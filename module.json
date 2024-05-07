@@ -1,0 +1,46 @@
+{
+  "title": "Actor Studio",
+  "description": "Easily create Heroes, Villains and everything in between.",
+  "version": "0.0.1",
+  "styles": ["style.css"],
+  "esmodules": ["index.js"],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json",
+      "flags": {}
+    }
+  ],
+  "packs": [],
+  "url": "https://round-table.games/",
+  "manifest": "https://github.com/geoidesic/foundryvtt-dnd5e-jump-calculator/releases/latest/download/module.json",
+  "download": "https://github.com/geoidesic/foundryvtt-dnd5e-jump-calculator/releases/latest/download/module.zip",
+  "authors": [
+    {
+      "name": "Noel da Costa  ",
+      "url": "https://www.arc2.co.uk",
+      "discord": "geoidesic",
+      "flags": {}
+    }
+  ],
+  "compatibility": {
+    "minimum": "11",
+    "verified": "11.315",
+    "maximum": "12"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "3.0.0",
+          "verified": "3.1.0",
+          "maximum": "4"
+        }
+      }
+    ]
+  },
+  "id": "foundryvtt-actor-studio"
+}

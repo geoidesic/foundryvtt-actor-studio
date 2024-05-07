@@ -1,0 +1,19 @@
+{
+    "tabs": [
+        {
+            "label": "Race"
+        },
+        {
+            "label": "Background"
+        },
+        {
+            "label": "Abilities"
+        },
+        {
+            "label": "Class"
+        },
+        {
+            "label": "Spells"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+.github/
+dist/
+docs/
+external/
+lang/
+scripts/
+styles/
+templates/
+src/**/*.svelte
+/index.js
+/index.js.map

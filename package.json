@@ -1,0 +1,29 @@
+{
+  "description": "Easily create Heroes, Villains and everything in between.",
+  "license": "MIT",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "authors": [
+    {
+      "name": "Noel da Costa",
+      "discord": "@geoidesic"
+    }
+  ],
+  "imports": {
+    "#runtime/*": "@typhonjs-fvtt/runtime/*",
+    "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "eslint": "^8",
+    "vite": "^4.4.0"
+  },
+  "browserslist": [">5%", "not IE 11"],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "eslint": "eslint ."
+  }
+}
