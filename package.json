@@ -15,12 +15,25 @@
     "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
   },
   "dependencies": {
+    "@typhonjs-fvtt/runtime": "^0.1.2",
+    "@typhonjs-fvtt/svelte-standard": "^0.1.0",
+    "svelte": "^4.2.16"
   },
   "devDependencies": {
-    "eslint": "^8",
-    "vite": "^4.4.0"
+    "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
+    "@typescript-eslint/eslint-plugin": "^7.8.0",
+    "@typescript-eslint/parser": "^7.8.0",
+    "eslint": "^9.2.0",
+    "prettier": "^3.2.5",
+    "pug": "^3.0.2",
+    "svelte-preprocess": "^5.1.4",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.11"
   },
-  "browserslist": [">5%", "not IE 11"],
+  "browserslist": [
+    ">5%",
+    "not IE 11"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite",

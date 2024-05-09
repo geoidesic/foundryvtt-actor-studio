@@ -1,19 +1,24 @@
 {
     "tabs": [
         {
-            "label": "Race"
+            "label": "Race",
+            "id": "race"
         },
         {
-            "label": "Background"
+            "label": "Background",
+            "id": "background"
         },
         {
-            "label": "Abilities"
+            "label": "Abilities",
+            "id": "abilities"
         },
         {
-            "label": "Class"
+            "label": "Class",
+            "id": "class"
         },
         {
-            "label": "Spells"
+            "label": "Spells",
+            "id": "spells"
         }
     ]
 }
