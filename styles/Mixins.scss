@@ -1,0 +1,683 @@
+@mixin background-normal {
+  background: url(../ui/parchment.jpg) repeat;
+  background-image: url(../ui/parchment.jpg);
+  background-position-x: initial;
+  background-position-y: initial;
+  background-size: initial;
+  background-repeat: repeat;
+  background-attachment: initial;
+  background-origin: initial;
+  background-clip: initial;
+  background: initial;
+}
+
+@mixin rollchat($lozenge-color: var(--player-color), $contrast-color: var(--player-contrast)) {
+  .roll-container,
+  .lozenge {
+    background-color: $lozenge-color;
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+  }
+  .contrast {
+    color: $contrast-color;
+  }
+  img {
+    &.profile {
+      border: 5px solid var(--player-color);
+      border-radius: 100%;
+    }
+    &.item {
+      width: 20px;
+    }
+  }
+  .roll-container {
+    border-radius: var(--border-radius);
+    padding: 0.5rem;
+    font-size: 2rem;
+    .sub {
+      font-size: 0.7rem;
+    }
+  }
+  .emboss {
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: rgba(0, 0, 0, 0.1);
+    -webkit-box-shadow: inset 5px -6px 50px -13px rgba(2, 0, 25, 0.73);
+    box-shadow: inset 5px -6px 50px -13px rgba(2, 0, 25, 0.73);
+    color: #ffffff;
+  }
+  .relief {
+    border-radius: var(--border-radius);
+    background-color: rgba(255, 255, 255, 0.1);
+    -webkit-box-shadow: inset 5px -6px 50px -13px rgba(2, 0, 25, 0.73);
+    box-shadow: inset 5px -6px 50px -13px rgba(2, 0, 25, 0.73);
+  }
+}
+
+@mixin spinner {
+  .spinner {
+    text-align: center;
+    color: #fff
+  }
+
+  .spinner > div {
+    width: 20px;
+    height: 20px;
+    background-color: #fff;
+
+    border-radius: 100%;
+    display: inline-block;
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  }
+
+  .spinner .bounce1 {
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+  }
+
+  .spinner .bounce2 {
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+  }
+
+  @-webkit-keyframes sk-bouncedelay {
+    0%, 80%, 100% { -webkit-transform: scale(0) }
+    40% { -webkit-transform: scale(1.0) }
+  }
+
+  @keyframes sk-bouncedelay {
+    0%, 80%, 100% { 
+      -webkit-transform: scale(0);
+      transform: scale(0);
+    } 40% { 
+      -webkit-transform: scale(1.0);
+      transform: scale(1.0);
+    }
+  }
+}
+
+@mixin buttons {
+  .rowimg {
+    position: absolute;
+    top: calc(50% - 15.5px);
+    left: -2px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    object-fit: cover;
+    img {
+      width: 30px;
+      height: 30px;
+    }
+    &.button {
+      cursor: pointer;
+      border: 1px solid grey;
+      border-radius: 3px;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .rowimgbutton {
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    object-fit: cover;
+    border: 1px solid grey;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    img {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  .rowbutton {
+    display: inline-block;
+    padding: 3px 5px;
+    border: 1px solid grey;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    i {
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  .rowimgbezelbutton {
+    border-style: solid;
+    border-width: 1px;
+    text-shadow: 0 1px 0 #eee;
+    background: #ccc;
+    color: #333;
+    font-family: "Lucida Grande";
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-border-radius: 3px;
+    -webkit-box-shadow: inset 0 1px 1px #fff, inset 0 -1px 1px #aaa, 0 2px 4px -3px #666;
+    &.lock-open {
+      background-color: #19762d;
+      color: white;
+    }
+    &.lock {
+      background-color: #9c0f0f;
+      color: white;
+    }
+  }
+  .rowimgbezelbutton:active {
+    -webkit-box-shadow: inset 0 1px 1px #aaa, inset 0 -1px 1px #aaa;
+    border-color: #888 #aaa #eee;
+  }
+
+  .embossButton {
+    border: 1px solid transparent;
+    border-radius: 3px;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+
+  }
+}
+
+@mixin sheetHeader {
+  gap: 2px;
+  .stat {
+    border-bottom: 1px solid rgb(94, 19, 19);
+    margin-bottom: 2px;
+    padding: 0;
+  }
+  label {
+    font-family: "Modesto Condensed", "Palatino Lynotype", serif;
+    font-size: 1.2rem;
+  }
+}
+
+@mixin itemSheetDetailTab {
+    .block {
+    border: 10px solid #ff9900;
+    border-radius: var(--border-radius);
+    padding: 0 0.5rem 1rem 0.5rem;
+    margin: 0.3rem 0;
+    .label {
+      vertical-align: -webkit-baseline-middle;
+    }
+  }
+  input {
+    margin: 0;
+  }
+  .flexrow,
+  .flexcol {
+    gap: 2px;
+  }
+  //- example of child selector
+  .block :global(.cheeky) {
+    margin: 0 0 0 -2px;
+  }
+  .form-group {
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 3px 0;
+  }
+
+  .form-group.stacked label.checkbox,
+  .form-group.stacked label.radio {
+    flex: auto;
+    text-align: left;
+  }
+  .form-group-stacked > *,
+  .form-group.stacked > * {
+    flex: 100%;
+  }
+  .form-group .form-fields {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .envelope {
+    margin: 0.4em 0;
+    padding: 1em;
+    border: 0.4em solid transparent;
+    background: linear-gradient(white, white) padding-box,
+      repeating-linear-gradient(-45deg, #6b1818 0, #112768 15%, #848a0e 0, #4e0a30 20%) 0 / 4em 4em;
+    animation: shimmer 4s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 0 0;
+    }
+    50% {
+      background-position: 0.5em 1em;
+    }
+    100% {
+      background-position: 0 0;
+    }
+  }
+
+  $lightblue: #7eb4e2;
+  $darkblue: #32557f;
+
+  .serrated {
+    padding: 10px 10px;
+    border: 10px solid transparent;
+    border-width: 10px 0;
+    background-color: $lightblue;
+    background-color: hsla(0, 0%, 0%, 0);
+    background-image: linear-gradient($lightblue, $darkblue),
+      linear-gradient(to bottom right, transparent 50.5%, $lightblue 50.5%),
+      linear-gradient(to bottom left, transparent 50.5%, $lightblue 50.5%),
+      linear-gradient(to top right, transparent 50.5%, $darkblue 50.5%),
+      linear-gradient(to top left, transparent 50.5%, $darkblue 50.5%);
+    background-repeat: repeat, repeat-x, repeat-x, repeat-x, repeat-x;
+    background-position: 0 0, 10px 0, 10px 0, 10px 100%, 10px 100%;
+    background-size: auto auto, 20px 20px, 20px 20px, 20px 20px, 20px 20px;
+    background-clip: padding-box, border-box, border-box, border-box, border-box;
+    background-origin: padding-box, border-box, border-box, border-box, border-box;
+  }
+}
+
+@mixin itemSheetDescriptionTab {
+  .flexrow {
+    gap: 2px;
+  }
+  .flexcol {
+    gap: 2px;
+  }
+  label {
+    margin: 0;
+    padding: 0;
+  }
+  .box {
+    background: silver;
+    border: 1px;
+  }
+  .properties-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    :global(>li) {
+      margin: 3px 0;
+      padding: 0 2px;
+      background: rgba(0, 0, 0, 0.05);
+      border: 2px groove #eeede0;
+      text-align: center;
+      font-size: 12px;
+      line-height: 18px;
+    }
+  }
+}
+
+@mixin input {
+  box-sizing: border-box;
+  border-style: var(--input-border-style);
+  border-radius: var(--input-border-radius);
+  border-width: var(--input-border-width);
+  border-color: var(--input-color);
+  background: var(--input-background);
+  // font-size: var(--font-size);
+  // font-family: var(--font-family);
+  // font-weight: var(--font-weight);
+  // text-align: var(--text-alignment);
+  height: var(--input-height);
+  width: var(--input-width);
+  padding: var(--input-padding);
+  color: var(--input-color);
+}
+
+@mixin input-disabled {
+  border-style: var(--input-border-style);
+  border-width: var(--input-border-width);
+  border-color: var(--input-border-color);
+  color: var(--font-color);
+  background: var(--static-value-background);
+  opacity: var(--disabled-opacity);
+}
+
+@mixin border {
+  border-style: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--player-color);
+}
+
+@mixin border-top {
+  border-top: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-top-bottom {
+  border-top: var(--border-style);
+  border-bottom: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-bottom {
+  border-bottom: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-bottom-sides {
+  border-right: var(--border-style);
+  border-left: var(--border-style);
+  border-bottom: var(--border-style);
+  border-bottom-right-radius: var(--border-radius);
+  border-bottom-left-radius: var(--border-radius);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-left {
+  border-left: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-right {
+  border-right: var(--border-style);
+  border-width: var(--border-width);
+  border-color: var(--border-color);
+}
+
+@mixin border-color-button {
+  border-color: var(--button-border-color);
+}
+
+@mixin button {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-style: var(--button-border-style);
+  border-radius: var(--button-border-radius);
+  border-width: var(--button-border-width);
+  border-color: var(--button-border-color);
+  background: var(--button-background);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  padding: var(--button-padding);
+  color: var(--button-color);
+  line-height: var(--button-line-height);
+  margin: 0;
+  background-color: transparent;
+
+  &:disabled {
+    cursor: default;
+    background: var(--button-background-disabled);
+  }
+
+
+
+  &:hover {
+    &:not(:disabled) {
+      background: radial-gradient(var(--sheet-color), transparent);
+    }
+  }
+}
+
+@mixin button-top {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-right: var(--button-border-style);
+  border-left: var(--button-border-style);
+  border-bottom: var(--button-border-style);
+  border-bottom-right-radius: var(--button-border-radius);
+  border-bottom-left-radius: var(--button-border-radius);
+  border-width: var(--button-border-width);
+  border-color: var(--button-border-color);
+  background: var(--button-background);
+  font-size: var(--button-font-size);
+  font-weight: var(--button-font-weight);
+  padding: var(--button-padding);
+  color: var(--button-color);
+  line-height: var(--button-line-height);
+  margin: 0;
+
+  &:disabled {
+    cursor: default;
+    background: var(--button-background-disabled);
+    color: var(--button-color-disabled);
+  }
+
+  &:hover {
+    &:not(:disabled) {
+      background: radial-gradient(var(--button-background-highlight), var(--button-background));
+      color: var(--button-color-disabled);
+    }
+  }
+}
+
+@mixin icon-button {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-style: var(--icon-button-border-style);
+  border-radius: var(--icon-button-border-radius);
+  border-width: var(--icon-button-border-width);
+  border-color: var(--border-color-icon-button);
+  font-size: var(--icon-button-font-size);
+  background: var(--icon-button-background);
+  padding: var(--icon-button-padding);
+  line-height: var(--icon-button-line-height);
+  width: var(--icon-button-radius);
+  height: var(--icon-button-radius);
+  color: var(--icon-button-color);
+}
+
+@mixin flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin flex-group-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@mixin flex-group-left {
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+@mixin flex-group-right {
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+@mixin flex-group-top {
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+}
+
+@mixin flex-group-top-right {
+  align-items: flex-end;
+  justify-content: flex-start;
+  text-align: right;
+}
+
+@mixin flex-group-top-left {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+@mixin flex-space-between {
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+@mixin flex-space-evenly {
+  align-items: center;
+  justify-content: space-evenly;
+  text-align: center;
+}
+
+@mixin grid($column-count) {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  grid-column: span $column-count / span $column-count;
+  grid-template-columns: repeat($column-count, minmax(0, 1fr));
+}
+
+@mixin grid-rows($row-count) {
+  display: grid;
+  grid-template-rows: repeat($row-count, 1fr);
+  grid-auto-flow: column;
+}
+
+@mixin grid-start($column-count) {
+  grid-column-start: $column-count
+}
+
+@mixin grid-span($column-count) {
+  grid-column-end: span $column-count;
+}
+
+@mixin attribute-colors {
+  &.body {
+    background: var(--body-color);
+  }
+
+  &.mind {
+    background: var(--mind-color);
+  }
+
+  &.soul {
+    background: var(--soul-color);
+  }
+}
+
+@mixin resistance-colors {
+  &.reflexes {
+    background: var(--reflexes-color);
+  }
+
+  &.resilience {
+    background: var(--resilience-color);
+  }
+
+  &.willpower {
+    background: var(--willpower-color);
+  }
+}
+
+@mixin rarity-colors {
+  &.uncommon {
+    background: var(--uncommon-color);
+  }
+
+  &.rare {
+    background: var(--rare-color);
+  }
+
+  &.unique {
+    background: var(--unique-color);
+  }
+}
+
+@mixin list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+@mixin panel-1 {
+  background: var(--panel-1-background);
+  color: var(--panel-1-color);
+  --border-color: var(--panel-1-color);
+}
+
+@mixin panel-2 {
+  background: var(--panel-2-background);
+  color: var(--panel-2-color);
+  --border-color: var(--panel-2-color);
+}
+
+@mixin panel-3 {
+  background: var(--panel-3-background);
+  color: var(--panel-3-color);
+  --border-color: var(--panel-3-color);
+}
+
+@mixin label {
+  background: var(--label-background);
+  color: var(--label-color);
+  --border-color: var(--label-color);
+}
+
+@mixin editor {
+  --tjs-editor-background: var(--editor-background);
+  --tjs-editor-border: var(--editor-border);
+  --tjs-editor-border-radius: var(--editor-border-radius);
+}
+
+@mixin tag-margin {
+  margin: 0.5rem 0.25rem 0 0.25rem;
+}
+
+@mixin tag-margin-small {
+  margin: 0.25rem 0.125rem 0 0.125rem;
+}
+
+@mixin font-size-normal {
+  font-size: var(--font-size-normal);
+}
+
+@mixin font-size-small {
+  font-size: var(--font-size-small);
+}
+
+@mixin font-size-large {
+  font-size: var(--font-size-large);
+}
+
+@mixin font-size-extra-large {
+  font-size: var(--font-size-extra-large);
+}
+
+@mixin static-value {
+  background-color: var(--static-value-background);
+}
+
+@mixin mod-colors {
+
+  &.greater {
+    color: var(--greater-color);
+    background: var(--greater-background);
+  }
+
+  &.lesser {
+    color: var(--lesser-color);
+    background: var(--lesser-background);
+  }
+}

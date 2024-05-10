@@ -1,7 +1,31 @@
 <script>
-   import { ApplicationShell }   from '#runtime/svelte/component/core';
+	import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { setContext, getContext, onMount } from "svelte";
+	import Tabs from "~/src/components/molecules/Tabs.svelte";
+	import dnd5e from "~/config/systems/dnd5e.json"
+  import Abilities from "~/src/components/organisms/Abilities.svelte";
+  import Background from "~/src/components/organisms/Background.svelte";
+  import Class from "~/src/components/organisms/Class.svelte";
+  import Race from "~/src/components/organisms/Race.svelte";
+  import Spells from "~/src/components/organisms/Spells.svelte";
 
-   export let elementRoot;
+
+  export let elementRoot; //- passed in by SvelteApplication
+  export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
+  export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
+
+  setContext("#doc", documentStore);
+	let activeTab = dnd5e.tabs[0].id
+
+	const defaultTabs = [
+    { label: "Abilities", id: "abilities", component: Abilities },
+    { label: "Background", id: "backgrond", component: Background },
+    { label: "Class", id: "class", component: Class },
+    { label: "Race", id: "race", component: Race },
+    { label: "Spells", id: "spells", component: Spells },
+  ];
+	$: tabs = defaultTabs;
+	  
 </script>
 
 <!-- This is necessary for Svelte to generate accessors TRL can access for `elementRoot` -->
@@ -9,16 +33,20 @@
 
 <!-- ApplicationShell provides the popOut / application shell frame, header bar, content areas -->
 <!-- ApplicationShell exports `elementRoot` which is the outer application shell element -->
-<ApplicationShell bind:elementRoot>
-   <main>
-      <h1>Basic applications11</h1>
-   </main>
-</ApplicationShell>
+
+<template lang="pug">
+	ApplicationShell(bind:elementRoot)
+		main 
+			header yo
+			section 
+				Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
+</template>
+
 
 <style lang="scss">
-   main {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-   }
+	 main {
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+	 }
 </style>

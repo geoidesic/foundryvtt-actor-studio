@@ -1,10 +1,12 @@
 /* eslint-env node */
-import { svelte }    from '@sveltejs/vite-plugin-svelte';
-import resolve       from '@rollup/plugin-node-resolve'; // This resolves NPM modules from node_modules.
-import preprocess    from 'svelte-preprocess';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
 import {
    postcssConfig,
-   terserConfig }    from '@typhonjs-fvtt/runtime/rollup';
+   terserConfig
+} from '@typhonjs-fvtt/runtime/rollup';
+import resolve from '@rollup/plugin-node-resolve'; // This resolves NPM modules from node_modules.
+import preprocess from 'svelte-preprocess';
+import * as path from "path";
 
 // ATTENTION!
 // Please modify the below variables: s_PACKAGE_ID and s_SVELTE_HASH_ID appropriately.
@@ -24,11 +26,11 @@ const s_SOURCEMAPS = true; // Generate sourcemaps for the bundle (recommended).
 // Used in bundling particularly during development. If you npm-link packages to your project add them here.
 const s_RESOLVE_CONFIG = {
    browser: true,
-   dedupe: ['svelte']
+   dedupe: ['svelte'],
+
 };
 
-export default () =>
-{
+export default () => {
    /** @type {import('vite').UserConfig} */
    return {
       root: 'src/',                 // Source location / esbuild root.
@@ -36,7 +38,12 @@ export default () =>
       publicDir: false,             // No public resources to copy.
       cacheDir: '../.vite-cache',   // Relative from root directory.
 
-      resolve: { conditions: ['import', 'browser'] },
+      resolve: {
+         conditions: ["import", "browser"],
+         alias: {
+            "~": path.resolve(__dirname),
+         },
+      },
 
       esbuild: {
          target: ['es2022']

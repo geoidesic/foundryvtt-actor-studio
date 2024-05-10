@@ -1,5 +1,5 @@
 <script>
-  import preventDefault from "~/helpers/svelte-actions/PreventDefault.js";
+  import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
 
   // List of tabs
@@ -44,7 +44,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../styles/Mixins.scss";
+  @import "../../../styles/Mixins.scss";
 
   .tabs {
     @include flex-column;
