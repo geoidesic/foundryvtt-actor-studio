@@ -13,8 +13,10 @@ export default class PCApplication extends SvelteApplication
    static get defaultOptions()
    {
       return foundry.utils.mergeObject(super.defaultOptions, {
-         title: 'GAS.PCTitle',  // Automatically localized from `lang/en.json`.
-         width: 300,
+         title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
+         width: 500,
+         height: 600,
+         minWidth: 500,
 
          svelte: {
             class: PCAppShell,

@@ -17,7 +17,7 @@ function addCreateNewActorButton(html, app) {
 
   const $hctButton = $(
     `<button class='dialog-button' data-hct_start>
-      ${game.i18n.localize('GAS.ActorsDirectoryButton')}
+      ${game.i18n.localize('GAS.ActorStudio')}
     </button>`,
   );
 

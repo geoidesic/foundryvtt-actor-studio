@@ -13,7 +13,9 @@
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
-
+	 
+	let lang = game.i18n.localize.bind(game.i18n);
+	
   setContext("#doc", documentStore);
 	let activeTab = dnd5e.tabs[0].id
 
@@ -37,7 +39,7 @@
 <template lang="pug">
 	ApplicationShell(bind:elementRoot)
 		main 
-			header yo
+			header {lang("GAS.PCTitle")}
 			section 
 				Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>
