@@ -100,6 +100,21 @@ function get_all_dirty_from_scope($$scope) {
   }
   return -1;
 }
+function exclude_internal_props(props) {
+  const result = {};
+  for (const k in props)
+    if (k[0] !== "$")
+      result[k] = props[k];
+  return result;
+}
+function compute_rest_props(props, keys) {
+  const rest = {};
+  keys = new Set(keys);
+  for (const k in props)
+    if (!keys.has(k) && k[0] !== "$")
+      rest[k] = props[k];
+  return rest;
+}
 function null_to_empty(value) {
   return value == null ? "" : value;
 }
@@ -213,6 +228,23 @@ function attr(node, attribute, value) {
     node.removeAttribute(attribute);
   else if (node.getAttribute(attribute) !== value)
     node.setAttribute(attribute, value);
+}
+const always_set_through_set_attribute = ["width", "height"];
+function set_attributes(node, attributes) {
+  const descriptors = Object.getOwnPropertyDescriptors(node.__proto__);
+  for (const key in attributes) {
+    if (attributes[key] == null) {
+      node.removeAttribute(key);
+    } else if (key === "style") {
+      node.style.cssText = attributes[key];
+    } else if (key === "__value") {
+      node.value = node[key] = attributes[key];
+    } else if (descriptors[key] && descriptors[key].set && always_set_through_set_attribute.indexOf(key) === -1) {
+      node[key] = attributes[key];
+    } else {
+      attr(node, key, attributes[key]);
+    }
+  }
 }
 function children(element2) {
   return Array.from(element2.childNodes);
@@ -396,6 +428,9 @@ function get_current_component() {
 }
 function onMount(fn) {
   get_current_component().$$.on_mount.push(fn);
+}
+function onDestroy(fn) {
+  get_current_component().$$.on_destroy.push(fn);
 }
 function setContext(key, context) {
   get_current_component().$$.context.set(key, context);
@@ -12051,7 +12086,7 @@ function localize(stringId, data) {
   const result = !isObject(data) ? globalThis.game.i18n.localize(stringId) : globalThis.game.i18n.format(stringId, data);
   return result !== void 0 ? result : "";
 }
-function create_if_block$3(ctx) {
+function create_if_block$4(ctx) {
   let span;
   let t;
   return {
@@ -12098,7 +12133,7 @@ function create_if_block$3(ctx) {
     }
   };
 }
-function create_fragment$b(ctx) {
+function create_fragment$c(ctx) {
   let a;
   let html_tag;
   let html_anchor;
@@ -12108,7 +12143,7 @@ function create_fragment$b(ctx) {
   let dispose;
   let if_block = (
     /*label*/
-    ctx[3] && create_if_block$3(ctx)
+    ctx[3] && create_if_block$4(ctx)
   );
   return {
     c() {
@@ -12191,7 +12226,7 @@ function create_fragment$b(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block$3(ctx2);
+          if_block = create_if_block$4(ctx2);
           if_block.c();
           if_block.m(a, null);
         }
@@ -12244,7 +12279,7 @@ function create_fragment$b(ctx) {
   };
 }
 const s_REGEX_HTML = /^\s*<.*>$/;
-function instance$6($$self, $$props, $$invalidate) {
+function instance$8($$self, $$props, $$invalidate) {
   let title;
   let icon;
   let label;
@@ -12329,7 +12364,7 @@ function instance$6($$self, $$props, $$invalidate) {
 class TJSHeaderButton extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$6, create_fragment$b, safe_not_equal, { button: 0 });
+    init(this, options, instance$8, create_fragment$c, safe_not_equal, { button: 0 });
   }
   get button() {
     return this.$$.ctx[0];
@@ -12339,17 +12374,17 @@ class TJSHeaderButton extends SvelteComponent {
     flush();
   }
 }
-function get_each_context$1(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[31] = list[i];
   return child_ctx;
 }
-function get_each_context_1$1(ctx, list, i) {
+function get_each_context_1$2(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[31] = list[i];
   return child_ctx;
 }
-function create_if_block$2(ctx) {
+function create_if_block$3(ctx) {
   let img;
   let img_src_value;
   return {
@@ -12378,7 +12413,7 @@ function create_if_block$2(ctx) {
     }
   };
 }
-function create_each_block_1$1(ctx) {
+function create_each_block_1$2(ctx) {
   let switch_instance;
   let switch_instance_anchor;
   let current;
@@ -12469,7 +12504,7 @@ function create_each_block_1$1(ctx) {
     }
   };
 }
-function create_each_block$1(ctx) {
+function create_each_block$2(ctx) {
   let switch_instance;
   let switch_instance_anchor;
   let current;
@@ -12579,14 +12614,14 @@ function create_key_block(ctx) {
   let mounted;
   let dispose;
   let if_block = typeof /*$storeHeaderIcon*/
-  ctx[6] === "string" && create_if_block$2(ctx);
+  ctx[6] === "string" && create_if_block$3(ctx);
   let each_value_1 = ensure_array_like(
     /*buttonsLeft*/
     ctx[1]
   );
   let each_blocks_1 = [];
   for (let i = 0; i < each_value_1.length; i += 1) {
-    each_blocks_1[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
+    each_blocks_1[i] = create_each_block_1$2(get_each_context_1$2(ctx, each_value_1, i));
   }
   const out = (i) => transition_out(each_blocks_1[i], 1, 1, () => {
     each_blocks_1[i] = null;
@@ -12597,7 +12632,7 @@ function create_key_block(ctx) {
   );
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
   }
   const out_1 = (i) => transition_out(each_blocks[i], 1, 1, () => {
     each_blocks[i] = null;
@@ -12684,7 +12719,7 @@ function create_key_block(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block$2(ctx2);
+          if_block = create_if_block$3(ctx2);
           if_block.c();
           if_block.m(header, t0);
         }
@@ -12715,12 +12750,12 @@ function create_key_block(ctx) {
         );
         let i;
         for (i = 0; i < each_value_1.length; i += 1) {
-          const child_ctx = get_each_context_1$1(ctx2, each_value_1, i);
+          const child_ctx = get_each_context_1$2(ctx2, each_value_1, i);
           if (each_blocks_1[i]) {
             each_blocks_1[i].p(child_ctx, dirty);
             transition_in(each_blocks_1[i], 1);
           } else {
-            each_blocks_1[i] = create_each_block_1$1(child_ctx);
+            each_blocks_1[i] = create_each_block_1$2(child_ctx);
             each_blocks_1[i].c();
             transition_in(each_blocks_1[i], 1);
             each_blocks_1[i].m(header, t3);
@@ -12740,12 +12775,12 @@ function create_key_block(ctx) {
         );
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context$1(ctx2, each_value, i);
+          const child_ctx = get_each_context$2(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
             transition_in(each_blocks[i], 1);
           } else {
-            each_blocks[i] = create_each_block$1(child_ctx);
+            each_blocks[i] = create_each_block$2(child_ctx);
             each_blocks[i].c();
             transition_in(each_blocks[i], 1);
             each_blocks[i].m(header, null);
@@ -12807,7 +12842,7 @@ function create_key_block(ctx) {
     }
   };
 }
-function create_fragment$a(ctx) {
+function create_fragment$b(ctx) {
   let previous_key = (
     /*draggable*/
     ctx[0]
@@ -12858,7 +12893,7 @@ function create_fragment$a(ctx) {
     }
   };
 }
-function instance$5($$self, $$props, $$invalidate) {
+function instance$7($$self, $$props, $$invalidate) {
   let $focusKeep;
   let $focusAuto;
   let $elementRoot;
@@ -13016,10 +13051,10 @@ function instance$5($$self, $$props, $$invalidate) {
 class TJSApplicationHeader extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$5, create_fragment$a, safe_not_equal, { draggable: 0, draggableOptions: 20 }, null, [-1, -1]);
+    init(this, options, instance$7, create_fragment$b, safe_not_equal, { draggable: 0, draggableOptions: 20 }, null, [-1, -1]);
   }
 }
-function create_fragment$9(ctx) {
+function create_fragment$a(ctx) {
   let div;
   let mounted;
   let dispose;
@@ -13055,7 +13090,7 @@ function create_fragment$9(ctx) {
     }
   };
 }
-function instance$4($$self, $$props, $$invalidate) {
+function instance$6($$self, $$props, $$invalidate) {
   let { elementRoot = void 0 } = $$props;
   let { enabled = true } = $$props;
   let ignoreElements, wrapEl;
@@ -13097,10 +13132,10 @@ function instance$4($$self, $$props, $$invalidate) {
 class TJSFocusWrap extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$4, create_fragment$9, safe_not_equal, { elementRoot: 2, enabled: 3 });
+    init(this, options, instance$6, create_fragment$a, safe_not_equal, { elementRoot: 2, enabled: 3 });
   }
 }
-function create_fragment$8(ctx) {
+function create_fragment$9(ctx) {
   let div;
   let resizable_action;
   let mounted;
@@ -13155,7 +13190,7 @@ function create_fragment$8(ctx) {
     }
   };
 }
-function instance$3($$self, $$props, $$invalidate) {
+function instance$5($$self, $$props, $$invalidate) {
   let $storeElementRoot;
   let $storeMinimized;
   let $storeResizable;
@@ -13284,10 +13319,10 @@ function instance$3($$self, $$props, $$invalidate) {
 class ResizableHandle extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$3, create_fragment$8, safe_not_equal, { isResizable: 7 });
+    init(this, options, instance$5, create_fragment$9, safe_not_equal, { isResizable: 7 });
   }
 }
-function create_else_block(ctx) {
+function create_else_block$1(ctx) {
   let div;
   let tjsapplicationheader;
   let t0;
@@ -13543,7 +13578,7 @@ function create_else_block(ctx) {
     }
   };
 }
-function create_if_block$1(ctx) {
+function create_if_block$2(ctx) {
   let div;
   let tjsapplicationheader;
   let t0;
@@ -13817,12 +13852,12 @@ function create_if_block$1(ctx) {
     }
   };
 }
-function create_fragment$7(ctx) {
+function create_fragment$8(ctx) {
   let current_block_type_index;
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block$1, create_else_block];
+  const if_block_creators = [create_if_block$2, create_else_block$1];
   const if_blocks = [];
   function select_block_type(ctx2, dirty) {
     if (
@@ -13885,7 +13920,7 @@ function create_fragment$7(ctx) {
     }
   };
 }
-function instance$2($$self, $$props, $$invalidate) {
+function instance$4($$self, $$props, $$invalidate) {
   let $focusKeep;
   let $focusAuto;
   let $minimized;
@@ -14180,8 +14215,8 @@ class ApplicationShell extends SvelteComponent {
     init(
       this,
       options,
-      instance$2,
-      create_fragment$7,
+      instance$4,
+      create_fragment$8,
       safe_not_equal,
       {
         elementContent: 0,
@@ -14403,18 +14438,18 @@ function ripple({
     };
   };
 }
-function get_each_context(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[5] = list[i];
   return child_ctx;
 }
-function get_each_context_1(ctx, list, i) {
+function get_each_context_1$1(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[5] = list[i];
   child_ctx[9] = i;
   return child_ctx;
 }
-function create_each_block_1(ctx) {
+function create_each_block_1$1(ctx) {
   let button;
   let t0_value = (
     /*tab*/
@@ -14485,7 +14520,7 @@ function create_each_block_1(ctx) {
     }
   };
 }
-function create_if_block(ctx) {
+function create_if_block$1(ctx) {
   let switch_instance;
   let switch_instance_anchor;
   let current;
@@ -14564,13 +14599,13 @@ function create_if_block(ctx) {
     }
   };
 }
-function create_each_block(ctx) {
+function create_each_block$1(ctx) {
   let if_block_anchor;
   let current;
   let if_block = (
     /*tab*/
     ctx[5].id === /*activeTab*/
-    ctx[0] && create_if_block(ctx)
+    ctx[0] && create_if_block$1(ctx)
   );
   return {
     c() {
@@ -14597,7 +14632,7 @@ function create_each_block(ctx) {
             transition_in(if_block, 1);
           }
         } else {
-          if_block = create_if_block(ctx2);
+          if_block = create_if_block$1(ctx2);
           if_block.c();
           transition_in(if_block, 1);
           if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -14629,7 +14664,7 @@ function create_each_block(ctx) {
     }
   };
 }
-function create_fragment$6(ctx) {
+function create_fragment$7(ctx) {
   let div2;
   let div0;
   let t;
@@ -14641,7 +14676,7 @@ function create_fragment$6(ctx) {
   );
   let each_blocks_1 = [];
   for (let i = 0; i < each_value_1.length; i += 1) {
-    each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    each_blocks_1[i] = create_each_block_1$1(get_each_context_1$1(ctx, each_value_1, i));
   }
   let each_value = ensure_array_like(
     /*tabs*/
@@ -14649,7 +14684,7 @@ function create_fragment$6(ctx) {
   );
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
   }
   const out = (i) => transition_out(each_blocks[i], 1, 1, () => {
     each_blocks[i] = null;
@@ -14696,11 +14731,11 @@ function create_fragment$6(ctx) {
         );
         let i;
         for (i = 0; i < each_value_1.length; i += 1) {
-          const child_ctx = get_each_context_1(ctx2, each_value_1, i);
+          const child_ctx = get_each_context_1$1(ctx2, each_value_1, i);
           if (each_blocks_1[i]) {
             each_blocks_1[i].p(child_ctx, dirty);
           } else {
-            each_blocks_1[i] = create_each_block_1(child_ctx);
+            each_blocks_1[i] = create_each_block_1$1(child_ctx);
             each_blocks_1[i].c();
             each_blocks_1[i].m(div0, null);
           }
@@ -14718,12 +14753,12 @@ function create_fragment$6(ctx) {
         );
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context(ctx2, each_value, i);
+          const child_ctx = get_each_context$1(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
             transition_in(each_blocks[i], 1);
           } else {
-            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i] = create_each_block$1(child_ctx);
             each_blocks[i].c();
             transition_in(each_blocks[i], 1);
             each_blocks[i].m(div1, null);
@@ -14760,7 +14795,7 @@ function create_fragment$6(ctx) {
     }
   };
 }
-function instance$1($$self, $$props, $$invalidate) {
+function instance$3($$self, $$props, $$invalidate) {
   let { tabs: tabs2 = [] } = $$props;
   let { sheet } = $$props;
   let { activeTab = void 0 } = $$props;
@@ -14783,7 +14818,7 @@ function instance$1($$self, $$props, $$invalidate) {
 class Tabs extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$1, create_fragment$6, safe_not_equal, { tabs: 1, sheet: 2, activeTab: 0, efx: 3 });
+    init(this, options, instance$3, create_fragment$7, safe_not_equal, { tabs: 1, sheet: 2, activeTab: 0, efx: 3 });
   }
 }
 const tabs = [
@@ -14811,7 +14846,7 @@ const tabs = [
 const dnd5e = {
   tabs
 };
-function create_fragment$5(ctx) {
+function create_fragment$6(ctx) {
   let pre;
   return {
     c() {
@@ -14834,10 +14869,10 @@ function create_fragment$5(ctx) {
 class Abilities extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, null, create_fragment$5, safe_not_equal, {});
+    init(this, options, null, create_fragment$6, safe_not_equal, {});
   }
 }
-function create_fragment$4(ctx) {
+function create_fragment$5(ctx) {
   let pre;
   return {
     c() {
@@ -14860,10 +14895,10 @@ function create_fragment$4(ctx) {
 class Background extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, null, create_fragment$4, safe_not_equal, {});
+    init(this, options, null, create_fragment$5, safe_not_equal, {});
   }
 }
-function create_fragment$3(ctx) {
+function create_fragment$4(ctx) {
   let pre;
   return {
     c() {
@@ -14886,33 +14921,765 @@ function create_fragment$3(ctx) {
 class Class extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, null, create_fragment$3, safe_not_equal, {});
+    init(this, options, null, create_fragment$4, safe_not_equal, {});
   }
 }
-function create_fragment$2(ctx) {
-  let pre;
+function truncate(str, n) {
+  return str.length > n ? str.substr(0, n - 1) + "..." : str;
+}
+function get_each_context(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[12] = list[i];
+  child_ctx[14] = i;
+  return child_ctx;
+}
+function get_each_context_1(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[12] = list[i];
+  child_ctx[14] = i;
+  return child_ctx;
+}
+function create_if_block_3(ctx) {
+  let div0;
+  let div0_class_value;
+  let div1;
+  let t_value = truncate(
+    /*option*/
+    ctx[12].label,
+    10
+  ) + "";
+  let t;
+  function select_block_type(ctx2, dirty) {
+    if (
+      /*option*/
+      ctx2[12].icon != void 0
+    )
+      return create_if_block_4;
+    return create_else_block_1;
+  }
+  let current_block_type = select_block_type(ctx);
+  let if_block = current_block_type(ctx);
   return {
     c() {
-      pre = element("pre");
-      pre.textContent = "Race";
+      div0 = element("div");
+      if_block.c();
+      div1 = element("div");
+      t = text(t_value);
+      attr(div0, "class", div0_class_value = "option-icon " + /*option*/
+      (ctx[12].img ? (
+        /*option*/
+        ctx[12].img
+      ) : "") + " svelte-gas-8l8gth");
+      attr(div1, "class", "option-label svelte-gas-8l8gth");
     },
     m(target, anchor) {
-      insert(target, pre, anchor);
+      insert(target, div0, anchor);
+      if_block.m(div0, null);
+      insert(target, div1, anchor);
+      append(div1, t);
     },
-    p: noop,
-    i: noop,
-    o: noop,
+    p(ctx2, dirty) {
+      if (current_block_type === (current_block_type = select_block_type(ctx2)) && if_block) {
+        if_block.p(ctx2, dirty);
+      } else {
+        if_block.d(1);
+        if_block = current_block_type(ctx2);
+        if (if_block) {
+          if_block.c();
+          if_block.m(div0, null);
+        }
+      }
+      if (dirty & /*options*/
+      2 && div0_class_value !== (div0_class_value = "option-icon " + /*option*/
+      (ctx2[12].img ? (
+        /*option*/
+        ctx2[12].img
+      ) : "") + " svelte-gas-8l8gth")) {
+        attr(div0, "class", div0_class_value);
+      }
+      if (dirty & /*options*/
+      2 && t_value !== (t_value = truncate(
+        /*option*/
+        ctx2[12].label,
+        10
+      ) + ""))
+        set_data(t, t_value);
+    },
     d(detaching) {
       if (detaching) {
-        detach(pre);
+        detach(div0);
+        detach(div1);
+      }
+      if_block.d();
+    }
+  };
+}
+function create_else_block_1(ctx) {
+  let img;
+  let img_src_value;
+  return {
+    c() {
+      img = element("img");
+      if (!src_url_equal(img.src, img_src_value = /*option*/
+      ctx[12].img))
+        attr(img, "src", img_src_value);
+      attr(img, "class", "svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, img, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*options*/
+      2 && !src_url_equal(img.src, img_src_value = /*option*/
+      ctx2[12].img)) {
+        attr(img, "src", img_src_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(img);
       }
     }
   };
 }
+function create_if_block_4(ctx) {
+  let i;
+  let i_class_value;
+  return {
+    c() {
+      i = element("i");
+      attr(i, "class", i_class_value = null_to_empty(
+        /*option*/
+        ctx[12].icon
+      ) + " svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, i, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*options*/
+      2 && i_class_value !== (i_class_value = null_to_empty(
+        /*option*/
+        ctx2[12].icon
+      ) + " svelte-gas-8l8gth")) {
+        attr(i, "class", i_class_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(i);
+      }
+    }
+  };
+}
+function create_each_block_1(ctx) {
+  let if_block_anchor;
+  let if_block = (
+    /*option*/
+    ctx[12] && /*option*/
+    ctx[12]?.value === /*value*/
+    ctx[0] && create_if_block_3(ctx)
+  );
+  return {
+    c() {
+      if (if_block)
+        if_block.c();
+      if_block_anchor = empty();
+    },
+    m(target, anchor) {
+      if (if_block)
+        if_block.m(target, anchor);
+      insert(target, if_block_anchor, anchor);
+    },
+    p(ctx2, dirty) {
+      if (
+        /*option*/
+        ctx2[12] && /*option*/
+        ctx2[12]?.value === /*value*/
+        ctx2[0]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block_3(ctx2);
+          if_block.c();
+          if_block.m(if_block_anchor.parentNode, if_block_anchor);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(if_block_anchor);
+      }
+      if (if_block)
+        if_block.d(detaching);
+    }
+  };
+}
+function create_if_block(ctx) {
+  let div;
+  let each_value = ensure_array_like(
+    /*options*/
+    ctx[1]
+  );
+  let each_blocks = [];
+  for (let i = 0; i < each_value.length; i += 1) {
+    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+  }
+  return {
+    c() {
+      div = element("div");
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].c();
+      }
+      attr(div, "class", "options-dropdown dropshadow svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        if (each_blocks[i]) {
+          each_blocks[i].m(div, null);
+        }
+      }
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*active, options, handleSelect, item, undefined, value*/
+      31) {
+        each_value = ensure_array_like(
+          /*options*/
+          ctx2[1]
+        );
+        let i;
+        for (i = 0; i < each_value.length; i += 1) {
+          const child_ctx = get_each_context(ctx2, each_value, i);
+          if (each_blocks[i]) {
+            each_blocks[i].p(child_ctx, dirty);
+          } else {
+            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i].c();
+            each_blocks[i].m(div, null);
+          }
+        }
+        for (; i < each_blocks.length; i += 1) {
+          each_blocks[i].d(1);
+        }
+        each_blocks.length = each_value.length;
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div);
+      }
+      destroy_each(each_blocks, detaching);
+    }
+  };
+}
+function create_if_block_1(ctx) {
+  let div2;
+  let div0;
+  let div0_class_value;
+  let div1;
+  let t_value = (
+    /*option*/
+    ctx[12].label + ""
+  );
+  let t;
+  let div2_class_value;
+  let mounted;
+  let dispose;
+  function select_block_type_1(ctx2, dirty) {
+    if (
+      /*option*/
+      ctx2[12].icon != void 0
+    )
+      return create_if_block_2;
+    return create_else_block;
+  }
+  let current_block_type = select_block_type_1(ctx);
+  let if_block = current_block_type(ctx);
+  return {
+    c() {
+      div2 = element("div");
+      div0 = element("div");
+      if_block.c();
+      div1 = element("div");
+      t = text(t_value);
+      attr(div0, "class", div0_class_value = "option-icon " + /*option*/
+      (ctx[12].img ? (
+        /*option*/
+        ctx[12].img
+      ) : "") + " svelte-gas-8l8gth");
+      attr(div1, "class", "option-label svelte-gas-8l8gth");
+      attr(div2, "class", div2_class_value = "option " + /*active*/
+      (ctx[3] === /*option*/
+      ctx[12].value ? "active" : "") + " svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, div2, anchor);
+      append(div2, div0);
+      if_block.m(div0, null);
+      append(div2, div1);
+      append(div1, t);
+      if (!mounted) {
+        dispose = listen(div2, "click", function() {
+          if (is_function(
+            /*handleSelect*/
+            ctx[4](
+              /*item*/
+              ctx[2],
+              /*option*/
+              ctx[12]
+            )
+          ))
+            ctx[4](
+              /*item*/
+              ctx[2],
+              /*option*/
+              ctx[12]
+            ).apply(this, arguments);
+        });
+        mounted = true;
+      }
+    },
+    p(new_ctx, dirty) {
+      ctx = new_ctx;
+      if (current_block_type === (current_block_type = select_block_type_1(ctx)) && if_block) {
+        if_block.p(ctx, dirty);
+      } else {
+        if_block.d(1);
+        if_block = current_block_type(ctx);
+        if (if_block) {
+          if_block.c();
+          if_block.m(div0, null);
+        }
+      }
+      if (dirty & /*options*/
+      2 && div0_class_value !== (div0_class_value = "option-icon " + /*option*/
+      (ctx[12].img ? (
+        /*option*/
+        ctx[12].img
+      ) : "") + " svelte-gas-8l8gth")) {
+        attr(div0, "class", div0_class_value);
+      }
+      if (dirty & /*options*/
+      2 && t_value !== (t_value = /*option*/
+      ctx[12].label + ""))
+        set_data(t, t_value);
+      if (dirty & /*active, options*/
+      10 && div2_class_value !== (div2_class_value = "option " + /*active*/
+      (ctx[3] === /*option*/
+      ctx[12].value ? "active" : "") + " svelte-gas-8l8gth")) {
+        attr(div2, "class", div2_class_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div2);
+      }
+      if_block.d();
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_else_block(ctx) {
+  let img;
+  let img_src_value;
+  return {
+    c() {
+      img = element("img");
+      if (!src_url_equal(img.src, img_src_value = /*option*/
+      ctx[12].img))
+        attr(img, "src", img_src_value);
+      attr(img, "class", "svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, img, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*options*/
+      2 && !src_url_equal(img.src, img_src_value = /*option*/
+      ctx2[12].img)) {
+        attr(img, "src", img_src_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(img);
+      }
+    }
+  };
+}
+function create_if_block_2(ctx) {
+  let i;
+  let i_class_value;
+  return {
+    c() {
+      i = element("i");
+      attr(i, "class", i_class_value = null_to_empty(
+        /*option*/
+        ctx[12].icon
+      ) + " svelte-gas-8l8gth");
+    },
+    m(target, anchor) {
+      insert(target, i, anchor);
+    },
+    p(ctx2, dirty) {
+      if (dirty & /*options*/
+      2 && i_class_value !== (i_class_value = null_to_empty(
+        /*option*/
+        ctx2[12].icon
+      ) + " svelte-gas-8l8gth")) {
+        attr(i, "class", i_class_value);
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(i);
+      }
+    }
+  };
+}
+function create_each_block(ctx) {
+  let if_block_anchor;
+  let if_block = (
+    /*option*/
+    ctx[12] && /*option*/
+    ctx[12]?.value !== /*value*/
+    ctx[0] && create_if_block_1(ctx)
+  );
+  return {
+    c() {
+      if (if_block)
+        if_block.c();
+      if_block_anchor = empty();
+    },
+    m(target, anchor) {
+      if (if_block)
+        if_block.m(target, anchor);
+      insert(target, if_block_anchor, anchor);
+    },
+    p(ctx2, dirty) {
+      if (
+        /*option*/
+        ctx2[12] && /*option*/
+        ctx2[12]?.value !== /*value*/
+        ctx2[0]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block_1(ctx2);
+          if_block.c();
+          if_block.m(if_block_anchor.parentNode, if_block_anchor);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(if_block_anchor);
+      }
+      if (if_block)
+        if_block.d(detaching);
+    }
+  };
+}
+function create_fragment$3(ctx) {
+  let div2;
+  let div1;
+  let div0;
+  let div2_id_value;
+  let mounted;
+  let dispose;
+  let each_value_1 = ensure_array_like(
+    /*options*/
+    ctx[1]
+  );
+  let each_blocks = [];
+  for (let i = 0; i < each_value_1.length; i += 1) {
+    each_blocks[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+  }
+  let if_block = (
+    /*isOpen*/
+    ctx[5] && create_if_block(ctx)
+  );
+  let div2_levels = [
+    { class: "custom-select" },
+    /*$$restProps*/
+    ctx[7],
+    { id: div2_id_value = /*item*/
+    ctx[2]._id }
+  ];
+  let div_data_2 = {};
+  for (let i = 0; i < div2_levels.length; i += 1) {
+    div_data_2 = assign(div_data_2, div2_levels[i]);
+  }
+  return {
+    c() {
+      div2 = element("div");
+      div1 = element("div");
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].c();
+      }
+      div0 = element("div");
+      div0.innerHTML = `<i class="fas fa-chevron-down"></i>`;
+      if (if_block)
+        if_block.c();
+      attr(div0, "class", "chevron-icon svelte-gas-8l8gth");
+      attr(div1, "class", "selected-option svelte-gas-8l8gth");
+      toggle_class(
+        div1,
+        "selected",
+        /*isOpen*/
+        ctx[5]
+      );
+      set_attributes(div2, div_data_2);
+      toggle_class(div2, "svelte-gas-8l8gth", true);
+    },
+    m(target, anchor) {
+      insert(target, div2, anchor);
+      append(div2, div1);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        if (each_blocks[i]) {
+          each_blocks[i].m(div1, null);
+        }
+      }
+      append(div1, div0);
+      if (if_block)
+        if_block.m(div2, null);
+      if (!mounted) {
+        dispose = listen(
+          div1,
+          "click",
+          /*toggleDropdown*/
+          ctx[6]
+        );
+        mounted = true;
+      }
+    },
+    p(ctx2, [dirty]) {
+      if (dirty & /*options, undefined, value*/
+      3) {
+        each_value_1 = ensure_array_like(
+          /*options*/
+          ctx2[1]
+        );
+        let i;
+        for (i = 0; i < each_value_1.length; i += 1) {
+          const child_ctx = get_each_context_1(ctx2, each_value_1, i);
+          if (each_blocks[i]) {
+            each_blocks[i].p(child_ctx, dirty);
+          } else {
+            each_blocks[i] = create_each_block_1(child_ctx);
+            each_blocks[i].c();
+            each_blocks[i].m(div1, div0);
+          }
+        }
+        for (; i < each_blocks.length; i += 1) {
+          each_blocks[i].d(1);
+        }
+        each_blocks.length = each_value_1.length;
+      }
+      if (dirty & /*isOpen*/
+      32) {
+        toggle_class(
+          div1,
+          "selected",
+          /*isOpen*/
+          ctx2[5]
+        );
+      }
+      if (
+        /*isOpen*/
+        ctx2[5]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block(ctx2);
+          if_block.c();
+          if_block.m(div2, null);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+      set_attributes(div2, div_data_2 = get_spread_update(div2_levels, [
+        { class: "custom-select" },
+        dirty & /*$$restProps*/
+        128 && /*$$restProps*/
+        ctx2[7],
+        dirty & /*item*/
+        4 && div2_id_value !== (div2_id_value = /*item*/
+        ctx2[2]._id) && { id: div2_id_value }
+      ]));
+      toggle_class(div2, "svelte-gas-8l8gth", true);
+    },
+    i: noop,
+    o: noop,
+    d(detaching) {
+      if (detaching) {
+        detach(div2);
+      }
+      destroy_each(each_blocks, detaching);
+      if (if_block)
+        if_block.d();
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function isClickOutsideContainer(event, containerElement) {
+  const targetElement = event.target;
+  if (targetElement === containerElement) {
+    return false;
+  }
+  return !containerElement.contains(targetElement);
+}
+function instance$2($$self, $$props, $$invalidate) {
+  const omit_props_names = ["options", "value", "disabled", "key", "handle", "item", "active", "handleSelect"];
+  let $$restProps = compute_rest_props($$props, omit_props_names);
+  let { options = [] } = $$props;
+  let { value = "" } = $$props;
+  let { disabled = false } = $$props;
+  let { key = "" } = $$props;
+  let { handle = void 0 } = $$props;
+  let { item = {} } = $$props;
+  let { active: active2 = void 0 } = $$props;
+  let isOpen = false;
+  let { handleSelect = (item2, option) => {
+    if (handle) {
+      if (handle(item2, option.value)) {
+        $$invalidate(0, value = option.value);
+      }
+    } else {
+      $$invalidate(0, value = option.value);
+      item2.update({ [`${key}`]: value });
+    }
+    toggleDropdown();
+  } } = $$props;
+  function toggleDropdown() {
+    $$invalidate(5, isOpen = !isOpen);
+  }
+  function handleClickOutside(event) {
+    const isClickOutside = isClickOutsideContainer(event, document.getElementById(item._id));
+    if (isClickOutside) {
+      $$invalidate(5, isOpen = false);
+    }
+  }
+  onMount(() => {
+    window.addEventListener("click", handleClickOutside);
+  });
+  onDestroy(() => {
+    window.removeEventListener("click", handleClickOutside);
+  });
+  $$self.$$set = ($$new_props) => {
+    $$props = assign(assign({}, $$props), exclude_internal_props($$new_props));
+    $$invalidate(7, $$restProps = compute_rest_props($$props, omit_props_names));
+    if ("options" in $$new_props)
+      $$invalidate(1, options = $$new_props.options);
+    if ("value" in $$new_props)
+      $$invalidate(0, value = $$new_props.value);
+    if ("disabled" in $$new_props)
+      $$invalidate(8, disabled = $$new_props.disabled);
+    if ("key" in $$new_props)
+      $$invalidate(9, key = $$new_props.key);
+    if ("handle" in $$new_props)
+      $$invalidate(10, handle = $$new_props.handle);
+    if ("item" in $$new_props)
+      $$invalidate(2, item = $$new_props.item);
+    if ("active" in $$new_props)
+      $$invalidate(3, active2 = $$new_props.active);
+    if ("handleSelect" in $$new_props)
+      $$invalidate(4, handleSelect = $$new_props.handleSelect);
+  };
+  return [
+    value,
+    options,
+    item,
+    active2,
+    handleSelect,
+    isOpen,
+    toggleDropdown,
+    $$restProps,
+    disabled,
+    key,
+    handle
+  ];
+}
+class IconSelect extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$2, create_fragment$3, safe_not_equal, {
+      options: 1,
+      value: 0,
+      disabled: 8,
+      key: 9,
+      handle: 10,
+      item: 2,
+      active: 3,
+      handleSelect: 4
+    });
+  }
+}
+function create_fragment$2(ctx) {
+  let div;
+  let h1;
+  let p;
+  let iconselect;
+  let current;
+  iconselect = new IconSelect({});
+  return {
+    c() {
+      div = element("div");
+      h1 = element("h1");
+      h1.textContent = "Race";
+      p = element("p");
+      p.textContent = `${/*filterText*/
+      ctx[0]}`;
+      create_component(iconselect.$$.fragment);
+      attr(div, "class", "tab-content svelte-gas-1jp11e5");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      append(div, h1);
+      append(div, p);
+      mount_component(iconselect, div, null);
+      current = true;
+    },
+    p: noop,
+    i(local) {
+      if (current)
+        return;
+      transition_in(iconselect.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(iconselect.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div);
+      }
+      destroy_component(iconselect);
+    }
+  };
+}
+function instance$1($$self) {
+  let filterText;
+  return [filterText];
+}
 class Race extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, null, create_fragment$2, safe_not_equal, {});
+    init(this, options, instance$1, create_fragment$2, safe_not_equal, {});
   }
 }
 function create_fragment$1(ctx) {
@@ -14949,7 +15716,7 @@ function create_default_slot(ctx) {
   let updating_activeTab;
   let current;
   function tabs_1_activeTab_binding(value) {
-    ctx[6](value);
+    ctx[5](value);
   }
   let tabs_1_props = { tabs: (
     /*tabs*/
@@ -14968,8 +15735,7 @@ function create_default_slot(ctx) {
     c() {
       main = element("main");
       header = element("header");
-      header.textContent = `${/*lang*/
-      ctx[3]("GAS.PCTitle")}`;
+      header.textContent = `${localize("GAS.PCTitle")}`;
       section = element("section");
       create_component(tabs_1.$$.fragment);
       attr(main, "class", "svelte-gas-9lusmr");
@@ -15019,9 +15785,10 @@ function create_fragment(ctx) {
   let updating_elementRoot;
   let current;
   function applicationshell_elementRoot_binding(value) {
-    ctx[7](value);
+    ctx[6](value);
   }
   let applicationshell_props = {
+    stylesApp: true,
     $$slots: { default: [create_default_slot] },
     $$scope: { ctx }
   };
@@ -15077,7 +15844,6 @@ function instance($$self, $$props, $$invalidate) {
   let { elementRoot } = $$props;
   let { documentStore } = $$props;
   let { document: document2 } = $$props;
-  let lang = game.i18n.localize.bind(game.i18n);
   setContext("#doc", documentStore);
   let activeTab = dnd5e.tabs[0].id;
   const defaultTabs = [
@@ -15085,6 +15851,11 @@ function instance($$self, $$props, $$invalidate) {
       label: "Abilities",
       id: "abilities",
       component: Abilities
+    },
+    {
+      label: "Race",
+      id: "race",
+      component: Race
     },
     {
       label: "Background",
@@ -15095,11 +15866,6 @@ function instance($$self, $$props, $$invalidate) {
       label: "Class",
       id: "class",
       component: Class
-    },
-    {
-      label: "Race",
-      id: "race",
-      component: Race
     },
     {
       label: "Spells",
@@ -15119,16 +15885,15 @@ function instance($$self, $$props, $$invalidate) {
     if ("elementRoot" in $$props2)
       $$invalidate(0, elementRoot = $$props2.elementRoot);
     if ("documentStore" in $$props2)
-      $$invalidate(4, documentStore = $$props2.documentStore);
+      $$invalidate(3, documentStore = $$props2.documentStore);
     if ("document" in $$props2)
-      $$invalidate(5, document2 = $$props2.document);
+      $$invalidate(4, document2 = $$props2.document);
   };
   $$invalidate(2, tabs2 = defaultTabs);
   return [
     elementRoot,
     activeTab,
     tabs2,
-    lang,
     documentStore,
     document2,
     tabs_1_activeTab_binding,
@@ -15140,8 +15905,8 @@ class PCAppShell extends SvelteComponent {
     super();
     init(this, options, instance, create_fragment, safe_not_equal, {
       elementRoot: 0,
-      documentStore: 4,
-      document: 5
+      documentStore: 3,
+      document: 4
     });
   }
   get elementRoot() {
@@ -15152,14 +15917,14 @@ class PCAppShell extends SvelteComponent {
     flush();
   }
   get documentStore() {
-    return this.$$.ctx[4];
+    return this.$$.ctx[3];
   }
   set documentStore(documentStore) {
     this.$$set({ documentStore });
     flush();
   }
   get document() {
-    return this.$$.ctx[5];
+    return this.$$.ctx[4];
   }
   set document(document2) {
     this.$$set({ document: document2 });
@@ -15175,11 +15940,15 @@ class PCApplication extends SvelteApplication {
    */
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      title: "GAS.ActorStudio - GAS.PCTitle",
+      id: "foundryvtt-actor-studio-pc-sheet",
+      title: game.i18n.localize("GAS.ActorStudio") + " - " + game.i18n.localize("GAS.PCTitle"),
       // Automatically localized from `lang/en.json`.
       width: 500,
       height: 600,
       minWidth: 500,
+      resizable: true,
+      focusAuto: false,
+      minimizable: true,
       svelte: {
         class: PCAppShell,
         target: document.body

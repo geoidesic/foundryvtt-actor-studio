@@ -15,9 +15,11 @@
     "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
   },
   "dependencies": {
+    "@floating-ui/core": "^1.6.1",
     "@typhonjs-fvtt/runtime": "^0.1.2",
     "@typhonjs-fvtt/svelte-standard": "^0.1.0",
     "svelte": "^4.2.16",
+    "svelte-floating-ui": "^1.5.8",
     "svelte-select": "^5.8.3"
   },
   "devDependencies": {
@@ -36,7 +38,7 @@
     "not IE 11"
   ],
   "scripts": {
-    "dev": "rm style.css; /* remove style.css to enable HMR for css in dev */; vite; ",
+    "dev": " > style.css; /* remove style.css to enable HMR for css in dev */; vite; ",
     "build": "vite build",
     "eslint": "eslint ."
   }
