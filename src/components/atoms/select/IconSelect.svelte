@@ -1,14 +1,23 @@
+
 <script>
+
+/**
+ * @author: Noel da Costa
+ * @copyright: Arc Digital Limited 11-05-2024
+ * @license: https://creativecommons.org/licenses/by/4.0/
+ */
+
   import { onMount, onDestroy } from "svelte";
   import { truncate } from "~/src/helpers/Utility.js";
 
-  export let options = [];
-  export let value = "";
+  export let options = []; //- {value, label, icon || img}
+  export let value = ""; //
   export let disabled = false;
   export let key = "";
   export let handle = void 0;
   export let item = {};
   export let active = void 0;
+  export let shrinkIfNoIcon = true;
 
   let isOpen = false;
 
@@ -56,20 +65,24 @@
     window.removeEventListener("click", handleClickOutside);
   });
 
+  let textOnly = (option) => {
+    return option.icon || option.img ? false : true;
+  }
+
   
 </script>
-
 
 <template lang="pug">
 div.custom-select({...$$restProps} id="{item._id}")
   div.selected-option(on:click="{toggleDropdown}" class:selected="{isOpen}")
     +each("options as option, index")
       +if("option && option?.value === value")
-        div.option-icon(class="{option.img ? option.img : ''}")
-          +if("option.icon != undefined")
-            i(class="{option.icon}")
-            +else
-              img(src="{option.img}")
+        +if("!textOnly(option) && shrinkIfNoIcon")
+          div.option-icon(class="{option.img ? option.img : ''}")
+            +if("option.icon != undefined")
+              i(class="{option.icon}")
+              +else
+                img(src="{option.img}")
         div.option-label {truncate(option.label, 10)}
     div.chevron-icon
       i(class="fas fa-chevron-down")
@@ -79,11 +92,13 @@ div.custom-select({...$$restProps} id="{item._id}")
       +each("options as option, index")
         +if("option && option?.value !== value")
           div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(item, option)}")
-            div.option-icon(class="{option.img ? option.img : ''}")
-              +if("option.icon != undefined")
-                i(class="{option.icon}")
-                +else
-                  img(src="{option.img}")
+            +if("!textOnly(option) && shrinkIfNoIcon")
+              div.option-icon(class="{option.img ? option.img : ''}")
+                +if("option.icon != undefined")
+                  i(class="{option.icon}")
+                  +else
+                    img(src="{option.img}")
+                  
             div.option-label {option.label}
 
 </template>
@@ -97,7 +112,7 @@ div.custom-select({...$$restProps} id="{item._id}")
   .selected-option {
     display: flex;
     align-items: left;
-    padding: 0.35rem 0.75rem 0.35rem 0.15rem;
+    padding: 0.35rem 1.75rem 0.35rem 0.15rem;
     font-size: 0.875rem;
     font-weight: 400;
     color: #212529;
@@ -155,7 +170,7 @@ div.custom-select({...$$restProps} id="{item._id}")
   .option {
     display: flex;
     align-items: left;
-    padding: 0.375rem 0.75rem;
+    padding: 4px;
     font-size: 0.875rem;
     font-weight: 400;
     line-height: 1.5;
@@ -164,6 +179,7 @@ div.custom-select({...$$restProps} id="{item._id}")
     &.active {
       background-color: rgba(0, 0, 0, 0.2);
     }
+    
   }
 
   .option:hover {

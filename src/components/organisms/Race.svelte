@@ -1,26 +1,44 @@
-<script lang="ts">
-	import { offset, flip, shift } from "svelte-floating-ui/dom";
-	import { createFloatingActions } from "svelte-floating-ui";
-  
-	const [ floatingRef, floatingContent ] = createFloatingActions({
-	  strategy: "absolute",
-	  placement: "bottom",
-	  middleware: [
-		offset(6),
-	  ]
-	});
-  
-	let showTooltip: boolean = false;
-  </script>
-  
-  <button
-	on:mousedown={() => showTooltip = true}
-	on:mouseup={() => showTooltip = false}
-	use:floatingRef
-  >Hover me</button>
-  
-  {#if showTooltip}
-	<div style="position:absolute" use:floatingContent>
-	  Tooltip
-	</div>
-  {/if}
+<script>
+import SvelteSelect from 'svelte-select';
+import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
+let items = [
+	{ value: 'one', label: 'One', icon: "fas fa-image" },
+	{ value: 'two', label: 'Two' },
+	{ value: 'three', label: 'Three' },
+	{ value: 'four', label: 'Four' },
+	{ value: 'five', label: 'Five' },
+	{ value: 'six', label: 'Six' },
+	{ value: 'seven', label: 'Seven' },
+];
+let options = [...items];
+let filterText;
+let floatingConfig = {
+	strategy: 'fixed',
+};
+
+let item = {
+	update: () => {
+		console.log('update item')
+	}
+}
+</script>
+
+<template lang="pug">
+div.tab-content
+	h1 Race
+	//- SvelteSelect(
+	//- 	{items} 
+	//- 	bind:filterText 
+	//- 	floatingConfig 
+	//- 	listOpen
+	//- 	loading
+	//- 	placeholder="jmsp"
+	//- )
+	IconSelect({item} {options} active="three" value="three")
+</template>
+
+<style lang="scss" scoped>
+.tab-content {
+	--tjs-app-overflow: visible;
+}
+</style>
