@@ -17,7 +17,8 @@
   "dependencies": {
     "@typhonjs-fvtt/runtime": "^0.1.2",
     "@typhonjs-fvtt/svelte-standard": "^0.1.0",
-    "svelte": "^4.2.16"
+    "svelte": "^4.2.16",
+    "svelte-select": "^5.8.3"
   },
   "devDependencies": {
     "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
