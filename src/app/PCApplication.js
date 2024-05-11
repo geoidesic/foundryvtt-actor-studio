@@ -13,11 +13,14 @@ export default class PCApplication extends SvelteApplication
    static get defaultOptions()
    {
       return foundry.utils.mergeObject(super.defaultOptions, {
+         id: 'foundryvtt-actor-studio-pc-sheet',
          title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
          width: 500,
          height: 600,
          minWidth: 500,
-
+         resizable: true,
+         focusAuto: false,
+         minimizable: true,
          svelte: {
             class: PCAppShell,
             target: document.body

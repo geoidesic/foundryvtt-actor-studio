@@ -1,6 +1,7 @@
 <script>
 	import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount } from "svelte";
+	import { localize } from "#runtime/svelte/helper";
 	import Tabs from "~/src/components/molecules/Tabs.svelte";
 	import dnd5e from "~/config/systems/dnd5e.json"
   import Abilities from "~/src/components/organisms/Abilities.svelte";
@@ -14,18 +15,22 @@
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
 	 
-	let lang = game.i18n.localize.bind(game.i18n);
 	
   setContext("#doc", documentStore);
 	let activeTab = dnd5e.tabs[0].id
 
 	const defaultTabs = [
     { label: "Abilities", id: "abilities", component: Abilities },
+    { label: "Race", id: "race", component: Race },
     { label: "Background", id: "backgrond", component: Background },
     { label: "Class", id: "class", component: Class },
-    { label: "Race", id: "race", component: Race },
     { label: "Spells", id: "spells", component: Spells },
   ];
+
+	const stylesApp = {
+		'--tjs-app-overflow': 'visible'
+  };
+
 	$: tabs = defaultTabs;
 	  
 </script>
@@ -37,9 +42,9 @@
 <!-- ApplicationShell exports `elementRoot` which is the outer application shell element -->
 
 <template lang="pug">
-	ApplicationShell(bind:elementRoot)
+	ApplicationShell(bind:elementRoot stylesApp)
 		main 
-			header {lang("GAS.PCTitle")}
+			header {localize("GAS.PCTitle")}
 			section 
 				Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>
