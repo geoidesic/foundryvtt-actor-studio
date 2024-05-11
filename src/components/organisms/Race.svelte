@@ -1,6 +1,8 @@
 <script>
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
+import { extractMapIteratorObjectProperties } from "~/src/helpers/Utility.js";
+
 let items = [
 	{ value: 'one', label: 'One', icon: "fas fa-image" },
 	{ value: 'two', label: 'Two' },
@@ -16,11 +18,21 @@ let floatingConfig = {
 	strategy: 'fixed',
 };
 
-let item = {
-	update: () => {
-		console.log('update item')
-	}
+let active = null;
+let value = null;
+
+let handler = async (option) => {
+	console.log(await fromUuid(option));
 }
+
+// $: pack = game.packs.get('dnd5e.races');
+
+let pack = game.packs.get('dnd5e.races');
+console.log(pack);
+
+
+$: options = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
+$: console.log(options);
 </script>
 
 <template lang="pug">
@@ -34,7 +46,7 @@ div.tab-content
 	//- 	loading
 	//- 	placeholder="jmsp"
 	//- )
-	IconSelect({item} {options} active="three" value="three")
+	IconSelect({options} {handler} {active} {value} id="asdlfkj")
 </template>
 
 <style lang="scss" scoped>

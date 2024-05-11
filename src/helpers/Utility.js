@@ -46,6 +46,24 @@ export function getSubAttributeGroup(subAttribute) {
   }
 }
 
+export function extractMapIteratorObjectProperties(mapIterator, keys) {
+  const newArray = [];
+  for (const [key, data] of mapIterator) {
+    const newObj = {};
+    keys.forEach((k) => {
+      if(k.includes('->')){
+        const split = k.split('->');
+        newObj[split[1]] = data[split[0]];
+      } else {
+        newObj[k] = data[k];
+      }
+    });
+    newObj.key = key;
+    newArray.push(newObj);
+  }
+  return newArray;
+}
+
 
 export function getActorOwner(actor) {
   const owners = getOwners(actor);

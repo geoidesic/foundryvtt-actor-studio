@@ -13,24 +13,21 @@
   export let options = []; //- {value, label, icon || img}
   export let value = ""; //
   export let disabled = false;
-  export let key = "";
-  export let handle = void 0;
-  export let item = {};
+  export let handler = void 0;
   export let active = void 0;
   export let shrinkIfNoIcon = true;
+  export let placeHolder = false;
+  export let id = void 0;
 
   let isOpen = false;
 
-  export let handleSelect = (item, option) => {
-    if (handle) {
-      if (handle(item, option.value)) {
+  export let handleSelect = (option) => {
+    if (handler) {
+      if (handler(option.value)) {
         value = option.value;
       }
     } else {
-      value = option.value;
-      item.update({
-        [`${key}`]: value,
-      });
+      console.warn('You need to pass a click handler in')
     }
     toggleDropdown();
   };
@@ -52,7 +49,7 @@
   }
 
   function handleClickOutside(event) {
-    const isClickOutside = isClickOutsideContainer(event, document.getElementById(item._id));
+    const isClickOutside = isClickOutsideContainer(event, document.getElementById(id));
     if(isClickOutside) {
       isOpen = false;
     }
@@ -73,7 +70,7 @@
 </script>
 
 <template lang="pug">
-div.custom-select({...$$restProps} id="{item._id}")
+div.custom-select({...$$restProps} {id})
   div.selected-option(on:click="{toggleDropdown}" class:selected="{isOpen}")
     +each("options as option, index")
       +if("option && option?.value === value")
@@ -91,7 +88,7 @@ div.custom-select({...$$restProps} id="{item._id}")
     div.options-dropdown.dropshadow
       +each("options as option, index")
         +if("option && option?.value !== value")
-          div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(item, option)}")
+          div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
