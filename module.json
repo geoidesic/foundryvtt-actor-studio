@@ -9,6 +9,7 @@
       "lang": "en",
       "name": "English",
       "path": "lang/en.json",
+      "isDefault": true,
       "flags": {}
     }
   ],
@@ -28,6 +29,12 @@
     "minimum": "11",
     "verified": "11.315",
     "maximum": "12"
+  },
+  "flags": {
+    "hotReload": {
+      "extensions": ["json"],
+      "paths": ["lang"]
+    }
   },
   "relationships": {
     "systems": [
