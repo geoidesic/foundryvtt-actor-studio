@@ -3,6 +3,8 @@ import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
 import { extractMapIteratorObjectProperties } from "~/src/helpers/Utility.js";
 
+// export const actor;
+
 let items = [
 	{ value: 'one', label: 'One', icon: "fas fa-image" },
 	{ value: 'two', label: 'Two' },
@@ -22,7 +24,8 @@ let active = null;
 let value = null;
 
 let handler = async (option) => {
-	console.log(await fromUuid(option));
+	const race = await fromUuid(option);
+
 }
 
 // $: pack = game.packs.get('dnd5e.races');
