@@ -1,9 +1,9 @@
 <script>
-	import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount } from "svelte";
-	import { localize } from "#runtime/svelte/helper";
-	import Tabs from "~/src/components/molecules/Tabs.svelte";
-	import dnd5e from "~/config/systems/dnd5e.json"
+  import { localize } from "#runtime/svelte/helper";
+  import Tabs from "~/src/components/molecules/Tabs.svelte";
+  import dnd5e from "~/config/systems/dnd5e.json"
   import Abilities from "~/src/components/organisms/Abilities.svelte";
   import Background from "~/src/components/organisms/Background.svelte";
   import Class from "~/src/components/organisms/Class.svelte";
@@ -14,12 +14,12 @@
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
-	 
-	
+   
+  
   setContext("#doc", documentStore);
-	let activeTab = dnd5e.tabs[0].id
+  let activeTab = dnd5e.tabs[0].id
 
-	const defaultTabs = [
+  const defaultTabs = [
     { label: "Abilities", id: "abilities", component: Abilities },
     { label: "Race", id: "race", component: Race },
     { label: "Background", id: "backgrond", component: Background },
@@ -27,12 +27,21 @@
     { label: "Spells", id: "spells", component: Spells },
   ];
 
-	const stylesApp = {
-		'--tjs-app-overflow': 'visible'
+  const stylesApp = {
+      '--tjs-app-overflow': 'visible'
   };
 
-	$: tabs = defaultTabs;
-	  
+  onMount( async () => {
+    let actor = await Actor.create({
+      name: "New Test Actor",
+      type: "character",
+      img: "artwork/character-profile.jpg"
+    });
+    console.log(actor);
+  });
+
+  $: tabs = defaultTabs;
+    
 </script>
 
 <!-- This is necessary for Svelte to generate accessors TRL can access for `elementRoot` -->
@@ -42,18 +51,18 @@
 <!-- ApplicationShell exports `elementRoot` which is the outer application shell element -->
 
 <template lang="pug">
-	ApplicationShell(bind:elementRoot stylesApp)
-		main 
-			header {localize("GAS.PCTitle")}
-			section 
-				Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
+  ApplicationShell(bind:elementRoot stylesApp)
+    main 
+      header {localize("GAS.PCTitle")}
+      section 
+        Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>
 
 
 <style lang="scss">
-	 main {
-			text-align: center;
-			display: flex;
-			flex-direction: column;
-	 }
+   main {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+   }
 </style>
