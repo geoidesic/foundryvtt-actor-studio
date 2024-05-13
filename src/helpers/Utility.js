@@ -64,6 +64,11 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   return newArray;
 }
 
+export function getPackFolders(pack, depth=1) {
+  const allRootFolders = extractMapIteratorObjectProperties(pack.folders.entries(), ['depth', 'name', '_id']);
+  const foldersAtDepth = allRootFolders.filter(x => x.depth === depth);
+  return foldersAtDepth
+}
 
 export function getActorOwner(actor) {
   const owners = getOwners(actor);
@@ -213,4 +218,30 @@ export function truncate(str, n) {
 
 export function isParentActor(item) {
   return item?.parent?.constructor?.name === 'SurgeActor';
+}
+
+export function userHasRightPermissions() {
+  const userRole = (gameny).user.role;
+
+  // create actor (REQUIRED)
+  if (!((game).permissions.ACTOR_CREATE).includes(userRole)) {
+    ui.notifications?.error(game.i18n.localize('GAS.Permissions.NeedCreateActorError'));
+    return false;
+  }
+
+  // create item (optional)
+  if (!((game).permissions.ITEM_CREATE).includes(userRole)) {
+    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedCreateItemWarn'));
+  }
+
+  // upload files (optional)
+  if (!((game).permissions.FILES_UPLOAD).includes(userRole)) {
+    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileUploadWarn'));
+  }
+
+  // browse files (optional)
+  if (!((game).permissions.FILES_BROWSE).includes(userRole)) {
+    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileBrowseWarn'));
+  }
+  return true;
 }

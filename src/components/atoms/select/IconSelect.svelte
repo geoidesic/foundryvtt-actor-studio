@@ -1,104 +1,107 @@
 
-<script>
+  <script>
 
-/**
- * @author: Noel da Costa
- * @copyright: Arc Digital Limited 11-05-2024
- * @license: https://creativecommons.org/licenses/by/4.0/
- */
+  /**
+   * @author: Noel da Costa
+   * @copyright: Arc Digital Limited 11-05-2024
+   * @license: https://creativecommons.org/licenses/by/4.0/
+   */
 
-  import { onMount, onDestroy } from "svelte";
-  import { truncate } from "~/src/helpers/Utility.js";
+    import { onMount, onDestroy } from "svelte";
+    import { truncate } from "~/src/helpers/Utility.js";
 
-  export let options = []; //- {value, label, icon || img}
-  export let value = ""; //
-  export let disabled = false;
-  export let handler = void 0;
-  export let active = void 0;
-  export let shrinkIfNoIcon = true;
-  export let placeHolder = false;
-  export let id = void 0;
+    export let options = []; //- {value, label, icon || img}
+    export let value = ""; //
+    export let disabled = false;
+    export let handler = void 0;
+    export let active = void 0;
+    export let shrinkIfNoIcon = true;
+    export let placeHolder = false;
+    export let id = void 0;
 
-  let isOpen = false;
+    let isOpen = false;
 
-  export let handleSelect = (option) => {
-    if (handler) {
-      if (handler(option.value)) {
-        value = option.value;
+    export let handleSelect = (option) => {
+      if (handler) {
+        if (handler(option.value)) {
+          value = option.value;
+        }
+      } else {
+        console.warn('You need to pass a click handler in')
       }
-    } else {
-      console.warn('You need to pass a click handler in')
-    }
-    toggleDropdown();
-  };
+      toggleDropdown();
+    };
 
-  function toggleDropdown() {
-    isOpen = !isOpen;
-  }
-
-  function isClickOutsideContainer(event, containerElement) {
-    const targetElement = event.target;
-
-    // Check if the target element is the container itself
-    if (targetElement === containerElement) {
-      return false;
+    function toggleDropdown() {
+      isOpen = !isOpen;
     }
 
-    // Check if the target element is inside the container
-    return !containerElement.contains(targetElement);
-  }
+    function isClickOutsideContainer(event, containerElement) {
+      const targetElement = event.target;
 
-  function handleClickOutside(event) {
-    const isClickOutside = isClickOutsideContainer(event, document.getElementById(id));
-    if(isClickOutside) {
-      isOpen = false;
+      // Check if the target element is the container itself
+      if (targetElement === containerElement) {
+        return false;
+      }
+
+      // Check if the target element is inside the container
+      return !containerElement.contains(targetElement);
     }
-  }
 
-  onMount(() => {
-    window.addEventListener("click", handleClickOutside);
-  });
-  onDestroy(() => {
-    window.removeEventListener("click", handleClickOutside);
-  });
+    function handleClickOutside(event) {
+      const isClickOutside = isClickOutsideContainer(event, document.getElementById(id));
+      if(isClickOutside) {
+        isOpen = false;
+      }
+    }
 
-  let textOnly = (option) => {
-    return option.icon || option.img ? false : true;
-  }
+    onMount(() => {
+      window.addEventListener("click", handleClickOutside);
+    });
+    onDestroy(() => {
+      window.removeEventListener("click", handleClickOutside);
+    });
 
-  
-</script>
+    let textOnly = (option) => {
+      return option.icon || option.img ? false : true;
+    }
 
-<template lang="pug">
-div.custom-select({...$$restProps} {id})
-  div.selected-option(on:click="{toggleDropdown}" class:selected="{isOpen}")
-    +each("options as option, index")
-      +if("option && option?.value === value")
-        +if("!textOnly(option) && shrinkIfNoIcon")
-          div.option-icon(class="{option.img ? option.img : ''}")
-            +if("option.icon != undefined")
-              i(class="{option.icon}")
-              +else
-                img(src="{option.img}")
-        div.option-label {truncate(option.label, 10)}
-    div.chevron-icon
-      i(class="fas fa-chevron-down")
 
-  +if("isOpen")
-    div.options-dropdown.dropshadow
+    
+  </script>
+
+  <template lang="pug">
+  div.custom-select({...$$restProps} {id})
+    div.selected-option(on:click="{toggleDropdown}" class:selected="{isOpen}")
+      +if("placeHolder && !value")
+        div.placeholder {placeHolder}
       +each("options as option, index")
-        +if("option && option?.value !== value")
-          div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}")
-            +if("!textOnly(option) && shrinkIfNoIcon")
-              div.option-icon(class="{option.img ? option.img : ''}")
-                +if("option.icon != undefined")
-                  i(class="{option.icon}")
-                  +else
-                    img(src="{option.img}")
-                  
-            div.option-label {option.label}
+        +if("option && option?.value === value")
+          +if("!textOnly(option) && shrinkIfNoIcon")
+            div.option-icon(class="{option.img ? option.img : ''}")
+              +if("option.icon != undefined")
+                i(class="{option.icon}")
+                +else
+                  img(src="{option.img}")
+          div.option-label {truncate(option.label, 10)}
+      div.chevron-icon
+        i(class="fas fa-chevron-down")
 
-</template>
+    +if("isOpen")
+      div.options-dropdown.dropshadow
+        +each("options as option, index")
+          +if("option && option?.value !== value")
+            div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}")
+              +if("!textOnly(option) && shrinkIfNoIcon")
+                div.option-icon(class="{option.img ? option.img : ''}")
+                  +if("option.icon != undefined")
+                    i(class="{option.icon}")
+                    +else
+                      img(src="{option.img}")
+                    
+              div.option-label {option.label}
+
+  </template>
 
 <style lang="scss">
   .custom-select {

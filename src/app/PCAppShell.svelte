@@ -4,11 +4,11 @@
   import { localize } from "#runtime/svelte/helper";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
-  import Abilities from "~/src/components/organisms/Abilities.svelte";
-  import Background from "~/src/components/organisms/Background.svelte";
-  import Class from "~/src/components/organisms/Class.svelte";
-  import Race from "~/src/components/organisms/Race.svelte";
-  import Spells from "~/src/components/organisms/Spells.svelte";
+  import Abilities from "~/src/components/organisms/dnd5e/Abilities.svelte";
+  import Background from "~/src/components/organisms/dnd5e/Background.svelte";
+  import Class from "~/src/components/organisms/dnd5e/Class.svelte";
+  import Race from "~/src/components/organisms/dnd5e/Race.svelte";
+  import Spells from "~/src/components/organisms/dnd5e/Spells.svelte";
 
 
   export let elementRoot; //- passed in by SvelteApplication
@@ -32,12 +32,18 @@
   };
 
   onMount( async () => {
-    let actor = await Actor.create({
-      name: "New Test Actor",
-      type: "character",
-      img: "artwork/character-profile.jpg"
-    });
-    console.log(actor);
+    // let actor = await Actor.create({
+    //   name: "New Test Actor",
+    //   type: "character",
+    //   img: "artwork/character-profile.jpg"
+    // });
+    // console.log(actor);
+
+    // create actor in memory, instead of in game:
+    // new Actor.implementation({name:"temp", type: "npc"})
+    console.log(elementRoot);
+    console.log(document);
+    console.log(documentStore);
   });
 
   $: tabs = defaultTabs;

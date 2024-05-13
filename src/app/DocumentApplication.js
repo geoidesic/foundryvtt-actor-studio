@@ -1,19 +1,14 @@
-import PCAppShell                from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
-import { LOG_PREFIX } from "~/src/helpers/constants"
-
-export default class PCApplication extends SvelteApplication
-{
-
-
+import DocumentShell from "./DocumentShell.svelte";
+export default class DocumentApplication extends SvelteApplication {
   /**
    * Document store that monitors updates to any assigned document.
    *
    * @type {TJSDocument<foundry.abstract.Document>}
    */
   #documentStore = new TJSDocument(void 0, { delete: this.close.bind(this) });
-  
+
   /**
    * Holds the document unsubscription function.
    *
@@ -33,7 +28,7 @@ export default class PCApplication extends SvelteApplication
     });
     this.reactive.document = object;
 
-    console.info(`${LOG_PREFIX}PCApplication object`, object);
+    console.log(object);
   }
 
 
@@ -44,41 +39,22 @@ export default class PCApplication extends SvelteApplication
    * @see https://foundryvtt.com/api/Application.html#options
    */
   static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {         id: 'foundryvtt-actor-studio-pc-sheet',
-      title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
-      width: 500,
+    return foundry.utils.mergeObject(super.defaultOptions, {
+      title: "No Document Assigned",
+      width: 800,
       height: 600,
-      minWidth: 500,
       resizable: true,
-      focusAuto: false,
       minimizable: true,
+      dragDrop: [{ dragSelector: ".directory-list .item", dropSelector: null }],
       svelte: {
-        class: PCAppShell,
+        class: DocumentShell,
         target: document.body,
+        // You can assign a function that is invoked with MyItemApp instance as `this`.
         props: function () {
           return { documentStore: this.#documentStore, document: this.reactive.document };
         },
       },
     });
-  }
-
-  /**
-   * Drag&Drop handling
-   */
-  _canDragStart(selector) {
-    return true;
-  }
-  _canDragDrop(selector) {
-    return this.reactive.document.isOwner || game.user.isGM;
-  }
-  _onDragOver(event) { }
-
-  _onDragStart(event) {
-  
-  }
-
-  async _onDrop(event) {
-  
   }
 
   async close(options = {}) {
@@ -113,5 +89,4 @@ export default class PCApplication extends SvelteApplication
     super.render(force, options);
     return this;
   }
-
 }
