@@ -29,28 +29,10 @@ const selectHandler = async (option) => {
 }
 
 const clickHandler = async () => {
-	// await keepActorInMemoryAddItemsThenAddToGame();
 	await createActorInGameAndEmbedItems();
 }
 
-/**
- * Note: this doesn't work. While the race is technically added as an item, 
- * certain initialisations that the dnd5e system does when a race is added to the Actor are not handled correctly.
- * The result is that the race is hidden and none of it's features are shown as added... 
- * BUT because the race item exists on the Actor, you will then have a broken Actor for which you cannot alter the Race
- */
-const keepActorInMemoryAddItemsThenAddToGame = async () => {
-	const itemData = race.toObject()
-	$actor._source.items.push(itemData);
-	log.d('$actor.toObject', $actor.toObject());
-	
-	$actor._initialize();
-	log.d('$actor.toObject', $actor.toObject());
 
-	const actorInGame = await Actor.create($actor.toObject());
-
-	log.d('actorInGame', actorInGame)
-}
 
 /**
  * So the only viable strategy is to keep the race additions in storage 

@@ -3,6 +3,7 @@ import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/hel
 import PCApplication from './app/PCApplication.js';
 import { userHasRightPermissions } from '~/src/helpers/Utility'
 import { log } from '~/src/helpers/Utility'
+window.log = log;
 log.level = log.DEBUG;
 
 Hooks.once("ready", (app, html, data) => {
