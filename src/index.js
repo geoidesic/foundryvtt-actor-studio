@@ -2,10 +2,11 @@ import '../styles/init.scss'; // Import any styles as this includes them in the 
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import PCApplication from './app/PCApplication.js';
 import { userHasRightPermissions } from '~/src/helpers/Utility'
+import { log } from '~/src/helpers/Utility'
+log.level = log.DEBUG;
 
 Hooks.once("ready", (app, html, data) => {
-    console.log('[ >> Actor Studio Initialising... << ]');
-    console.log('[ >> Actor Studio Initialised << ]');
+    log.i('Initialising');
     CONFIG.debug.hooks = true;
     
 });
@@ -24,7 +25,7 @@ function addCreateNewActorButton(html, app) {
     if (userHasRightPermissions()) {
       const heroName = $('input', html).val();
       try {
-        new PCApplication(new Actor({name:heroName, type: "character"})).render(true, { focus: true })
+        new PCApplication(new Actor.implementation({name:heroName, type: "character"})).render(true, { focus: true })
         app.close();
       } catch (error) {
         ui.notifications.error(error.message);
@@ -35,11 +36,11 @@ function addCreateNewActorButton(html, app) {
 
 Hooks.on('renderApplication', (app, html, data)  => {
     
-    console.log(html);
-    console.log(app);
+  log.d(html);
+  log.d(app);
 
-    const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
-    if (app.title === createNewActorLocalized) {
-      addCreateNewActorButton(html, app);
-    }
+  const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
+  if (app.title === createNewActorLocalized) {
+    addCreateNewActorButton(html, app);
+  }
 })

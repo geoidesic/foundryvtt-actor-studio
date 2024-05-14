@@ -196,10 +196,25 @@ export function getEffectOrigin(effect) {
   return item;
 }
 
-export function log() {
-  const args = arguments;
-  console.info(`${LOG_PREFIX}}`, ...args);
-}
+export const log = {
+  ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
+  set level(level) {
+    if (level >= this.ASSERT) this.a = console.assert.bind(window.console);
+    else this.a = function () { };
+    if (level >= this.ERROR) this.e = console.error.bind(window.console);
+    else this.e = function () { };
+    if (level >= this.WARN) this.w = console.warn.bind(window.console);
+    else this.w = function () { };
+    if (level >= this.INFO) this.i = console.info.bind(window.console);
+    else this.i = function () { };
+    if (level >= this.DEBUG) this.d = console.debug.bind(window.console);
+    else this.d = function () { };
+    if (level >= this.VERBOSE) this.v = console.log.bind(window.console);
+    else this.v = function () { };
+    this.loggingLevel = level;
+  },
+  get level() { return this.loggingLevel; }
+};
 
 export async function getCompendiumEffect(effect) {
   if (!effect) {

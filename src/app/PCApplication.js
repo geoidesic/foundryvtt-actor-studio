@@ -1,7 +1,6 @@
 import PCAppShell                from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
-import { LOG_PREFIX } from "~/src/helpers/constants"
 
 export default class PCApplication extends SvelteApplication
 {
@@ -20,7 +19,6 @@ export default class PCApplication extends SvelteApplication
   #storeUnsubscribe;
 
   constructor(object) {
-    console.info(`${LOG_PREFIX}PCApplication object`, object);
     super(object);
     
     // Define document store property
@@ -31,10 +29,6 @@ export default class PCApplication extends SvelteApplication
       },
     });
     this.reactive.document = object;
-    
-    
-    console.info(`${LOG_PREFIX}PCApplication this.reactive.document`, this.reactive.document);
-
   }
 
   /**

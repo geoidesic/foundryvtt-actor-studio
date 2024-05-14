@@ -2,8 +2,8 @@
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
 import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter } from "~/src/helpers/Utility.js";
-import { log } from "~/src/helpers/Utility";
 import { getContext, onDestroy, onMount } from "svelte";
+    import { log } from '../../../helpers/Utility';
 
 let active = null, value = null, placeHolder = "Races";
 let pack = game.packs.get('dnd5e.races');
@@ -15,32 +15,60 @@ let race;
 
 const actor = getContext("#doc");
 
+
 $: actorObject = $actor.toObject();
 $: options = raceDefinitions;
-$: console.log(options);
 
-log('actor', actor);
-log('$actor', $actor);
+log.d('actor', actor);
+log.d('$actor', $actor);
 
 const selectHandler = async (option) => {
 	race = await fromUuid(option)
 	active = option; 
-	log('race', race);
+	log.d('race', race);
 }
 
 const clickHandler = async () => {
-	const itemData = race.toObject()
-	log('itemData', itemData)
-	const actorInGame = await Actor.create(actorObject);
-	log('actorInGame' , actorInGame)
-	const result = await addItemToCharacter(actorInGame, itemData)
-	log('result', result);
+	// await keepActorInMemoryAddItemsThenAddToGame();
+	await createActorInGameAndEmbedItems();
 }
 
-console.log('folders', folders);
-console.log('folderIds', folderIds);
-console.log('allRaceItems', allRaceItems);
-console.log('raceDefinitions', raceDefinitions);
+/**
+ * Note: this doesn't work. While the race is technically added as an item, 
+ * certain initialisations that the dnd5e system does when a race is added to the Actor are not handled correctly.
+ * The result is that the race is hidden and none of it's features are shown as added... 
+ * BUT because the race item exists on the Actor, you will then have a broken Actor for which you cannot alter the Race
+ */
+const keepActorInMemoryAddItemsThenAddToGame = async () => {
+	const itemData = race.toObject()
+	$actor._source.items.push(itemData);
+	log.d('$actor.toObject', $actor.toObject());
+	
+	$actor._initialize();
+	log.d('$actor.toObject', $actor.toObject());
+
+	const actorInGame = await Actor.create($actor.toObject());
+
+	log.d('actorInGame', actorInGame)
+}
+
+/**
+ * So the only viable strategy is to keep the race additions in storage 
+ * and then only add them after the Actor is added to the game
+ */
+const createActorInGameAndEmbedItems = async () => {
+	const itemData = race.toObject()
+	log.d('itemData', itemData)
+	const actorInGame = await Actor.create(actorObject);
+	log.d('actorInGame' , actorInGame)
+	const result = await addItemToCharacter(actorInGame, itemData)
+	log.d('result', result);
+}
+
+log.d('folders', folders);
+log.d('folderIds', folderIds);
+log.d('allRaceItems', allRaceItems);
+log.d('raceDefinitions', raceDefinitions);
 
 </script>
 
