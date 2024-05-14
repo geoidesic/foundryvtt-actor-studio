@@ -1,3 +1,6 @@
+
+import { LOG_PREFIX } from "~/src/helpers/constants"
+
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -193,6 +196,11 @@ export function getEffectOrigin(effect) {
   return item;
 }
 
+export function log() {
+  const args = arguments;
+  console.info(`${LOG_PREFIX}}`, ...args);
+}
+
 export async function getCompendiumEffect(effect) {
   if (!effect) {
     console.trace()
@@ -209,6 +217,10 @@ export async function getCompendiumEffect(effect) {
   return origin;
 }
 
+export const addItemToCharacter = async (actor, itemData) => {
+	itemData = itemData instanceof Array ? itemData : [itemData];
+	return actor.createEmbeddedDocuments("Item", itemData);
+}
 
 // truncate string
 export function truncate(str, n) {
@@ -221,7 +233,7 @@ export function isParentActor(item) {
 }
 
 export function userHasRightPermissions() {
-  const userRole = (gameny).user.role;
+  const userRole = game.user.role;
 
   // create actor (REQUIRED)
   if (!((game).permissions.ACTOR_CREATE).includes(userRole)) {

@@ -5,8 +5,6 @@ import { LOG_PREFIX } from "~/src/helpers/constants"
 
 export default class PCApplication extends SvelteApplication
 {
-
-
   /**
    * Document store that monitors updates to any assigned document.
    *
@@ -22,8 +20,9 @@ export default class PCApplication extends SvelteApplication
   #storeUnsubscribe;
 
   constructor(object) {
+    console.info(`${LOG_PREFIX}PCApplication object`, object);
     super(object);
-
+    
     // Define document store property
     Object.defineProperty(this.reactive, "document", {
       get: () => this.#documentStore.get(),
@@ -32,10 +31,11 @@ export default class PCApplication extends SvelteApplication
       },
     });
     this.reactive.document = object;
+    
+    
+    console.info(`${LOG_PREFIX}PCApplication this.reactive.document`, this.reactive.document);
 
-    console.info(`${LOG_PREFIX}PCApplication object`, object);
   }
-
 
   /**
    * Default Application options

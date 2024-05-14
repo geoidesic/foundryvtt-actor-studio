@@ -2,6 +2,7 @@
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount } from "svelte";
   import { localize } from "#runtime/svelte/helper";
+  import { log } from "~/src/helpers/Utility";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
   import Abilities from "~/src/components/organisms/dnd5e/Abilities.svelte";
@@ -41,9 +42,13 @@
 
     // create actor in memory, instead of in game:
     // new Actor.implementation({name:"temp", type: "npc"})
-    console.log(elementRoot);
-    console.log(document);
-    console.log(documentStore);
+    log('elementRoot', elementRoot);
+    log('documentStore', documentStore);
+    log('document', document);
+    // console.info(`${LOG_PREFIX}elementRoot`, elementRoot);
+    // console.info(`${LOG_PREFIX}documentStore`, documentStore);
+    // console.info(`${LOG_PREFIX}document`, document);
+
   });
 
   $: tabs = defaultTabs;

@@ -91,7 +91,7 @@
       div.options-dropdown.dropshadow
         +each("options as option, index")
           +if("option && option?.value !== value")
-            div.option(class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}")
+            div.option(class="{active === option.value ? 'active' : ''}" on:click!="{handleSelect(option)}")
               +if("!textOnly(option) && shrinkIfNoIcon")
                 div.option-icon(class="{option.img ? option.img : ''}")
                   +if("option.icon != undefined")
