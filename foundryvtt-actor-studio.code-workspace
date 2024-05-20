@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../hero-creation-tool"
+		},
+		{
+			"path": "../template-svelte-esm"
+		},
+		{
+			"path": "../essential-svelte-esm"
+		},
+		{
+			"path": "../surge-prototype"
+		},
+		{
+			"path": "../FoundryVTT-11"
+		}
+	],
+	"settings": {}
+}
