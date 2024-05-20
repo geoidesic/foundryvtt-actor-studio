@@ -63,7 +63,7 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot stylesApp)
     main 
-      header {localize("GAS.PCTitle")}
+      //- header {localize("GAS.PCTitle")}
       section 
         Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>

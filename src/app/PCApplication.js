@@ -38,8 +38,10 @@ export default class PCApplication extends SvelteApplication
    * @see https://foundryvtt.com/api/Application.html#options
    */
   static get defaultOptions() {
-    return foundry.utils.mergeObject(super.defaultOptions, {         id: 'foundryvtt-actor-studio-pc-sheet',
+    return foundry.utils.mergeObject(super.defaultOptions, {         
+      id: 'foundryvtt-actor-studio-pc-sheet',
       title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
+      classes: ['gas-actor-studio'],
       width: 500,
       height: 600,
       minWidth: 500,
@@ -94,9 +96,8 @@ export default class PCApplication extends SvelteApplication
   async #handleDocUpdate(doc, options) {
     const { action, data, documentType } = options;
 
-    // I need to add a 'subscribe' action to TJSDocument so must check void.
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
-      this.reactive.title = doc?.isToken ? `[Token] ${doc?.name}` : doc?.name ?? "No Document Assigned";
+      this.reactive.title += (' - '+doc.name);
     }
   }
 
