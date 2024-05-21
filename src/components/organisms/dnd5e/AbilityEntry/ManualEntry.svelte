@@ -7,13 +7,11 @@
   
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
-  const updateDebounce = (path) => Timing.debounce($doc.update({[path]: Number(event.target.value) }), 300);
+  const updateDebounce = Timing.debounce(updateValue, 300);
 
   function updateValue(attr, event) {
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    console.log(options);
     $doc.updateSource(options)
-    console.log($doc);
   }
 
   $: systemAbilities = game.system.config.abilities
@@ -27,7 +25,6 @@
     .flexrow.mb-sm
       .flex1 {ability[1].label}
       .flex3.right
-        //- input(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input="{updateDebounce(`system.abilities.${ability[1].abbreviation}.value`)}" style="width: 40px")
-        input(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateValue(ability[1].abbreviation, event)}" style="width: 40px")
+        input(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}" style="width: 40px")
 </template>
 
