@@ -25,6 +25,6 @@
     .flexrow.mb-sm
       .flex1 {ability[1].label}
       .flex3.right
-        input(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}" style="width: 40px")
+        input.center(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}" style="width: 40px")
 </template>
 
