@@ -1,14 +1,13 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount } from "svelte";
-  import { localize } from "#runtime/svelte/helper";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
-  import Abilities from "~/src/components/organisms/dnd5e/Abilities.svelte";
-  import Background from "~/src/components/organisms/dnd5e/Background.svelte";
-  import Class from "~/src/components/organisms/dnd5e/Class.svelte";
-  import Race from "~/src/components/organisms/dnd5e/Race.svelte";
-  import Spells from "~/src/components/organisms/dnd5e/Spells.svelte";
+  import Abilities from "~/src/components/organisms/dnd5e/Tabs/Abilities.svelte";
+  import Background from "~/src/components/organisms/dnd5e/Tabs/Background.svelte";
+  import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
+  import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
+  import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
 
 
   export let elementRoot; //- passed in by SvelteApplication
@@ -78,5 +77,11 @@
 
   section {
     padding: 20px; // Add some padding for spacing
+  }
+  
+  :global(.tab-content) {
+    .border-right {
+      border-right: 4px solid brown;
+    }
   }
 </style>

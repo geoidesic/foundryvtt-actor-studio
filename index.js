@@ -207,20 +207,20 @@ function space() {
 function empty() {
   return text("");
 }
-function listen(node, event, handler, options) {
-  node.addEventListener(event, handler, options);
-  return () => node.removeEventListener(event, handler, options);
+function listen(node, event2, handler, options) {
+  node.addEventListener(event2, handler, options);
+  return () => node.removeEventListener(event2, handler, options);
 }
 function prevent_default(fn) {
-  return function(event) {
-    event.preventDefault();
-    return fn.call(this, event);
+  return function(event2) {
+    event2.preventDefault();
+    return fn.call(this, event2);
   };
 }
 function stop_propagation(fn) {
-  return function(event) {
-    event.stopPropagation();
-    return fn.call(this, event);
+  return function(event2) {
+    event2.stopPropagation();
+    return fn.call(this, event2);
   };
 }
 function attr(node, attribute, value) {
@@ -431,6 +431,25 @@ function onMount(fn) {
 }
 function onDestroy(fn) {
   get_current_component().$$.on_destroy.push(fn);
+}
+function createEventDispatcher() {
+  const component = get_current_component();
+  return (type, detail, { cancelable = false } = {}) => {
+    const callbacks = component.$$.callbacks[type];
+    if (callbacks) {
+      const event2 = custom_event(
+        /** @type {string} */
+        type,
+        detail,
+        { cancelable }
+      );
+      callbacks.slice().forEach((fn) => {
+        fn.call(component, event2);
+      });
+      return !event2.defaultPrevented;
+    }
+    return true;
+  };
 }
 function setContext(key, context) {
   get_current_component().$$.context.set(key, context);
@@ -1208,7 +1227,7 @@ class A11yHelper {
    *
    * TODO: Evaluate / test against touch input devices.
    */
-  static getFocusSource({ event, x, y, focusEl, debug = false }) {
+  static getFocusSource({ event: event2, x, y, focusEl, debug = false }) {
     if (focusEl !== void 0 && !(focusEl instanceof HTMLElement) && typeof focusEl !== "string") {
       throw new TypeError(
         `A11yHelper.getFocusSource error: 'focusEl' is not a HTMLElement or string.`
@@ -1217,7 +1236,7 @@ class A11yHelper {
     if (debug !== void 0 && typeof debug !== "boolean") {
       throw new TypeError(`A11yHelper.getFocusSource error: 'debug' is not a boolean.`);
     }
-    if (event === void 0) {
+    if (event2 === void 0) {
       if (typeof x !== "number") {
         throw new TypeError(`A11yHelper.getFocusSource error: 'event' not defined and 'x' is not a number.`);
       }
@@ -1231,7 +1250,7 @@ class A11yHelper {
         y
       };
     }
-    if (!(event instanceof KeyboardEvent) && !(event instanceof MouseEvent)) {
+    if (!(event2 instanceof KeyboardEvent) && !(event2 instanceof MouseEvent)) {
       throw new TypeError(`A11yHelper.getFocusSource error: 'event' is not a KeyboardEvent or MouseEvent.`);
     }
     if (x !== void 0 && !Number.isInteger(x)) {
@@ -1240,21 +1259,21 @@ class A11yHelper {
     if (y !== void 0 && !Number.isInteger(y)) {
       throw new TypeError(`A11yHelper.getFocusSource error: 'y' is not a number.`);
     }
-    const targetEl = event.target;
+    const targetEl = event2.target;
     if (!(targetEl instanceof HTMLElement)) {
       throw new TypeError(`A11yHelper.getFocusSource error: 'event.target' is not an HTMLElement.`);
     }
     const result = { debug };
-    if (event instanceof MouseEvent) {
-      if (event?.button !== 2 && event.type === "contextmenu") {
+    if (event2 instanceof MouseEvent) {
+      if (event2?.button !== 2 && event2.type === "contextmenu") {
         const rect = targetEl.getBoundingClientRect();
         result.x = x ?? rect.left + rect.width / 2;
         result.y = y ?? rect.top + rect.height / 2;
         result.focusEl = focusEl !== void 0 ? [targetEl, focusEl] : [targetEl];
         result.source = "keyboard";
       } else {
-        result.x = x ?? event.pageX;
-        result.y = y ?? event.pageY;
+        result.x = x ?? event2.pageX;
+        result.y = y ?? event2.pageY;
         result.focusEl = focusEl !== void 0 ? [focusEl] : void 0;
       }
     } else {
@@ -1631,19 +1650,19 @@ class Timing {
   static doubleClick({ single, double, delay = 400 }) {
     let clicks = 0;
     let timeoutId;
-    return (event) => {
+    return (event2) => {
       clicks++;
       if (clicks === 1) {
         timeoutId = globalThis.setTimeout(() => {
           if (typeof single === "function") {
-            single(event);
+            single(event2);
           }
           clicks = 0;
         }, delay);
       } else {
         globalThis.clearTimeout(timeoutId);
         if (typeof double === "function") {
-          double(event);
+          double(event2);
         }
         clicks = 0;
       }
@@ -9921,24 +9940,24 @@ function draggable(node, {
   if (active2) {
     activateListeners();
   }
-  function onDragPointerDown(event) {
-    if (event.button !== button || !event.isPrimary) {
+  function onDragPointerDown(event2) {
+    if (event2.button !== button || !event2.isPrimary) {
       return;
     }
     if (!position.enabled) {
       return;
     }
-    if (ignoreTargetClassList !== void 0 && event.target instanceof HTMLElement) {
+    if (ignoreTargetClassList !== void 0 && event2.target instanceof HTMLElement) {
       for (const targetClass of ignoreTargetClassList) {
-        if (event.target.classList.contains(targetClass)) {
+        if (event2.target.classList.contains(targetClass)) {
           return;
         }
       }
     }
-    if (hasTargetClassList !== void 0 && event.target instanceof HTMLElement) {
+    if (hasTargetClassList !== void 0 && event2.target instanceof HTMLElement) {
       let foundTarget = false;
       for (const targetClass of hasTargetClassList) {
-        if (event.target.classList.contains(targetClass)) {
+        if (event2.target.classList.contains(targetClass)) {
           foundTarget = true;
           break;
         }
@@ -9947,29 +9966,29 @@ function draggable(node, {
         return;
       }
     }
-    event.preventDefault();
+    event2.preventDefault();
     dragging = false;
     initialPosition = position.get();
-    initialDragPoint = { x: event.clientX, y: event.clientY };
+    initialDragPoint = { x: event2.clientX, y: event2.clientY };
     node.addEventListener(...handlers.dragMove);
     node.addEventListener(...handlers.dragUp);
-    node.setPointerCapture(event.pointerId);
+    node.setPointerCapture(event2.pointerId);
   }
-  function onDragPointerChange(event) {
-    if ((event.buttons & 1) === 0) {
-      onDragPointerUp(event);
+  function onDragPointerChange(event2) {
+    if ((event2.buttons & 1) === 0) {
+      onDragPointerUp(event2);
       return;
     }
-    if (event.button !== -1 || !event.isPrimary) {
+    if (event2.button !== -1 || !event2.isPrimary) {
       return;
     }
-    event.preventDefault();
+    event2.preventDefault();
     if (!dragging && typeof storeDragging?.set === "function") {
       dragging = true;
       storeDragging.set(true);
     }
-    const newLeft = initialPosition.left + (event.clientX - initialDragPoint.x);
-    const newTop = initialPosition.top + (event.clientY - initialDragPoint.y);
+    const newLeft = initialPosition.left + (event2.clientX - initialDragPoint.x);
+    const newTop = initialPosition.top + (event2.clientY - initialDragPoint.y);
     if (ease) {
       quickTo(newTop, newLeft);
     } else {
@@ -9978,8 +9997,8 @@ function draggable(node, {
       position.set(positionData);
     }
   }
-  function onDragPointerUp(event) {
-    event.preventDefault();
+  function onDragPointerUp(event2) {
+    event2.preventDefault();
     dragging = false;
     if (typeof storeDragging?.set === "function") {
       storeDragging.set(false);
@@ -10175,7 +10194,7 @@ class DraggableOptions {
   }
 }
 draggable.options = (options) => new DraggableOptions(options);
-function create_if_block$5(ctx) {
+function create_if_block$8(ctx) {
   let span;
   let t;
   return {
@@ -10222,7 +10241,7 @@ function create_if_block$5(ctx) {
     }
   };
 }
-function create_fragment$c(ctx) {
+function create_fragment$d(ctx) {
   let a;
   let html_tag;
   let html_anchor;
@@ -10232,7 +10251,7 @@ function create_fragment$c(ctx) {
   let dispose;
   let if_block = (
     /*label*/
-    ctx[3] && create_if_block$5(ctx)
+    ctx[3] && create_if_block$8(ctx)
   );
   return {
     c() {
@@ -10315,7 +10334,7 @@ function create_fragment$c(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block$5(ctx2);
+          if_block = create_if_block$8(ctx2);
           if_block.c();
           if_block.m(a, null);
         }
@@ -10368,7 +10387,7 @@ function create_fragment$c(ctx) {
   };
 }
 const s_REGEX_HTML = /^\s*<.*>$/;
-function instance$8($$self, $$props, $$invalidate) {
+function instance$d($$self, $$props, $$invalidate) {
   let title;
   let icon;
   let label;
@@ -10376,35 +10395,35 @@ function instance$8($$self, $$props, $$invalidate) {
   let keyCode;
   let styles;
   let { button = void 0 } = $$props;
-  function onClick(event) {
+  function onClick(event2) {
     const invoke = button?.onPress ?? button?.onclick;
     if (typeof invoke === "function") {
-      invoke.call(button, event);
+      invoke.call(button, event2);
       $$invalidate(0, button);
     }
   }
-  function onContextMenu(event) {
+  function onContextMenu(event2) {
     const invoke = button?.onContextMenu;
     if (typeof invoke === "function") {
-      invoke.call(button, event);
+      invoke.call(button, event2);
       $$invalidate(0, button);
     }
   }
-  function onKeydown(event) {
-    if (event.code === keyCode) {
-      event.preventDefault();
-      event.stopPropagation();
+  function onKeydown(event2) {
+    if (event2.code === keyCode) {
+      event2.preventDefault();
+      event2.stopPropagation();
     }
   }
-  function onKeyup(event) {
-    if (event.code === keyCode) {
+  function onKeyup(event2) {
+    if (event2.code === keyCode) {
       const invoke = button.onPress ?? button.onclick;
       if (typeof invoke === "function") {
-        invoke.call(button, event);
+        invoke.call(button, event2);
         $$invalidate(0, button);
       }
-      event.preventDefault();
-      event.stopPropagation();
+      event2.preventDefault();
+      event2.stopPropagation();
     }
   }
   $$self.$$set = ($$props2) => {
@@ -10453,7 +10472,7 @@ function instance$8($$self, $$props, $$invalidate) {
 class TJSHeaderButton extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$8, create_fragment$c, safe_not_equal, { button: 0 });
+    init(this, options, instance$d, create_fragment$d, safe_not_equal, { button: 0 });
   }
   get button() {
     return this.$$.ctx[0];
@@ -10463,7 +10482,7 @@ class TJSHeaderButton extends SvelteComponent {
     flush();
   }
 }
-function get_each_context$2(ctx, list, i) {
+function get_each_context$3(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[31] = list[i];
   return child_ctx;
@@ -10473,7 +10492,7 @@ function get_each_context_1$2(ctx, list, i) {
   child_ctx[31] = list[i];
   return child_ctx;
 }
-function create_if_block$4(ctx) {
+function create_if_block$7(ctx) {
   let img;
   let img_src_value;
   return {
@@ -10593,7 +10612,7 @@ function create_each_block_1$2(ctx) {
     }
   };
 }
-function create_each_block$2(ctx) {
+function create_each_block$3(ctx) {
   let switch_instance;
   let switch_instance_anchor;
   let current;
@@ -10703,7 +10722,7 @@ function create_key_block(ctx) {
   let mounted;
   let dispose;
   let if_block = typeof /*$storeHeaderIcon*/
-  ctx[6] === "string" && create_if_block$4(ctx);
+  ctx[6] === "string" && create_if_block$7(ctx);
   let each_value_1 = ensure_array_like(
     /*buttonsLeft*/
     ctx[1]
@@ -10721,7 +10740,7 @@ function create_key_block(ctx) {
   );
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+    each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
   }
   const out_1 = (i) => transition_out(each_blocks[i], 1, 1, () => {
     each_blocks[i] = null;
@@ -10808,7 +10827,7 @@ function create_key_block(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block$4(ctx2);
+          if_block = create_if_block$7(ctx2);
           if_block.c();
           if_block.m(header, t0);
         }
@@ -10864,12 +10883,12 @@ function create_key_block(ctx) {
         );
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context$2(ctx2, each_value, i);
+          const child_ctx = get_each_context$3(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
             transition_in(each_blocks[i], 1);
           } else {
-            each_blocks[i] = create_each_block$2(child_ctx);
+            each_blocks[i] = create_each_block$3(child_ctx);
             each_blocks[i].c();
             transition_in(each_blocks[i], 1);
             each_blocks[i].m(header, null);
@@ -10931,7 +10950,7 @@ function create_key_block(ctx) {
     }
   };
 }
-function create_fragment$b(ctx) {
+function create_fragment$c(ctx) {
   let previous_key = (
     /*draggable*/
     ctx[0]
@@ -10982,7 +11001,7 @@ function create_fragment$b(ctx) {
     }
   };
 }
-function instance$7($$self, $$props, $$invalidate) {
+function instance$c($$self, $$props, $$invalidate) {
   let $focusKeep;
   let $focusAuto;
   let $elementRoot;
@@ -11022,9 +11041,9 @@ function instance$7($$self, $$props, $$invalidate) {
   let buttonsLeft;
   let buttonsRight;
   function minimizable(node, booleanStore) {
-    const callback = (event) => {
-      if (event.target.classList.contains("window-title") || event.target.classList.contains("window-header") || event.target.classList.contains("keep-minimized")) {
-        application._onToggleMinimize(event);
+    const callback = (event2) => {
+      if (event2.target.classList.contains("window-title") || event2.target.classList.contains("window-header") || event2.target.classList.contains("keep-minimized")) {
+        application._onToggleMinimize(event2);
       }
     };
     function activateListeners() {
@@ -11047,7 +11066,7 @@ function instance$7($$self, $$props, $$invalidate) {
       destroy: () => removeListeners()
     };
   }
-  function onPointerdown(event) {
+  function onPointerdown(event2) {
     const rootEl = $elementRoot;
     if ($focusAuto && rootEl instanceof HTMLElement && rootEl?.isConnected) {
       if ($focusKeep) {
@@ -11055,7 +11074,7 @@ function instance$7($$self, $$props, $$invalidate) {
         if (focusOutside) {
           rootEl.focus();
         } else {
-          event.preventDefault();
+          event2.preventDefault();
         }
       } else {
         rootEl.focus();
@@ -11140,10 +11159,10 @@ function instance$7($$self, $$props, $$invalidate) {
 class TJSApplicationHeader extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$7, create_fragment$b, safe_not_equal, { draggable: 0, draggableOptions: 20 }, null, [-1, -1]);
+    init(this, options, instance$c, create_fragment$c, safe_not_equal, { draggable: 0, draggableOptions: 20 }, null, [-1, -1]);
   }
 }
-function create_fragment$a(ctx) {
+function create_fragment$b(ctx) {
   let div;
   let mounted;
   let dispose;
@@ -11179,7 +11198,7 @@ function create_fragment$a(ctx) {
     }
   };
 }
-function instance$6($$self, $$props, $$invalidate) {
+function instance$b($$self, $$props, $$invalidate) {
   let { elementRoot = void 0 } = $$props;
   let { enabled = true } = $$props;
   let ignoreElements, wrapEl;
@@ -11221,10 +11240,10 @@ function instance$6($$self, $$props, $$invalidate) {
 class TJSFocusWrap extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$6, create_fragment$a, safe_not_equal, { elementRoot: 2, enabled: 3 });
+    init(this, options, instance$b, create_fragment$b, safe_not_equal, { elementRoot: 2, enabled: 3 });
   }
 }
-function create_fragment$9(ctx) {
+function create_fragment$a(ctx) {
   let div;
   let resizable_action;
   let mounted;
@@ -11279,7 +11298,7 @@ function create_fragment$9(ctx) {
     }
   };
 }
-function instance$5($$self, $$props, $$invalidate) {
+function instance$a($$self, $$props, $$invalidate) {
   let $storeElementRoot;
   let $storeMinimized;
   let $storeResizable;
@@ -11322,8 +11341,8 @@ function instance$5($$self, $$props, $$invalidate) {
     } else {
       node.style.display = "none";
     }
-    function onResizePointerDown(event) {
-      event.preventDefault();
+    function onResizePointerDown(event2) {
+      event2.preventDefault();
       resizing = false;
       position = application.position.get();
       if (position.height === "auto") {
@@ -11332,31 +11351,31 @@ function instance$5($$self, $$props, $$invalidate) {
       if (position.width === "auto") {
         position.width = $storeElementRoot.clientWidth;
       }
-      initialPosition = { x: event.clientX, y: event.clientY };
+      initialPosition = { x: event2.clientX, y: event2.clientY };
       node.addEventListener(...handlers.resizeMove);
       node.addEventListener(...handlers.resizeUp);
-      node.setPointerCapture(event.pointerId);
+      node.setPointerCapture(event2.pointerId);
     }
-    function onResizePointerMove(event) {
-      event.preventDefault();
+    function onResizePointerMove(event2) {
+      event2.preventDefault();
       if (!resizing && typeof storeResizing2?.set === "function") {
         resizing = true;
         storeResizing2.set(true);
       }
       application.position.set({
-        width: position.width + (event.clientX - initialPosition.x),
-        height: position.height + (event.clientY - initialPosition.y)
+        width: position.width + (event2.clientX - initialPosition.x),
+        height: position.height + (event2.clientY - initialPosition.y)
       });
     }
-    function onResizePointerUp(event) {
+    function onResizePointerUp(event2) {
       resizing = false;
       if (typeof storeResizing2?.set === "function") {
         storeResizing2.set(false);
       }
-      event.preventDefault();
+      event2.preventDefault();
       node.removeEventListener(...handlers.resizeMove);
       node.removeEventListener(...handlers.resizeUp);
-      application?._onResize?.(event);
+      application?._onResize?.(event2);
     }
     return {
       update: ({ active: active3 }) => {
@@ -11408,7 +11427,7 @@ function instance$5($$self, $$props, $$invalidate) {
 class ResizableHandle extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$5, create_fragment$9, safe_not_equal, { isResizable: 7 });
+    init(this, options, instance$a, create_fragment$a, safe_not_equal, { isResizable: 7 });
   }
 }
 function create_else_block$1(ctx) {
@@ -11667,7 +11686,7 @@ function create_else_block$1(ctx) {
     }
   };
 }
-function create_if_block$3(ctx) {
+function create_if_block$6(ctx) {
   let div;
   let tjsapplicationheader;
   let t0;
@@ -11941,12 +11960,12 @@ function create_if_block$3(ctx) {
     }
   };
 }
-function create_fragment$8(ctx) {
+function create_fragment$9(ctx) {
   let current_block_type_index;
   let if_block;
   let if_block_anchor;
   let current;
-  const if_block_creators = [create_if_block$3, create_else_block$1];
+  const if_block_creators = [create_if_block$6, create_else_block$1];
   const if_blocks = [];
   function select_block_type(ctx2, dirty) {
     if (
@@ -12009,7 +12028,7 @@ function create_fragment$8(ctx) {
     }
   };
 }
-function instance$4($$self, $$props, $$invalidate) {
+function instance$9($$self, $$props, $$invalidate) {
   let $focusKeep;
   let $focusAuto;
   let $minimized;
@@ -12047,11 +12066,11 @@ function instance$4($$self, $$props, $$invalidate) {
   let oldTransition = TJSDefaultTransition.default;
   let oldTransitionOptions = void 0;
   onMount(() => elementRoot.focus());
-  function onClosePopup(event) {
+  function onClosePopup(event2) {
     if (!$focusAuto) {
       return;
     }
-    const targetEl = event?.detail?.target;
+    const targetEl = event2?.detail?.target;
     if (!(targetEl instanceof HTMLElement)) {
       return;
     }
@@ -12071,12 +12090,12 @@ function instance$4($$self, $$props, $$invalidate) {
       }
     }
   }
-  function onKeydown(event) {
-    if ((event.target === elementRoot || event.target === elementContent) && KeyboardManager && KeyboardManager?._getMatchingActions?.(KeyboardManager?.getKeyboardEventContext?.(event))?.length) {
-      event.target?.blur();
+  function onKeydown(event2) {
+    if ((event2.target === elementRoot || event2.target === elementContent) && KeyboardManager && KeyboardManager?._getMatchingActions?.(KeyboardManager?.getKeyboardEventContext?.(event2))?.length) {
+      event2.target?.blur();
       return;
     }
-    if (focusWrapEnabled && event.shiftKey && event.code === "Tab") {
+    if (focusWrapEnabled && event2.shiftKey && event2.code === "Tab") {
       const allFocusable = A11yHelper.getFocusableElements(elementRoot, s_IGNORE_CLASSES);
       const firstFocusEl = allFocusable.length > 0 ? allFocusable[0] : void 0;
       const lastFocusEl = allFocusable.length > 0 ? allFocusable[allFocusable.length - 1] : void 0;
@@ -12084,8 +12103,8 @@ function instance$4($$self, $$props, $$invalidate) {
         if (lastFocusEl instanceof HTMLElement && firstFocusEl !== lastFocusEl) {
           lastFocusEl.focus();
         }
-        event.preventDefault();
-        event.stopPropagation();
+        event2.preventDefault();
+        event2.stopPropagation();
       }
     }
     if (typeof application?.options?.popOut === "boolean" && application.options.popOut && application !== globalThis.ui?.activeWindow) {
@@ -12097,15 +12116,15 @@ function instance$4($$self, $$props, $$invalidate) {
       application.bringToTop.call(application);
     }
   }
-  function onPointerdownContent(event) {
-    const focusable = A11yHelper.isFocusable(event.target);
+  function onPointerdownContent(event2) {
+    const focusable = A11yHelper.isFocusable(event2.target);
     if (!focusable && $focusAuto) {
       if ($focusKeep) {
         const focusOutside = document.activeElement instanceof HTMLElement && !elementRoot.contains(document.activeElement);
         if (focusOutside) {
           elementContent.focus();
         } else {
-          event.preventDefault();
+          event2.preventDefault();
         }
       } else {
         elementContent.focus();
@@ -12304,8 +12323,8 @@ class ApplicationShell extends SvelteComponent {
     init(
       this,
       options,
-      instance$4,
-      create_fragment$8,
+      instance$9,
+      create_fragment$9,
       safe_not_equal,
       {
         elementContent: 0,
@@ -12448,8 +12467,8 @@ cssVariables.setProperties({
   // TJSApplicationShell app background.
   "--tjs-app-background": `url("${globalThis.foundry.utils.getRoute("/ui/denim075.png")}")`
 }, false);
-function preventDefault(event) {
-  event.preventDefault();
+function preventDefault(event2) {
+  event2.preventDefault();
   return;
 }
 function ripple({
@@ -12500,34 +12519,34 @@ function ripple({
         }
       };
     }
-    function keyHandler(event) {
-      if (event?.code === keyCode) {
-        createRipple(event);
+    function keyHandler(event2) {
+      if (event2?.code === keyCode) {
+        createRipple(event2);
       }
     }
     const eventFn = Number.isInteger(debounce) && debounce > 0 ? Timing.debounce(createRipple, debounce) : createRipple;
     const keyEventFn = Number.isInteger(debounce) && debounce > 0 ? Timing.debounce(keyHandler, debounce) : keyHandler;
-    for (const event of events) {
-      if (["keydown", "keyup"].includes(event)) {
-        element2.addEventListener(event, keyEventFn);
+    for (const event2 of events) {
+      if (["keydown", "keyup"].includes(event2)) {
+        element2.addEventListener(event2, keyEventFn);
       } else {
-        element2.addEventListener(event, eventFn);
+        element2.addEventListener(event2, eventFn);
       }
     }
     return {
       destroy: () => {
-        for (const event of events) {
-          if (["keydown", "keyup"].includes(event)) {
-            element2.removeEventListener(event, keyEventFn);
+        for (const event2 of events) {
+          if (["keydown", "keyup"].includes(event2)) {
+            element2.removeEventListener(event2, keyEventFn);
           } else {
-            element2.removeEventListener(event, eventFn);
+            element2.removeEventListener(event2, eventFn);
           }
         }
       }
     };
   };
 }
-function get_each_context$1(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[5] = list[i];
   return child_ctx;
@@ -12567,7 +12586,7 @@ function create_each_block_1$1(ctx) {
         /*activeTab*/
         ctx[0] === /*tab*/
         ctx[5].id ? "active " : ""
-      ) + " svelte-gas-158yyx3");
+      ) + " svelte-gas-1hsuznc");
     },
     m(target, anchor) {
       insert(target, button, anchor);
@@ -12596,7 +12615,7 @@ function create_each_block_1$1(ctx) {
         /*activeTab*/
         ctx[0] === /*tab*/
         ctx[5].id ? "active " : ""
-      ) + " svelte-gas-158yyx3")) {
+      ) + " svelte-gas-1hsuznc")) {
         attr(button, "class", button_class_value);
       }
     },
@@ -12609,7 +12628,7 @@ function create_each_block_1$1(ctx) {
     }
   };
 }
-function create_if_block$2(ctx) {
+function create_if_block$5(ctx) {
   let switch_instance;
   let switch_instance_anchor;
   let current;
@@ -12688,13 +12707,13 @@ function create_if_block$2(ctx) {
     }
   };
 }
-function create_each_block$1(ctx) {
+function create_each_block$2(ctx) {
   let if_block_anchor;
   let current;
   let if_block = (
     /*tab*/
     ctx[5].id === /*activeTab*/
-    ctx[0] && create_if_block$2(ctx)
+    ctx[0] && create_if_block$5(ctx)
   );
   return {
     c() {
@@ -12721,7 +12740,7 @@ function create_each_block$1(ctx) {
             transition_in(if_block, 1);
           }
         } else {
-          if_block = create_if_block$2(ctx2);
+          if_block = create_if_block$5(ctx2);
           if_block.c();
           transition_in(if_block, 1);
           if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -12753,7 +12772,7 @@ function create_each_block$1(ctx) {
     }
   };
 }
-function create_fragment$7(ctx) {
+function create_fragment$8(ctx) {
   let div2;
   let div0;
   let t;
@@ -12773,7 +12792,7 @@ function create_fragment$7(ctx) {
   );
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+    each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
   }
   const out = (i) => transition_out(each_blocks[i], 1, 1, () => {
     each_blocks[i] = null;
@@ -12790,9 +12809,9 @@ function create_fragment$7(ctx) {
       for (let i = 0; i < each_blocks.length; i += 1) {
         each_blocks[i].c();
       }
-      attr(div0, "class", "tabs-list svelte-gas-158yyx3");
-      attr(div1, "class", "tab-content svelte-gas-158yyx3");
-      attr(div2, "class", "tabs svelte-gas-158yyx3");
+      attr(div0, "class", "tabs-list svelte-gas-1hsuznc");
+      attr(div1, "class", "tab-content svelte-gas-1hsuznc");
+      attr(div2, "class", "tabs svelte-gas-1hsuznc");
     },
     m(target, anchor) {
       insert(target, div2, anchor);
@@ -12842,12 +12861,12 @@ function create_fragment$7(ctx) {
         );
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context$1(ctx2, each_value, i);
+          const child_ctx = get_each_context$2(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
             transition_in(each_blocks[i], 1);
           } else {
-            each_blocks[i] = create_each_block$1(child_ctx);
+            each_blocks[i] = create_each_block$2(child_ctx);
             each_blocks[i].c();
             transition_in(each_blocks[i], 1);
             each_blocks[i].m(div1, null);
@@ -12884,7 +12903,7 @@ function create_fragment$7(ctx) {
     }
   };
 }
-function instance$3($$self, $$props, $$invalidate) {
+function instance$8($$self, $$props, $$invalidate) {
   let { tabs: tabs2 = [] } = $$props;
   let { sheet } = $$props;
   let { activeTab = void 0 } = $$props;
@@ -12907,10 +12926,14 @@ function instance$3($$self, $$props, $$invalidate) {
 class Tabs extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$3, create_fragment$7, safe_not_equal, { tabs: 1, sheet: 2, activeTab: 0, efx: 3 });
+    init(this, options, instance$8, create_fragment$8, safe_not_equal, { tabs: 1, sheet: 2, activeTab: 0, efx: 3 });
   }
 }
 const tabs = [
+  {
+    label: "Abilities",
+    id: "abilities"
+  },
   {
     label: "Race",
     id: "race"
@@ -12918,10 +12941,6 @@ const tabs = [
   {
     label: "Background",
     id: "background"
-  },
-  {
-    label: "Abilities",
-    id: "abilities"
   },
   {
     label: "Class",
@@ -12935,84 +12954,6 @@ const tabs = [
 const dnd5e = {
   tabs
 };
-function create_fragment$6(ctx) {
-  let pre;
-  return {
-    c() {
-      pre = element("pre");
-      pre.textContent = "Abilites";
-    },
-    m(target, anchor) {
-      insert(target, pre, anchor);
-    },
-    p: noop,
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(pre);
-      }
-    }
-  };
-}
-class Abilities extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, null, create_fragment$6, safe_not_equal, {});
-  }
-}
-function create_fragment$5(ctx) {
-  let pre;
-  return {
-    c() {
-      pre = element("pre");
-      pre.textContent = "Background";
-    },
-    m(target, anchor) {
-      insert(target, pre, anchor);
-    },
-    p: noop,
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(pre);
-      }
-    }
-  };
-}
-class Background extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, null, create_fragment$5, safe_not_equal, {});
-  }
-}
-function create_fragment$4(ctx) {
-  let pre;
-  return {
-    c() {
-      pre = element("pre");
-      pre.textContent = "Class";
-    },
-    m(target, anchor) {
-      insert(target, pre, anchor);
-    },
-    p: noop,
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(pre);
-      }
-    }
-  };
-}
-class Class extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, null, create_fragment$4, safe_not_equal, {});
-  }
-}
 function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
@@ -13103,7 +13044,7 @@ function userHasRightPermissions() {
   }
   return true;
 }
-function get_each_context(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
   const child_ctx = ctx.slice();
   child_ctx[14] = list[i];
   child_ctx[16] = i;
@@ -13382,7 +13323,7 @@ function create_each_block_1(ctx) {
     }
   };
 }
-function create_if_block$1(ctx) {
+function create_if_block$4(ctx) {
   let div;
   let each_value = ensure_array_like(
     /*options*/
@@ -13390,7 +13331,7 @@ function create_if_block$1(ctx) {
   );
   let each_blocks = [];
   for (let i = 0; i < each_value.length; i += 1) {
-    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+    each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
   }
   return {
     c() {
@@ -13419,11 +13360,11 @@ function create_if_block$1(ctx) {
         );
         let i;
         for (i = 0; i < each_value.length; i += 1) {
-          const child_ctx = get_each_context(ctx2, each_value, i);
+          const child_ctx = get_each_context$1(ctx2, each_value, i);
           if (each_blocks[i]) {
             each_blocks[i].p(child_ctx, dirty);
           } else {
-            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i] = create_each_block$1(child_ctx);
             each_blocks[i].c();
             each_blocks[i].m(div, null);
           }
@@ -13675,7 +13616,7 @@ function create_if_block_3(ctx) {
     }
   };
 }
-function create_each_block(ctx) {
+function create_each_block$1(ctx) {
   let if_block_anchor;
   let if_block = (
     /*option*/
@@ -13722,7 +13663,7 @@ function create_each_block(ctx) {
     }
   };
 }
-function create_fragment$3(ctx) {
+function create_fragment$7(ctx) {
   let div2;
   let div1;
   let if_block0_anchor;
@@ -13744,7 +13685,7 @@ function create_fragment$3(ctx) {
   }
   let if_block1 = (
     /*isOpen*/
-    ctx[7] && create_if_block$1(ctx)
+    ctx[7] && create_if_block$4(ctx)
   );
   let div2_levels = [
     { class: "custom-select" },
@@ -13892,7 +13833,7 @@ function create_fragment$3(ctx) {
         if (if_block1) {
           if_block1.p(ctx2, dirty);
         } else {
-          if_block1 = create_if_block$1(ctx2);
+          if_block1 = create_if_block$4(ctx2);
           if_block1.c();
           if_block1.m(div2, null);
         }
@@ -13938,24 +13879,24 @@ function create_fragment$3(ctx) {
     }
   };
 }
-function handleKeydown(event) {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    if (event.currentTarget.getAttribute("role") === "option") {
-      this.handleSelect(event.currentTarget.option);
+function handleKeydown(event2) {
+  if (event2.key === "Enter" || event2.key === " ") {
+    event2.preventDefault();
+    if (event2.currentTarget.getAttribute("role") === "option") {
+      this.handleSelect(event2.currentTarget.option);
     } else {
       this.toggleDropdown();
     }
   }
 }
-function isClickOutsideContainer(event, containerElement) {
-  const targetElement = event.target;
+function isClickOutsideContainer(event2, containerElement) {
+  const targetElement = event2.target;
   if (targetElement === containerElement) {
     return false;
   }
   return !containerElement.contains(targetElement);
 }
-function instance$2($$self, $$props, $$invalidate) {
+function instance$7($$self, $$props, $$invalidate) {
   const omit_props_names = [
     "options",
     "value",
@@ -13990,8 +13931,8 @@ function instance$2($$self, $$props, $$invalidate) {
   function toggleDropdown() {
     $$invalidate(7, isOpen = !isOpen);
   }
-  function handleClickOutside(event) {
-    const isClickOutside = isClickOutsideContainer(event, document.getElementById(id));
+  function handleClickOutside(event2) {
+    const isClickOutside = isClickOutsideContainer(event2, document.getElementById(id));
     if (isClickOutside) {
       $$invalidate(7, isOpen = false);
     }
@@ -14046,7 +13987,7 @@ function instance$2($$self, $$props, $$invalidate) {
 class IconSelect extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, instance$2, create_fragment$3, safe_not_equal, {
+    init(this, options, instance$7, create_fragment$7, safe_not_equal, {
       options: 1,
       value: 0,
       disabled: 11,
@@ -14059,7 +14000,278 @@ class IconSelect extends SvelteComponent {
     });
   }
 }
-function create_if_block(ctx) {
+function get_each_context(ctx, list, i) {
+  const child_ctx = ctx.slice();
+  child_ctx[8] = list[i];
+  child_ctx[10] = i;
+  return child_ctx;
+}
+function create_each_block(ctx) {
+  let div2;
+  let div0;
+  let t_value = (
+    /*ability*/
+    ctx[8][1].label + ""
+  );
+  let t;
+  let div1;
+  let input;
+  let input_value_value;
+  let mounted;
+  let dispose;
+  return {
+    c() {
+      div2 = element("div");
+      div0 = element("div");
+      t = text(t_value);
+      div1 = element("div");
+      input = element("input");
+      attr(div0, "class", "flex1");
+      attr(input, "type", "number");
+      input.value = input_value_value = /*$doc*/
+      ctx[1].system.abilities[
+        /*ability*/
+        ctx[8][1].abbreviation
+      ].value;
+      set_style(input, "width", "40px");
+      attr(div1, "class", "flex3 right");
+      attr(div2, "class", "flexrow mb-sm");
+    },
+    m(target, anchor) {
+      insert(target, div2, anchor);
+      append(div2, div0);
+      append(div0, t);
+      append(div2, div1);
+      append(div1, input);
+      if (!mounted) {
+        dispose = listen(input, "input", function() {
+          if (is_function(
+            /*updateValue*/
+            ctx[3](
+              /*ability*/
+              ctx[8][1].abbreviation,
+              event
+            )
+          ))
+            ctx[3](
+              /*ability*/
+              ctx[8][1].abbreviation,
+              event
+            ).apply(this, arguments);
+        });
+        mounted = true;
+      }
+    },
+    p(new_ctx, dirty) {
+      ctx = new_ctx;
+      if (dirty & /*systemAbilitiesArray*/
+      1 && t_value !== (t_value = /*ability*/
+      ctx[8][1].label + ""))
+        set_data(t, t_value);
+      if (dirty & /*$doc, systemAbilitiesArray*/
+      3 && input_value_value !== (input_value_value = /*$doc*/
+      ctx[1].system.abilities[
+        /*ability*/
+        ctx[8][1].abbreviation
+      ].value) && input.value !== input_value_value) {
+        input.value = input_value_value;
+      }
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div2);
+      }
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_fragment$6(ctx) {
+  let div;
+  let each_value = ensure_array_like(
+    /*systemAbilitiesArray*/
+    ctx[0]
+  );
+  let each_blocks = [];
+  for (let i = 0; i < each_value.length; i += 1) {
+    each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+  }
+  return {
+    c() {
+      div = element("div");
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        each_blocks[i].c();
+      }
+      attr(div, "class", "attribute-entry mt-sm");
+    },
+    m(target, anchor) {
+      insert(target, div, anchor);
+      for (let i = 0; i < each_blocks.length; i += 1) {
+        if (each_blocks[i]) {
+          each_blocks[i].m(div, null);
+        }
+      }
+    },
+    p(ctx2, [dirty]) {
+      if (dirty & /*$doc, systemAbilitiesArray, updateValue, event*/
+      11) {
+        each_value = ensure_array_like(
+          /*systemAbilitiesArray*/
+          ctx2[0]
+        );
+        let i;
+        for (i = 0; i < each_value.length; i += 1) {
+          const child_ctx = get_each_context(ctx2, each_value, i);
+          if (each_blocks[i]) {
+            each_blocks[i].p(child_ctx, dirty);
+          } else {
+            each_blocks[i] = create_each_block(child_ctx);
+            each_blocks[i].c();
+            each_blocks[i].m(div, null);
+          }
+        }
+        for (; i < each_blocks.length; i += 1) {
+          each_blocks[i].d(1);
+        }
+        each_blocks.length = each_value.length;
+      }
+    },
+    i: noop,
+    o: noop,
+    d(detaching) {
+      if (detaching) {
+        detach(div);
+      }
+      destroy_each(each_blocks, detaching);
+    }
+  };
+}
+function instance$6($$self, $$props, $$invalidate) {
+  let systemAbilities;
+  let systemAbilitiesArray;
+  let $doc;
+  let { document: document2 = false } = $$props;
+  createEventDispatcher();
+  const doc = document2 || getContext("#doc");
+  component_subscribe($$self, doc, (value) => $$invalidate(1, $doc = value));
+  function updateValue(attr2, event2) {
+    const options = {
+      system: {
+        abilities: {
+          [attr2]: { value: Number(event2.target.value) }
+        }
+      }
+    };
+    console.log(options);
+    $doc.updateSource(options);
+    console.log($doc);
+  }
+  $$self.$$set = ($$props2) => {
+    if ("document" in $$props2)
+      $$invalidate(4, document2 = $$props2.document);
+  };
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & /*systemAbilities*/
+    32) {
+      $$invalidate(0, systemAbilitiesArray = Object.entries(systemAbilities));
+    }
+  };
+  $$invalidate(5, systemAbilities = game.system.config.abilities);
+  return [systemAbilitiesArray, $doc, doc, updateValue, document2, systemAbilities];
+}
+class ManualEntry extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$6, create_fragment$6, safe_not_equal, { document: 4 });
+  }
+}
+function create_fragment$5(ctx) {
+  let div3;
+  let div2;
+  let div0;
+  let h4;
+  let ol;
+  let manualentry;
+  let div1;
+  let current;
+  manualentry = new ManualEntry({});
+  return {
+    c() {
+      div3 = element("div");
+      div2 = element("div");
+      div0 = element("div");
+      h4 = element("h4");
+      h4.textContent = `${localize("GAS.Tabs.Abilities.HowCalculated")}`;
+      ol = element("ol");
+      ol.innerHTML = `<li>Manual Entry</li>`;
+      create_component(manualentry.$$.fragment);
+      div1 = element("div");
+      attr(h4, "class", "left");
+      attr(ol, "class", "properties-list svelte-gas-lr0at4");
+      attr(div0, "class", "flex2 border-right pr-sm svelte-gas-lr0at4");
+      attr(div1, "class", "flex3");
+      attr(div2, "class", "flexrow svelte-gas-lr0at4");
+      attr(div3, "class", "tab-content svelte-gas-lr0at4");
+    },
+    m(target, anchor) {
+      insert(target, div3, anchor);
+      append(div3, div2);
+      append(div2, div0);
+      append(div0, h4);
+      append(div0, ol);
+      mount_component(manualentry, div0, null);
+      append(div2, div1);
+      current = true;
+    },
+    p: noop,
+    i(local) {
+      if (current)
+        return;
+      transition_in(manualentry.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(manualentry.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div3);
+      }
+      destroy_component(manualentry);
+    }
+  };
+}
+function instance$5($$self, $$props, $$invalidate) {
+  let $actor;
+  let pack = game.packs.get("dnd5e.races");
+  let folders = getPackFolders(pack, 1);
+  let folderIds = folders.map((x) => x._id);
+  let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ["name->label", "img", "type", "folder", "uuid->value", "_id"]);
+  let raceDefinitions = allRaceItems.filter((x) => folderIds.includes(x.folder));
+  const actor = getContext("#doc");
+  component_subscribe($$self, actor, (value) => $$invalidate(1, $actor = value));
+  log$1.d("actor", actor);
+  log$1.d("$actor", $actor);
+  log$1.d("folders", folders);
+  log$1.d("folderIds", folderIds);
+  log$1.d("allRaceItems", allRaceItems);
+  log$1.d("raceDefinitions", raceDefinitions);
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & /*$actor*/
+    2) {
+      $actor.toObject();
+    }
+  };
+  return [actor, $actor];
+}
+class Abilities extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$5, create_fragment$5, safe_not_equal, {});
+  }
+}
+function create_if_block$3(ctx) {
   let button;
   let mounted;
   let dispose;
@@ -14091,21 +14303,24 @@ function create_if_block(ctx) {
     }
   };
 }
-function create_fragment$2(ctx) {
-  let div;
-  let h1;
+function create_fragment$4(ctx) {
+  let div3;
+  let div2;
+  let div0;
   let if_block_anchor;
   let iconselect;
   let updating_value;
+  let div1;
   let current;
   let if_block = (
     /*value*/
-    ctx[1] && create_if_block(ctx)
+    ctx[1] && create_if_block$3(ctx)
   );
   function iconselect_value_binding(value) {
     ctx[8](value);
   }
   let iconselect_props = {
+    class: "icon-select",
     options: (
       /*options*/
       ctx[2]
@@ -14135,22 +14350,28 @@ function create_fragment$2(ctx) {
   binding_callbacks.push(() => bind(iconselect, "value", iconselect_value_binding));
   return {
     c() {
-      div = element("div");
-      h1 = element("h1");
-      h1.textContent = "Race";
+      div3 = element("div");
+      div2 = element("div");
+      div0 = element("div");
       if (if_block)
         if_block.c();
       if_block_anchor = empty();
       create_component(iconselect.$$.fragment);
-      attr(div, "class", "tab-content svelte-gas-1jp11e5");
+      div1 = element("div");
+      attr(div0, "class", "flex1 border-right svelte-gas-hal4i0");
+      attr(div1, "class", "flex3");
+      attr(div2, "class", "flexrow");
+      attr(div3, "class", "tab-content svelte-gas-hal4i0");
     },
     m(target, anchor) {
-      insert(target, div, anchor);
-      append(div, h1);
+      insert(target, div3, anchor);
+      append(div3, div2);
+      append(div2, div0);
       if (if_block)
-        if_block.m(div, null);
-      append(div, if_block_anchor);
-      mount_component(iconselect, div, null);
+        if_block.m(div0, null);
+      append(div0, if_block_anchor);
+      mount_component(iconselect, div0, null);
+      append(div2, div1);
       current = true;
     },
     p(ctx2, [dirty]) {
@@ -14161,9 +14382,9 @@ function create_fragment$2(ctx) {
         if (if_block) {
           if_block.p(ctx2, dirty);
         } else {
-          if_block = create_if_block(ctx2);
+          if_block = create_if_block$3(ctx2);
           if_block.c();
-          if_block.m(div, if_block_anchor);
+          if_block.m(div0, if_block_anchor);
         }
       } else if (if_block) {
         if_block.d(1);
@@ -14199,7 +14420,670 @@ function create_fragment$2(ctx) {
     },
     d(detaching) {
       if (detaching) {
-        detach(div);
+        detach(div3);
+      }
+      if (if_block)
+        if_block.d();
+      destroy_component(iconselect);
+    }
+  };
+}
+function instance$4($$self, $$props, $$invalidate) {
+  let actorObject;
+  let options;
+  let $actor;
+  let active2 = null, value = null, placeHolder = "Races";
+  let pack = game.packs.get("dnd5e.races");
+  let folders = getPackFolders(pack, 1);
+  let folderIds = folders.map((x) => x._id);
+  let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ["name->label", "img", "type", "folder", "uuid->value", "_id"]);
+  let raceDefinitions = allRaceItems.filter((x) => folderIds.includes(x.folder));
+  let race;
+  const actor = getContext("#doc");
+  component_subscribe($$self, actor, (value2) => $$invalidate(7, $actor = value2));
+  log$1.d("actor", actor);
+  log$1.d("$actor", $actor);
+  const selectHandler = async (option) => {
+    race = await fromUuid(option);
+    $$invalidate(0, active2 = option);
+    log$1.d("race", race);
+  };
+  const clickHandler = async () => {
+    await createActorInGameAndEmbedItems();
+  };
+  const createActorInGameAndEmbedItems = async () => {
+    const itemData = race.toObject();
+    log$1.d("itemData", itemData);
+    const actorInGame = await Actor.create(actorObject);
+    log$1.d("actorInGame", actorInGame);
+    const result = await addItemToCharacter(actorInGame, itemData);
+    log$1.d("result", result);
+  };
+  log$1.d("folders", folders);
+  log$1.d("folderIds", folderIds);
+  log$1.d("allRaceItems", allRaceItems);
+  log$1.d("raceDefinitions", raceDefinitions);
+  function iconselect_value_binding(value$1) {
+    value = value$1;
+    $$invalidate(1, value);
+  }
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & /*$actor*/
+    128) {
+      actorObject = $actor.toObject();
+    }
+  };
+  $$invalidate(2, options = raceDefinitions);
+  return [
+    active2,
+    value,
+    options,
+    placeHolder,
+    actor,
+    selectHandler,
+    clickHandler,
+    $actor,
+    iconselect_value_binding
+  ];
+}
+class Background extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$4, create_fragment$4, safe_not_equal, {});
+  }
+}
+function create_if_block$2(ctx) {
+  let button;
+  let mounted;
+  let dispose;
+  return {
+    c() {
+      button = element("button");
+      button.textContent = "Next";
+      attr(button, "label", "Submit");
+    },
+    m(target, anchor) {
+      insert(target, button, anchor);
+      if (!mounted) {
+        dispose = listen(
+          button,
+          "click",
+          /*clickHandler*/
+          ctx[6]
+        );
+        mounted = true;
+      }
+    },
+    p: noop,
+    d(detaching) {
+      if (detaching) {
+        detach(button);
+      }
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_fragment$3(ctx) {
+  let div3;
+  let div2;
+  let div0;
+  let if_block_anchor;
+  let iconselect;
+  let updating_value;
+  let div1;
+  let current;
+  let if_block = (
+    /*value*/
+    ctx[1] && create_if_block$2(ctx)
+  );
+  function iconselect_value_binding(value) {
+    ctx[8](value);
+  }
+  let iconselect_props = {
+    class: "icon-select",
+    options: (
+      /*options*/
+      ctx[2]
+    ),
+    active: (
+      /*active*/
+      ctx[0]
+    ),
+    placeHolder: (
+      /*placeHolder*/
+      ctx[3]
+    ),
+    handler: (
+      /*selectHandler*/
+      ctx[5]
+    ),
+    id: "asdlfkj"
+  };
+  if (
+    /*value*/
+    ctx[1] !== void 0
+  ) {
+    iconselect_props.value = /*value*/
+    ctx[1];
+  }
+  iconselect = new IconSelect({ props: iconselect_props });
+  binding_callbacks.push(() => bind(iconselect, "value", iconselect_value_binding));
+  return {
+    c() {
+      div3 = element("div");
+      div2 = element("div");
+      div0 = element("div");
+      if (if_block)
+        if_block.c();
+      if_block_anchor = empty();
+      create_component(iconselect.$$.fragment);
+      div1 = element("div");
+      attr(div0, "class", "flex1 border-right svelte-gas-hal4i0");
+      attr(div1, "class", "flex3");
+      attr(div2, "class", "flexrow");
+      attr(div3, "class", "tab-content svelte-gas-hal4i0");
+    },
+    m(target, anchor) {
+      insert(target, div3, anchor);
+      append(div3, div2);
+      append(div2, div0);
+      if (if_block)
+        if_block.m(div0, null);
+      append(div0, if_block_anchor);
+      mount_component(iconselect, div0, null);
+      append(div2, div1);
+      current = true;
+    },
+    p(ctx2, [dirty]) {
+      if (
+        /*value*/
+        ctx2[1]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block$2(ctx2);
+          if_block.c();
+          if_block.m(div0, if_block_anchor);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+      const iconselect_changes = {};
+      if (dirty & /*options*/
+      4)
+        iconselect_changes.options = /*options*/
+        ctx2[2];
+      if (dirty & /*active*/
+      1)
+        iconselect_changes.active = /*active*/
+        ctx2[0];
+      if (!updating_value && dirty & /*value*/
+      2) {
+        updating_value = true;
+        iconselect_changes.value = /*value*/
+        ctx2[1];
+        add_flush_callback(() => updating_value = false);
+      }
+      iconselect.$set(iconselect_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(iconselect.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(iconselect.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div3);
+      }
+      if (if_block)
+        if_block.d();
+      destroy_component(iconselect);
+    }
+  };
+}
+function instance$3($$self, $$props, $$invalidate) {
+  let actorObject;
+  let options;
+  let $actor;
+  let active2 = null, value = null, placeHolder = "Races";
+  let pack = game.packs.get("dnd5e.races");
+  let folders = getPackFolders(pack, 1);
+  let folderIds = folders.map((x) => x._id);
+  let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ["name->label", "img", "type", "folder", "uuid->value", "_id"]);
+  let raceDefinitions = allRaceItems.filter((x) => folderIds.includes(x.folder));
+  let race;
+  const actor = getContext("#doc");
+  component_subscribe($$self, actor, (value2) => $$invalidate(7, $actor = value2));
+  log$1.d("actor", actor);
+  log$1.d("$actor", $actor);
+  const selectHandler = async (option) => {
+    race = await fromUuid(option);
+    $$invalidate(0, active2 = option);
+    log$1.d("race", race);
+  };
+  const clickHandler = async () => {
+    await createActorInGameAndEmbedItems();
+  };
+  const createActorInGameAndEmbedItems = async () => {
+    const itemData = race.toObject();
+    log$1.d("itemData", itemData);
+    const actorInGame = await Actor.create(actorObject);
+    log$1.d("actorInGame", actorInGame);
+    const result = await addItemToCharacter(actorInGame, itemData);
+    log$1.d("result", result);
+  };
+  log$1.d("folders", folders);
+  log$1.d("folderIds", folderIds);
+  log$1.d("allRaceItems", allRaceItems);
+  log$1.d("raceDefinitions", raceDefinitions);
+  function iconselect_value_binding(value$1) {
+    value = value$1;
+    $$invalidate(1, value);
+  }
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & /*$actor*/
+    128) {
+      actorObject = $actor.toObject();
+    }
+  };
+  $$invalidate(2, options = raceDefinitions);
+  return [
+    active2,
+    value,
+    options,
+    placeHolder,
+    actor,
+    selectHandler,
+    clickHandler,
+    $actor,
+    iconselect_value_binding
+  ];
+}
+class Class extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$3, create_fragment$3, safe_not_equal, {});
+  }
+}
+function create_if_block$1(ctx) {
+  let button;
+  let mounted;
+  let dispose;
+  return {
+    c() {
+      button = element("button");
+      button.textContent = "Next";
+      attr(button, "label", "Submit");
+    },
+    m(target, anchor) {
+      insert(target, button, anchor);
+      if (!mounted) {
+        dispose = listen(
+          button,
+          "click",
+          /*clickHandler*/
+          ctx[6]
+        );
+        mounted = true;
+      }
+    },
+    p: noop,
+    d(detaching) {
+      if (detaching) {
+        detach(button);
+      }
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_fragment$2(ctx) {
+  let div3;
+  let div2;
+  let div0;
+  let if_block_anchor;
+  let iconselect;
+  let updating_value;
+  let div1;
+  let current;
+  let if_block = (
+    /*value*/
+    ctx[1] && create_if_block$1(ctx)
+  );
+  function iconselect_value_binding(value) {
+    ctx[8](value);
+  }
+  let iconselect_props = {
+    class: "icon-select",
+    options: (
+      /*options*/
+      ctx[2]
+    ),
+    active: (
+      /*active*/
+      ctx[0]
+    ),
+    placeHolder: (
+      /*placeHolder*/
+      ctx[3]
+    ),
+    handler: (
+      /*selectHandler*/
+      ctx[5]
+    ),
+    id: "asdlfkj"
+  };
+  if (
+    /*value*/
+    ctx[1] !== void 0
+  ) {
+    iconselect_props.value = /*value*/
+    ctx[1];
+  }
+  iconselect = new IconSelect({ props: iconselect_props });
+  binding_callbacks.push(() => bind(iconselect, "value", iconselect_value_binding));
+  return {
+    c() {
+      div3 = element("div");
+      div2 = element("div");
+      div0 = element("div");
+      if (if_block)
+        if_block.c();
+      if_block_anchor = empty();
+      create_component(iconselect.$$.fragment);
+      div1 = element("div");
+      attr(div0, "class", "flex1 border-right");
+      attr(div1, "class", "flex3");
+      attr(div2, "class", "flexrow");
+      attr(div3, "class", "tab-content");
+    },
+    m(target, anchor) {
+      insert(target, div3, anchor);
+      append(div3, div2);
+      append(div2, div0);
+      if (if_block)
+        if_block.m(div0, null);
+      append(div0, if_block_anchor);
+      mount_component(iconselect, div0, null);
+      append(div2, div1);
+      current = true;
+    },
+    p(ctx2, [dirty]) {
+      if (
+        /*value*/
+        ctx2[1]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block$1(ctx2);
+          if_block.c();
+          if_block.m(div0, if_block_anchor);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+      const iconselect_changes = {};
+      if (dirty & /*options*/
+      4)
+        iconselect_changes.options = /*options*/
+        ctx2[2];
+      if (dirty & /*active*/
+      1)
+        iconselect_changes.active = /*active*/
+        ctx2[0];
+      if (!updating_value && dirty & /*value*/
+      2) {
+        updating_value = true;
+        iconselect_changes.value = /*value*/
+        ctx2[1];
+        add_flush_callback(() => updating_value = false);
+      }
+      iconselect.$set(iconselect_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(iconselect.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(iconselect.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div3);
+      }
+      if (if_block)
+        if_block.d();
+      destroy_component(iconselect);
+    }
+  };
+}
+function instance$2($$self, $$props, $$invalidate) {
+  let actorObject;
+  let options;
+  let $actor;
+  let active2 = null, value = null, placeHolder = "Races";
+  let pack = game.packs.get("dnd5e.races");
+  let folders = getPackFolders(pack, 1);
+  let folderIds = folders.map((x) => x._id);
+  let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ["name->label", "img", "type", "folder", "uuid->value", "_id"]);
+  let raceDefinitions = allRaceItems.filter((x) => folderIds.includes(x.folder));
+  let race;
+  const actor = getContext("#doc");
+  component_subscribe($$self, actor, (value2) => $$invalidate(7, $actor = value2));
+  log$1.d("actor", actor);
+  log$1.d("$actor", $actor);
+  const selectHandler = async (option) => {
+    race = await fromUuid(option);
+    $$invalidate(0, active2 = option);
+    log$1.d("race", race);
+  };
+  const clickHandler = async () => {
+    await createActorInGameAndEmbedItems();
+  };
+  const createActorInGameAndEmbedItems = async () => {
+    const itemData = race.toObject();
+    log$1.d("itemData", itemData);
+    const actorInGame = await Actor.create(actorObject);
+    log$1.d("actorInGame", actorInGame);
+    const result = await addItemToCharacter(actorInGame, itemData);
+    log$1.d("result", result);
+  };
+  log$1.d("folders", folders);
+  log$1.d("folderIds", folderIds);
+  log$1.d("allRaceItems", allRaceItems);
+  log$1.d("raceDefinitions", raceDefinitions);
+  function iconselect_value_binding(value$1) {
+    value = value$1;
+    $$invalidate(1, value);
+  }
+  $$self.$$.update = () => {
+    if ($$self.$$.dirty & /*$actor*/
+    128) {
+      actorObject = $actor.toObject();
+    }
+  };
+  $$invalidate(2, options = raceDefinitions);
+  return [
+    active2,
+    value,
+    options,
+    placeHolder,
+    actor,
+    selectHandler,
+    clickHandler,
+    $actor,
+    iconselect_value_binding
+  ];
+}
+class Race extends SvelteComponent {
+  constructor(options) {
+    super();
+    init(this, options, instance$2, create_fragment$2, safe_not_equal, {});
+  }
+}
+function create_if_block(ctx) {
+  let button;
+  let mounted;
+  let dispose;
+  return {
+    c() {
+      button = element("button");
+      button.textContent = "Next";
+      attr(button, "label", "Submit");
+    },
+    m(target, anchor) {
+      insert(target, button, anchor);
+      if (!mounted) {
+        dispose = listen(
+          button,
+          "click",
+          /*clickHandler*/
+          ctx[6]
+        );
+        mounted = true;
+      }
+    },
+    p: noop,
+    d(detaching) {
+      if (detaching) {
+        detach(button);
+      }
+      mounted = false;
+      dispose();
+    }
+  };
+}
+function create_fragment$1(ctx) {
+  let div3;
+  let div2;
+  let div0;
+  let if_block_anchor;
+  let iconselect;
+  let updating_value;
+  let div1;
+  let current;
+  let if_block = (
+    /*value*/
+    ctx[1] && create_if_block(ctx)
+  );
+  function iconselect_value_binding(value) {
+    ctx[8](value);
+  }
+  let iconselect_props = {
+    class: "icon-select",
+    options: (
+      /*options*/
+      ctx[2]
+    ),
+    active: (
+      /*active*/
+      ctx[0]
+    ),
+    placeHolder: (
+      /*placeHolder*/
+      ctx[3]
+    ),
+    handler: (
+      /*selectHandler*/
+      ctx[5]
+    ),
+    id: "asdlfkj"
+  };
+  if (
+    /*value*/
+    ctx[1] !== void 0
+  ) {
+    iconselect_props.value = /*value*/
+    ctx[1];
+  }
+  iconselect = new IconSelect({ props: iconselect_props });
+  binding_callbacks.push(() => bind(iconselect, "value", iconselect_value_binding));
+  return {
+    c() {
+      div3 = element("div");
+      div2 = element("div");
+      div0 = element("div");
+      if (if_block)
+        if_block.c();
+      if_block_anchor = empty();
+      create_component(iconselect.$$.fragment);
+      div1 = element("div");
+      attr(div0, "class", "flex1 border-right svelte-gas-hal4i0");
+      attr(div1, "class", "flex3");
+      attr(div2, "class", "flexrow");
+      attr(div3, "class", "tab-content svelte-gas-hal4i0");
+    },
+    m(target, anchor) {
+      insert(target, div3, anchor);
+      append(div3, div2);
+      append(div2, div0);
+      if (if_block)
+        if_block.m(div0, null);
+      append(div0, if_block_anchor);
+      mount_component(iconselect, div0, null);
+      append(div2, div1);
+      current = true;
+    },
+    p(ctx2, [dirty]) {
+      if (
+        /*value*/
+        ctx2[1]
+      ) {
+        if (if_block) {
+          if_block.p(ctx2, dirty);
+        } else {
+          if_block = create_if_block(ctx2);
+          if_block.c();
+          if_block.m(div0, if_block_anchor);
+        }
+      } else if (if_block) {
+        if_block.d(1);
+        if_block = null;
+      }
+      const iconselect_changes = {};
+      if (dirty & /*options*/
+      4)
+        iconselect_changes.options = /*options*/
+        ctx2[2];
+      if (dirty & /*active*/
+      1)
+        iconselect_changes.active = /*active*/
+        ctx2[0];
+      if (!updating_value && dirty & /*value*/
+      2) {
+        updating_value = true;
+        iconselect_changes.value = /*value*/
+        ctx2[1];
+        add_flush_callback(() => updating_value = false);
+      }
+      iconselect.$set(iconselect_changes);
+    },
+    i(local) {
+      if (current)
+        return;
+      transition_in(iconselect.$$.fragment, local);
+      current = true;
+    },
+    o(local) {
+      transition_out(iconselect.$$.fragment, local);
+      current = false;
+    },
+    d(detaching) {
+      if (detaching) {
+        detach(div3);
       }
       if (if_block)
         if_block.d();
@@ -14265,44 +15149,15 @@ function instance$1($$self, $$props, $$invalidate) {
     iconselect_value_binding
   ];
 }
-class Race extends SvelteComponent {
-  constructor(options) {
-    super();
-    init(this, options, instance$1, create_fragment$2, safe_not_equal, {});
-  }
-}
-function create_fragment$1(ctx) {
-  let pre;
-  return {
-    c() {
-      pre = element("pre");
-      pre.textContent = "Spells";
-    },
-    m(target, anchor) {
-      insert(target, pre, anchor);
-    },
-    p: noop,
-    i: noop,
-    o: noop,
-    d(detaching) {
-      if (detaching) {
-        detach(pre);
-      }
-    }
-  };
-}
 class Spells extends SvelteComponent {
   constructor(options) {
     super();
-    init(this, options, null, create_fragment$1, safe_not_equal, {});
+    init(this, options, instance$1, create_fragment$1, safe_not_equal, {});
   }
 }
 function create_default_slot(ctx) {
   let main;
   let section;
-  let div2;
-  let div0;
-  let div1;
   let tabs_1;
   let updating_activeTab;
   let current;
@@ -14326,23 +15181,14 @@ function create_default_slot(ctx) {
     c() {
       main = element("main");
       section = element("section");
-      div2 = element("div");
-      div0 = element("div");
-      div0.innerHTML = `<img src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;"/>`;
-      div1 = element("div");
       create_component(tabs_1.$$.fragment);
-      attr(div0, "class", "flex1");
-      attr(div1, "class", "flex3");
-      attr(div2, "class", "flexrow");
-      attr(main, "class", "svelte-gas-9lusmr");
+      attr(section, "class", "svelte-gas-1hayv8v");
+      attr(main, "class", "svelte-gas-1hayv8v");
     },
     m(target, anchor) {
       insert(target, main, anchor);
       append(main, section);
-      append(section, div2);
-      append(div2, div0);
-      append(div2, div1);
-      mount_component(tabs_1, div1, null);
+      mount_component(tabs_1, section, null);
       current = true;
     },
     p(ctx2, dirty) {
@@ -18335,7 +19181,7 @@ class PCApplication extends SvelteApplication {
       classes: ["gas-actor-studio"],
       width: 500,
       height: 600,
-      headerIcon: "assets/actor-studio-blue-dragon.svg",
+      headerIcon: "modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg",
       minWidth: 500,
       padding: 0,
       resizable: true,
@@ -18359,11 +19205,11 @@ class PCApplication extends SvelteApplication {
   _canDragDrop(selector) {
     return this.reactive.document.isOwner || game.user.isGM;
   }
-  _onDragOver(event) {
+  _onDragOver(event2) {
   }
-  _onDragStart(event) {
+  _onDragStart(event2) {
   }
-  async _onDrop(event) {
+  async _onDrop(event2) {
   }
   async close(options = {}) {
     await super.close(options);

@@ -7,6 +7,11 @@
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",
       "NeedFileUploadWarn": "User without 'Use File Browser' permission. You might experience issues selecting images",
       "NeedFileBrowseWarn": "User without 'Upload New Files' permission. You might experience issues selecting images"
+    },
+    "Tabs": {
+      "Abilities": {
+        "HowCalculated": "How are abilities calculated?"
+      }
     }
   }
 }

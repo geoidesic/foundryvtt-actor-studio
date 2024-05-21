@@ -1,9 +1,8 @@
 <script>
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter } from "~/src/helpers/Utility.js";
+import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
 import { getContext, onDestroy, onMount } from "svelte";
-    import { log } from '../../../helpers/Utility';
 
 let active = null, value = null, placeHolder = "Races";
 let pack = game.packs.get('dnd5e.races');
@@ -23,13 +22,13 @@ log.d('actor', actor);
 log.d('$actor', $actor);
 
 const selectHandler = async (option) => {
-	race = await fromUuid(option)
-	active = option; 
-	log.d('race', race);
+    race = await fromUuid(option)
+    active = option; 
+    log.d('race', race);
 }
 
 const clickHandler = async () => {
-	await createActorInGameAndEmbedItems();
+    await createActorInGameAndEmbedItems();
 }
 
 
@@ -39,12 +38,12 @@ const clickHandler = async () => {
  * and then only add them after the Actor is added to the game
  */
 const createActorInGameAndEmbedItems = async () => {
-	const itemData = race.toObject()
-	log.d('itemData', itemData)
-	const actorInGame = await Actor.create(actorObject);
-	log.d('actorInGame' , actorInGame)
-	const result = await addItemToCharacter(actorInGame, itemData)
-	log.d('result', result);
+    const itemData = race.toObject()
+    log.d('itemData', itemData)
+    const actorInGame = await Actor.create(actorObject);
+    log.d('actorInGame' , actorInGame)
+    const result = await addItemToCharacter(actorInGame, itemData)
+    log.d('result', result);
 }
 
 log.d('folders', folders);
@@ -66,7 +65,7 @@ div.tab-content
 
 <style lang="scss" scoped>
 .tab-content {
-	--tjs-app-overflow: visible;
+    --tjs-app-overflow: visible;
   padding: 20px; // Add padding to the tab content
   border: 2px solid transparent; // Start with a transparent border
   border-radius: 10px; // Add some rounded corners

@@ -1,11 +1,4 @@
-.window-content {
-  display: none;
-}
 
-.window-content {
-  //   display: block !important;
-  gap: var(--size-sm);
-}
 
 
 input {
@@ -248,8 +241,6 @@ table thead {
 
 
 //-  padding / margins
-
-
 .py-md {
   padding: var(--size-md) 0;
 }

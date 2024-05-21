@@ -1,16 +1,16 @@
 {
     "tabs": [
         {
+            "label": "Abilities",
+            "id": "abilities"
+        },
+        {
             "label": "Race",
             "id": "race"
         },
         {
             "label": "Background",
             "id": "background"
-        },
-        {
-            "label": "Abilities",
-            "id": "abilities"
         },
         {
             "label": "Class",

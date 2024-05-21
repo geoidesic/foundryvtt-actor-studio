@@ -5,12 +5,48 @@ export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function localize(string) {
-  return game.i18n.localize(`LOCAL.${string}.label`);
-}
+
 
 export function isNumber(value) {
   return typeof value === 'number' && isFinite(value);
+}
+
+
+/**
+ * Gets a rules from a journal by ID and Page
+ *
+ * @export
+ * @async
+ * @param {object} rule
+ * @param {string} rule.journalId
+ * @param {string} rule.pageId
+ * @returns {string}
+ */
+export async function getRules(rule) {
+  const { journalId, pageId } = rule;
+  const rules = await game.packs.get('dnd5e.rules');
+  const journal = await rules?.getDocument(journalId);
+  const text = (journal)?.pages?.get(pageId).text;
+  if (!text) {
+    console.error(`Unable to find rule journal on compendium ${DEFAULT_PACKS.RULES}`);
+  }
+  return text;
+}
+
+export const update = ($doc, dispatch, path) => async(event) => {
+  console.log("event", event);
+  console.log("dispatch", dispatch);
+  console.log("path", path);
+  console.log("$doc", $doc);
+
+  const updateParams = { [path]: event.target.value }
+
+  console.log('updateParams', updateParams)
+
+  if ($doc && event.target.value) {
+    await $doc.update(updateParams);
+  }
+  dispatch("input", event.target.value);
 }
 
 export function getAllAttributeValues() {
@@ -24,8 +60,6 @@ export function getAllAttributeValues() {
 
   return allValues;
 }
-
-export const i18n = (s, d = {}) => game.i18n.format(s, d);
 
 
 export function isAttribute(val) {
