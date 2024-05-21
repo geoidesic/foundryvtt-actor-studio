@@ -36,6 +36,17 @@
       isOpen = !isOpen;
     }
 
+    function handleKeydown(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        if (event.currentTarget.getAttribute('role') === 'option') {
+          this.handleSelect(event.currentTarget.option);
+        } else {
+          this.toggleDropdown();
+        }
+      }
+    }
+
     function isClickOutsideContainer(event, containerElement) {
       const targetElement = event.target;
 
@@ -70,38 +81,36 @@
     
   </script>
 
-  <template lang="pug">
-  div.custom-select({...$$restProps} {id})
-    div.selected-option(on:click="{toggleDropdown}" class:selected="{isOpen}")
-      +if("placeHolder && !value")
-        div.placeholder {placeHolder}
+<template lang="pug">
+div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0")
+  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}")
+    +if("placeHolder && !value")
+      div.placeholder {placeHolder}
+    +each("options as option, index")
+      +if("option && option?.value === value")
+        +if("!textOnly(option) && shrinkIfNoIcon")
+          div.option-icon(class="{option.img ? option.img : ''}")
+            +if("option.icon != undefined")
+              i(class="{option.icon}")
+              +else
+                img(src="{option.img}" alt="{option.label}")
+        div.option-label {truncate(option.label, 10)}
+    div.chevron-icon
+      i(class="fas fa-chevron-down")
+
+  +if("isOpen")
+    div.options-dropdown.dropshadow(id="options-list" role="listbox")
       +each("options as option, index")
-        +if("option && option?.value === value")
-          +if("!textOnly(option) && shrinkIfNoIcon")
-            div.option-icon(class="{option.img ? option.img : ''}")
-              +if("option.icon != undefined")
-                i(class="{option.icon}")
-                +else
-                  img(src="{option.img}")
-          div.option-label {truncate(option.label, 10)}
-      div.chevron-icon
-        i(class="fas fa-chevron-down")
-
-    +if("isOpen")
-      div.options-dropdown.dropshadow
-        +each("options as option, index")
-          +if("option && option?.value !== value")
-            div.option(class="{active === option.value ? 'active' : ''}" on:click!="{handleSelect(option)}")
-              +if("!textOnly(option) && shrinkIfNoIcon")
-                div.option-icon(class="{option.img ? option.img : ''}")
-                  +if("option.icon != undefined")
-                    i(class="{option.icon}")
-                    +else
-                      img(src="{option.img}")
-                    
-              div.option-label {option.label}
-
-  </template>
+        +if("option && option?.value !== value")
+          div.option(role="option" aria-selected="{active === option.value}" class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+            +if("!textOnly(option) && shrinkIfNoIcon")
+              div.option-icon(class="{option.img ? option.img : ''}")
+                +if("option.icon != undefined")
+                  i(class="{option.icon}")
+                  +else
+                    img(src="{option.img}" alt="{option.label}")
+            div.option-label {option.label}
+</template>
 
 <style lang="scss">
   .custom-select {

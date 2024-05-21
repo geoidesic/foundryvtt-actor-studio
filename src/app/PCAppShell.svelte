@@ -63,16 +63,20 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot stylesApp)
     main 
-      //- header {localize("GAS.PCTitle")}
       section 
         Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>
 
 
 <style lang="scss">
-   main {
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-   }
+  main {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    height: 100%; // Ensure the layout takes up the full height
+  }
+
+  section {
+    padding: 20px; // Add some padding for spacing
+  }
 </style>

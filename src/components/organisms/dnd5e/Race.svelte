@@ -56,14 +56,46 @@ log.d('raceDefinitions', raceDefinitions);
 
 <template lang="pug">
 div.tab-content
-	h1 Race
-	+if("value")
-		button(label="Submit" on:click!="{clickHandler}") Next
-	IconSelect({options} {active} {placeHolder} handler="{selectHandler}" id="asdlfkj" bind:value )
+  .flexrow
+    .flex1.border-right
+      +if("value")
+        button(label="Submit" on:click!="{clickHandler}") Next
+      IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="asdlfkj" bind:value )
+    .flex3
 </template>
 
 <style lang="scss" scoped>
 .tab-content {
 	--tjs-app-overflow: visible;
+  padding: 20px; // Add padding to the tab content
+  border: 2px solid transparent; // Start with a transparent border
+  border-radius: 10px; // Add some rounded corners
+  background-color: #f9f9f9; // Add a light background color
+  position: relative; // Enable absolute positioning for decorations
+
+  // Add decorative elements
+  &:before,
+  &:after {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: -1;
+    border: 2px solid #8b0000; // Choose a dark red color for the border
+    border-radius: 15px; // Adjust the radius for a more wicked look
+  }
+
+  &:before {
+    transform: rotate(-3deg); // Rotate the border element for a dynamic effect
+  }
+
+  &:after {
+    transform: rotate(3deg); // Rotate the border element for a dynamic effect
+  }
+  .border-right {
+    border-right: 4px solid brown;
+  }
 }
 </style>

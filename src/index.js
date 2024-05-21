@@ -21,24 +21,31 @@ function addCreateNewActorButton(html, app) {
     if (actorType === "character") {
       if (!$('button[data-hct_start]', html).length) {
         const $hctButton = $(
-          `<button class='dialog-button' data-hct_start>
-            ${game.i18n.localize('GAS.ActorStudio')}
+          `<button type="button" class='dialog-button default bright' data-hct_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
+            <img src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
           </button>`,
         );
 
         $('button', html).last().after($hctButton); // Ensure button is added after the Create New Actor confirm button
 
-        $hctButton.on('mousedown', function (e) {
-          if (userHasRightPermissions()) {
-            const actorName = $('input', html).val();
-            try {
-              new PCApplication(new Actor.implementation({name: actorName, type: actorType})).render(true, { focus: true });
-              app.close();
-            } catch (error) {
-              ui.notifications.error(error.message);
+        const handleButtonClick = function (e) {
+          if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
+            log.d('html', html);
+            if (userHasRightPermissions()) {
+              const actorName = $('input', html).val();
+              log.d('actorType', actorType);
+              try {
+                new PCApplication(new Actor.implementation({name: actorName, type: actorType})).render(true, { focus: true });
+                app.close();
+              } catch (error) {
+                ui.notifications.error(error.message);
+              }
             }
           }
-        });
+        };
+
+        $hctButton.on('mousedown', handleButtonClick);
+        $hctButton.on('keydown', handleButtonClick);
       }
     } else {
       $('button[data-hct_start]', html).remove(); // Remove button if actorType is not "character"
