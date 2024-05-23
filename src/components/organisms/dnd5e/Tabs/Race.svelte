@@ -103,7 +103,7 @@ div.tab-content
             +each("advancementArray as advancement")
               li.left
                 .flexrow
-                  .flex1.relative
+                  .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
                   
@@ -121,6 +121,9 @@ div.tab-content
   :global(.icon-select)
     position: relative
 
+  .image
+    min-width: 24px
+
   ul.icon-list
     list-style-type: none
     padding: 0
@@ -128,7 +131,8 @@ div.tab-content
     margin: 0
     li
       margin: 3px 0
-      padding: 0.5rem
+      box-shadow: 0 0 0 1px var(--li-inset-color) inset
+      padding: 0.5rem 0.3rem
       border-radius: var(--border-radius)
       background: var(--li-background-color)
 
