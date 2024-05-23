@@ -18,6 +18,7 @@
 
   $: systemAbilities = game.system.config.abilities
   $: systemAbilitiesArray = Object.entries(systemAbilities);
+  $: raceFeatScore = 0;
 
 </script>
 
@@ -25,16 +26,18 @@
 .attribute-entry.mt-sm
   h5.flexrow.mb-sm
     .flex2.left Ability
-    .flex1.center Race / Background
+    .flex1.center Race / Feat
     .flex1.center Base Score
+    .flex1.center Score
     .flex1.center Modifier
   .indent
     +each("systemAbilitiesArray as ability, index")
       .flexrow.mb-sm
         .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input  0
+        .flex1.center.align-text-with-input {raceFeatScore}
         .flex1.center
           input.center.small(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
+        .flex1.center.align-text-with-input {raceFeatScore + $doc.system.abilities[ability[1].abbreviation].value}
         .flex1.center.align-text-with-input 
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +

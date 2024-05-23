@@ -24,11 +24,11 @@
   // You can opt to use box shadow for manually focused / navigated components. In this case remove the outline above.
   // --tjs-default-box-shadow-focus-visible: undefined
 
-  --tjs-action-ripple-background: rgba(234, 215, 203, 0.1);
 }
 
 #foundryvtt-actor-studio-pc-sheet{
   --tjs-app-overflow: visible;
+  --tjs-action-ripple-background: rgba(210, 165, 137, 0.5);
 
   .border-right {
     border-right: 4px ridge brown;

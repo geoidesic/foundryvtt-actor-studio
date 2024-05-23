@@ -77,12 +77,10 @@ div.tab-content
       IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="asdlfkj" bind:value )
       +if("value")
         +if("source")
-          h3.left {localize('GAS.Source')}
+          //- h3.left {localize('GAS.Source')}
           ol.properties-list
-            li {book} {page}
-        h3.left {localize('GAS.AbilityScores')}
-        ol.properties-list
-          li Manual Entry
+            li {book} {page} {type.value ? ', ' + type.value : ''} 
+
         +if("filteredMovement")
           h3.left {localize('GAS.Tabs.Races.Movement')}
           ol.properties-list
@@ -93,19 +91,17 @@ div.tab-content
           ol.properties-list
             +each("filteredSenses as senses")
               li.left {senses.label} : {senses.value} {units}
-        +if("type")
-          h3.left {localize('GAS.Tabs.Races.Type')}
-          ol.properties-list
-            li.left {type.value}
         +if("advancementArray")
           h3.left {localize('GAS.Tabs.Races.Advancements')}
           ul.icon-list
             +each("advancementArray as advancement")
+              //- @todo: this should be broken out into components for each advancement.type
               li.left
-                .flexrow
+                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
+                    
                   
                 
     .flex0.border-right.right-border-gradient-mask 
