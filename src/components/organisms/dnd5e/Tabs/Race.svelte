@@ -74,7 +74,7 @@ log.d('raceDefinitions', raceDefinitions);
 div.tab-content
   .flexrow
     .flex2.pr-sm.col-a
-      IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="asdlfkj" bind:value )
+      IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value )
       +if("value")
         +if("source")
           //- h3.left {localize('GAS.Source')}
@@ -109,7 +109,7 @@ div.tab-content
   
 </template>
 
-<style lang="sass" scoped>
+<style lang="sass">
   @import "../../../../../styles/Mixins.scss"
   .tab-content 
     @include staticOptions
