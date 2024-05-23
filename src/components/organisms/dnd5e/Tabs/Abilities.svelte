@@ -23,24 +23,17 @@
 <template lang="pug">
   div.tab-content
     .flexrow
-      .flex2.pr-sm
+      .flex2.pr-sm.col-a
         h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         ol.properties-list
           li Manual Entry
         ManualEntry
       .flex0.border-right.right-border-gradient-mask 
-      .flex3.left.pl-md.scroll(bind:innerHTML="{html}" contenteditable)
+      .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{html}" contenteditable)
 </template>
 
 <style lang="sass" scoped>
 @import "../../../../../styles/Mixins.scss"
 .tab-content 
   @include staticOptions
-  position: relative
-  padding: 0
-  .scroll
-    overflow-y: auto
-    height: 580px
-    box-sizing: content-box
-    padding-right: 15px
 </style>

@@ -2,6 +2,8 @@
   "GAS": {
     "ActorStudio": "Actor Studio",
     "PCTitle": "Player Character",
+    "AbilityScores": "Ability Scores",
+    "Source": "Source",
     "Permissions": {
       "NeedCreateActorError": "User requires the 'Create New Actors' permission. Ask your DM to add it to your role",
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",
@@ -11,6 +13,12 @@
     "Tabs": {
       "Abilities": {
         "HowCalculated": "How are abilities calculated?"
+      },
+      "Races": {
+        "Movement": "Movement",
+        "Senses": "Senses",
+        "Type": "Type",
+        "Advancements": "Advancements"
       }
     }
   }

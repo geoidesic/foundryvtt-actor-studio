@@ -106,5 +106,15 @@
     position: relative 
     margin-top: 5px
 
+    position: relative
+    padding: 0
 
+  :global(.tab-content .scroll)
+    overflow-y: auto
+    height: 580px
+    box-sizing: content-box
+    padding-right: 15px
+
+  :global(.tab-content .col-a)
+    padding: 1rem
 </style>
