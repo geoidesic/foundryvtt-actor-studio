@@ -1,7 +1,7 @@
 <script>
   import SvelteSelect from 'svelte-select';
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility";
+  import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log, getRules } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import Tabs from '~/src/components/molecules/Tabs.svelte';
   import ManualEntry from '~/src/components/organisms/dnd5e/AbilityEntry/ManualEntry.svelte';
@@ -16,9 +16,14 @@
   let race; 
   
   const actor = getContext("#doc");
+  const ruleConfig = { journalId: '0AGfrwZRzSG0vNKb', pageId: 'yuSwUFIjK31Mr3DI' };
+
+  let rules = '';
   
   $: actorObject = $actor.toObject();
   $: options = raceDefinitions;
+  $: html = rules?.content || '';
+ 
   
   log.d('actor', actor);
   log.d('$actor', $actor);
@@ -50,6 +55,12 @@
   log.d('folderIds', folderIds);
   log.d('allRaceItems', allRaceItems);
   log.d('raceDefinitions', raceDefinitions);
+
+  onMount(async () => {
+      log.d('mounted');
+      rules = await getRules(ruleConfig);
+      log.d('rules', rules);
+  });
     
 </script>
     
@@ -57,11 +68,11 @@
   div.tab-content
     .flexrow
       .flex2.border-right.pr-sm
-        h4.left {localize('GAS.Tabs.Abilities.HowCalculated')}
+        h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         ol.properties-list
           li Manual Entry
         ManualEntry
-      .flex3
+      .flex3.left.pl-md(bind:innerHTML="{html}" contenteditable)
 </template>
 
 <style lang="scss" scoped>

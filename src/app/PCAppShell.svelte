@@ -61,27 +61,23 @@
 
 <template lang="pug">
   ApplicationShell(bind:elementRoot stylesApp)
-    main 
+    main
       section 
-        Tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
+        Tabs.gas-tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
 </template>
 
 
-<style lang="scss">
-  main {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    height: 100%; // Ensure the layout takes up the full height
-  }
+<style lang="sass" scoped>
+  main 
+    text-align: center
+    display: flex
+    flex-direction: column
+    height: 100%
 
-  section {
-    padding: 20px; // Add some padding for spacing
-  }
+  section 
+    padding: 20px 
   
-  :global(.tab-content) {
-    .border-right {
-      border-right: 4px solid brown;
-    }
-  }
+  :global(.tabs-list) 
+    padding: 0.25rem 10px !important
+  
 </style>

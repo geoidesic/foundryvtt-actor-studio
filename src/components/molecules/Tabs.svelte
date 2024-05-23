@@ -4,7 +4,6 @@
 
   // List of tabs
   export let tabs = [];
-
   // type of sheet
   export let sheet;
 
@@ -15,7 +14,7 @@
 </script>
 
 <!--List of tabs-->
-<div class="tabs">
+<div class="tabs {$$restProps.class}">
   <!--Tab List-->
   <div class="tabs-list">
     <!--For each tab-->
