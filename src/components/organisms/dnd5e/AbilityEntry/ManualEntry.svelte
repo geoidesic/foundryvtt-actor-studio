@@ -42,7 +42,6 @@
 </template>
 
 <style lang="sass">
-  
   .align-text-with-input
     text-align: center
     margin-top: 0.3rem

@@ -73,22 +73,19 @@
           li Manual Entry
         ManualEntry
       .flex0.border-right
-      .flex3.left.pl-md(bind:innerHTML="{html}" contenteditable)
+      .flex3.left.pl-md.scroll(bind:innerHTML="{html}" contenteditable)
 </template>
 
 <style lang="sass" scoped>
 @import "../../../../../styles/Mixins.scss"
 .tab-content 
   @include staticOptions
-  --tjs-app-overflow: visible
-  padding: 15px // Add padding to the tab content
-  border: 2px solid transparent // Start with a transparent border
-  border-radius: 10px // Add some rounded corners
-  background-color: #f9f9f9 // Add a light background color
-  position: relative // Enable absolute positioning for decorations
-
-  .border-right
-    border-right: 4px ridge brown
-    mask-image: linear-gradient(0deg, transparent 0%, black 100%)
-
+  position: relative
+  padding: 0
+  .scroll
+    // display: none
+    overflow-y: auto
+    height: 580px
+    box-sizing: content-box
+    padding-right: 15px
 </style>

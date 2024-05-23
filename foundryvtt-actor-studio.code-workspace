@@ -4,19 +4,19 @@
 			"path": "."
 		},
 		{
-			"path": "../hero-creation-tool"
+			"path": "../FoundryVTT-11"
 		},
 		{
-			"path": "../template-svelte-esm"
+			"path": "../FoundryVTT-Data-11"
 		},
 		{
 			"path": "../essential-svelte-esm"
 		},
 		{
-			"path": "../surge-prototype"
+			"path": "../hero-creation-tool"
 		},
 		{
-			"path": "../FoundryVTT-11"
+			"path": "../surge-prototype"
 		}
 	],
 	"settings": {}

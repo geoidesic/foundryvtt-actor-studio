@@ -67,7 +67,7 @@
 </template>
 
 
-<style lang="sass" scoped>
+<style lang="sass">
   main 
     text-align: center
     display: flex
@@ -79,5 +79,32 @@
   
   :global(.tabs-list) 
     padding: 0.25rem 1.5rem !important
-  
+
+  :global(.gas-tabs)
+    position: relative 
+    padding-top: 1rem
+
+  :global(.gas-tabs .tabs-list) 
+    background: #dbd9cd !important
+    position: fixed
+    top: 30px
+    left: 0
+    width: 100%
+    z-index: 1
+    height: 2.5rem !important
+    padding-top: 1rem !important
+
+  :global(.gas-tabs .tabs-list button:hover)
+    box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important
+
+  :global(.tab-content)
+    --tjs-app-overflow: visible
+    padding: 15px 0px 15px 15px
+    border: 2px solid transparent
+    border-radius: 10px 
+    background-color: #f9f9f9
+    position: relative 
+    margin-top: 5px
+
+
 </style>
