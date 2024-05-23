@@ -75,9 +75,9 @@
     height: 100%
 
   section 
-    padding: 20px 
+    padding: 0.5rem 0.2rem
   
   :global(.tabs-list) 
-    padding: 0.25rem 10px !important
+    padding: 0.25rem 1.5rem !important
   
 </style>
