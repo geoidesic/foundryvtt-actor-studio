@@ -199,8 +199,6 @@
     background: var(--button-background-disabled);
   }
 
-
-
   &:hover {
     &:not(:disabled) {
       background: radial-gradient(var(--sheet-color), transparent);

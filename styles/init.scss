@@ -37,8 +37,11 @@
 
   .border-right {
     border-right: 4px ridge brown;
+  }
+  .right-border-gradient-mask {
     mask-image: linear-gradient(0deg, transparent 0%, black 100%);
   }
+  
   // alignment, accent and visibility
   .bold {
     font-weight: 700;

@@ -72,7 +72,7 @@
         ol.properties-list
           li Manual Entry
         ManualEntry
-      .flex0.border-right
+      .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll(bind:innerHTML="{html}" contenteditable)
 </template>
 
