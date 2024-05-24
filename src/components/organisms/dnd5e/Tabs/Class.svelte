@@ -3,47 +3,65 @@
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
   import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { characterClass } from "~/src/helpers/store"
+  import { characterClass, characterSubClass } from "~/src/helpers/store"
   
-  let active = null, value = null, placeHolder = "Classes";
+  let filteredSubClassIndex = [], mappedSubClassIndex, subClassesIndex, activeClass = null, activeSubClass = null, classValue = null, subclassValue = null, classesPlaceholder = "Classes",  subclassesPlaceholder = "Subclasses";
   let pack = game.packs.get('dnd5e.classes');
   let subClassesPack = game.packs.get('dnd5e.subclasses');
-  let subClassesIndex;
   let folders = getPackFolders(pack, 1);
   let folderIds = folders.map(x => x._id);
-  let allItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
-  let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder));
+  let mappedClassIndex = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
+  let filteredClassIndex = mappedClassIndex.filter(x => !folderIds.includes(x.folder));
+  
+  
   
   const actor = getContext("#doc");
   
   
-  $: options = itemDefinitions;
+  $: classOptions = filteredClassIndex;
+  $: subclassOptions = filteredSubClassIndex;
   $: html = $characterClass?.system?.description.value || '';
   $: subclasses = subClassesIndex?.filter(x => x.system.classIdentifier === $characterClass?.system.identifier);
-
+  
   let richHTML = '';
   
   log.d('actor', actor);
   log.d('$actor', $actor);
   
-  const getSubclassIndex = async (entry) => {
+  const getSubclassIndex = async () => {
     subClassesIndex = await subClassesPack.getIndex({ fields: ['system.classIdentifier'] });
+    mappedSubClassIndex = subClassesPack ? extractMapIteratorObjectProperties(subClassesIndex.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', 'system', '_id'])  : [];
+    filteredSubClassIndex = subClassesPack ? mappedSubClassIndex?.filter(x => x.system.classIdentifier == $characterClass.system.identifier) : [];
+    log.d('subClassesIndex', subClassesIndex);
+    log.d($characterClass.system.identifier);
+    log.d(mappedSubClassIndex);
+    log.d(filteredClassIndex);
+    log.d(filteredSubClassIndex);
+    log.d(subclassOptions);
   }
 
-  const selectHandler = async (option) => {
+  const selectClassHandler = async (option) => {
     $characterClass = await fromUuid(option)
-    active = option; 
+    activeClass = option; 
+    getSubclassIndex();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
-    getSubclassIndex();
+  }
+
+  const selectSubClassHandler = async (option) => {
+    $characterSubClass = await fromUuid(option)
+    activeSubClass = option; 
   }
 
   onMount(async () => {
     log.d('actor', actor);
     if($characterClass) {
-      value = $characterClass.uuid;
+      classValue = $characterClass.uuid;
       richHTML = await TextEditor.enrichHTML(html);
       getSubclassIndex();
+    }
+    if($characterSubClass) {
+      subclassValue = $characterSubClass.uuid;
     }
   });
     
@@ -53,16 +71,12 @@
 div.tab-content
   .flexrow
     .flex2.pr-sm.col-a
-      IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="characterClass-select" bind:value )
+      IconSelect.icon-select(active="{activeClass}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+      +if("subClassesIndex")
       +if("subclasses")
-        h3.left Subclass
-        ul.icon-list
-          +each("subclasses as subclass")
-            li.left
-              .flexrow
-                .flex0.relative.image
-                  img(src="{subclass.img}" alt="{subclass.name}")
-                .flex3.left {subclass.name}
+        h3.left.mt-md Subclass
+        IconSelect.icon-select(active="{activeSubClass}" options="{filteredSubClassIndex}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" )
+        
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
 
