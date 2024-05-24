@@ -1,7 +1,8 @@
 <script>
   import { log, update } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount  } from "svelte";
+  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
+  import { abilities, race } from "~/src/helpers/store"
   
   export let document = false;
   
@@ -20,6 +21,11 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
 
+  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
+
+  onMount(async () => {
+    log.d(abilityAdvancements);
+  });
 </script>
 
 <template lang="pug">
@@ -34,10 +40,13 @@
     +each("systemAbilitiesArray as ability, index")
       .flexrow.mb-sm
         .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input {raceFeatScore}
+        .flex1.center.align-text-with-input
+          +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+              span +
+          span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center
           input.center.small(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
-        .flex1.center.align-text-with-input {raceFeatScore + $doc.system.abilities[ability[1].abbreviation].value}
+        .flex1.center.align-text-with-input {Number(abilityAdvancements?.[ability[1].abbreviation]) + Number($doc.system.abilities[ability[1].abbreviation].value)}
         .flex1.center.align-text-with-input 
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +

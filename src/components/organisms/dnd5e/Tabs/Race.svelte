@@ -54,6 +54,7 @@ onMount(async () => {
   if($race) {
     value = $race.uuid;
   }
+  log.d($race);
 });
 
 /**
