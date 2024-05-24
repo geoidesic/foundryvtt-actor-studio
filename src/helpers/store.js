@@ -7,3 +7,4 @@ export const characterSubClass = writable(false);
 export const background = writable(false); 
 export const abilities = writable(false); 
 export const spells = writable(false); 
+export const level = writable(1); 

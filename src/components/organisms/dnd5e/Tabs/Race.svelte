@@ -100,7 +100,7 @@ div.tab-content
             +each("filteredSenses as senses")
               li.left {senses.label} : {senses.value} {units}
         +if("advancementArray")
-          h3.left {localize('GAS.Tabs.Races.Advancements')}
+          h3.left {localize('GAS.Advancements')}
           ul.icon-list
             +each("advancementArray as advancement")
               //- @todo: this should be broken out into components for each advancement.type

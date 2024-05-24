@@ -4,6 +4,7 @@
     "PCTitle": "Player Character",
     "AbilityScores": "Ability Scores",
     "Source": "Source",
+    "Advancements": "Advancements",
     "Permissions": {
       "NeedCreateActorError": "User requires the 'Create New Actors' permission. Ask your DM to add it to your role",
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",
@@ -17,8 +18,12 @@
       "Races": {
         "Movement": "Movement",
         "Senses": "Senses",
-        "Type": "Type",
-        "Advancements": "Advancements"
+        "Type": "Type"
+      },
+      "Classes": {
+        "Class": "Class",
+        "SubClass": "Sublass",
+        "FilterByLevel": "Filter by Level"
       }
     }
   }

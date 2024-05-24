@@ -94,6 +94,18 @@
     height: 2.5rem !important
     padding-top: 1rem !important
 
+  :global(.gas-tabs .tabs-list::after)
+    content: ""
+    display: block
+    position: fixed
+    top: 71px
+    left: auto
+    width: 95%
+    height: 17px
+    background: black
+    background: linear-gradient(0deg, rgba(219, 217, 205, 0) 0%, #f9f9f9 100%)
+    z-index: 1 
+
   :global(.gas-tabs .tabs-list button:hover)
     box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important
 

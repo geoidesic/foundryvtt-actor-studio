@@ -27,8 +27,27 @@
 }
 
 #foundryvtt-actor-studio-pc-sheet{
-  --tjs-app-overflow: visible;
-  --tjs-action-ripple-background: rgba(210, 165, 137, 0.5);
+  --tjs-select-appearance: none;
+  --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-background-size: 16px 16px;
+  --tjs-select-border: 1px solid #ccc;
+  --tjs-select-border-radius: 4px;
+  --tjs-select-box-shadow-focus: 0 0 5px rgba(0, 0, 0, 0.2);
+  --tjs-select-box-shadow-focus-visible: 0 0 5px rgba(0, 0, 0, 0.5);
+  --tjs-select-cursor: pointer;
+  --tjs-select-flex: 1;
+  --tjs-select-height: 24px; /* Adjust height for smaller vertical size */
+  --tjs-select-outline-focus-visible: none;
+  --tjs-select-outline-offset: 2px;
+  --tjs-select-overflow: hidden;
+  --tjs-select-padding: 0 5px; /* Adjust padding for smaller size */
+  --tjs-select-text-overflow: ellipsis;
+  --tjs-select-transition-focus-visible: box-shadow 0.2s ease;
+  --tjs-select-width: auto; /* Adjust width as needed */
+
+  /* Option variables */
+  --tjs-select-option-background: #23221d;
+  --tjs-select-option-color: #b5b3a4;
 
   .border-right {
     border-right: 4px ridge brown;
