@@ -2,6 +2,7 @@
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
 import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
+import { race } from "~/src/helpers/store"
 import { getContext, onDestroy, onMount, tick } from "svelte";
 import { localize } from "#runtime/svelte/helper";
 
@@ -11,15 +12,14 @@ let folders = getPackFolders(pack, 1);
 let folderIds = folders.map(x => x._id);
 let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
 let raceDefinitions = allRaceItems.filter(x => folderIds.includes(x.folder));
-let race; 
 
 const actor = getContext("#doc");
 
 $: actorObject = $actor.toObject();
 $: options = raceDefinitions;
-$: html = race?.system?.description.value || '';
-$: movement = race?.system?.movement
-$: senses = race?.system?.senses
+$: html = $race?.system?.description.value || '';
+$: movement = $race?.system?.movement
+$: senses = $race?.system?.senses
 
 $: filteredMovement = movement ? Object.keys(movement)
     .filter(key => key !== 'units' && movement[key])
@@ -29,18 +29,18 @@ $: filteredSenses = senses ? Object.keys(senses)
     .filter(key => key !== 'units' && senses[key])
     .map(key => ({ label: key, value: senses[key] })) : [];
 
-$: units = race?.system?.movement?.units || '';
-$: type = race?.system?.type || '';
-$: source = race?.system?.source || '';
+$: units = $race?.system?.movement?.units || '';
+$: type = $race?.system?.type || '';
+$: source = $race?.system?.source || '';
 $: book = source?.book || '';
 $: page = source?.page? ', p. ' + source.page : '';
-$: advancementArray = race?.advancement?.byId ? Object.entries(race.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
+$: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
 
 
 const selectHandler = async (option) => {
-  race = await fromUuid(option);
+  $race = await fromUuid(option);
   active = option; 
-  log.d('race', race);
+  log.d('$race', $race);
   log.d('race.system.description', race.system.description);
   log.d('filteredMovement', filteredMovement);
   log.d('race.advancement', race.advancement);
@@ -48,6 +48,13 @@ const selectHandler = async (option) => {
   await tick();
   log.d('advancementArray', advancementArray);
 }
+
+onMount(async () => {
+  log.d('actor', actor);
+  if($race) {
+    value = $race.uuid;
+  }
+});
 
 /**
  * So the only viable strategy is to keep the race additions in storage 
