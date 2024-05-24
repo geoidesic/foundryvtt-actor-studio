@@ -117,4 +117,40 @@
 
   :global(.tab-content .col-a)
     padding: 1rem
+
+  :global(.tab-content ul.icon-list .image)
+    min-width: 24px
+
+  :global(.tab-content ul.icon-list)
+    list-style-type: none !important
+    padding: 0
+    position: relative
+    margin: 0
+
+  :global(.tab-content ul.icon-list li)
+    margin: 3px 0
+    box-shadow: 0 0 0 1px var(--li-inset-color) inset
+    padding: 0.5rem 0.3rem
+    border-radius: var(--border-radius)
+    background: var(--li-background-color)
+
+  :global(.tab-content ul.icon-list .image img.icon)
+    position: absolute
+    top: -3px
+    left: 0
+    width: 24px
+    height: 24px
+    vertical-align: middle
+    border: 0
+
+  :global(.tab-content ul.icon-list li.tight .flexcol)
+    gap: 0
+    line-height: 11px
+    height: 19px
+    margin: 4px 0 5px 0
+
+  :global(.tab-content ul.icon-list li.tight .image img.icon)
+    top: 2px
+    left: 2px
+  
 </style>

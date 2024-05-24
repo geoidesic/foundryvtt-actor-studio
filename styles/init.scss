@@ -66,9 +66,21 @@
     justify-content: center;
   }
 
-  // headings
+  .tight {
+    padding: 0;
+  }
+
+  // headings and text
   h1, h2, h3, h4, h5 {
     font-family: var(--dnd5e-font-modesto);
+  }
+
+  .caption {
+    font-size: smaller;
+  }
+
+  .light {
+    opacity: 0.5;
   }
 
   // padding margins

@@ -125,29 +125,6 @@ div.tab-content
   :global(.icon-select)
     position: relative
 
-  .image
-    min-width: 24px
 
-  ul.icon-list
-    list-style-type: none
-    padding: 0
-    position: relative
-    margin: 0
-    li
-      margin: 3px 0
-      box-shadow: 0 0 0 1px var(--li-inset-color) inset
-      padding: 0.5rem 0.3rem
-      border-radius: var(--border-radius)
-      background: var(--li-background-color)
-
-  img.icon
-    position: absolute
-    top: -3px
-    left: 0
-    width: 24px
-    height: 24px
-    vertical-align: middle
-    border: 0
-  
 
 </style>
