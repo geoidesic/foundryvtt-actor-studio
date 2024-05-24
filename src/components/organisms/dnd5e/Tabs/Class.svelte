@@ -3,6 +3,7 @@
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
   import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { characterClass } from "~/src/helpers/store"
   
   let active = null, value = null, placeHolder = "Classes";
   let pack = game.packs.get('dnd5e.classes');
@@ -10,13 +11,12 @@
   let folderIds = folders.map(x => x._id);
   let allItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
   let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder));
-  let characterClass; 
   
   const actor = getContext("#doc");
   
   
   $: options = itemDefinitions;
-  $: html = characterClass?.system?.description.value || '';
+  $: html = $characterClass?.system?.description.value || '';
 
   let richHTML = '';
   
@@ -24,12 +24,19 @@
   log.d('$actor', $actor);
   
   const selectHandler = async (option) => {
-    characterClass = await fromUuid(option)
+    $characterClass = await fromUuid(option)
     active = option; 
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
   }
-  
+
+  onMount(async () => {
+    log.d('actor', actor);
+    if($characterClass) {
+      value = $characterClass.uuid;
+      richHTML = await TextEditor.enrichHTML(html);
+    }
+  });
     
 </script>
     
