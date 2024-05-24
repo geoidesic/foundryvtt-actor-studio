@@ -110,7 +110,7 @@
 </script>
     
 <template lang="pug">
-div.tab-content
+.content
   .flexrow
     .flex2.pr-sm.col-a
       IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
@@ -154,7 +154,7 @@ div.tab-content
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
-  .tab-content 
+  .content 
     @include staticOptions
 
   :global(.icon-select)

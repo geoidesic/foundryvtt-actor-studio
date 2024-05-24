@@ -79,7 +79,7 @@ log.d('raceDefinitions', raceDefinitions);
 </script>
 
 <template lang="pug">
-div.tab-content
+div.content
   .flexrow
     .flex2.pr-sm.col-a
       IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value )
@@ -119,7 +119,7 @@ div.tab-content
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
-  .tab-content 
+  .content 
     @include staticOptions
 
   :global(.icon-select)

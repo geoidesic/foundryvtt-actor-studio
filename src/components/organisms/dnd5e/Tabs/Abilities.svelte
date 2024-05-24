@@ -21,7 +21,7 @@
 </script>
     
 <template lang="pug">
-  div.tab-content
+  div.content
     .flexrow
       .flex2.pr-sm.col-a
         h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
@@ -34,6 +34,6 @@
 
 <style lang="sass" scoped>
 @import "../../../../../styles/Mixins.scss"
-.tab-content 
+.content 
   @include staticOptions
 </style>

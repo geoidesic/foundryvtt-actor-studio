@@ -31,6 +31,8 @@ export default class PCApplication extends SvelteApplication
     this.reactive.document = object;
   }
 
+
+
   /**
    * Default Application options
    *
@@ -38,9 +40,11 @@ export default class PCApplication extends SvelteApplication
    * @see https://foundryvtt.com/api/Application.html#options
    */
   static get defaultOptions() {
+    const title = this.title;
     return foundry.utils.mergeObject(super.defaultOptions, {         
       id: 'foundryvtt-actor-studio-pc-sheet',
-      title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
+      
+      title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  
       classes: ['gas-actor-studio'],
       width: 650,
       height: 600,
@@ -97,9 +101,8 @@ export default class PCApplication extends SvelteApplication
    */
   async #handleDocUpdate(doc, options) {
     const { action, data, documentType } = options;
-
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
-      this.reactive.title += (' - '+doc.name);
+      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle')} - ${doc.name}`;
     }
   }
 

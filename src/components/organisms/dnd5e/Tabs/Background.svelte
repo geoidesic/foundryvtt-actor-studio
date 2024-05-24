@@ -51,7 +51,7 @@
 </script>
     
 <template lang="pug">
-div.tab-content
+div.content
   .flexrow
     .flex2.pr-sm.col-a
       IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
@@ -88,7 +88,7 @@ div.tab-content
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
-  .tab-content 
+  .content 
     @include staticOptions
 
   :global(.icon-select)

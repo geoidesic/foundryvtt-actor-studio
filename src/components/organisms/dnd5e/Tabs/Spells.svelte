@@ -23,7 +23,7 @@
 </script>
     
 <template lang="pug">
-  div.tab-content
+  div.content
     .flexrow
       .flex2.pr-sm.col-a
       .flex0.border-right.right-border-gradient-mask 
@@ -32,6 +32,6 @@
 
 <style lang="sass" scoped>
 @import "../../../../../styles/Mixins.scss"
-.tab-content 
+.content 
   @include staticOptions
 </style>

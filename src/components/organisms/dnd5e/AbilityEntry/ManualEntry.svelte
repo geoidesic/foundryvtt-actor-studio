@@ -42,7 +42,7 @@
         .flex2.left {ability[1].label}
         .flex1.center.align-text-with-input
           +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
-              span +
+            span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center
           input.center.small(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")

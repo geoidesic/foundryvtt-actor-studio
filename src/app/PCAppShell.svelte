@@ -2,20 +2,26 @@
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount } from "svelte";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
+  import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
   import Abilities from "~/src/components/organisms/dnd5e/Tabs/Abilities.svelte";
   import Background from "~/src/components/organisms/dnd5e/Tabs/Background.svelte";
   import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
   import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
+  import { applyPosition }   from '#runtime/svelte/store/position';
 
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
-   
   
   setContext("#doc", documentStore);
+
+  const application = getContext('#external').application;
+  const { top, left, width, height, rotateX, rotateY, rotateZ, scale, zIndex } = application.position.stores;
+  const { dragging, resizing } = application.reactive.storeUIState;
+  
   let activeTab = dnd5e.tabs[0].id
 
   const defaultTabs = [
@@ -62,9 +68,14 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot stylesApp)
     main
-      section 
+      section.a
         Tabs.gas-tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
+
+      section.b
+        Footer
+
 </template>
+
 
 
 <style lang="sass">
@@ -76,7 +87,23 @@
 
   section 
     padding: 0.5rem 0.2rem
-  
+
+  .a
+    flex: 1
+    overflow-y: scroll
+
+  .b 
+    height: 65px
+
+
+  .flex-grow
+    flex: 1 // Make this section grow to fill available space
+    overflow-y: scroll
+    height: 90%
+
+  .section-bottom
+    // Add any additional styling for the bottom section
+
   :global(.tabs-list) 
     padding: 0.25rem 1.5rem !important
 
@@ -122,10 +149,8 @@
     padding: 0
 
   :global(.tab-content .scroll)
-    overflow-y: auto
-    height: 580px
     box-sizing: content-box
-    padding-right: 15px
+    padding: 15px
 
   :global(.tab-content .col-a)
     padding: 1rem
