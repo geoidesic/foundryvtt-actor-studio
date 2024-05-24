@@ -42,7 +42,7 @@ export default class PCApplication extends SvelteApplication
       id: 'foundryvtt-actor-studio-pc-sheet',
       title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  // Automatically localized from `lang/en.json`.
       classes: ['gas-actor-studio'],
-      width: 580,
+      width: 650,
       height: 600,
       headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
       minWidth: 500,

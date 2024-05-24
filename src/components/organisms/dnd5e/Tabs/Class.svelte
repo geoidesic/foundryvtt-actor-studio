@@ -7,6 +7,8 @@
   
   let active = null, value = null, placeHolder = "Classes";
   let pack = game.packs.get('dnd5e.classes');
+  let subClassesPack = game.packs.get('dnd5e.subclasses');
+  let subClassesIndex;
   let folders = getPackFolders(pack, 1);
   let folderIds = folders.map(x => x._id);
   let allItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
@@ -17,17 +19,23 @@
   
   $: options = itemDefinitions;
   $: html = $characterClass?.system?.description.value || '';
+  $: subclasses = subClassesIndex?.filter(x => x.system.classIdentifier === $characterClass?.system.identifier);
 
   let richHTML = '';
   
   log.d('actor', actor);
   log.d('$actor', $actor);
   
+  const getSubclassIndex = async (entry) => {
+    subClassesIndex = await subClassesPack.getIndex({ fields: ['system.classIdentifier'] });
+  }
+
   const selectHandler = async (option) => {
     $characterClass = await fromUuid(option)
     active = option; 
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
+    getSubclassIndex();
   }
 
   onMount(async () => {
@@ -35,6 +43,7 @@
     if($characterClass) {
       value = $characterClass.uuid;
       richHTML = await TextEditor.enrichHTML(html);
+      getSubclassIndex();
     }
   });
     
@@ -45,7 +54,15 @@ div.tab-content
   .flexrow
     .flex2.pr-sm.col-a
       IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="characterClass-select" bind:value )
-  
+      +if("subclasses")
+        h3.left Subclass
+        ul.icon-list
+          +each("subclasses as subclass")
+            li.left
+              .flexrow
+                .flex0.relative.image
+                  img(src="{subclass.img}" alt="{subclass.name}")
+                .flex3.left {subclass.name}
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
 
