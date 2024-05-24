@@ -19,6 +19,8 @@
     export let shrinkIfNoIcon = true;
     export let placeHolder = false;
     export let id = void 0;
+    export let noImg = false;
+    export let truncateWidth = 10;
 
     let isOpen = false;
 
@@ -91,13 +93,13 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
       div.placeholder {placeHolder}
     +each("options as option, index")
       +if("option && option?.value === value")
-        +if("!textOnly(option) && shrinkIfNoIcon")
+        +if("!noImg && !textOnly(option) && shrinkIfNoIcon")
           div.option-icon(class="{option.img ? option.img : ''}")
             +if("option.icon != undefined")
               i(class="{option.icon}")
               +else
                 img(src="{option.img}" alt="{option.label}")
-        div.option-label {truncate(option.label, 10)}
+        div.option-label {truncate(option.label, truncateWidth)}
     div.chevron-icon
       i(class="fas fa-chevron-down")
 

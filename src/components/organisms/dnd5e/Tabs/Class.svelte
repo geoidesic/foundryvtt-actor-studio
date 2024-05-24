@@ -5,7 +5,11 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { characterClass, characterSubClass } from "~/src/helpers/store"
   
-  let filteredSubClassIndex = [], mappedSubClassIndex, subClassesIndex, activeClass = null, activeSubClass = null, classValue = null, subclassValue = null, classesPlaceholder = "Classes",  subclassesPlaceholder = "Subclasses";
+  let richHtml = '', richSubClassHTML = '', filteredSubClassIndex = [], mappedSubClassIndex, subClassesIndex, 
+    activeClass = null, activeSubClass = null, classValue = null, subclassValue = null, 
+    classesPlaceholder = "Classes",  subclassesPlaceholder = "Subclasses"
+    ;
+
   let pack = game.packs.get('dnd5e.classes');
   let subClassesPack = game.packs.get('dnd5e.subclasses');
   let folders = getPackFolders(pack, 1);
@@ -37,6 +41,7 @@
     activeSubClass = null
     $characterSubClass = null
     subclassValue = null
+    richSubClassHTML = ''
     $characterClass = await fromUuid(option)
     activeClass = option; 
     getSubclassIndex();
@@ -47,6 +52,9 @@
   const selectSubClassHandler = async (option) => {
     $characterSubClass = await fromUuid(option)
     activeSubClass = option; 
+    await tick();
+    richSubClassHTML = await TextEditor.enrichHTML($characterSubClass.system.description.value);
+    log.d($characterSubClass)
   }
 
   onMount(async () => {
@@ -57,6 +65,8 @@
     }
     if($characterSubClass) {
       subclassValue = $characterSubClass.uuid;
+      await tick();
+      richSubClassHTML = await TextEditor.enrichHTML($characterSubClass.system.description.value);
     }
   });
     
@@ -70,8 +80,10 @@ div.tab-content
       +if("subClassesIndex")
       +if("subclasses")
         h3.left.mt-md Subclass
-        IconSelect.icon-select(active="{subClassProp}" options="{filteredSubClassIndex}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" )
-        p.left active sub: {subClassProp}
+        IconSelect.icon-select(active="{subClassProp}" options="{filteredSubClassIndex}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+        +if("$characterSubClass")
+          h3.left.mt-sm Description
+          .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
 
@@ -85,5 +97,13 @@ div.tab-content
 
   :global(.icon-select)
     position: relative
-
+  
+  .sub-class
+    height: 100px
+    overflow-y: auto
+    padding: 0.5rem
+    border: 1px solid transparent
+    border-radius: 5px
+    box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
+    font-size: smaller
 </style>
