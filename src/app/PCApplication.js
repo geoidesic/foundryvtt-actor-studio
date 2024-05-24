@@ -1,6 +1,7 @@
 import PCAppShell                from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
+import { MODULE_ID } from "~/src/helpers/constants"
 
 export default class PCApplication extends SvelteApplication
 {
@@ -102,7 +103,8 @@ export default class PCApplication extends SvelteApplication
   async #handleDocUpdate(doc, options) {
     const { action, data, documentType } = options;
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
-      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle')} - ${doc.name}`;
+      const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : "";
+      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
     }
   }
 
