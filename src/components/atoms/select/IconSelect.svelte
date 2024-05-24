@@ -37,6 +37,8 @@
       isOpen = !isOpen;
     }
 
+    $: log.d(id, value)
+
     function handleKeydown(event) {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
@@ -78,7 +80,6 @@
     let textOnly = (option) => {
       return option.icon || option.img ? false : true;
     }
-
 
     
   </script>
