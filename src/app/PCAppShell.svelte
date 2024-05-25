@@ -9,7 +9,6 @@
   import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
   import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
-  import { applyPosition }   from '#runtime/svelte/store/position';
 
 
   export let elementRoot; //- passed in by SvelteApplication
