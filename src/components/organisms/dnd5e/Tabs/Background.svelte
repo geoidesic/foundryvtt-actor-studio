@@ -14,7 +14,6 @@
   
   const actor = getContext("#doc");
   
-  
   $: options = itemDefinitions;
   $: html = $background?.system?.description.value || '';
   $: backgroundFolders = folders.filter(x => x.depth == 1 && x.name.includes($background?.name))
@@ -24,9 +23,6 @@
   $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
 
   let richHTML = '';
-  
-  log.d('actor', actor);
-  log.d('$actor', $actor);
   
   const selectHandler = async (option) => {
     $background = await fromUuid(option)
@@ -41,12 +37,6 @@
       value = $background.uuid;
       richHTML = await TextEditor.enrichHTML(html);
     }
-    log.d(backgroundFolders);
-    log.d(folders);
-    log.d(pack);
-    log.d(equipmentFolderId);
-    log.d(equipment);
-    log.d(features);
   });
 </script>
     

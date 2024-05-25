@@ -1,15 +1,14 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
-  import { setContext, getContext, onMount } from "svelte";
+  import { setContext, getContext, onMount, onDestroy } from "svelte";
+  import { characterClass, characterSubClass, resetStores, tabs, activeTab } from "~/src/helpers/store"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
-  import Abilities from "~/src/components/organisms/dnd5e/Tabs/Abilities.svelte";
-  import Background from "~/src/components/organisms/dnd5e/Tabs/Background.svelte";
-  import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
-  import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
+    import { log } from '../helpers/Utility';
 
+resetStores
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -18,18 +17,15 @@
   setContext("#doc", documentStore);
 
   const application = getContext('#external').application;
-  const { top, left, width, height, rotateX, rotateY, rotateZ, scale, zIndex } = application.position.stores;
-  const { dragging, resizing } = application.reactive.storeUIState;
   
-  let activeTab = dnd5e.tabs[0].id
+  $activeTab = dnd5e.tabs[0].id
 
-  const defaultTabs = [
-    { label: "Abilities", id: "abilities", component: Abilities },
-    { label: "Race", id: "race", component: Race },
-    { label: "Background", id: "backgrond", component: Background },
-    { label: "Class", id: "class", component: Class },
-    { label: "Spells", id: "spells", component: Spells },
-  ];
+  $: if($characterClass?.system?.spellcasting?.progression && $characterClass?.system?.spellcasting?.progression !== "none") {
+    // ensure that tabs includes spells
+    if(!$tabs.find(x => x.id === "spells")) {
+      $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
+    }
+  }
 
   const stylesApp = {
       '--tjs-app-overflow': 'visible'
@@ -54,7 +50,9 @@
 
   });
 
-  $: tabs = defaultTabs;
+  onDestroy(() => {
+    resetStores();
+  });
     
 </script>
 
@@ -68,7 +66,7 @@
   ApplicationShell(bind:elementRoot stylesApp)
     main
       section.a
-        Tabs.gas-tabs( {tabs} bind:activeTab="{activeTab}" sheet="PC")
+        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC" importPath="../organisms/dnd5e/Tabs/")
 
       section.b
         Footer

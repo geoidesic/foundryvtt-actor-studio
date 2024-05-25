@@ -1,16 +1,28 @@
 <script>
   import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
+    import { log } from "../../helpers/Utility";
 
   // List of tabs
   export let tabs = [];
   // type of sheet
   export let sheet;
+  export let importPath = '';
 
   // The active tab
   export let activeTab = void 0;
 
   export let efx = ripple();
+
+  
+  const componentImport = async (componentName) => {
+    return import(/* @vite-ignore */`${importPath}${componentName}.svelte`).then(({default: C}) => C);
+  }
+
+  const importComponent = async (componentName) => {
+    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
+    return Component;
+  };
 </script>
 
 <!--List of tabs-->
@@ -36,7 +48,18 @@
   <div class="tab-content">
     {#each tabs as tab}
       {#if tab.id === activeTab}
+        {#if typeof tab.component === 'object'}
         <svelte:component this={tab.component} {sheet} />
+        {/if}
+        {#if typeof tab.component === 'string' && importPath}
+          {#await importComponent(tab.component)}
+            Loading...
+          {:then Component}
+            <svelte:component this={Component} {sheet} />
+          {:catch error}
+            <p>Error loading component: {error.message}</p>
+          {/await}
+        {/if}
       {/if}
     {/each}
   </div>

@@ -39,8 +39,6 @@
       isOpen = !isOpen;
     }
 
-    $: log.d(id, value)
-
     function handleKeydown(event) {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();

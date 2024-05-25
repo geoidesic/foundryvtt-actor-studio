@@ -40,13 +40,7 @@ $: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancemen
 const selectHandler = async (option) => {
   $race = await fromUuid(option);
   active = option; 
-  log.d('$race', $race);
-  log.d('race.system.description', race.system.description);
-  log.d('filteredMovement', filteredMovement);
-  log.d('race.advancement', race.advancement);
-  log.d('race.advancement.byId', race.advancement.byId);
   await tick();
-  log.d('advancementArray', advancementArray);
 }
 
 onMount(async () => {
@@ -64,17 +58,9 @@ onMount(async () => {
  */
 const createActorInGameAndEmbedItems = async () => {
   const itemData = race.toObject()
-  log.d('itemData', itemData)
   const actorInGame = await Actor.create(actorObject);
-  log.d('actorInGame' , actorInGame)
   const result = await addItemToCharacter(actorInGame, itemData)
-  log.d('result', result);
 }
-
-log.d('folders', folders);
-log.d('folderIds', folderIds);
-log.d('allRaceItems', allRaceItems);
-log.d('raceDefinitions', raceDefinitions);
 
 </script>
 

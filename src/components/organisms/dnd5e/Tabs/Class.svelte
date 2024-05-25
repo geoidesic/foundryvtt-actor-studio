@@ -3,7 +3,7 @@
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
   import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { characterClass, characterSubClass, level } from "~/src/helpers/store"
+  import { characterClass, characterSubClass, level, tabs } from "~/src/helpers/store"
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   
@@ -29,10 +29,8 @@
     // display: 'inline-block',
     // fontSize: 'smaller',
   }
-
   
   const actor = getContext("#doc");
-  
   
   $: classOptions = filteredClassIndex;
   $: subclassOptions = filteredSubClassIndex;
@@ -56,11 +54,6 @@
         .map(([id, value]) => ({ ...value, id }))
     : [];
 
-    
-  
-  $: log.d('subClassAdvancementArrayFiltered', subClassAdvancementArrayFiltered )
-  $: log.d('classAdvancementArrayFiltered', classAdvancementArrayFiltered )
-
   let richHTML = '';
   
   const getSubclassIndex = async () => {
@@ -80,6 +73,9 @@
     getSubclassIndex();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
+
+    log.d($characterClass)
+    log.d($tabs)
   }
 
   const selectSubClassHandler = async (option) => {
