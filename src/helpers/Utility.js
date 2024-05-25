@@ -230,25 +230,25 @@ export function getEffectOrigin(effect) {
   return item;
 }
 
+
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
   set level(level) {
-    if (level >= this.ASSERT) this.a = console.assert.bind(window.console);
-    else this.a = function () { };
-    if (level >= this.ERROR) this.e = console.error.bind(window.console);
-    else this.e = function () { };
-    if (level >= this.WARN) this.w = console.warn.bind(window.console);
-    else this.w = function () { };
-    if (level >= this.INFO) this.i = console.info.bind(window.console);
-    else this.i = function () { };
-    if (level >= this.DEBUG) this.d = console.debug.bind(window.console);
-    else this.d = function () { };
-    if (level >= this.VERBOSE) this.v = console.log.bind(window.console);
-    else this.v = function () { };
+    this.a = (level >= this.ASSERT) ? console.assert.bind(window.console, LOG_PREFIX) : () => {};
+    this.e = (level >= this.ERROR) ? console.error.bind(window.console, LOG_PREFIX) : () => {};
+    this.w = (level >= this.WARN) ? console.warn.bind(window.console, LOG_PREFIX) : () => {};
+    this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => {};
+    this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => {};
+    this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => {};
     this.loggingLevel = level;
   },
   get level() { return this.loggingLevel; }
 };
+
+// Example usage:
+// log.level = log.DEBUG;
+// log.d("This is a debug message.");
+
 
 export async function getCompendiumEffect(effect) {
   if (!effect) {
@@ -267,8 +267,7 @@ export async function getCompendiumEffect(effect) {
 }
 
 export const addItemToCharacter = async (actor, itemData) => {
-	itemData = itemData instanceof Array ? itemData : [itemData];
-	return actor.createEmbeddedDocuments("Item", itemData);
+  await actor.sheet._onDropSingleItem(itemData);
 }
 
 // truncate string
