@@ -17,7 +17,7 @@ const actor = getContext("#doc");
 
 $: actorObject = $actor.toObject();
 $: options = raceDefinitions;
-$: html = $race?.system?.description.value || '';
+$: html = $race?.system?.description?.value || '';
 $: movement = $race?.system?.movement
 $: senses = $race?.system?.senses
 
