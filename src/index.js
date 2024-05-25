@@ -2,20 +2,20 @@ import '../styles/Variables.scss'; // Import any styles as this includes them in
 import '../styles/init.scss'; // Import any styles as this includes them in the build.
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import PCApplication from './app/PCApplication.js';
-import { userHasRightPermissions } from '~/src/helpers/Utility'
-import { log } from '~/src/helpers/Utility'
+import { userHasRightPermissions, log } from '~/src/helpers/Utility'
+import { tabs, activeTab, advancementApp } from '~/src/helpers/store.js';
+import { writable, get, derived } from 'svelte/store';;
+
 window.log = log;
 log.level = log.DEBUG;
 
 Hooks.once("ready", (app, html, data) => {
-    log.i('Initialising');
-    CONFIG.debug.hooks = true;
-
-    
+  log.i('Initialising');
+  // CONFIG.debug.hooks = true;
 });
 
 function addCreateNewActorButton(html, app) {
-  console.info(`${LOG_PREFIX} Adding Create New Actor button`);
+  log.i('Adding Create New Actor button');
   const select = $('select', html);
 
   function updateButton() {
@@ -37,7 +37,7 @@ function addCreateNewActorButton(html, app) {
               const actorName = $('input', html).val();
               log.d('actorType', actorType);
               try {
-                new PCApplication(new Actor.implementation({name: actorName, type: actorType})).render(true, { focus: true });
+                new PCApplication(new Actor.implementation({ name: actorName, type: actorType })).render(true, { focus: true });
                 app.close();
               } catch (error) {
                 ui.notifications.error(error.message);
@@ -61,13 +61,61 @@ function addCreateNewActorButton(html, app) {
   select.on('change', updateButton);
 }
 
-Hooks.on('renderApplication', (app, html, data)  => {
-    
-  log.d(html);
-  log.d(app);
+Hooks.on('renderApplication', (app, html, data) => {
 
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
     addCreateNewActorButton(html, app);
+  }
+})
+
+function stripClasses(element) {
+  element.find('*').removeClass(); // Remove all classes from all descendants
+  element.removeClass(); // Remove all classes from the element itself
+}
+
+function stripRootClasses(element) {
+  element.removeClass(); // Remove all classes from the root element itself
+  element.addClass('gas-advancements')
+}
+
+Hooks.on('renderAdvancementManager', async (app, html, data) => {
+  // Check if your application is currently open by looking for its specific DOM element
+  const appElement = $('#foundryvtt-actor-studio-pc-sheet');
+  if (appElement.length) {
+    // stripClasses(html);
+    log.d('html', html)
+    log.d('app', app)
+    stripRootClasses(html);
+
+    const unsubscribe = tabs.subscribe(async (obj) => {
+
+      if (!obj.find(x => x.id === "advancements")) {
+        await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        activeTab.set('advancements');
+      }
+    })
+
+    advancementApp.set({ app, html, data });
+
+
+
+    unsubscribe();
+
+
+  }
+});
+
+
+Hooks.on('gas.renderAdvancement', () => {
+  const {app, html, data} = get(advancementApp);
+  if (app) {
+    const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
+    // Move the dialog to your application's content area
+    app.element.appendTo(panelElement);
+
+
+    // Modify the application properties
+   
   }
 })

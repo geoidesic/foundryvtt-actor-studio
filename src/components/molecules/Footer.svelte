@@ -1,7 +1,7 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { race, characterClass, characterSubClass, background, spells, subRace } from "~/src/helpers/store";
+  import { race, characterClass, characterSubClass, background, spells, subRace, isActorCreated } from "~/src/helpers/store";
     import { addItemToCharacter, log } from "~/src/helpers/Utility";
 
   export let value = null;
@@ -24,8 +24,14 @@
     log.d($actor)
   }
 
-  const clickHandler = async () => {
+  const clickCreateHandler = async () => {
     await createActorInGameAndEmbedItems();
+    $isActorCreated = true
+  }
+
+  const clickUpdateHandler = async () => {
+    log.i('Updating actor')
+    // await actor.update(actorObject);
   }
 
 
@@ -117,7 +123,10 @@ const createActorInGameAndEmbedItems = async () => {
           .flex2
             input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
     .flex1
-      button(type="button" role="button" on:mousedown="{clickHandler}") Create
+      +if("!$isActorCreated")
+        button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create
+      +if("$isActorCreated")
+        button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
 </template>
 
 

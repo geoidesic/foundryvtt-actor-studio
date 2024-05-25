@@ -1,9 +1,4 @@
-import { writable, get, derived } from 'svelte/store';
-
-import Abilities from "~/src/components/organisms/dnd5e/Tabs/Abilities.svelte";
-import Background from "~/src/components/organisms/dnd5e/Tabs/Background.svelte";
-import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
-import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
+import { writable, get, derived } from 'svelte/store';;
 
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
@@ -21,6 +16,8 @@ export const abilities = writable(false);
 export const spells = writable(false); 
 export const level = writable(1); 
 export const activeTab = writable(''); 
+export const isActorCreated = writable(false);
+export const advancementApp = writable(false); 
 
 export const tabs = writable(initialTabs);
 
@@ -36,4 +33,6 @@ export function resetStores() {
   level.set(1);
   activeTab.set('');
   tabs.set(initialTabs);
+  advancementApp.set(false);
+  isActorCreated.set(false);
 }

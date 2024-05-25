@@ -29,6 +29,7 @@ resetStores
 
   const stylesApp = {
       '--tjs-app-overflow': 'visible'
+      
   };
 
   onMount( async () => {
