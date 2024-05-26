@@ -2,16 +2,17 @@ import '../styles/Variables.scss'; // Import any styles as this includes them in
 import '../styles/init.scss'; // Import any styles as this includes them in the build.
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import PCApplication from './app/PCApplication.js';
-import { userHasRightPermissions, log } from '~/src/helpers/Utility'
-import { tabs, activeTab, advancementApps } from '~/src/helpers/store.js';
-import { writable, get, derived } from 'svelte/store';;
+import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
+import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
+import { writable, get, derived } from 'svelte/store';
+import { tick } from "svelte";
 
 window.log = log;
 log.level = log.DEBUG;
 
 Hooks.once("ready", (app, html, data) => {
   log.i('Initialising');
-  // CONFIG.debug.hooks = true;
+  CONFIG.debug.hooks = true;
 });
 
 function addCreateNewActorButton(html, app) {
@@ -32,7 +33,6 @@ function addCreateNewActorButton(html, app) {
 
         const handleButtonClick = function (e) {
           if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
-            log.d('html', html);
             if (userHasRightPermissions()) {
               const actorName = $('input', html).val();
               log.d('actorType', actorType);
@@ -69,52 +69,99 @@ Hooks.on('renderApplication', (app, html, data) => {
   }
 })
 
-function stripClasses(element) {
-  element.find('*').removeClass(); // Remove all classes from all descendants
-  element.removeClass(); // Remove all classes from the element itself
-}
 
-function stripRootClasses(element) {
-  element.removeClass(); // Remove all classes from the root element itself
-  element.addClass('gas-advancements')
-}
+
+const isAppElementAppended = (appId) => {
+  const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
+  return panelElement.find(`[data-appid="${appId}"]`).length > 0;
+};
+
+const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
+
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
+  log.d('renderAdvancementManager')
+
   // Check if your application is currently open by looking for its specific DOM element
-  const appElement = $('#foundryvtt-actor-studio-pc-sheet');
-  if (appElement.length) {
-    // stripClasses(html);
-    log.d('html', html)
-    log.d('app', app)
-    stripRootClasses(html);
+  const currentProcess = get(dropItemRegistry.currentProcess)
+  log.d('app', app)
+  const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
-    const unsubscribe = tabs.subscribe(async (obj) => {
+  log.d('methods', methods)
+  log.d('currentProcess', currentProcess)
 
-      if (!obj.find(x => x.id === "advancements")) {
+  if (currentProcess.id && app._stepIndex === 0) {
+    log.d('currentProcess', currentProcess)
+    log.d(' app._stepIndex', app._stepIndex)
+    const appElement = $('#foundryvtt-actor-studio-pc-sheet');
+    if (appElement.length) {
+
+      dropItemRegistry.updateCurrentProcess({ app, html, data })
+
+      const advancementsTab = get(tabs).find(x => x.id === "advancements");
+
+      if (advancementsTab) {
+        Hooks.call("gas.renderAdvancement");
+      } else {
+
         await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         activeTab.set('advancements');
       }
-    })
 
-    advancementApps.update(apps => [...apps, { app, html, data }]);
-    unsubscribe();
+
+    }
   }
 });
 
 Hooks.on('gas.renderAdvancement', () => {
+  log.d('gas.renderAdvancement')
+  const currentProcess = get(dropItemRegistry.currentProcess);
+  log.d('currentProcess', currentProcess)
+
   // Get all stored advancement apps
-  const apps = get(advancementApps);
-  apps.forEach(({ app, html, data }) => {
-    if (app) {
-      console.group(app)
-      const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
+  if (currentProcess) {
+    const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
+    log.d('panelElement', panelElement)
+    // Move each app's dialog to your application's content area
+    // Check if the app's element is already appended
+    if (!isAppElementAppended(currentProcess.id)) {
+      log.d('not cuurently appended, so append app');
+      const element = currentProcess.app.element
+      log.d('element', element)
+      element.removeClass(); // Remove all classes from the root element itself
+      element.addClass('gas-advancements')
+      element.attr('gas-appid', currentProcess.id);
       // Move each app's dialog to your application's content area
-      app.element.appendTo(panelElement);
+      element.appendTo(panelElement);
     }
-  });
+  }
 });
 
-// Hooks.on('dnd5e.preAdvancementManagerComplete', () => {
+Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
+  log.d(args)
+})
+Hooks.on('closeAdvancementManager', async (...args) => {
+  // Define a function to check if the panel is empty
+  const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content').html().trim() === '';
 
+  // Define a function to wait for the panel to become empty
+  const waitForPanelEmpty = async () => {
+    while (!isPanelEmpty()) {
+      // Wait for a short delay before checking again
+      await new Promise(resolve => setTimeout(resolve, 100)); // Adjust the delay as needed
+    }
+  };
 
+  // Wait for the panel to become empty
+  await waitForPanelEmpty();
+
+  // Once the panel is empty, proceed with the drop operation
+  dropItemRegistry.advanceQueue();
+});
+
+// Hooks.on('dnd5e.advancementManagerComplete', (...args) => {
+//   log.d(args)
+//   setTimeout(() => {
+//     dropItemRegistry.advanceQueue();
+//   }, 5000);
 // })

@@ -30,10 +30,8 @@
   @include inset
   font-size: 1rem
 
-
 :global(.gas-advancements .step ol.trait-slots li.trait-slot)
   margin: 2px 0
-  
 
 :global(.gas-advancements .step ol.trait-slots li.trait-slot label::before)
   content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M9 16.17l-3.5-3.5 1.17-1.17L9 13.83l6.33-6.33L16.5 8.5 9 16.17zM5 5v14h14V5H5z"/></svg>') /* SVG icon */

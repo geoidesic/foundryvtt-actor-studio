@@ -249,6 +249,8 @@ export const log = {
 // log.level = log.DEBUG;
 // log.d("This is a debug message.");
 
+export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 
 export async function getCompendiumEffect(effect) {
   if (!effect) {
@@ -266,8 +268,8 @@ export async function getCompendiumEffect(effect) {
   return origin;
 }
 
-export const addItemToCharacter = async (actor, itemData) => {
-  return await actor.sheet._onDropSingleItem(itemData);
+export const addItemToCharacter = async ({actor, itemData}) => {
+  await actor.sheet._onDropSingleItem(itemData);
 }
 
 // truncate string

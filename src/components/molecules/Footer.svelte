@@ -1,8 +1,8 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { race, characterClass, characterSubClass, background, spells, subRace, isActorCreated, activeTab } from "~/src/helpers/store";
-    import { addItemToCharacter, log } from "~/src/helpers/Utility";
+  import { race, characterClass, characterSubClass, background, spells, subRace, isActorCreated, activeTab, dropItemRegistry } from "~/src/helpers/store";
+  import { log } from "~/src/helpers/Utility";
 
   export let value = null;
 
@@ -15,13 +15,10 @@
 
   const handleNameInput = (e) => {
     $actor.name = e.target.value;
-    log.d($actor)
   }
   const handleTokenNameInput = (e) => {
-    log.d(e.target.value);
     if(!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
-    log.d($actor)
   }
 
   const clickCreateHandler = async () => {
@@ -30,7 +27,6 @@
   }
 
   const clickUpdateHandler = async () => {
-    log.i('Updating actor')
     // await actor.update(actorObject);
   }
 
@@ -41,60 +37,51 @@
  */
 const createActorInGameAndEmbedItems = async () => {
 	const actorInGame = await Actor.create(actorObject);
-  let result = null;
 
   // background
   if($background) {
     log.i('Adding background to character')
     const backgroundData = $background.toObject()
-    result = await addItemToCharacter(actorInGame, backgroundData)
-    log.d(result);
+    dropItemRegistry.add( { actor: actorInGame, id: 'background', itemData: backgroundData });
   }
   
   // race
   if($race) {
     log.i('Adding race to character')
     const raceData = $race.toObject()
-    await addItemToCharacter(actorInGame, raceData)
-    
+    dropItemRegistry.add( { actor: actorInGame, id: 'race', itemData: raceData });
   }
   
   // subrace
   if($subRace) {
     log.i('Adding subrace to character')
     const subRaceData = $subRace.toObject()
-    await addItemToCharacter(actorInGame, subRaceData)
-
+    dropItemRegistry.add( { actor: actorInGame, id: 'subRace', itemData: subRaceData });
   }
   
   // character class
   if($characterClass) {
     log.i('Adding class to character')
     const characterClassData = $characterClass.toObject()
-    await addItemToCharacter(actorInGame, characterClassData)
-
+    dropItemRegistry.add( { actor: actorInGame, id: 'characterClass', itemData: characterClassData });
   }
   
   // character subclass
   if($characterSubClass) {
     log.i('Adding subclass to character')
     const characterSubClassData = $characterSubClass.toObject()
-    await addItemToCharacter(actorInGame, characterSubClassData)
-
+    dropItemRegistry.add( { actor: actorInGame, id: 'characterSubClass', itemData: characterSubClassData });
   }
-
 
   // spells
   if($spells) {
     log.i('Adding spells to character')
-    log.i('Adding spells to character')
     const spellsData = $spells.toObject()
-    await addItemToCharacter(actorInGame, spellsData)
-
+    dropItemRegistry.add( { actor: actorInGame, id: 'spells', itemData: spellsData });
   }
-
-  
   // app.close();
+
+  dropItemRegistry.advanceQueue(true);
 }
 
 </script>
