@@ -25,6 +25,9 @@ resetStores
     if(!$tabs.find(x => x.id === "spells")) {
       $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
     }
+  } else {
+    // remove spells tab
+    $tabs = $tabs.filter(x => x.id !== "spells")
   }
 
   const stylesApp = {
