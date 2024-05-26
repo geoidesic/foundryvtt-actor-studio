@@ -36,12 +36,19 @@ $: book = source?.book || '';
 $: page = source?.page? ', p. ' + source.page : '';
 $: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
 
+$: log.d('advancementArray', advancementArray)
 
 const selectHandler = async (option) => {
   $race = await fromUuid(option);
   active = option; 
   await tick();
 }
+
+const importPath = '../../../molecules/dnd5e/Advancements/';
+const importComponent = async (componentName) => {
+    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
+    return Component;
+  };
 
 onMount(async () => {
   if($race) {
@@ -93,6 +100,9 @@ div.content
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
+                +await("importComponent(advancement.type)")
+                  +then("Component")
+                    svelte:component(this="{Component}" advancement="{advancement}")
                     
                   
                 

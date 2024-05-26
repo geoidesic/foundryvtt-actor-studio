@@ -15,9 +15,7 @@
   export let efx = ripple();
 
   
-  const componentImport = async (componentName) => {
-    return import(/* @vite-ignore */`${importPath}${componentName}.svelte`).then(({default: C}) => C);
-  }
+
 
   const importComponent = async (componentName) => {
     const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);

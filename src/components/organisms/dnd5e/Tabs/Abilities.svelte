@@ -3,7 +3,7 @@
   import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log, getRules } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import Tabs from '~/src/components/molecules/Tabs.svelte';
-  import ManualEntry from '~/src/components/organisms/dnd5e/AbilityEntry/ManualEntry.svelte';
+  import ManualEntry from '~/src/components/molecules/dnd5e/AbilityEntry/ManualEntry.svelte';
   import { localize } from "#runtime/svelte/helper";
   
   const actor = getContext("#doc");

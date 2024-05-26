@@ -12,7 +12,7 @@ log.level = log.DEBUG;
 
 Hooks.once("ready", (app, html, data) => {
   log.i('Initialising');
-  CONFIG.debug.hooks = true;
+  // CONFIG.debug.hooks = true;
 });
 
 function addCreateNewActorButton(html, app) {
