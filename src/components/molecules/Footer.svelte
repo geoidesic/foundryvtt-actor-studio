@@ -89,7 +89,7 @@ const createActorInGameAndEmbedItems = async () => {
 <template lang="pug">
 div
   +if("$activeTab !== 'advancements'")  
-    .flexrow.gap-10
+    .flexrow.gap-10.pr-md.mt-sm
       .flex2
         .flexcol
           .flexrow.gap-10
@@ -97,11 +97,11 @@ div
               label Character Name
             .flex2
               input.left(type="text" value="{value}" on:input="{handleNameInput}")
-          .flexrow.gap-10
-            .flex1.right.mt-xs
-              label Token Name
-            .flex2
-              input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
+          //- .flexrow.gap-10
+          //-   .flex1.right.mt-xs
+          //-     label Token Name
+          //-   .flex2
+          //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       .flex1
         +if("!$isActorCreated")
           button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create
@@ -113,6 +113,8 @@ div
 <style lang="sass">
 .gap-10
   gap: 10px
+  justify-content: space-between
+  align-items: center
 label
   margin: 10px 0 0 0
 </style>
