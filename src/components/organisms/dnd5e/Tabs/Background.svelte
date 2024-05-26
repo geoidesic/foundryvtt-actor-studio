@@ -22,7 +22,7 @@
   $: featureFolderId = backgroundFolders.find(x => x.name == $background.name+' Feature')?.key
   $: equipment = equipmentFolderId ? allItems.filter(x => x.folder == equipmentFolderId) : [];
   $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
-  $: advancementArray = $background?.advancement?.byId ? Object.entries($background.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
+  $: advancementArray = $background?.advancement?.byId ? Object.entries($background.advancement.byId).map(([id, value]) => ({ ...value, id })).filter(value => !(value.type == 'ItemGrant' && value.title == "Feature")) : [];
 
   $: log.d('advancementArray', advancementArray)
 
