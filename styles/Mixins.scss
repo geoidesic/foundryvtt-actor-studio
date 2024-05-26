@@ -11,6 +11,13 @@
   background: initial;
 }
 
+@mixin inset {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.4rem;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3) inset;
+}
+
 @mixin staticOptions {
   .flexrow {
     gap: 2px;

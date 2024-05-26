@@ -3,7 +3,7 @@ import '../styles/init.scss'; // Import any styles as this includes them in the 
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import PCApplication from './app/PCApplication.js';
 import { userHasRightPermissions, log } from '~/src/helpers/Utility'
-import { tabs, activeTab, advancementApp } from '~/src/helpers/store.js';
+import { tabs, activeTab, advancementApps } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';;
 
 window.log = log;
@@ -96,26 +96,25 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       }
     })
 
-    advancementApp.set({ app, html, data });
-
-
-
+    advancementApps.update(apps => [...apps, { app, html, data }]);
     unsubscribe();
-
-
   }
 });
 
-
 Hooks.on('gas.renderAdvancement', () => {
-  const {app, html, data} = get(advancementApp);
-  if (app) {
-    const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
-    // Move the dialog to your application's content area
-    app.element.appendTo(panelElement);
+  // Get all stored advancement apps
+  const apps = get(advancementApps);
+  apps.forEach(({ app, html, data }) => {
+    if (app) {
+      console.group(app)
+      const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
+      // Move each app's dialog to your application's content area
+      app.element.appendTo(panelElement);
+    }
+  });
+});
+
+// Hooks.on('dnd5e.preAdvancementManagerComplete', () => {
 
 
-    // Modify the application properties
-   
-  }
-})
+// })

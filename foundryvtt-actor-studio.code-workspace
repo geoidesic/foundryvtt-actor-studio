@@ -17,6 +17,9 @@
 		},
 		{
 			"path": "../surge-prototype"
+		},
+		{
+			"path": "../dnd5e"
 		}
 	],
 	"settings": {}

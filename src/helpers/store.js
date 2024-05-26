@@ -17,7 +17,7 @@ export const spells = writable(false);
 export const level = writable(1); 
 export const activeTab = writable(''); 
 export const isActorCreated = writable(false);
-export const advancementApp = writable(false); 
+export const advancementApps = writable([]); 
 
 export const tabs = writable(initialTabs);
 
@@ -33,6 +33,6 @@ export function resetStores() {
   level.set(1);
   activeTab.set('');
   tabs.set(initialTabs);
-  advancementApp.set(false);
+  advancementApps.set([]);
   isActorCreated.set(false);
 }

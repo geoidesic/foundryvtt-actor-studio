@@ -267,7 +267,7 @@ export async function getCompendiumEffect(effect) {
 }
 
 export const addItemToCharacter = async (actor, itemData) => {
-  await actor.sheet._onDropSingleItem(itemData);
+  return await actor.sheet._onDropSingleItem(itemData);
 }
 
 // truncate string
