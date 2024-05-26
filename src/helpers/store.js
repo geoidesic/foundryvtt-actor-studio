@@ -25,11 +25,15 @@ const arrayOfObjectsStore = () => {
     advanceQueue: async (initial) => {
       const next = get(store)[0] || false;
       log.d('next', next)
-      if (!next) return false;
+      if (!next) {
+        inProcess.set(false);
+        return false;
+      }
       inProcess.set(next);
       remove(next.id);
       log.d('queue', get(store))
       await addItemToCharacter(next);
+      return true;
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),
@@ -48,6 +52,7 @@ export const activeTab = writable('');
 export const isActorCreated = writable(false);
 export const dropItemRegistry = arrayOfObjectsStore();
 export const tabs = writable(initialTabs);
+export const actorInGame = writable(false);
 
 // Function to reset all stores
 export function resetStores() {
@@ -63,4 +68,5 @@ export function resetStores() {
   tabs.set(initialTabs);
   dropItemRegistry.removeAll();
   isActorCreated.set(false);
+  actorInGame.set(false);
 }

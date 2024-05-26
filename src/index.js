@@ -156,7 +156,11 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   await waitForPanelEmpty();
 
   // Once the panel is empty, proceed with the drop operation
-  dropItemRegistry.advanceQueue();
+  const queue = await dropItemRegistry.advanceQueue();
+  log.d('queue', queue)
+  if(!queue) {
+    Hooks.call("gas.close");
+  }
 });
 
 // Hooks.on('dnd5e.advancementManagerComplete', (...args) => {

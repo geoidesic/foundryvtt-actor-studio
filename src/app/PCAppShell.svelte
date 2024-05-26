@@ -1,14 +1,12 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
-  import { characterClass, characterSubClass, resetStores, tabs, activeTab } from "~/src/helpers/store"
+  import { characterClass, characterSubClass, resetStores, tabs, activeTab, actorInGame } from "~/src/helpers/store"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
-    import { log } from '../helpers/Utility';
-
-resetStores
+  import { log } from '../helpers/Utility';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -41,6 +39,15 @@ resetStores
 
   onDestroy(() => {
     resetStores();
+  });
+
+  Hooks.on("gas.close", (item) => {
+    log.d('gas.close')
+    log.d($actorInGame);
+    log.d($actorInGame.sheet);
+    $actorInGame.sheet.render(true);
+    resetStores();
+    application.close();
   });
     
 </script>
