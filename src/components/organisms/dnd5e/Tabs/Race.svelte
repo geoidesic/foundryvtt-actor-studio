@@ -44,11 +44,9 @@ const selectHandler = async (option) => {
 }
 
 onMount(async () => {
-  log.d('actor', actor);
   if($race) {
     value = $race.uuid;
   }
-  log.d($race);
 });
 
 /**

@@ -32,7 +32,6 @@
   }
   
   onMount(async () => {
-    log.d('actor', actor);
     if($background) {
       value = $background.uuid;
       richHTML = await TextEditor.enrichHTML(html);

@@ -36,7 +36,6 @@
   $: subclassOptions = filteredSubClassIndex;
   $: html = $characterClass?.system?.description.value || '';
   $: subclasses = subClassesIndex?.filter(x => x.system.classIdentifier === $characterClass?.system.identifier);
-
   $: subClassProp = activeSubClass
   $: classProp = activeClass
   // $: subClassAdvancementArray = $characterSubClass?.advancement?.byId ? Object.entries($characterSubClass.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
@@ -73,9 +72,6 @@
     getSubclassIndex();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
-
-    log.d($characterClass)
-    log.d($tabs)
   }
 
   const selectSubClassHandler = async (option) => {
@@ -83,7 +79,6 @@
     activeSubClass = option; 
     await tick();
     richSubClassHTML = await TextEditor.enrichHTML($characterSubClass.system.description.value);
-    log.d($characterSubClass)
   }
 
   const levelSelectHandler = async (option) => {
@@ -115,7 +110,7 @@
         .flexrow
           .flex2.mt-xs {localize('GAS.Tabs.Classes.FilterByLevel')}
           .flex2.left
-            TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" id="level-select" styles="{selectStyles}" )
+            TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
         +if("classAdvancementArrayFiltered")
           h3.left.mt-sm {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')} 
           ul.icon-list

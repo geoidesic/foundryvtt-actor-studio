@@ -49,13 +49,13 @@
     {#each tabs as tab}
       {#if tab.id === activeTab}
         {#if typeof tab.component === 'object'}
-        <svelte:component this={tab.component} {sheet} />
+        <svelte:component this={tab.component} />
         {/if}
         {#if typeof tab.component === 'string' && importPath}
           {#await importComponent(tab.component)}
             Loading...
           {:then Component}
-            <svelte:component this={Component} {sheet} />
+            <svelte:component this={Component} />
           {:catch error}
             <p>Error loading component: {error.message}</p>
           {/await}

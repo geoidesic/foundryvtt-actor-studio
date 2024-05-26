@@ -71,7 +71,6 @@
 
     onMount(() => {
       window.addEventListener("click", handleClickOutside);
-      log.d('placeHolder', placeHolder)
     });
     onDestroy(() => {
       window.removeEventListener("click", handleClickOutside);

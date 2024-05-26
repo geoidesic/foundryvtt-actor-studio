@@ -14,17 +14,14 @@
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     $doc.updateSource(options)
     $doc = $doc
-    log.d($doc.system.abilities);
   }
 
   $: systemAbilities = game.system.config.abilities
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
 
   onMount(async () => {
-    log.d(abilityAdvancements);
   });
 </script>
 
