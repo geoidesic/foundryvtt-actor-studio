@@ -3,6 +3,7 @@
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
   import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { localize } from "#runtime/svelte/helper";
   import { background } from "~/src/helpers/store"
   
   let active = null, value = null, placeHolder = "Backgrounds";
@@ -21,6 +22,10 @@
   $: featureFolderId = backgroundFolders.find(x => x.name == $background.name+' Feature')?.key
   $: equipment = equipmentFolderId ? allItems.filter(x => x.folder == equipmentFolderId) : [];
   $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
+  $: advancementArray = $background?.advancement?.byId ? Object.entries($background.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
+
+  $: log.d('advancementArray', advancementArray)
+
 
   let richHTML = '';
   
@@ -30,6 +35,13 @@
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
   }
+
+  const importPath = '../../../molecules/dnd5e/Advancements/';
+  const importComponent = async (componentName) => {
+    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
+    return Component;
+  };
+
   
   onMount(async () => {
     if($background) {
@@ -68,6 +80,19 @@ div.content
                     .caption {item.label}
                     .caption.light {item.type}
 
+        +if("advancementArray.length")
+          h3.left {localize('GAS.Advancements')}
+          ul.icon-list
+            +each("advancementArray as advancement")
+              //- @todo: this should be broken out into components for each advancement.type
+              li.left
+                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
+                  .flex0.relative.image
+                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                  .flex2 {advancement.title}
+                +await("importComponent(advancement.type)")
+                  +then("Component")
+                    svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)

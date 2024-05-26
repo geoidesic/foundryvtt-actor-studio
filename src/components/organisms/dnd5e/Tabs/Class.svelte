@@ -53,6 +53,9 @@
         .map(([id, value]) => ({ ...value, id }))
     : [];
 
+  $: log.d('classAdvancementArrayFiltered', classAdvancementArrayFiltered)
+  $: log.d('subClassAdvancementArrayFiltered', subClassAdvancementArrayFiltered)
+
   let richHTML = '';
   
   const getSubclassIndex = async () => {
