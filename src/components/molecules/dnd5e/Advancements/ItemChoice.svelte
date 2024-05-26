@@ -12,7 +12,7 @@
 
 <template lang="pug">
   .advancement.mt-sm
-    +if("advancement.title === 'Size'")
+    +if("advancement.title === 'Cantrip'")
       .flexrow
         .flex.left {advancement.configuration.hint}
 

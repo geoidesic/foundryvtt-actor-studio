@@ -4,8 +4,14 @@ import { getContext, onDestroy, onMount, tick } from "svelte";
 export let advancement = null;
 
 $: grantArray = Array.from(advancement.configuration.grants).map(grant => {
-  const [label, value] = grant.split(':');
-  return { label, value };
+  const split = grant.split(':');
+  switch (split[0]) {
+    case 'weapon':
+      return split[2]
+  
+    default:
+      return game.system.config[split[0]][split[1]].label
+  }
 });
 
 
@@ -24,10 +30,10 @@ onMount(async () => {
         span.label Any
       .flex.right
         span.value {advancement.configuration.choices[0].count}
-  +if("advancement.title === 'Skills'")
-    +each("grantArray as skill")
-      .flexrow
-        .flex.left {game.system.config.skills[skill.value].label}
+    +else()
+      +each("grantArray as grant")
+        .flexrow
+          .flex.left {grant}
     
 </template>
 
