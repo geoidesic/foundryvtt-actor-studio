@@ -56,7 +56,7 @@
 </script>
 
 <template lang="pug">
-  .advancement.mt-sm
+  .advancement.mt-sm(data-type="{advancement.type}")
     +if("grants.length > 0")
       +each("grants as grant")
         .flexrow

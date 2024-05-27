@@ -27,7 +27,7 @@
 </script>
 
 <template lang="pug">
-  .advancement.mt-sm
+  .advancement.mt-sm(data-type="{advancement.type}")
     ul.icon-list
     +each("items as item")
       li.left

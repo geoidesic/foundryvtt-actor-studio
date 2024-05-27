@@ -32,7 +32,7 @@
 </script>
 
 <template lang="pug">
-.advancement.mt-sm
+.advancement.mt-sm(data-type="{advancement.type}")
   +each("improvements as improvement")
     .flexrow
       .flex.left

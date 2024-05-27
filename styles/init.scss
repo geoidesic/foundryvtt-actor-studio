@@ -27,16 +27,15 @@
 }
 .gas-tooltip {
   text-align: left !important;
-  line-height: 1.4rem !important;
+  line-height: 1.3rem !important;
 }
 .gas-tooltip a {
-  background-color: #ff9900 !important;
+  background-color: var(--color-text-hyperlink) !important;
   color: #fff !important;
   border-radius: var(--border-radius) !important;
 }
-.gas-tooltip a .icon {
+.gas-tooltip a i {
   color: #fff;
-  background-color: #fff;
 }
 #foundryvtt-actor-studio-pc-sheet{
   --tjs-select-appearance: none;
