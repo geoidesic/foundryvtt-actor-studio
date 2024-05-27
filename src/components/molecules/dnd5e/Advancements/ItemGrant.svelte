@@ -33,7 +33,7 @@
       li.left
         +await("TextEditor.enrichHTML(item.system.description.value || '')")
           +then("Html")
-            .flexrow(data-tooltip="{Html}")
+            .flexrow(data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip")
               .flex0.relative.image
                 img.icon(src="{item.img}" alt="{item.name}")
               .flex2 {item.name}

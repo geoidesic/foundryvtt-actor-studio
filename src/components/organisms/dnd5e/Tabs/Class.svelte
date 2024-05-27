@@ -38,8 +38,6 @@
   $: subclasses = subClassesIndex?.filter(x => x.system.classIdentifier === $characterClass?.system.identifier);
   $: subClassProp = activeSubClass
   $: classProp = activeClass
-  // $: subClassAdvancementArray = $characterSubClass?.advancement?.byId ? Object.entries($characterSubClass.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
-  // $: classAdvancementArray = $characterClass?.advancement?.byId ? Object.entries($characterClass.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
 
   $: subClassAdvancementArrayFiltered = $characterSubClass?.advancement?.byId
     ? Object.entries($characterSubClass.advancement.byId)
@@ -87,6 +85,12 @@
   const levelSelectHandler = async (option) => {
     
   }
+
+  const importPath = '../../../molecules/dnd5e/Advancements/';
+  const importComponent = async (componentName) => {
+    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
+    return Component;
+  };
   
   onMount(async () => {
     if($characterClass) {
@@ -120,10 +124,16 @@
             +each("classAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
               li.left
-                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
+                .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
+                
+                +await("importComponent(advancement.type)")
+                  +then("Component")
+                    //- pre advancement {advancement.type}
+                    svelte:component(this="{Component}" advancement="{advancement}")
+
       +if("subclasses")
         h3.left.mt-md Subclass
         IconSelect.icon-select(active="{subClassProp}" options="{filteredSubClassIndex}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
@@ -136,10 +146,16 @@
             +each("subClassAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
               li.left
-                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
+                .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
+                
+                +await("importComponent(advancement.type)")
+                  +then("Component")
+                    //- pre advancement {advancement.type}
+                    svelte:component(this="{Component}" advancement="{advancement}")
+
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
 

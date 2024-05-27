@@ -25,7 +25,19 @@
   // --tjs-default-box-shadow-focus-visible: undefined
 
 }
-
+.gas-tooltip {
+  text-align: left !important;
+  line-height: 1.4rem !important;
+}
+.gas-tooltip a {
+  background-color: #ff9900 !important;
+  color: #fff !important;
+  border-radius: var(--border-radius) !important;
+}
+.gas-tooltip a .icon {
+  color: #fff;
+  background-color: #fff;
+}
 #foundryvtt-actor-studio-pc-sheet{
   --tjs-select-appearance: none;
   --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
@@ -49,9 +61,7 @@
   --tjs-select-option-background: #23221d;
   --tjs-select-option-color: #b5b3a4;
 
-  #tooltip {
-    text-align: left;
-  }
+
 
   .border-right {
     border-right: 4px ridge var(--color-highlight);

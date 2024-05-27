@@ -49,9 +49,9 @@ const selectHandler = async (option) => {
 
 const importPath = '../../../molecules/dnd5e/Advancements/';
 const importComponent = async (componentName) => {
-    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
-    return Component;
-  };
+  const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
+  return Component;
+};
 
 onMount(async () => {
   if($race) {
@@ -99,7 +99,7 @@ div.content
             +each("advancementArray as advancement")
               //- @todo: this should be broken out into components for each advancement.type
               li.left
-                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
+                .flexrow(data-tooltip="{advancement.configuration?.hint || null}")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}

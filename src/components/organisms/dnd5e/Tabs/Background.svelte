@@ -86,7 +86,7 @@ div.content
             +each("advancementArray as advancement")
               //- @todo: this should be broken out into components for each advancement.type
               li.left
-                .flexrow(data-tooltip="{advancement.configuration?.hint || ''}")
+                .flexrow(data-tooltip="{advancement.configuration?.hint || null}"  data-tooltip-class="gas-tooltip")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
