@@ -125,17 +125,20 @@
             .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
             .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
           ul.icon-list
-            +each("classAdvancementArrayFiltered as advancement")
-              //- @todo: this should be broken out into components for each advancement.type
-              li.left(data-type="{advancement.type}")
-                .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
-                  .flex0.relative.image
-                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                  .flex2 {advancement.title}
-                +await("importComponent(advancement.type)")
-                  +then("Component")
-                    //- pre advancement {advancement.type}
-                    svelte:component(this="{Component}" advancement="{advancement}")
+            +if("!subClassAdvancementArrayFiltered.length")
+              li.left {localize('GAS.NoAdvancements')}
+              +else()
+                +each("classAdvancementArrayFiltered as advancement")
+                  //- @todo: this should be broken out into components for each advancement.type
+                  li.left(data-type="{advancement.type}")
+                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
+                      .flex0.relative.image
+                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                      .flex2 {advancement.title}
+                    +await("importComponent(advancement.type)")
+                      +then("Component")
+                        //- pre advancement {advancement.type}
+                        svelte:component(this="{Component}" advancement="{advancement}")
 
       +if("subclasses")
         h3.left.mt-md Subclass
