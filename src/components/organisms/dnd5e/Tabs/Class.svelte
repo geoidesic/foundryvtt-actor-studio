@@ -125,13 +125,13 @@
             .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
             .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
           ul.icon-list
-            +if("!subClassAdvancementArrayFiltered.length")
+            +if("!classAdvancementArrayFiltered.length")
               li.left {localize('GAS.NoAdvancements')}
               +else()
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
                   li.left(data-type="{advancement.type}")
-                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
+                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                       .flex0.relative.image
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
@@ -157,7 +157,7 @@
                   +each("subClassAdvancementArrayFiltered as advancement")
                     //- @todo: this should be broken out into components for each advancement.type
                     li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
+                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
                         .flex0.relative.image
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
