@@ -121,7 +121,9 @@
           .flex2.left
             TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
         +if("classAdvancementArrayFiltered")
-          h3.left.mt-sm {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')} 
+          h3.left.mt-sm.flexrow
+            .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
+            .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
           ul.icon-list
             +each("classAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
@@ -141,24 +143,26 @@
         +if("$characterSubClass")
           h3.left.mt-sm Description
           .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
-        +if("subClassAdvancementArrayFiltered")
-          h3.left.mt-sm {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')} 
-          ul.icon-list
-            +if("!subClassAdvancementArrayFiltered.length")
-              li.left {localize('GAS.NoAdvancements')}
-              +else()
-                +each("subClassAdvancementArrayFiltered as advancement")
-                  //- @todo: this should be broken out into components for each advancement.type
-                  li.left(data-type="{advancement.type}")
-                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
-                      .flex0.relative.image
-                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                      .flex2 {advancement.title}
-                    
-                    +await("importComponent(advancement.type)")
-                      +then("Component")
-                        //- pre advancement {advancement.type}
-                        svelte:component(this="{Component}" advancement="{advancement}")
+          +if("subClassAdvancementArrayFiltered")
+            h3.left.mt-sm.flexrow
+              .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
+              .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
+            ul.icon-list
+              +if("!subClassAdvancementArrayFiltered.length")
+                li.left {localize('GAS.NoAdvancements')}
+                +else()
+                  +each("subClassAdvancementArrayFiltered as advancement")
+                    //- @todo: this should be broken out into components for each advancement.type
+                    li.left(data-type="{advancement.type}")
+                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
+                        .flex0.relative.image
+                          img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                        .flex2 {advancement.title}
+                      
+                      +await("importComponent(advancement.type)")
+                        +then("Component")
+                          //- pre advancement {advancement.type}
+                          svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
@@ -170,6 +174,12 @@
   @import "../../../../../styles/Mixins.scss"
   .content 
     @include staticOptions
+    .badge.inset
+      @include badge()
+      @include inset
+      display: inline-block
+      white-space: nowrap
+
 
   :global(.icon-select)
     position: relative
