@@ -34,7 +34,10 @@ $: type = $race?.system?.type || '';
 $: source = $race?.system?.source || '';
 $: book = source?.book || '';
 $: page = source?.page? ', p. ' + source.page : '';
-$: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancement.byId).map(([id, value]) => ({ ...value, id })) : [];
+$: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancement.byId).map(([id, value]) => ({ ...value, id }))
+  .filter(value => !(value.type == 'Trait' && value.title == "Dwarven Resilience"))
+  // .filter(value => (value.type == 'Trait' && value.title == "Tinker"))
+  : [];
 
 $: log.d('advancementArray', advancementArray)
 
@@ -100,8 +103,12 @@ div.content
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
+                //- pre advancement.type {advancement.type}
+                //- pre advancement.title {advancement.title}
+
                 +await("importComponent(advancement.type)")
                   +then("Component")
+                    //- pre advancement {advancement.type}
                     svelte:component(this="{Component}" advancement="{advancement}")
                     
                   

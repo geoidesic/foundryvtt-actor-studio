@@ -31,10 +31,12 @@
     ul.icon-list
     +each("items as item")
       li.left
-        .flexrow(data-tooltip="{item.system.description.value || ''}")
-          .flex0.relative.image
-            img.icon(src="{item.img}" alt="{item.name}")
-          .flex2 {item.name}
+        +await("TextEditor.enrichHTML(item.system.description.value || '')")
+          +then("Html")
+            .flexrow(data-tooltip="{Html}")
+              .flex0.relative.image
+                img.icon(src="{item.img}" alt="{item.name}")
+              .flex2 {item.name}
 
 </template>
 

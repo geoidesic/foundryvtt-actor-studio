@@ -18,6 +18,14 @@
   box-shadow: 0 0 5px rgba(0,0,0,0.3) inset;
 }
 
+@mixin badge($background: var(--color-highlight), $size: 0.75rem) {
+  padding: 2px 4px !important;
+  border-radius: var(--border-radius);
+  background: $background;
+  color: #fff;
+  font-size: $size;
+}
+
 @mixin staticOptions {
   .flexrow {
     gap: 2px;
