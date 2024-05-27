@@ -48,7 +48,9 @@
   $: classAdvancementArrayFiltered = $characterClass?.advancement?.byId
     ? Object.entries($characterClass.advancement.byId)
         .filter(([id, value]) => value.level === $level)
+        
         .map(([id, value]) => ({ ...value, id }))
+        // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
     : [];
 
   $: log.d('classAdvancementArrayFiltered', classAdvancementArrayFiltered)
@@ -123,12 +125,11 @@
           ul.icon-list
             +each("classAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
-              li.left
+              li.left(data-type="{advancement.type}")
                 .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
-                
                 +await("importComponent(advancement.type)")
                   +then("Component")
                     //- pre advancement {advancement.type}
@@ -145,7 +146,7 @@
           ul.icon-list
             +each("subClassAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
-              li.left
+              li.left(data-type="{advancement.type}")
                 .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")

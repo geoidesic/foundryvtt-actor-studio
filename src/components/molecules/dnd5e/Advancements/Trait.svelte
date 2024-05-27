@@ -44,6 +44,9 @@
         case "languages":
         case "tool":
           return { label: split[2], value: split[1] };
+          
+          case "saves":
+          return { label: game.system.config.abilities[split[1]].label, value: split[1] };
 
         default:
           return {
