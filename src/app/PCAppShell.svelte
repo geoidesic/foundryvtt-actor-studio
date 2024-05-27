@@ -84,6 +84,7 @@
   .a
     flex: 1
     overflow-y: scroll
+    min-width: 200px
 
   .b 
     height: 65px

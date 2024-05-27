@@ -5,6 +5,7 @@
     "AbilityScores": "Ability Scores",
     "Source": "Source",
     "Advancements": "Advancements",
+    "NoAdvancements": "No advancements for this level",
     "Permissions": {
       "NeedCreateActorError": "User requires the 'Create New Actors' permission. Ask your DM to add it to your role",
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",

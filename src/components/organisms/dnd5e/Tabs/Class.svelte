@@ -144,18 +144,21 @@
         +if("subClassAdvancementArrayFiltered")
           h3.left.mt-sm {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')} 
           ul.icon-list
-            +each("subClassAdvancementArrayFiltered as advancement")
-              //- @todo: this should be broken out into components for each advancement.type
-              li.left(data-type="{advancement.type}")
-                .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
-                  .flex0.relative.image
-                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                  .flex2 {advancement.title}
-                
-                +await("importComponent(advancement.type)")
-                  +then("Component")
-                    //- pre advancement {advancement.type}
-                    svelte:component(this="{Component}" advancement="{advancement}")
+            +if("!subClassAdvancementArrayFiltered.length")
+              li.left {localize('GAS.NoAdvancements')}
+              +else()
+                +each("subClassAdvancementArrayFiltered as advancement")
+                  //- @todo: this should be broken out into components for each advancement.type
+                  li.left(data-type="{advancement.type}")
+                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip" )
+                      .flex0.relative.image
+                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                      .flex2 {advancement.title}
+                    
+                    +await("importComponent(advancement.type)")
+                      +then("Component")
+                        //- pre advancement {advancement.type}
+                        svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
