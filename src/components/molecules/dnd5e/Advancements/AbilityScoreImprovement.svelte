@@ -21,11 +21,21 @@
     return nonZeroFixedArray;
   }
 
+  let improvements = [];
+  $: fixed = getNonZeroFixedValues(advancement.configuration)
+  $: points = advancement.configuration.points
 
-  $: improvements = getNonZeroFixedValues(advancement.configuration);
+  $: if(fixed) {
+    improvements = fixed;
+  }
+  $: if(points)(
+    improvements = [
+      { label: 'Points', value: Number(points) }
+    ]
+  )
 
   onMount(async () => {
-    console.log('advancement'+advancement.type, advancement)
+    console.log('AbilityScoreImprovement advancement'+advancement.type, advancement)
     
   });
   
