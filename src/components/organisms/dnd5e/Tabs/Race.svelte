@@ -1,7 +1,7 @@
 <script>
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-import { extractMapIteratorObjectProperties, getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
+import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
 import { getContext, onDestroy, onMount, tick } from "svelte";
 import { localize } from "#runtime/svelte/helper";
 import { race } from "~/src/helpers/store"

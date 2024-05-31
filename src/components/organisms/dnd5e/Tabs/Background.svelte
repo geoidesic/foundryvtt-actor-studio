@@ -1,17 +1,17 @@
 <script>
   import SvelteSelect from 'svelte-select';
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { extractMapIteratorObjectProperties, getPackFolders, getPacksFromSettings, addItemToCharacter, log } from "~/src/helpers/Utility.js";
+  import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
   import { background } from "~/src/helpers/store"
   
   let active = null, value = null, placeHolder = "Backgrounds";
-  let pack = getPacksFromSettings('backgrounds');
-  let folders = getPackFolders(pack, 1);
+  let packs = getPacksFromSettings('backgrounds');
+  let folders = getFoldersFromMultiplePacks(packs, 1);
   let folderIds = folders.map(x => x._id);
-  let allItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
-  let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder));
+  let allItems = extractItemsFromPacks(packs, ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
+  let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder)).sort((a, b) => a.label.localeCompare(b.label));
   
   const actor = getContext("#doc");
   
@@ -23,8 +23,6 @@
   $: equipment = equipmentFolderId ? allItems.filter(x => x.folder == equipmentFolderId) : [];
   $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
   $: advancementArray = $background?.advancement?.byId ? Object.entries($background.advancement.byId).map(([id, value]) => ({ ...value, id })).filter(value => !(value.type == 'ItemGrant' && value.title == "Feature")) : [];
-
-  $: log.d('advancementArray', advancementArray)
 
 
   let richHTML = '';
