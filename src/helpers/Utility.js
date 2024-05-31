@@ -33,6 +33,10 @@ export async function getRules(rule) {
   return text;
 }
 
+export const getPacksFromSettings = (type) => {
+  return game.packs.get(`dnd5e.${type}`);
+}
+
 export const update = ($doc, dispatch, path) => async(event) => {
   console.log("event", event);
   console.log("dispatch", dispatch);
