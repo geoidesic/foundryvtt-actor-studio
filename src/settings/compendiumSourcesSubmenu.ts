@@ -58,14 +58,18 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   }
 }
 
-function buildCompendiaList(compendiaList: any[], defaultCollection?: string[]) {
-  return compendiaList.map((p: any) => {
-    return {
-      collection: p.collection as string,
-      label: `${p.metadata.label} [${p.metadata.packageName}]`,
-      checked: defaultCollection?.includes(p.collection),
-    };
-  });
+function buildCompendiaList(compendiaList: Compendium[], defaultCollection: DefaultCollection, defaultType: keyof DefaultCollection) {
+  return compendiaList
+    .filter((p: any) => {
+      return p.metadata.packageName !== 'dnd5e' || p.metadata.id === `dnd5e.${defaultType}`
+    })
+    .map((p: any) => {
+      return {
+        collection: p.collection as string,
+        label: `${p.metadata.label} [${p.metadata.packageName}]`,
+        checked: defaultCollection[defaultType]?.includes(p.collection),
+      };
+    });
 }
 
 type BuildData = {
@@ -82,44 +86,64 @@ type BuildData = {
     items: string[];
   };
 };
+
+type Compendium = {
+  collection: string;
+  metadata: {
+    packageName: string;
+    label: string;
+  };
+};
+
+type DefaultCollection = {
+  races: string[];
+  racialFeatures: string[];
+  classes: string[];
+  subclasses: string[];
+  backgrounds: string[];
+  spells: string[];
+  feats: string[];
+  items: string[];
+};
+
 function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
   return {
     source: {
       races: {
         label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.races),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'races'),
       },
       racialFeatures: {
         label: game.i18n.localize('GAS.Setting.Sources.RacialFeatureCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.racialFeatures),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'racialFeatures'),
       },
       classes: {
         label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.classes),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'classes'),
       },
       subclasses: {
         label: game.i18n.localize('GAS.Setting.Sources.SubclassCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.subclasses),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'subclasses'),
       },
       // classFeatures: {
       //   label: game.i18n.localize('GAS.Setting.Sources.ClassFeatureCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia.classFeatures),
+      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'classFeatures'),
       // },
       backgrounds: {
         label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.backgrounds),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds'),
       },
       spells: {
         label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.spells),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'spells'),
       },
       feats: {
         label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.feats),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'feats'),
       },
       items: {
         label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia.items),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
       },
     },
   };
