@@ -1,6 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { addItemToCharacter, log } from "~/src/helpers/Utility";
-
+import { addItemToCharacter, isAdvancementsForLevelInItem, log } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
   { label: "Race", id: "race", component: "Race" },
@@ -32,8 +31,9 @@ const arrayOfObjectsStore = () => {
       inProcess.set(next);
       remove(next.id);
       log.d('queue', get(store))
-      await addItemToCharacter(next);
-      return true;
+      const itemData = await addItemToCharacter(next);
+      log.d('itemData', itemData)
+      return isAdvancementsForLevelInItem(level, itemData)
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),

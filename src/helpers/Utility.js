@@ -305,7 +305,14 @@ export async function getCompendiumEffect(effect) {
 }
 
 export const addItemToCharacter = async ({actor, itemData}) => {
-  await actor.sheet._onDropSingleItem(itemData);
+  return await actor.sheet._onDropSingleItem(itemData);
+}
+
+export const isAdvancementsForLevelInItem = (level, item) => {
+  // where structure is like system.advancement = [{level: 1, ...}]
+  const adv = item.system.advancement.find(adv => adv.level === level)
+  if (adv) return true;
+  return false
 }
 
 // truncate string
