@@ -1,13 +1,13 @@
 <script>
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
+import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
 import { getContext, onDestroy, onMount, tick } from "svelte";
 import { localize } from "#runtime/svelte/helper";
 import { race } from "~/src/helpers/store"
 
 let active = null, value = null, placeHolder = "Races";
-let pack = game.packs.get('dnd5e.races');
+let pack = getPacksFromSettings('races');
 let folders = getPackFolders(pack, 1);
 let folderIds = folders.map(x => x._id);
 let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);

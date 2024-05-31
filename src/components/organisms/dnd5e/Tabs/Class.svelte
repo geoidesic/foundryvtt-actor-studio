@@ -1,7 +1,7 @@
 <script>
   import SvelteSelect from 'svelte-select';
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
+  import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { characterClass, characterSubClass, level, tabs } from "~/src/helpers/store"
   import { localize } from "#runtime/svelte/helper";
@@ -12,8 +12,12 @@
     classesPlaceholder = "Classes",  subclassesPlaceholder = "Subclasses"
     ;
 
-  let pack = game.packs.get('dnd5e.classes');
-  let subClassesPack = game.packs.get('dnd5e.subclasses');
+  let pack = getPacksFromSettings('classes');
+
+  /** @todo: #15:- build this up based on settings */
+  let subClassesPack = getPacksFromSettings('subclasses');
+  
+  
   let folders = getPackFolders(pack, 1);
   let folderIds = folders.map(x => x._id);
   let mappedClassIndex = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);

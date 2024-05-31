@@ -1,13 +1,13 @@
 <script>
   import SvelteSelect from 'svelte-select';
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, log } from "~/src/helpers/Utility.js";
+  import { extractMapIteratorObjectProperties, getPackFolders, getPacksFromSettings, addItemToCharacter, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
   import { background } from "~/src/helpers/store"
   
   let active = null, value = null, placeHolder = "Backgrounds";
-  let pack = game.packs.get('dnd5e.backgrounds');
+  let pack = getPacksFromSettings('backgrounds');
   let folders = getPackFolders(pack, 1);
   let folderIds = folders.map(x => x._id);
   let allItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
