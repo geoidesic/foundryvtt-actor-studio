@@ -1,17 +1,17 @@
 <script>
 import SvelteSelect from 'svelte-select';
 import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-import { extractMapIteratorObjectProperties, getPackFolders, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
+import { extractMapIteratorObjectProperties, getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
 import { getContext, onDestroy, onMount, tick } from "svelte";
 import { localize } from "#runtime/svelte/helper";
 import { race } from "~/src/helpers/store"
 
 let active = null, value = null, placeHolder = "Races";
-let pack = getPacksFromSettings('races');
-let folders = getPackFolders(pack, 1);
+let packs = getPacksFromSettings('races');
+let folders = getFoldersFromMultiplePacks(packs, 1);
 let folderIds = folders.map(x => x._id);
-let allRaceItems = extractMapIteratorObjectProperties(pack.index.entries(), ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
-let raceDefinitions = allRaceItems.filter(x => folderIds.includes(x.folder));
+let allRaceItems = extractItemsFromPacks(packs, ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
+let raceDefinitions = allRaceItems.filter(x => folderIds.includes(x.folder)).sort((a, b) => a.label.localeCompare(b.label));
 
 const actor = getContext("#doc");
 
@@ -39,7 +39,6 @@ $: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancemen
   // .filter(value => (value.type == 'Trait' && value.title == "Tinker"))
   : [];
 
-$: log.d('advancementArray', advancementArray)
 
 const selectHandler = async (option) => {
   $race = await fromUuid(option);

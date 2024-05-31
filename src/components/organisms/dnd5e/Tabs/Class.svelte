@@ -19,7 +19,7 @@
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
 
-  let richHtml = "",
+  let richHTML = "",
     richSubClassHTML = "",
     activeClass = null,
     activeSubClass = null,
@@ -63,13 +63,15 @@
   const actor = getContext("#doc");
 
   $: html = $characterClass?.system?.description.value || "";
+  $: subClassProp = activeSubClass;
+  $: classProp = activeClass;
+  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
+
   $: if(subClassesIndex?.length) {
     subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
   } else {
     subclasses = [];
   }
-  $: subClassProp = activeSubClass;
-  $: classProp = activeClass;
 
   $: subClassAdvancementArrayFiltered = $characterSubClass?.advancement?.byId
     ? Object.entries($characterSubClass.advancement.byId)
@@ -85,12 +87,9 @@
     : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
       [];
 
-  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
 
-  let richHTML = "";
 
   const getFilteredSubclassIndex = async () => {
-    log.d('getFilteredSubclassIndex subClassesPacks', subClassesPacks);
     const filteredSubClassIndex = [];
     for(let subClassesPack of subClassesPacks) {
       let index = await subClassesPack.getIndex({
@@ -112,7 +111,6 @@
       ))
     }
     const output = filteredSubClassIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
-    log.d('output', output);
     return output
   };
 
