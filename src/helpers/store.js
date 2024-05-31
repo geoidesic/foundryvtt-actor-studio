@@ -33,7 +33,7 @@ const arrayOfObjectsStore = () => {
       log.d('queue', get(store))
       const itemData = await addItemToCharacter(next);
       log.d('itemData', itemData)
-      return isAdvancementsForLevelInItem(level, itemData)
+      return isAdvancementsForLevelInItem(1, itemData) //- hard-coded to level 1 because this module only currently supports level 1 advancements
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),
