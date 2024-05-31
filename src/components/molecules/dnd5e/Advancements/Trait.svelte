@@ -11,7 +11,7 @@
     const arr = Array.from(p)
     const nuarr = arr.map(x => {
       const split = x.split(":")
-      log.d('split', split);
+      // log.d('split', split);
       if(split[2]) {
         return {all: false, label: split[2], value: split[1]};
       }
@@ -39,7 +39,7 @@
   $: if (advancement.configuration.grants.size > 0) {
     grants = Array.from(advancement.configuration.grants).map((grant) => {
       const split = grant.split(":");
-      log.d('Trait split', split);
+      // log.d('Trait split', split);
       switch (split[0]) {
         case "languages":
         case "tool":

@@ -1,5 +1,23 @@
 
-import { LOG_PREFIX } from "~/src/helpers/constants"
+import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
+
+
+
+export const log = {
+  ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
+  set level(level) {
+    this.a = (level >= this.ASSERT) ? console.assert.bind(window.console, LOG_PREFIX) : () => {};
+    this.e = (level >= this.ERROR) ? console.error.bind(window.console, LOG_PREFIX) : () => {};
+    this.w = (level >= this.WARN) ? console.warn.bind(window.console, LOG_PREFIX) : () => {};
+    this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => {};
+    this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => {};
+    this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => {};
+    this.loggingLevel = level;
+  },
+  get level() { return this.loggingLevel; }
+};
+
+
 
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -33,19 +51,80 @@ export async function getRules(rule) {
   return text;
 }
 
+export function extractItemsFromPacks(packs, keys) {
+  const items = [];
+  for (const pack of packs) {
+    const packItems = extractMapIteratorObjectProperties(pack.index.entries(), keys);
+    items.push(...packItems);
+  }
+  return items;
+}
+
+export function extractMapIteratorObjectProperties(mapIterator, keys) {
+  const newArray = [];
+  for (const [key, data] of mapIterator) {
+    const newObj = {};
+    keys.forEach((k) => {
+      if(k.includes('->')){
+        const split = k.split('->');
+        newObj[split[1]] = data[split[0]];
+      } else {
+        newObj[k] = data[k];
+      }
+    });
+    newObj.key = key;
+    newArray.push(newObj);
+  }
+  return newArray;
+}
+
+export function getFoldersFromMultiplePacks(packs, depth=1) {
+  const folders = [];
+  for (const pack of packs) {
+    log.d('pack', pack)
+    const packFolders = getPackFolders(pack, depth);
+    log.d('packFolders', packFolders);
+    log.d('folders', folders);
+    folders.push(...packFolders);
+  }
+  return folders;
+}
+
+export function getPackFolders(pack, depth=1) {
+  log.d('pack', pack)
+  log.d('pack.folders', pack.folders)
+  log.d('pack.folders.entries()', pack.folders.entries())
+  const allRootFolders = extractMapIteratorObjectProperties(pack.folders.entries(), ['depth', 'name', '_id']);
+  log.d('allRootFolders', allRootFolders)
+  const foldersAtDepth = allRootFolders.filter(x => x.depth === depth);
+  log.d('foldersAtDepth', foldersAtDepth)
+  return foldersAtDepth
+}
+
 export const getPacksFromSettings = (type) => {
-  return game.packs.get(`dnd5e.${type}`);
+  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  log.d(settings);
+  const filteredPackNames = settings[type];
+  const packs = [];
+  for(const packName of filteredPackNames) {
+    packs.push(game.packs.get(packName));
+  }
+  return packs;
+}
+
+export const getSelectItemsFromPacksArray = (packs, type) => {
+
 }
 
 export const update = ($doc, dispatch, path) => async(event) => {
-  console.log("event", event);
-  console.log("dispatch", dispatch);
-  console.log("path", path);
-  console.log("$doc", $doc);
+  // console.log("event", event);
+  // console.log("dispatch", dispatch);
+  // console.log("path", path);
+  // console.log("$doc", $doc);
 
   const updateParams = { [path]: event.target.value }
 
-  console.log('updateParams', updateParams)
+  // console.log('updateParams', updateParams)
 
   if ($doc && event.target.value) {
     await $doc.update(updateParams);
@@ -87,29 +166,6 @@ export function getSubAttributeGroup(subAttribute) {
   }
 }
 
-export function extractMapIteratorObjectProperties(mapIterator, keys) {
-  const newArray = [];
-  for (const [key, data] of mapIterator) {
-    const newObj = {};
-    keys.forEach((k) => {
-      if(k.includes('->')){
-        const split = k.split('->');
-        newObj[split[1]] = data[split[0]];
-      } else {
-        newObj[k] = data[k];
-      }
-    });
-    newObj.key = key;
-    newArray.push(newObj);
-  }
-  return newArray;
-}
-
-export function getPackFolders(pack, depth=1) {
-  const allRootFolders = extractMapIteratorObjectProperties(pack.folders.entries(), ['depth', 'name', '_id']);
-  const foldersAtDepth = allRootFolders.filter(x => x.depth === depth);
-  return foldersAtDepth
-}
 
 export function getActorOwner(actor) {
   const owners = getOwners(actor);
@@ -233,21 +289,6 @@ export function getEffectOrigin(effect) {
   }
   return item;
 }
-
-
-export const log = {
-  ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
-  set level(level) {
-    this.a = (level >= this.ASSERT) ? console.assert.bind(window.console, LOG_PREFIX) : () => {};
-    this.e = (level >= this.ERROR) ? console.error.bind(window.console, LOG_PREFIX) : () => {};
-    this.w = (level >= this.WARN) ? console.warn.bind(window.console, LOG_PREFIX) : () => {};
-    this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => {};
-    this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => {};
-    this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => {};
-    this.loggingLevel = level;
-  },
-  get level() { return this.loggingLevel; }
-};
 
 // Example usage:
 // log.level = log.DEBUG;

@@ -11,11 +11,7 @@
 
   // The active tab
   export let activeTab = void 0;
-
   export let efx = ripple();
-
-  
-
 
   const importComponent = async (componentName) => {
     const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
