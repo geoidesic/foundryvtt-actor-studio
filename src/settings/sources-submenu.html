@@ -1,0 +1,22 @@
+<form class="flexcol">
+    <div class="flex0">
+        <button type="submit" name="submit">
+            {{localize 'GAS.Setting.Sources.Save'}}
+        </button>
+    </div>
+    <div class="flex">
+        {{#each source}}
+        <details class="flexcol">
+            <summary class="hct-cursor-pointer">{{label}}&nbsp&nbsp</summary>
+            {{#each compendia}}
+            <div class="flexrow ">
+                <input type="checkbox" name="{{@../key}}" value="{{collection}}" id="{{@../key}}_{{collection}}"
+                    {{checkedIf checked}}>
+                <label for="{{@../key}}_{{collection}}">{{label}}</label>
+                <br>
+            </div>
+            {{/each}}
+        </details>
+        {{/each}}
+    </div>
+</form>

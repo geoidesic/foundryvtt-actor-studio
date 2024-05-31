@@ -27,6 +27,80 @@
         "SubClass": "Sublass",
         "FilterByLevel": "Filter by Level"
       }
+    },
+    "Setting": {
+      "DefaultGoldDice": {
+        "Name": "Default starting gold roll",
+        "Hint": "Here you can customize the starting gold dice rolled on the tool"
+      },
+      "ShowRolls": {
+        "Name": "Show rolls on chat",
+        "Hint": "Show ability score, hp per level and starting gold rolls as chat messages"
+      },
+      "IndividualPanelScroll": {
+        "Name": "Individual panel scrolls",
+        "Hint": "In tabs with left and right panels, make each side have independent scrolls"
+      },
+      "AllowAbilityRolling": {
+        "Name": "Allow ability score rolling"
+      },
+      "AllowAbilityStandardArray": {
+        "Name": "Allow ability score Standard Array"
+      },
+      "AllowAbilityPointBuy": {
+        "Name": "Allow ability score Point-Buy"
+      },
+      "AllowAbilityInput": {
+        "Name": "Allow ability score manual entry"
+      },
+      "UseTokenizer": {
+        "Name": "Use Tokenizer if available",
+        "Hint": "The tool will try to use the Tokenizer module, if found, as default to generate avatar and token pictures"
+      },
+      "TokenNameMode": {
+        "Name": "Token name display mode"
+      },
+      "TokenBarMode": {
+        "Name": "Token bar 1 display mode"
+      },
+      "EquipmentBlacklist": {
+        "Name": "Equipment Blacklist",
+        "Hint": "Items (Equipment) not shown for purchase, by name (case-sensitive, separated by ';', spaces are ok). Only 'common' rarity items are shown, but this list excludes the few magical/unreasonable common items. Default - 'Potion of Climbing; Potion of Healing; Spell Scroll 1st Level; Spell Scroll Cantrip Level; Unarmed Strike'"
+      },
+      "SubraceNameBlacklist": {
+        "Name": "Subrace Names Blacklist",
+        "Hint": "Items excluded by name from been Subraces (case-sensitive, separated by ';', spaces are ok). Used by default to exclude things like Gnome Cunning from registering as Gnome subclasses. Default - 'Gnome Cunning; Halfling Nimbleness'"
+      },
+      "ButtonOnDialogInsteadOfActorsDirectory": {
+        "Name": "Create Actor dialog button",
+        "Hint": "If the button interferes with other modules, or you prefer the aesthetic of having a single 'create actor' button to not confuse your players"
+      },
+      "PointBuyLimit": {
+        "Name": "Point Buy Limit"
+      },
+      "AbilityRollFormula": {
+        "Name": "Formula used to roll stats (per stat)"
+      },
+      "Sources": {
+        "Name": "Compendium Sources",
+        "Hint": "Select the compendia that will serve as data source for the different creation steps",
+        "Label": "Select sources",
+        "Save": "Save",
+        "RaceCompendia": "Race Compendia",
+        "RacialFeatureCompendia": "Racial Features Compendia",
+        "ClassCompendia": "Class Compendia",
+        "SubclassCompendia": "Subclass Compendia",
+        "ClassFeatureCompendia": "Class Features Compendia",
+        "BackgroundCompendia": "Background Compendia",
+        "SpellCompendia": "Spell Compendia",
+        "FeatCompendia": "Feat Compendia",
+        "EquipmentCompendia": "Equipment Compendia"
+      },
+
+      "TrimSubclasses": {
+        "Name": "Trim Subclass names",
+        "Hint": "Shows subclass names without any last part in parenthesis, mostly for DDBImporter subclasses like 'Assassin (Rogue)' to be just 'Assassin' (does NOT modify the items added to actor, just show they are shown in the tool)"
+      }
     }
   }
 }

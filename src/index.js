@@ -5,6 +5,7 @@ import PCApplication from './app/PCApplication.js';
 import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';
+import { registerSettings } from '~/src/settings';
 import { tick } from "svelte";
 
 window.log = log;
@@ -13,6 +14,7 @@ log.level = log.DEBUG;
 Hooks.once("ready", (app, html, data) => {
   log.i('Initialising');
   // CONFIG.debug.hooks = true;
+  registerSettings();
 });
 
 function addCreateNewActorButton(html, app) {
@@ -158,7 +160,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   // Once the panel is empty, proceed with the drop operation
   const queue = await dropItemRegistry.advanceQueue();
   log.d('queue', queue)
-  if(!queue) {
+  if (!queue) {
     Hooks.call("gas.close");
   }
 });
