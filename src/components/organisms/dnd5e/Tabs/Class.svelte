@@ -85,6 +85,8 @@
     : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
       [];
 
+  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
+
   let richHTML = "";
 
   const getFilteredSubclassIndex = async () => {
@@ -197,8 +199,8 @@
         h3.left.mt-md Subclass
         IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
         +if("$characterSubClass")
-          h3.left.mt-sm Description
-          .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
+          //- h3.left.mt-sm Description
+          //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
           +if("subClassAdvancementArrayFiltered")
             h3.left.mt-sm.flexrow
               .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
@@ -221,7 +223,7 @@
                           svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
+    .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{combinedHtml}" contenteditable)
 
 </template>
 

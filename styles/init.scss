@@ -60,6 +60,10 @@
   --tjs-select-option-background: #23221d;
   --tjs-select-option-color: #b5b3a4;
 
+  h2, h3, [title] {
+    color: var(--color-highlight)
+  }
+
 
 
   .border-right {
