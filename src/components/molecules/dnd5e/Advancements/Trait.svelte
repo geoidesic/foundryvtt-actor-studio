@@ -34,7 +34,6 @@
     }
   });
 
-  $: log.d(advancement.configuration)
 
   $: if (advancement.configuration.grants.size > 0) {
     grants = Array.from(advancement.configuration.grants).map((grant) => {

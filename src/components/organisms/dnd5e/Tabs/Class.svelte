@@ -21,18 +21,18 @@
 
   let richHtml = "",
     richSubClassHTML = "",
-    filteredSubClassIndex = [],
-    mappedSubClassIndex,
-    subClassesIndex,
     activeClass = null,
     activeSubClass = null,
     classValue = null,
     subclassValue = null,
+    subClassesIndex,
+    subclasses,
     classesPlaceholder = "Classes",
     subclassesPlaceholder = "Subclasses",
     packs = getPacksFromSettings("classes"),
     /** @todo: #15:- build this up based on settings */
-    subClassesPack = getPacksFromSettings("subclasses"),
+    subClassesPack = game.packs.get('dnd5e.subclasses'),
+    subClassesPacks = getPacksFromSettings("subclasses"),
     folders = getFoldersFromMultiplePacks(packs, 1),
     folderIds = folders.map((x) => x._id),
     mappedClassIndex = extractItemsFromPacks(packs, [
@@ -48,10 +48,6 @@
     ).sort((a, b) => a.label.localeCompare(b.label));
   ;
 
-  log.d(packs);
-  log.d(folders);
-  log.d(folderIds);
-  log.d("mappedClassIndex", mappedClassIndex);
 
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
@@ -67,9 +63,11 @@
   const actor = getContext("#doc");
 
   $: html = $characterClass?.system?.description.value || "";
-  $: subclasses = subClassesIndex?.filter(
-    (x) => x.system.classIdentifier === $characterClass?.system.identifier,
-  );
+  $: if(subClassesIndex?.length) {
+    subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+  } else {
+    subclasses = [];
+  }
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
 
@@ -87,20 +85,17 @@
     : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
       [];
 
-  $: log.d("classAdvancementArrayFiltered", classAdvancementArrayFiltered);
-  $: log.d(
-    "subClassAdvancementArrayFiltered",
-    subClassAdvancementArrayFiltered,
-  );
-
   let richHTML = "";
 
-  const getSubclassIndex = async () => {
-    subClassesIndex = await subClassesPack.getIndex({
-      fields: ["system.classIdentifier"],
-    });
-    mappedSubClassIndex = subClassesPack
-      ? extractMapIteratorObjectProperties(subClassesIndex.entries(), [
+  const getFilteredSubclassIndex = async () => {
+    log.d('getFilteredSubclassIndex subClassesPacks', subClassesPacks);
+    const filteredSubClassIndex = [];
+    for(let subClassesPack of subClassesPacks) {
+      let index = await subClassesPack.getIndex({
+        fields: ["system.classIdentifier"],
+      });
+      if(!subClassesPack) continue
+      let mappedSubClassIndex =  extractMapIteratorObjectProperties(index.entries(), [
           "name->label",
           "img",
           "type",
@@ -109,12 +104,14 @@
           "system",
           "_id",
         ])
-      : [];
-    filteredSubClassIndex = subClassesPack
-      ? mappedSubClassIndex?.filter(
-          (x) => x.system.classIdentifier == $characterClass.system.identifier,
-        )
-      : [];
+
+      filteredSubClassIndex.push(mappedSubClassIndex?.filter(
+        (x) => x.system.classIdentifier == $characterClass.system.identifier,
+      ))
+    }
+    const output = filteredSubClassIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+    log.d('output', output);
+    return output
   };
 
   const selectClassHandler = async (option) => {
@@ -125,7 +122,7 @@
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
     activeClass = option;
-    getSubclassIndex();
+    subClassesIndex = await getFilteredSubclassIndex();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
   };
@@ -153,7 +150,7 @@
     if ($characterClass) {
       classValue = $characterClass.uuid;
       richHTML = await TextEditor.enrichHTML(html);
-      getSubclassIndex();
+      subClassesIndex = await getFilteredSubclassIndex();
     }
     if ($characterSubClass) {
       subclassValue = $characterSubClass.uuid;
@@ -196,9 +193,9 @@
                         //- pre advancement {advancement.type}
                         svelte:component(this="{Component}" advancement="{advancement}")
 
-      +if("subclasses")
+      +if("subclasses.length")
         h3.left.mt-md Subclass
-        IconSelect.icon-select(active="{subClassProp}" options="{filteredSubClassIndex}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+        IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
         +if("$characterSubClass")
           h3.left.mt-sm Description
           .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)

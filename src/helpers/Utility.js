@@ -81,29 +81,20 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
 export function getFoldersFromMultiplePacks(packs, depth=1) {
   const folders = [];
   for (const pack of packs) {
-    log.d('pack', pack)
     const packFolders = getPackFolders(pack, depth);
-    log.d('packFolders', packFolders);
-    log.d('folders', folders);
     folders.push(...packFolders);
   }
   return folders;
 }
 
 export function getPackFolders(pack, depth=1) {
-  log.d('pack', pack)
-  log.d('pack.folders', pack.folders)
-  log.d('pack.folders.entries()', pack.folders.entries())
   const allRootFolders = extractMapIteratorObjectProperties(pack.folders.entries(), ['depth', 'name', '_id']);
-  log.d('allRootFolders', allRootFolders)
   const foldersAtDepth = allRootFolders.filter(x => x.depth === depth);
-  log.d('foldersAtDepth', foldersAtDepth)
   return foldersAtDepth
 }
 
 export const getPacksFromSettings = (type) => {
   const settings = game.settings.get(MODULE_ID, 'compendiumSources');
-  log.d(settings);
   const filteredPackNames = settings[type];
   const packs = [];
   for(const packName of filteredPackNames) {
