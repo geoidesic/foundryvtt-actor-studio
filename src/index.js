@@ -2,6 +2,7 @@ import '../styles/Variables.scss'; // Import any styles as this includes them in
 import '../styles/init.scss'; // Import any styles as this includes them in the build.
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import PCApplication from './app/PCApplication.js';
+import WelcomeApplication from './app/WelcomeApplication.js';
 import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';
@@ -15,6 +16,10 @@ Hooks.once("ready", (app, html, data) => {
   log.i('Initialising');
   // CONFIG.debug.hooks = true;
   registerSettings();
+
+  new WelcomeApplication().render(true, { focus: true });
+
+
 });
 
 function addCreateNewActorButton(html, app) {
