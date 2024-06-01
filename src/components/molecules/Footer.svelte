@@ -1,89 +1,143 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { race, characterClass, characterSubClass, background, spells, subRace, isActorCreated, activeTab, dropItemRegistry, actorInGame } from "~/src/helpers/store";
+  import {
+    race,
+    abilities,
+    characterClass,
+    characterSubClass,
+    background,
+    spells,
+    subRace,
+    isActorCreated,
+    activeTab,
+    dropItemRegistry,
+    actorInGame,
+  } from "~/src/helpers/store";
   import { log } from "~/src/helpers/Utility";
+  import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
+
+  import { derived, writable } from "svelte/store";
+
+  const stores = [
+    race,
+    characterClass,
+    characterSubClass,
+    background,
+  ];
+
+  // Derive the progress value from the store states
+  const progress = derived(stores, ($stores) => {
+    const total = $stores.length;
+    const completed = $stores.filter((value) => value).length;
+    return (completed / total) * 100;
+  });
+
+  $: log.d('progress', $progress)
+
 
   export let value = null;
 
   const actor = getContext("#doc");
-  const app = getContext('#external').application;
+  const app = getContext("#external").application;
 
   $: actorObject = $actor.toObject();
-  $: value = $actor?.name || '';
-  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value ;
+  $: value = $actor?.name || "";
+  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   const handleNameInput = (e) => {
     $actor.name = e.target.value;
-  }
+  };
   const handleTokenNameInput = (e) => {
-    if(!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
+    if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
-  }
+  };
 
   const clickCreateHandler = async () => {
     await createActorInGameAndEmbedItems();
-    $isActorCreated = true
-  }
+    $isActorCreated = true;
+  };
 
   const clickUpdateHandler = async () => {
     // await actor.update(actorObject);
-  }
-
+  };
 
   /**
- * So the only viable strategy is to keep the race additions in storage 
- * and then only add them after the Actor is added to the game
- */
-const createActorInGameAndEmbedItems = async () => {
-	$actorInGame = await Actor.create(actorObject);
+   * So the only viable strategy is to keep the race additions in storage
+   * and then only add them after the Actor is added to the game
+   */
+  const createActorInGameAndEmbedItems = async () => {
+    $actorInGame = await Actor.create(actorObject);
 
-  // background
-  if($background) {
-    log.i('Adding background to character')
-    const backgroundData = $background.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'background', itemData: backgroundData });
-  }
-  
-  // race
-  if($race) {
-    log.i('Adding race to character')
-    const raceData = $race.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'race', itemData: raceData });
-  }
-  
-  // subrace
-  if($subRace) {
-    log.i('Adding subrace to character')
-    const subRaceData = $subRace.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'subRace', itemData: subRaceData });
-  }
-  
-  // character class
-  if($characterClass) {
-    log.i('Adding class to character')
-    const characterClassData = $characterClass.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'characterClass', itemData: characterClassData });
-  }
-  
-  // character subclass
-  if($characterSubClass) {
-    log.i('Adding subclass to character')
-    const characterSubClassData = $characterSubClass.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'characterSubClass', itemData: characterSubClassData });
-  }
+    // background
+    if ($background) {
+      log.i("Adding background to character");
+      const backgroundData = $background.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "background",
+        itemData: backgroundData,
+      });
+    }
 
-  // spells
-  if($spells) {
-    log.i('Adding spells to character')
-    const spellsData = $spells.toObject()
-    dropItemRegistry.add( { actor: $actorInGame, id: 'spells', itemData: spellsData });
-  }
-  // app.close();
+    // race
+    if ($race) {
+      log.i("Adding race to character");
+      const raceData = $race.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "race",
+        itemData: raceData,
+      });
+    }
 
-  dropItemRegistry.advanceQueue(true);
-}
+    // subrace
+    if ($subRace) {
+      log.i("Adding subrace to character");
+      const subRaceData = $subRace.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "subRace",
+        itemData: subRaceData,
+      });
+    }
 
+    // character class
+    if ($characterClass) {
+      log.i("Adding class to character");
+      const characterClassData = $characterClass.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterClass",
+        itemData: characterClassData,
+      });
+    }
+
+    // character subclass
+    if ($characterSubClass) {
+      log.i("Adding subclass to character");
+      const characterSubClassData = $characterSubClass.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterSubClass",
+        itemData: characterSubClassData,
+      });
+    }
+
+    // spells
+    if ($spells) {
+      log.i("Adding spells to character");
+      const spellsData = $spells.toObject();
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "spells",
+        itemData: spellsData,
+      });
+    }
+    // app.close();
+
+    dropItemRegistry.advanceQueue(true);
+  };
 </script>
 
 <template lang="pug">
@@ -103,12 +157,14 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       .flex1
-        +if("!$isActorCreated")
-          button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create
-        +if("$isActorCreated")
-          button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
+        +if("$progress != '100'")
+          ProgressBar(progress="{progress}")
+          +else()
+            +if("!$isActorCreated")
+              button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create
+            +if("$isActorCreated")
+              button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
 </template>
-
 
 <style lang="sass">
 .gap-10
@@ -117,4 +173,7 @@ div
   align-items: center
 label
   margin: 10px 0 0 0
+button
+  background-color: #76c7c0
+  color: #fff
 </style>
