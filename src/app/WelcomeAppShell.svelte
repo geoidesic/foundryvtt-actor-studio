@@ -22,8 +22,9 @@
     main
       img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
       p Thank you for using Actor Studio!
-    footer Actor Studio is sponsored by 
-        a(href="https://www.round-table.games") Round Table Games
+    footer
+      p Actor Studio is sponsored by 
+      a(href="https://www.round-table.games") Round Table Games
 
 </template>
 

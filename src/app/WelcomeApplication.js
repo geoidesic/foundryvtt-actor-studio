@@ -21,10 +21,10 @@ export default class WelcomeApplication extends SvelteApplication
         classes: ['gas-actor-studio'],
          resizable: true,
          minimizable: true,
-         width: 350,
-         height: 300,
+         width: 220,
+         height: 400,
          headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
-         title: game.i18n.localize('GAS.ActorStudio')+' - Welcome - v'+version,
+         title: game.i18n.localize('GAS.ActorStudio')+' v'+version,
          svelte: {
             class: WelcomeAppShell,
             target: document.body,
