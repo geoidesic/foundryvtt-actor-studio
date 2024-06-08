@@ -36,7 +36,6 @@
 
   onMount(async () => {
     console.log('AbilityScoreImprovement advancement'+advancement.type, advancement)
-    
   });
   
 </script>

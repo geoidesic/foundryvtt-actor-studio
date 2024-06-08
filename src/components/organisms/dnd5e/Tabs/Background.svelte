@@ -12,7 +12,7 @@
   let folderIds = folders.map(x => x._id);
   let allItems = extractItemsFromPacks(packs, ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
   let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder)).sort((a, b) => a.label.localeCompare(b.label));
-  
+  log.d('itemDefinitions', itemDefinitions)
   const actor = getContext("#doc");
   
   $: options = itemDefinitions;
