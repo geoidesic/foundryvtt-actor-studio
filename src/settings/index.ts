@@ -53,16 +53,16 @@ export function registerSettings(): void {
 
   // defaultStartingGoldDice();
   // showRollsAsChatMessages();
-  individualPanelScrolls();
+  // individualPanelScrolls();
   // abilityScoreMethods();
   pointBuyLimit();
   // abilityRollFormula();
   // tokenDisplayNameMode();
   // tokenDisplayBarsMode();
-  equipmentBlacklist();
-  subraceNameBlacklist();
+  // equipmentBlacklist();
+  // subraceNameBlacklist();
   // buttonOnDialogInsteadOfActorsDirectory();
-  trimSubclasses();
+  // trimSubclasses();
   // custom packs
   sourcesConfiguration();
   // integrations
@@ -70,6 +70,10 @@ export function registerSettings(): void {
   // private settings
   // lastMigration();
   dontShowWelcome();
+  allowManualInput();
+  allowStandardArray();
+  allowPointBuy();
+  allowRolling();
 }
 
 function sourcesConfiguration() {
@@ -276,6 +280,46 @@ function abilityRollFormula() {
     config: true,
     default: '4d6kh3',
     type: String,
+  });
+}
+
+function allowManualInput() {
+  game.settings.register(MODULE_ID, 'allowManualInput', {
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowManualInput.Name'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
+function allowStandardArray() {
+  game.settings.register(MODULE_ID, 'allowStandardArray', {
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowStandardArray.Name'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function allowPointBuy() {
+  game.settings.register(MODULE_ID, 'allowPointBuy', {
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowPointBuy.Name'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function allowRolling() {
+  game.settings.register(MODULE_ID, 'allowRolling', {
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowRolling.Name'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
   });
 }
 

@@ -29,6 +29,24 @@
       }
     },
     "Setting": {
+      "AbilityEntry": {
+        "AllowManualInput": {
+          "Name": "Allow manual input",
+          "Hint": "Allow the user to manually input the ability scores"
+        },
+        "AllowStandardArray": {
+          "Name": "Allow standard array",
+          "Hint": "Allow the user to use the standard array"
+        },
+        "AllowPointBuy": {
+          "Name": "Allow point buy",
+          "Hint": "Allow the user to use the point buy system"
+        },
+        "AllowRolling": {
+          "Name": "Allow rolling",
+          "Hint": "Allow the user to roll for the ability scores"
+        }
+      },
       "DefaultGoldDice": {
         "Name": "Default starting gold roll",
         "Hint": "Here you can customize the starting gold dice rolled on the tool"
@@ -55,7 +73,7 @@
       },
       "DontShowWelcome": {
         "Name": "Don't show this message again",
-        "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this from Configure Settings later)."
+        "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this via Configure Settings)."
       },
       "UseTokenizer": {
         "Name": "Use Tokenizer if available",

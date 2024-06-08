@@ -180,3 +180,12 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 //     dropItemRegistry.advanceQueue();
 //   }, 5000);
 // })
+
+
+Hooks.on('renderSettingsConfig', (app, html ,context) => {
+
+  log.d('renderSettingsConfig', app, html, context)
+  $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html).before('<h3>Ability Score Entry Options</h3>')
+  // $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html)
+  // $(html).before('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]').insertAdjacentHTML('beforeBegin', '<h3>Sub-header</h3>')
+})
