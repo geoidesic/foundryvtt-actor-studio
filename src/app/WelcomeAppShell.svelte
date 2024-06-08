@@ -3,6 +3,7 @@
   import { fade, scale }        from 'svelte/transition';
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { localize } from "#runtime/svelte/helper";
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   export let elementRoot = void 0;
   export let version = void 0;
@@ -11,7 +12,7 @@
 
   const handleChange = (event) => {
     alert('changed')
-    game.settings.set('foundryvtt-actor-studio', 'dontShowWelcome', event.target.checked);
+    game.settings.set(MODULE_ID, 'dontShowWelcome', event.target.checked);
   }
 
 
@@ -19,7 +20,7 @@
   draggable = true
 
   $: application.reactive.draggable = draggable;
-  $: dontShowWelcome = game.settings.get('foundryvtt-actor-studio', 'dontShowWelcome');
+  $: dontShowWelcome = game.settings.get(MODULE_ID, 'dontShowWelcome');
 
   onMount(async () => {
   });
