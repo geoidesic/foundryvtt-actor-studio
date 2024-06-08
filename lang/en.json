@@ -53,6 +53,10 @@
       "AllowAbilityInput": {
         "Name": "Allow ability score manual entry"
       },
+      "DontShowWelcome": {
+        "Name": "Don't show this message again",
+        "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this from Configure Settings later)."
+      },
       "UseTokenizer": {
         "Name": "Use Tokenizer if available",
         "Hint": "The tool will try to use the Tokenizer module, if found, as default to generate avatar and token pictures"

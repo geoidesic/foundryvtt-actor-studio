@@ -69,6 +69,7 @@ export function registerSettings(): void {
   // useTokenizerIfAvailable();
   // private settings
   // lastMigration();
+  dontShowWelcome();
 }
 
 function sourcesConfiguration() {
@@ -119,6 +120,16 @@ function trimSubclasses() {
     scope: 'world',
     config: true,
     default: true,
+    type: Boolean,
+  });
+}
+function dontShowWelcome() {
+  game.settings.register(MODULE_ID, 'dontShowWelcome', {
+    name: game.i18n.localize('GAS.Setting.DontShowWelcome.Name'),
+    hint: game.i18n.localize('GAS.Setting.DontShowWelcome.Hint'),
+    scope: 'user',
+    config: true,
+    default: false,
     type: Boolean,
   });
 }

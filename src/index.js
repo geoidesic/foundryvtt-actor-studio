@@ -17,9 +17,13 @@ Hooks.once("ready", (app, html, data) => {
   // CONFIG.debug.hooks = true;
   registerSettings();
 
-  new WelcomeApplication().render(true, { focus: true });
-
-
+  if (!game.modules.get(MODULE_ID).active) {
+    log.w('Module is not active');
+    return;
+  }
+  if(!game.settings.get(MODULE_ID, 'dontShowWelcome')){
+    new WelcomeApplication().render(true, { focus: true });
+  }
 });
 
 function addCreateNewActorButton(html, app) {

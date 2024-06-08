@@ -44,7 +44,6 @@ export default class PCApplication extends SvelteApplication
     const title = this.title;
     return foundry.utils.mergeObject(super.defaultOptions, {         
       id: 'foundryvtt-actor-studio-pc-sheet',
-      
       title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  
       classes: ['gas-actor-studio'],
       width: 650,
