@@ -55,7 +55,7 @@ export function registerSettings(): void {
   // showRollsAsChatMessages();
   individualPanelScrolls();
   // abilityScoreMethods();
-  // pointBuyLimit();
+  pointBuyLimit();
   // abilityRollFormula();
   // tokenDisplayNameMode();
   // tokenDisplayBarsMode();
