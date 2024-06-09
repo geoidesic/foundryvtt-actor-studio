@@ -73,7 +73,7 @@
 
   onMount(async () => {
     rules = await getRules(ruleConfig);
-    log.d('options', options)
+    
   });
 
 </script>
@@ -101,4 +101,7 @@
 @import "../../../../../styles/Mixins.scss"
 .content 
   @include staticOptions
+
+  :global(.icon-select)
+    position: relative
 </style>
