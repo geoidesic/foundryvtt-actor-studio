@@ -53,6 +53,7 @@ export const isActorCreated = writable(false);
 export const dropItemRegistry = arrayOfObjectsStore();
 export const tabs = writable(initialTabs);
 export const actorInGame = writable(false);
+export const abilityGenerationMethod = writable(null);
 
 // Function to reset all stores
 export function resetStores() {
@@ -69,4 +70,5 @@ export function resetStores() {
   dropItemRegistry.removeAll();
   isActorCreated.set(false);
   actorInGame.set(false);
+  abilityGenerationMethod.set(null);
 }

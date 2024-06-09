@@ -20,7 +20,7 @@
     export let placeHolder = false;
     export let id = void 0;
     export let noImg = false;
-    export let truncateWidth = 10;
+    export let truncateWidth = 20;
 
     let isOpen = false;
 

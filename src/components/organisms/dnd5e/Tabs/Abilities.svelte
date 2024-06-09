@@ -16,6 +16,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { abilityGenerationMethod } from "~/src/helpers/store";
 
   const actor = getContext("#doc");
   const ruleConfig = {
@@ -30,8 +31,8 @@
     return Component;
   };
   const selectHandler = async (option) => {
-    active = option;
-    value = option;
+    active = option.value;
+    $abilityGenerationMethod = option.value;
   };
 
   let rules = "", active, value, placeHolder = 'Ability Generation Method'
@@ -67,14 +68,14 @@
 
   $: if (options.length === 1) {
     // value = options[0];
-    value = options[0].value;
-
+    $abilityGenerationMethod = options[0].value;
   }
 
   onMount(async () => {
     rules = await getRules(ruleConfig);
     log.d('options', options)
   });
+
 </script>
 
 <template lang="pug">
@@ -83,15 +84,15 @@
       .flex2.pr-sm.col-a
         h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         +if("options.length > 1")
-          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value )
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" )
           +else()
             ol.properties-list
               +each("options as option")
                 li {option.label}
-        +if("value")
-          +await("importComponent(options.find(x => x.value == value).type)")
+        +if("$abilityGenerationMethod")
+          +await("importComponent(options.find(x => x.value == $abilityGenerationMethod).type)")
             +then("Component")
-              svelte:component(this="{Component}" value="{value}")
+              svelte:component(this="{Component}")
       .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{html}" contenteditable)
 </template>

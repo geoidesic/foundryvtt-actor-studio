@@ -2,24 +2,31 @@
   import { log, update } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race } from "~/src/helpers/store"
+  import { abilities, race, } from "~/src/helpers/store"
+  import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
   
   export let document = false;
   
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
-  const updateDebounce = Timing.debounce(updateValue, 300);
+  const updateDebounce = Timing.debounce(updateValue, 100);
 
   function updateValue(attr, event) {
+    if(event.target.value < 8) return false;
+    if(event.target.value > 15) return false;
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     $doc.updateSource(options)
     $doc = $doc
   }
+  
 
   $: systemAbilities = game.system.config.abilities
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
+  $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation].value)], 0)
+  $: pointBuyLimit = game.settings.get(MODULE_ID, "pointBuyLimit")
+  $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red': 'green'
 
   onMount(async () => {
   });
@@ -41,17 +48,54 @@
           +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
-        .flex1.center
-          input.center.small(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
+        .flex1.center.relative
+          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}")
+          .controls
+            .up.chevron
+              i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) + 1}})}")
+            .down.chevron
+              i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) - 1}})}")
         .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
         .flex1.center.align-text-with-input 
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +
           span {$doc.system.abilities[ability[1].abbreviation].mod}
+    hr
+    .flexrow.justify-flexrow-vertical
+      .flex1 Points total: 
+      .flex
+        input.center.small(disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
+      .flex0 / 
+      .flex1 
+        input.center.small(disabled  type="number" value="{pointBuyLimit}") 
+
 </template>
 
 <style lang="sass">
   .align-text-with-input
-    text-align: center
     margin-top: 0.3rem
+  .green
+    color: green
+  .red
+    color: red
+  .mainscore
+    min-width: 40px
+  .controls
+    .chevron
+      position: absolute
+      font-size: 0.75rem
+      right: 0
+      cursor: pointer
+      background-color: rgba(0, 0, 0, 0.1)
+      &.up
+        padding: 1px 3px 0px 3px
+        top: 0
+        &:hover
+          background-color: rgba(140, 90, 0, 0.2)
+      &.down
+        padding: 1px 3px 0px 3px
+        bottom: 0
+        &:hover
+          background-color: rgba(140, 90, 0, 0.2)
+    
 </style>
