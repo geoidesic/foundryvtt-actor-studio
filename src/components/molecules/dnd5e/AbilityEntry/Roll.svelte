@@ -3,18 +3,32 @@
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
   import { abilities, race, } from "~/src/helpers/store"
-  import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
+  import { MODULE_ID } from "~/src/helpers/constants"
   
   export let document = false;
   
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
+  let formula;
 
   function updateValue(attr, event) {
     if(event.target.value < 8) return false;
     if(event.target.value > 15) return false;
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
+    $doc.updateSource(options)
+    $doc = $doc
+  }
+
+
+  async function roll(attr) {
+
+
+    const roll = await new Roll(formula).evaluate({async: true});
+    await roll.toMessage();
+
+    // set the value of the ability to the result of the roll
+    const options = {system: {abilities: { [attr]: {value: Number(roll.total)}}}};
     $doc.updateSource(options)
     $doc = $doc
   }
@@ -24,11 +38,9 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation].value)], 0)
-  $: pointBuyLimit = game.settings.get(MODULE_ID, "pointBuyLimit")
-  $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red': 'green'
 
   onMount(async () => {
+    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
   });
 </script>
 
@@ -55,7 +67,7 @@
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +
           span {$doc.system.abilities[ability[1].abbreviation].mod}
-        .flex0.center.justify-flexrow-vertical.controls(alt="Roll" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) - 1}})}")
+        .flex0.center.justify-flexrow-vertical.controls(alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
           i.fas.fa-dice
 
 </template>

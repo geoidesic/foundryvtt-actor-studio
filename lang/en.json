@@ -40,7 +40,8 @@
         },
         "AllowPointBuy": {
           "Name": "Allow point buy",
-          "Hint": "Allow the user to use the point buy system"
+          "Hint": "Allow the user to use the point buy system",
+          "InvalidTotal": "Invalid total points"
         },
         "AllowRolling": {
           "Name": "Allow rolling",

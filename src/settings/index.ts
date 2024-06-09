@@ -211,7 +211,6 @@ function individualPanelScrolls() {
 
 
 function pointBuyLimit() {
-  if(!game.settings.get(MODULE_ID, 'allowPointBuy')) return
   game.settings.register(MODULE_ID, 'pointBuyLimit', {
     name: game.i18n.localize('GAS.Setting.PointBuyLimit.Name'),
     scope: 'world',
@@ -222,7 +221,6 @@ function pointBuyLimit() {
 }
 
 function abilityRollFormula() {
-  if(!game.settings.get(MODULE_ID, 'allowRolling')) return
   game.settings.register(MODULE_ID, 'abiiltyRollFormula', {
     name: game.i18n.localize('GAS.Setting.AbilityRollFormula.Name'),
     scope: 'world',

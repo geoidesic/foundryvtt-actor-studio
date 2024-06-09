@@ -4,6 +4,7 @@
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
   import { abilities, race, } from "~/src/helpers/store"
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
+  import { localize } from "#runtime/svelte/helper";
   
   export let document = false;
   
@@ -17,6 +18,15 @@
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     $doc.updateSource(options)
     $doc = $doc
+  }
+
+  function reset() {
+    const options = {system: {abilities: {}}};
+    systemAbilitiesArray.forEach(ability => {
+      options.system.abilities[ability[1].abbreviation] = {value: 10};
+    });
+    $doc.updateSource(options);
+    $doc = $doc;
   }
   
 
@@ -64,10 +74,17 @@
     .flexrow.justify-flexrow-vertical
       .flex1 Points total: 
       .flex
-        input.center.small(disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
+        +if("isNaN(scoreTotal)")
+          span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
+          +else()
+            input.center.small(disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
       .flex0 / 
       .flex1 
         input.center.small(disabled  type="number" value="{pointBuyLimit}") 
+    
+    +if("isNaN(scoreTotal)")
+      hr
+      button.btn.btn-primary(on:click="{reset}") Reset scores
 
 </template>
 
