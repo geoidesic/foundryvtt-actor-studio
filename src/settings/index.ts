@@ -6,28 +6,6 @@ export const enum PrivateSettingKeys {
   LAST_MIGRATION = 'lastMigration',
 }
 
-const enum SettingKeys {
-  USE_TOKENIZER = 'useTokenizer',
-  TOKEN_BAR = 'displayBarsMode',
-  TOKEN_NAME = 'displayNameMode',
-  SHOW_ROLLS_AS_MESSAGES = 'showRolls',
-  ENABLE_ASI_ROLL = 'enableAbilityScoreRolls',
-  ENABLE_ASI_POINTBUY = 'enableAbilityScorePointBuy',
-  ENABLE_ASI_STANDARD = 'enableAbilityScoreStandardArray',
-  ENABLE_ASI_MANUAL = 'enableAbilityScoreManualInput',
-  INDIVIDUAL_PANEL_SCROLLS = 'individualScrolls',
-  DEFAULT_GOLD_DICE = 'defaultGoldDice',
-  FIGHTING_STYLE_STRING = 'fightingStyleLookupString',
-  EQUIPMENTS_BLACKLIST = 'equipmentsBlackList',
-  SUBRACES_BLACKLIST = 'subracesBlacklist',
-  BUTTON_ON_DIALOG = 'buttonOnDialog',
-  POINT_BUY_LIMIT = 'pointBuyLimit',
-  ABILITY_ROLL_FORMULA = 'abiiltyRollFormula',
-  SOURCES = 'compendiumSources',
-  TRIM_SUBCLASSES = 'trimSubclasses',
-}
-export default SettingKeys;
-
 export const enum SourceType {
   RACES = 'races',
   RACIAL_FEATURES = 'racialFeatures',
@@ -44,7 +22,7 @@ export type Source = {
   [key in SourceType]: any;
 };
 
-export function registerSettings(): void {
+export function registerSettings(app): void {
   console.info(`${LOG_PREFIX} | Building module settings`);
 
   Handlebars.registerHelper('checkedIf', function (condition) {
@@ -54,9 +32,6 @@ export function registerSettings(): void {
   // defaultStartingGoldDice();
   // showRollsAsChatMessages();
   // individualPanelScrolls();
-  // abilityScoreMethods();
-  pointBuyLimit();
-  // abilityRollFormula();
   // tokenDisplayNameMode();
   // tokenDisplayBarsMode();
   // equipmentBlacklist();
@@ -70,21 +45,26 @@ export function registerSettings(): void {
   // private settings
   // lastMigration();
   dontShowWelcome();
+  // abilityScoreMethods();
+
   allowManualInput();
   allowStandardArray();
   allowPointBuy();
-  allowRolling();
+  pointBuyLimit();
+  allowRolling(app);
+  abilityRollFormula();
+
 }
 
 function sourcesConfiguration() {
-  game.settings.register(MODULE_ID, SettingKeys.SOURCES, {
+  game.settings.register(MODULE_ID, 'compendiumSources', {
     scope: 'world',
     config: false,
     type: Object,
     default: DEFAULT_SOURCES,
   });
   // Define a settings submenu which handles advanced configuration needs
-  game.settings.registerMenu(MODULE_ID, SettingKeys.SOURCES, {
+  game.settings.registerMenu(MODULE_ID, 'compendiumSources', {
     name: game.i18n.localize('GAS.Setting.Sources.Name'),
     hint: game.i18n.localize('GAS.Setting.Sources.Hint'),
     label: game.i18n.localize('GAS.Setting.Sources.Label'),
@@ -95,7 +75,7 @@ function sourcesConfiguration() {
 }
 
 function equipmentBlacklist() {
-  game.settings.register(MODULE_ID, SettingKeys.EQUIPMENTS_BLACKLIST, {
+  game.settings.register(MODULE_ID, 'equipmentsBlackList', {
     name: game.i18n.localize('GAS.Setting.EquipmentBlacklist.Name'),
     hint: game.i18n.localize('GAS.Setting.EquipmentBlacklist.Hint'),
     scope: 'world',
@@ -107,7 +87,7 @@ function equipmentBlacklist() {
 }
 
 function subraceNameBlacklist() {
-  game.settings.register(MODULE_ID, SettingKeys.SUBRACES_BLACKLIST, {
+  game.settings.register(MODULE_ID, 'subracesBlacklist', {
     name: game.i18n.localize('GAS.Setting.SubraceNameBlacklist.Name'),
     hint: game.i18n.localize('GAS.Setting.SubraceNameBlacklist.Hint'),
     scope: 'world',
@@ -118,7 +98,7 @@ function subraceNameBlacklist() {
 }
 
 function trimSubclasses() {
-  game.settings.register(MODULE_ID, SettingKeys.TRIM_SUBCLASSES, {
+  game.settings.register(MODULE_ID, 'trimSubclasses', {
     name: game.i18n.localize('GAS.Setting.TrimSubclasses.Name'),
     hint: game.i18n.localize('GAS.Setting.TrimSubclasses.Hint'),
     scope: 'world',
@@ -139,7 +119,7 @@ function dontShowWelcome() {
 }
 
 function defaultStartingGoldDice() {
-  game.settings.register(MODULE_ID, SettingKeys.DEFAULT_GOLD_DICE, {
+  game.settings.register(MODULE_ID, 'defaultGoldDice', {
     name: game.i18n.localize('GAS.Setting.DefaultGoldDice.Name'),
     hint: game.i18n.localize('GAS.Setting.DefaultGoldDice.Hint'),
     scope: 'world',
@@ -150,7 +130,7 @@ function defaultStartingGoldDice() {
 }
 
 function useTokenizerIfAvailable() {
-  game.settings.register(MODULE_ID, SettingKeys.USE_TOKENIZER, {
+  game.settings.register(MODULE_ID, 'useTokenizer', {
     name: game.i18n.localize('GAS.Setting.UseTokenizer.Name'),
     hint: game.i18n.localize('GAS.Setting.UseTokenizer.Hint'),
     scope: 'world',
@@ -161,7 +141,7 @@ function useTokenizerIfAvailable() {
 }
 
 function buttonOnDialogInsteadOfActorsDirectory() {
-  game.settings.register(MODULE_ID, SettingKeys.BUTTON_ON_DIALOG, {
+  game.settings.register(MODULE_ID, 'buttonOnDialog', {
     name: game.i18n.localize('GAS.Setting.ButtonOnDialogInsteadOfActorsDirectory.Name'),
     hint: game.i18n.localize('GAS.Setting.ButtonOnDialogInsteadOfActorsDirectory.Hint'),
     scope: 'world',
@@ -172,7 +152,7 @@ function buttonOnDialogInsteadOfActorsDirectory() {
 }
 
 function tokenDisplayBarsMode() {
-  game.settings.register(MODULE_ID, SettingKeys.TOKEN_BAR, {
+  game.settings.register(MODULE_ID, 'displayBarsMode', {
     name: game.i18n.localize('GAS.Setting.TokenBarMode.Name'),
     scope: 'world',
     config: true,
@@ -190,7 +170,7 @@ function tokenDisplayBarsMode() {
 }
 
 function tokenDisplayNameMode() {
-  game.settings.register(MODULE_ID, SettingKeys.TOKEN_NAME, {
+  game.settings.register(MODULE_ID, 'displayNameMode', {
     name: game.i18n.localize('GAS.Setting.TokenNameMode.Name'),
     scope: 'world',
     config: true,
@@ -208,7 +188,7 @@ function tokenDisplayNameMode() {
 }
 
 function showRollsAsChatMessages() {
-  game.settings.register(MODULE_ID, SettingKeys.SHOW_ROLLS_AS_MESSAGES, {
+  game.settings.register(MODULE_ID, 'showRolls', {
     name: game.i18n.localize('GAS.Setting.ShowRolls.Name'),
     hint: game.i18n.localize('GAS.Setting.ShowRolls.Hint'),
     scope: 'world',
@@ -219,7 +199,7 @@ function showRollsAsChatMessages() {
 }
 
 function individualPanelScrolls() {
-  game.settings.register(MODULE_ID, SettingKeys.INDIVIDUAL_PANEL_SCROLLS, {
+  game.settings.register(MODULE_ID, 'individualScrolls', {
     name: game.i18n.localize('GAS.Setting.IndividualPanelScroll.Name'),
     hint: game.i18n.localize('GAS.Setting.IndividualPanelScroll.Hint'),
     scope: 'client',
@@ -229,42 +209,10 @@ function individualPanelScrolls() {
   });
 }
 
-function abilityScoreMethods() {
-  game.settings.register(MODULE_ID, SettingKeys.ENABLE_ASI_ROLL, {
-    name: game.i18n.localize('GAS.Setting.AllowAbilityRolling.Name'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true,
-  });
-
-  game.settings.register(MODULE_ID, SettingKeys.ENABLE_ASI_STANDARD, {
-    name: game.i18n.localize('GAS.Setting.AllowAbilityStandardArray.Name'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true,
-  });
-
-  game.settings.register(MODULE_ID, SettingKeys.ENABLE_ASI_MANUAL, {
-    name: game.i18n.localize('GAS.Setting.AllowAbilityInput.Name'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true,
-  });
-
-  game.settings.register(MODULE_ID, SettingKeys.ENABLE_ASI_POINTBUY, {
-    name: game.i18n.localize('GAS.Setting.AllowAbilityPointBuy.Name'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true,
-  });
-}
 
 function pointBuyLimit() {
-  game.settings.register(MODULE_ID, SettingKeys.POINT_BUY_LIMIT, {
+  if(!game.settings.get(MODULE_ID, 'allowPointBuy')) return
+  game.settings.register(MODULE_ID, 'pointBuyLimit', {
     name: game.i18n.localize('GAS.Setting.PointBuyLimit.Name'),
     scope: 'world',
     config: true,
@@ -274,22 +222,27 @@ function pointBuyLimit() {
 }
 
 function abilityRollFormula() {
-  game.settings.register(MODULE_ID, SettingKeys.ABILITY_ROLL_FORMULA, {
+  if(!game.settings.get(MODULE_ID, 'allowRolling')) return
+  game.settings.register(MODULE_ID, 'abiiltyRollFormula', {
     name: game.i18n.localize('GAS.Setting.AbilityRollFormula.Name'),
     scope: 'world',
     config: true,
     default: '4d6kh3',
     type: String,
+    onChange: () => { console.log('allowPointBuy')},
+    updateSetting: () => { console.log('updateSetting'); },
   });
 }
 
+
+
 function allowManualInput() {
   game.settings.register(MODULE_ID, 'allowManualInput', {
-    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowManualInput.Name'),
+    name: game.i18n.localize('GAS.Setting.AllowAbilityRolling.Name'),
     scope: 'world',
     config: true,
-    default: true,
     type: Boolean,
+    default: true,
   });
 }
 
@@ -309,16 +262,20 @@ function allowPointBuy() {
     scope: 'world',
     config: true,
     default: false,
+    onChange: () => { console.log('allowPointBuy')},
+    updateSetting: () => { console.log('updateSetting'); },
     type: Boolean,
   });
 }
 
-function allowRolling() {
+function allowRolling(app) {
   game.settings.register(MODULE_ID, 'allowRolling', {
     name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowRolling.Name'),
     scope: 'world',
     config: true,
     default: false,
+    onChange: () => { console.log('allowPointBuy')},
+    updateSetting: () => { console.log('updateSetting'); },
     type: Boolean,
   });
 }

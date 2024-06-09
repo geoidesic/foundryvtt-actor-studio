@@ -1,5 +1,4 @@
 import { DEFAULT_SOURCES, LOG_PREFIX, MODULE_ID } from '../helpers/constants';
-import SettingKeys from './index.ts';
 
 export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
@@ -27,7 +26,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   }
 
   getData() {
-    let selected: any = game.settings.get(MODULE_ID, SettingKeys.SOURCES);
+    let selected: any = game.settings.get(MODULE_ID, 'compendiumSources');
     //@ts-expect-error Foundry.utils TS def not updated yet
     if (foundry.utils.isEmpty(selected)) {
       selected = DEFAULT_SOURCES;
@@ -42,7 +41,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   _updateObject(event: Event, formData?: any) {
     console.info(`${LOG_PREFIX} | Saving compendia sources:`);
     console.info(formData);
-    return game.settings.set(MODULE_ID, SettingKeys.SOURCES, formData);
+    return game.settings.set(MODULE_ID, 'compendiumSources', formData);
   }
 
   protected _getSubmitData(updateData?: any | null | undefined): Record<string, unknown> {

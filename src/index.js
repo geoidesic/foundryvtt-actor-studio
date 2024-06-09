@@ -12,10 +12,14 @@ import { tick } from "svelte";
 window.log = log;
 log.level = log.DEBUG;
 
-Hooks.once("ready", (app, html, data) => {
+Hooks.once("init", (app, html, data) => {
+
   log.i('Initialising');
-  // CONFIG.debug.hooks = true;
-  registerSettings();
+  CONFIG.debug.hooks = true;
+  registerSettings(app);
+
+});
+Hooks.once("ready", (app, html, data) => {
 
   if (!game.modules.get(MODULE_ID).active) {
     log.w('Module is not active');
