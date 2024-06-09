@@ -53,4 +53,13 @@ export const POINT_BUY_COSTS = {
   15: 7
 }
 
+export const STANDARD_ARRAY = {
+  str: 15, 
+  dex: 14, 
+  con: 13, 
+  int: 12, 
+  wis: 11, 
+  cha: 10
+};
+
 export type CLASS_LEVEL = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;

@@ -50,19 +50,19 @@
       value: 2,
       label: "Point Buy",
       type: "PointBuy",
-      setting: game.settings.get(MODULE_ID, "allowStandardArray"),
+      setting: game.settings.get(MODULE_ID, "allowPointBuy"),
     },
     {
       value: 3,
       label: "Roll",
       type: "Roll",
-      setting: game.settings.get(MODULE_ID, "allowPointBuy"),
+      setting: game.settings.get(MODULE_ID, "allowRolling"),
     },
     {
       value: 4,
       label: "Standard Array",
       type: "StandardArray",
-      setting: game.settings.get(MODULE_ID, "allowRolling"),
+      setting: game.settings.get(MODULE_ID, "allowStandardArray"),
     },
   ].filter((obj) => obj.setting);
 
