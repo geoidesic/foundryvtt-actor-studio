@@ -15,7 +15,7 @@ log.level = log.DEBUG;
 Hooks.once("init", (app, html, data) => {
 
   log.i('Initialising');
-  CONFIG.debug.hooks = true;
+  // CONFIG.debug.hooks = true;
   registerSettings(app);
 
 });
@@ -50,9 +50,13 @@ function addCreateNewActorButton(html, app) {
           if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
             if (userHasRightPermissions()) {
               const actorName = $('input', html).val();
+              const folderName = $('select[name="folder"]', html).val();
               log.d('actorType', actorType);
               try {
-                new PCApplication(new Actor.implementation({ name: actorName, type: actorType })).render(true, { focus: true });
+                log.d('app', app)
+                log.d('app.getData()', app.getData())
+                // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
+                new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });
                 app.close();
               } catch (error) {
                 ui.notifications.error(error.message);
