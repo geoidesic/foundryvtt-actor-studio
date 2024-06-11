@@ -15,10 +15,6 @@
         {
             "label": "Class",
             "id": "class"
-        },
-        {
-            "label": "Spells",
-            "id": "spells"
         }
     ]
 }
