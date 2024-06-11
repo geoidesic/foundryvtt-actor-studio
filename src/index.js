@@ -1,13 +1,17 @@
 import '../styles/Variables.scss'; // Import any styles as this includes them in the build.
 import '../styles/init.scss'; // Import any styles as this includes them in the build.
-import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
-import PCApplication from './app/PCApplication.js';
+
 import WelcomeApplication from './app/WelcomeApplication.js';
+import PCApplication from './app/PCApplication.js';
+import dnd5e from "~/config/systems/dnd5e.json";
+
+import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
 import { tick } from "svelte";
+
 
 window.log = log;
 log.level = log.DEBUG;
@@ -30,13 +34,19 @@ Hooks.once("ready", (app, html, data) => {
   }
 });
 
+function isActorTypeValid(actorTypes, type) {
+  // Check if the type exists as a key in the object and its value is true
+  return actorTypes.hasOwnProperty(type) && actorTypes[type] === true;
+}
+
 function addCreateNewActorButton(html, app) {
   log.i('Adding Create New Actor button');
   const select = $('select', html);
+  const systemActorDocumentTypes = dnd5e.actorTypes
 
   function updateButton() {
     const actorType = select.val();
-    if (actorType === "character") {
+    if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
       if (!$('button[data-hct_start]', html).length) {
         const $hctButton = $(
           `<button type="button" class='dialog-button default bright' data-hct_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">

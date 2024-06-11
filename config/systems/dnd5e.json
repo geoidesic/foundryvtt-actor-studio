@@ -16,5 +16,11 @@
             "label": "Class",
             "id": "class"
         }
-    ]
+    ],
+    "actorTypes": {
+        "character": true,
+        "npc": false,
+        "group": false,
+        "vehicle": false
+    }
 }
