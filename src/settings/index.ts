@@ -53,6 +53,7 @@ export function registerSettings(app): void {
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
+  donationTracker();
 
 }
 
@@ -276,6 +277,18 @@ function allowRolling(app) {
     updateSetting: () => { console.log('updateSetting'); },
     type: Boolean,
   });
+}
+
+function donationTracker() {
+  if(!game.modules.get('donation-tracker').active) return;
+  game.settings.register(MODULE_ID, 'donationTracker', {
+    name: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Name'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+
 }
 
 // PRIVATE SETTINGS

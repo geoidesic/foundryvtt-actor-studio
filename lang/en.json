@@ -1,12 +1,12 @@
 {
   "GAS": {
     "ActorStudio": "Actor Studio",
-    "PCTitle": "Player Character",
     "AbilityScores": "Ability Scores",
-    "Source": "Source",
     "Advancements": "Advancements",
     "Level": "Level",
     "NoAdvancements": "No advancements for this level",
+    "PCTitle": "Player Character",
+    "Source": "Source",
     "Permissions": {
       "NeedCreateActorError": "User requires the 'Create New Actors' permission. Ask your DM to add it to your role",
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",
@@ -52,6 +52,14 @@
         "Name": "Default starting gold roll",
         "Hint": "Here you can customize the starting gold dice rolled on the tool"
       },
+      "DonationTrackerEnabled" : {
+        "Name": "Enable Donation Tracker",
+        "Hint": "Enable the donation tracker to show the current donation amount and goal"
+      },
+      "DontShowWelcome": {
+        "Name": "Don't show this message again",
+        "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this via Configure Settings)."
+      },
       "ShowRolls": {
         "Name": "Show rolls on chat",
         "Hint": "Show ability score, hp per level and starting gold rolls as chat messages"
@@ -71,10 +79,6 @@
       },
       "AllowAbilityInput": {
         "Name": "Allow ability score manual entry"
-      },
-      "DontShowWelcome": {
-        "Name": "Don't show this message again",
-        "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this via Configure Settings)."
       },
       "UseTokenizer": {
         "Name": "Use Tokenizer if available",
