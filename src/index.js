@@ -201,9 +201,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 
 
 Hooks.on('renderSettingsConfig', (app, html ,context) => {
-
-  log.d('renderSettingsConfig', app, html, context)
-  $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html).before('<h3>Ability Score Entry Options</h3>')
-  // $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html)
-  // $(html).before('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]').insertAdjacentHTML('beforeBegin', '<h3>Sub-header</h3>')
+  $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
+  $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
+  $('[data-setting-id="foundryvtt-actor-studio.dontShowWelcome"]', html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
 })

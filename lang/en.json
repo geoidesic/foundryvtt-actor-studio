@@ -29,6 +29,9 @@
       }
     },
     "Setting": {
+      "World": "World Settings",
+      "User": "User Settings",
+      "AbilityScoreEntryOptions": "Ability Score Entry Options",
       "AbilityEntry": {
         "AllowManualInput": {
           "Name": "Allow manual input",
@@ -46,15 +49,28 @@
         "AllowRolling": {
           "Name": "Allow rolling",
           "Hint": "Allow the user to roll for the ability scores"
+        },
+        "PointBuyLimit": {
+          "Name": "Point Buy Limit",
+          "Hint": "Set the maximum points allowed for the point buy system. Values higher than this threshold will show in red."
+        },
+        "AbilityRollFormula": {
+          "Name": "Formula used to roll stats (per stat)",
+          "Hint": "E.g. 4d6kh3"
         }
       },
       "DefaultGoldDice": {
         "Name": "Default starting gold roll",
         "Hint": "Here you can customize the starting gold dice rolled on the tool"
       },
-      "DonationTrackerEnabled" : {
+      "DonationTrackerEnabled": {
         "Name": "Enable Donation Tracker",
         "Hint": "Enable the donation tracker to show the current donation amount and goal"
+      },
+      "DonationTracker": {
+        "Name": "Domation Tracker settings",
+        "Label": "Edit",
+        "Hint": "Enable / Disable the integration, and each donation tracker membership level has a folder name. You can edit them here."
       },
       "DontShowWelcome": {
         "Name": "Don't show this message again",
@@ -102,12 +118,6 @@
         "Name": "Create Actor dialog button",
         "Hint": "If the button interferes with other modules, or you prefer the aesthetic of having a single 'create actor' button to not confuse your players"
       },
-      "PointBuyLimit": {
-        "Name": "Point Buy Limit"
-      },
-      "AbilityRollFormula": {
-        "Name": "Formula used to roll stats (per stat)"
-      },
       "Sources": {
         "Name": "Compendium Sources",
         "Hint": "Select the compendia that will serve as data source for the different creation steps",
@@ -123,7 +133,6 @@
         "FeatCompendia": "Feat Compendia",
         "EquipmentCompendia": "Equipment Compendia"
       },
-
       "TrimSubclasses": {
         "Name": "Trim Subclass names",
         "Hint": "Shows subclass names without any last part in parenthesis, mostly for DDBImporter subclasses like 'Assassin (Rogue)' to be just 'Assassin' (does NOT modify the items added to actor, just show they are shown in the tool)"

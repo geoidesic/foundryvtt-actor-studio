@@ -29,6 +29,7 @@ export function registerSettings(app): void {
     return condition ? 'checked' : '';
   });
 
+  /**  Disabled settings */
   // defaultStartingGoldDice();
   // showRollsAsChatMessages();
   // individualPanelScrolls();
@@ -39,14 +40,14 @@ export function registerSettings(app): void {
   // buttonOnDialogInsteadOfActorsDirectory();
   // trimSubclasses();
   // custom packs
-  sourcesConfiguration();
   // integrations
   // useTokenizerIfAvailable();
   // private settings
   // lastMigration();
-  dontShowWelcome();
   // abilityScoreMethods();
 
+  /** World Settings */
+  sourcesConfiguration();
   allowManualInput();
   allowStandardArray();
   allowPointBuy();
@@ -54,6 +55,9 @@ export function registerSettings(app): void {
   allowRolling(app);
   abilityRollFormula();
   donationTracker();
+
+  /** User settings */ 
+  dontShowWelcome();
 
 }
 
@@ -213,7 +217,8 @@ function individualPanelScrolls() {
 
 function pointBuyLimit() {
   game.settings.register(MODULE_ID, 'pointBuyLimit', {
-    name: game.i18n.localize('GAS.Setting.PointBuyLimit.Name'),
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.PointBuyLimit.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.PointBuyLimit.Hint'),
     scope: 'world',
     config: true,
     default: 27,
@@ -223,7 +228,8 @@ function pointBuyLimit() {
 
 function abilityRollFormula() {
   game.settings.register(MODULE_ID, 'abiiltyRollFormula', {
-    name: game.i18n.localize('GAS.Setting.AbilityRollFormula.Name'),
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AbilityRollFormula.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.AbilityRollFormula.Hint'),
     scope: 'world',
     config: true,
     default: '4d6kh3',
@@ -237,7 +243,8 @@ function abilityRollFormula() {
 
 function allowManualInput() {
   game.settings.register(MODULE_ID, 'allowManualInput', {
-    name: game.i18n.localize('GAS.Setting.AllowAbilityRolling.Name'),
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowManualInput.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.AllowManualInput.Hint'),
     scope: 'world',
     config: true,
     type: Boolean,
@@ -248,6 +255,7 @@ function allowManualInput() {
 function allowStandardArray() {
   game.settings.register(MODULE_ID, 'allowStandardArray', {
     name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowStandardArray.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.AllowStandardArray.Hint'),
     scope: 'world',
     config: true,
     default: false,
@@ -258,6 +266,7 @@ function allowStandardArray() {
 function allowPointBuy() {
   game.settings.register(MODULE_ID, 'allowPointBuy', {
     name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowPointBuy.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.AllowPointBuy.Hint'),
     scope: 'world',
     config: true,
     default: false,
@@ -270,6 +279,7 @@ function allowPointBuy() {
 function allowRolling(app) {
   game.settings.register(MODULE_ID, 'allowRolling', {
     name: game.i18n.localize('GAS.Setting.AbilityEntry.AllowRolling.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.AllowRolling.Hint'),
     scope: 'world',
     config: true,
     default: false,
@@ -281,12 +291,21 @@ function allowRolling(app) {
 
 function donationTracker() {
   if(!game.modules.get('donation-tracker').active) return;
-  game.settings.register(MODULE_ID, 'donationTracker', {
-    name: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Name'),
-    scope: 'world',
-    config: true,
-    default: true,
-    type: Boolean,
+  // game.settings.register(MODULE_ID, 'DonationTrackerEnabled', {
+  //   name: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Name'),
+  //   hint: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Hint'),
+  //   scope: 'world',
+  //   config: true,
+  //   default: false,
+  //   type: Boolean,
+  // });
+  game.settings.registerMenu(MODULE_ID, 'DonationTracker', {
+    name: game.i18n.localize('GAS.Setting.DonationTracker.Name'),
+    hint: game.i18n.localize('GAS.Setting.DonationTracker.Hint'),
+    label: game.i18n.localize('GAS.Setting.DonationTracker.Label'),
+    icon: 'fas fa-coins',
+    type: CompendiumSourcesSubmenu,
+    restricted: true,
   });
 
 }
