@@ -6,12 +6,12 @@ import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
   set level(level) {
-    this.a = (level >= this.ASSERT) ? console.assert.bind(window.console, LOG_PREFIX) : () => {};
-    this.e = (level >= this.ERROR) ? console.error.bind(window.console, LOG_PREFIX) : () => {};
-    this.w = (level >= this.WARN) ? console.warn.bind(window.console, LOG_PREFIX) : () => {};
-    this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => {};
-    this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => {};
-    this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => {};
+    this.a = (level >= this.ASSERT) ? console.assert.bind(window.console, LOG_PREFIX) : () => { };
+    this.e = (level >= this.ERROR) ? console.error.bind(window.console, LOG_PREFIX) : () => { };
+    this.w = (level >= this.WARN) ? console.warn.bind(window.console, LOG_PREFIX) : () => { };
+    this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => { };
+    this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => { };
+    this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => { };
     this.loggingLevel = level;
   },
   get level() { return this.loggingLevel; }
@@ -65,7 +65,7 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   for (const [key, data] of mapIterator) {
     const newObj = {};
     keys.forEach((k) => {
-      if(k.includes('->')){
+      if (k.includes('->')) {
         const split = k.split('->');
         newObj[split[1]] = data[split[0]];
       } else {
@@ -78,7 +78,7 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   return newArray;
 }
 
-export function getFoldersFromMultiplePacks(packs, depth=1) {
+export function getFoldersFromMultiplePacks(packs, depth = 1) {
   const folders = [];
   for (const pack of packs) {
     const packFolders = getPackFolders(pack, depth);
@@ -87,7 +87,7 @@ export function getFoldersFromMultiplePacks(packs, depth=1) {
   return folders;
 }
 
-export function getPackFolders(pack, depth=1) {
+export function getPackFolders(pack, depth = 1) {
   const allRootFolders = extractMapIteratorObjectProperties(pack.folders.entries(), ['depth', 'name', '_id']);
   const foldersAtDepth = allRootFolders.filter(x => x.depth === depth);
   return foldersAtDepth
@@ -97,17 +97,38 @@ export const getPacksFromSettings = (type) => {
   const settings = game.settings.get(MODULE_ID, 'compendiumSources');
   const filteredPackNames = settings[type];
   const packs = [];
-  for(const packName of filteredPackNames) {
+  for (const packName of filteredPackNames) {
     packs.push(game.packs.get(packName));
   }
   return packs;
+}
+
+export const getAllPacksFromAllSettings = () => {
+  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  const types = Object.keys(settings);
+  const packs = [];
+  for (const type of types) {
+    const filteredPackNames = settings[type];
+    for (const packName of filteredPackNames) {
+      packs.push(game.packs.get(packName));
+    }
+  }
+  return packs;
+}
+
+export const getAllPackIdsFromAllSettings = () => {
+  const packs = getAllPacksFromAllSettings();
+  log.d('getAllPackIdsFromAllSettings', packs);
+  return packs.map(p => {
+    return p.collection
+  });
 }
 
 export const getSelectItemsFromPacksArray = (packs, type) => {
 
 }
 
-export const update = ($doc, dispatch, path) => async(event) => {
+export const update = ($doc, dispatch, path) => async (event) => {
   // console.log("event", event);
   // console.log("dispatch", dispatch);
   // console.log("path", path);
@@ -150,10 +171,10 @@ export function ucfirst(str) {
 export function camelCaseToTitleCase(camelCaseStr) {
   // Split the string at each uppercase letter
   const words = camelCaseStr.replace(/([A-Z])/g, ' $1').trim();
-  
+
   // Capitalize the first letter of each word and join them with spaces
   const titleCaseStr = words.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  
+
   return titleCaseStr;
 }
 
@@ -315,7 +336,7 @@ export async function getCompendiumEffect(effect) {
   return origin;
 }
 
-export const addItemToCharacter = async ({actor, itemData}) => {
+export const addItemToCharacter = async ({ actor, itemData }) => {
   return await actor.sheet._onDropSingleItem(itemData);
 }
 

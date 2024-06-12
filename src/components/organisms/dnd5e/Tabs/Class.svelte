@@ -159,6 +159,7 @@
         $characterSubClass.system.description.value,
       );
     }
+    
   });
 </script>
 

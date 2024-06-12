@@ -6,7 +6,7 @@ import PCApplication from './app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
 
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
-import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
+import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
@@ -20,7 +20,7 @@ log.level = log.DEBUG;
 Hooks.once("init", (app, html, data) => {
 
   log.i('Initialising');
-  CONFIG.debug.hooks = true;
+  // CONFIG.debug.hooks = true;
   registerSettings(app);
 
 
@@ -189,16 +189,28 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 
 
 Hooks.on('renderCompendium', async (app, html, data) => {
+  log.d('renderCompendium', app, html, data)
   if(game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
+    const allPacks = getAllPackIdsFromAllSettings();
+    const actionButtons = html.find('.action-buttons')
+    const DTaction = actionButtons.find('button.gas-add-dt-folders');
+    log.d('actionButtons', actionButtons)
+    log.d('DTaction', DTaction)
+
+    // don't render the button if it already exists
+    if(DTaction.length) return;
+
+    // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
+    if(!allPacks.includes(pack.metadata.id)) return;
 
     async function addDonationTrackerFolders () {
       const membershipRanks = game.membership.RANKS
+      log.d($('.gas-add-dt-folders').length === 0)
       for (const [rank, value] of Object.entries(membershipRanks)) {
         if(value === -1) continue;
         const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
-        log.d('folder', folder)
         if (!folder) {
           // pack.folders.createDocument({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "JournalEntry" });
           const folderCls = getDocumentClass("Folder"); 
@@ -208,8 +220,7 @@ Hooks.on('renderCompendium', async (app, html, data) => {
       }
     }
     
-    const actionButtons = $('.window-app.Compendium-sidebar .action-buttons')
-    const button = $(`<button role="button" class="gas-dt-folders" datatitle="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}" data-tooltip="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Hint')}"><i class="fas fa-folder"></i> ${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}</button>`);
+    const button = $(`<button role="button" class="gas-add-dt-folders" datatitle="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}" data-tooltip="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Hint')}"><i class="fas fa-folder"></i> ${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}</button>`);
     button.on('click', addDonationTrackerFolders)
     actionButtons.append(button)
     
