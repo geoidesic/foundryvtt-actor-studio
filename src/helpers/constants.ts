@@ -17,6 +17,10 @@ export const enum DEFAULT_PACKS {
   BACKGROUNDS = 'dnd5e.backgrounds',
 }
 
+export const sessionConstants = {
+  appState: `${MODULE_ID}.settings.appState`
+};
+
 export const DEFAULT_SOURCES = {
   races: [DEFAULT_PACKS.RACES],
   racialFeatures: [DEFAULT_PACKS.RACE_FEATURES],

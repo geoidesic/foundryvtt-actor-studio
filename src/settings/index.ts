@@ -1,4 +1,5 @@
 import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
+import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 
 // settings not shown on the Module Settings - not modifiable by users
@@ -56,9 +57,8 @@ export function registerSettings(app): void {
   abilityRollFormula();
   donationTracker();
 
-  /** User settings */ 
+  /** User settings */
   dontShowWelcome();
-
 }
 
 function sourcesConfiguration() {
@@ -234,7 +234,7 @@ function abilityRollFormula() {
     config: true,
     default: '4d6kh3',
     type: String,
-    onChange: () => { console.log('allowPointBuy')},
+    onChange: () => { console.log('allowPointBuy') },
     updateSetting: () => { console.log('updateSetting'); },
   });
 }
@@ -270,7 +270,7 @@ function allowPointBuy() {
     scope: 'world',
     config: true,
     default: false,
-    onChange: () => { console.log('allowPointBuy')},
+    onChange: () => { console.log('allowPointBuy') },
     updateSetting: () => { console.log('updateSetting'); },
     type: Boolean,
   });
@@ -283,14 +283,14 @@ function allowRolling(app) {
     scope: 'world',
     config: true,
     default: false,
-    onChange: () => { console.log('allowPointBuy')},
+    onChange: () => { console.log('allowPointBuy') },
     updateSetting: () => { console.log('updateSetting'); },
     type: Boolean,
   });
 }
 
 function donationTracker() {
-  if(!game.modules.get('donation-tracker').active) return;
+  if (!game.modules.get('donation-tracker').active) return;
   // game.settings.register(MODULE_ID, 'DonationTrackerEnabled', {
   //   name: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Name'),
   //   hint: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Hint'),
@@ -299,12 +299,17 @@ function donationTracker() {
   //   default: false,
   //   type: Boolean,
   // });
+
+  Hooks.on('mce-everywhere:open:settings', () => {
+    if (game.user.isGM) { DonationTrackerSettingsButton.showSettings(); }
+  });
+
   game.settings.registerMenu(MODULE_ID, 'DonationTracker', {
     name: game.i18n.localize('GAS.Setting.DonationTracker.Name'),
     hint: game.i18n.localize('GAS.Setting.DonationTracker.Hint'),
     label: game.i18n.localize('GAS.Setting.DonationTracker.Label'),
     icon: 'fas fa-coins',
-    type: CompendiumSourcesSubmenu,
+    type: DonationTrackerSettingsButton,
     restricted: true,
   });
 

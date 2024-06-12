@@ -10,6 +10,7 @@ import { userHasRightPermissions, log, delay } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
 import { writable, get, derived } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
+import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
 import { tick } from "svelte";
 
 
@@ -21,6 +22,8 @@ Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
   // CONFIG.debug.hooks = true;
   registerSettings(app);
+
+  DonationTrackerGameSettings.init();
 
 });
 Hooks.once("ready", (app, html, data) => {
@@ -198,7 +201,6 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 //     dropItemRegistry.advanceQueue();
 //   }, 5000);
 // })
-
 
 Hooks.on('renderSettingsConfig', (app, html ,context) => {
   $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
