@@ -53,8 +53,6 @@ class DonationTrackerGameSettings extends TJSGameSettings {
          }
       }
       
-      
-
       this.registerAll(allSettings, !game.user.isGM);
    }
 }

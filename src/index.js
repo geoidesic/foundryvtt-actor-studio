@@ -20,7 +20,7 @@ log.level = log.DEBUG;
 Hooks.once("init", (app, html, data) => {
 
   log.i('Initialising');
-  // CONFIG.debug.hooks = true;
+  CONFIG.debug.hooks = true;
   registerSettings(app);
 
 
@@ -185,4 +185,34 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
   $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
   $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
   $('[data-setting-id="foundryvtt-actor-studio.dontShowWelcome"]', html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
+})
+
+
+Hooks.on('renderCompendium', async (app, html, data) => {
+  if(game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+
+    const pack = app.collection
+
+    async function addDonationTrackerFolders () {
+      const membershipRanks = game.membership.RANKS
+      for (const [rank, value] of Object.entries(membershipRanks)) {
+        if(value === -1) continue;
+        const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
+        log.d('folder', folder)
+        if (!folder) {
+          // pack.folders.createDocument({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "JournalEntry" });
+          const folderCls = getDocumentClass("Folder"); 
+          // const myFolder = await folderCls.create({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "JournalEntry" });
+          await folderCls.create({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "Item" }, {pack:pack.metadata.id});
+        }
+      }
+    }
+    
+    const actionButtons = $('.window-app.Compendium-sidebar .action-buttons')
+    const button = $(`<button role="button" class="gas-dt-folders" datatitle="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}" data-tooltip="${game.i18n.localize('GAS.Setting.DonationTrackerAction.Hint')}"><i class="fas fa-folder"></i> ${game.i18n.localize('GAS.Setting.DonationTrackerAction.Name')}</button>`);
+    button.on('click', addDonationTrackerFolders)
+    actionButtons.append(button)
+    
+  }
+  
 })

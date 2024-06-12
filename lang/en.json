@@ -71,6 +71,10 @@
         "Name": "Rank",
         "Hint": "Enter the folder name for the rank"
       },
+      "DonationTrackerAction": {
+        "Name": "Add DT folders",
+        "Hint": "Add the membership level folders to this compendium"
+      },
       "DonationTracker": {
         "Name": "Donation Tracker settings",
         "Label": "Edit",
