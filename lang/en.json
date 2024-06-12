@@ -67,8 +67,12 @@
         "Name": "Enable Donation Tracker",
         "Hint": "Enable the donation tracker to show the current donation amount and goal"
       },
+      "DonationTrackerRank": {
+        "Name": "Rank",
+        "Hint": "Enter the folder name for the rank"
+      },
       "DonationTracker": {
-        "Name": "Domation Tracker settings",
+        "Name": "Donation Tracker settings",
         "Label": "Edit",
         "Hint": "Enable / Disable the integration, and each donation tracker membership level has a folder name. You can edit them here."
       },

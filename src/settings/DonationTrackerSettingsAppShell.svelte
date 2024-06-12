@@ -36,3 +36,19 @@
       <SettingsFooter slot=settings-footer />
    </TJSSettingsEdit>
 </TJSApplicationShell>
+
+
+<style lang="sass">
+   :root
+      --tjs-settings-edit-background-color: rgba(0,0,0,0.9)
+      --tjs-settings-edit-color: white
+      --tjs-settings-entry-hint-color: #999
+      --tjs-settings-entry-label-color: white
+
+   :global(#gas-donation-tracker-settings)
+      background-color: rgba(0,0,0,0.9)
+      color: white
+
+   :global(#gas-donation-tracker-settings .tjs-input)
+      color: white
+</style>

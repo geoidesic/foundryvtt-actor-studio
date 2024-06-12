@@ -147,6 +147,17 @@ export function ucfirst(str) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
+export function camelCaseToTitleCase(camelCaseStr) {
+  // Split the string at each uppercase letter
+  const words = camelCaseStr.replace(/([A-Z])/g, ' $1').trim();
+  
+  // Capitalize the first letter of each word and join them with spaces
+  const titleCaseStr = words.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  
+  return titleCaseStr;
+}
+
+
 export function getSubAttributeGroup(subAttribute) {
   for (const key in attributes) {
     if (attributes.hasOwnProperty(key)) {

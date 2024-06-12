@@ -291,14 +291,6 @@ function allowRolling(app) {
 
 function donationTracker() {
   if (!game.modules.get('donation-tracker').active) return;
-  // game.settings.register(MODULE_ID, 'DonationTrackerEnabled', {
-  //   name: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Name'),
-  //   hint: game.i18n.localize('GAS.Setting.DonationTrackerEnabled.Hint'),
-  //   scope: 'world',
-  //   config: true,
-  //   default: false,
-  //   type: Boolean,
-  // });
 
   Hooks.on('mce-everywhere:open:settings', () => {
     if (game.user.isGM) { DonationTrackerSettingsButton.showSettings(); }
@@ -311,6 +303,9 @@ function donationTracker() {
     icon: 'fas fa-coins',
     type: DonationTrackerSettingsButton,
     restricted: true,
+    onChange: () => {
+      Hooks.call('mce-everywhere:open:settings');
+    }
   });
 
 }

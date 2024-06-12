@@ -23,7 +23,6 @@ Hooks.once("init", (app, html, data) => {
   // CONFIG.debug.hooks = true;
   registerSettings(app);
 
-  DonationTrackerGameSettings.init();
 
 });
 Hooks.once("ready", (app, html, data) => {
@@ -32,9 +31,10 @@ Hooks.once("ready", (app, html, data) => {
     log.w('Module is not active');
     return;
   }
-  if(!game.settings.get(MODULE_ID, 'dontShowWelcome')){
+  if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
     new WelcomeApplication().render(true, { focus: true });
   }
+  DonationTrackerGameSettings.init();
 });
 
 function isActorTypeValid(actorTypes, type) {
@@ -112,54 +112,34 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  log.d('renderAdvancementManager')
-
   // Check if your application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
-  log.d('app', app)
   const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
-  log.d('methods', methods)
-  log.d('currentProcess', currentProcess)
-
   if (currentProcess.id && app._stepIndex === 0) {
-    log.d('currentProcess', currentProcess)
-    log.d(' app._stepIndex', app._stepIndex)
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
-
       dropItemRegistry.updateCurrentProcess({ app, html, data })
-
       const advancementsTab = get(tabs).find(x => x.id === "advancements");
-
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
-
         await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         activeTab.set('advancements');
       }
-
-
     }
   }
 });
 
 Hooks.on('gas.renderAdvancement', () => {
-  log.d('gas.renderAdvancement')
   const currentProcess = get(dropItemRegistry.currentProcess);
-  log.d('currentProcess', currentProcess)
-
   // Get all stored advancement apps
   if (currentProcess) {
     const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
-    log.d('panelElement', panelElement)
     // Move each app's dialog to your application's content area
     // Check if the app's element is already appended
     if (!isAppElementAppended(currentProcess.id)) {
-      log.d('not cuurently appended, so append app');
       const element = currentProcess.app.element
-      log.d('element', element)
       element.removeClass(); // Remove all classes from the root element itself
       element.addClass('gas-advancements')
       element.attr('gas-appid', currentProcess.id);
@@ -189,7 +169,6 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 
   // Once the panel is empty, proceed with the drop operation
   const queue = await dropItemRegistry.advanceQueue();
-  log.d('queue', queue)
   if (!queue) {
     Hooks.call("gas.close");
   }
@@ -202,7 +181,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 //   }, 5000);
 // })
 
-Hooks.on('renderSettingsConfig', (app, html ,context) => {
+Hooks.on('renderSettingsConfig', (app, html, context) => {
   $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
   $('[data-setting-id="foundryvtt-actor-studio.allowManualInput"]', html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
   $('[data-setting-id="foundryvtt-actor-studio.dontShowWelcome"]', html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
