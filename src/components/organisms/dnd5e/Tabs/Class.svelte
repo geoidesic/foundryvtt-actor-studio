@@ -19,6 +19,7 @@
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import DonationTracker from "~/src/plugins/donation-tracker"
 
   let richHTML = "",
     richSubClassHTML = "",
@@ -36,17 +37,8 @@
     subClassesPacks = getPacksFromSettings("subclasses"),
     folders = getFoldersFromMultiplePacks(packs, 1),
     folderIds = folders.map((x) => x._id),
-    mappedClassIndex = extractItemsFromPacks(packs, [
-      "name->label",
-      "img",
-      "type",
-      "folder",
-      "uuid->value",
-      "_id",
-    ]),
-    filteredClassIndex = mappedClassIndex.filter(
-      (x) => !folderIds.includes(x.folder),
-    ).sort((a, b) => a.label.localeCompare(b.label));
+    mappedClassIndex,
+    filteredClassIndex
   ;
 
 
@@ -143,6 +135,22 @@
 
 
   onMount(async () => {
+
+    mappedClassIndex = extractItemsFromPacks(packs, [
+      "name->label",
+      "img",
+      "type",
+      "folder",
+      "uuid->value",
+      "_id",
+    ]),
+    filteredClassIndex = mappedClassIndex
+      .filter((i) => {
+        return DonationTracker.canViewItem(i)
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+
+      
     if ($characterClass) {
       classValue = $characterClass.uuid;
       richHTML = await TextEditor.enrichHTML(html);
@@ -155,6 +163,7 @@
         $characterSubClass.system.description.value,
       );
     }
+
     
   });
 </script>

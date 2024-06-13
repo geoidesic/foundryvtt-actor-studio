@@ -17,6 +17,8 @@ import { tick } from "svelte";
 window.log = log;
 log.level = log.DEBUG;
 
+
+
 Hooks.once("init", (app, html, data) => {
 
   log.i('Initialising');

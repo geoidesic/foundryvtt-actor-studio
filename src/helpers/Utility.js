@@ -1,7 +1,6 @@
 
 import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
-
-
+import DTPlugin from "~/src/plugins/donation-tracker";
 
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
@@ -29,11 +28,9 @@ export function clamp(value, min, max) {
 }
 
 
-
 export function isNumber(value) {
   return typeof value === 'number' && isFinite(value);
 }
-
 
 /**
  * Gets a rules from a journal by ID and Page
@@ -56,10 +53,26 @@ export async function getRules(rule) {
   return text;
 }
 
+
 export function extractItemsFromPacks(packs, keys) {
   const items = [];
+
+  const DTpermissions = DTPlugin.getDTSettings();
+  log.d('DTpermissions', DTpermissions)
   for (const pack of packs) {
-    const packItems = extractMapIteratorObjectProperties(pack.index.entries(), keys);
+    let entries = pack.index.entries()
+    // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
+    if (game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+      // get dt folder id's from this pack
+      const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
+      log.d('dtFolderIds', dtFolderIds)
+      // filter the index.entries accordingly
+      entries = entries.filter(([key, value]) => {
+        log.d('value.folder', value.folder)
+        return !value.folder || dtFolderIds.includes(value.folder)
+      });
+    }
+    const packItems = extractMapIteratorObjectProperties(entries, keys);
     items.push(...packItems);
   }
   return items;
