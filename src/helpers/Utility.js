@@ -17,7 +17,12 @@ export const log = {
   get level() { return this.loggingLevel; }
 };
 
-
+export const importComponent = async (importPath, componentName) => {
+  const { default: Component } = await import(
+    /* @vite-ignore */ `${importPath}${componentName}.svelte`
+  );
+  return Component;
+};
 
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -77,6 +82,7 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   }
   return newArray;
 }
+
 
 export function getFoldersFromMultiplePacks(packs, depth = 1) {
   const folders = [];
