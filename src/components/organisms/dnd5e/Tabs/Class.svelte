@@ -185,7 +185,7 @@
                       .flex0.relative.image
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
-                    +await("importComponent(advancement.type)")
+                    +await("importComponent(importComponent, advancement.type)")
                       +then("Component")
                         //- pre advancement {advancement.type}
                         svelte:component(this="{Component}" advancement="{advancement}")
@@ -212,7 +212,7 @@
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
                       
-                      +await("importComponent(advancement.type)")
+                      +await("importComponent(importComponent, advancement.type)")
                         +then("Component")
                           //- pre advancement {advancement.type}
                           svelte:component(this="{Component}" advancement="{advancement}")
