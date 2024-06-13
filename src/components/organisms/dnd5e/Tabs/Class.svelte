@@ -63,32 +63,6 @@
 
   const actor = getContext("#doc");
 
-  $: html = $characterClass?.system?.description.value || "";
-  $: subClassProp = activeSubClass;
-  $: classProp = activeClass;
-  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
-
-  $: if(subClassesIndex?.length) {
-    subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
-  } else {
-    subclasses = [];
-  }
-
-  $: subClassAdvancementArrayFiltered = $characterSubClass?.advancement?.byId
-    ? Object.entries($characterSubClass.advancement.byId)
-        .filter(([id, value]) => value.level === $level)
-        .map(([id, value]) => ({ ...value, id }))
-    : [];
-
-  $: classAdvancementArrayFiltered = $characterClass?.advancement?.byId
-    ? Object.entries($characterClass.advancement.byId)
-        .filter(([id, value]) => value.level === $level)
-
-        .map(([id, value]) => ({ ...value, id }))
-    : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
-      [];
-
-
 
   const getFilteredSubclassIndex = async () => {
     const filteredSubClassIndex = [];
@@ -140,6 +114,32 @@
   const levelSelectHandler = async (option) => {};
 
   const importPath = "components/molecules/dnd5e/Advancements/";
+
+  $: html = $characterClass?.system?.description.value || "";
+  $: subClassProp = activeSubClass;
+  $: classProp = activeClass;
+  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
+
+  $: if(subClassesIndex?.length) {
+    subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+  } else {
+    subclasses = [];
+  }
+
+  $: subClassAdvancementArrayFiltered = $characterSubClass?.advancement?.byId
+    ? Object.entries($characterSubClass.advancement.byId)
+        .filter(([id, value]) => value.level === $level)
+        .map(([id, value]) => ({ ...value, id }))
+    : [];
+
+  $: classAdvancementArrayFiltered = $characterClass?.advancement?.byId
+    ? Object.entries($characterClass.advancement.byId)
+        .filter(([id, value]) => value.level === $level)
+
+        .map(([id, value]) => ({ ...value, id }))
+    : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
+      [];
+
 
 
   onMount(async () => {
