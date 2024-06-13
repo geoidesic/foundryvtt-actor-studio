@@ -13094,15 +13094,16 @@ function userHasRightPermissions() {
     ui.notifications?.error(game.i18n.localize("GAS.Permissions.NeedCreateActorError"));
     return false;
   }
-  if (!game.permissions.ITEM_CREATE.includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedCreateItemWarn"));
-  }
-  if (!game.permissions.FILES_UPLOAD.includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedFileUploadWarn"));
-  }
-  if (!game.permissions.FILES_BROWSE.includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedFileBrowseWarn"));
-  }
+  /** @todo: these were from HCT. None of these apply to the current version of Actor Studio */
+  // if (!game.permissions.ITEM_CREATE.includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedCreateItemWarn"));
+  // }
+  // if (!game.permissions.FILES_UPLOAD.includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedFileUploadWarn"));
+  // }
+  // if (!game.permissions.FILES_BROWSE.includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize("GAS.Permissions.NeedFileBrowseWarn"));
+  // }
   return true;
 }
 const race = writable(false);
