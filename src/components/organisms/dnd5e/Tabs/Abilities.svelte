@@ -6,6 +6,7 @@
     addItemToCharacter,
     log,
     getRules,
+    importComponent
   } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
@@ -23,13 +24,8 @@
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
-  const importPath = "../../../molecules/dnd5e/AbilityEntry/";
-  const importComponent = async (componentName) => {
-    const { default: Component } = await import(
-      /* @vite-ignore */ `${importPath}${componentName}.svelte`
-    );
-    return Component;
-  };
+  const importPath = "components/molecules/dnd5e/AbilityEntry/";
+
   const selectHandler = async (option) => {
     active = option.value;
     $abilityGenerationMethod = option.value;
@@ -90,7 +86,7 @@
               +each("options as option")
                 li {option.label}
         +if("$abilityGenerationMethod")
-          +await("importComponent(options.find(x => x.value == $abilityGenerationMethod).type)")
+          +await("importComponent(importPath, options.find(x => x.value == $abilityGenerationMethod).type)")
             +then("Component")
               svelte:component(this="{Component}")
       .flex0.border-right.right-border-gradient-mask 
