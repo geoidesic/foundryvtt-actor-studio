@@ -357,6 +357,7 @@ export function isParentActor(item) {
   return item?.parent?.constructor?.name === 'SurgeActor';
 }
 
+/** @todo: these were from HCT. None of these apply to the current version of Actor Studio */
 export function userHasRightPermissions() {
   const userRole = game.user.role;
 
@@ -367,18 +368,18 @@ export function userHasRightPermissions() {
   }
 
   // create item (optional)
-  if (!((game).permissions.ITEM_CREATE).includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedCreateItemWarn'));
-  }
+  // if (!((game).permissions.ITEM_CREATE).includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedCreateItemWarn'));
+  // }
 
   // upload files (optional)
-  if (!((game).permissions.FILES_UPLOAD).includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileUploadWarn'));
-  }
+  // if (!((game).permissions.FILES_UPLOAD).includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileUploadWarn'));
+  // }
 
   // browse files (optional)
-  if (!((game).permissions.FILES_BROWSE).includes(userRole)) {
-    ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileBrowseWarn'));
-  }
+  // if (!((game).permissions.FILES_BROWSE).includes(userRole)) {
+  //   ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileBrowseWarn'));
+  // }
   return true;
 }
