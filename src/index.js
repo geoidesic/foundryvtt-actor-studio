@@ -207,7 +207,6 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 
     async function addDonationTrackerFolders () {
       const membershipRanks = game.membership.RANKS
-      log.d($('.gas-add-dt-folders').length === 0)
       for (const [rank, value] of Object.entries(membershipRanks)) {
         if(value === -1) continue;
         const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
