@@ -8,6 +8,7 @@
     addItemToCharacter,
     getPacksFromSettings,
     log,
+    importComponent
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -138,13 +139,8 @@
 
   const levelSelectHandler = async (option) => {};
 
-  const importPath = "../../../molecules/dnd5e/Advancements/";
-  const importComponent = async (componentName) => {
-    const { default: Component } = await import(
-      /* @vite-ignore */ `${importPath}${componentName}.svelte`
-    );
-    return Component;
-  };
+  const importPath = "components/molecules/dnd5e/Advancements/";
+
 
   onMount(async () => {
     if ($characterClass) {
