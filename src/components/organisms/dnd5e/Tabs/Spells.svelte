@@ -26,7 +26,7 @@
     .flexrow
       .flex2.pr-sm.col-a
       .flex0.border-right.right-border-gradient-mask 
-      .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
+      .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
 
 <style lang="sass" scoped>

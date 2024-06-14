@@ -1,73 +1,100 @@
 <script>
-import SvelteSelect from 'svelte-select';
-import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
-import { getContext, onDestroy, onMount, tick } from "svelte";
-import { localize } from "#runtime/svelte/helper";
-import { race } from "~/src/helpers/store"
+  import SvelteSelect from "svelte-select";
+  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import {
+    getFoldersFromMultiplePacks,
+    extractItemsFromPacks,
+    addItemToCharacter,
+    getPacksFromSettings,
+    importComponent,
+    log,
+  } from "~/src/helpers/Utility.js";
+  import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { localize } from "#runtime/svelte/helper";
+  import { race } from "~/src/helpers/store";
 
-let active = null, value = null, placeHolder = "Races";
-let packs = getPacksFromSettings('races');
-let folders = getFoldersFromMultiplePacks(packs, 1);
-let folderIds = folders.map(x => x._id);
-let allRaceItems = extractItemsFromPacks(packs, ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
-let raceDefinitions = allRaceItems.filter(x => folderIds.includes(x.folder)).sort((a, b) => a.label.localeCompare(b.label));
+  let active = null,
+    value = null,
+    placeHolder = "Races",
+    richHTML = "";
+  let packs = getPacksFromSettings("races");
+  let folders = getFoldersFromMultiplePacks(packs, 1);
+  let folderIds = folders.map((x) => x._id);
+  let allRaceItems = extractItemsFromPacks(packs, [
+    "name->label",
+    "img",
+    "type",
+    "folder",
+    "uuid->value",
+    "_id",
+  ]);
+  let raceDefinitions = allRaceItems
+    .filter((x) => folderIds.includes(x.folder))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
-const actor = getContext("#doc");
-
-$: actorObject = $actor.toObject();
-$: options = raceDefinitions;
-$: html = $race?.system?.description?.value || '';
-$: movement = $race?.system?.movement
-$: senses = $race?.system?.senses
-
-$: filteredMovement = movement ? Object.keys(movement)
-    .filter(key => key !== 'units' && movement[key])
-    .map(key => ({ label: key, value: movement[key] })) : [];
-
-$: filteredSenses = senses ? Object.keys(senses)
-    .filter(key => key !== 'units' && senses[key])
-    .map(key => ({ label: key, value: senses[key] })) : [];
-
-$: units = $race?.system?.movement?.units || '';
-$: type = $race?.system?.type || '';
-$: source = $race?.system?.source || '';
-$: book = source?.book || '';
-$: page = source?.page? ', p. ' + source.page : '';
-$: advancementArray = $race?.advancement?.byId ? Object.entries($race.advancement.byId).map(([id, value]) => ({ ...value, id }))
-  .filter(value => !(value.type == 'Trait' && value.title == "Dwarven Resilience"))
-  // .filter(value => (value.type == 'Trait' && value.title == "Tinker"))
-  : [];
+  const actor = getContext("#doc");
 
 
-const selectHandler = async (option) => {
-  $race = await fromUuid(option);
-  active = option; 
-  await tick();
-}
+  const selectHandler = async (option) => {
+    $race = await fromUuid(option);
+    active = option;
+    await tick();
+  };
 
-const importPath = '../../../molecules/dnd5e/Advancements/';
-const importComponent = async (componentName) => {
-  const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
-  return Component;
-};
+  const importPath = "components/molecules/dnd5e/Advancements/";
 
-onMount(async () => {
-  if($race) {
-    value = $race.uuid;
-  }
-});
+  /**
+   * So the only viable strategy is to keep the race additions in storage
+   * and then only add them after the Actor is added to the game.
+   * I haven't found a way to add them to the Actor before it is persisted.
+   */
+  const createActorInGameAndEmbedItems = async () => {
+    const itemData = race.toObject();
+    const actorInGame = await Actor.create(actorObject);
+    const result = await addItemToCharacter(actorInGame, itemData);
+  };
 
-/**
- * So the only viable strategy is to keep the race additions in storage 
- * and then only add them after the Actor is added to the game. 
- * I haven't found a way to add them to the Actor before it is persisted.
- */
-const createActorInGameAndEmbedItems = async () => {
-  const itemData = race.toObject()
-  const actorInGame = await Actor.create(actorObject);
-  const result = await addItemToCharacter(actorInGame, itemData)
-}
+
+  $: actorObject = $actor.toObject();
+  $: options = raceDefinitions;
+  $: html = $race?.system?.description?.value || "";
+  $: movement = $race?.system?.movement;
+  $: senses = $race?.system?.senses;
+
+  $: filteredMovement = movement
+    ? Object.keys(movement)
+        .filter((key) => key !== "units" && movement[key])
+        .map((key) => ({ label: key, value: movement[key] }))
+    : [];
+
+  $: filteredSenses = senses
+    ? Object.keys(senses)
+        .filter((key) => key !== "units" && senses[key])
+        .map((key) => ({ label: key, value: senses[key] }))
+    : [];
+
+  $: units = $race?.system?.movement?.units || "";
+  $: type = $race?.system?.type || "";
+  $: source = $race?.system?.source || "";
+  $: book = source?.book || "";
+  $: page = source?.page ? ", p. " + source.page : "";
+  $: advancementArray = $race?.advancement?.byId
+    ? Object.entries($race.advancement.byId)
+        .map(([id, value]) => ({ ...value, id }))
+        .filter(
+          (value) =>
+            !(value.type == "Trait" && value.title == "Dwarven Resilience"),
+        )
+    : // .filter(value => (value.type == 'Trait' && value.title == "Tinker"))
+      [];
+
+
+  onMount(async () => {
+    if ($race) {
+      value = $race.uuid;
+    }
+    richHTML = await TextEditor.enrichHTML(html);
+  });
 
 </script>
 
@@ -105,7 +132,7 @@ div.content
                 //- pre advancement.type {advancement.type}
                 //- pre advancement.title {advancement.title}
 
-                +await("importComponent(advancement.type)")
+                +await("importComponent(importPath, advancement.type)")
                   +then("Component")
                     //- pre advancement {advancement.type}
                     svelte:component(this="{Component}" advancement="{advancement}")
@@ -113,8 +140,8 @@ div.content
                   
                 
     .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{html}" contenteditable)
-  
+    .flex3.left.pl-md.scroll.col-b {@html richHTML}
+
 </template>
 
 <style lang="sass">

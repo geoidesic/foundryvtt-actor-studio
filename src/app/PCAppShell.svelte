@@ -19,10 +19,11 @@
   $activeTab = dnd5e.tabs[0].id
 
   $: if($characterClass?.system?.spellcasting?.progression && $characterClass?.system?.spellcasting?.progression !== "none") {
+    // @todo: [NB: this has been disabled for MVP as the bounty wasn't reached to fund this work.
     // ensure that tabs includes spells
-    if(!$tabs.find(x => x.id === "spells")) {
-      $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
-    }
+    // if(!$tabs.find(x => x.id === "spells")) {
+    //   $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
+    // }
   } else {
     // remove spells tab
     $tabs = $tabs.filter(x => x.id !== "spells")
@@ -61,7 +62,7 @@
   ApplicationShell(bind:elementRoot stylesApp)
     main
       section.a
-        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC" importPath="../organisms/dnd5e/Tabs/")
+        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC" importPath="components/organisms/dnd5e/Tabs/")
 
       section.b
         Footer

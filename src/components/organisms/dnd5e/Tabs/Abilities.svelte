@@ -34,7 +34,7 @@
   let rules = "", active, value, placeHolder = 'Ability Generation Method'
 
   $: actorObject = $actor.toObject();
-  $: html = rules?.content || "";
+  $: richHTML = rules?.content || "";
   $: options = [
     {
       value: 1,
@@ -90,7 +90,7 @@
             +then("Component")
               svelte:component(this="{Component}")
       .flex0.border-right.right-border-gradient-mask 
-      .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{html}" contenteditable)
+      .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
 
 <style lang="sass" scoped>

@@ -1,22 +1,20 @@
 <script>
   import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
-    import { log } from "~/src/helpers/Utility";
+  import { log, importComponent } from "~/src/helpers/Utility";
 
   // List of tabs
   export let tabs = [];
   // type of sheet
   export let sheet;
-  export let importPath = '';
+  export let importPath;
 
   // The active tab
   export let activeTab = void 0;
   export let efx = ripple();
 
-  const importComponent = async (componentName) => {
-    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
-    return Component;
-  };
+  log.d('tabs', tabs);
+
 </script>
 
 <!--List of tabs-->
@@ -46,12 +44,12 @@
         <svelte:component this={tab.component} />
         {/if}
         {#if typeof tab.component === 'string' && importPath}
-          {#await importComponent(tab.component)}
+          {#await importComponent(importPath, tab.component)}
             <i class="spinner fas fa-circle-notch fa-spin"></i>
           {:then Component}
             <svelte:component this={Component} />
           {:catch error}
-            <p>Error loading component: {error.message}</p>
+            <p>Error loading component 333: {error.message}</p>
           {/await}
         {/if}
       {/if}

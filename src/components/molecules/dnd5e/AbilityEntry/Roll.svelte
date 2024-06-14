@@ -22,9 +22,7 @@
 
 
   async function roll(attr) {
-
-
-    const roll = await new Roll(formula).evaluate({async: true});
+    const roll = await new Roll(formula).evaluate();
     await roll.toMessage();
 
     // set the value of the ability to the result of the roll

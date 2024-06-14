@@ -1,7 +1,7 @@
 <script>
   import SvelteSelect from 'svelte-select';
   import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, log } from "~/src/helpers/Utility.js";
+  import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, importComponent, log } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
   import { background } from "~/src/helpers/store"
@@ -22,7 +22,10 @@
   $: featureFolderId = backgroundFolders.find(x => x.name == $background.name+' Feature')?.key
   $: equipment = equipmentFolderId ? allItems.filter(x => x.folder == equipmentFolderId) : [];
   $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
-  $: advancementArray = $background?.advancement?.byId ? Object.entries($background.advancement.byId).map(([id, value]) => ({ ...value, id })).filter(value => !(value.type == 'ItemGrant' && value.title == "Feature")) : [];
+  $: advancementArray = $background?.advancement?.byId 
+    ? Object.entries($background.advancement.byId)
+      .map(([id, value]) => ({ ...value, id }))
+    : [];
 
 
   let richHTML = '';
@@ -32,13 +35,13 @@
     active = option; 
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
+
+    log.d('$background', $background)
+    log.d('advancementArray', advancementArray)
   }
 
-  const importPath = '../../../molecules/dnd5e/Advancements/';
-  const importComponent = async (componentName) => {
-    const { default: Component } = await import( /* @vite-ignore */`${importPath}${componentName}.svelte`);
-    return Component;
-  };
+  const importPath = 'components/molecules/dnd5e/Advancements/';
+
 
   
   onMount(async () => {
@@ -93,7 +96,7 @@ div.content
                     svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{richHTML}" contenteditable)
+    .flex3.left.pl-md.scroll.col-b {@html richHTML}
 
 </template>
   

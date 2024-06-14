@@ -32,11 +32,10 @@
     classesPlaceholder = "Classes",
     subclassesPlaceholder = "Subclasses",
     packs = getPacksFromSettings("classes"),
-    /** @todo: #15:- build this up based on settings */
     subClassesPack = game.packs.get('dnd5e.subclasses'),
     subClassesPacks = getPacksFromSettings("subclasses"),
-    folders = getFoldersFromMultiplePacks(packs, 1),
-    folderIds = folders.map((x) => x._id),
+    // folders = getFoldersFromMultiplePacks(packs, 1),
+    // folderIds = folders.map((x) => x._id),
     mappedClassIndex,
     filteredClassIndex
   ;
@@ -54,7 +53,6 @@
   };
 
   const actor = getContext("#doc");
-
 
   const getFilteredSubclassIndex = async () => {
     const filteredSubClassIndex = [];
@@ -129,10 +127,7 @@
         .filter(([id, value]) => value.level === $level)
 
         .map(([id, value]) => ({ ...value, id }))
-    : // .filter(value => (value.type == 'Trait' && value.title == "Saving Throws"))
-      [];
-
-
+    : [];
 
   onMount(async () => {
 
@@ -163,9 +158,8 @@
         $characterSubClass.system.description.value,
       );
     }
-
-    
   });
+
 </script>
 
 <template lang="pug">
@@ -227,7 +221,7 @@
                           svelte:component(this="{Component}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b(bind:innerHTML="{combinedHtml}" contenteditable)
+    .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
 
 </template>
 
