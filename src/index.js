@@ -197,7 +197,7 @@ Hooks.on('renderCompendium', async (app, html, data) => {
     const pack = app.collection
     const allPacks = getAllPackIdsFromAllSettings();
     const actionButtons = html.find('.action-buttons')
-    const DTaction = actionButtons.find('button.gas-add-dt-folders');
+    const DTaction = actionButtons.length ? $(actionButtons[0]).find('button.gas-add-dt-folders') : [];
     log.d('actionButtons', actionButtons)
     log.d('DTaction', DTaction)
 
