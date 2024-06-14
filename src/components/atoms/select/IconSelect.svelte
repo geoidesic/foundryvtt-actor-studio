@@ -190,10 +190,11 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     &.active {
       background-color: rgba(0, 0, 0, 0.2);
     }
+
+    &:hover {
+      background-color: var(--select-option-highlight-color);
+    }
     
   }
 
-  .option:hover {
-    background-color: #f8f9fa;
-  }
 </style>
