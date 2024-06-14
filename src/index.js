@@ -204,8 +204,16 @@ Hooks.on('renderCompendium', async (app, html, data) => {
     // don't render the button if it already exists
     if(DTaction.length) return;
 
+    log.d('continue 1')
+    log.d('allPacks', allPacks)
+    log.d('pack', pack)
+    
     // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
-    if(!allPacks.includes(pack.metadata.id)) return;
+    if(!allPacks.includes(pack.metadata.id)) {
+      ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`) 
+      return;
+    }
+    log.d('continue 2')
 
     async function addDonationTrackerFolders () {
       const membershipRanks = game.membership.RANKS
