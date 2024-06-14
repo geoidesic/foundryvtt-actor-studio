@@ -46,6 +46,14 @@
  }
 }
 
+.gas-add-dt-folders {
+  background-color: #fff;
+  &:hover {
+    background-color: var(--color-text-hyperlink);
+    border-color: black
+  }
+}
+
   
 .justify-flexrow-vertical {
   align-items: center;
