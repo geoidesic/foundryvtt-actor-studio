@@ -197,23 +197,31 @@ Hooks.on('renderCompendium', async (app, html, data) => {
     const pack = app.collection
     const allPacks = getAllPackIdsFromAllSettings();
     const actionButtons = html.find('.action-buttons')
-    const DTaction = actionButtons.length ? $(actionButtons[0]).find('button.gas-add-dt-folders') : [];
-    log.d('actionButtons', actionButtons)
-    log.d('DTaction', DTaction)
+    const DTaction = actionButtons.find('button.gas-add-dt-folders');
 
     // don't render the button if it already exists
-    if(DTaction.length) return;
-
-    log.d('continue 1')
-    log.d('allPacks', allPacks)
-    log.d('pack', pack)
+    if(DTaction.length) {
+      log.i('Donation Tracker button already exists, skipping')
+      return;
+    }
     
     // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
     if(!allPacks.includes(pack.metadata.id)) {
+      log.i('Pack is not mapped to Actor Studio Sources, skipping')
       ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`) 
       return;
     }
-    log.d('continue 2')
+
+    // if the DTfolders already exist, don't render the button
+    const membershipRanks = game.membership.RANKS
+    for (const [rank, value] of Object.entries(membershipRanks)) {
+      if(value === -1) continue;
+      const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
+      if (folder) {
+        log.i('Donation Tracker folders already exist, skipping')
+        return;
+      }
+    }
 
     async function addDonationTrackerFolders () {
       const membershipRanks = game.membership.RANKS
