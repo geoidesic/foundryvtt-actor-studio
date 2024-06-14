@@ -91,7 +91,7 @@ div.content
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
-                +await("importComponent(advancement.type)")
+                +await("importComponent(importPath, advancement.type)")
                   +then("Component")
                     svelte:component(this="{Component}" advancement="{advancement}")
 
