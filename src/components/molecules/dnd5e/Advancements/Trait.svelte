@@ -21,7 +21,6 @@
   }
 
   const fromAll = (p) => {
-    log.d(p);
     return p.some(x => {
       return x.all
     })

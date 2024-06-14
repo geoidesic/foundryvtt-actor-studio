@@ -58,17 +58,14 @@ export function extractItemsFromPacks(packs, keys) {
   const items = [];
 
   const DTpermissions = DTPlugin.getDTSettings();
-  log.d('DTpermissions', DTpermissions)
   for (const pack of packs) {
     let entries = pack.index.entries()
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     if (game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
       // get dt folder id's from this pack
       const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
-      log.d('dtFolderIds', dtFolderIds)
       // filter the index.entries accordingly
       entries = entries.filter(([key, value]) => {
-        log.d('value.folder', value.folder)
         return !value.folder || dtFolderIds.includes(value.folder)
       });
     }

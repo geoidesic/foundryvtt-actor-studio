@@ -66,20 +66,17 @@ class plugin {
   folderIsAllowed(folderName) {
     const settings = this.getDTSettings()
     const setting = settings.find(s => s.folderName === folderName)
-    log.d('setting', setting)
     return game.membership.hasPermission(setting.permission)
   }
 
   getDTFolderIdsFromPack(pack) {
     const membershipFolderNames = this.getDTFolderNames();
-    log.d('membershipFolderNames', membershipFolderNames)
     const dtFolders = pack.folders.filter(f => membershipFolderNames.includes(f.name))
     return dtFolders.map(f => f.id)
   }
   
   getAllowedDTFOlderIdsFromPack(pack) {
     const membershipFolderNames = this.getDTFolderNames();
-    log.d('membershipFolderNames', membershipFolderNames)
     const dtFolders = pack.folders.filter(f => membershipFolderNames.includes(f.name) && this.folderIsAllowed(f.name))
     return dtFolders.map(f => f.id)
   }
