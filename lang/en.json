@@ -73,7 +73,7 @@
       },
       "DonationTrackerAction": {
         "Name": "Add DT folders",
-        "Hint": "Add the membership level folders to this compendium"
+        "Hint": "Add the Donation Tracker membership level folders to this compendium"
       },
       "DonationTracker": {
         "Name": "Donation Tracker settings",
