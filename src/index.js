@@ -119,7 +119,9 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 // })
 
 Hooks.on('renderSettingsConfig', (app, html, context) => {
-  $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
+  if(game.user.isGM) {
+    $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
+  }
   $(`[data-setting-id="${MODULE_ID}.allowManualInput"]`, html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
   $(`[data-setting-id="${MODULE_ID}.dontShowWelcome"]`, html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
 })
