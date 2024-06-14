@@ -56,6 +56,7 @@ export function registerSettings(app): void {
   allowRolling(app);
   abilityRollFormula();
   donationTracker();
+  showButtonInSideBar();
 
   /** User settings */
   dontShowWelcome();
@@ -285,6 +286,17 @@ function allowRolling(app) {
     default: false,
     onChange: () => { console.log('allowPointBuy') },
     updateSetting: () => { console.log('updateSetting'); },
+    type: Boolean,
+  });
+}
+
+function showButtonInSideBar(app) {
+  game.settings.register(MODULE_ID, 'showButtonInSideBar', {
+    name: game.i18n.localize('GAS.Setting.showButtonInSideBar.Name'),
+    hint: game.i18n.localize('GAS.Setting.showButtonInSideBar.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
     type: Boolean,
   });
 }
