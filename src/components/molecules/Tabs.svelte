@@ -2,7 +2,7 @@
   import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { log } from "~/helpers/Utility";
+  import { log } from "~/src/helpers/Utility";
 
   // List of tabs
   export let tabs = [];
