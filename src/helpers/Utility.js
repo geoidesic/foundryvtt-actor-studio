@@ -17,8 +17,9 @@ export const log = {
 };
 
 export const importComponent = async (importPath, componentName) => {
+  log.d(`../${importPath}${componentName}.svelte`)
   const { default: Component } = await import(
-    /* @vite-ignore */ `../${importPath}${componentName}.svelte`
+    /* @vite-ignore */ `${importPath}${componentName}.svelte`
   );
   return Component;
 };

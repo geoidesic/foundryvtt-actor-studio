@@ -49,7 +49,7 @@
           {:then Component}
             <svelte:component this={Component} />
           {:catch error}
-            <p>Error loading component 333: {error.message}</p>
+            <p>Error loading component: {error.message}</p>
           {/await}
         {/if}
       {/if}

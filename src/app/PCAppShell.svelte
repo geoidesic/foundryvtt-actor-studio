@@ -6,7 +6,8 @@
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
-  import { log } from '../helpers/Utility';
+  import { log } from '~/src/helpers/Utility';
+  import { MODULE_ID } from '~/src/helpers/constants';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -15,6 +16,7 @@
   setContext("#doc", documentStore);
 
   const application = getContext('#external').application;
+  const importPath = `modules/${MODULE_ID}/src/components/organisms/dnd5e/Tabs/`;
   
   $activeTab = dnd5e.tabs[0].id
 
@@ -62,7 +64,7 @@
   ApplicationShell(bind:elementRoot stylesApp)
     main
       section.a
-        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC" importPath="components/organisms/dnd5e/Tabs/")
+        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC" importPath="{$importPath}")
 
       section.b
         Footer
