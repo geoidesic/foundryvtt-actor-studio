@@ -49,6 +49,7 @@
     $race = await fromUuid(option);
     active = option;
     await tick();
+    // must be after tick to avoid reactiverace conditions
     await importAdvancements();
   };
 
