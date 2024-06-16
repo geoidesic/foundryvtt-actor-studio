@@ -8,7 +8,6 @@
     addItemToCharacter,
     getPacksFromSettings,
     log,
-    importComponent
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -36,8 +35,19 @@
     subClassesPacks = getPacksFromSettings("subclasses"),
     // folders = getFoldersFromMultiplePacks(packs, 1),
     // folderIds = folders.map((x) => x._id),
-    mappedClassIndex,
-    filteredClassIndex
+    mappedClassIndex = extractItemsFromPacks(packs, [
+      "name->label",
+      "img",
+      "type",
+      "folder",
+      "uuid->value",
+      "_id",
+    ]),
+    filteredClassIndex = mappedClassIndex
+      .filter((i) => {
+        return DonationTracker.canViewItem(i)
+      })
+      .sort((a, b) => a.label.localeCompare(b.label))
   ;
 
 
@@ -53,6 +63,9 @@
   };
 
   const actor = getContext("#doc");
+
+  const levelSelectHandler = async (option) => {};
+
 
   const getFilteredSubclassIndex = async () => {
     const filteredSubClassIndex = [];
@@ -79,6 +92,7 @@
     return output
   };
 
+ 
   const selectClassHandler = async (option) => {
     activeSubClass = null;
     $characterSubClass = null;
@@ -88,27 +102,50 @@
     $characterClass = await fromUuid(option);
     activeClass = option;
     subClassesIndex = await getFilteredSubclassIndex();
+
+    importClassAdvancements();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
+  };
+
+  const importClassAdvancements = async () => {
+    for (const classAdvancement of classAdvancementArrayFiltered) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
+        classAdvancementComponents[classAdvancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+      }
+    }
   };
 
   const selectSubClassHandler = async (option) => {
     $characterSubClass = await fromUuid(option);
     activeSubClass = option;
+    importSubClassAdvancements()
     await tick();
     richSubClassHTML = await TextEditor.enrichHTML(
       $characterSubClass.system.description.value,
     );
   };
 
-  const levelSelectHandler = async (option) => {};
-
-  const importPath = "components/molecules/dnd5e/Advancements/";
+  const importSubClassAdvancements = async () => {
+    for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
+        subClassAdvancementComponents[subClassAdvancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
+      }
+    }
+  };
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
   $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
+  $: classAdvancementComponents = {};
+  $: subClassAdvancementComponents = {};
 
   $: if(subClassesIndex?.length) {
     subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
@@ -129,30 +166,18 @@
         .map(([id, value]) => ({ ...value, id }))
     : [];
 
+
   onMount(async () => {
 
-    mappedClassIndex = extractItemsFromPacks(packs, [
-      "name->label",
-      "img",
-      "type",
-      "folder",
-      "uuid->value",
-      "_id",
-    ]),
-    filteredClassIndex = mappedClassIndex
-      .filter((i) => {
-        return DonationTracker.canViewItem(i)
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
-
-      
     if ($characterClass) {
       classValue = $characterClass.uuid;
+      importClassAdvancements();
       richHTML = await TextEditor.enrichHTML(html);
       subClassesIndex = await getFilteredSubclassIndex();
     }
     if ($characterSubClass) {
       subclassValue = $characterSubClass.uuid;
+      importSubClassAdvancements();
       await tick();
       richSubClassHTML = await TextEditor.enrichHTML(
         $characterSubClass.system.description.value,
@@ -188,10 +213,8 @@
                       .flex0.relative.image
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
-                    +await("importComponent(importPath, advancement.type)")
-                      +then("Component")
-                        //- pre advancement {advancement.type}
-                        svelte:component(this="{Component}" advancement="{advancement}")
+                    .flexrow
+                      svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
 
       +if("subclasses.length")
         h3.left.mt-md Subclass
@@ -214,11 +237,8 @@
                         .flex0.relative.image
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
-                      
-                      +await("importComponent(importPath, advancement.type)")
-                        +then("Component")
-                          //- pre advancement {advancement.type}
-                          svelte:component(this="{Component}" advancement="{advancement}")
+                      .flexrow
+                        svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b {@html combinedHtml}

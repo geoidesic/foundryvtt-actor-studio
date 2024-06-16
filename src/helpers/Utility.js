@@ -16,14 +16,6 @@ export const log = {
   get level() { return this.loggingLevel; }
 };
 
-export const importComponent = async (importPath, componentName) => {
-  log.d(`../${importPath}${componentName}.svelte`)
-  const { default: Component } = await import(
-    /* @vite-ignore */ `${importPath}${componentName}.svelte`
-  );
-  return Component;
-};
-
 export function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
