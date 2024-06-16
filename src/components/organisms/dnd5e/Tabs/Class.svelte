@@ -198,63 +198,62 @@
 </script>
 
 <template lang="pug">
-.content
-  .flexrow
-    .flex2.pr-sm.col-a
-      IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
-      +if("$characterClass")
-        h3.left.mt-sm Features
-        .flexrow
-          .flex2.mt-xs {localize('GAS.Tabs.Classes.FilterByLevel')}
-          .flex2.left
-            TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
-        +if("classAdvancementArrayFiltered")
-          h3.left.mt-sm.flexrow
-            .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
-            .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
-          ul.icon-list
-            +if("!classAdvancementArrayFiltered.length")
-              li.left {localize('GAS.NoAdvancements')}
-              +else()
-                +each("classAdvancementArrayFiltered as advancement")
-                  //- @todo: this should be broken out into components for each advancement.type
-                  li.left(data-type="{advancement.type}")
-                    .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                      .flex0.relative.image
-                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                      .flex2 {advancement.title}
-                    .flexrow
-                      svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-
-      +if("subclasses.length")
-        h3.left.mt-md Subclass
-        IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
-        +if("$characterSubClass")
-          //- h3.left.mt-sm Description
-          //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
-          +if("subClassAdvancementArrayFiltered")
+  .content
+    .flexrow
+      .flex2.pr-sm.col-a
+        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+        +if("$characterClass")
+          +if("subclasses.length")
+            h3.left.mt-md Subclass
+            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+          h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
+          .flexrow
+            .flex2.left
+              TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
+          +if("classAdvancementArrayFiltered")
             h3.left.mt-sm.flexrow
-              .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
+              .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
               .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
             ul.icon-list
-              +if("!subClassAdvancementArrayFiltered.length")
+              +if("!classAdvancementArrayFiltered.length")
                 li.left {localize('GAS.NoAdvancements')}
                 +else()
-                  +each("subClassAdvancementArrayFiltered as advancement")
+                  +each("classAdvancementArrayFiltered as advancement")
                     //- @todo: this should be broken out into components for each advancement.type
                     li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                         .flex0.relative.image
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
                       .flexrow
-                        +if("advancement.type && subClassAdvancementComponents[advancement.type]")
+                        svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
+  
+        +if("subclasses.length")
+          +if("$characterSubClass")
+            //- h3.left.mt-sm Description
+            //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
+            +if("subClassAdvancementArrayFiltered")
+              h3.left.mt-sm.flexrow
+                .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
+                .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
+              ul.icon-list
+                +if("!subClassAdvancementArrayFiltered.length")
+                  li.left {localize('GAS.NoAdvancements')}
+                  +else()
+                    +each("subClassAdvancementArrayFiltered as advancement")
+                      //- @todo: this should be broken out into components for each advancement.type
+                      li.left(data-type="{advancement.type}")
+                        .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                          .flex0.relative.image
+                            img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                          .flex2 {advancement.title}
+                        .flexrow
                           svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
-
-    .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
-
-</template>
+  
+      .flex0.border-right.right-border-gradient-mask 
+      .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
+  
+  </template>
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
