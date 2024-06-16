@@ -1,57 +1,96 @@
 <script>
-  import SvelteSelect from 'svelte-select';
-  import IconSelect from '~/src/components/atoms/select/IconSelect.svelte';
-  import { getFoldersFromMultiplePacks, extractItemsFromPacks, addItemToCharacter, getPacksFromSettings, importComponent, log } from "~/src/helpers/Utility.js";
+  import SvelteSelect from "svelte-select";
+  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import {
+    getFoldersFromMultiplePacks,
+    extractItemsFromPacks,
+    addItemToCharacter,
+    getPacksFromSettings,
+    log,
+  } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-  import { background } from "~/src/helpers/store"
-  
-  let active = null, value = null, placeHolder = "Backgrounds";
-  let packs = getPacksFromSettings('backgrounds');
+  import { background } from "~/src/helpers/store";
+
+  let active = null,
+    value = null,
+    placeHolder = "Backgrounds";
+  let packs = getPacksFromSettings("backgrounds");
   let folders = getFoldersFromMultiplePacks(packs, 1);
-  let folderIds = folders.map(x => x._id);
-  let allItems = extractItemsFromPacks(packs, ['name->label','img', 'type', 'folder', 'uuid->value', '_id']);
-  let itemDefinitions = allItems.filter(x => !folderIds.includes(x.folder)).sort((a, b) => a.label.localeCompare(b.label));
-  log.d('itemDefinitions', itemDefinitions)
+  let folderIds = folders.map((x) => x._id);
+  let allItems = extractItemsFromPacks(packs, [
+    "name->label",
+    "img",
+    "type",
+    "folder",
+    "uuid->value",
+    "_id",
+  ]);
+  let itemDefinitions = allItems
+    .filter((x) => !folderIds.includes(x.folder))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  log.d("itemDefinitions", itemDefinitions);
   const actor = getContext("#doc");
-  
+
   $: options = itemDefinitions;
-  $: html = $background?.system?.description.value || '';
-  $: backgroundFolders = folders.filter(x => x.depth == 1 && x.name.includes($background?.name))
-  $: equipmentFolderId = backgroundFolders.find(x => x.name == $background.name+' Equipment')?.key
-  $: featureFolderId = backgroundFolders.find(x => x.name == $background.name+' Feature')?.key
-  $: equipment = equipmentFolderId ? allItems.filter(x => x.folder == equipmentFolderId) : [];
-  $: features = featureFolderId ? allItems.filter(x => x.folder == featureFolderId) : [];
-  $: advancementArray = $background?.advancement?.byId 
-    ? Object.entries($background.advancement.byId)
-      .map(([id, value]) => ({ ...value, id }))
+  $: advancementComponents = {};
+  $: html = $background?.system?.description.value || "";
+  $: backgroundFolders = folders.filter(
+    (x) => x.depth == 1 && x.name.includes($background?.name),
+  );
+  $: equipmentFolderId = backgroundFolders.find(
+    (x) => x.name == $background.name + " Equipment",
+  )?.key;
+  $: featureFolderId = backgroundFolders.find(
+    (x) => x.name == $background.name + " Feature",
+  )?.key;
+  $: equipment = equipmentFolderId
+    ? allItems.filter((x) => x.folder == equipmentFolderId)
+    : [];
+  $: features = featureFolderId
+    ? allItems.filter((x) => x.folder == featureFolderId)
+    : [];
+  $: advancementArray = $background?.advancement?.byId
+    ? Object.entries($background.advancement.byId).map(([id, value]) => ({
+        ...value,
+        id,
+      }))
     : [];
 
+  let richHTML = "";
 
-  let richHTML = '';
-  
+  const importAdvancements = async () => {
+    log.d('advancementArray',advancementArray)
+    for (const advancement of advancementArray) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
+        advancementComponents[advancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${advancement.type}:`, error);
+      }
+    }
+  };
   const selectHandler = async (option) => {
-    $background = await fromUuid(option)
-    active = option; 
+    $background = await fromUuid(option);
+    active = option;
+    importAdvancements();
     await tick();
     richHTML = await TextEditor.enrichHTML(html);
 
-    log.d('$background', $background)
-    log.d('advancementArray', advancementArray)
-  }
-
-  const importPath = 'components/molecules/dnd5e/Advancements/';
+    log.d("$background", $background);
+    log.d("advancementArray", advancementArray);
+  };
 
 
-  
   onMount(async () => {
-    if($background) {
+    if ($background) {
       value = $background.uuid;
+      importAdvancements();
       richHTML = await TextEditor.enrichHTML(html);
     }
   });
 </script>
-    
+
 <template lang="pug">
 div.content
   .flexrow
@@ -91,15 +130,13 @@ div.content
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
-                +await("importComponent(importPath, advancement.type)")
-                  +then("Component")
-                    svelte:component(this="{Component}" advancement="{advancement}")
+                .flexrow
+                  svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b {@html richHTML}
 
 </template>
-  
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
