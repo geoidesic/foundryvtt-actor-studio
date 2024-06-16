@@ -67,6 +67,7 @@
   const levelSelectHandler = async (option) => {
     subClassesIndex = await getFilteredSubclassIndex();
     await tick();
+    importClassAdvancements();
     importSubClassAdvancements();
 
   };
@@ -129,6 +130,7 @@
     $characterSubClass = await fromUuid(option);
     activeSubClass = option;
     await tick();
+    importClassAdvancements()
     importSubClassAdvancements()
     richSubClassHTML = await TextEditor.enrichHTML(
       $characterSubClass.system.description.value,

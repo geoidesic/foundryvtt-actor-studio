@@ -1,8 +1,10 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-    import { log } from "../../../../helpers/Utility";
+  import { log } from "~/src/helpers/Utility";
   
   export let advancement = null;
+  
+  $: improvements = [];
   
   function getNonZeroFixedValues(obj) {
     if (!obj || typeof obj !== 'object' || !obj.fixed) {
@@ -21,7 +23,6 @@
     return nonZeroFixedArray;
   }
 
-  let improvements = [];
   $: fixed = getNonZeroFixedValues(advancement.configuration)
   $: points = advancement.configuration.points
 
@@ -35,7 +36,7 @@
   )
 
   onMount(async () => {
-    console.log('AbilityScoreImprovement advancement'+advancement.type, advancement)
+    // log.d('advancement', advancement)
   });
   
 </script>
