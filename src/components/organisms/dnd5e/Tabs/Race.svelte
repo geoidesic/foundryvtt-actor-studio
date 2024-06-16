@@ -6,7 +6,6 @@
     extractItemsFromPacks,
     addItemToCharacter,
     getPacksFromSettings,
-    importComponent,
     log,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -34,11 +33,23 @@
 
   const actor = getContext("#doc");
 
+  const importAdvancements = async () => {
+    log.d('advancementArray',advancementArray)
+    for (const advancement of advancementArray) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
+        advancementComponents[advancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${advancement.type}:`, error);
+      }
+    }
+  };
 
   const selectHandler = async (option) => {
     $race = await fromUuid(option);
     active = option;
     await tick();
+    await importAdvancements();
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
@@ -60,6 +71,7 @@
   $: html = $race?.system?.description?.value || "";
   $: movement = $race?.system?.movement;
   $: senses = $race?.system?.senses;
+  $: advancementComponents = {};
 
   $: filteredMovement = movement
     ? Object.keys(movement)
@@ -93,6 +105,7 @@
     if ($race) {
       value = $race.uuid;
     }
+    await importAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
   });
 
@@ -129,13 +142,8 @@ div.content
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
-                //- pre advancement.type {advancement.type}
-                //- pre advancement.title {advancement.title}
-
-                +await("importComponent(importPath, advancement.type)")
-                  +then("Component")
-                    //- pre advancement {advancement.type}
-                    svelte:component(this="{Component}" advancement="{advancement}")
+                .flexrow
+                  svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
                     
                   
                 

@@ -171,14 +171,15 @@
 
     if ($characterClass) {
       classValue = $characterClass.uuid;
+      await tick();
       importClassAdvancements();
       richHTML = await TextEditor.enrichHTML(html);
       subClassesIndex = await getFilteredSubclassIndex();
     }
     if ($characterSubClass) {
       subclassValue = $characterSubClass.uuid;
-      importSubClassAdvancements();
       await tick();
+      importSubClassAdvancements();
       richSubClassHTML = await TextEditor.enrichHTML(
         $characterSubClass.system.description.value,
       );
