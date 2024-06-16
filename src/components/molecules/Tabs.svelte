@@ -4,19 +4,27 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { log } from "~/src/helpers/Utility";
 
-  // List of tabs
   export let tabs = [];
-  // type of sheet
   export let sheet;
-
-  // The active tab
   export let activeTab = void 0;
-
   export let efx = ripple();
+
+  let initialTabs = [];
 
   $: tabComponents = {}
 
+  // if the tabs change, load the new components
+  $: if(initialTabs !== tabs) {
+    initialTabs = tabs;
+    for (const tab of tabs) {
+      import(`~/src/components/organisms/dnd5e/Tabs/${tab.component}.svelte`).then(module => {
+        tabComponents[tab.component] = module.default;
+      });
+    }
+  }
+
   onMount(async () => {
+    initialTabs = tabs;
     for (const tab of tabs) {
       const module = await import(`~/src/components/organisms/dnd5e/Tabs/${tab.component}.svelte`);
       tabComponents[tab.component] = module.default;
