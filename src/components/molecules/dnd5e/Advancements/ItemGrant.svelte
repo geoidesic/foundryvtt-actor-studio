@@ -4,12 +4,11 @@
   
   export let advancement = null;
 
-  let items = [];
+  $: items = [];
 
   async function getItemsFromUUIDs(uuids) {
     const itemPromises = uuids.map(async (uuid) => {
       const item = await fromUuid(uuid);
-      log.d('item', item)
       return item
     });
     return Promise.all(itemPromises);

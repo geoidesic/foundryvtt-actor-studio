@@ -64,7 +64,12 @@
 
   const actor = getContext("#doc");
 
-  const levelSelectHandler = async (option) => {};
+  const levelSelectHandler = async (option) => {
+    subClassesIndex = await getFilteredSubclassIndex();
+    await tick();
+    importSubClassAdvancements();
+
+  };
 
 
   const getFilteredSubclassIndex = async () => {
@@ -101,10 +106,11 @@
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
     activeClass = option;
-    subClassesIndex = await getFilteredSubclassIndex();
-
-    importClassAdvancements();
+    
     await tick();
+    subClassesIndex = await getFilteredSubclassIndex();
+    await tick();
+    importClassAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
   };
 
@@ -122,8 +128,8 @@
   const selectSubClassHandler = async (option) => {
     $characterSubClass = await fromUuid(option);
     activeSubClass = option;
-    importSubClassAdvancements()
     await tick();
+    importSubClassAdvancements()
     richSubClassHTML = await TextEditor.enrichHTML(
       $characterSubClass.system.description.value,
     );
@@ -133,6 +139,7 @@
     for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
+        await tick();
         subClassAdvancementComponents[subClassAdvancement.type] = module.default;
       } catch (error) {
         log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
@@ -239,7 +246,8 @@
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
                       .flexrow
-                        svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
+                        +if("advancement.type && subClassAdvancementComponents[advancement.type]")
+                          svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
