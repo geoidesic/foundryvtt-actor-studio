@@ -79,7 +79,7 @@ export default () => {
       },
 
       build: {
-         outDir: __dirname,
+         outDir: __dirname+'/dist',
          emptyOutDir: false,
          sourcemap: s_SOURCEMAPS,
          brotliSize: true,

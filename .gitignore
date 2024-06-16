@@ -3,6 +3,5 @@
 .vite-cache/
 .vscode/**/*
 !.vscode/extensions.json
-dist/
+/dist
 node_modules/
-*studio.code-workspace

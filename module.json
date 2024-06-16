@@ -2,7 +2,7 @@
   "title": "Actor Studio",
   "description": "Easily create Heroes, Villains and everything in between.",
   "version": "0.0.1",
-  "styles": ["style.css"],
+  "styles": ["dist/style.css"],
   "esmodules": ["index.js"],
   "languages": [
     {
