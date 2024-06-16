@@ -5,10 +5,9 @@
     getPackFolders,
     addItemToCharacter,
     log,
-    getRules,
-    importComponent
+    getRules
   } from "~/src/helpers/Utility";
-  import { getContext, onDestroy, onMount } from "svelte";
+  import { getContext, onDestroy, onMount, tick } from "svelte";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import ManualEntry from "~/src/components/molecules/dnd5e/AbilityEntry/ManualEntry.svelte";
   import PointBuy from "~/src/components/molecules/dnd5e/AbilityEntry/PointBuy.svelte";
@@ -24,16 +23,29 @@
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
-  const importPath = "components/molecules/dnd5e/AbilityEntry/";
+  const importAdvancements = async () => {
+    log.d('options',options)
+    for (const option of options) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/AbilityEntry/${option.type}.svelte`);
+        advancementComponents[option.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${option.type}:`, error);
+      }
+    }
+  };
 
   const selectHandler = async (option) => {
     active = option.value;
     $abilityGenerationMethod = option.value;
+    importAdvancements();
   };
+  
 
   let rules = "", active, value, placeHolder = 'Ability Generation Method'
 
   $: actorObject = $actor.toObject();
+  $: advancementComponents = {};
   $: richHTML = rules?.content || "";
   $: options = [
     {
@@ -67,9 +79,12 @@
     $abilityGenerationMethod = options[0].value;
   }
 
+  $: abilityModule = $abilityGenerationMethod ? advancementComponents[options.find(option => option.value === $abilityGenerationMethod).type] : null;
+
   onMount(async () => {
     rules = await getRules(ruleConfig);
-    
+    await tick();
+    await importAdvancements();
   });
 
 </script>
@@ -86,9 +101,7 @@
               +each("options as option")
                 li {option.label}
         +if("$abilityGenerationMethod")
-          +await("importComponent(importPath, options.find(x => x.value == $abilityGenerationMethod).type)")
-            +then("Component")
-              svelte:component(this="{Component}")
+          svelte:component(this="{abilityModule}")
       .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
