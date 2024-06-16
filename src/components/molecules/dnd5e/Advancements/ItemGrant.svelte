@@ -1,27 +1,33 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-    import { log } from "../../../../helpers/Utility";
+  import { log } from "~/src/helpers/Utility";
   
   export let advancement = null;
 
-  let items = [];
+  $: items = [];
+  let initialId = null;
 
   async function getItemsFromUUIDs(uuids) {
     const itemPromises = uuids.map(async (uuid) => {
       const item = await fromUuid(uuid);
-      log.d('item', item)
       return item
     });
     return Promise.all(itemPromises);
   }
 
-
-  
-  onMount(async () => {
-    console.log('advancement'+advancement.type, advancement)
+  async function getItems() {
     if (advancement.configuration.items && Array.isArray(advancement.configuration.items)) {
       items = await getItemsFromUUIDs(advancement.configuration.items.map(item => item.uuid));
     }
+  }
+
+  $: if (advancement.id != initialId) {
+    getItems();
+    initialId = advancement.id;
+  }
+  
+  onMount(async () => {
+    initialId = advancement.id;
   });
   
 </script>

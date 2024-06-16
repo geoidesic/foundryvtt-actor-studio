@@ -73,8 +73,8 @@
   const selectHandler = async (option) => {
     $background = await fromUuid(option);
     active = option;
-    importAdvancements();
     await tick();
+    await importAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
 
     log.d("$background", $background);
@@ -85,7 +85,8 @@
   onMount(async () => {
     if ($background) {
       value = $background.uuid;
-      importAdvancements();
+      await tick();
+      await importAdvancements();
       richHTML = await TextEditor.enrichHTML(html);
     }
   });

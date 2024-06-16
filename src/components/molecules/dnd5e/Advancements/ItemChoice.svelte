@@ -1,10 +1,16 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  // import { log } from "~/src/helpers/Utility";
   
   export let advancement = null;
-  
+
+  $: count = advancement?.configuration?.choices?.[0]
+    ? typeof advancement.configuration.choices[0] === 'object' && advancement.configuration.choices[0] !== null
+      ? advancement.configuration.choices[0].count
+      : advancement.configuration.choices[0]
+    : '-';
+
   onMount(async () => {
-    console.log('>>> advancement'+advancement.type, advancement)
   
   });
   
@@ -19,7 +25,7 @@
         .flexrow
           h3.flex.left
             span Choose 
-            span {advancement.configuration.choices[0]}&nbsp
+            span {count}&nbsp
             span from: 
         ul.icon-list
           +each("advancement.configuration.pool as pool")
