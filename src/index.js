@@ -28,7 +28,6 @@ Hooks.once("init", (app, html, data) => {
 
 });
 Hooks.once("ready", (app, html, data) => {
-
   if (!game.modules.get(MODULE_ID).active) {
     log.w('Module is not active');
     return;
@@ -61,6 +60,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
+        // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
         await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         activeTab.set('advancements');
       }
@@ -87,8 +87,9 @@ Hooks.on('gas.renderAdvancement', () => {
 });
 
 Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
-  log.d(args)
+  // log.d(args)
 })
+
 Hooks.on('closeAdvancementManager', async (...args) => {
   // Define a function to check if the panel is empty
   const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content').html().trim() === '';
@@ -104,7 +105,8 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   // Wait for the panel to become empty
   await waitForPanelEmpty();
 
-  // Once the panel is empty, proceed with the drop operation
+  
+  // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
   if (!queue) {
     Hooks.call("gas.close");

@@ -134,7 +134,8 @@
         itemData: spellsData,
       });
     }
-    // app.close();
+
+    log.d('dropItemRegistry', $dropItemRegistry)
 
     dropItemRegistry.advanceQueue(true);
   };
