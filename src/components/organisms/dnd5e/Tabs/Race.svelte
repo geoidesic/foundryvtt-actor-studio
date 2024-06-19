@@ -51,6 +51,8 @@
     await tick();
     // must be after tick to avoid reactiverace conditions
     await importAdvancements();
+    richHTML = await TextEditor.enrichHTML(html);
+
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
@@ -106,6 +108,7 @@
     if ($race) {
       value = $race.uuid;
     }
+    await tick();
     await importAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
   });
