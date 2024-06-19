@@ -35,7 +35,9 @@ Hooks.once("ready", (app, html, data) => {
   if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
     new WelcomeApplication().render(true, { focus: true });
   }
-  DonationTrackerGameSettings.init();
+  if (game.modules.get('donation-tracker').active) {
+    DonationTrackerGameSettings.init();
+  }
 });
 
 
