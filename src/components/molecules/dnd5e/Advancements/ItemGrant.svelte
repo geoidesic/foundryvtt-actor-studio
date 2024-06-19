@@ -50,6 +50,5 @@
   @import "../../../../../styles/Mixins.scss"
   .advancement
     @include inset
-    @include staticOptions
 
 </style>
