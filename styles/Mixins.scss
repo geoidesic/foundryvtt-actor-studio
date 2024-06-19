@@ -15,7 +15,7 @@
   padding: 0.5rem;
   border: 1px solid #ccc;
   border-radius: 0.4rem;
-  box-shadow: 0 0 5px rgba(0,0,0,0.3) inset;
+  box-shadow: 0 0 5px rgba(165,42,42,0.3) inset;
 }
 
 @mixin badge($background: var(--color-highlight), $size: 0.75rem) {
