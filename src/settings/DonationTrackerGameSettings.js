@@ -30,7 +30,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
          }
       });
 
-      const membershipRanks = game.membership.RANKS
+      const membershipRanks = game.membership?.RANKS || []
 
       if ( Object.keys(membershipRanks).length > 0) {
          for (const [rank, value] of Object.entries(membershipRanks)) {

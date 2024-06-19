@@ -42,11 +42,10 @@ export async function getRules(rule) {
 export function extractItemsFromPacks(packs, keys) {
   const items = [];
 
-  const DTpermissions = DTPlugin.getDTSettings();
   for (const pack of packs) {
     let entries = pack.index.entries()
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
-    if (game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+    if (game.modules.get('donation-tracker').active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
       // get dt folder id's from this pack
       const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
       // filter the index.entries accordingly
