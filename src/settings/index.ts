@@ -302,7 +302,7 @@ function showButtonInSideBar(app) {
 }
 
 function donationTracker() {
-  if (!game.modules.get('donation-tracker').active) return;
+  if (!game.modules.get('donation-tracker')?.active) return;
 
   Hooks.on('mce-everywhere:open:settings', () => {
     if (game.user.isGM) { DonationTrackerSettingsButton.showSettings(); }

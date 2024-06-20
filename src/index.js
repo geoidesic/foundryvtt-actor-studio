@@ -28,14 +28,14 @@ Hooks.once("init", (app, html, data) => {
 
 });
 Hooks.once("ready", (app, html, data) => {
-  if (!game.modules.get(MODULE_ID).active) {
+  if (!game.modules.get(MODULE_ID)?.active) {
     log.w('Module is not active');
     return;
   }
   if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
     new WelcomeApplication().render(true, { focus: true });
   }
-  if (game.modules.get('donation-tracker').active) {
+  if (game.modules.get('donation-tracker')?.active) {
     DonationTrackerGameSettings.init();
   }
 });
@@ -258,7 +258,7 @@ Hooks.on('renderApplication', (app, html, data) => {
 
 
 Hooks.on('changeSidebarTab', async (app) => {
-  if (!game.modules.get(MODULE_ID).active) return;
+  if (!game.modules.get(MODULE_ID)?.active) return;
   // Add Actor Studio button to the sidebar
   if (app.constructor.name === "ActorDirectory") {
     if(!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
