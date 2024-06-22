@@ -75,14 +75,14 @@ type BuildData = {
   compendiaList: any[];
   selectedCompendia: {
     races: string[];
-    racialFeatures: string[];
     classes: string[];
     subclasses: string[];
-    // classFeatures: string[];
     backgrounds: string[];
-    spells: string[];
-    feats: string[];
-    items: string[];
+    // racialFeatures: string[];
+    // classFeatures: string[];
+    // spells: string[];
+    // feats: string[];
+    // items: string[];
   };
 };
 
