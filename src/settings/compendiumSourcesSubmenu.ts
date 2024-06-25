@@ -14,7 +14,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
       popOut: true,
       width: 400,
       height: 400,
-      template: `/modules/foundryvtt-actor-studio/src/settings/sources-submenu.html`,
+      template: `/modules/foundryvtt-actor-studio/templates/sources-submenu.html`,
       id: 'gas-settings-submenu',
       title: 'Actor Studio - Sources',
       resizable: false,
