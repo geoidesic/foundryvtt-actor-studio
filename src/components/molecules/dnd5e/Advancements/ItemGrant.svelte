@@ -37,7 +37,7 @@
     ul.icon-list
     +each("items as item")
       li.left
-        +await("TextEditor.enrichHTML(item.system.description.value || '')")
+        +await("TextEditor.enrichHTML(item.system?.description?.value || '')")
           +then("Html")
             .flexrow(data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
               .flex0.relative.image
