@@ -20,7 +20,7 @@
     "packs": [],
     "url": "https://github.com/geoidesic/foundryvtt-actor-studio",
     "manifest": "https://raw.githubusercontent.com/geoidesic/foundryvtt-actor-studio/next/module.json",
-    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/0.0.1/module.zip",
+    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/0.0.2/module.zip",
     "authors": [
         {
             "name": "Noel da Costa",
