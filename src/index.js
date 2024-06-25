@@ -135,6 +135,8 @@ Hooks.on('renderCompendium', async (app, html, data) => {
   if (game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
+    if(pack.locked) return
+    if(pack.metadata.path.includes('systems/')) return
     const allPacks = getAllPackIdsFromAllSettings();
     const actionButtons = html.find('.action-buttons')
     const DTaction = actionButtons.find('button.gas-add-dt-folders');
