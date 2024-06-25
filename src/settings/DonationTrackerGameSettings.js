@@ -1,17 +1,15 @@
 import { TJSGameSettings } from '#runtime/svelte/store/fvtt/settings';
-import { log, camelCaseToTitleCase } from '~/src/helpers/Utility'
+import { camelCaseToTitleCase } from '~/src/helpers/Utility'
 
 import { MODULE_ID } from '~/src/helpers/constants';
 class DonationTrackerGameSettings extends TJSGameSettings {
    constructor() {
-      console.log(MODULE_ID);
       super(MODULE_ID);
-      console.log(this.namespace)
    }
 
    init() {
+      log.i('Registering Actor Studio Donation Tracker integration')
       const namespace = this.namespace;
-
       const allSettings = [];
 
       this.register({
@@ -25,15 +23,17 @@ class DonationTrackerGameSettings extends TJSGameSettings {
             type: Boolean,
             default: true,
             onchange: () => {
-               alert('o');
             }
          }
       });
 
       const membershipRanks = game.membership?.RANKS || []
+      log.d('membershipRanks', membershipRanks)
 
       if ( Object.keys(membershipRanks).length > 0) {
+         log.d('Registering Donation Tracker Ranks')
          for (const [rank, value] of Object.entries(membershipRanks)) {
+            log.d('rank', rank)
             if(value === -1) continue;
             allSettings.push({
                namespace,
@@ -52,7 +52,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
             });
          }
       }
-      
+      log.d('allSettings', allSettings)
       this.registerAll(allSettings, !game.user.isGM);
    }
 }

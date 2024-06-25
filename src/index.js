@@ -149,8 +149,9 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 
     // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
     if (!allPacks.includes(pack.metadata.id)) {
-      log.i('Pack is not mapped to Actor Studio Sources, skipping')
-      ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`)
+      // @why commented out? Apparently these were annoying
+      // log.i('Pack is not mapped to Actor Studio Sources, skipping')
+      // ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`)
       return;
     }
 
