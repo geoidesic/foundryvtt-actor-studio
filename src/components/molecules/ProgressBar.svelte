@@ -12,10 +12,10 @@
 <template lang="pug">
   .component
     .progress-bar(class="{cssClass}")
-      +if("$progress == 0")
-        .flexrow
-          .flex.progress-text progress
-      .progress-bar-inner(style="width: {$progress}%")
+      .outer
+        .progress-bar(style="width: {$progress}%")
+      .inner
+        .center {$progress}% Complete
 </template>
 
 <style lang="sass">
@@ -27,14 +27,17 @@
     border-radius: 5px
     position: relative
     display: flex
-    &.center
+    .inner
       align-items: center
       justify-content: center
+      mix-blend-mode: multiply
+      width: 100%
 
-    .progress-bar-inner
-      height: 25px
+    .outer .progress-bar
+      position: absolute
+      height: 100%
       width: 0
-      background-color: #76c7c0
+      background-color: rgba(10, 144, 50, 0.5)
       border-radius: 5px
       transition: width 0.5s
 

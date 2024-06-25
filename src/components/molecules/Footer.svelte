@@ -162,7 +162,7 @@ div
           ProgressBar(progress="{progress}")
           +else()
             +if("!$isActorCreated")
-              button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create
+              button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
             +if("$isActorCreated")
               button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
 </template>
@@ -175,6 +175,4 @@ div
 label
   margin: 10px 0 0 0
 button
-  background-color: #76c7c0
-  color: #fff
 </style>
