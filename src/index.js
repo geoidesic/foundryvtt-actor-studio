@@ -5,13 +5,12 @@ import WelcomeApplication from './app/WelcomeApplication.js';
 import PCApplication from './app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
 
-import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, DEFAULT_PACKS } from '~/src/helpers/constants';
+import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
-import { writable, get, derived } from 'svelte/store';
+import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
-import { tick } from "svelte";
 
 
 window.log = log;
@@ -193,7 +192,7 @@ function isActorTypeValid(actorTypes, type) {
 
 function getActorStudioButton() {
   const gasButton = $(
-    `<button type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
+    `<button id="gas-button" type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
       <img src="modules/${MODULE_ID}/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
     </button>`,
   );
@@ -235,6 +234,7 @@ function addCreateNewActorButton(html, app) {
 
         $gasButton.on('mousedown', handleButtonClick);
         $gasButton.on('keydown', handleButtonClick);
+
       }
     } else {
       $('button[data-gas_start]', html).remove(); // Remove button if actorType is not "character"
@@ -262,6 +262,7 @@ Hooks.on('changeSidebarTab', async (app) => {
   // Add Actor Studio button to the sidebar
   if (app.constructor.name === "ActorDirectory") {
     if(!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+    if($('#gas-button').length) return;
     const $gasButton = getActorStudioButton();
     $(app._element).find('header.directory-header').append($gasButton);
 
