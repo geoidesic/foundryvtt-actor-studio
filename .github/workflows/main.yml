@@ -105,17 +105,20 @@ jobs:
       - name: Prepare repository
         if: "github.event.release.prerelease"
         run: |
-         git config --global user.name '${{github.actor}}'
-         git config --global user.email '${{github.actor}}@users.noreply.github.com'
-         git add module.json
-         git stash
-         git clean -f
-         git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
-         git fetch origin "next"
-         git switch -c "next" "origin/next"
-         git checkout stash module.json    
-         git commit -m "${{github.event.release.tag_name}} manifest"
-         git push -f
+          git config --global user.name '${{github.actor}}'
+          git config --global user.email '${{github.actor}}@users.noreply.github.com'
+          git add module.json
+          git stash
+          git clean -f
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
+          git fetch origin "next"
+          git switch -c "next" "origin/next"
+          git checkout stash module.json    
+          echo "Staged changes:"
+          git status
+          git diff --staged
+          git commit -m "${{github.event.release.tag_name}} manifest"
+          git push -f
       - name: Echo End Repository Preparation
         if: "github.event.release.prerelease"
         run: echo "Repository preparation completed."
