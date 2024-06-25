@@ -19,29 +19,22 @@ log.level = log.DEBUG;
 
 
 Hooks.once("init", (app, html, data) => {
-
   log.i('Initialising');
   // CONFIG.debug.hooks = true;
   registerSettings(app);
-
-
-});
-Hooks.once("ready", (app, html, data) => {
-  log.i('Ready hook');
-  if (!game.modules.get(MODULE_ID)?.active) {
-    log.w('Module is not active');
-    return;
-  }
-  if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
-    new WelcomeApplication().render(true, { focus: true });
-  }
-  log.d('DT', game.modules.get('donation-tracker'))
-  log.d('DT active', game.modules.get('donation-tracker')?.active)
-  if (game.modules.get('donation-tracker')?.active) {
-    DonationTrackerGameSettings.init();
-  }
+  Hooks.call("gas.initIsComplete");
 });
 
+Hooks.on('init', () => {
+  Hooks.once("ready", (app, html, data) => {
+    const dtExists = game.modules.get('donation-tracker')?.active
+    log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
+    if (dtExists) {
+      DonationTrackerGameSettings.init();
+    }
+    Hooks.call("gas.readyIsComplete");
+  });
+})
 
 const isAppElementAppended = (appId) => {
   const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');

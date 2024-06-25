@@ -46,7 +46,6 @@ class DonationTrackerGameSettings extends TJSGameSettings {
                   type: String,
                   default: `${camelCaseToTitleCase(rank)}`,
                   onchange: () => {
-                     alert('o');
                   }
                }
             });

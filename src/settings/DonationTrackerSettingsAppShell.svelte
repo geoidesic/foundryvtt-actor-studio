@@ -27,6 +27,7 @@
    // A debounced callback that serializes application state after 500-millisecond delay.
    const storePosition = Timing.debounce(() => $stateStore = application.state.get(), 500);
 
+
    // Reactive statement to invoke debounce callback on Position changes.
    $: storePosition($position);
 </script>
