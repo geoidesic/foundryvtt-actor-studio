@@ -62,6 +62,7 @@
     // await actor.update(actorObject);
   };
 
+
   /**
    * So the only viable strategy is to keep the race additions in storage
    * and then only add them after the Actor is added to the game
@@ -158,11 +159,11 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       .flex1
+        ProgressBar(progress="{progress}")
         +if("$progress != '100'")
-          ProgressBar(progress="{progress}")
           +else()
             +if("!$isActorCreated")
-              button(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
+              button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
             +if("$isActorCreated")
               button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
 </template>

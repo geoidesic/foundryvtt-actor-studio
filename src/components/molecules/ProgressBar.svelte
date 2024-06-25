@@ -4,41 +4,46 @@
   export let progress;
   
 
+
   $: cssClass = $progress == 0 ? "center" : "";
   
 
 </script>
-
-<template lang="pug">
-  .component
-    .progress-bar(class="{cssClass}")
-      .outer
-        .progress-bar(style="width: {$progress}%")
-      .inner
-        .center {$progress}% Complete
-</template>
-
+<div class="progress">
+  <div class="back">{$progress}% Complete</div>
+  <div class="front" style="clip-path: inset(0 0 0 {$progress}%); -webkit-clip-path: inset(0 0 0 {$progress}%);">{$progress}% Complete</div>
+</div>
 <style lang="sass">
   @import '../../../styles/Mixins.scss'
 
-  .progress-bar
-    width: 100%
-    background-color: #e0e0e0
-    border-radius: 5px
+  .progress
     position: relative
     display: flex
-    .inner
-      align-items: center
-      justify-content: center
-      mix-blend-mode: multiply
-      width: 100%
+    border-radius: 5px
+    background-color: #e0e0e0
+    overflow: hidden
 
-    .outer .progress-bar
-      position: absolute
-      height: 100%
-      width: 0
-      background-color: rgba(10, 144, 50, 0.5)
-      border-radius: 5px
-      transition: width 0.5s
+  .back
+    display: flex
+    justify-content: center
+    align-items: center
+    width: 100%
+    background-color: rgba(10, 144, 50, 0.5)
+    color: white
 
+  .front
+    position: absolute
+    display: flex
+    justify-content: center
+    align-items: center
+    left: 0
+    right: 0
+    top: 0
+    bottom: 0
+    background: white
+    color: black
+    transition: clip-path 1s linear
+
+
+  
 </style>
