@@ -27,6 +27,7 @@ Hooks.once("init", (app, html, data) => {
 
 });
 Hooks.once("ready", (app, html, data) => {
+  log.i('Ready hook');
   if (!game.modules.get(MODULE_ID)?.active) {
     log.w('Module is not active');
     return;
@@ -34,6 +35,8 @@ Hooks.once("ready", (app, html, data) => {
   if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
     new WelcomeApplication().render(true, { focus: true });
   }
+  log.d('DT', game.modules.get('donation-tracker'))
+  log.d('DT active', game.modules.get('donation-tracker')?.active)
   if (game.modules.get('donation-tracker')?.active) {
     DonationTrackerGameSettings.init();
   }
