@@ -49,7 +49,7 @@ export function extractItemsFromPacks(packs, keys) {
       // get dt folder id's from this pack
       const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
       // filter the index.entries accordingly
-      entries = entries.filter(([key, value]) => {
+      entries = entries.filter(([_, value]) => {
         return !value.folder || dtFolderIds.includes(value.folder)
       });
     }

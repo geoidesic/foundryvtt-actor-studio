@@ -29,7 +29,6 @@
   let itemDefinitions = allItems
     .filter((x) => !folderIds.includes(x.folder))
     .sort((a, b) => a.label.localeCompare(b.label));
-  log.d("itemDefinitions", itemDefinitions);
   const actor = getContext("#doc");
 
   $: options = itemDefinitions;
@@ -60,7 +59,6 @@
   let richHTML = "";
 
   const importAdvancements = async () => {
-    log.d('advancementArray',advancementArray)
     for (const advancement of advancementArray) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
@@ -70,17 +68,14 @@
       }
     }
   };
+  
   const selectHandler = async (option) => {
     $background = await fromUuid(option);
     active = option;
     await tick();
     await importAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
-
-    log.d("$background", $background);
-    log.d("advancementArray", advancementArray);
   };
-
 
   onMount(async () => {
     if ($background) {
@@ -90,6 +85,7 @@
       richHTML = await TextEditor.enrichHTML(html);
     }
   });
+
 </script>
 
 <template lang="pug">
