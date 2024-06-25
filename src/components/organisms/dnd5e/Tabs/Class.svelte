@@ -33,8 +33,6 @@
     packs = getPacksFromSettings("classes"),
     subClassesPack = game.packs.get('dnd5e.subclasses'),
     subClassesPacks = getPacksFromSettings("subclasses"),
-    // folders = getFoldersFromMultiplePacks(packs, 1),
-    // folderIds = folders.map((x) => x._id),
     mappedClassIndex = extractItemsFromPacks(packs, [
       "name->label",
       "img",
@@ -45,7 +43,7 @@
     ]),
     filteredClassIndex = mappedClassIndex
       .filter((i) => {
-        return DonationTracker.canViewItem(i)
+        return i.type == 'class' && DonationTracker.canViewItem(i)
       })
       .sort((a, b) => a.label.localeCompare(b.label))
   ;

@@ -16,8 +16,8 @@
     value = null,
     placeHolder = "Backgrounds";
   let packs = getPacksFromSettings("backgrounds");
-  let folders = getFoldersFromMultiplePacks(packs, 1);
-  let folderIds = folders.map((x) => x._id);
+  // let folders = getFoldersFromMultiplePacks(packs, 1);
+  // let folderIds = folders.map((x) => x._id);
   let allItems = extractItemsFromPacks(packs, [
     "name->label",
     "img",
@@ -27,28 +27,14 @@
     "_id",
   ]);
   let itemDefinitions = allItems
-    .filter((x) => !folderIds.includes(x.folder))
+    .filter((x) => x.type == "background")
     .sort((a, b) => a.label.localeCompare(b.label));
   const actor = getContext("#doc");
 
   $: options = itemDefinitions;
   $: advancementComponents = {};
   $: html = $background?.system?.description.value || "";
-  $: backgroundFolders = folders.filter(
-    (x) => x.depth == 1 && x.name.includes($background?.name),
-  );
-  $: equipmentFolderId = backgroundFolders.find(
-    (x) => x.name == $background.name + " Equipment",
-  )?.key;
-  $: featureFolderId = backgroundFolders.find(
-    (x) => x.name == $background.name + " Feature",
-  )?.key;
-  $: equipment = equipmentFolderId
-    ? allItems.filter((x) => x.folder == equipmentFolderId)
-    : [];
-  $: features = featureFolderId
-    ? allItems.filter((x) => x.folder == featureFolderId)
-    : [];
+  $: backgrounds = allItems.filter((x) => x.type == "background");
   $: advancementArray = $background?.advancement?.byId
     ? Object.entries($background.advancement.byId).map(([id, value]) => ({
         ...value,
@@ -71,6 +57,7 @@
   
   const selectHandler = async (option) => {
     $background = await fromUuid(option);
+    log.d('background', $background)
     active = option;
     await tick();
     await importAdvancements();
@@ -79,6 +66,7 @@
 
   onMount(async () => {
     if ($background) {
+      log.d('background', background)
       value = $background.uuid;
       await tick();
       await importAdvancements();
@@ -93,42 +81,20 @@ div.content
   .flexrow
     .flex2.pr-sm.col-a
       IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
-      +if("backgroundFolders")
-        +if("equipmentFolderId")
-          h3.left Equipment
-          ul.icon-list
-            +each("equipment as item")
-              li.left.tight
-                .flexrow
-                  .flex0.relative.image.mr-xs
-                    img.icon(src="{item.img}" alt="{item.label}")
-                  .flex2.flexcol 
-                    .caption {item.label}
-                    .caption.light {item.type}
-        +if("featureFolderId")
-          h3.left Features
-          ul.icon-list
-            +each("features as item")
-              li.left.tight
-                .flexrow
-                  .flex0.relative.image.mr-xs
-                    img.icon(src="{item.img}" alt="{item.label}")
-                  .flex2.flexcol 
-                    .caption {item.label}
-                    .caption.light {item.type}
+     
 
-        +if("advancementArray.length")
-          h3.left {localize('GAS.Advancements')}
-          ul.icon-list
-            +each("advancementArray as advancement")
-              //- @todo: this should be broken out into components for each advancement.type
-              li.left
-                .flexrow(data-tooltip="{advancement.configuration?.hint || null}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                  .flex0.relative.image
-                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                  .flex2 {advancement.title}
-                .flexrow
-                  svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
+      +if("advancementArray.length")
+        h3.left {localize('GAS.Advancements')}
+        ul.icon-list
+          +each("advancementArray as advancement")
+            //- @todo: this should be broken out into components for each advancement.type
+            li.left
+              .flexrow(data-tooltip="{advancement.configuration?.hint || null}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                .flex0.relative.image
+                  img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                .flex2 {advancement.title}
+              .flexrow
+                svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b {@html richHTML}

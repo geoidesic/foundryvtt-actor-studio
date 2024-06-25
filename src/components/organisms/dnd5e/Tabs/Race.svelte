@@ -17,8 +17,6 @@
     placeHolder = "Races",
     richHTML = "";
   let packs = getPacksFromSettings("races");
-  let folders = getFoldersFromMultiplePacks(packs, 1);
-  let folderIds = folders.map((x) => x._id);
   let allRaceItems = extractItemsFromPacks(packs, [
     "name->label",
     "img",
@@ -28,7 +26,7 @@
     "_id",
   ]);
   let raceDefinitions = allRaceItems
-    .filter((x) => folderIds.includes(x.folder))
+    .filter((x) => x.type == "race")
     .sort((a, b) => a.label.localeCompare(b.label));
 
   const actor = getContext("#doc");

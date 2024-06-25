@@ -6,3 +6,4 @@ A FoundryVTT module for creating Actors
 - Preview and select your race, background, class and subclass
 - You can preview available advancements by level for class and subclass
 - Once your've made your selections, the actor will be created and the advancements triggered for completion
+- NB: for the advancements to work you must have the "Disable level-up automation" setting switched off!
