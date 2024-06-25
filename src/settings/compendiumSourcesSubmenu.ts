@@ -112,10 +112,10 @@ function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
         label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
         compendia: buildCompendiaList(compendiaList, selectedCompendia, 'races'),
       },
-      racialFeatures: {
-        label: game.i18n.localize('GAS.Setting.Sources.RacialFeatureCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'racialFeatures'),
-      },
+      // racialFeatures: {
+      //   label: game.i18n.localize('GAS.Setting.Sources.RacialFeatureCompendia'),
+      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'racialFeatures'),
+      // },
       classes: {
         label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
         compendia: buildCompendiaList(compendiaList, selectedCompendia, 'classes'),
@@ -132,18 +132,18 @@ function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
         label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'),
         compendia: buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds'),
       },
-      spells: {
-        label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'spells'),
-      },
-      feats: {
-        label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'feats'),
-      },
-      items: {
-        label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
-      },
+      // spells: {
+      //   label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'),
+      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'spells'),
+      // },
+      // feats: {
+      //   label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'),
+      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'feats'),
+      // },
+      // items: {
+      //   label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
+      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
+      // },
     },
   };
 }
