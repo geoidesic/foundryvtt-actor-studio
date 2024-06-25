@@ -107,9 +107,13 @@ jobs:
         run: |
           git config --global user.name '${{github.actor}}'
           git config --global user.email '${{github.actor}}@users.noreply.github.com'
+          echo "Git congig completed."
           git status
+          echo "git status completed."
           git add module.json
+          echo "git add module.json completed."
           git stash
+          echo "git stash completed."
           git clean -f
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
           git fetch origin "next"
