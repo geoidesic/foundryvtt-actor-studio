@@ -9,9 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      
+
       # Substitute the Manifest and Download URLs in the module.json
       # for a FULL RELEASE
+      - name: Echo Start Full Release Substitution
+        run: echo "Starting full release substitution..."
       - name: Substitute Manifest and Download Links For Versioned Ones
         if: "!github.event.release.prerelease"
         id: sub_release_manifest_version
@@ -23,10 +25,15 @@ jobs:
           url: https://github.com/${{github.repository}}
           manifest: https://github.com/${{github.repository}}/releases/latest/download/module.json
           download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
-          
+      - name: Echo End Full Release Substitution
+        if: "!github.event.release.prerelease"
+        run: echo "Full release substitution completed."
+
       # Substitute the Manifest and Download URLs in the module.json
       # for a PRE RELEASE. Manifest pointing to live module.json on branch,
       # which is updated after tag.
+      - name: Echo Start Pre Release Substitution
+        run: echo "Starting pre release substitution..."
       - name: Substitute Manifest and Download Links For Versioned Ones
         if: "github.event.release.prerelease"
         id: sub_prerelease_manifest_version
@@ -38,13 +45,21 @@ jobs:
           url: https://github.com/${{github.repository}}
           manifest: https://raw.githubusercontent.com/${{github.repository}}/next/module.json
           download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
-     
-
+      - name: Echo End Pre Release Substitution
+        if: "github.event.release.prerelease"
+        run: echo "Pre release substitution completed."
 
       # Create a zip file with all files required by the module to add to the release
+      - name: Echo Start Zip Creation
+        run: echo "Starting zip creation..."
       - run: zip -r ./module.zip module.json LICENSE index.js dist/ lang/ assets/
+      - name: Echo End Zip Creation
+        run: echo "Zip creation completed."
 
       # Create a release for this specific version
+      - name: Echo Start Full Release Update
+        if: "!github.event.release.prerelease"
+        run: echo "Starting full release update..."
       - name: Update Release with Files
         if: "!github.event.release.prerelease"
         id: create_version_release
@@ -58,8 +73,14 @@ jobs:
           artifacts: './module.json, ./module.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
-          
+      - name: Echo End Full Release Update
+        if: "!github.event.release.prerelease"
+        run: echo "Full release update completed."
+
       #  OR create a pre-release for this specific version
+      - name: Echo Start Pre Release Update
+        if: "github.event.release.prerelease"
+        run: echo "Starting pre release update..."
       - name: Update Release with Files
         if: "github.event.release.prerelease"
         id: create_version_prerelease
@@ -73,8 +94,14 @@ jobs:
           artifacts: './module.json, ./module.zip'
           tag: ${{ github.event.release.tag_name }}
           body: ${{ github.event.release.body }}
-          
-      #update next branch
+      - name: Echo End Pre Release Update
+        if: "github.event.release.prerelease"
+        run: echo "Pre release update completed."
+
+      # Update next branch
+      - name: Echo Start Repository Preparation
+        if: "github.event.release.prerelease"
+        run: echo "Starting repository preparation..."
       - name: Prepare repository
         if: "github.event.release.prerelease"
         run: |
@@ -89,3 +116,6 @@ jobs:
          git checkout stash module.json    
          git commit -m "${{github.event.release.tag_name}} manifest"
          git push -f
+      - name: Echo End Repository Preparation
+        if: "github.event.release.prerelease"
+        run: echo "Repository preparation completed."
