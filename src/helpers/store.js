@@ -22,9 +22,12 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
+      log.d('advanceQueue', initial)
       const next = get(store)[0] || false;
+      log.d('next', next)
       if (!next) {
         inProcess.set(false);
+        log.d('end of queue')
         return false;
       }
       inProcess.set(next);

@@ -1,7 +1,9 @@
 <script>
   import { onMount } from "svelte";
+    import { log } from "../../../../helpers/Utility";
 
   onMount(() => {
+    log.d("Advancements tab mounted");
     Hooks.call("gas.renderAdvancement");
   });
 </script>

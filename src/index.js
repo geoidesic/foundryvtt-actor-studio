@@ -20,7 +20,7 @@ log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
-  // CONFIG.debug.hooks = true;
+  CONFIG.debug.hooks = true;
   registerSettings(app);
   Hooks.call("gas.initIsComplete");
 });
@@ -45,6 +45,7 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
+  log.d('renderAdvancementManager')
   // Check if your application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
   const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
@@ -55,8 +56,10 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
       const advancementsTab = get(tabs).find(x => x.id === "advancements");
       if (advancementsTab) {
+        log.d('Advancements tab found, rendering it')
         Hooks.call("gas.renderAdvancement");
       } else {
+        log.d('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
         await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         activeTab.set('advancements');
@@ -66,6 +69,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
 });
 
 Hooks.on('gas.renderAdvancement', () => {
+  log.d('gas.renderAdvancement')
   const currentProcess = get(dropItemRegistry.currentProcess);
   // Get all stored advancement apps
   if (currentProcess) {
