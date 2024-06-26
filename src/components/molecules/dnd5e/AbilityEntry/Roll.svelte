@@ -59,7 +59,7 @@
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center.relative
-          input.center.small(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}")
+          input.center.small(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}"  name="{ability[1].abbreviation}" id="{ability[1].abbreviation}")
         .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
         .flex1.center.align-text-with-input 
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
