@@ -32,6 +32,9 @@ Hooks.on('init', () => {
     if (dtExists) {
       DonationTrackerGameSettings.init();
     }
+    if(game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
+      game.settings.set("dnd5e", "disableAdvancements", false);
+    }
     Hooks.call("gas.readyIsComplete");
   });
 })

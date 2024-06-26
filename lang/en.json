@@ -84,6 +84,10 @@
         "Name": "Don't show this message again",
         "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this via Configure Settings)."
       },
+      "forceDnd5eLevelUpAutomation": {
+        "Name": "Force D&D5e Level Up Automation",
+        "Hint": "Without this the Actor Studio is pretty much useless other that for previewing options as it won't be able to apply the changes to the actor"
+      },
       "ShowRolls": {
         "Name": "Show rolls on chat",
         "Hint": "Show ability score, hp per level and starting gold rolls as chat messages"

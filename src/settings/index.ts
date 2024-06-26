@@ -56,7 +56,8 @@ export function registerSettings(app): void {
   allowRolling(app);
   abilityRollFormula();
   donationTracker();
-  showButtonInSideBar();
+  showButtonInSideBar(app);
+  forceDnd5eLevelUpAutomation();
 
   /** User settings */
   dontShowWelcome();
@@ -113,6 +114,18 @@ function trimSubclasses() {
     type: Boolean,
   });
 }
+
+function forceDnd5eLevelUpAutomation() {
+  game.settings.register(MODULE_ID, 'forceDnd5eLevelUpAutomation', {
+    name: game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name'),
+    hint: game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
 function dontShowWelcome() {
   game.settings.register(MODULE_ID, 'dontShowWelcome', {
     name: game.i18n.localize('GAS.Setting.DontShowWelcome.Name'),
