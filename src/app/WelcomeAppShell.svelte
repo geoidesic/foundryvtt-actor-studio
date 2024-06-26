@@ -11,7 +11,6 @@
   const application = getContext('#external').application;
 
   const handleChange = (event) => {
-    alert('changed')
     game.settings.set(MODULE_ID, 'dontShowWelcome', event.target.checked);
   }
 

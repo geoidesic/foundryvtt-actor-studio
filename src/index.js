@@ -16,28 +16,29 @@ import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSetti
 window.log = log;
 log.level = log.DEBUG;
 
-
-
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
   CONFIG.debug.hooks = true;
   registerSettings(app);
   Hooks.call("gas.initIsComplete");
+  
 });
 
-Hooks.on('init', () => {
-  Hooks.once("ready", (app, html, data) => {
-    const dtExists = game.modules.get('donation-tracker')?.active
-    log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
-    if (dtExists) {
-      DonationTrackerGameSettings.init();
-    }
-    if(game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
-      game.settings.set("dnd5e", "disableAdvancements", false);
-    }
-    Hooks.call("gas.readyIsComplete");
-  });
-})
+Hooks.once("ready", (app, html, data) => {
+  if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
+    new WelcomeApplication().render(true, { focus: true });
+  }
+
+  const dtExists = game.modules.get('donation-tracker')?.active
+  log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
+  if (dtExists) {
+    DonationTrackerGameSettings.init();
+  }
+  if(game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
+    game.settings.set("dnd5e", "disableAdvancements", false);
+  }
+  Hooks.call("gas.readyIsComplete");
+});
 
 const isAppElementAppended = (appId) => {
   const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
