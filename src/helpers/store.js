@@ -22,7 +22,8 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      log.d('advanceQueue', initial)
+      log.d('advanceQueue')
+      log.d('initial', initial || false)
       const next = get(store)[0] || false;
       log.d('next', next)
       if (!next) {
@@ -34,6 +35,7 @@ const arrayOfObjectsStore = () => {
       remove(next.id);
       await addItemToCharacter(next);
       const itemData = next.itemData;
+      log.d('itemData', itemData)
       return isAdvancementsForLevelInItem(1, itemData) //- hard-coded to level 1 because this module only currently supports level 1 advancements
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
