@@ -59,7 +59,7 @@
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center.relative
-          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" name="{ability[1].abbreviation}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
+          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
           .controls
             .up.chevron
               i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) + 1}})}")
