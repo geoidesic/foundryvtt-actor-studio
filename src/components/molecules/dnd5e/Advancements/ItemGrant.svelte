@@ -41,8 +41,8 @@
           +then("Html")
             .flexrow(data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
               .flex0.relative.image
-                img.icon(src="{item.img}" alt="{item.name}")
-              .flex2 {item.name}
+                img.icon(src="{item?.img}" alt="{item?.name}")
+              .flex2 {item?.name}
 
 </template>
 
