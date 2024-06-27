@@ -136,7 +136,7 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 
 Hooks.on('renderCompendium', async (app, html, data) => {
   log.d('renderCompendium', app, html, data)
-  if (game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+  if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
     if(pack.locked) return
