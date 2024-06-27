@@ -141,9 +141,13 @@ export const addItemToCharacter = async ({ actor, itemData }) => {
 }
 
 export const isAdvancementsForLevelInItem = (level, item) => {
-  log.d('isAdvancementsForLevelInItem', level, item);
   // where structure is like system.advancement = [{level: 1, ...}]
-  const adv = item?.system?.advancement.find(adv => adv.level === level)
+  const adv = item?.system?.advancement.find(adv => {
+    if(adv.level == undefined) return true;
+    if(level == 1 && (adv.level == 0 || adv.level == 1)) return true;
+    return adv.level === level
+  })
+  log.d('adv', adv)
   if (adv) return true;
   return false
 }
