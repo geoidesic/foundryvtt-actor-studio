@@ -317,7 +317,7 @@ function showButtonInSideBar(app) {
 function donationTracker() {
   if (!game.modules.get('donation-tracker')?.active) return;
 
-  Hooks.on('mce-everywhere:open:settings', () => {
+  Hooks.on('actor-studio-donation-tracker:settings', () => {
     if (game.user.isGM) { DonationTrackerSettingsButton.showSettings(); }
   });
 
@@ -329,7 +329,7 @@ function donationTracker() {
     type: DonationTrackerSettingsButton,
     restricted: true,
     onChange: () => {
-      Hooks.call('mce-everywhere:open:settings');
+      Hooks.call('actor-studio-donation-tracker:settings');
     }
   });
 
