@@ -7,9 +7,11 @@ const initialTabs = [
   { label: "Class", id: "class", component: "Class" },
 ]
 
+let lastDrop = writable(false);
+
 const arrayOfObjectsStore = () => {
-  const store = writable([]);
-  const inProcess = writable(false);
+  const store = writable([]); // stores an object with signature {actorId, itemData, id}  
+  const inProcess = writable(false); // stores the advancement application that's in process
   const { subscribe, set, update } = store;
   
   const remove = (id) => update(apps => apps.filter(app => app.id !== id));
@@ -25,7 +27,7 @@ const arrayOfObjectsStore = () => {
       log.d('advanceQueue')
       log.d('initial', initial || false)
       const next = get(store)[0] || false;
-      log.d('next', next)
+      log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
         log.d('end of queue')
@@ -33,10 +35,13 @@ const arrayOfObjectsStore = () => {
       }
       inProcess.set(next);
       remove(next.id);
-      await addItemToCharacter(next);
-      const itemData = next.itemData;
-      log.d('itemData', itemData)
-      return isAdvancementsForLevelInItem(1, itemData) //- hard-coded to level 1 because this module only currently supports level 1 advancements
+      log.d('dropping item to character', next)
+      log.d(next.itemData);
+      setTimeout(() => {
+        addItemToCharacter(next);
+      }, 3000)
+      // await addItemToCharacter(next);
+      return true
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),

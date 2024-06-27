@@ -1,7 +1,23 @@
 <script>
   import { onMount } from "svelte";
-    import { log } from "../../../../helpers/Utility";
+  import { log, addItemToCharacter } from "../../../../helpers/Utility";
+  import { dropItemRegistry } from "~/src/helpers/store.js";
+  import { getContext } from "svelte";
 
+  const doc = getContext("#doc");
+
+  async function addAdvancement() {
+    log.d("currentProcess", $dropItemRegistry.currentProcess);
+    let item = await fromUuid(
+      "Compendium.dnd5e.subclasses.Item.sprHbe7cRg9osTzf",
+    );
+    log.d("item", item);
+    addItemToCharacter({
+      actor: $doc,
+      id: "characterSubClass",
+      itemData: item.toObject(),
+    });
+  }
   onMount(() => {
     log.d("Advancements tab mounted");
     Hooks.call("gas.renderAdvancement");
@@ -9,7 +25,9 @@
 </script>
 
 <template lang="pug">
-.content
+.container
+  button.btn.btn-primary.mt-sm(on:click="{addAdvancement}") Add Advancement
+  .content
 
 </template>
 

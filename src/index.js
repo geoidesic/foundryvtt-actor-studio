@@ -99,7 +99,6 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
 Hooks.on('closeAdvancementManager', async (...args) => {
   // Define a function to check if the panel is empty
   const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content')?.html()?.trim() === '';
-
   // Define a function to wait for the panel to become empty
   const waitForPanelEmpty = async () => {
     while (!isPanelEmpty()) {
