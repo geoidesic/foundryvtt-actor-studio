@@ -135,19 +135,12 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const addItemToCharacter = async ({ actor, itemData }) => {
-  log.d('addItemToCharacter', actor, itemData);
-  log.d('actor.sheet._onDropSingleItem', actor.sheet._onDropSingleItem)
-  return await actor.sheet._onDropSingleItem(itemData);
+  return await actor.sheet._onDropItemCreate(itemData);
 }
 
 export const isAdvancementsForLevelInItem = (level, item) => {
   // where structure is like system.advancement = [{level: 1, ...}]
-  const adv = item?.system?.advancement.find(adv => {
-    if(adv.level == undefined) return true;
-    if(level == 1 && (adv.level == 0 || adv.level == 1)) return true;
-    return adv.level === level
-  })
-  log.d('adv', adv)
+  const adv = item?.system?.advancement.find(adv => adv.level === level)
   if (adv) return true;
   return false
 }

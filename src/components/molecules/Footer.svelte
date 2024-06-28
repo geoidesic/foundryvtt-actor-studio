@@ -73,7 +73,7 @@
     // background
     if ($background) {
       log.i("Adding background to character");
-      const backgroundData = $background.toObject();
+      const backgroundData = $background;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "background",
@@ -84,7 +84,7 @@
     // race
     if ($race) {
       log.i("Adding race to character");
-      const raceData = $race.toObject();
+      const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "race",
@@ -95,7 +95,7 @@
     // subrace
     if ($subRace) {
       log.i("Adding subrace to character");
-      const subRaceData = $subRace.toObject();
+      const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "subRace",
@@ -106,7 +106,7 @@
     // character class
     if ($characterClass) {
       log.i("Adding class to character");
-      const characterClassData = $characterClass.toObject();
+      const characterClassData = $characterClass;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "characterClass",
@@ -117,7 +117,7 @@
     // character subclass
     if ($characterSubClass) {
       log.i("Adding subclass to character");
-      const characterSubClassData = $characterSubClass.toObject();
+      const characterSubClassData = $characterSubClass;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "characterSubClass",
@@ -128,7 +128,7 @@
     // spells
     if ($spells) {
       log.i("Adding spells to character");
-      const spellsData = $spells.toObject();
+      const spellsData = $spells;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "spells",
