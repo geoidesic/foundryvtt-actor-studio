@@ -41,12 +41,11 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
 
-  $: actorObject = $actor.toObject();
   $: value = $actor?.name || "";
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   const handleNameInput = (e) => {
-    $actor.name = e.target.value;
+    $actor.updateSource({name: e.target.value});
   };
   const handleTokenNameInput = (e) => {
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
@@ -68,7 +67,11 @@
    * and then only add them after the Actor is added to the game
    */
   const createActorInGameAndEmbedItems = async () => {
-    $actorInGame = await Actor.create(actorObject);
+
+    //@todo WIP: fix this
+    const test = $actor.toObject();
+    test.name = $actor.name // this works but it's a hack
+    $actorInGame = await Actor.create($actor.toObject());
 
     // background
     if ($background) {
