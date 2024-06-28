@@ -24,22 +24,20 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      log.d('advanceQueue')
-      log.d('initial', initial || false)
+      // log.d('advanceQueue')
+      // log.d('initial', initial || false)
       const next = get(store)[0] || false;
-      log.d('current item to advance: ', next.id)
+      // log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
-        log.d('end of queue')
+        // log.d('end of queue')
         return false;
       }
       inProcess.set(next);
       remove(next.id);
-      log.d('dropping item to character', next)
-      log.d(next.itemData);
-      setTimeout(() => {
-        addItemToCharacter(next);
-      }, 3000)
+      // log.d('dropping item to character', next)
+      // log.d(next.itemData);
+      addItemToCharacter(next);
       // await addItemToCharacter(next);
       return true
     },
