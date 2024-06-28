@@ -6,6 +6,7 @@
 
   const doc = getContext("#doc");
 
+  //- for debugging purposes only
   async function addAdvancement() {
     log.d("currentProcess", $dropItemRegistry.currentProcess);
     let item = await fromUuid(
@@ -15,7 +16,7 @@
     addItemToCharacter({
       actor: $doc,
       id: "characterSubClass",
-      itemData: item.toObject(),
+      itemData: item
     });
   }
   onMount(() => {
@@ -26,7 +27,8 @@
 
 <template lang="pug">
 .container
-  button.btn.btn-primary.mt-sm(on:click="{addAdvancement}") Add Advancement
+  //- button for debugging only
+  //- button.btn.btn-primary.mt-sm(on:click="{addAdvancement}") Add Advancement
   .content
 
 </template>
