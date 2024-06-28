@@ -24,9 +24,14 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      // log.d('advanceQueue')
-      // log.d('initial', initial || false)
-      const next = get(store)[0] || false;
+      log.d('advanceQueue')
+      log.d('advanceQueue initial', initial || false)
+
+      const currentStore = get(store);
+
+      log.d('advanceQueue currentStore.length', currentStore.length)
+      
+      const next = currentStore[0] || false;
       // log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
@@ -35,11 +40,12 @@ const arrayOfObjectsStore = () => {
       }
       inProcess.set(next);
       remove(next.id);
+      log.d('advanceQueue currentStore.length', currentStore.length)
       // log.d('dropping item to character', next)
       // log.d(next.itemData);
       addItemToCharacter(next);
       // await addItemToCharacter(next);
-      return true
+      return currentStore.length > 1
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),
