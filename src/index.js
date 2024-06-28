@@ -18,7 +18,7 @@ log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
-  CONFIG.debug.hooks = true;
+  // CONFIG.debug.hooks = true;
   registerSettings(app);
   Hooks.call("gas.initIsComplete");
   
@@ -49,7 +49,7 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  log.d('renderAdvancementManager')
+  // log.d('renderAdvancementManager')
   // Check if your application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
   const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
@@ -72,8 +72,8 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
 });
 
 Hooks.on('gas.renderAdvancement', () => {
-  log.d('gas.renderAdvancement')
-  log.d('Advancements tab found, rendering the advancment workflow')
+  // log.d('gas.renderAdvancement')
+  // log.d('Advancements tab found, rendering the advancment workflow')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
   // Get all stored advancement apps
@@ -119,13 +119,6 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   }
 });
 
-// Hooks.on('dnd5e.advancementManagerComplete', (...args) => {
-//   log.d(args)
-//   setTimeout(() => {
-//     dropItemRegistry.advanceQueue();
-//   }, 5000);
-// })
-
 Hooks.on('renderSettingsConfig', (app, html, context) => {
   if(game.user.isGM) {
     $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
@@ -136,7 +129,7 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 
 
 Hooks.on('renderCompendium', async (app, html, data) => {
-  log.d('renderCompendium', app, html, data)
+  // log.d('renderCompendium', app, html, data)
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
