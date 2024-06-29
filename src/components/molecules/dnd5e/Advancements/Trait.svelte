@@ -37,22 +37,20 @@
   $: if (advancement.configuration.grants.size > 0) {
     grants = Array.from(advancement.configuration.grants).map((grant) => {
       const split = grant.split(":");
-      // log.d('Trait split', split);
+
+      log.d('Trait split', split);
       switch (split[0]) {
         case "languages":
         case "tool":
           return { label: split[2], value: split[1] };
-          
         case "saves":
           return { label: game.system.config.abilities[split[1]].label, value: null };
-
         case "armor":
           return {label: game.system.config.armorProficiencies[split[1]], value: null};
-          
-
         case "weapon":
           return {label: game.system.config.weaponProficiencies[split[1]], value: null};
-          
+        case 'dr':
+          return {label: game.system.config.damageTypes[split[1]].label, value: split[1]};
         default:
           return {
             label: game.system.config[split[0]][split[1]].label,
