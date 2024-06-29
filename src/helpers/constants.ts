@@ -53,8 +53,8 @@ export const POINT_BUY_COSTS = {
   11: 3,
   12: 4,
   13: 5,
-  14: 6,
-  15: 7
+  14: 7,
+  15: 9
 }
 
 export const STANDARD_ARRAY = {
