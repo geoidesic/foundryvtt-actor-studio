@@ -29,6 +29,12 @@ Hooks.once("ready", (app, html, data) => {
     new WelcomeApplication().render(true, { focus: true });
   }
 
+  
+  Hooks.call("gas.readyIsComplete");
+});
+
+//- donation-tracker integration
+Hooks.once("membershipReady", (app, html, data) => {
   const dtExists = game.modules.get('donation-tracker')?.active
   log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
   if (dtExists) {
@@ -37,7 +43,6 @@ Hooks.once("ready", (app, html, data) => {
   if(game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
     game.settings.set("dnd5e", "disableAdvancements", false);
   }
-  Hooks.call("gas.readyIsComplete");
 });
 
 const isAppElementAppended = (appId) => {
