@@ -66,7 +66,7 @@ class plugin {
   folderIsAllowed(folderName) {
     const settings = this.getDTSettings()
     const setting = settings.find(s => s.folderName === folderName)
-    return game.membership.hasPermission(setting.permission)
+    return game.membership.hasPermission(setting.permission) || game.user.isGM
   }
 
   getDTFolderIdsFromPack(pack) {
