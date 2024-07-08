@@ -32,7 +32,7 @@
   const actor = getContext("#doc");
 
   const importAdvancements = async () => {
-    log.d('advancementArray',advancementArray)
+    // log.d('advancementArray',advancementArray)
     for (const advancement of advancementArray) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
