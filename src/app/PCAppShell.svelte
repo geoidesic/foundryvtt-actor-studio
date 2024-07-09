@@ -1,7 +1,7 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
-  import { characterClass, characterSubClass, resetStores, tabs, activeTab, actorInGame } from "~/src/helpers/store"
+  import { characterClass, characterSubClass, resetStores, tabs, levelUpTabs, activeTab, actorInGame } from "~/src/helpers/store"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
@@ -11,23 +11,28 @@
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
-  
+  export let levelUp = false;
+
+
   setContext("#doc", documentStore);
 
   const application = getContext('#external').application;
   
+  // set initial active tab
   $activeTab = dnd5e.tabs[0].id
 
-  $: if($characterClass?.system?.spellcasting?.progression && $characterClass?.system?.spellcasting?.progression !== "none") {
+  $: filteredTabs = levelUp ? $levelUpTabs : $tabs
+
+  // $: if($characterClass?.system?.spellcasting?.progression && $characterClass?.system?.spellcasting?.progression !== "none") {
     // @todo: [NB: this has been disabled for MVP as the bounty wasn't reached to fund this work.
     // ensure that tabs includes spells
     // if(!$tabs.find(x => x.id === "spells")) {
     //   $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
     // }
-  } else {
+  // } else {
     // remove spells tab
-    $tabs = $tabs.filter(x => x.id !== "spells")
-  }
+    // $tabs = $tabs.filter(x => x.id !== "spells")
+  // }
 
   const stylesApp = {
       '--tjs-app-overflow': 'visible'
@@ -62,7 +67,7 @@
   ApplicationShell(bind:elementRoot stylesApp)
     main
       section.a
-        Tabs.gas-tabs( tabs="{$tabs}" bind:activeTab="{$activeTab}" sheet="PC")
+        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
 
       section.b
         Footer

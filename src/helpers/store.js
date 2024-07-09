@@ -7,6 +7,12 @@ const initialTabs = [
   { label: "Class", id: "class", component: "Class" },
 ]
 
+// Tabs for level up
+const upTabs = [
+  { label: "Abilities", id: "existing-abilities", component: "ExistingAbilities" },
+  { label: "Class", id: "class", component: "Class" },
+]
+
 let lastDrop = writable(false);
 
 const arrayOfObjectsStore = () => {
@@ -64,6 +70,7 @@ export const activeTab = writable('');
 export const isActorCreated = writable(false);
 export const dropItemRegistry = arrayOfObjectsStore();
 export const tabs = writable(initialTabs);
+export const levelUpTabs = writable(upTabs);
 export const actorInGame = writable(false);
 export const abilityGenerationMethod = writable(null);
 
@@ -79,6 +86,7 @@ export function resetStores() {
   level.set(1);
   activeTab.set('');
   tabs.set(initialTabs);
+  levelUpTabs.set(upTabs)
   dropItemRegistry.removeAll();
   isActorCreated.set(false);
   actorInGame.set(false);

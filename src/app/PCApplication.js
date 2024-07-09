@@ -1,17 +1,16 @@
-import PCAppShell                from './PCAppShell.svelte';
+import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID } from "~/src/helpers/constants"
 
-export default class PCApplication extends SvelteApplication
-{
+export default class PCApplication extends SvelteApplication {
   /**
    * Document store that monitors updates to any assigned document.
    *
    * @type {TJSDocument<foundry.abstract.Document>}
    */
   #documentStore = new TJSDocument(void 0, { delete: this.close.bind(this) });
-  
+
   /**
    * Holds the document unsubscription function.
    *
@@ -19,9 +18,9 @@ export default class PCApplication extends SvelteApplication
    */
   #storeUnsubscribe;
 
-  constructor(object) {
+  constructor(object, levelUp = false) {
     super(object);
-    
+
     // Define document store property
     Object.defineProperty(this.reactive, "document", {
       get: () => this.#documentStore.get(),
@@ -30,6 +29,7 @@ export default class PCApplication extends SvelteApplication
       },
     });
     this.reactive.document = object;
+    this.levelUp = levelUp
   }
 
 
@@ -42,9 +42,9 @@ export default class PCApplication extends SvelteApplication
    */
   static get defaultOptions() {
     const title = this.title;
-    return foundry.utils.mergeObject(super.defaultOptions, {         
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'foundryvtt-actor-studio-pc-sheet',
-      title: game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle'),  
+      title: game.i18n.localize('GAS.ActorStudio') + ' - ' + game.i18n.localize('GAS.PCTitle'),
       classes: ['gas-actor-studio'],
       width: 650,
       height: 600,
@@ -58,7 +58,7 @@ export default class PCApplication extends SvelteApplication
         class: PCAppShell,
         target: document.body,
         props: function () {
-          return { documentStore: this.#documentStore, document: this.reactive.document };
+          return { documentStore: this.#documentStore, document: this.reactive.document, levelUp: this.levelUp  };
         },
       },
     });
@@ -76,11 +76,11 @@ export default class PCApplication extends SvelteApplication
   _onDragOver(event) { }
 
   _onDragStart(event) {
-  
+
   }
 
   async _onDrop(event) {
-  
+
   }
 
   async close(options = {}) {
@@ -103,7 +103,7 @@ export default class PCApplication extends SvelteApplication
     const { action, data, documentType } = options;
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
       const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : "";
-      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')+' - '+game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
+      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio') + ' - ' + game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
     }
   }
 

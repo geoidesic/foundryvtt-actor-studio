@@ -8,6 +8,7 @@ import dnd5e from "~/config/systems/dnd5e.json";
 import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
+import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
@@ -18,10 +19,14 @@ log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
-  // CONFIG.debug.hooks = true;
-  registerSettings(app);
-  Hooks.call("gas.initIsComplete");
+  CONFIG.debug.hooks = true;
+  initLevelup();
   
+  registerSettings(app);
+
+
+  Hooks.call("gas.initIsComplete");
+
 });
 
 Hooks.once("ready", (app, html, data) => {
@@ -29,7 +34,7 @@ Hooks.once("ready", (app, html, data) => {
     new WelcomeApplication().render(true, { focus: true });
   }
 
-  
+
   Hooks.call("gas.readyIsComplete");
 });
 
@@ -40,7 +45,7 @@ Hooks.once("membershipReady", (app, html, data) => {
   if (dtExists) {
     DonationTrackerGameSettings.init();
   }
-  if(game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
+  if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
     game.settings.set("dnd5e", "disableAdvancements", false);
   }
 });
@@ -115,7 +120,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   // Wait for the panel to become empty
   await waitForPanelEmpty();
 
-  
+
   // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
   log.d('closeAdvancementManager queue', queue)
@@ -125,7 +130,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 });
 
 Hooks.on('renderSettingsConfig', (app, html, context) => {
-  if(game.user.isGM) {
+  if (game.user.isGM) {
     $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
   }
   $(`[data-setting-id="${MODULE_ID}.allowManualInput"]`, html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
@@ -138,8 +143,8 @@ Hooks.on('renderCompendium', async (app, html, data) => {
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
-    if(pack.locked) return
-    if(pack.metadata.path.includes('systems/')) return
+    if (pack.locked) return
+    if (pack.metadata.path.includes('systems/')) return
     const allPacks = getAllPackIdsFromAllSettings();
     const actionButtons = html.find('.action-buttons')
     const DTaction = actionButtons.find('button.gas-add-dt-folders');
@@ -263,8 +268,8 @@ Hooks.on('renderActorDirectory', async (app) => {
   if (!game.modules.get(MODULE_ID)?.active) return;
   // Add Actor Studio button to the sidebar
   if (app.constructor.name === "ActorDirectory") {
-    if(!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
-    if($('#gas-sidebar-button').length) return;
+    if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+    if ($('#gas-sidebar-button').length) return;
     const $gasButton = getActorStudioButton('gas-sidebar-button');
     $(app._element).find('header.directory-header').append($gasButton);
 

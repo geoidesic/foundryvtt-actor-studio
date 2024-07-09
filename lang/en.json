@@ -4,6 +4,9 @@
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",
     "Level": "Level",
+    "LevelUp": {
+      "Button": "Level Up"
+    },
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
     "Source": "Source",
@@ -83,6 +86,10 @@
       "DontShowWelcome": {
         "Name": "Don't show this message again",
         "Hint": "Don't show the welcome application when Foundry first loads. (You can always undo this via Configure Settings)."
+      },
+      "EnableLevelUp": {
+        "Name": "Enable Level Up",
+        "Hint": "Check this to include a button on the character sheet for leveling up via Actor Studio"
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "Force D&D5e Level Up Automation",
