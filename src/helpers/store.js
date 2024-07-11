@@ -70,6 +70,7 @@ export const isLevelUp = writable(false);
 export const newClassLevel = writable(false); 
 export const level = writable(1); 
 export const activeTab = writable(''); 
+export const activeClass = writable(false); 
 export const isActorCreated = writable(false);
 export const dropItemRegistry = arrayOfObjectsStore();
 export const tabs = writable(initialTabs);
@@ -90,6 +91,7 @@ export function resetStores() {
   spells.set(false);
   level.set(1);
   activeTab.set('');
+  activeClass.set(false);
   tabs.set(initialTabs);
   levelUpTabs.set(upTabs)
   dropItemRegistry.removeAll();

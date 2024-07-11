@@ -14,7 +14,8 @@
     characterSubClass,
     level,
     tabs,
-    newClassLevel
+    newClassLevel,
+    activeClass
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
@@ -24,7 +25,6 @@
 
   let richHTML = "",
     richSubClassHTML = "",
-    activeClass = null,
     activeClassKey = null,
     activeSubClass = null,
     classValue = null,
@@ -98,7 +98,7 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
-    activeClass = option;
+    $activeClass = option;
     
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
@@ -142,13 +142,13 @@
   };
 
   const clickCancelMulticlass = async () => {
-    activeClass = null
+    $activeClass = null
     activeSubClass = null
   }
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
-  $: classProp = activeClass;
+  $: classProp = $activeClass;
   $: combinedHtml = richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '');
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
@@ -176,7 +176,7 @@
 
   $: classLevels = classKeys.map((classKey) => {
     const classObj = $actor._classes[classKey]
-    return classObj.uuid == activeClass ? classObj.system.levels + 1 : classObj.system.levels;
+    return classObj.uuid == $activeClass ? classObj.system.levels + 1 : classObj.system.levels;
   });
 
   $: activeClassObj = $actor._classes[activeClassKey];
@@ -207,7 +207,7 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(uuid);
-    activeClass = uuid;
+    $activeClass = uuid;
     activeClassKey = classKey
     newClassLevel.set($actor._classes[classKey]?.system?.levels + 1);
     
@@ -248,9 +248,7 @@
     log.d($characterClass)
   });
 
-  function emit() {
-    Hooks.call('gas.close')
-  }
+
 
 </script>
 
@@ -258,10 +256,9 @@
   .content
     .flexrow
       .flex2.pr-sm.col-a
-        button(on:click="{emit}") emit
         h1.flex Existing Classes
         +each("classKeys as classKey, index")
-          .class-row.gold-button.flexrow(class="{getCharacterClass(classKey).uuid === activeClass ? 'active' : ''}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
+          .class-row.gold-button.flexrow(class="{getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
             .flex.icon
               img(height="40" src="{getCharacterClass(classKey)?.img}")
             .flex3.flexrow
@@ -269,7 +266,7 @@
               .flex0
                 .lozenge {classLevels[index]} 
               .flex1.right.pr-md
-                +if("!activeClass")
+                +if("!$activeClass")
                   i(class="fas fa-plus")
         //- h1.flexrow.mt-md
         //-   .flex2.left Add Multiclass
@@ -277,7 +274,7 @@
         //-     .flex0
         //-       button.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
         //-         i(class="fas fa-times")
-        //- IconSelect.icon-select(bind:active="{activeClass}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+        //- IconSelect.icon-select(bind:active="{$activeClass}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         +if("$characterClass")
           //- +if("subclasses.length")
           //-   h3.left.mt-md Subclass
