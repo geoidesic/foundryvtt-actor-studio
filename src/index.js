@@ -71,7 +71,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
-      const advancementsTab = get(tabs).find(x => x.id === "advancements");
+      const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
       console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
