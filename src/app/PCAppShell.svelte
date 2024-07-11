@@ -44,22 +44,28 @@
       log.d($actorInGame);
     }
     isLevelUp.set(levelUp);
+
+    log.d($isLevelUp)
   });
 
   onDestroy(() => {
     resetStores();
+    Hooks.off("gas.close", gasClose);
   });
 
-  Hooks.on("gas.close", (item) => {
+  function gasClose() {
     log.d('gas.close')
     log.d($actorInGame);
     log.d($actorInGame.sheet);
-    if($actorInGame.sheet) {
+    log.d($isLevelUp)
+    if(!$isLevelUp) {
       $actorInGame.sheet.render(true);
     }
     resetStores();
     application.close();
-  });
+  }
+
+  Hooks.once("gas.close", gasClose);
     
 </script>
 

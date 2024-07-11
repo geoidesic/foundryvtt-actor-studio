@@ -4,7 +4,6 @@
   import {
     getFoldersFromMultiplePacks,
     extractItemsFromPacks,
-    addItemToCharacter,
     getPacksFromSettings,
     log,
   } from "~/src/helpers/Utility.js";
@@ -54,18 +53,6 @@
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
-
-  /**
-   * So the only viable strategy is to keep the race additions in storage
-   * and then only add them after the Actor is added to the game.
-   * I haven't found a way to add them to the Actor before it is persisted.
-   */
-  const createActorInGameAndEmbedItems = async () => {
-    const itemData = race.toObject();
-    const actorInGame = await Actor.create(actorObject);
-    const result = await addItemToCharacter(actorInGame, itemData);
-  };
-
 
   $: actorObject = $actor.toObject();
   $: options = raceDefinitions;

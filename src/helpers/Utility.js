@@ -142,7 +142,8 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const addItemToCharacter = async ({ actor, itemData }) => {
-  return await actor.sheet._onDropItemCreate(itemData);
+  const item = await fromUuid(itemData.flags.core?.sourceId);
+  return await actor.sheet._onDropItemCreate(item);
 }
 
 export const isAdvancementsForLevelInItem = (level, item) => {

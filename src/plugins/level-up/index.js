@@ -15,10 +15,10 @@ export function registerSettings() {
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
+  log.d(actor);
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
-  const editMode = html.find('slide-toggle.mode-slider');
 
   if(actor.system.details.xp.max - actor.system.details.xp.value > 0) return;
 

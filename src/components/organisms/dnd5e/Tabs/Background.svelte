@@ -4,7 +4,6 @@
   import {
     getFoldersFromMultiplePacks,
     extractItemsFromPacks,
-    addItemToCharacter,
     getPacksFromSettings,
     log,
   } from "~/src/helpers/Utility.js";

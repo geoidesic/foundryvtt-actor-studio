@@ -5,7 +5,6 @@
     extractMapIteratorObjectProperties,
     extractItemsFromPacks,
     getFoldersFromMultiplePacks,
-    addItemToCharacter,
     getPacksFromSettings,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";

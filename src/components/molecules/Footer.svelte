@@ -73,11 +73,8 @@
   };
 
   const updateActorAndEmbedItems = async () => {
-
-    await $actor.update({...$actor.toObject(), name: actorName});
-    log.d('dropItemRegistry', $dropItemRegistry)
+    await $actor.update({name: actorName});
     if ($characterClass) {
-      log.i("Adding class to character");
       const characterClassData = $characterClass;
       dropItemRegistry.add({
         actor: $actorInGame,

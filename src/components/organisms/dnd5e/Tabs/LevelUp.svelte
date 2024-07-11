@@ -5,7 +5,6 @@
     extractMapIteratorObjectProperties,
     extractItemsFromPacks,
     getFoldersFromMultiplePacks,
-    addItemToCharacter,
     getPacksFromSettings,
     ucfirst
   } from "~/src/helpers/Utility.js";
@@ -211,7 +210,6 @@
     activeClass = uuid;
     activeClassKey = classKey
     newClassLevel.set($actor._classes[classKey]?.system?.levels + 1);
-    log.d(newClassLevel);
     
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
@@ -220,8 +218,6 @@
     richHTML = await TextEditor.enrichHTML(html);
 
   }
-
-
 
   function getLevel(classKey) {
     const level = $newClassLevel ? $newClassLevel : getCharacterClass(classKey)?.system?.levels
@@ -252,12 +248,17 @@
     log.d($characterClass)
   });
 
+  function emit() {
+    Hooks.call('gas.close')
+  }
+
 </script>
 
 <template lang="pug">
   .content
     .flexrow
       .flex2.pr-sm.col-a
+        button(on:click="{emit}") emit
         h1.flex Existing Classes
         +each("classKeys as classKey, index")
           .class-row.gold-button.flexrow(class="{getCharacterClass(classKey).uuid === activeClass ? 'active' : ''}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")

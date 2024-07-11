@@ -38,6 +38,7 @@ const arrayOfObjectsStore = () => {
       log.d('advanceQueue currentStore.length', currentStore.length)
       
       const next = currentStore[0] || false;
+      log.d("advanceQueue next", next);
       // log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);

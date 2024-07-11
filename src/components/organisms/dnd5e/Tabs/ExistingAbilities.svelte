@@ -3,7 +3,6 @@
   import {
     extractMapIteratorObjectProperties,
     getPackFolders,
-    addItemToCharacter,
     log,
     getRules
   } from "~/src/helpers/Utility";
