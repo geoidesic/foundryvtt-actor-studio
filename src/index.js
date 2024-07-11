@@ -78,7 +78,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       } else {
         log.d('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
-        if(isLevelUp) {
+        if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         } else {
           await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);

@@ -54,7 +54,9 @@
     log.d('gas.close')
     log.d($actorInGame);
     log.d($actorInGame.sheet);
-    $actorInGame.sheet.render(true);
+    if($actorInGame.sheet) {
+      $actorInGame.sheet.render(true);
+    }
     resetStores();
     application.close();
   });
