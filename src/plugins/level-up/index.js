@@ -17,7 +17,9 @@ export function dnd5eSheet2UI(app, html, data) {
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
   const xpValue = Number(sheetheader.find('.xp-label .value')[0].innerText);
-  const xpNextLevel = Number(sheetheader.find('.xp-label .max')[0].innerText);
+
+
+  const xpNextLevel = Number(sheetheader.find('.xp-label .max')[0].innerText.replace(/,/g, ''));
   if(xpValue < xpNextLevel) return;
 
   buttons.css('gap', '0.35rem');
@@ -51,10 +53,11 @@ export function dnd5eSheet2UI(app, html, data) {
     .appendTo('head');
   
   buttons.append(levelUpButton);
-  // console.log('sheetheader', sheetheader);
-  // console.log('buttons', buttons);
-  // console.log('xpValue', xpValue);
-  // console.log('xpNextLevel', xpNextLevel);
+  log.d('sheetheader', sheetheader);
+  log.d('buttons', buttons);
+  log.d('xpValue', xpValue);
+  log.d('xpNextLevel', xpNextLevel);
+  log.d(sheetheader.find('.xp-label .max'))
 
 }
 
@@ -66,7 +69,7 @@ export function initLevelup() {
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
 
     if(app.constructor.name === "ActorSheet5eCharacter") {
-      alert('1');
+      log.d("Level Up not implemented for old dnd5e character sheet")
     }
     if(app.constructor.name === "ActorSheet5eCharacter2") {
       dnd5eSheet2UI(app, html, data)
