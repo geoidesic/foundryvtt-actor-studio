@@ -19,7 +19,7 @@ log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising');
-  CONFIG.debug.hooks = true;
+  // CONFIG.debug.hooks = true;
   initLevelup();
   
   registerSettings(app);
