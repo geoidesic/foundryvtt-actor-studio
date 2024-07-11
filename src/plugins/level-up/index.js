@@ -14,13 +14,13 @@ export function registerSettings() {
 
 export function dnd5eSheet2UI(app, html, data) {
 
+  const actor = data.actor;
+
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
-  const xpValue = Number(sheetheader.find('.xp-label .value')[0].innerText);
+  const editMode = html.find('slide-toggle.mode-slider');
 
-
-  const xpNextLevel = Number(sheetheader.find('.xp-label .max')[0].innerText.replace(/,/g, ''));
-  if(xpValue < xpNextLevel) return;
+  if(actor.system.details.xp.max - actor.system.details.xp.value > 0) return;
 
   buttons.css('gap', '0.35rem');
   const levelUpButton = $(`
@@ -53,11 +53,6 @@ export function dnd5eSheet2UI(app, html, data) {
     .appendTo('head');
   
   buttons.append(levelUpButton);
-  log.d('sheetheader', sheetheader);
-  log.d('buttons', buttons);
-  log.d('xpValue', xpValue);
-  log.d('xpNextLevel', xpNextLevel);
-  log.d(sheetheader.find('.xp-label .max'))
 
 }
 
@@ -66,6 +61,7 @@ export function initLevelup() {
   registerSettings();
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
+    log.d(app.constructor.name)
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
 
     if(app.constructor.name === "ActorSheet5eCharacter") {
