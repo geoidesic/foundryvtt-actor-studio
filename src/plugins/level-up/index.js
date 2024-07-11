@@ -30,6 +30,7 @@ export function dnd5eSheet2UI(app, html, data) {
   `);
 
   levelUpButton.on('click', async (event) => {
+    //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
   })
   
@@ -50,10 +51,10 @@ export function dnd5eSheet2UI(app, html, data) {
     .appendTo('head');
   
   buttons.append(levelUpButton);
-  console.log('sheetheader', sheetheader);
-  console.log('buttons', buttons);
-  console.log('xpValue', xpValue);
-  console.log('xpNextLevel', xpNextLevel);
+  // console.log('sheetheader', sheetheader);
+  // console.log('buttons', buttons);
+  // console.log('xpValue', xpValue);
+  // console.log('xpNextLevel', xpNextLevel);
 
 }
 

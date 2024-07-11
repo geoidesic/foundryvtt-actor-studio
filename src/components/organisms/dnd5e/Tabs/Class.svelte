@@ -7,7 +7,6 @@
     getFoldersFromMultiplePacks,
     addItemToCharacter,
     getPacksFromSettings,
-    log,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -150,7 +149,7 @@
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
-  $: combinedHtml = richHTML + (richSubClassHTML ? '<h1>Subclass</h1>' + richSubClassHTML : '');
+  $: combinedHtml = richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '');
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
 
@@ -175,7 +174,6 @@
 
 
   onMount(async () => {
-
     if ($characterClass) {
       classValue = $characterClass.uuid;
       await tick();
@@ -202,7 +200,7 @@
         IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         +if("$characterClass")
           +if("subclasses.length")
-            h3.left.mt-md Subclass
+            h3.left.mt-md {localize('GAS.SubClass')}
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
           h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
           .flexrow

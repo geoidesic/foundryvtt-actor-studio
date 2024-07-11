@@ -9,8 +9,8 @@ const initialTabs = [
 
 // Tabs for level up
 const upTabs = [
-  { label: "Abilities", id: "existing-abilities", component: "ExistingAbilities" },
-  { label: "Class", id: "class", component: "Class" },
+  { label: "Level Up", id: "level-up", component: "LevelUp" },
+
 ]
 
 let lastDrop = writable(false);
@@ -65,6 +65,8 @@ export const characterSubClass = writable(false);
 export const background = writable(false); 
 export const abilities = writable(false); 
 export const spells = writable(false); 
+export const isLevelUp = writable(false); 
+export const newClassLevel = writable(false); 
 export const level = writable(1); 
 export const activeTab = writable(''); 
 export const isActorCreated = writable(false);
@@ -82,6 +84,8 @@ export function resetStores() {
   characterSubClass.set(false);
   background.set(false);
   abilities.set(false);
+  isLevelUp.set(false);
+  newClassLevel.set(false);
   spells.set(false);
   level.set(1);
   activeTab.set('');

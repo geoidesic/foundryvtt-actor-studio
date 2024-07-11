@@ -7,7 +7,7 @@ import dnd5e from "~/config/systems/dnd5e.json";
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
-import { tabs, activeTab, dropItemRegistry } from '~/src/helpers/store.js';
+import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs } from '~/src/helpers/store.js';
 import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
@@ -62,24 +62,39 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   // log.d('renderAdvancementManager')
   // Check if your application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
-  const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
+  // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
+
+  log.d('currentProcess', currentProcess)
+  log.d('app._stepIndex', app._stepIndex)
 
   if (currentProcess.id && app._stepIndex === 0) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
       const advancementsTab = get(tabs).find(x => x.id === "advancements");
+      console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
         log.d('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
-        await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        if(isLevelUp) {
+          await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        } else {
+          await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        }
         activeTab.set('advancements');
       }
     }
   }
 });
+
+Hooks.on("renderActorSheet", (app, html, actor) => {
+  log.d("actor", actor);
+})
+Hooks.on("renderItemSheet5e", (app, html, item) => {
+  log.d("item", item);
+})
 
 Hooks.on('gas.renderAdvancement', () => {
   // log.d('gas.renderAdvancement')

@@ -125,6 +125,7 @@
             box-shadow: none;
           }
           background: #f9f9f9;
+          color: var(--dnd5e-color-gold)
         }
       }
     }

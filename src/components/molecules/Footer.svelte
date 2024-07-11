@@ -10,13 +10,14 @@
     spells,
     subRace,
     isActorCreated,
+    isLevelUp,
     activeTab,
     dropItemRegistry,
     actorInGame,
   } from "~/src/helpers/store";
   import { log } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
-
+  import { abilityGenerationMethod } from "~/src/helpers/store";
   import { derived, writable } from "svelte/store";
 
   const stores = [
@@ -40,12 +41,19 @@
 
   const actor = getContext("#doc");
   const app = getContext("#external").application;
+  let actorName = $actor?.name || "";
 
   $: value = $actor?.name || "";
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   const handleNameInput = (e) => {
-    $actor.updateSource({name: e.target.value});
+    if($isLevelUp) {
+      //- @why: for existing actors, we need to update the actor object in the database
+      actorName = e.target.value;
+    } else {
+      //- @why: for new actors, we need to update the actor source object in memory, 
+      $actor.updateSource({name: e.target.value});
+    }
   };
   const handleTokenNameInput = (e) => {
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
@@ -59,7 +67,26 @@
 
   const clickUpdateHandler = async () => {
     // await actor.update(actorObject);
+    
+    await updateActorAndEmbedItems()
+    // drop class on actor and catch advancements
   };
+
+  const updateActorAndEmbedItems = async () => {
+
+    await $actor.update({...$actor.toObject(), name: actorName});
+    log.d('dropItemRegistry', $dropItemRegistry)
+    if ($characterClass) {
+      log.i("Adding class to character");
+      const characterClassData = $characterClass;
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterClass",
+        itemData: characterClassData,
+      });
+    }
+    dropItemRegistry.advanceQueue(true);
+  }
 
 
   /**
@@ -72,6 +99,12 @@
     const test = $actor.toObject();
     test.name = $actor.name // this works but it's a hack
     $actorInGame = await Actor.create($actor.toObject());
+
+    // // set flags
+    // const abilityFlags = {
+    //   abilityGenerationMethod: $abilityGenerationMethod,
+    // };
+    // $actorInGame.setFlag(MODULE_ID, "abilities", abilityFlags);
 
     // background
     if ($background) {
@@ -161,14 +194,17 @@ div
           //-     label Token Name
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
-      .flex1
-        ProgressBar(progress="{progress}")
-        +if("$progress != '100'")
-          +else()
-            +if("!$isActorCreated")
-              button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
-            +if("$isActorCreated")
-              button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
+      +if("!$isLevelUp")
+        .flex1
+          ProgressBar(progress="{progress}")
+          +if("$progress != '100'")
+            +else()
+              +if("!$isActorCreated")
+                button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
+              +if("$isActorCreated")
+                button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
+        +else()
+          button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
 </template>
 
 <style lang="sass">

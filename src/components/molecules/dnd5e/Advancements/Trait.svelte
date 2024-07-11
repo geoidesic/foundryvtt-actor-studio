@@ -76,7 +76,7 @@
           .flexrow
             .flex 
               span Choose 
-              span {choice.count} 
+              span &nbsp;{choice.count}&nbsp; 
               span of the following:
           +each("choice.pool as pool")
             .flexrow

@@ -122,4 +122,10 @@
   width: 40px
   background-size: contain
   background-repeat: no-repeat
+
+:global(.step form[data-type="HitPoints"] .rolls)
+    display: grid
+    grid-template-columns: 50% 1fr 1fr
+    align-items: center
+    gap: 2px
 </style>

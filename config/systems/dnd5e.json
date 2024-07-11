@@ -22,5 +22,140 @@
         "npc": false,
         "group": false,
         "vehicle": false
+    },
+    "multiclassing": {
+        "Artificer": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "int",
+                    "value": 13
+                }
+            ]
+        },
+        "Barbarian": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "str",
+                    "value": 13
+                }
+            ]
+        },
+        "Bard": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "cha",
+                    "value": 13
+                }
+            ]
+        },
+        "Cleric": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "wis",
+                    "value": 13
+                }
+            ]
+        },
+        "Druid": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "wis",
+                    "value": 13
+                }
+            ]
+        },
+        "Fighter": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "str",
+                    "value": 13
+                },
+                {
+                    "abilityAbbreviation" : "dex",
+                    "value": 13
+                }
+            ]
+        },
+        "Monk": {
+            "type": "all",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "dex",
+                    "value": 13
+                },
+                {
+                    "abilityAbbreviation" : "wis",
+                    "value": 13
+                }
+            ]
+        },
+        "Paladin": {
+            "type": "all",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "str",
+                    "value": 13
+                },
+                {
+                    "abilityAbbreviation" : "cha",
+                    "value": 13
+                }
+            ]
+        },
+        "Ranger": {
+            "type": "all",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "dex",
+                    "value": 13
+                },
+                {
+                    "abilityAbbreviation" : "wis",
+                    "value": 13
+                }
+            ]
+        },
+        "Rogue": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "dex",
+                    "value": 13
+                }
+            ]
+        },
+        "Sorcerer": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "cha",
+                    "value": 13
+                }
+            ]
+        },
+        "Warlock": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "cha",
+                    "value": 13
+                }
+            ]
+        },
+        "Wizard": {
+            "type": "any",
+            "abilities" : [
+                {
+                    "abilityAbbreviation" : "int",
+                    "value": 13
+                }
+            ]
+        }
     }
 }

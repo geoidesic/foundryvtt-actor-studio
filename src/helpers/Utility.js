@@ -124,6 +124,13 @@ export const getAllPackIdsFromAllSettings = () => {
   });
 }
 
+
+export function ucfirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+}
+
+
 export function camelCaseToTitleCase(camelCaseStr) {
   // Split the string at each uppercase letter
   const words = camelCaseStr.replace(/([A-Z])/g, ' $1').trim();

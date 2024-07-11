@@ -54,7 +54,14 @@
   }
 }
 
+.flex {
+  display: flex !important;
+}
 
+.flexrow>.flex4,
+.flexcol>.flex4 {
+  flex: 4;
+}
   
 .justify-flexrow-vertical {
   align-items: center;
@@ -85,8 +92,6 @@
   h2, h3, [title] {
     color: var(--color-highlight)
   }
-
-
 
   .border-right {
     border-right: 4px ridge var(--color-highlight);
@@ -145,6 +150,15 @@
   .window-title {
     font-size: 1.5em;
     font-weight: 700;
+  }
+
+  // Colours
+  .negative {
+    color: var(--color-negative);
+  }
+
+  .positive {
+    color: var(--color-positive);
   }
 
   // padding margins

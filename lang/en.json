@@ -5,7 +5,8 @@
     "Advancements": "Advancements",
     "Level": "Level",
     "LevelUp": {
-      "Button": "Level Up"
+      "Button": "Level Up",
+      "ClassLevelUp": "Level up this class"
     },
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
@@ -16,6 +17,7 @@
       "NeedFileUploadWarn": "User without 'Use File Browser' permission. You might experience issues selecting images",
       "NeedFileBrowseWarn": "User without 'Upload New Files' permission. You might experience issues selecting images"
     },
+    "SubClass": "Subclass",
     "Tabs": {
       "Abilities": {
         "HowCalculated": "How are abilities calculated?"
@@ -101,7 +103,7 @@
       },
       "showButtonInSideBar": {
         "Name": "Show button in sidebar",
-        "Hint": "Show the Actor Studio button in the sidebar"
+        "Hint": "Show the Actor Studio button in the sidebar. (Requires a browser refresh to take effect)"
       },
       "IndividualPanelScroll": {
         "Name": "Individual panel scrolls",

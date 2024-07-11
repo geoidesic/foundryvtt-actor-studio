@@ -1,62 +1,83 @@
 <script>
   import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, } from "~/src/helpers/store"
-  import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants"
-  
+  import {
+    createEventDispatcher,
+    getContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import { abilities, race } from "~/src/helpers/store";
+  import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
 
-  async function updateValue (attr, value) {
+  async function updateValue(attr, value) {
     // move the value to the next ability according to the direction of the arrow
     const abilities = Object.keys(STANDARD_ARRAY);
     // get index of attr from abilities
     const index = abilities.indexOf(attr);
-    log.d('abilities', abilities)
-    log.d('index', index)
-    log.d('value', value)
-    log.d('attr', attr)
+    // log.d('abilities', abilities)
+    // log.d('index', index)
+    // log.d('value', value)
+    // log.d('attr', attr)
     switch (value) {
       case -1:
         // move the value to the next ability according to the direction of the arrow
-        if(index < abilities.length - 1) {
+        if (index < abilities.length - 1) {
           const nextAbility = abilities[index + 1];
-          log.d('nextAbility', nextAbility)
-          const options = {system: {abilities: {[attr]: {value: $doc.system.abilities[nextAbility].value}, [nextAbility]: {value: $doc.system.abilities[attr].value}}}};
-          log.d('options', options)
-          await $doc.updateSource(options)
-          $doc = $doc
-
+          // log.d('nextAbility', nextAbility)
+          const options = {
+            system: {
+              abilities: {
+                [attr]: { value: $doc.system.abilities[nextAbility].value },
+                [nextAbility]: { value: $doc.system.abilities[attr].value },
+              },
+            },
+          };
+          // log.d('options', options)
+          await $doc.updateSource(options);
+          $doc = $doc;
         }
         break;
-    
+
       default:
         // move the value to the next ability according to the direction of the arrow
-        if(index > 0) {
+        if (index > 0) {
           const nextAbility = abilities[index - 1];
-          log.d('nextAbility', nextAbility)
-          const options = {system: {abilities: {[attr]: {value: $doc.system.abilities[nextAbility].value}, [nextAbility]: {value: $doc.system.abilities[attr].value}}}};
-          log.d('options', options)
-          await $doc.updateSource(options)
-          $doc = $doc
+          // log.d('nextAbility', nextAbility)
+          const options = {
+            system: {
+              abilities: {
+                [attr]: { value: $doc.system.abilities[nextAbility].value },
+                [nextAbility]: { value: $doc.system.abilities[attr].value },
+              },
+            },
+          };
+          // log.d('options', options)
+          await $doc.updateSource(options);
+          $doc = $doc;
         }
         break;
     }
 
-    log.d(abilities)
+    // log.d(abilities)
     // const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     // $doc.updateSource(options)
     // $doc = $doc
   }
 
   function reset() {
-    const options = {system: {abilities: {}}};
-    systemAbilitiesArray.forEach(ability => {
-      options.system.abilities[ability[1].abbreviation] = {value: STANDARD_ARRAY[ability[1].abbreviation]};
+    const options = { system: { abilities: {} } };
+    systemAbilitiesArray.forEach((ability) => {
+      options.system.abilities[ability[1].abbreviation] = {
+        value: STANDARD_ARRAY[ability[1].abbreviation],
+      };
     });
     $doc.updateSource(options);
     $doc = $doc;
@@ -71,18 +92,30 @@
     return sortedArray1.every((value, index) => value === sortedArray2[index]);
   }
 
-  $: systemAbilities = game.system.config.abilities
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: isStandardArrayValues = arraysMatch(Object.values(STANDARD_ARRAY), systemAbilitiesArray.map(ability => $doc.system.abilities[ability[1].abbreviation].value))
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
+  $: isStandardArrayValues = arraysMatch(
+    Object.values(STANDARD_ARRAY),
+    systemAbilitiesArray.map(
+      (ability) => $doc.system.abilities[ability[1].abbreviation].value,
+    ),
+  );
 
   onMount(async () => {
-    log.d($doc.system.abilities)
-    log.d(Object.keys($doc.system.abilities))
-    log.d(isStandardArrayValues)
+    // log.d($doc.system.abilities)
+    // log.d(Object.keys($doc.system.abilities))
+    // log.d(isStandardArrayValues)
     // if all the abilities are 10, set them to the standard array
-    if(systemAbilitiesArray.every(ability => $doc.system.abilities[ability[1].abbreviation].value === 10)) {
+    if (
+      systemAbilitiesArray.every(
+        (ability) =>
+          $doc.system.abilities[ability[1].abbreviation].value === 10,
+      )
+    ) {
       reset();
     }
   });
@@ -150,5 +183,5 @@
         bottom: 0
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
-    
+
 </style>

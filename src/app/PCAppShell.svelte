@@ -1,7 +1,7 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
-  import { characterClass, characterSubClass, resetStores, tabs, levelUpTabs, activeTab, actorInGame } from "~/src/helpers/store"
+  import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame } from "~/src/helpers/store"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
@@ -19,7 +19,7 @@
   const application = getContext('#external').application;
   
   // set initial active tab
-  $activeTab = dnd5e.tabs[0].id
+  $activeTab = levelUp ? $levelUpTabs[0].id : $tabs[0].id
 
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
 
@@ -39,7 +39,11 @@
   };
 
   onMount( async () => {
-
+    if(levelUp) {
+      $actorInGame = $documentStore
+      log.d($actorInGame);
+    }
+    isLevelUp.set(levelUp);
   });
 
   onDestroy(() => {
