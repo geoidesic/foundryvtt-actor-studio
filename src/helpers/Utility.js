@@ -43,6 +43,9 @@ export function extractItemsFromPacks(packs, keys) {
   const items = [];
 
   for (const pack of packs) {
+    if(!pack.index) {
+      ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
+    }
     let entries = pack.index.entries()
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {

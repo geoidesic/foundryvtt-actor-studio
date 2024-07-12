@@ -1,7 +1,8 @@
 {
   "GAS": {
     "Error": {
-      "ItemNotFoundInCompendium": "Item not found in compendium"
+      "ItemNotFoundInCompendium": "Item not found in compendium",
+      "PackIndexNotFound": "The compendium pack from which the character class was imported not found in this world"
     },
     "ActorStudio": "Actor Studio",
     "AbilityScores": "Ability Scores",
@@ -145,6 +146,14 @@
       "ButtonOnDialogInsteadOfActorsDirectory": {
         "Name": "Create Actor dialog button",
         "Hint": "If the button interferes with other modules, or you prefer the aesthetic of having a single 'create actor' button to not confuse your players"
+      },
+      "WindowX": {
+        "Name": "Actor Studio application window width",
+        "Hint": "Set the initial width for the window here"
+      },
+      "WindowY": {
+        "Name": "Actor Studio application window height",
+        "Hint": "Set the initial height for the window here"
       },
       "Sources": {
         "Name": "Compendium Sources",

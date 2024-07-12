@@ -58,6 +58,8 @@ export function registerSettings(app): void {
   donationTracker();
   showButtonInSideBar(app);
   forceDnd5eLevelUpAutomation();
+  windowX();
+  windowY();
 
   /** User settings */
   dontShowWelcome();
@@ -239,6 +241,26 @@ function pointBuyLimit() {
     type: Number,
   });
 }
+function windowX() {
+  game.settings.register(MODULE_ID, 'windowX', {
+    name: game.i18n.localize('GAS.Setting.WindowX.Name'),
+    hint: game.i18n.localize('GAS.Setting.WindowX.Hint'),
+    scope: 'world',
+    config: true,
+    default: 700,
+    type: Number,
+  });
+}
+function windowY() {
+  game.settings.register(MODULE_ID, 'windowY', {
+    name: game.i18n.localize('GAS.Setting.WindowY.Name'),
+    hint: game.i18n.localize('GAS.Setting.WindowY.Hint'),
+    scope: 'world',
+    config: true,
+    default: 800,
+    type: Number,
+  });
+}
 
 function abilityRollFormula() {
   game.settings.register(MODULE_ID, 'abiiltyRollFormula', {
@@ -252,7 +274,6 @@ function abilityRollFormula() {
     updateSetting: () => { console.log('updateSetting'); },
   });
 }
-
 
 
 function allowManualInput() {
