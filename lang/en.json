@@ -1,5 +1,8 @@
 {
   "GAS": {
+    "Error": {
+      "ItemNotFoundInCompendium": "Item not found in compendium"
+    },
     "ActorStudio": "Actor Studio",
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",

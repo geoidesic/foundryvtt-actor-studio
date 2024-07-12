@@ -118,7 +118,7 @@ export const getAllPacksFromAllSettings = () => {
 
 export const getAllPackIdsFromAllSettings = () => {
   const packs = getAllPacksFromAllSettings();
-  log.d('getAllPackIdsFromAllSettings', packs);
+  // log.d('getAllPackIdsFromAllSettings', packs);
   return packs.map(p => {
     return p.collection
   });
@@ -141,8 +141,31 @@ export function camelCaseToTitleCase(camelCaseStr) {
   return titleCaseStr;
 }
 
-export const addItemToCharacter = async ({ actor, itemData }) => {
-  const item = await fromUuid(itemData.flags.core?.sourceId);
+export const getCompendiumSource = (item) => {
+  if(game.version < 12) {
+    return item.flags.core.sourceId;
+  } else {
+    return item._stats.compendiumSource;
+  }
+}
+
+export const addItemToCharacter = async ({ actor, itemData, isLevelUp }) => {
+  let item
+  if (isLevelUp) {
+    item = await Item.implementation.fromDropData({ type: 'Item', uuid: getCompendiumSource(itemData) });
+
+    if(!item) {
+      log.e('Item not found in compendium', itemData._stats.compendiumSource);
+      ui.notifications.error(game.i18n.localize('GAS.Error.ItemNotFoundInCompendium'));
+      return 
+    } 
+  } else {
+    const dropData = {
+      type: 'Item',
+      uuid: itemData.uuid,
+    }
+    item = await Item.implementation.fromDropData(dropData);
+  }
   return await actor.sheet._onDropItemCreate(item);
 }
 

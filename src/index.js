@@ -18,12 +18,12 @@ window.log = log;
 log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
-  log.i('Initialising');
-  // CONFIG.debug.hooks = true;
-  initLevelup();
+  log.i('Initialising', game.version);
   
-  registerSettings(app);
+  // CONFIG.debug.hooks = true;
 
+  initLevelup();
+  registerSettings(app);
 
   Hooks.call("gas.initIsComplete");
 
@@ -64,19 +64,19 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   const currentProcess = get(dropItemRegistry.currentProcess)
   // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
-  log.d('currentProcess', currentProcess)
-  log.d('app._stepIndex', app._stepIndex)
+  // log.d('currentProcess', currentProcess)
+  // log.d('app._stepIndex', app._stepIndex)
 
   if (currentProcess.id && app._stepIndex === 0) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
-      console.log('advancementsTab', advancementsTab)
+      // console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
-        log.d('Advancements tab not found, adding it to the tabs')
+        log.i('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
         if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
@@ -90,10 +90,14 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
 });
 
 Hooks.on("renderActorSheet", (app, html, actor) => {
-  log.d("actor", actor);
+  // log.d("actor", actor);
 })
 Hooks.on("renderItemSheet5e", (app, html, item) => {
-  log.d("item", item);
+  // log.d("item", item);
+})
+
+Hooks.on("dropActorSheetData", (actor, type, info) => {
+  // log.d("dropActorSheetData", actor, type, info);
 })
 
 Hooks.on('gas.renderAdvancement', () => {
@@ -237,11 +241,11 @@ Hooks.on('renderApplication', (app, html, data) => {
 
     function updateButton() {
       const actorType = select.val();
-      log.d('actorType', actorType)
+      // log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         if (!$('#gas-dialog-button', html).length) {
           const $gasButton = getActorStudioButton('gas-dialog-button');
-          log.d('html', html)
+          // log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
           const handleButtonClick = function (e) {
@@ -249,7 +253,7 @@ Hooks.on('renderApplication', (app, html, data) => {
               if (userHasRightPermissions()) {
                 const actorName = $('input', html).val();
                 const folderName = $('select[name="folder"]', html).val();
-                log.d('actorType', actorType);
+                // log.d('actorType', actorType);
                 try {
                   // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
                   new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });

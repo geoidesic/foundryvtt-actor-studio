@@ -80,6 +80,7 @@
         actor: $actorInGame,
         id: "characterClass",
         itemData: characterClassData,
+        isLevelUp: $isLevelUp,
       });
     }
     dropItemRegistry.advanceQueue(true);
@@ -111,6 +112,7 @@
         actor: $actorInGame,
         id: "background",
         itemData: backgroundData,
+        isLevelUp: $isLevelUp,
       });
     }
 
@@ -122,6 +124,7 @@
         actor: $actorInGame,
         id: "race",
         itemData: raceData,
+        isLevelUp: $isLevelUp,
       });
     }
 
@@ -133,17 +136,19 @@
         actor: $actorInGame,
         id: "subRace",
         itemData: subRaceData,
+        isLevelUp: $isLevelUp,
       });
     }
 
     // character class
     if ($characterClass) {
-      log.i("Adding class to character");
+      log.i("Adding class to character", $characterClass);
       const characterClassData = $characterClass;
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "characterClass",
         itemData: characterClassData,
+        isLevelUp: $isLevelUp,
       });
     }
 
@@ -155,6 +160,7 @@
         actor: $actorInGame,
         id: "characterSubClass",
         itemData: characterSubClassData,
+        isLevelUp: $isLevelUp,
       });
     }
 
@@ -166,6 +172,7 @@
         actor: $actorInGame,
         id: "spells",
         itemData: spellsData,
+        isLevelUp: $isLevelUp,
       });
     }
 
@@ -192,6 +199,7 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       +if("!$isLevelUp")
+        button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
         .flex1
           ProgressBar(progress="{progress}")
           +if("$progress != '100'")

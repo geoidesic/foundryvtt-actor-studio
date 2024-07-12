@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
-  import { log, addItemToCharacter } from "../../../../helpers/Utility";
-  import { dropItemRegistry } from "~/src/helpers/store.js";
+  import { log, addItemToCharacter } from "~/src/helpers/Utility";
+  import { dropItemRegistry, isLevelUp } from "~/src/helpers/store.js";
   import { getContext } from "svelte";
 
   const doc = getContext("#doc");
@@ -15,8 +15,8 @@
     log.d("item", item);
     addItemToCharacter({
       actor: $doc,
-      id: "characterSubClass",
-      itemData: item
+      itemData: item,
+      isLevelUp: $isLevelUp
     });
   }
   onMount(() => {
