@@ -145,19 +145,18 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const getCompendiumSource = (item) => {
-  log.d('getCompendiumSource', item);
+  // log.d('getCompendiumSource', item);
   let sourceId;
   if (game.version < 12) {
     sourceId = item.flags.core.sourceId;
   } else {
     sourceId = item._stats.compendiumSource;
   }
-  log.d('sourceId', sourceId);
+  // log.d('sourceId', sourceId);
   return sourceId;
 }
 
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
-  alert('prepareItemForDrop');
   let item
   if (isLevelUp) {
     if (isMultiClass) {
@@ -178,7 +177,6 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
     }
     item = await Item.implementation.fromDropData(dropData);
   }
-  log.d('prepareItemForDrop item', item);
   return item;
 }
 

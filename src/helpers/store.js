@@ -50,9 +50,9 @@ const arrayOfObjectsStore = () => {
       // log.d('advanceQueue currentStore.length', currentStore.length)
       // log.d('dropping item to character', next)
       // log.d(next.itemData);
-      const item = prepareItemForDrop(next)
+      const item = await prepareItemForDrop(next)
       dropItemOnCharacter(next.actor, item);
-      // await dropItemOnCharacter(next);
+
       return currentStore.length > 1
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
