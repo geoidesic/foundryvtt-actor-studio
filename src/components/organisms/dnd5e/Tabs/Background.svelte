@@ -79,7 +79,10 @@
 div.content
   .flexrow
     .flex2.pr-sm.col-a
-      IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
+      .flexrow
+        .flex0.required(class="{$background ? '' : 'active'}") *
+        .flex3 
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
      
 
       +if("advancementArray.length")

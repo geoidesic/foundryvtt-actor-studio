@@ -167,6 +167,18 @@
     gap: 4px;
   }
 
+  .required {
+    font-size: large;
+    margin-right: 2px;
+    color: var(--color-positive);
+    display: none;
+    &.active {
+      display: block;
+      color: var(--color-negative);
+      animation: pulse 0.5s infinite;
+    }
+  }
+
   // Colours
   .negative {
     color: var(--color-negative);

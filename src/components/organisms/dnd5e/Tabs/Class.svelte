@@ -196,11 +196,17 @@
   .content
     .flexrow
       .flex2.pr-sm.col-a
-        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+        .flexrow
+          .flex0.required(class="{$characterClass ? '' : 'active'}") *
+          .flex3 
+            IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         +if("$characterClass")
           +if("subclasses.length")
             h3.left.mt-md {localize('GAS.SubClass')}
-            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+            .flexrow
+              .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
+              .flex3
+                IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
           h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
           .flexrow
             .flex2.left

@@ -104,7 +104,10 @@
 div.content
   .flexrow
     .flex2.pr-sm.col-a
-      IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value )
+      .flexrow
+        .flex0.required(class="{$race ? '' : 'active'}") *
+        .flex3 
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value )
       +if("value")
         +if("source")
           //- h3.left {localize('GAS.Source')}
