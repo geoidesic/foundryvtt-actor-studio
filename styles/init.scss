@@ -225,6 +225,9 @@
     padding-left: var(--size-md);
   }
 
+  .pr-none {
+    padding-right: 0px !important;
+  }
   .pr-sm {
     padding-right: var(--size-sm);
   }

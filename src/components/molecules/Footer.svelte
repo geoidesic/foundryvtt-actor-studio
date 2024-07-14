@@ -14,8 +14,9 @@
     activeTab,
     dropItemRegistry,
     actorInGame,
+    isMultiClass
   } from "~/src/helpers/store";
-  import { log } from "~/src/helpers/Utility";
+  // import { prepareItemForDrop } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/helpers/store";
   import { derived, writable } from "svelte/store";
@@ -34,17 +35,11 @@
     return (completed / total) * 100;
   });
 
-  $: log.d('progress', $progress)
-
-
   export let value = null;
 
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
-
-  $: value = $actor?.name || "";
-  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   const handleNameInput = (e) => {
     if($isLevelUp) {
@@ -74,14 +69,23 @@
 
   const updateActorAndEmbedItems = async () => {
     await $actor.update({name: actorName});
-    if ($characterClass) {
-      const characterClassData = $characterClass;
-      dropItemRegistry.add({
+    $actorInGame = $actor;
+    // log.d("isMultiClass", $isMultiClass);
+    // log.d("characterClass", $characterClass);
+    // log.d("characterClass uuid", $characterClass.uuid);
+    const data = {
         actor: $actorInGame,
         id: "characterClass",
-        itemData: characterClassData,
+        itemData: $characterClass,
         isLevelUp: $isLevelUp,
-      });
+        isMultiClass: $isMultiClass,
+      };
+    // const item = prepareItemForDrop(data)
+    // log.d("item", item);
+    // return;
+    if ($characterClass) {
+      const characterClassData = $characterClass;
+      dropItemRegistry.add(data);
     }
     dropItemRegistry.advanceQueue(true);
   }
@@ -180,6 +184,14 @@
 
     dropItemRegistry.advanceQueue(true);
   };
+
+
+
+  $: value = $actor?.name || "";
+  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
+
+
+  
 </script>
 
 <template lang="pug">
@@ -209,7 +221,7 @@ div
               +if("$isActorCreated")
                 button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
         +else()
-          button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
+          button(disabled="{!$characterClass}" type="button" role="button" on:mousedown="{clickUpdateHandler}" data-tooltip="{$characterClass ? '': 'First select a class to level up, or a multi-class to add'}") Update
 </template>
 
 <style lang="sass">
@@ -219,5 +231,12 @@ div
   align-items: center
 label
   margin: 10px 0 0 0
-button
+button[disabled]
+  cursor: not-allowed
+  background-color: #ccc
+  color: #666
+  border: 1px solid #ccc
+  &:hover
+    background-color: #ccc
+    color: #666
 </style>

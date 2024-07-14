@@ -15,13 +15,15 @@
     level,
     tabs,
     newClassLevel,
-    activeClass
+    activeClass,
+    isMultiClass
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import DonationTracker from "~/src/plugins/donation-tracker"
   import LevelUpExisting from "~/src/components/organisms/dnd5e/Tabs/LevelUpExistingClassLeftCol.svelte";
-    import { log } from "../../../../helpers/Utility";
+  import LevelUpButtonInnards from "~/src/components/atoms/button/LevelUpButtonInnards.svelte";
+  import { log } from "../../../../helpers/Utility";
 
   let richHTML = "",
     richSubClassHTML = "",
@@ -59,13 +61,42 @@
 
   const actor = getContext("#doc");
 
-  const levelSelectHandler = async (option) => {
-    subClassesIndex = await getFilteredSubclassIndex();
-    await tick();
-    importClassAdvancements();
-    importSubClassAdvancements();
+  /** IMPORTERS */
+  const importClassAdvancements = async () => {
+    for (const classAdvancement of classAdvancementArrayFiltered) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
+        classAdvancementComponents[classAdvancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+      }
+    }
   };
 
+  const importSubClassAdvancements = async () => {
+    for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
+        await tick();
+        subClassAdvancementComponents[subClassAdvancement.type] = module.default;
+      } catch (error) {
+        log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
+      }
+    }
+  };
+
+  /** DECORATORS */
+  function existingClassesCssClassForRow(classKey) {
+    let css = getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''
+    if($isMultiClass) {
+      css += ' gold-button-disabled'
+    } else {
+        css += ' gold-button'
+    }
+    return css
+  }
+
+  /** FILTERS */
   const getFilteredSubclassIndex = async () => {
     const filteredSubClassIndex = [];
     for(let subClassesPack of subClassesPacks) {
@@ -91,7 +122,19 @@
     return output
   };
  
+  const getCharacterClass = (classKey) => {
+    // log.d($actor._classes[classKey])
+    return $actor._classes[classKey];
+  }
+
+  function getLevel(classKey) {
+    const level = $newClassLevel ? $newClassLevel : getCharacterClass(classKey)?.system?.levels
+    return level
+  }
+
+  /** EVENT HANDLERS */
   const selectClassHandler = async (option) => {
+    log.d('add multi class', option)
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -107,44 +150,42 @@
     richHTML = await TextEditor.enrichHTML(html);
   };
 
-  const importClassAdvancements = async () => {
-    for (const classAdvancement of classAdvancementArrayFiltered) {
-      try {
-        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
-        classAdvancementComponents[classAdvancement.type] = module.default;
-      } catch (error) {
-        log.e(`Failed to load component for ${classAdvancement.type}:`, error);
-      }
-    }
-  };
-
-  const selectSubClassHandler = async (option) => {
-    $characterSubClass = await fromUuid(option);
-    activeSubClass = option;
-    await tick();
-    importClassAdvancements()
-    importSubClassAdvancements()
-    richSubClassHTML = await TextEditor.enrichHTML(
-      $characterSubClass.system.description.value,
-    );
-  };
-
-  const importSubClassAdvancements = async () => {
-    for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
-      try {
-        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
-        await tick();
-        subClassAdvancementComponents[subClassAdvancement.type] = module.default;
-      } catch (error) {
-        log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
-      }
-    }
-  };
-
   const clickCancelMulticlass = async () => {
-    $activeClass = null
+    $activeClass = false
+    classValue = null
     activeSubClass = null
+    activeClassKey = null
+    $characterClass = false
   }
+
+  async function clickAddLevel(classKey) {
+
+    if ($isMultiClass) return;
+    const isUnset = Boolean($activeClass) && Boolean($newClassLevel);
+    if(isUnset) return;
+
+    const uuid = getCharacterClass(classKey).uuid
+    log.d('add level for class: ', uuid)
+
+    activeSubClass = null;
+    $characterSubClass = null;
+    subclassValue = null;
+    subClassAdvancementArrayFiltered = [];
+    richSubClassHTML = "";
+    $characterClass = await fromUuid(uuid);
+    $activeClass = uuid;
+    activeClassKey = classKey
+    newClassLevel.set($actor._classes[classKey]?.system?.levels + 1);
+    
+    await tick();
+    subClassesIndex = await getFilteredSubclassIndex();
+    await tick();
+    importClassAdvancements();
+    richHTML = await TextEditor.enrichHTML(html);
+
+  }
+
+  /** REACTIVE */
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
@@ -193,37 +234,6 @@
       })
       .sort((a, b) => a.label.localeCompare(b.label))
 
-  const getCharacterClass = (classKey) => {
-    return $actor._classes[classKey];
-  }
-
-  async function clickAddLevel(classKey) {
-
-    log.d(getCharacterClass(classKey).uuid)
-    const uuid = getCharacterClass(classKey).uuid
-    activeSubClass = null;
-    $characterSubClass = null;
-    subclassValue = null;
-    subClassAdvancementArrayFiltered = [];
-    richSubClassHTML = "";
-    $characterClass = await fromUuid(uuid);
-    $activeClass = uuid;
-    activeClassKey = classKey
-    newClassLevel.set($actor._classes[classKey]?.system?.levels + 1);
-    
-    await tick();
-    subClassesIndex = await getFilteredSubclassIndex();
-    await tick();
-    importClassAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
-
-  }
-
-  function getLevel(classKey) {
-    const level = $newClassLevel ? $newClassLevel : getCharacterClass(classKey)?.system?.levels
-    return level
-  }
-
   onMount(async () => {
     if ($characterClass) {
       classValue = $characterClass.uuid;
@@ -240,12 +250,12 @@
         $characterSubClass.system.description.value,
       );
     }
-    log.d("classKeys", classKeys);
-    log.d(typeof classKeys);
-    log.d(classKeys.length);
-    log.d(Array.isArray(classKeys.length));
-    log.d(getCharacterClass('fighter'))
-    log.d($characterClass)
+    // log.d("classKeys", classKeys);
+    // log.d(typeof classKeys);
+    // log.d(classKeys.length);
+    // log.d(Array.isArray(classKeys.length));
+    // log.d(getCharacterClass('fighter'))
+    // log.d($characterClass)
   });
 
 
@@ -254,27 +264,31 @@
 
 <template lang="pug">
   .content
+    //- pre isMultiClass {$isMultiClass}
+    //- pre activeClass {$activeClass}
+    //- pre characterClass {$characterClass}
+    //- pre newClassLevel {$newClassLevel}
     .flexrow
       .flex2.pr-sm.col-a
         h1.flex Existing Classes
         +each("classKeys as classKey, index")
-          .class-row.gold-button.flexrow(class="{getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
-            .flex0.icon
-              img(height="40" width="40" src="{getCharacterClass(classKey)?.img}")
-            .flex3.flexrow
-              .flex3.left.pa-xs {ucfirst(classKey)} 
-              .flex0.right.mr-sm
-                .lozenge.pa-xs {classLevels[index]} 
-              .flex0.right.pr-md.py-xs
-                +if("!$activeClass")
-                  i(class="fas fa-plus")
-        //- h1.flexrow.mt-md
-        //-   .flex2.left Add Multiclass
-        //-   +if("classProp")
-        //-     .flex0
-        //-       button.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
-        //-         i(class="fas fa-times")
-        //- IconSelect.icon-select(bind:active="{$activeClass}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+          //- pre classKey {classKey}
+          //- pre getCharacterClass(classKey) {getCharacterClass(classKey).system.img}
+          //- pre getCharacterClass(classKey)?.system?.img {getCharacterClass(classKey)?.system?.img}
+          +if("$activeClass && !$newClassLevel")
+            .class-row(class="{existingClassesCssClassForRow(classKey)}")
+              LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
+            +else()
+              .class-row(class="{existingClassesCssClassForRow(classKey)}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
+                LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
+        +if("!$newClassLevel") 
+          h1.flexrow.mt-md
+            .flex2.left Add Multiclass
+            +if("classProp")
+              .flex0
+                button.pr-none.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
+                  i(class="fas fa-times")
+          IconSelect.icon-select( options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         +if("$characterClass")
           //- +if("subclasses.length")
           //-   h3.left.mt-md Subclass
@@ -327,22 +341,12 @@
   :global(.icon-select)
     position: relative
 
-  .class-row
-    padding: 0
-    justify-items: center
-    align-items: center
-  
-  .lozenge
-    background-color: var(--dnd5e-color-gold)
-    color: #000
-    border-radius: var(--border-radius)
-    box-shadow: 0 0 6px var(--dnd5e-shadow-45)
-  
-  .gold-button
-    @include gold-button
 
-  .icon
-    min-width: 40px
+  .gold-button-disabled
+    @include gold-button(null)
+  .gold-button
+    @include gold-button  
+
   .sub-class
     height: 100px
     overflow-y: auto

@@ -1,24 +1,24 @@
 <script>
   import { onMount } from "svelte";
-  import { log, addItemToCharacter } from "~/src/helpers/Utility";
+  import { log, dropItemOnCharacter } from "~/src/helpers/Utility";
   import { dropItemRegistry, isLevelUp } from "~/src/helpers/store.js";
   import { getContext } from "svelte";
 
   const doc = getContext("#doc");
 
   //- for debugging purposes only
-  async function addAdvancement() {
-    log.d("currentProcess", $dropItemRegistry.currentProcess);
-    let item = await fromUuid(
-      "Compendium.dnd5e.subclasses.Item.sprHbe7cRg9osTzf",
-    );
-    log.d("item", item);
-    addItemToCharacter({
-      actor: $doc,
-      itemData: item,
-      isLevelUp: $isLevelUp
-    });
-  }
+  // async function addAdvancement() {
+  //   log.d("currentProcess", $dropItemRegistry.currentProcess);
+  //   let item = await fromUuid(
+  //     "Compendium.dnd5e.subclasses.Item.sprHbe7cRg9osTzf",
+  //   );
+  //   log.d("item", item);
+  //   dropItemOnCharacter({
+  //     actor: $doc,
+  //     itemData: item,
+  //     isLevelUp: $isLevelUp
+  //   });
+  // }
   onMount(() => {
     log.d("Advancements tab mounted");
     Hooks.call("gas.renderAdvancement");

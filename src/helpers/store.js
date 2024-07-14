@@ -1,5 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { addItemToCharacter, isAdvancementsForLevelInItem, log } from "~/src/helpers/Utility";
+import { dropItemOnCharacter, prepareItemForDrop, isAdvancementsForLevelInItem, log } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
   { label: "Race", id: "race", component: "Race" },
@@ -50,8 +50,9 @@ const arrayOfObjectsStore = () => {
       // log.d('advanceQueue currentStore.length', currentStore.length)
       // log.d('dropping item to character', next)
       // log.d(next.itemData);
-      addItemToCharacter(next);
-      // await addItemToCharacter(next);
+      const item = prepareItemForDrop(next)
+      dropItemOnCharacter(next.actor, item);
+      // await dropItemOnCharacter(next);
       return currentStore.length > 1
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
@@ -77,6 +78,11 @@ export const tabs = writable(initialTabs);
 export const levelUpTabs = writable(upTabs);
 export const actorInGame = writable(false);
 export const abilityGenerationMethod = writable(null);
+
+export const isMultiClass = derived([characterClass, activeClass, newClassLevel], ([$characterClass, $characterSubClass, $newClassLevel]) => {
+  if($newClassLevel) return false;
+  if($characterClass && !$newClassLevel) return true;
+});
 
 // Function to reset all stores
 export function resetStores() {

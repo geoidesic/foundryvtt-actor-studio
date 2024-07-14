@@ -10,10 +10,9 @@
 
   function getBaseItemUUID(identifier) {
     if (!identifier) {
-      console.trace();
       return null;
     }
-    log.d("identifier", identifier);
+    // log.d("identifier", identifier);
     let pack = CONFIG.DND5E.sourcePacks.ITEMS;
     let [scope, collection, id] = identifier.split(".");
     if (scope && collection) pack = `${scope}.${collection}`;
@@ -50,14 +49,14 @@
 
   const fetchAndSetItem = async (uuid) => {
     const itemObj = await fromUuid(uuid);
-    log.d('Item', itemObj);
+    // log.d('Item', itemObj);
     item.set(itemObj);
   };
 
   const processGrant = async (grant) => {
     const split = grant.split(":");
-    log.d('Trait split', split);
-    log.d('switch', split[0]);
+    // log.d('Trait split', split);
+    // log.d('switch', split[0]);
     switch (split[0]) {
       case "languages":
         return { label: ucfirst(split[1]), value: split[2] };
@@ -74,7 +73,11 @@
       case "armor":
         return { label: game.system.config.armorProficiencies[split[1]], value: null };
       case "weapon":
-        return { label: ucfirst(split[2]), value: game.system.config.weaponProficiencies[split[1]] };
+        if(split[2]) {
+          return { label: ucfirst(split[2]), value: game.system.config.weaponProficiencies[split[1]] };
+        } else {
+          return { label: game.system.config.weaponProficiencies[split[1]], value: null };
+        }
       case 'dr':
         return { label: game.system.config.damageTypes[split[1]].label, value: split[1] };
       default:
@@ -86,14 +89,14 @@
   };
 
   const initializeGrants = async () => {
-    log.d(advancement.configuration.grants)
+    // log.d(advancement.configuration.grants)
     const grantPromises = Array.from(advancement.configuration.grants).map(processGrant);
     grants = await Promise.all(grantPromises);
-    log.d('Grants', grants);
+    // log.d('Grants', grants);
   };
 
   onMount(async () => {
-    log.d("Advancement", advancement);
+    // log.d("Advancement", advancement);
     if (advancement.configuration.grants.size > 0) {
       await initializeGrants();
     }

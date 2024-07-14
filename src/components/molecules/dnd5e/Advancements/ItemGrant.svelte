@@ -7,8 +7,6 @@
   $: items = [];
   let initialId = null;
 
-  $: log.d("ItemGrant Items", items)
-
   async function getItemsFromUUIDs(uuids) {
     const itemPromises = uuids.map(async (uuid) => {
       const item = await fromUuid(uuid);

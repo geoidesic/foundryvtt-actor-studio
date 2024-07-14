@@ -95,7 +95,7 @@
         height: 200%;
         margin: -10px 2px;
         font-weight: normal;
-        
+        font-size: larger;
         margin-bottom: -10px;
         padding: 10px 0;
         align-items: end;
@@ -124,6 +124,7 @@
             background: #f9f9f9;
             box-shadow: none;
           }
+          font-weight: bold;
           background: #f9f9f9;
           color: var(--dnd5e-color-gold)
         }

@@ -43,7 +43,7 @@ export function extractItemsFromPacks(packs, keys) {
   const items = [];
 
   for (const pack of packs) {
-    if(!pack.index) {
+    if (!pack.index) {
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
     let entries = pack.index.entries()
@@ -145,23 +145,32 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const getCompendiumSource = (item) => {
-  if(game.version < 12) {
-    return item.flags.core.sourceId;
+  log.d('getCompendiumSource', item);
+  let sourceId;
+  if (game.version < 12) {
+    sourceId = item.flags.core.sourceId;
   } else {
-    return item._stats.compendiumSource;
+    sourceId = item._stats.compendiumSource;
   }
+  log.d('sourceId', sourceId);
+  return sourceId;
 }
 
-export const addItemToCharacter = async ({ actor, itemData, isLevelUp }) => {
+export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
+  alert('prepareItemForDrop');
   let item
   if (isLevelUp) {
-    item = await Item.implementation.fromDropData({ type: 'Item', uuid: getCompendiumSource(itemData) });
+    if (isMultiClass) {
+      item = await Item.implementation.fromDropData({ type: 'Item', uuid: itemData.uuid });
+    } else {
+      item = await Item.implementation.fromDropData({ type: 'Item', uuid: getCompendiumSource(itemData) });
+    }
 
-    if(!item) {
+    if (!item) {
       log.e('Item not found in compendium', itemData._stats.compendiumSource);
       ui.notifications.error(game.i18n.localize('GAS.Error.ItemNotFoundInCompendium'));
-      return 
-    } 
+      return
+    }
   } else {
     const dropData = {
       type: 'Item',
@@ -169,6 +178,12 @@ export const addItemToCharacter = async ({ actor, itemData, isLevelUp }) => {
     }
     item = await Item.implementation.fromDropData(dropData);
   }
+  log.d('prepareItemForDrop item', item);
+  return item;
+}
+
+//- used by dropItemRegistry
+export const dropItemOnCharacter = async (actor, item) => {
   return await actor.sheet._onDropItemCreate(item);
 }
 

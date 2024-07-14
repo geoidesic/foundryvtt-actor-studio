@@ -12,10 +12,9 @@
     import { log } from "../../../helpers/Utility";
 
     export let options = []; //- {value, label, icon || img}
-    export let value = ""; //
+    export let value = ""; //- the currently selected uuid
     export let disabled = false;
     export let handler = void 0;
-    export let active = void 0;
     export let shrinkIfNoIcon = true;
     export let placeHolder = false;
     export let id = void 0;
@@ -104,7 +103,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       +each("options as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option" aria-selected="{active === option.value}" class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(role="option"  on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
@@ -187,9 +186,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     line-height: 1.5;
     color: #212529;
     cursor: pointer;
-    &.active {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
+
 
     &:hover {
       background-color: var(--select-option-highlight-color);
