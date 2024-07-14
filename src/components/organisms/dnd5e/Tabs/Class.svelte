@@ -221,6 +221,7 @@
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
                       .flexrow
+                        //- pre advancement.type {advancement.type}
                         svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
   
         +if("subclasses.length")
