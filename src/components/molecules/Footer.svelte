@@ -14,26 +14,66 @@
     activeTab,
     dropItemRegistry,
     actorInGame,
-    isMultiClass
+    isMultiClass,
+    pointBuy,
+    abilityRolls,
+    isStandardArrayValues
   } from "~/src/helpers/store";
   // import { prepareItemForDrop } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/helpers/store";
   import { derived, writable } from "svelte/store";
+  import { log } from "../../helpers/Utility";
 
   const stores = [
     race,
     characterClass,
     characterSubClass,
     background,
+    abilityGenerationMethod,
+    pointBuy,
+    abilityRolls,
+    isStandardArrayValues
   ];
+
+    // Sample helper function to process abilityGenerationMethod
+    function isAbilityGenerationMethodReady(method) {
+    log.d("method", method);
+    if (!method) {
+      return false;
+    }
+    
+    switch (method) {
+      case 2:
+        // Check if points are allocated correctly
+        log.d("pointBuy", $pointBuy);
+        return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
+      case 3:
+          // Check if all abilities are assigned
+        log.d("abilityRolls", $abilityRolls);
+        return Object.keys($abilityRolls).length === 6;
+      case 4:
+        // Check if all rolls are assigned
+        return $isStandardArrayValues
+      default:
+        return true;
+    }
+  }
+
 
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
-    const total = $stores.length;
-    const completed = $stores.filter((value) => value).length;
+    const [race, characterClass, characterSubClass, background, abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues] = $stores;
+    const total = $stores.slice(0, 5).length; // Only count the main five stores for total
+    const completed = $stores.slice(0, 5).filter((value, index) => {
+      if (index === 4) { // Index of abilityGenerationMethod
+        return isAbilityGenerationMethodReady(abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues);
+      }
+      return !!value;
+    }).length;
     return (completed / total) * 100;
   });
+
 
   export let value = null;
 
@@ -201,7 +241,7 @@ div
       .flex2
         .flexcol
           .flexrow.gap-10
-            .flex1.right.mt-xs
+            .flex0.right.mt-xs.no-wrap.ml-md
               label Character Name
             .flex2
               input.left(type="text" value="{value}" on:input="{handleNameInput}")
@@ -211,7 +251,7 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       +if("!$isLevelUp")
-        button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
+        //- button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
         .flex1
           ProgressBar(progress="{progress}")
           +if("$progress != '100'")

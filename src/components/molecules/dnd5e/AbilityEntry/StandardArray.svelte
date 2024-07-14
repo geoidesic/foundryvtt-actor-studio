@@ -8,7 +8,7 @@
     onMount,
     tick,
   } from "svelte";
-  import { abilities, race } from "~/src/helpers/store";
+  import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/helpers/store";
   import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
 
   export let document = false;
@@ -73,6 +73,8 @@
   }
 
   function reset() {
+    $abilityRolls = {};
+
     const options = { system: { abilities: {} } };
     systemAbilitiesArray.forEach((ability) => {
       options.system.abilities[ability[1].abbreviation] = {
@@ -98,13 +100,28 @@
   $: abilityAdvancements =
     $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
       ?.fixed;
-  $: isStandardArrayValues = arraysMatch(
+  // $: isStandardArrayValues = arraysMatch(
+  //   Object.values(STANDARD_ARRAY),
+  //   systemAbilitiesArray.map(
+  //     (ability) => $doc.system.abilities[ability[1].abbreviation].value,
+  //   ),
+  // );
+  $: $isStandardArrayValues = arraysMatch(
     Object.values(STANDARD_ARRAY),
     systemAbilitiesArray.map(
       (ability) => $doc.system.abilities[ability[1].abbreviation].value,
     ),
   );
-
+  // $: {
+  //   const currentAbilities = systemAbilitiesArray.map(
+  //     (ability) => {
+  //       log.d(ability) 
+  //       return $doc.system.abilities[ability[1].abbreviation].value
+  //     }
+  //   );
+  //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
+  //   isStandardArrayValues.set(match);
+  // }
   onMount(async () => {
     // log.d($doc.system.abilities)
     // log.d(Object.keys($doc.system.abilities))
@@ -151,7 +168,7 @@
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +
           span {$doc.system.abilities[ability[1].abbreviation].mod}
-    +if("!isStandardArrayValues")
+    +if("!$isStandardArrayValues")
       hr
       button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
 

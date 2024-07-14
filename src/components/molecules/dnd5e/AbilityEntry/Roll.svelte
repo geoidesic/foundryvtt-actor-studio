@@ -2,7 +2,7 @@
   import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, } from "~/src/helpers/store"
+  import { abilities, race, abilityRolls } from "~/src/helpers/store"
   import { MODULE_ID } from "~/src/helpers/constants"
   
   export let document = false;
@@ -25,6 +25,9 @@
     const roll = await new Roll(formula).evaluate();
     await roll.toMessage();
 
+    $abilityRolls = !$abilityRolls ? {} : $abilityRolls
+    $abilityRolls[attr] = roll.total
+
     // set the value of the ability to the result of the roll
     const options = {system: {abilities: { [attr]: {value: Number(roll.total)}}}};
     $doc.updateSource(options)
@@ -44,6 +47,8 @@
 
 <template lang="pug">
 .attribute-entry.mt-sm
+  +each("Object.keys($abilityRolls) as roll, ability")
+    pre abilityRolls {ability}: {roll}
   h5.flexrow.mb-sm
     .flex2.left Ability
     .flex1.center Race / Feat
@@ -65,7 +70,7 @@
           +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
             span +
           span {$doc.system.abilities[ability[1].abbreviation].mod}
-        .flex0.center.justify-flexrow-vertical.controls(alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
+        .flex0.center.justify-flexrow-vertical.controls(class="{$abilityRolls[ability[1].abbreviation] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
           i.fas.fa-dice
 
 </template>
@@ -83,10 +88,15 @@
     font-size: 1rem
     background-color: rgba(0, 0, 0, 0.1)
     padding: 2px 1px 0px 0px
-    border: 1px solid grey
+    border: 1px solid var(--color-positive)
     border-radius: 4px
+    color: var(--color-positive)
     &:hover
       cursor: pointer
       background-color: rgba(140, 90, 0, 0.2)
+    &.active
+      border: 1px solid var(--color-negative)
+      color: var(--color-negative)
+      animation: pulse 1s infinite
     
 </style>

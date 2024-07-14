@@ -1,8 +1,8 @@
 <script>
   import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, } from "~/src/helpers/store"
+  import { createEventDispatcher, getContext, setContext, onDestroy, onMount, tick  } from "svelte";
+  import { abilities, race, pointBuy, abilityRolls } from "~/src/helpers/store"
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
   import { localize } from "#runtime/svelte/helper";
   
@@ -21,6 +21,7 @@
   }
 
   function reset() {
+    $abilityRolls = {};
     const options = {system: {abilities: {}}};
     systemAbilitiesArray.forEach(ability => {
       options.system.abilities[ability[1].abbreviation] = {value: 10};
@@ -36,7 +37,11 @@
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
   $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation].value)], 0)
   $: pointBuyLimit = game.settings.get(MODULE_ID, "pointBuyLimit")
-  $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red': 'green'
+  $: activeClass = scoreTotal !== pointBuyLimit ? ' active' : '';
+  $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red'+activeClass: 'green'+activeClass
+
+  $: $pointBuy = {scoreTotal, pointBuyLimit}
+
 
   onMount(async () => {
   });
@@ -77,7 +82,7 @@
         +if("isNaN(scoreTotal)")
           span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
           +else()
-            input.center.small(disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
+            input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
       .flex0 / 
       .flex1 
         input.center.small(disabled  type="number" value="{pointBuyLimit}") 
@@ -97,6 +102,10 @@
     color: red
   .mainscore
     min-width: 40px
+  .score
+
+    &.active
+      animation: pulse 0.5s infinite
   .controls
     .chevron
       position: absolute

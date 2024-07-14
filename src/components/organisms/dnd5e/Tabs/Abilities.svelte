@@ -15,7 +15,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { abilityGenerationMethod } from "~/src/helpers/store";
+  import { abilityGenerationMethod, abilityRolls } from "~/src/helpers/store";
 
   const actor = getContext("#doc");
   const ruleConfig = {
@@ -35,9 +35,13 @@
   };
 
   const selectHandler = async (option) => {
-    active = option.value;
-    $abilityGenerationMethod = option.value;
-    importAdvancements();
+    active = option.value ?? option ?? null;
+    await importAdvancements();
+    tick();
+    $abilityGenerationMethod = active;
+    log.d('option', option)
+    log.d('active', active)
+    log.d('abilityGenerationMethod', $abilityGenerationMethod)
   };
   
 
