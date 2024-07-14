@@ -47,7 +47,7 @@
     .flexrow
       .flex.left
         span.label {improvement.label}
-      .flex.right
+      .flex0.right
         +if("Number(improvement.value) > 0")
           span +
         span.value {improvement.value}

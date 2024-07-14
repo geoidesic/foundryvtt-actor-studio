@@ -114,7 +114,7 @@
       +each("choices as choice")
         +if("!fromAll(choice.pool)")
           .flexrow
-            .flex 
+            h3.flex
               span Choose&nbsp;
               span &nbsp;{choice.count}&nbsp; 
               span of the following:
