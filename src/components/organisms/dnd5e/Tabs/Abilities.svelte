@@ -23,7 +23,7 @@
     pageId: "yuSwUFIjK31Mr3DI",
   };
   const importAdvancements = async () => {
-    log.d('options',options)
+    // log.d('options',options)
     for (const option of options) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/AbilityEntry/${option.type}.svelte`);
@@ -39,9 +39,9 @@
     await importAdvancements();
     tick();
     $abilityGenerationMethod = active;
-    log.d('option', option)
-    log.d('active', active)
-    log.d('abilityGenerationMethod', $abilityGenerationMethod)
+    // log.d('option', option)
+    // log.d('active', active)
+    // log.d('abilityGenerationMethod', $abilityGenerationMethod)
   };
   
 

@@ -134,7 +134,7 @@
 
   /** EVENT HANDLERS */
   const selectClassHandler = async (option) => {
-    log.d('add multi class', option)
+    // log.d('add multi class', option)
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -165,7 +165,7 @@
     if(isUnset) return;
 
     const uuid = getCharacterClass(classKey).uuid
-    log.d('add level for class: ', uuid)
+    // log.d('add level for class: ', uuid)
 
     activeSubClass = null;
     $characterSubClass = null;

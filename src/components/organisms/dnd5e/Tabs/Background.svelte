@@ -56,7 +56,7 @@
   
   const selectHandler = async (option) => {
     $background = await fromUuid(option);
-    log.d('background', $background)
+    // log.d('background', $background)
     active = option;
     await tick();
     await importAdvancements();
@@ -65,7 +65,7 @@
 
   onMount(async () => {
     if ($background) {
-      log.d('background', background)
+      // log.d('background', background)
       value = $background.uuid;
       await tick();
       await importAdvancements();

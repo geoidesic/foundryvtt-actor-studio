@@ -142,7 +142,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 
   // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
-  log.d('closeAdvancementManager queue', queue)
+  // log.d('closeAdvancementManager queue', queue)
   if (!queue) {
     Hooks.call("gas.close");
   }

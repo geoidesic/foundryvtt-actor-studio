@@ -7,8 +7,8 @@
   $: sizes = advancement.configuration.sizes;
   
   onMount(async () => {
-    log.d('advancement'+advancement.type, advancement)
-    log.d('Sizes', sizes);
+    // log.d('advancement'+advancement.type, advancement)
+    // log.d('Sizes', sizes);
   });
   
 </script>

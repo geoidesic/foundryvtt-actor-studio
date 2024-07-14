@@ -20,7 +20,7 @@
   //   });
   // }
   onMount(() => {
-    log.d("Advancements tab mounted");
+    // log.d("Advancements tab mounted");
     Hooks.call("gas.renderAdvancement");
   });
 </script>

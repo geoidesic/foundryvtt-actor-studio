@@ -29,15 +29,15 @@ class plugin {
     const membershipRanks = game.membership.RANKS
 
     const membershipFolderArray = Object.entries(membershipRanks).filter(([key, value]) => value !== -1);
-    log.d('membershipFolderArray', membershipFolderArray)
+    // log.d('membershipFolderArray', membershipFolderArray)
     const membershipFolderNames = membershipFolderArray
       .map(([key, value]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
-      log.d('membershipFolderNames', membershipFolderNames)
-      log.d(item)
+      // log.d('membershipFolderNames', membershipFolderNames)
+      // log.d(item)
     const folderIsDt = item.folder.find(f => membershipFolderNames.includes(f.name))
     if(!folderIsDt) return true;
     const canView = game.membership.hasPermission(folderIsDt.name)
-    log.d('canView', canView)
+    // log.d('canView', canView)
     return canView;
   }
 
@@ -59,7 +59,7 @@ class plugin {
 
   getDTPermissionFromFolderName(folderName) {
     const membershipRanks = game.membership.RANKS
-    log.d('membershipRanks', membershipRanks)
+    // log.d('membershipRanks', membershipRanks)
 
   }
 

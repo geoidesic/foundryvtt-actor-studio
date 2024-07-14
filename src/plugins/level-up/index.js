@@ -15,7 +15,7 @@ export function registerSettings() {
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
-  log.d(actor);
+  // log.d(actor);
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
@@ -61,11 +61,11 @@ export function initLevelup() {
   registerSettings();
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
-    log.d(app.constructor.name)
+    // log.d(app.constructor.name)
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
 
     if(app.constructor.name === "ActorSheet5eCharacter") {
-      log.d("Level Up not implemented for old dnd5e character sheet")
+      log.e("Level Up not implemented for old dnd5e character sheet")
     }
     if(app.constructor.name === "ActorSheet5eCharacter2") {
       dnd5eSheet2UI(app, html, data)
