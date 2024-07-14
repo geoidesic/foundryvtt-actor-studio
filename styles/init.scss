@@ -30,12 +30,23 @@
   // line-height: 1.3rem !important;
 }
 .gas-tooltip a {
-  background-color: var(--color-text-hyperlink) !important;
-  color: #fff !important;
-  border-radius: var(--border-radius) !important;
+  // background-color: var(--color-text-hyperlink) !important;
+  // color: #fff !important;
+  // border-radius: var(--border-radius) !important;
+  // border-color: var(--color-text-hyperlink) !important;
 }
 .gas-tooltip a i {
   color: #fff;
+}
+
+.gas-tooltip .content-link {
+  border-radius: var(--border-radius);
+  margin: 0 3px;
+  color: var(--color-text-hyperlink);
+}
+
+.gas-tooltip .content-link i {
+  color: var(--color-text-hyperlink);
 }
 
 // alter heading styles for Configure Settings
@@ -152,6 +163,10 @@
     font-weight: 700;
   }
 
+  .gap-4 {
+    gap: 4px;
+  }
+
   // Colours
   .negative {
     color: var(--color-negative);
@@ -177,40 +192,30 @@
   .py-xxs {
     padding: var(--size-xxs) 0;
   }
-
-  .px-sm {
-    padding-right: var(--size-sm);
-    padding-left: var(--size-sm);
-  }
-
   .px-xs {
     padding-right: var(--size-xs);
     padding-left: var(--size-xs);
   }
-
+  .px-sm {
+    padding-right: var(--size-sm);
+    padding-left: var(--size-sm);
+  }
   .px-md {
     padding-right: var(--size-md);
     padding-left: var(--size-md);
   }
 
   .pa-sm {
-    padding: var(--size-sm);
+    padding: var(--size-sm) var(--size-md);
   }
-
   .pa-xxs {
-    padding: var(--size-xxs);
+    padding: var(--size-xxs) va(--size-xs);
   }
-
-  .pt-xxs {
-    padding-top: var(--size-xxs);
-  }
-
   .pa-xs {
-    padding: var(--size-xs);
+    padding: var(--size-xs) var(--size-sm);
   }
-
   .pa-md {
-    padding: var(--size-md);
+    padding: var(--size-md) var(--size-md);
   }
 
   .pl-sm {
@@ -223,11 +228,9 @@
   .pr-sm {
     padding-right: var(--size-sm);
   }
-
   .pr-md {
     padding-right: var(--size-md);
   }
-
   .pr-xs {
     padding-right: var(--size-xs);
   }
@@ -236,27 +239,21 @@
     padding-bottom: var(--size-sm);
   }
 
+  .pt-xxs {
+    padding-top: var(--size-xxs);
+  }
+  .pt-xs {
+    padding-top: var(--size-xs);
+  }
+  .pt-sm {
+    padding-top: var(--size-sm);
+  }
   .pt-ms {
     padding-top: var(--size-ms);
   }
 
-  .pt-sm {
-    padding-top: var(--size-sm);
-  }
 
-  .pt-xs {
-    padding-top: var(--size-xs);
-  }
 
-  .px-sm {
-    padding-right: var(--size-sm);
-    padding-left: var(--size-sm);
-  }
-
-  .py-sm {
-    padding-top: var(--size-sm);
-    padding-bottom: var(--size-sm);
-  }
 
   .ma-sm {
     margin: var(--size-sm);

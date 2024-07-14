@@ -7,6 +7,8 @@
   $: items = [];
   let initialId = null;
 
+  $: log.d("ItemGrant Items", items)
+
   async function getItemsFromUUIDs(uuids) {
     const itemPromises = uuids.map(async (uuid) => {
       const item = await fromUuid(uuid);
@@ -39,16 +41,24 @@
       li.left
         +await("TextEditor.enrichHTML(item?.system?.description?.value || '')")
           +then("Html")
-            .flexrow(data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+            .flexrow.gap-4
+              //- (data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
               .flex0.relative.image
                 img.icon(src="{item?.img}" alt="{item?.name}")
-              .flex2 {item?.name}
+              +if("item?.link")
+                +await("TextEditor.enrichHTML(item.link || '')")
+                  +then("Html")
+                    .flex2 {@html Html}
+                +else()
+                  .flex2 {item?.name}
 
 </template>
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"
   .advancement
-    @include inset
-
+    .gold-button
+      @include gold-button(null)
+        
+      
 </style>

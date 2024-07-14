@@ -259,13 +259,13 @@
         h1.flex Existing Classes
         +each("classKeys as classKey, index")
           .class-row.gold-button.flexrow(class="{getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
-            .flex.icon
-              img(height="40" src="{getCharacterClass(classKey)?.img}")
+            .flex0.icon
+              img(height="40" width="40" src="{getCharacterClass(classKey)?.img}")
             .flex3.flexrow
-              .flex3 {ucfirst(classKey)} 
-              .flex0
-                .lozenge {classLevels[index]} 
-              .flex1.right.pr-md
+              .flex3.left.pa-xs {ucfirst(classKey)} 
+              .flex0.right.mr-sm
+                .lozenge.pa-xs {classLevels[index]} 
+              .flex0.right.pr-md.py-xs
                 +if("!$activeClass")
                   i(class="fas fa-plus")
         //- h1.flexrow.mt-md
@@ -337,27 +337,12 @@
     color: #000
     border-radius: var(--border-radius)
     box-shadow: 0 0 6px var(--dnd5e-shadow-45)
-    padding: 0 0.2rem
   
   .gold-button
-    position: relative
-    border: 3px solid transparent
-    border-radius: var(--border-radius)
-    background: var(--dnd5e-color-black)
-    color: var(--dnd5e-color-gold)
-    margin: 0 0 3px 0
-    box-shadow: 0 0 6px var(--dnd5e-shadow-45)
-    font-size: var(--font-size-14)
-    line-height: normal
-    overflow: hidden
-    //- cursor:  cell
-    cursor: pointer
-    &.active .lozenge
-      border: 3px solid var(-as-blue)
-      background: var(--as-blue)
-      color: #fff
+    @include gold-button
+
   .icon
-    min-width: 20px
+    min-width: 40px
   .sub-class
     height: 100px
     overflow-y: auto
