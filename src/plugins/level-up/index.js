@@ -1,6 +1,17 @@
 import { MODULE_ID } from '~/src/helpers/constants';
 import PCApplication from '~/src/app/PCApplication.js';
 
+const pulseKeyframes = `
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+`;
+
 export function registerSettings() {
   game.settings.register(MODULE_ID, 'enableLevelUp', {
     name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
@@ -36,17 +47,7 @@ export function dnd5eSheet2UI(app, html, data) {
     new PCApplication(app.actor, true).render(true, { focus: true });
   })
   
-  const pulseKeyframes = `
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-    }
-  `;
-  
+
   $('<style>')
     .prop('type', 'text/css')
     .html(pulseKeyframes)
@@ -85,17 +86,6 @@ export function tidy5eSheetUI(app, element, data) {
     //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
   });
-
-  const pulseKeyframes = `
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-    }
-  `;
 
   $("<style>").prop("type", "text/css").html(pulseKeyframes).appendTo("head");
 
