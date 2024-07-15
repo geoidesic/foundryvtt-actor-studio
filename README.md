@@ -7,7 +7,9 @@ A FoundryVTT module for creating Actors
 - You can preview available advancements by level for class and subclass
 - Once your've made your selections, the actor will be created and the advancements triggered for completion
 - NB: for the advancements to work you must have the "Disable level-up automation" setting switched off!
-- Level Up! as of v1.2.1 this module now supports multi-classing and leveling up. Look for the level up button (only currently available on the dnd5e standard sheet).
+- Level Up! as of v1.2.1 this module now supports multi-classing and leveling up. Look for the level up button
+- Supports standard dnd5e (v3+) character sheet
+- Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) 
 
 ## New feature donations
 There are [features waiting for funding](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/6).
