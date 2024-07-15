@@ -56,6 +56,54 @@ export function dnd5eSheet2UI(app, html, data) {
 
 }
 
+export function tidy5eSheetUI(app, element, data) {
+  const tidy5eApi = game.modules.get("tidy5e-sheet").api;
+
+  if (!tidy5eApi.isTidy5eCharacterSheet(app)) {
+    return;
+  }
+
+  const actor = data.actor;
+
+  if (actor.system.details.xp.max - actor.system.details.xp.value > 0) return;
+
+  const levelUpButton = $(`
+    <button
+      type="button"
+      data-tidy-render-scheme="handlebars"
+      class="inline-transparent-button"
+      data-action="flags"
+      data-tooltip="GAS.LevelUp.Button"
+      aria-label="GAS.LevelUp.Button"
+      style="animation: pulse 2s infinite;"
+    >
+      <i class="fas fa-arrow-alt-circle-up"></i>
+    </button>
+  `);
+
+  levelUpButton.on("click", async (event) => {
+    //- render the level up UI
+    new PCApplication(app.actor, true).render(true, { focus: true });
+  });
+
+  const pulseKeyframes = `
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+  `;
+
+  $("<style>").prop("type", "text/css").html(pulseKeyframes).appendTo("head");
+
+  $(element)
+    .find('[data-tidy-sheet-part="name-container"]')
+    .after(levelUpButton);
+}
+
 export function initLevelup() {
 
   registerSettings();
@@ -72,6 +120,10 @@ export function initLevelup() {
     }
 
   })
+
+  Hooks.on("tidy5e-sheet.renderActorSheet", (app, element, data) => {
+    tidy5eSheetUI(app, element, data);
+  });
 
 }
 
