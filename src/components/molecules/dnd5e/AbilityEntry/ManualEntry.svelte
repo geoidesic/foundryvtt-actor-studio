@@ -42,12 +42,12 @@
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center
-          input.center.small(name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
+          input.center.small(name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
+        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
         .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
+          +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
             span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
+          span {$doc.system.abilities[ability[1].abbreviation]?.mod}
 </template>
 
 <style lang="sass">

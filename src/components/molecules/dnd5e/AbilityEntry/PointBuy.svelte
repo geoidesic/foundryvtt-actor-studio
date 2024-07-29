@@ -35,7 +35,7 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation].value)], 0)
+  $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 0)
   $: pointBuyLimit = game.settings.get(MODULE_ID, "pointBuyLimit")
   $: activeClass = scoreTotal !== pointBuyLimit ? ' active' : '';
   $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red'+activeClass: 'green'+activeClass
@@ -64,17 +64,17 @@
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center.relative
-          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
+          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
           .controls
             .up.chevron
-              i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) + 1}})}")
+              i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
             .down.chevron
-              i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation].value) - 1}})}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
+              i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
+        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
         .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
+          +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
             span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
+          span {$doc.system.abilities[ability[1].abbreviation]?.mod}
     hr
     .flexrow.justify-flexrow-vertical
       .flex1 Points total: 

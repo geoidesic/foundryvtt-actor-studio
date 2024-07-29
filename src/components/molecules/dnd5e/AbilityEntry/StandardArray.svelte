@@ -109,7 +109,7 @@
   $: $isStandardArrayValues = arraysMatch(
     Object.values(STANDARD_ARRAY),
     systemAbilitiesArray.map(
-      (ability) => $doc.system.abilities[ability[1].abbreviation].value,
+      (ability) => $doc.system.abilities[ability[1].abbreviation]?.value,
     ),
   );
   // $: {
@@ -130,7 +130,7 @@
     if (
       systemAbilitiesArray.every(
         (ability) =>
-          $doc.system.abilities[ability[1].abbreviation].value === 10,
+          $doc.system.abilities[ability[1].abbreviation]?.value === 10,
       )
     ) {
       reset();
@@ -155,7 +155,7 @@
             span +
           span {abilityAdvancements?.[ability[1].abbreviation] || 0}
         .flex1.center.relative
-          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}")
+          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}")
           .controls
             .up.chevron
               +if("index != 0")
@@ -163,11 +163,11 @@
             .down.chevron
               +if("index != 5")
                 i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, -1)}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
+        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
         .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
+          +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
             span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
+          span {$doc.system.abilities[ability[1].abbreviation]?.mod}
     +if("!$isStandardArrayValues")
       hr
       button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
