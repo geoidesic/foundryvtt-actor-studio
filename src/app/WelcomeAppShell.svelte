@@ -34,7 +34,7 @@
       img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
       p Thank you for using Actor Studio!
       h1 Introduction
-      p NB: <strong>Actor Studio</strong> is only currently intended for creating Level 1 player characters. This functionality will be expanded in the future.
+      p Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e. It provides a guided workflow to help you create a character, and then guides you through the various advancements for your character.
       h1 Usage Instructions
       p To create your character, work your way through the tabs and select from the options available. You can always go back and change your choices. Use this as a way to preview what each choice does to your character.
       p Once you are happy with your character, click the "Create Character" button to create your character in Foundry VTT.

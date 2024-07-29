@@ -84,7 +84,6 @@ div.content
         .flex3 
           IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
      
-
       +if("advancementArray.length")
         h3.left {localize('GAS.Advancements')}
         ul.icon-list
@@ -96,6 +95,7 @@ div.content
                   img.icon(src="{advancement.icon}" alt="{advancement.title}")
                 .flex2 {advancement.title}
               .flexrow
+                //- pre advancement {advancement.type}
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 

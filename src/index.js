@@ -30,10 +30,10 @@ Hooks.once("init", (app, html, data) => {
 });
 
 Hooks.once("ready", (app, html, data) => {
+  
   if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
     new WelcomeApplication().render(true, { focus: true });
   }
-
 
   Hooks.call("gas.readyIsComplete");
 });
