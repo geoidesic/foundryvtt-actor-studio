@@ -60,7 +60,6 @@
     }
   }
 
-
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
     const [race, characterClass, characterSubClass, background, abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues] = $stores;
@@ -75,7 +74,6 @@
     }).length;
     return (completed / total) * 100;
   });
-
 
   export let value = null;
 

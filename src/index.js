@@ -4,6 +4,8 @@ import '../styles/init.scss'; // Import any styles as this includes them in the 
 import WelcomeApplication from './app/WelcomeApplication.js';
 import PCApplication from './app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
+import packageJson from '../package.json';
+import manifestJson from '../module.json';
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
@@ -20,12 +22,12 @@ log.level = log.INFO;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising for foundry version:', game.version);
+  log.i('Initialising module manifest version:', manifestJson.version);
+  log.i('Initialising module package version:', packageJson.version);
+  log.i('Initialising game module version:', game.modules.get(MODULE_ID).version);
 
-
-  
   initLevelup();
   registerSettings(app);
-  
   
   if(game.settings.get(MODULE_ID, 'debug')) {
     log.level = log.VERBOSE;
