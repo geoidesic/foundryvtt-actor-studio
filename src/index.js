@@ -19,7 +19,7 @@ window.log = log;
 log.level = log.INFO;
 
 Hooks.once("init", (app, html, data) => {
-  log.i('Initialising', game.version);
+  log.i('Initialising for foundry version:', game.version);
 
 
   
@@ -29,11 +29,18 @@ Hooks.once("init", (app, html, data) => {
   
   if(game.settings.get(MODULE_ID, 'debug')) {
     log.level = log.VERBOSE;
+  } else {
+    log.level = log.INFO;
   }
 
   if(game.settings.get(MODULE_ID, 'debug.hooks')) {
     CONFIG.debug.hooks = true;
   }
+
+
+  log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
+  log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
+  log.d('Log level: ',log.level)
 
   Hooks.call("gas.initIsComplete");
 
