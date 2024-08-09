@@ -20,13 +20,20 @@ log.level = log.DEBUG;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising', game.version);
-  
-  // CONFIG.debug.hooks = true;
 
+
+  
   initLevelup();
   registerSettings(app);
-
-
+  
+  
+  if(game.settings.get(MODULE_ID, 'debug')) {
+    log.level = log.VERBOSE;
+  }
+  
+  if(game.settings.get(MODULE_ID, 'debug.hooks')) {
+    CONFIG.debug.hooks = true;
+  }
 
   Hooks.call("gas.initIsComplete");
 

@@ -48,6 +48,8 @@ export function registerSettings(app): void {
   // abilityScoreMethods();
 
   /** World Settings */
+  debugSetting();
+  debugHooksSetting();
   sourcesConfiguration();
   allowManualInput();
   allowStandardArray();
@@ -328,6 +330,26 @@ function showButtonInSideBar(app) {
   game.settings.register(MODULE_ID, 'showButtonInSideBar', {
     name: game.i18n.localize('GAS.Setting.showButtonInSideBar.Name'),
     hint: game.i18n.localize('GAS.Setting.showButtonInSideBar.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+function debugSetting() {
+  game.settings.register(MODULE_ID, 'debug', {
+    name: game.i18n.localize('GAS.Setting.debug.Name'),
+    hint: game.i18n.localize('GAS.Setting.debug.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+function debugHooksSetting() {
+  game.settings.register(MODULE_ID, 'debug.hooks', {
+    name: game.i18n.localize('GAS.Setting.debugHooks.Name'),
+    hint: game.i18n.localize('GAS.Setting.debugHooks.Hint'),
     scope: 'world',
     config: true,
     default: false,

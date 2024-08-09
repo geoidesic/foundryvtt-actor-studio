@@ -68,6 +68,14 @@
           "Hint": "E.g. 4d6kh3"
         }
       },
+      "debug": {
+        "Name": "Enable debug mode",
+        "Hint": "Provides additional logging for debugging purposes"
+      },
+      "debugHooks": {
+        "Name": "Enable extended debugging mode",
+        "Hint": "Provides additional logging of all Foundry hooks"
+      },
       "DefaultGoldDice": {
         "Name": "Default starting gold roll",
         "Hint": "Here you can customize the starting gold dice rolled on the tool"
