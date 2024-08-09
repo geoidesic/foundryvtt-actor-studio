@@ -17,7 +17,8 @@
     isMultiClass,
     pointBuy,
     abilityRolls,
-    isStandardArrayValues
+    isStandardArrayValues,
+    subClassesForClass
   } from "~/src/helpers/store";
   // import { prepareItemForDrop } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
@@ -64,6 +65,8 @@
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
     const [race, characterClass, characterSubClass, background, abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues] = $stores;
+    //- @why: some classes don't have subclasses until later levels
+    const length = $subClassesForClass.length > 0 ? 5 : 4;
     const total = $stores.slice(0, 5).length; // Only count the main five stores for total
     const completed = $stores.slice(0, 5).filter((value, index) => {
       if (index === 4) { // Index of abilityGenerationMethod

@@ -13,6 +13,7 @@
     characterSubClass,
     level,
     tabs,
+    subClassesForClass
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
@@ -106,6 +107,8 @@
     
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
+    $subClassesForClass = subClassesIndex;
+    
     await tick();
     importClassAdvancements();
     richHTML = await TextEditor.enrichHTML(html);

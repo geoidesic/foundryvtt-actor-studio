@@ -81,6 +81,7 @@ export const tabs = writable(initialTabs);
 export const levelUpTabs = writable(upTabs);
 export const actorInGame = writable(false);
 export const abilityGenerationMethod = writable(null);
+export const subClassesForClass = writable([]);
 
 export const isMultiClass = derived([characterClass, activeClass, newClassLevel], ([$characterClass, $characterSubClass, $newClassLevel]) => {
   if($newClassLevel) return false;
@@ -110,4 +111,6 @@ export function resetStores() {
   isActorCreated.set(false);
   actorInGame.set(false);
   abilityGenerationMethod.set(null);
+  subClassesForClass = writable([]);
+
 }
