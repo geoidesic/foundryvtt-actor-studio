@@ -39,7 +39,6 @@
 
     // Sample helper function to process abilityGenerationMethod
     function isAbilityGenerationMethodReady(method) {
-    log.d("method", method);
     if (!method) {
       return false;
     }

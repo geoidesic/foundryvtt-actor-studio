@@ -13,11 +13,11 @@
     characterSubClass,
     level,
     tabs,
-    subClassesForClass
+    subClassesForClass,
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
-  import DonationTracker from "~/src/plugins/donation-tracker"
+  import DonationTracker from "~/src/plugins/donation-tracker";
 
   let richHTML = "",
     html = "",
@@ -31,8 +31,10 @@
     classesPlaceholder = "Classes",
     subclassesPlaceholder = "Subclasses",
     packs = getPacksFromSettings("classes"),
-    subClassesPack = game.packs.get('dnd5e.subclasses'),
+    subClassesPack = game.packs.get("dnd5e.subclasses"),
     subClassesPacks = getPacksFromSettings("subclasses"),
+    classAdvancementArrayFiltered = [],
+    subClassAdvancementArrayFiltered = [],
     mappedClassIndex = extractItemsFromPacks(packs, [
       "name->label",
       "img",
@@ -43,12 +45,9 @@
     ]),
     filteredClassIndex = mappedClassIndex
       .filter((i) => {
-        return i.type == 'class' && DonationTracker.canViewItem(i)
+        return i.type == "class" && DonationTracker.canViewItem(i);
       })
-      .sort((a, b) => a.label.localeCompare(b.label))
-  ;
-
-
+      .sort((a, b) => a.label.localeCompare(b.label));
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
     levelOptions.push({ label: "Level " + i, value: i });
@@ -67,18 +66,18 @@
     await tick();
     importClassAdvancements();
     importSubClassAdvancements();
-
   };
-
 
   const getFilteredSubclassIndex = async () => {
     const filteredSubClassIndex = [];
-    for(let subClassesPack of subClassesPacks) {
+    for (let subClassesPack of subClassesPacks) {
       let index = await subClassesPack.getIndex({
         fields: ["system.classIdentifier"],
       });
-      if(!subClassesPack) continue
-      let mappedSubClassIndex =  extractMapIteratorObjectProperties(index.entries(), [
+      if (!subClassesPack) continue;
+      let mappedSubClassIndex = extractMapIteratorObjectProperties(
+        index.entries(),
+        [
           "name->label",
           "img",
           "type",
@@ -86,17 +85,21 @@
           "uuid->value",
           "system",
           "_id",
-        ])
+        ],
+      );
 
-      filteredSubClassIndex.push(mappedSubClassIndex?.filter(
-        (x) => x.system.classIdentifier == $characterClass.system.identifier,
-      ))
+      filteredSubClassIndex.push(
+        mappedSubClassIndex?.filter(
+          (x) => x.system.classIdentifier == $characterClass.system.identifier,
+        ),
+      );
     }
-    const output = filteredSubClassIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
-    return output
+    const output = filteredSubClassIndex
+      .flat()
+      .sort((a, b) => a.label.localeCompare(b.label));
+    return output;
   };
 
- 
   const selectClassHandler = async (option) => {
     activeSubClass = null;
     $characterSubClass = null;
@@ -104,12 +107,17 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
+    log.d($characterClass.system.advancement);
+    log.d(Array.isArray($characterClass.system.advancement));
+    log.d($characterClass?.system?.advancement.filter);
+    log.d($characterClass?.system?.advancement.map);
+
     activeClass = option;
-    
+
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
     $subClassesForClass = subClassesIndex;
-    
+
     await tick();
     importClassAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
@@ -118,7 +126,9 @@
   const importClassAdvancements = async () => {
     for (const classAdvancement of classAdvancementArrayFiltered) {
       try {
-        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
+        const module = await import(
+          `~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`
+        );
         classAdvancementComponents[classAdvancement.type] = module.default;
       } catch (error) {
         log.e(`Failed to load component for ${classAdvancement.type}:`, error);
@@ -130,8 +140,8 @@
     $characterSubClass = await fromUuid(option);
     activeSubClass = option;
     await tick();
-    importClassAdvancements()
-    importSubClassAdvancements()
+    importClassAdvancements();
+    importSubClassAdvancements();
     richSubClassHTML = await TextEditor.enrichHTML(
       $characterSubClass.system.description.value,
     );
@@ -140,44 +150,70 @@
   const importSubClassAdvancements = async () => {
     for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
       try {
-        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
+        const module = await import(
+          `~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`
+        );
         await tick();
-        subClassAdvancementComponents[subClassAdvancement.type] = module.default;
+        subClassAdvancementComponents[subClassAdvancement.type] =
+          module.default;
       } catch (error) {
-        log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
+        log.e(
+          `Failed to load component for ${subClassAdvancement.type}:`,
+          error,
+        );
       }
     }
   };
 
+  function getHint(advancement) {
+    if(game.version > 12) {
+      return advancement.hint || null;
+    } else {
+      return advancement.configuration?.hint || null
+    }
+  }
+
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
-  $: combinedHtml = richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '');
+  $: combinedHtml =
+    richHTML +
+    (richSubClassHTML
+      ? `<h1>${localize("GAS.SubClass")}</h1>` + richSubClassHTML
+      : "");
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
 
-  $: if(subClassesIndex?.length) {
-    subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+  $: if (subClassesIndex?.length) {
+    subclasses = subClassesIndex
+      .flat()
+      .sort((a, b) => a.label.localeCompare(b.label));
   } else {
     subclasses = [];
   }
 
-  $: subClassAdvancementArrayFiltered = $characterSubClass?.advancement?.byId
-    ? Object.entries($characterSubClass.advancement.byId)
-        .filter(([id, value]) => value.level === $level)
-        .map(([id, value]) => ({ ...value, id }))
-    : [];
+  $: if ($characterSubClass?.system?.advancement.length) {
+    subClassAdvancementArrayFiltered =
+      $characterSubClass.system.advancement.filter(
+        (value) => value.level === $level,
+      );
+  } else {
+    subClassAdvancementArrayFiltered = [];
+  }
 
-  $: classAdvancementArrayFiltered = $characterClass?.advancement?.byId
-    ? Object.entries($characterClass.advancement.byId)
-        .filter(([id, value]) => value.level === $level)
-
-        .map(([id, value]) => ({ ...value, id }))
-    : [];
+  $: if ($characterClass?.system?.advancement.length) {
+    classAdvancementArrayFiltered = $characterClass.system.advancement.filter(
+      (value) => value.level === $level,
+    );
+  } else {
+    classAdvancementArrayFiltered = [];
+  }
 
 
   onMount(async () => {
     if ($characterClass) {
+      log.d($characterClass);
+
       classValue = $characterClass.uuid;
       await tick();
       importClassAdvancements();
@@ -193,7 +229,6 @@
       );
     }
   });
-
 </script>
 
 <template lang="pug">
@@ -226,7 +261,7 @@
                   +each("classAdvancementArrayFiltered as advancement")
                     //- @todo: this should be broken out into components for each advancement.type
                     li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                      .flexrow(data-tooltip="{getHint(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                         .flex0.relative.image
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
@@ -248,7 +283,7 @@
                     +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type
                       li.left(data-type="{advancement.type}")
-                        .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                        .flexrow(data-tooltip="{getHint(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
                           .flex0.relative.image
                             img.icon(src="{advancement.icon}" alt="{advancement.title}")
                           .flex2 {advancement.title}
@@ -257,8 +292,8 @@
   
       .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
-  
-  </template>
+
+</template>
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.scss"

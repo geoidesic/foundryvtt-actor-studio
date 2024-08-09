@@ -111,6 +111,6 @@ export function resetStores() {
   isActorCreated.set(false);
   actorInGame.set(false);
   abilityGenerationMethod.set(null);
-  subClassesForClass = set([]);
+  subClassesForClass.set([]);
 
 }

@@ -14,6 +14,7 @@ import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
 
 
+
 window.log = log;
 log.level = log.DEBUG;
 
@@ -24,6 +25,8 @@ Hooks.once("init", (app, html, data) => {
 
   initLevelup();
   registerSettings(app);
+
+
 
   Hooks.call("gas.initIsComplete");
 
