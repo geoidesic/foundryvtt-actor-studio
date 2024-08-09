@@ -127,11 +127,11 @@ export const getAllPackIdsFromAllSettings = () => {
   });
 }
 
-export function getAdvancementHint(advancement) {
+export function getAdvancementValue(advancement, key) {
   if(game.version > 12) {
-    return advancement.hint || null;
+    return advancement[key] || null;
   } else {
-    return advancement.configuration?.hint || null
+    return advancement.configuration?.[key] || null
   }
 }
 

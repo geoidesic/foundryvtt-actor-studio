@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { getAdvancementHint } from "~/src/helpers/Utility";
+  import { getAdvancementValue } from "~/src/helpers/Utility";
   
   export let advancement = null;
 
@@ -20,7 +20,7 @@
   .advancement.mt-sm(data-type="{advancement.type}")
     +if("advancement.title === 'Cantrip'")
       .flexrow
-        .flex.left {getAdvancementHint(advancement)}
+        .flex.left {getAdvancementValue(advancement, 'hint')}
       +else()
         .flexrow
           h3.flex.left
@@ -28,7 +28,7 @@
             span {count}&nbsp
             span from: 
         ul.icon-list
-          +each("advancement.configuration.pool as pool")
+          +each("getAdvancementValue(advancement, 'pool') as pool")
             +await("fromUuid(pool.uuid)")
               +then("item")
                 li.left

@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { log } from "~/src/helpers/Utility";
+  import { getAdvancementValue } from "~/src/helpers/Utility";
   
   export let advancement = null;
   

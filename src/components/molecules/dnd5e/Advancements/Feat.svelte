@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { getAdvancementHint } from "~/src/helpers/Utility";
+  import { getAdvancementValue } from "~/src/helpers/Utility";
   
   export let advancement = null;
   
@@ -15,7 +15,7 @@
   .advancement.mt-sm(data-type="{advancement.type}")
     +if("advancement.title === 'Size'")
       .flexrow
-        .flex.left {getAdvancementHint(advancement)}
+        .flex.left {getAdvancementValue(advancement)}
 
 </template>
 
