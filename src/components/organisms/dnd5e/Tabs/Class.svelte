@@ -6,6 +6,7 @@
     extractItemsFromPacks,
     getFoldersFromMultiplePacks,
     getPacksFromSettings,
+    getAdvancementHint
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -165,13 +166,7 @@
     }
   };
 
-  function getHint(advancement) {
-    if(game.version > 12) {
-      return advancement.hint || null;
-    } else {
-      return advancement.configuration?.hint || null
-    }
-  }
+
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
@@ -261,7 +256,7 @@
                   +each("classAdvancementArrayFiltered as advancement")
                     //- @todo: this should be broken out into components for each advancement.type
                     li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{getHint(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                      .flexrow(data-tooltip="{getAdvancementHint(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                         .flex0.relative.image
                           img.icon(src="{advancement.icon}" alt="{advancement.title}")
                         .flex2 {advancement.title}
@@ -283,7 +278,7 @@
                     +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type
                       li.left(data-type="{advancement.type}")
-                        .flexrow(data-tooltip="{getHint(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                        .flexrow(data-tooltip="{getAdvancementHint(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
                           .flex0.relative.image
                             img.icon(src="{advancement.icon}" alt="{advancement.title}")
                           .flex2 {advancement.title}

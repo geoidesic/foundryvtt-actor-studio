@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  // import { log } from "~/src/helpers/Utility";
+  import { getAdvancementHint } from "~/src/helpers/Utility";
   
   export let advancement = null;
 
@@ -20,7 +20,7 @@
   .advancement.mt-sm(data-type="{advancement.type}")
     +if("advancement.title === 'Cantrip'")
       .flexrow
-        .flex.left {advancement.configuration.hint}
+        .flex.left {getAdvancementHint(advancement)}
       +else()
         .flexrow
           h3.flex.left

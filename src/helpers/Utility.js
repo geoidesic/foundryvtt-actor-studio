@@ -127,6 +127,14 @@ export const getAllPackIdsFromAllSettings = () => {
   });
 }
 
+export function getAdvancementHint(advancement) {
+  if(game.version > 12) {
+    return advancement.hint || null;
+  } else {
+    return advancement.configuration?.hint || null
+  }
+}
+
 
 export function ucfirst(str) {
   if (!str) return str;

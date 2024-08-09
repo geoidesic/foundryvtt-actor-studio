@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-    import { log } from "../../../../helpers/Utility";
+    import { getAdvancementHint } from "~/src/helpers/Utility";
   
   export let advancement = null;
 
@@ -17,8 +17,8 @@
   .advancement.mt-sm(data-type="{advancement.type}")
     +if("advancement.title === 'Size'")
       .flexrow
-        +if("advancement.configuration.hint")
-          .flex.left {advancement.configuration.hint}
+        +if("getAdvancementHint(advancement)")
+          .flex.left {getAdvancementHint(advancement)}
         +if("sizes?.size > 0")
           .flex0
             +each("sizes as size")
