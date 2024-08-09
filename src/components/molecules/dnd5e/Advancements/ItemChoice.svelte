@@ -28,7 +28,7 @@
             span {count}&nbsp
             span from: 
         ul.icon-list
-          +each("getAdvancementValue(advancement, 'pool') as pool")
+          +each("advancement.configuration.pool as pool")
             +await("fromUuid(pool.uuid)")
               +then("item")
                 li.left
