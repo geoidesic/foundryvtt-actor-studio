@@ -2,7 +2,6 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { ucfirst } from "~/src/helpers/Utility";
   import { writable, derived } from "svelte/store";
-  import { log } from "~/src/helpers/Utility";
 
   export let advancement = null;
 

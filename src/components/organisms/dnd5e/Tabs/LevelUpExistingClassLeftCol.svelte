@@ -1,7 +1,8 @@
 <script>
   import { onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-
+  import { getAdvancementValue } from "~/src/helpers/Utility.js";
+  
   export let classAdvancementArrayFiltered = [];
   export let level = 0;
 
@@ -36,7 +37,7 @@
             +each("classAdvancementArrayFiltered as advancement")
               //- @todo: this should be broken out into components for each advancement.type
               li.left(data-type="{advancement.type}")
-                .flexrow(data-tooltip="{advancement.configuration?.hint || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                   .flex0.relative.image
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
