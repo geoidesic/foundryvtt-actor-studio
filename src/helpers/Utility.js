@@ -165,6 +165,11 @@ export const getCompendiumSource = (item) => {
 }
 
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
+  log.d('prepareItemForDrop');
+  log.d('isLevelUp? ', isLevelUp);
+  log.d('isMultiClass? ', isMultiClass);
+  log.d('itemData', itemData);
+
   let item
   if (isLevelUp) {
     if (isMultiClass) {
@@ -183,13 +188,17 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
       type: 'Item',
       uuid: itemData.uuid,
     }
+    log.d('dropData', dropData);
     item = await Item.implementation.fromDropData(dropData);
+    log.d('item', item);
   }
   return item;
 }
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
+  log.d('dropItemOnCharacter');
+  log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
   return await actor.sheet._onDropItemCreate(item);
 }
 

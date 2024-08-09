@@ -16,7 +16,7 @@ import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSetti
 
 
 window.log = log;
-log.level = log.DEBUG;
+log.level = log.INFO;
 
 Hooks.once("init", (app, html, data) => {
   log.i('Initialising', game.version);
@@ -30,7 +30,7 @@ Hooks.once("init", (app, html, data) => {
   if(game.settings.get(MODULE_ID, 'debug')) {
     log.level = log.VERBOSE;
   }
-  
+
   if(game.settings.get(MODULE_ID, 'debug.hooks')) {
     CONFIG.debug.hooks = true;
   }

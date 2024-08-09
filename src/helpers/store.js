@@ -1,5 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { dropItemOnCharacter, prepareItemForDrop, isAdvancementsForLevelInItem, log } from "~/src/helpers/Utility";
+import { dropItemOnCharacter, prepareItemForDrop, log } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
   { label: "Race", id: "race", component: "Race" },
@@ -30,26 +30,26 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      // log.d('advanceQueue')
-      // log.d('advanceQueue initial', initial || false)
+      log.d('advanceQueue')
+      log.d('advanceQueue initial', initial || false)
 
       const currentStore = get(store);
 
-      // log.d('advanceQueue currentStore.length', currentStore.length)
+      log.d('advanceQueue currentStore.length', currentStore.length)
       
       const next = currentStore[0] || false;
-      // log.d("advanceQueue next", next);
-      // log.d('current item to advance: ', next.id)
+      log.d("advanceQueue next", next);
+      log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
-        // log.d('end of queue')
+        log.d('end of queue')
         return false;
       }
       inProcess.set(next);
       remove(next.id);
-      // log.d('advanceQueue currentStore.length', currentStore.length)
-      // log.d('dropping item to character', next)
-      // log.d(next.itemData);
+      log.d('advanceQueue currentStore.length', currentStore.length)
+      log.d('dropping item to character', next)
+      log.d(next.itemData);
       const item = await prepareItemForDrop(next)
       dropItemOnCharacter(next.actor, item);
 
