@@ -20,6 +20,7 @@
   import DonationTracker from "~/src/plugins/donation-tracker"
 
   let richHTML = "",
+    html = "",
     richSubClassHTML = "",
     activeClass = null,
     activeSubClass = null,
@@ -233,8 +234,7 @@
                         //- pre advancement.type {advancement.type}
                         svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
   
-        +if("subclasses.length")
-          +if("$characterSubClass")
+          +if("subclasses.length")
             //- h3.left.mt-sm Description
             //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
             +if("subClassAdvancementArrayFiltered")
