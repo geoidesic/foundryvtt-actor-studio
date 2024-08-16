@@ -15,6 +15,13 @@
             "path": "lang/en.json",
             "isDefault": true,
             "flags": {}
+        },
+        {
+            "lang": "zh-tw",
+            "name": "正體中文",
+            "path": "lang/zh-tw.json",
+            "isDefault": false,
+            "flags": {}
         }
     ],
     "packs": [],
