@@ -1,7 +1,7 @@
 {
     "title": "Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "1.3.10",
+    "version": "1.3.11",
     "styles": [
         "dist/style.css"
     ],
@@ -38,7 +38,7 @@
     ],
     "compatibility": {
         "minimum": "11",
-        "verified": "11.315",
+        "verified": "12",
         "maximum": "12"
     },
     "flags": {
