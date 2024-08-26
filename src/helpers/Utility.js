@@ -121,7 +121,7 @@ export const getAllPacksFromAllSettings = () => {
 
 export const getAllPackIdsFromAllSettings = () => {
   const packs = getAllPacksFromAllSettings();
-  // log.d('getAllPackIdsFromAllSettings', packs);
+  // game.system.log.d('getAllPackIdsFromAllSettings', packs);
   return packs.map(p => {
     return p.collection
   });
@@ -153,22 +153,22 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const getCompendiumSource = (item) => {
-  // log.d('getCompendiumSource', item);
+  // game.system.log.d('getCompendiumSource', item);
   let sourceId;
   if (game.version < 12) {
     sourceId = item.flags.core.sourceId;
   } else {
     sourceId = item._stats.compendiumSource;
   }
-  // log.d('sourceId', sourceId);
+  // game.system.log.d('sourceId', sourceId);
   return sourceId;
 }
 
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
-  log.d('prepareItemForDrop');
-  log.d('isLevelUp? ', isLevelUp);
-  log.d('isMultiClass? ', isMultiClass);
-  log.d('itemData', itemData);
+  game.system.log.d('prepareItemForDrop');
+  game.system.log.d('isLevelUp? ', isLevelUp);
+  game.system.log.d('isMultiClass? ', isMultiClass);
+  game.system.log.d('itemData', itemData);
 
   let item
   if (isLevelUp) {
@@ -188,17 +188,17 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
       type: 'Item',
       uuid: itemData.uuid,
     }
-    log.d('dropData', dropData);
+    game.system.log.d('dropData', dropData);
     item = await Item.implementation.fromDropData(dropData);
-    log.d('item', item);
+    game.system.log.d('item', item);
   }
   return item;
 }
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
-  log.d('dropItemOnCharacter');
-  log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
+  game.system.log.d('dropItemOnCharacter');
+  game.system.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
   return await actor.sheet._onDropItemCreate(item);
 }
 

@@ -41,11 +41,11 @@
   onMount( async () => {
     if(levelUp) {
       $actorInGame = $documentStore
-      // log.d($actorInGame);
+      // game.system.log.d($actorInGame);
     }
     isLevelUp.set(levelUp);
 
-    // log.d($isLevelUp)
+    // game.system.log.d($isLevelUp)
   });
 
   onDestroy(() => {
@@ -54,10 +54,10 @@
   });
 
   function gasClose() {
-    // log.d('gas.close')
-    // log.d($actorInGame);
-    // log.d($actorInGame.sheet);
-    // log.d($isLevelUp)
+    // game.system.log.d('gas.close')
+    // game.system.log.d($actorInGame);
+    // game.system.log.d($actorInGame.sheet);
+    // game.system.log.d($isLevelUp)
     if(!$isLevelUp) {
       $actorInGame.sheet.render(true);
     }

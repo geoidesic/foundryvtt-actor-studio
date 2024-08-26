@@ -1,5 +1,5 @@
 import '../styles/Variables.scss'; // Import any styles as this includes them in the build.
-import '../styles/init.scss'; // Import any styles as this includes them in the build.
+import '../styles/init.sass'; // Import any styles as this includes them in the build.
 
 import WelcomeApplication from './app/WelcomeApplication.js';
 import PCApplication from './app/PCApplication.js';
@@ -17,14 +17,18 @@ import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSetti
 
 
 
-window.log = log;
-log.level = log.INFO;
-
 Hooks.once("init", (app, html, data) => {
-  log.i('Initialising for foundry version:', game.version);
-  log.i('Initialising module manifest version:', manifestJson.version);
-  log.i('Initialising module package version:', packageJson.version);
-  log.i('Initialising game module version:', game.modules.get(MODULE_ID).version);
+
+
+  game.system.log = log;
+  log.level = log.DEBUG;
+  game.system.log.i(`Starting System ${SYSTEM_ID}`);
+
+  
+  game.system.log.i('Initialising for foundry version:', game.version);
+  game.system.log.i('Initialising module manifest version:', manifestJson.version);
+  game.system.log.i('Initialising module package version:', packageJson.version);
+  game.system.log.i('Initialising game module version:', game.modules.get(MODULE_ID).version);
 
   initLevelup();
   registerSettings(app);
@@ -40,9 +44,9 @@ Hooks.once("init", (app, html, data) => {
   }
 
 
-  log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
-  log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
-  log.d('Log level: ',log.level)
+  game.system.log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
+  game.system.log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
+  game.system.log.d('Log level: ',log.level)
 
   Hooks.call("gas.initIsComplete");
 
@@ -60,7 +64,7 @@ Hooks.once("ready", (app, html, data) => {
 //- donation-tracker integration
 Hooks.once("membershipReady", (app, html, data) => {
   const dtExists = game.modules.get('donation-tracker')?.active
-  log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
+  game.system.log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
   if (dtExists) {
     DonationTrackerGameSettings.init();
   }
@@ -78,13 +82,13 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  // log.d('renderAdvancementManager')
+  // game.system.log.d('renderAdvancementManager')
   // Check if your application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
   // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
-  // log.d('currentProcess', currentProcess)
-  // log.d('app._stepIndex', app._stepIndex)
+  // game.system.log.d('currentProcess', currentProcess)
+  // game.system.log.d('app._stepIndex', app._stepIndex)
 
   if (currentProcess.id && app._stepIndex === 0) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
@@ -95,7 +99,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
-        log.i('Advancements tab not found, adding it to the tabs')
+        game.system.log.i('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
         if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
@@ -109,19 +113,19 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
 });
 
 Hooks.on("renderActorSheet", (app, html, actor) => {
-  // log.d("actor", actor);
+  // game.system.log.d("actor", actor);
 })
 Hooks.on("renderItemSheet5e", (app, html, item) => {
-  // log.d("item", item);
+  // game.system.log.d("item", item);
 })
 
 Hooks.on("dropActorSheetData", (actor, type, info) => {
-  // log.d("dropActorSheetData", actor, type, info);
+  // game.system.log.d("dropActorSheetData", actor, type, info);
 })
 
 Hooks.on('gas.renderAdvancement', () => {
-  // log.d('gas.renderAdvancement')
-  // log.d('Advancements tab found, rendering the advancment workflow')
+  // game.system.log.d('gas.renderAdvancement')
+  // game.system.log.d('Advancements tab found, rendering the advancment workflow')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
   // Get all stored advancement apps
@@ -141,7 +145,7 @@ Hooks.on('gas.renderAdvancement', () => {
 });
 
 Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
-  // log.d(args)
+  // game.system.log.d(args)
 })
 
 Hooks.on('closeAdvancementManager', async (...args) => {
@@ -161,7 +165,7 @@ Hooks.on('closeAdvancementManager', async (...args) => {
 
   // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
-  // log.d('closeAdvancementManager queue', queue)
+  // game.system.log.d('closeAdvancementManager queue', queue)
   if (!queue) {
     Hooks.call("gas.close");
   }
@@ -177,7 +181,7 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 
 
 Hooks.on('renderCompendium', async (app, html, data) => {
-  // log.d('renderCompendium', app, html, data)
+  // game.system.log.d('renderCompendium', app, html, data)
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
@@ -189,14 +193,14 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 
     // don't render the button if it already exists
     if (DTaction.length) {
-      log.i('Donation Tracker button already exists, skipping')
+      game.system.log.i('Donation Tracker button already exists, skipping')
       return;
     }
 
     // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
     if (!allPacks.includes(pack.metadata.id)) {
       // @why commented out? Apparently these were annoying
-      // log.i('Pack is not mapped to Actor Studio Sources, skipping')
+      // game.system.log.i('Pack is not mapped to Actor Studio Sources, skipping')
       // ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`)
       return;
     }
@@ -207,7 +211,7 @@ Hooks.on('renderCompendium', async (app, html, data) => {
       if (value === -1) continue;
       const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
       if (folder) {
-        log.i('Donation Tracker folders already exist, skipping')
+        game.system.log.i('Donation Tracker folders already exist, skipping')
         return;
       }
     }
@@ -253,18 +257,18 @@ function getActorStudioButton(buttonId) {
 Hooks.on('renderApplication', (app, html, data) => {
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
-    log.i('Adding Create New Actor button');
+    game.system.log.i('Adding Create New Actor button');
 
     const select = $('select', html);
     const systemActorDocumentTypes = dnd5e.actorTypes
 
     function updateButton() {
       const actorType = select.val();
-      // log.d('actorType', actorType)
+      // game.system.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         if (!$('#gas-dialog-button', html).length) {
           const $gasButton = getActorStudioButton('gas-dialog-button');
-          // log.d('html', html)
+          // game.system.log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
           const handleButtonClick = function (e) {
@@ -272,7 +276,7 @@ Hooks.on('renderApplication', (app, html, data) => {
               if (userHasRightPermissions()) {
                 const actorName = $('input', html).val();
                 const folderName = $('select[name="folder"]', html).val();
-                // log.d('actorType', actorType);
+                // game.system.log.d('actorType', actorType);
                 try {
                   // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
                   new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });

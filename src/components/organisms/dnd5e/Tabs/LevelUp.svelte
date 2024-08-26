@@ -123,7 +123,7 @@
   };
  
   const getCharacterClass = (classKey) => {
-    // log.d($actor._classes[classKey])
+    // game.system.log.d($actor._classes[classKey])
     return $actor._classes[classKey];
   }
 
@@ -134,7 +134,7 @@
 
   /** EVENT HANDLERS */
   const selectClassHandler = async (option) => {
-    // log.d('add multi class', option)
+    // game.system.log.d('add multi class', option)
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -165,7 +165,7 @@
     if(isUnset) return;
 
     const uuid = getCharacterClass(classKey).uuid
-    // log.d('add level for class: ', uuid)
+    // game.system.log.d('add level for class: ', uuid)
 
     activeSubClass = null;
     $characterSubClass = null;
@@ -250,12 +250,12 @@
         $characterSubClass.system.description.value,
       );
     }
-    // log.d("classKeys", classKeys);
-    // log.d(typeof classKeys);
-    // log.d(classKeys.length);
-    // log.d(Array.isArray(classKeys.length));
-    // log.d(getCharacterClass('fighter'))
-    // log.d($characterClass)
+    // game.system.log.d("classKeys", classKeys);
+    // game.system.log.d(typeof classKeys);
+    // game.system.log.d(classKeys.length);
+    // game.system.log.d(Array.isArray(classKeys.length));
+    // game.system.log.d(getCharacterClass('fighter'))
+    // game.system.log.d($characterClass)
   });
 
 

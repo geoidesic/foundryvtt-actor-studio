@@ -22,16 +22,16 @@
     const abilities = Object.keys(STANDARD_ARRAY);
     // get index of attr from abilities
     const index = abilities.indexOf(attr);
-    // log.d('abilities', abilities)
-    // log.d('index', index)
-    // log.d('value', value)
-    // log.d('attr', attr)
+    // game.system.log.d('abilities', abilities)
+    // game.system.log.d('index', index)
+    // game.system.log.d('value', value)
+    // game.system.log.d('attr', attr)
     switch (value) {
       case -1:
         // move the value to the next ability according to the direction of the arrow
         if (index < abilities.length - 1) {
           const nextAbility = abilities[index + 1];
-          // log.d('nextAbility', nextAbility)
+          // game.system.log.d('nextAbility', nextAbility)
           const options = {
             system: {
               abilities: {
@@ -40,7 +40,7 @@
               },
             },
           };
-          // log.d('options', options)
+          // game.system.log.d('options', options)
           await $doc.updateSource(options);
           $doc = $doc;
         }
@@ -50,7 +50,7 @@
         // move the value to the next ability according to the direction of the arrow
         if (index > 0) {
           const nextAbility = abilities[index - 1];
-          // log.d('nextAbility', nextAbility)
+          // game.system.log.d('nextAbility', nextAbility)
           const options = {
             system: {
               abilities: {
@@ -59,14 +59,14 @@
               },
             },
           };
-          // log.d('options', options)
+          // game.system.log.d('options', options)
           await $doc.updateSource(options);
           $doc = $doc;
         }
         break;
     }
 
-    // log.d(abilities)
+    // game.system.log.d(abilities)
     // const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     // $doc.updateSource(options)
     // $doc = $doc
@@ -115,7 +115,7 @@
   // $: {
   //   const currentAbilities = systemAbilitiesArray.map(
   //     (ability) => {
-  //       log.d(ability) 
+  //       game.system.log.d(ability) 
   //       return $doc.system.abilities[ability[1].abbreviation].value
   //     }
   //   );
@@ -123,9 +123,9 @@
   //   isStandardArrayValues.set(match);
   // }
   onMount(async () => {
-    // log.d($doc.system.abilities)
-    // log.d(Object.keys($doc.system.abilities))
-    // log.d(isStandardArrayValues)
+    // game.system.log.d($doc.system.abilities)
+    // game.system.log.d(Object.keys($doc.system.abilities))
+    // game.system.log.d(isStandardArrayValues)
     // if all the abilities are 10, set them to the standard array
     if (
       systemAbilitiesArray.every(

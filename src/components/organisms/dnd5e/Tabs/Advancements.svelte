@@ -8,11 +8,11 @@
 
   //- for debugging purposes only
   // async function addAdvancement() {
-  //   log.d("currentProcess", $dropItemRegistry.currentProcess);
+  //   game.system.log.d("currentProcess", $dropItemRegistry.currentProcess);
   //   let item = await fromUuid(
   //     "Compendium.dnd5e.subclasses.Item.sprHbe7cRg9osTzf",
   //   );
-  //   log.d("item", item);
+  //   game.system.log.d("item", item);
   //   dropItemOnCharacter({
   //     actor: $doc,
   //     itemData: item,
@@ -20,7 +20,7 @@
   //   });
   // }
   onMount(() => {
-    // log.d("Advancements tab mounted");
+    // game.system.log.d("Advancements tab mounted");
     Hooks.call("gas.renderAdvancement");
   });
 </script>

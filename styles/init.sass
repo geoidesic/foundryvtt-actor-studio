@@ -1,0 +1,296 @@
+/**
+ * Provides styles used across all demo applications. Take note that `classes: ['tjs-essential-svelte-esm']` is added to
+ * all applications and dialogs which allows targeting just the `essential-svelte-esm` GUI.
+ *
+ * Vite / Rollup includes style files by importing them; see: `./src/index.js`.
+ */
+
+.tjs-essential-svelte-esm
+  // Instead of the browser default outline for manually focused components define your own.
+  // Note that this is just for TRL / svelte-standard components as there are several normal elements still used in the
+  // demo code thus will have default styles of either Foundry or the browser.
+  --tjs-default-outline-focus-visible: 4px dotted orange
+
+  // Optional transition parameters for all components when manually focused / navigated by keyboard.
+  //--tjs-default-transition-focus-visible: box-shadow 0.1s ease-in-out, outline 0.1s ease-in-out;
+
+  // -----------------------------------------------------------------------------------------------------------------
+
+  // Other useful default CSS variables that widely apply across TRL / svelte-standard.
+  // Please note that the default values are provided. There are many more default and more specific CSS variables to
+  // target subsections of components that will be further discussed once they are represented in the demos.
+
+  // --tjs-default-text-shadow-focus-hover: 0 0 8px red;
+
+  // You can opt to use box shadow for manually focused / navigated components. In this case remove the outline above.
+  // --tjs-default-box-shadow-focus-visible: undefined
+.RTAS
+  .gas-tooltip
+    text-align: left !important
+    // line-height: 1.3rem !important;
+
+    & a
+
+
+    & a i
+      color: #fff
+
+    & .content-link
+      border-radius: var(--border-radius)
+      margin: 0 3px
+      color: var(--color-text-hyperlink)
+
+    & .content-link i
+      color: var(--color-text-hyperlink)
+
+  // alter heading styles for Configure Settings
+  #client-settings
+  h4
+    font-size: 1.1em
+    border-bottom: 1px solid var(--color-underline-header)
+
+  .gas-add-dt-folders
+    background-color: #fff
+    &:hover
+      background-color: var(--color-text-hyperlink)
+      border-color: black
+
+  .flex
+    display: flex !important
+
+  .flexrow>.flex4,
+  .flexcol>.flex4
+    flex: 4
+
+  .justify-flexrow-vertical
+    align-items: center
+
+  #foundryvtt-actor-studio-pc-sheet
+    --tjs-select-appearance: none
+    --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
+    --tjs-select-background-size: 16px 16px
+    --tjs-select-border: 1px solid #ccc
+    --tjs-select-border-radius: 4px
+    --tjs-select-box-shadow-focus: 0 0 5px rgba(0, 0, 0, 0.2)
+    --tjs-select-box-shadow-focus-visible: 0 0 5px rgba(0, 0, 0, 0.5)
+    --tjs-select-cursor: pointer
+    --tjs-select-flex: 1
+    --tjs-select-height: 24px
+    --tjs-select-outline-focus-visible: none
+    --tjs-select-outline-offset: 2px
+    --tjs-select-overflow: hidden
+    --tjs-select-padding: 0 5px
+    --tjs-select-text-overflow: ellipsis
+    --tjs-select-transition-focus-visible: box-shadow 0.2s ease
+    --tjs-select-width: auto
+
+    /* Option variables */
+    --tjs-select-option-background: #23221d
+    --tjs-select-option-color: #b5b3a4
+
+    h2, h3, [title]
+      color: var(--color-highlight)
+
+    .border-right
+      border-right: 4px ridge var(--color-highlight)
+
+    .right-border-gradient-mask
+      mask-image: linear-gradient(0deg, transparent 0%, black 100%)
+
+    // alignment, accent and visibility
+    .bold
+      font-weight: 700
+
+    .left
+      text-align: left
+
+    .right
+      text-align: right
+
+    .center
+      text-align: center
+
+    .hide
+      visibility: hidden
+
+    .relative
+      position: relative
+
+    .justify-flexrow-vertical
+      align-items: center
+
+    .tight
+      padding: 0
+
+    // headings and text
+    h1, h2, h3, h4, h5
+      font-family: var(--dnd5e-font-modesto)
+
+    .caption
+      font-size: smaller
+
+    .light
+      opacity: 0.5
+
+    .window-title
+      font-size: 1.5em
+      font-weight: 700
+
+    .gap-4
+      gap: 4px
+
+    .no-wrap, .nowrap
+      white-space: nowrap
+
+    .required
+      font-size: large
+      margin-right: 2px
+      color: var(--color-positive)
+      display: none
+      &.active
+        display: block
+        color: var(--color-negative)
+        animation: pulse 0.5s infinite
+
+    // Colours
+    .negative
+      color: var(--color-negative)
+
+    .positive
+      color: var(--color-positive)
+
+    // padding margins
+    .py-md
+      padding: var(--size-md) 0
+
+    .py-sm
+      padding: var(--size-sm) 0
+
+    .py-xs
+      padding: var(--size-xs) 0
+
+    .py-xxs
+      padding: var(--size-xxs) 0
+
+    .px-xs
+      padding-right: var(--size-xs)
+      padding-left: var(--size-xs)
+
+    .px-sm
+      padding-right: var(--size-sm)
+      padding-left: var(--size-sm)
+
+    .px-md
+      padding-right: var(--size-md)
+      padding-left: var(--size-md)
+
+    .pa-sm
+      padding: var(--size-sm) var(--size-md)
+
+    .pa-xxs
+      padding: var(--size-xxs) va(--size-xs)
+
+    .pa-xs
+      padding: var(--size-xs) var(--size-sm)
+
+    .pa-md
+      padding: var(--size-md) var(--size-md)
+
+    .pl-sm
+      padding-left: var(--size-sm)
+
+    .pl-md
+      padding-left: var(--size-md)
+
+    .pr-none
+      padding-right: 0px !important
+
+    .pr-sm
+      padding-right: var(--size-sm)
+
+    .pr-md
+      padding-right: var(--size-md)
+
+    .pr-xs
+      padding-right: var(--size-xs)
+
+    .pb-sm
+      padding-bottom: var(--size-sm)
+
+    .pt-xxs
+      padding-top: var(--size-xxs)
+
+    .pt-xs
+      padding-top: var(--size-xs)
+
+    .pt-sm
+      padding-top: var(--size-sm)
+
+    .pt-ms
+      padding-top: var(--size-ms)
+
+    .ma-sm
+      margin: var(--size-sm)
+
+    .mx-sm
+      margin-right: var(--size-sm)
+      margin-left: var(--size-sm)
+
+    .mx-xs
+      margin-right: var(--size-xs)
+      margin-left: var(--size-xs)
+
+    .my-sm
+      margin-top: var(--size-sm)
+      margin-bottom: var(--size-sm)
+
+    .mt-none
+      margin-top: none
+
+    .mt-lg
+      margin-top: var(--size-lg)
+
+    .mt-md
+      margin-top: var(--size-md)
+
+    .mt-sm
+      margin-top: var(--size-sm)
+
+    .mt-xs
+      margin-top: var(--size-xs)
+
+    .mt-xxs
+      margin-top: var(--size-xxs)
+
+    .mb-md
+      margin-bottom: var(--size-md)
+
+    .mb-sm
+      margin-bottom: var(--size-sm)
+
+    .mb-xs
+      margin-bottom: var(--size-xs)
+
+    .mr-sm
+      margin-right: var(--size-sm)
+
+    .mr-xs
+      margin-right: var(--size-xs)
+
+    .mr-md
+      margin-right: var(--size-md)
+
+    .ml-xs
+      margin-left: var(--size-xs)
+
+    .ml-sm
+      margin-left: var(--size-sm)
+
+    .ml-md
+      margin-left: var(--size-md)
+
+    .ml-lg
+      margin-left: var(--size-lg)
+
+    .ml-xl
+      margin-left: var(--size-xl)

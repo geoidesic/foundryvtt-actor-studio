@@ -108,10 +108,10 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
-    log.d($characterClass.system.advancement);
-    log.d(Array.isArray($characterClass.system.advancement));
-    log.d($characterClass?.system?.advancement.filter);
-    log.d($characterClass?.system?.advancement.map);
+    game.system.log.d($characterClass.system.advancement);
+    game.system.log.d(Array.isArray($characterClass.system.advancement));
+    game.system.log.d($characterClass?.system?.advancement.filter);
+    game.system.log.d($characterClass?.system?.advancement.map);
 
     activeClass = option;
 
@@ -207,7 +207,7 @@
 
   onMount(async () => {
     if ($characterClass) {
-      log.d($characterClass);
+      game.system.log.d($characterClass);
 
       classValue = $characterClass.uuid;
       await tick();

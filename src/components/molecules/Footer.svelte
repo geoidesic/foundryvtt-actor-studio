@@ -46,11 +46,11 @@
     switch (method) {
       case 2:
         // Check if points are allocated correctly
-        log.d("pointBuy", $pointBuy);
+        game.system.log.d("pointBuy", $pointBuy);
         return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
       case 3:
           // Check if all abilities are assigned
-        log.d("abilityRolls", $abilityRolls);
+        game.system.log.d("abilityRolls", $abilityRolls);
         return Object.keys($abilityRolls).length === 6;
       case 4:
         // Check if all rolls are assigned
@@ -110,9 +110,9 @@
   const updateActorAndEmbedItems = async () => {
     await $actor.update({name: actorName});
     $actorInGame = $actor;
-    // log.d("isMultiClass", $isMultiClass);
-    // log.d("characterClass", $characterClass);
-    // log.d("characterClass uuid", $characterClass.uuid);
+    // game.system.log.d("isMultiClass", $isMultiClass);
+    // game.system.log.d("characterClass", $characterClass);
+    // game.system.log.d("characterClass uuid", $characterClass.uuid);
     const data = {
         actor: $actorInGame,
         id: "characterClass",
@@ -121,7 +121,7 @@
         isMultiClass: $isMultiClass,
       };
     // const item = prepareItemForDrop(data)
-    // log.d("item", item);
+    // game.system.log.d("item", item);
     // return;
     if ($characterClass) {
       const characterClassData = $characterClass;
@@ -150,7 +150,7 @@
 
     // background
     if ($background) {
-      log.i("Adding background to character");
+      game.system.log.i("Adding background to character");
       const backgroundData = $background;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -162,7 +162,7 @@
 
     // race
     if ($race) {
-      log.i("Adding race to character");
+      game.system.log.i("Adding race to character");
       const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -174,7 +174,7 @@
 
     // subrace
     if ($subRace) {
-      log.i("Adding subrace to character");
+      game.system.log.i("Adding subrace to character");
       const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -186,7 +186,7 @@
 
     // character class
     if ($characterClass) {
-      log.i("Adding class to character", $characterClass);
+      game.system.log.i("Adding class to character", $characterClass);
       const characterClassData = $characterClass;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -198,7 +198,7 @@
 
     // character subclass
     if ($characterSubClass) {
-      log.i("Adding subclass to character");
+      game.system.log.i("Adding subclass to character");
       const characterSubClassData = $characterSubClass;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -210,7 +210,7 @@
 
     // spells
     if ($spells) {
-      log.i("Adding spells to character");
+      game.system.log.i("Adding spells to character");
       const spellsData = $spells;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -220,7 +220,7 @@
       });
     }
 
-    log.d('dropItemRegistry', $dropItemRegistry)
+    game.system.log.d('dropItemRegistry', $dropItemRegistry)
 
     dropItemRegistry.advanceQueue(true);
   };

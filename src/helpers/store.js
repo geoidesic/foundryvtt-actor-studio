@@ -30,26 +30,26 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      log.d('advanceQueue')
-      log.d('advanceQueue initial', initial || false)
+      game.system.log.d('advanceQueue')
+      game.system.log.d('advanceQueue initial', initial || false)
 
       const currentStore = get(store);
 
-      log.d('advanceQueue currentStore.length', currentStore.length)
+      game.system.log.d('advanceQueue currentStore.length', currentStore.length)
       
       const next = currentStore[0] || false;
-      log.d("advanceQueue next", next);
-      log.d('current item to advance: ', next.id)
+      game.system.log.d("advanceQueue next", next);
+      game.system.log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
-        log.d('end of queue')
+        game.system.log.d('end of queue')
         return false;
       }
       inProcess.set(next);
       remove(next.id);
-      log.d('advanceQueue currentStore.length', currentStore.length)
-      log.d('dropping item to character', next)
-      log.d(next.itemData);
+      game.system.log.d('advanceQueue currentStore.length', currentStore.length)
+      game.system.log.d('dropping item to character', next)
+      game.system.log.d(next.itemData);
       const item = await prepareItemForDrop(next)
       dropItemOnCharacter(next.actor, item);
 

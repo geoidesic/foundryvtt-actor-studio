@@ -23,7 +23,7 @@
     pageId: "yuSwUFIjK31Mr3DI",
   };
   const importAdvancements = async () => {
-    // log.d('options',options)
+    // game.system.log.d('options',options)
     for (const option of options) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/AbilityEntry/${option.type}.svelte`);

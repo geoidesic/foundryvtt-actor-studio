@@ -36,7 +36,7 @@
   )
 
   onMount(async () => {
-    // log.d('advancement', advancement)
+    // game.system.log.d('advancement', advancement)
   });
   
 </script>
