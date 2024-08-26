@@ -22,7 +22,9 @@ Hooks.once("init", (app, html, data) => {
 
   game.system.log = log;
   log.level = log.DEBUG;
-  game.system.log.i(`Starting System ${SYSTEM_ID}`);
+
+
+  game.system.log.i(`Starting System ${MODULE_ID}`);
 
   
   game.system.log.i('Initialising for foundry version:', game.version);

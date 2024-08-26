@@ -24,7 +24,7 @@ export type Source = {
 };
 
 export function registerSettings(app): void {
-  console.info(`${LOG_PREFIX} | Building module settings`);
+  game.system.log.d("Building module settings");
 
   Handlebars.registerHelper('checkedIf', function (condition) {
     return condition ? 'checked' : '';
