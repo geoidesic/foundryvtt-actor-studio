@@ -19,14 +19,10 @@ import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSetti
 
 Hooks.once("init", (app, html, data) => {
 
-
   game.system.log = log;
   log.level = log.DEBUG;
 
-
   game.system.log.i(`Starting System ${MODULE_ID}`);
-
-  
   game.system.log.i('Initialising for foundry version:', game.version);
   game.system.log.i('Initialising module manifest version:', manifestJson.version);
   game.system.log.i('Initialising module package version:', packageJson.version);
@@ -44,7 +40,6 @@ Hooks.once("init", (app, html, data) => {
   if(game.settings.get(MODULE_ID, 'debug.hooks')) {
     CONFIG.debug.hooks = true;
   }
-
 
   game.system.log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
   game.system.log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
