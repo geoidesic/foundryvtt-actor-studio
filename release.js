@@ -18,4 +18,5 @@ moduleJson.version = newVersion;
 // Write back the updated module.json
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
+execSync('yarn build', { stdio: 'inherit' });
 console.log(`Updated module.json to version ${newVersion}`);
