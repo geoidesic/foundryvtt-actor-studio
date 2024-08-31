@@ -2,7 +2,7 @@
   "description": "Easily create Heroes, Villains and everything in between.",
   "license": "MIT",
   "private": false,
-  "version": "1.4.2",
+  "version": "1.4.3",
   "type": "module",
   "authors": [
     {
@@ -42,6 +42,7 @@
   "scripts": {
     "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
     "build": "vite build",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "release": "node release.js"
   }
 }
