@@ -51,9 +51,15 @@ const arrayOfObjectsStore = () => {
       game.system.log.d('dropping item to character', next)
       game.system.log.d(next.itemData);
       const item = await prepareItemForDrop(next)
-      dropItemOnCharacter(next.actor, item);
+      
+      try {
+        const result = await dropItemOnCharacter(next.actor, item);
+        game.system.log.d('dropItemOnCharacter result', result)
+      } catch (error) {
+        game.system.log.e('dropItemOnCharacter error', error)
+      }
 
-      return currentStore.length > 1
+      return currentStore.length > 0
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),
