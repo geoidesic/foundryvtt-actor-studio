@@ -1,5 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { dropItemOnCharacter, prepareItemForDrop, log } from "~/src/helpers/Utility";
+import { dropItemOnCharacter, prepareItemForDrop, itemHasAdvancementChoices } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
   { label: "Race", id: "race", component: "Race" },
@@ -25,21 +25,27 @@ const arrayOfObjectsStore = () => {
   return {
     subscribe,
     add: (app) => {
-      update(apps => [...apps, app]);
+      update(apps => {
+        const filteredApps = apps.filter(existingApp => existingApp.id !== app.id); // Remove any app with the same id
+        return [...filteredApps, app]; // Add the new app
+      });
+      game.system.log.d('currentStore.length', get(store).length);
     },
+    
+    
     remove,
     removeAll: () => set([]),
     advanceQueue: async (initial) => {
-      game.system.log.d('advanceQueue')
-      game.system.log.d('advanceQueue initial', initial || false)
-
+      // game.system.log.d('advanceQueue')
+      // game.system.log.d('advanceQueue initial', initial || false)
+      
       const currentStore = get(store);
-
-      game.system.log.d('advanceQueue currentStore.length', currentStore.length)
+      // game.system.log.d('currentStore.length', currentStore.length)
+      // game.system.log.d('advanceQueue currentStore.length', currentStore.length)
       
       const next = currentStore[0] || false;
-      game.system.log.d("advanceQueue next", next);
-      game.system.log.d('current item to advance: ', next.id)
+      // game.system.log.d("advanceQueue next", next);
+      // game.system.log.d('current item to advance: ', next.id)
       if (!next) {
         inProcess.set(false);
         game.system.log.d('end of queue')
@@ -47,19 +53,26 @@ const arrayOfObjectsStore = () => {
       }
       inProcess.set(next);
       remove(next.id);
-      game.system.log.d('advanceQueue currentStore.length', currentStore.length)
-      game.system.log.d('dropping item to character', next)
-      game.system.log.d(next.itemData);
+      // game.system.log.d('advanceQueue currentStore.length', currentStore.length)
+      // game.system.log.d('dropping item to character', next)
+      // game.system.log.d(next.itemData);
       const item = await prepareItemForDrop(next)
       
       try {
         const result = await dropItemOnCharacter(next.actor, item);
-        game.system.log.d('dropItemOnCharacter result', result)
+        // game.system.log.d('dropItemOnCharacter result', result)
       } catch (error) {
-        game.system.log.e('dropItemOnCharacter error', error)
+        // game.system.log.e('dropItemOnCharacter error', error)
       }
 
-      return currentStore.length > 0
+      if(currentStore.length == 1) {
+        if(!itemHasAdvancementChoices(next.itemData)) {
+          return false
+        }
+      } 
+      if(currentStore.length == 0) return false
+      return true;
+      
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({...p, ...obj})),

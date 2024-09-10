@@ -220,7 +220,7 @@
       });
     }
 
-    game.system.log.d('dropItemRegistry', $dropItemRegistry)
+    // game.system.log.d('dropItemRegistry', $dropItemRegistry)
 
     dropItemRegistry.advanceQueue(true);
   };
@@ -251,7 +251,7 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       +if("!$isLevelUp")
-        //- button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
+        button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
         .flex1
           ProgressBar(progress="{progress}")
           +if("$progress != '100'")

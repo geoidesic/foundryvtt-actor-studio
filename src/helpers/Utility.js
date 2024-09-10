@@ -198,8 +198,21 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
   game.system.log.d('dropItemOnCharacter');
+  game.system.log.d('dropItemOnCharacter item', item);
   game.system.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
   return await actor.sheet._onDropItemCreate(item);
+}
+
+export const itemHasAdvancementChoices = (item) => {
+  let hasAdvancementChoices = false;
+  if (!item?.system?.advancement.length) return false;
+  for (const adv of item.system.advancement) {
+    if (adv.configuration.choices) {
+      hasAdvancementChoices = true;
+      break;
+    }
+  }
+  return hasAdvancementChoices;
 }
 
 export const isAdvancementsForLevelInItem = (level, item) => {
