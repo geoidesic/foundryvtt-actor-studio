@@ -205,7 +205,8 @@
         "Usage6": "If you have any issues, please report them on",
         "github": "GitHub",
         "Sponsored": "is sponsored by",
-        "News": "Generative AI integration is here! Once you have added a race to your character, a button containing the ChatGPT logo will appear next to the character name in the footer. Clicking it will generate a name based on the race you selected."
+        "News": "Generative AI integration is here! Once you have added a race to your character, a button containing the ChatGPT logo will appear next to the character name in the footer. Clicking it will generate a name based on the race you selected.",
+        "RTGLogo": "Round Table Games Logo"
       }
     }
   }

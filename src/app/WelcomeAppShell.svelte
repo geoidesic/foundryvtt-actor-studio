@@ -53,8 +53,12 @@
         .flex
           span {localize('GAS.Setting.DontShowWelcome.Name') }
     footer
-      p {localize('GAS.ActorStudio')} {localize('GAS.GAS.Welcome.Message.Sponsored')}
-      a(href="https://www.round-table.games") Round Table Games
+      .flexrow.gap-10
+        .flex3.right
+          img.pt-sm.white(src="systems/foundryvtt-final-fantasy/assets/round-table-games-logo.svg" alt="{localize('GAS.Welcome.Message.RTGLogo')}" height="50" width="50" style="fill: white; border: none; width: auto;")
+        .flex4.left.pt-sm
+          h4 {localize('GAS.ActorStudio')} {localize('GAS.Welcome.Message.Sponsored')}
+          a(href="https://www.round-table.games") Round Table Games ©2024
 
 </template>
 
@@ -66,6 +70,10 @@
     overflow-y: auto
     margin-bottom: 5em
 
+
+  .white
+    filter: invert(1)
+    
   footer
     position: fixed
     bottom: 0
