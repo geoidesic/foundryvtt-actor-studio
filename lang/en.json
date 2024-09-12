@@ -186,6 +186,27 @@
         "Name": "Trim Subclass names",
         "Hint": "Shows subclass names without any last part in parenthesis, mostly for DDBImporter subclasses like 'Assassin (Rogue)' to be just 'Assassin' (does NOT modify the items added to actor, just show they are shown in the tool)"
       }
+    },
+    "Welcome": {
+      "Heading": {
+        "News": "News",
+        "Intro": "Introduction",
+        "Usage": "Usage Instructions",
+        "Help": "Need Help?"
+      },
+      "Message": {
+        "ThankYou": "Thank you for using Actor Studio!",
+        "Intro": "Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e. It provides a guided workflow to help you create a character, and then guides you through the various advancements for your character.",
+        "Usage1": "To create your character, work your way through the tabs and select from the options available. You can always go back and change your choices. Use this as a way to preview what each choice does to your character.",
+        "Usage2": "Once you are happy with your character, click the \"Create Character\" button to create your character in Foundry VTT.",
+        "Usage3": "At this point the Actor will be created and then the Advancement workflows will begin, where you select the various advancements for each choice you've made for your character (e.g. languages, skills, etc.).",
+        "Usage4": "Once you've completed the advancements, your character will be ready to play in Foundry VTT.",
+        "Usage5": "You can also use Actor Studio to level up your character. Just click the \"Level Up\" button on the character sheet (next to your Level) and follow the same process as creating a character.",
+        "Usage6": "If you have any issues, please report them on",
+        "github": "GitHub",
+        "Sponsored": "is sponsored by",
+        "News": "Generative AI integration is here! Once you have added a race to your character, a button containing the ChatGPT logo will appear next to the character name in the footer. Clicking it will generate a name based on the race you selected."
+      }
     }
   }
 }

@@ -31,26 +31,29 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot)
     main
-      img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
-      p Thank you for using Actor Studio!
-      h1 Introduction
-      p Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e. It provides a guided workflow to help you create a character, and then guides you through the various advancements for your character.
-      h1 Usage Instructions
-      p To create your character, work your way through the tabs and select from the options available. You can always go back and change your choices. Use this as a way to preview what each choice does to your character.
-      p Once you are happy with your character, click the "Create Character" button to create your character in Foundry VTT.
-      p At this point the Actor will be created and then the Advancement workflows will begin, where you select the various advancements for each choice you've made for your character (e.g. languages, skills, etc.).
-      h1 Help
+      img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="{localize('GAS.ActorStudio')}" style="height: 100%; max-height: 50px; border: none; width: auto;")
+      p {localize('GAS.Welcome.Message.ThankYou')}
+      h1 {localize('GAS.Welcome.Heading.News')}
+      p {localize('GAS.Welcome.Message.News')}
+      h1 {localize('GAS.Welcome.Heading.Intro')}
+      p {localize('GAS.Welcome.Message.Intro')}
+      h1 {localize('GAS.Welcome.Heading.Usage')}
+      p {localize('GAS.Welcome.Message.Usage1')}
+      p {localize('GAS.Welcome.Message.Usage2')}
+      p {localize('GAS.Welcome.Message.Usage3')}
+      p {localize('GAS.Welcome.Message.Usage4')}
+      p {localize('GAS.Welcome.Message.Usage5')}
+      h1 {localize('GAS.Welcome.Heading.Help')}
       p 
-        span If you have any issues, please report them on the 
-        a(href="https://github.com/geoidesic/foundryvtt-actor-studio/issues") github
-        span &nbsp;page.
+        span {localize('GAS.Welcome.Message.Usage6')}
+        a(href="https://github.com/geoidesic/foundryvtt-actor-studio/issues") gi{localize('GAS.Welcome.Message.github')}thub
       .flexrow.inset.justify-flexrow-vertical(data-tooltip="{localize('GAS.Setting.DontShowWelcome.Hint')}")
         .flex0
           input(type="checkbox" on:change="{handleChange}" label="{localize('GAS.Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
         .flex
           span {localize('GAS.Setting.DontShowWelcome.Name') }
     footer
-      p Actor Studio is sponsored by 
+      p {localize('GAS.ActorStudio')} {localize('GAS.GAS.Welcome.Message.Sponsored')}
       a(href="https://www.round-table.games") Round Table Games
 
 </template>
