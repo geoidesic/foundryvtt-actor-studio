@@ -30,8 +30,9 @@ export function dnd5eSheet2UI(app, html, data) {
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
+  game.system.log.d(game.settings.get(MODULE_ID, 'milestoneLeveling'))
 
-  if(actor.system.details.xp.max - actor.system.details.xp.value > 0) return;
+  if (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   buttons.css('gap', '0.35rem');
   const levelUpButton = $(`
@@ -66,7 +67,7 @@ export function tidy5eSheetUI(app, element, data) {
 
   const actor = data.actor;
 
-  if (actor.system.details.xp.max - actor.system.details.xp.value > 0) return;
+  if (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   const levelUpButton = $(`
     <button

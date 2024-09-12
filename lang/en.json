@@ -109,6 +109,10 @@
         "Name": "Force D&D5e Level Up Automation",
         "Hint": "Without this the Actor Studio is pretty much useless other that for previewing options as it won't be able to apply the changes to the actor"
       },
+      "milestoneLeveling": {
+        "Name": "Milestone Levelling",
+        "Hint": "If unchecked, the Level Up button will only be shown when the Actor has sufficient XP to level up. If checked, the button will always be shown and the user will be able to level up without having the required XP."
+      },
       "ShowRolls": {
         "Name": "Show rolls on chat",
         "Hint": "Show ability score, hp per level and starting gold rolls as chat messages"

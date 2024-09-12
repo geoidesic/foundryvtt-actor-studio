@@ -60,6 +60,7 @@ export function registerSettings(app): void {
   donationTracker();
   showButtonInSideBar(app);
   forceDnd5eLevelUpAutomation();
+  milestoneLeveling();
   windowX();
   windowY();
 
@@ -115,6 +116,17 @@ function trimSubclasses() {
     scope: 'world',
     config: true,
     default: true,
+    type: Boolean,
+  });
+}
+
+function milestoneLeveling() {
+  game.settings.register(MODULE_ID, 'milestoneLeveling', {
+    name: game.i18n.localize('GAS.Setting.milestoneLeveling.Name'),
+    hint: game.i18n.localize('GAS.Setting.milestoneLeveling.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
     type: Boolean,
   });
 }
