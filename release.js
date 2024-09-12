@@ -1,8 +1,18 @@
 import fs from 'fs';
 import { execSync } from 'child_process';
 
-// Run `yarn version --patch` to update the version in package.json
-execSync('yarn version --patch', { stdio: 'inherit' });
+// Get versioning argument from command line arguments and remove leading '--'
+const versionType = process.argv[2]?.replace(/^--/, '') || 'patch';
+
+// Validate versionType
+const validVersionTypes = ['patch', 'minor', 'major'];
+if (!validVersionTypes.includes(versionType)) {
+  console.error(`Invalid version type: ${versionType}. Valid types are: ${validVersionTypes.join(', ')}`);
+  process.exit(1);
+}
+
+// Run `yarn version` with the specified version type
+execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
 
 // Read the updated version from package.json
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
