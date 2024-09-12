@@ -18,43 +18,45 @@
     pointBuy,
     abilityRolls,
     isStandardArrayValues,
-    subClassesForClass
+    subClassesForClass,
+    abilityGenerationMethod // Make sure this is imported correctly
   } from "~/src/helpers/store";
-  // import { prepareItemForDrop } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
-  import { abilityGenerationMethod } from "~/src/helpers/store";
-  import { derived, writable } from "svelte/store";
+  import { derived } from "svelte/store";
   import { log } from "../../helpers/Utility";
+
+
+  // Reactive variable for actor name
+  let actorName = "";
+
+
+  const browserLanguage = navigator.language || 'en';
 
   const stores = [
     race,
     characterClass,
     characterSubClass,
     background,
-    abilityGenerationMethod,
+    abilityGenerationMethod, // Include the abilityGenerationMethod here
     pointBuy,
     abilityRolls,
     isStandardArrayValues
   ];
 
-    // Sample helper function to process abilityGenerationMethod
-    function isAbilityGenerationMethodReady(method) {
-    if (!method) {
-      return false;
-    }
+
+  // Helper function to check if ability generation method is ready
+  function isAbilityGenerationMethodReady(method) {
+    if (!method) return false;
     
     switch (method) {
       case 2:
-        // Check if points are allocated correctly
         game.system.log.d("pointBuy", $pointBuy);
         return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
       case 3:
-          // Check if all abilities are assigned
         game.system.log.d("abilityRolls", $abilityRolls);
         return Object.keys($abilityRolls).length === 6;
       case 4:
-        // Check if all rolls are assigned
-        return $isStandardArrayValues
+        return $isStandardArrayValues;
       default:
         return true;
     }
@@ -63,9 +65,8 @@
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
     const [race, characterClass, characterSubClass, background, abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues] = $stores;
-    //- @why: some classes don't have subclasses until later levels
     const length = $subClassesForClass.length > 0 ? 5 : 4;
-    const total = $stores.slice(0, 5).length; // Only count the main five stores for total
+    const total = $stores.slice(0, 5).length;
     const completed = $stores.slice(0, 5).filter((value, index) => {
       if (index === 4) { // Index of abilityGenerationMethod
         return isAbilityGenerationMethodReady(abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues);
@@ -75,21 +76,41 @@
     return (completed / total) * 100;
   });
 
-  export let value = null;
-
   const actor = getContext("#doc");
   const app = getContext("#external").application;
-  let actorName = $actor?.name || "";
+
+  const openApiKey = 'actor-studio-gpt-beta' || game.settings.get(MODULE_ID, 'openaiApiKey');
+
+  const generateName = async (race) => {
+    const response = await fetch('https://actor-studio-openai.vercel.app/api/generateName', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${openApiKey}`
+      },
+      body: JSON.stringify({ prompt: `Generate a fantasy RPG name for an ${race}` })
+    });
+    
+    const data = await response.json();
+    
+    game.system.log.d("Generated name", data);
+
+    // Update the reactive variable
+    actorName = data.object.name;
+  };
 
   const handleNameInput = (e) => {
-    if($isLevelUp) {
-      //- @why: for existing actors, we need to update the actor object in the database
-      actorName = e.target.value;
+    actorName = e.target.value; // Update reactive variable
+
+    if ($isLevelUp) {
+      // Update existing actor object in the database
+      $actor.update({ name: actorName });
     } else {
-      //- @why: for new actors, we need to update the actor source object in memory, 
-      $actor.updateSource({name: e.target.value});
+      // Update new actor source object in memory
+      $actor.updateSource({ name: actorName });
     }
   };
+
   const handleTokenNameInput = (e) => {
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
@@ -101,18 +122,12 @@
   };
 
   const clickUpdateHandler = async () => {
-    // await actor.update(actorObject);
-    
-    await updateActorAndEmbedItems()
-    // drop class on actor and catch advancements
+    await updateActorAndEmbedItems();
   };
 
   const updateActorAndEmbedItems = async () => {
-    await $actor.update({name: actorName});
+    await $actor.update({ name: actorName });
     $actorInGame = $actor;
-    // game.system.log.d("isMultiClass", $isMultiClass);
-    // game.system.log.d("characterClass", $characterClass);
-    // game.system.log.d("characterClass uuid", $characterClass.uuid);
     const data = {
         actor: $actorInGame,
         id: "characterClass",
@@ -120,37 +135,19 @@
         isLevelUp: $isLevelUp,
         isMultiClass: $isMultiClass,
       };
-    // const item = prepareItemForDrop(data)
-    // game.system.log.d("item", item);
-    // return;
     if ($characterClass) {
       const characterClassData = $characterClass;
       dropItemRegistry.add(data);
     }
     dropItemRegistry.advanceQueue(true);
-  }
+  };
 
-
-  /**
-   * So the only viable strategy is to keep the race additions in storage
-   * and then only add them after the Actor is added to the game
-   */
   const createActorInGameAndEmbedItems = async () => {
-
-    //@todo WIP: fix this
     const test = $actor.toObject();
-    test.name = $actor.name // this works but it's a hack
+    test.name = $actor.name;
     $actorInGame = await Actor.create($actor.toObject());
 
-    // // set flags
-    // const abilityFlags = {
-    //   abilityGenerationMethod: $abilityGenerationMethod,
-    // };
-    // $actorInGame.setFlag(MODULE_ID, "abilities", abilityFlags);
-
-    // background
     if ($background) {
-      game.system.log.i("Adding background to character");
       const backgroundData = $background;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -160,9 +157,7 @@
       });
     }
 
-    // race
     if ($race) {
-      game.system.log.i("Adding race to character");
       const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -172,9 +167,7 @@
       });
     }
 
-    // subrace
     if ($subRace) {
-      game.system.log.i("Adding subrace to character");
       const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -184,9 +177,7 @@
       });
     }
 
-    // character class
     if ($characterClass) {
-      game.system.log.i("Adding class to character", $characterClass);
       const characterClassData = $characterClass;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -196,9 +187,7 @@
       });
     }
 
-    // character subclass
     if ($characterSubClass) {
-      game.system.log.i("Adding subclass to character");
       const characterSubClassData = $characterSubClass;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -208,9 +197,7 @@
       });
     }
 
-    // spells
     if ($spells) {
-      game.system.log.i("Adding spells to character");
       const spellsData = $spells;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -220,23 +207,17 @@
       });
     }
 
-    // game.system.log.d('dropItemRegistry', $dropItemRegistry)
-
     dropItemRegistry.advanceQueue(true);
   };
 
-
-
   $: value = $actor?.name || "";
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
-
-
-  
 </script>
+
 
 <template lang="pug">
 div
-  +if("$activeTab !== 'advancements'")  
+  +if("$activeTab !== 'advancements'")
     .flexrow.gap-10.pr-md.mt-sm
       .flex2
         .flexcol
@@ -244,7 +225,11 @@ div
             .flex0.right.mt-xs.no-wrap.ml-md
               label Character Name
             .flex2
-              input.left(type="text" value="{value}" on:input="{handleNameInput}")
+              input.left(type="text" bind:value="{actorName}" on:input="{handleNameInput}")
+            +if("$race")
+              .flex.pointer(on:click="{generateName($race.name + ' lang: ' + browserLanguage)}")
+                img(src="modules/foundryvtt-actor-studio/assets/ChatGPT_logo.svg" alt="Generate name via ChatGPT" style="height: 100%; max-height: 30px; border: none; width: auto;")
+
           //- .flexrow.gap-10
           //-   .flex1.right.mt-xs
           //-     label Token Name

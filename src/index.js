@@ -32,7 +32,7 @@ Hooks.once("init", (app, html, data) => {
   registerSettings(app);
   
   if(game.settings.get(MODULE_ID, 'debug')) {
-    log.level = log.VERBOSE;
+    log.level = log.DEBUG;
   } else {
     log.level = log.INFO;
   }
