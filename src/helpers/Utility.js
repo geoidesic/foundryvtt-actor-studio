@@ -98,11 +98,24 @@ export function getPackFolders(pack, depth = 1) {
 
 export const getPacksFromSettings = (type) => {
   const settings = game.settings.get(MODULE_ID, 'compendiumSources');
-  const filteredPackNames = settings[type];
+  let filteredPackNames = settings[type];
   const packs = [];
-  for (const packName of filteredPackNames) {
-    packs.push(game.packs.get(packName));
+
+  filteredPackNames = filteredPackNames.filter(packName => {
+    const pack = game.packs.get(packName);
+    if (pack) {
+      packs.push(pack);
+      return true;
+    }
+    return false;
+  });
+
+  // Update settings if any packs were removed
+  if (filteredPackNames.length !== settings[type].length) {
+    settings[type] = filteredPackNames;
+    game.settings.set(MODULE_ID, 'compendiumSources', settings);
   }
+
   return packs;
 }
 
