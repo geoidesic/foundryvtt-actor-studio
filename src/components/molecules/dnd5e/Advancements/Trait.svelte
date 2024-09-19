@@ -48,15 +48,15 @@
 
   const fetchAndSetItem = async (uuid) => {
     const itemObj = await fromUuid(uuid);
-    game.system.log.d('Item', itemObj);
+    // game.system.log.d('Item', itemObj);
     item.set(itemObj);
   };
 
   const processGrant = async (grant) => {
-    game.system.log.d("Trait grant ", grant);
+    // game.system.log.d("Trait grant ", grant);
     const split = grant.split(":");
-    game.system.log.d('Trait split', split);
-    game.system.log.d('switch', split[0]);
+    // game.system.log.d('Trait split', split);
+    // game.system.log.d('switch', split[0]);
     switch (split[0]) {
       case "languages":
         return { label: ucfirst(split[1]), value: ucfirst(split[2]) };

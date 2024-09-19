@@ -3,7 +3,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import {
     getFoldersFromMultiplePacks,
-    extractItemsFromPacks,
+    extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue
   } from "~/src/helpers/Utility.js";
@@ -17,7 +17,7 @@
   let packs = getPacksFromSettings("backgrounds");
   // let folders = getFoldersFromMultiplePacks(packs, 1);
   // let folderIds = folders.map((x) => x._id);
-  let allItems = extractItemsFromPacks(packs, [
+  let allItems = extractItemsFromPacksSync(packs, [
     "name->label",
     "img",
     "type",

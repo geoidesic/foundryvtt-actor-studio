@@ -11,6 +11,8 @@ if (!validVersionTypes.includes(versionType)) {
   process.exit(1);
 }
 
+execSync('yarn build', { stdio: 'inherit' });
+
 // Run `yarn version` with the specified version type
 execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
 
@@ -28,5 +30,4 @@ moduleJson.version = newVersion;
 // Write back the updated module.json
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
-execSync('yarn build', { stdio: 'inherit' });
 console.log(`Updated module.json to version ${newVersion}`);

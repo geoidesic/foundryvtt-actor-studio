@@ -38,27 +38,92 @@ export async function getRules(rule) {
   return text;
 }
 
+export function filterPackForDTPackItems(pack, entries) {
+  // game.system.log.d('filterPackForDTPackItems', pack, entries);
+  // game.system.log.d('filterPackForDTPackItems filter', entries.filter);
+  if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+    // get dt folder id's from this pack
+    const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
+    // filter the index.entries accordingly
+    entries = entries.filter(([key, value]) => {
+      //- if item is not in a folder, include it
+      // game.system.log.d(1)
+      if (!value.folder) return true;
+      //- if the item is in a folder that is not a real folder (e.g. deleted folder)
+      // game.system.log.d(2)
+      if (!pack.folders.get(value.folder)) return false;
+      //- if the pack has no DT folders, include everything
+      // game.system.log.d(3)
+      if (!DTPlugin.packHasDTFolders(pack)) return true;
+      //- if the item is in a DT folder tree, include it
+      // game.system.log.d(4)
+      if (DTPlugin.packHasDTFolders(pack) && dtFolderIds.includes(value.folder)) return true;
+      // game.system.log.d(5)
+      return false;
+    });
+  }
+  return entries;
+}
 
-export function extractItemsFromPacks(packs, keys) {
+
+/**
+ * Extracts items from all compendium packs including subfolders
+ * @param {Array} packs compendium packs
+ * @param {Array} keys pack data to extract
+ * @returns {Array} extracted items
+ */
+export function extractItemsFromPacksSync(packs, keys) {
   const items = [];
 
   for (const pack of packs) {
+    game.system.log.d('pack.metadata.name', pack.metadata.name);
     if (!pack.index) {
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
     let entries = pack.index.entries()
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
-    if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
-      // get dt folder id's from this pack
-      const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
-      // filter the index.entries accordingly
-      entries = entries.filter(([_, value]) => {
-        return !value.folder || dtFolderIds.includes(value.folder)
-      });
-    }
+    entries = filterPackForDTPackItems(pack, entries);
     const packItems = extractMapIteratorObjectProperties(entries, keys);
+    // game.system.log.d('packItems', packItems);
     items.push(...packItems);
   }
+  return items;
+}
+
+/**
+ * Extracts items from all compendium packs including subfolders
+ * @param {Array} packs compendium packs
+ * @param {Array} keys pack data to extract
+ * @param {boolean|Array} nonIndexKeys pack data to extract that doesn't exist in the index, thus we need to generate a new index, which is an async process
+ * @returns {Array} extracted items
+ */
+export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = false) {
+  const items = [];
+  // game.system.log.d('extractItemsFromPacks packs', packs);
+  // game.system.log.d('nonIndexKeys', nonIndexKeys);
+  for (const pack of packs) {
+
+    let index = await pack.getIndex({
+      fields: nonIndexKeys,
+    });
+
+    if (!pack) continue;
+    if (!index) {
+      ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
+    }
+
+    // game.system.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // game.system.log.d('extractItemsFromPacks pack', pack);
+    // game.system.log.d('extractItemsFromPacks packindex', index);
+    let entries = index.entries()
+    // game.system.log.d('extractItemsFromPacks entries', entries);
+    entries = filterPackForDTPackItems(pack, entries);
+    // game.system.log.d('extractItemsFromPacks entries post', entries);
+    
+    const packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    items.push(...packItems);
+  }
+  game.system.log.d('items', items)
   return items;
 }
 
@@ -70,6 +135,8 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
       if (k.includes('->')) {
         const split = k.split('->');
         newObj[split[1]] = data[split[0]];
+      } else if (k.includes('.')) {
+        setNestedProperty(newObj, k, getNestedProperty(data, k))
       } else {
         newObj[k] = data[k];
       }
@@ -79,6 +146,19 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   }
   return newArray;
 }
+
+
+export function getNestedProperty(obj, path) {
+  return path.split('.').reduce((acc, key) => acc && acc[key], obj);
+}
+
+export function setNestedProperty(obj, path, value) {
+  const keys = path.split('.');
+  const lastKey = keys.pop();
+  const lastObj = keys.reduce((acc, key) => acc[key] = acc[key] || {}, obj);
+  lastObj[lastKey] = value;
+}
+
 
 
 export function getFoldersFromMultiplePacks(packs, depth = 1) {
@@ -141,7 +221,7 @@ export const getAllPackIdsFromAllSettings = () => {
 }
 
 export function getAdvancementValue(advancement, key) {
-  if(game.version > 12) {
+  if (game.version > 12) {
     return advancement[key] || null;
   } else {
     return advancement.configuration?.[key] || null
