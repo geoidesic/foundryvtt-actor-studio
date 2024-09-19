@@ -3,7 +3,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import {
     getFoldersFromMultiplePacks,
-    extractItemsFromPacks,
+    extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue
   } from "~/src/helpers/Utility.js";
@@ -16,7 +16,7 @@
     placeHolder = "Races",
     richHTML = "";
   let packs = getPacksFromSettings("races");
-  let allRaceItems = extractItemsFromPacks(packs, [
+  let allRaceItems = extractItemsFromPacksSync(packs, [
     "name->label",
     "img",
     "type",
@@ -24,6 +24,7 @@
     "uuid->value",
     "_id",
   ]);
+  game.system.log.d('allRaceItems', allRaceItems)
   let raceDefinitions = allRaceItems
     .filter((x) => x.type == "race")
     .sort((a, b) => a.label.localeCompare(b.label));

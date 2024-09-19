@@ -3,7 +3,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import {
     extractMapIteratorObjectProperties,
-    extractItemsFromPacks,
+    extractItemsFromPacksSync,
     getFoldersFromMultiplePacks,
     getPacksFromSettings,
     ucfirst
@@ -38,7 +38,7 @@
     packs = getPacksFromSettings("classes"),
     subClassesPack = game.packs.get('dnd5e.subclasses'),
     subClassesPacks = getPacksFromSettings("subclasses"),
-    mappedClassIndex = extractItemsFromPacks(packs, [
+    mappedClassIndex = extractItemsFromPacksSync(packs, [
       "name->label",
       "img",
       "type",

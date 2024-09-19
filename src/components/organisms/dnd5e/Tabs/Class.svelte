@@ -3,10 +3,10 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import {
     extractMapIteratorObjectProperties,
-    extractItemsFromPacks,
-    getFoldersFromMultiplePacks,
+    extractItemsFromPacksSync,
+    extractItemsFromPacksAsync,
     getPacksFromSettings,
-    getAdvancementValue
+    getAdvancementValue,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -36,7 +36,7 @@
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
     subClassAdvancementArrayFiltered = [],
-    mappedClassIndex = extractItemsFromPacks(packs, [
+    mappedClassIndex = extractItemsFromPacksSync(packs, [
       "name->label",
       "img",
       "type",
@@ -46,7 +46,7 @@
     ]),
     filteredClassIndex = mappedClassIndex
       .filter((i) => {
-        return i.type == "class" && DonationTracker.canViewItem(i);
+        return i.type == "class";
       })
       .sort((a, b) => a.label.localeCompare(b.label));
   const levelOptions = [];
@@ -70,35 +70,28 @@
   };
 
   const getFilteredSubclassIndex = async () => {
-    const filteredSubClassIndex = [];
-    for (let subClassesPack of subClassesPacks) {
-      let index = await subClassesPack.getIndex({
-        fields: ["system.classIdentifier"],
-      });
-      if (!subClassesPack) continue;
-      let mappedSubClassIndex = extractMapIteratorObjectProperties(
-        index.entries(),
-        [
-          "name->label",
-          "img",
-          "type",
-          "folder",
-          "uuid->value",
-          "system",
-          "_id",
-        ],
-      );
 
-      filteredSubClassIndex.push(
-        mappedSubClassIndex?.filter(
-          (x) => x.system.classIdentifier == $characterClass.system.identifier,
-        ),
-      );
-    }
-    const output = filteredSubClassIndex
+    let filteredSubClassIndex = [];
+    let mappedSubClassIndex = await extractItemsFromPacksAsync(
+      subClassesPacks,
+      ["name->label", "img", "type", "folder", "uuid->value", "_id"],
+      ["system.classIdentifier"],
+    );
+    
+    game.system.log.d('mappedSubClassIndex', mappedSubClassIndex);
+
+    mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
+      game.system.log.d("subclass", x);
+      game.system.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
+      return x.system.classIdentifier == $characterClass.system.identifier;
+    });
+
+    const output = mappedSubClassIndex
       .flat()
       .sort((a, b) => a.label.localeCompare(b.label));
+    game.system.log.d("subclass output", output);
     return output;
+
   };
 
   const selectClassHandler = async (option) => {
@@ -108,10 +101,11 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
-    game.system.log.d($characterClass.system.advancement);
-    game.system.log.d(Array.isArray($characterClass.system.advancement));
-    game.system.log.d($characterClass?.system?.advancement.filter);
-    game.system.log.d($characterClass?.system?.advancement.map);
+
+    // game.system.log.d($characterClass.system.advancement);
+    // game.system.log.d(Array.isArray($characterClass.system.advancement));
+    // game.system.log.d($characterClass?.system?.advancement.filter);
+    // game.system.log.d($characterClass?.system?.advancement.map);
 
     activeClass = option;
 
@@ -166,8 +160,6 @@
     }
   };
 
-
-
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
@@ -203,7 +195,6 @@
   } else {
     classAdvancementArrayFiltered = [];
   }
-
 
   onMount(async () => {
     if ($characterClass) {
