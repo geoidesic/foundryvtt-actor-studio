@@ -186,7 +186,6 @@
   }
 
   /** REACTIVE */
-
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = $activeClass;
@@ -214,7 +213,6 @@
     : [];
 
   $: classKeys = Object.keys($actor._classes);
-
   $: classLevels = classKeys.map((classKey) => {
     const classObj = $actor._classes[classKey]
     return classObj.uuid == $activeClass ? classObj.system.levels + 1 : classObj.system.levels;
@@ -223,14 +221,11 @@
   $: activeClassObj = $actor._classes[activeClassKey];
   $: activeClassIndex = classKeys.indexOf(activeClassKey);
   $: activeClassLevel = classLevels[activeClassIndex];
-
-
   $: filteredClassIndex = mappedClassIndex
       .filter((i) => {
         return i.type == 'class' 
-        && DonationTracker.canViewItem(i)
         //- @why: don't include classes that are already in the character
-        && !classKeys.includes(i.label.toLowerCase())
+        !classKeys.includes(i.label.toLowerCase())
       })
       .sort((a, b) => a.label.localeCompare(b.label))
 
