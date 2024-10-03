@@ -44,6 +44,14 @@ export function filterPackForDTPackItems(pack, entries) {
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
     // get dt folder id's from this pack
     const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
+    // game.system.log.d('dtFolderIds', dtFolderIds);
+
+    // if the pack has no DT folders, include everything
+    if (!dtFolderIds.length) return entries;
+     //- if the pack has no DT folders, include everything
+    //  game.system.log.d(3)
+     if (!DTPlugin.packHasDTFolders(pack)) return true;
+
     // filter the index.entries accordingly
     entries = entries.filter(([key, value]) => {
       //- if item is not in a folder, include it
@@ -52,12 +60,10 @@ export function filterPackForDTPackItems(pack, entries) {
       //- if the item is in a folder that is not a real folder (e.g. deleted folder)
       // game.system.log.d(2)
       if (!pack.folders.get(value.folder)) return false;
-      //- if the pack has no DT folders, include everything
-      // game.system.log.d(3)
-      if (!DTPlugin.packHasDTFolders(pack)) return true;
+     
       //- if the item is in a DT folder tree, include it
       // game.system.log.d(4)
-      if (DTPlugin.packHasDTFolders(pack) && dtFolderIds.includes(value.folder)) return true;
+      if (dtFolderIds.includes(value.folder)) return true;
       // game.system.log.d(5)
       return false;
     });
@@ -178,11 +184,24 @@ export function getPackFolders(pack, depth = 1) {
 
 export const getPacksFromSettings = (type) => {
   const settings = game.settings.get(MODULE_ID, 'compendiumSources');
-  const filteredPackNames = settings[type];
+  let filteredPackNames = settings[type];
   const packs = [];
-  for (const packName of filteredPackNames) {
-    packs.push(game.packs.get(packName));
+
+  filteredPackNames = filteredPackNames.filter(packName => {
+    const pack = game.packs.get(packName);
+    if (pack) {
+      packs.push(pack);
+      return true;
+    }
+    return false;
+  });
+
+  // Update settings if any packs were removed
+  if (filteredPackNames.length !== settings[type].length) {
+    settings[type] = filteredPackNames;
+    game.settings.set(MODULE_ID, 'compendiumSources', settings);
   }
+
   return packs;
 }
 
