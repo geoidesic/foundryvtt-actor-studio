@@ -102,7 +102,8 @@
     richSubClassHTML = "";
     $characterClass = await fromUuid(option);
 
-    // game.system.log.d($characterClass.system.advancement);
+    game.system.log.d($characterClass.system);
+    game.system.log.d($characterClass.system.advancement);
     // game.system.log.d(Array.isArray($characterClass.system.advancement));
     // game.system.log.d($characterClass?.system?.advancement.filter);
     // game.system.log.d($characterClass?.system?.advancement.map);
@@ -133,6 +134,7 @@
 
   const selectSubClassHandler = async (option) => {
     $characterSubClass = await fromUuid(option);
+    game.system.log.d($characterSubClass);
     activeSubClass = option;
     await tick();
     importClassAdvancements();

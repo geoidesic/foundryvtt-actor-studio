@@ -40,6 +40,16 @@
     "Setting": {
       "World": "世界設定",
       "User": "用戶設定",
+      "Aardvark": {
+        "LicenseTrackerEnabled": {
+          "Name": "啟用Aardvark License Tracker",
+          "Hint": "啟用 Aardvark 授權追蹤器以輸入您的 Aardvark 授權金鑰"
+        },
+        "LicenseTrackerCode": {
+          "Name": "啟用 Aardvark 授權追蹤器",
+          "Hint": "輸入您的 Aardvark 授權金鑰"
+        }
+      },
       "AbilityScoreEntryOptions": "屬性輸入選項",
       "AbilityEntry": {
         "AllowManualInput": {

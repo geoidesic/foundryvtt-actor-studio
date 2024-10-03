@@ -40,6 +40,16 @@
     "Setting": {
       "World": "World Settings",
       "User": "User Settings",
+      "Aardvark": {
+        "LicenseTrackerEnabled": {
+          "Name": "Enable Aardvark License Tracker",
+          "Hint": "Enable the Aardvark License Tracker to enter your Aardvark license key"
+        },
+        "LicenseTrackerCode": {
+          "Name": "Aardvark License Code",
+          "Hint": "Enter your Aardvark license code"
+        }
+      },
       "AbilityScoreEntryOptions": "Ability Score Entry Options",
       "AbilityEntry": {
         "AllowManualInput": {

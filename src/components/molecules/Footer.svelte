@@ -22,6 +22,7 @@
     abilityGenerationMethod // Make sure this is imported correctly
   } from "~/src/helpers/store";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
+  import OpenAI from "~/src/plugins/open-ai";
   import { derived } from "svelte/store";
   import { log } from "../../helpers/Utility";
 
@@ -29,8 +30,12 @@
   // Reactive variable for actor name
   let actorName = "";
 
-
   const browserLanguage = navigator.language || 'en';
+
+  const generateName = async (race) => {
+    const name = await OpenAI.generateName(race+ ' lang: ' + browserLanguage + ' avoiding patterns or common starting letters. Ensure the name is different with each request.');
+    actorName = name;
+  };
 
   const stores = [
     race,
@@ -42,7 +47,6 @@
     abilityRolls,
     isStandardArrayValues
   ];
-
 
   // Helper function to check if ability generation method is ready
   function isAbilityGenerationMethodReady(method) {
@@ -79,25 +83,6 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
 
-  const openApiKey = 'actor-studio-gpt-beta' || game.settings.get(MODULE_ID, 'openaiApiKey');
-
-  const generateName = async (race) => {
-    const response = await fetch('https://actor-studio-openai.vercel.app/api/generateName', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${openApiKey}`
-      },
-      body: JSON.stringify({ prompt: `Generate a fantasy RPG name for an ${race}` })
-    });
-    
-    const data = await response.json();
-    
-    game.system.log.d("Generated name", data);
-
-    // Update the reactive variable
-    actorName = data.object.name;
-  };
 
   const handleNameInput = (e) => {
     actorName = e.target.value; // Update reactive variable
@@ -227,7 +212,7 @@ div
             .flex2
               input.left(type="text" bind:value="{actorName}" on:input="{handleNameInput}")
             +if("$race")
-              .flex.pointer(on:click="{generateName($race.name + ' lang: ' + browserLanguage)}")
+              .flex.pointer(on:click="{generateName($race.name)}")
                 img(src="modules/foundryvtt-actor-studio/assets/ChatGPT_logo.svg" alt="Generate name via ChatGPT" style="height: 100%; max-height: 30px; border: none; width: auto;")
 
           //- .flexrow.gap-10

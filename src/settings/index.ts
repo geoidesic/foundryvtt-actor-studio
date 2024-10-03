@@ -1,3 +1,4 @@
+import aardvarkLicenseTracker from './aardvarkLicenseTracker';
 import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
@@ -48,6 +49,7 @@ export function registerSettings(app): void {
   // abilityScoreMethods();
 
   /** World Settings */
+  aardvarkLicenseTracker.init();
   debugSetting();
   debugHooksSetting();
   sourcesConfiguration();
@@ -57,6 +59,7 @@ export function registerSettings(app): void {
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
+
   donationTracker();
   showButtonInSideBar(app);
   forceDnd5eLevelUpAutomation();
@@ -150,6 +153,9 @@ function dontShowWelcome() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      alert('o');
+    }
   });
 }
 
