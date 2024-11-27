@@ -27,6 +27,21 @@ class DonationTrackerGameSettings extends TJSGameSettings {
          }
       });
 
+      allSettings.push({
+         namespace,
+         key: "enable-donation-tracker-unregistered-access",
+         options: {
+            name: game.i18n.localize('GAS.Setting.DonationTracker_UnregisteredAccess.Name'),
+            hint: game.i18n.localize('GAS.Setting.DonationTracker_UnregisteredAccess.Hint'),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: false,
+            onchange: () => {
+            }
+         }
+      });
+
       const membershipRanks = game.membership?.RANKS || []
       // game.system.log.d('membershipRanks', membershipRanks)
 

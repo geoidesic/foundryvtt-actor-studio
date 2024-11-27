@@ -88,6 +88,10 @@
         "Name": "Rank",
         "Hint": "Enter the folder name for the rank"
       },
+      "DonationTracker_UnregisteredAccess": {
+        "Name": "Unregistered Access",
+        "Hint": "If ticked, unregistered users will have access to anything outside of DT folders in DT linked compendiums"
+      },
       "DonationTrackerAction": {
         "Name": "Add DT folders",
         "Hint": "Add the Donation Tracker membership level folders to this compendium"

@@ -88,6 +88,10 @@
         "Name": "等級",
         "Hint": "輸入等級的文件夾名稱"
       },
+      "DonationTracker_UnregisteredAccess": {
+        "Name": "未註冊訪問",
+        "Hint": "如果勾選，未註冊用戶將可訪問 DT 連結彙編中 DT 資料夾外的所有內容"
+      },
       "DonationTrackerAction": {
         "Name": "新增捐贈追踪器文件夾",
         "Hint": "將捐贈追踪器會員級別文件夾新增到此資料庫"
