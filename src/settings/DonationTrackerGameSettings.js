@@ -12,7 +12,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
       const namespace = this.namespace;
       const allSettings = [];
 
-      this.register({
+      allSettings.push({
          namespace,
          key: "enable-donation-tracker",
          options: {
