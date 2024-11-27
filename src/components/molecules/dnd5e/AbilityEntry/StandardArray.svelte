@@ -26,6 +26,7 @@
     // game.system.log.d('index', index)
     // game.system.log.d('value', value)
     // game.system.log.d('attr', attr)
+    
     switch (value) {
       case -1:
         // move the value to the next ability according to the direction of the arrow

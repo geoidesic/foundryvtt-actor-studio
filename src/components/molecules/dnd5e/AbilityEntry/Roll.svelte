@@ -48,7 +48,7 @@
 <template lang="pug">
 .attribute-entry.mt-sm
   +each("Object.keys($abilityRolls) as roll, ability")
-    pre abilityRolls {ability}: {roll}
+    //- pre abilityRolls {ability}: {roll}
   h5.flexrow.mb-sm
     .flex2.left Ability
     .flex1.center Race / Feat
