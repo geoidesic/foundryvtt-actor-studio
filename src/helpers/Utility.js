@@ -42,29 +42,49 @@ export function filterPackForDTPackItems(pack, entries) {
   // game.system.log.d('filterPackForDTPackItems', pack, entries);
   // game.system.log.d('filterPackForDTPackItems filter', entries.filter);
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+    
+
+    //- if the pack has no DT folders, include everything, @why: as this compendium is not managed by DT
+    if (!DTPlugin.packHasDTFolders(pack)) {
+      // game.system.log.d('packHasDTFolders false');
+      return true;
+    }
     // get dt folder id's from this pack
-    const dtFolderIds = DTPlugin.getAllowedDTFOlderIdsFromPack(pack)
-    // game.system.log.d('dtFolderIds', dtFolderIds);
+    const allowedDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack)
+    // game.system.log.d('allowedDTFolderIds', allowedDTFolderIds);
+    const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false)
+    // game.system.log.d('allDTFolderIds', allDTFolderIds);
+    
+    const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
 
-    // if the pack has no DT folders, include everything
-    if (!dtFolderIds.length) return entries;
-     //- if the pack has no DT folders, include everything
-    //  game.system.log.d(3)
-     if (!DTPlugin.packHasDTFolders(pack)) return true;
-
+    if(game.user.isGM && game.membership.DEVELOPER_IS_ADMIN) return entries;
     // filter the index.entries accordingly
     entries = entries.filter(([key, value]) => {
-      //- if item is not in a folder, include it
+
+      // game.system.log.d('key', key, value)
+      //- if item is not in a folder
       // game.system.log.d(1)
-      if (!value.folder) return true;
+      if (!value.folder) {
+        return unregisteredAccess;
+      }
+      
       //- if the item is in a folder that is not a real folder (e.g. deleted folder)
       // game.system.log.d(2)
       if (!pack.folders.get(value.folder)) return false;
      
       //- if the item is in a DT folder tree, include it
       // game.system.log.d(4)
-      if (dtFolderIds.includes(value.folder)) return true;
+      if (allowedDTFolderIds.includes(value.folder)) return true;
       // game.system.log.d(5)
+      
+      //- if item is in a folder that is not a DT folder
+      if(!allDTFolderIds.includes(value.folder)) {
+        // game.system.log.d(6)
+        return unregisteredAccess;
+      }
+      
+      // game.system.log.d(7)
+
       return false;
     });
   }
@@ -73,7 +93,8 @@ export function filterPackForDTPackItems(pack, entries) {
 
 
 /**
- * Extracts items from all compendium packs including subfolders
+ * Extracts items from all compendium packs including subfolders.
+ * Use this if you're happy with the default pack index.
  * @param {Array} packs compendium packs
  * @param {Array} keys pack data to extract
  * @returns {Array} extracted items
@@ -97,7 +118,8 @@ export function extractItemsFromPacksSync(packs, keys) {
 }
 
 /**
- * Extracts items from all compendium packs including subfolders
+ * Extracts items from all compendium packs including subfolders.
+ * Use this if you need extra index info (via async)
  * @param {Array} packs compendium packs
  * @param {Array} keys pack data to extract
  * @param {boolean|Array} nonIndexKeys pack data to extract that doesn't exist in the index, thus we need to generate a new index, which is an async process
