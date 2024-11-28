@@ -13,7 +13,6 @@
     characterClass,
     characterSubClass,
     level,
-    tabs,
     subClassesForClass,
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";

@@ -80,7 +80,8 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
   // game.system.log.d('renderAdvancementManager')
-  // Check if your application is currently open by looking for its specific DOM element
+
+  // Check if the application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
   // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
@@ -124,7 +125,7 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
 })
 
 Hooks.on('gas.renderAdvancement', () => {
-  // game.system.log.d('gas.renderAdvancement')
+  game.system.log.d('gas.renderAdvancement')
   // game.system.log.d('Advancements tab found, rendering the advancment workflow')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
@@ -134,12 +135,15 @@ Hooks.on('gas.renderAdvancement', () => {
     // Move each app's dialog to your application's content area
     // Check if the app's element is already appended
     if (!isAppElementAppended(currentProcess.id)) {
-      const element = currentProcess.app.element
-      element.removeClass(); // Remove all classes from the root element itself
-      element.addClass('gas-advancements')
-      element.attr('gas-appid', currentProcess.id);
-      // Move each app's dialog to your application's content area
-      element.appendTo(panelElement);
+      game.system.log.d(currentProcess);
+      const element = currentProcess.app?.element
+      if(element) {
+        element.removeClass(); // Remove all classes from the root element itself
+        element.addClass('gas-advancements')
+        element.attr('gas-appid', currentProcess.id);
+        // Move each app's dialog to your application's content area
+        element.appendTo(panelElement);
+      }
     }
   }
 });
@@ -149,9 +153,11 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
 })
 
 Hooks.on('closeAdvancementManager', async (...args) => {
-  // Define a function to check if the panel is empty
+  game.system.log.d('closeAdvancementManager args', args);
+  // Check if the panel is empty
   const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content')?.html()?.trim() === '';
-  // Define a function to wait for the panel to become empty
+  game.system.log.d('isPanelEmpty', isPanelEmpty());
+
   const waitForPanelEmpty = async () => {
     while (!isPanelEmpty()) {
       // Wait for a short delay before checking again
@@ -162,10 +168,11 @@ Hooks.on('closeAdvancementManager', async (...args) => {
   // Wait for the panel to become empty
   await waitForPanelEmpty();
 
+  game.system.log.d('closeAdvancementManager currentProcess', dropItemRegistry.currentProcess);
 
   // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
-  // game.system.log.d('closeAdvancementManager queue', queue)
+  game.system.log.d('closeAdvancementManager queue', queue)
   if (!queue) {
     Hooks.call("gas.close");
   }
