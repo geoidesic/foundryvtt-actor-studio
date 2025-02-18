@@ -99,6 +99,7 @@ const arrayOfObjectsStore = () => {
           game.system.log.d('Item has no advancement choices, returning false');
           return false
         }
+        //- @why: without this check, the queue will continue to run even if the item has no advancements for the current level
         if (!isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
           game.system.log.d('Item has no advancements for level, returning false');
           return false
