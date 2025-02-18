@@ -1,13 +1,12 @@
 # foundryvtt-actor-studio
-A FoundryVTT module for creating Actors
-
+A FoundryVTT module for creating Actors 
 
 ## New feature donations
 There are [features waiting for funding](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/6).
 If you would like to fund these features, you can do so by [donating here](https://github.com/sponsors/geoidesic?frequency=one-time), just include the feature # number in your reference, or hit me up on Discord (geoidesic).
 
-
 ## dnd5e
+- Supports both dnd5e v3.x and v4.x
 - The DM / GM can set which compendiums are available to Actor Studio
 - Set your Ability Scores using either: point buy, manual entry, standard array or dice rolls
 - Preview and select your race, background, class and subclass

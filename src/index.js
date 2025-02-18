@@ -77,6 +77,34 @@ const isAppElementAppended = (appId) => {
 
 const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
+// Helper to check dnd5e version
+const getDnd5eVersion = () => {
+  const system = game.system;
+  if (system.id !== 'dnd5e') return null;
+  return Number(system.version.split('.')[0]); // Returns 3 or 4
+};
+
+// Helper to check if we're on first step based on version
+const isFirstAdvancementStep = (app) => {
+  const version = getDnd5eVersion();
+  if (version >= 4) {
+    return app.steps?.[0] === app.step;
+  }
+  return app._stepIndex === 0;
+};
+
+// Helper to get advancement element based on version
+const getAdvancementElement = (currentProcess) => {
+  const version = getDnd5eVersion();
+  const rawElement = currentProcess.app?.element;
+  
+  if (version >= 4) {
+    // v4 passes raw DOM element
+    return $(rawElement);
+  }
+  // v3 already provides jQuery element
+  return rawElement;
+};
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
   // game.system.log.d('renderAdvancementManager')
@@ -88,7 +116,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   // game.system.log.d('currentProcess', currentProcess)
   // game.system.log.d('app._stepIndex', app._stepIndex)
 
-  if (currentProcess.id && app.steps?.[0] === app.step) {
+  if (currentProcess.id && isFirstAdvancementStep(app)) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
@@ -138,7 +166,7 @@ Hooks.on('gas.renderAdvancement', () => {
     const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
     if (!isAppElementAppended(currentProcess.id)) {
       game.system.log.d(currentProcess);
-      const element = $(currentProcess.app?.element)
+      const element = getAdvancementElement(currentProcess);
       if(element) {
         element.removeClass(); // Remove all classes from the root element itself
         element.addClass('gas-advancements')
