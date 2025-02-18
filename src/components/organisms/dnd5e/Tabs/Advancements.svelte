@@ -128,4 +128,10 @@
     grid-template-columns: 50% 1fr 1fr
     align-items: center
     gap: 2px
+
+:global(.gas-advancements .gas-header)
+  border-bottom: 1px solid var(--color-border-light)
+  
+:global(.gas-advancements .gas-content)
+  padding: 0.5rem
 </style>

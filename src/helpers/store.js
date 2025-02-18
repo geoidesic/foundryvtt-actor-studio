@@ -36,61 +36,64 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async function (initial) {
-      // game.system.log.d('advanceQueue')
-      // game.system.log.d('advanceQueue initial', initial || false)
+      game.system.log.d('advanceQueue called with store state:', {
+        storeContents: get(store),
+        storeLength: get(store).length,
+        currentProcess: get(inProcess)
+      });
 
       const currentStore = get(store);
-      // game.system.log.d('currentStore.length', currentStore.length)
-      // game.system.log.d('advanceQueue currentStore.length', currentStore.length)
-
       const next = currentStore[0] || false;
-      // game.system.log.d("advanceQueue next", next);
-      // game.system.log.d('current item to advance: ', next.id)
+      game.system.log.d('Next item:', {
+        next,
+        remainingLength: currentStore.length,
+        hasAdvancementChoices: next ? itemHasAdvancementChoices(next.itemData) : false
+      });
 
       if (!next) {
         inProcess.set(false);
-        // game.system.log.d('end of queue')
+        game.system.log.d('No next item, queue empty');
         return false;
       }
       inProcess.set(next);
       remove(next.id);
-      // game.system.log.d('advanceQueue currentStore.length', currentStore.length)
-      // game.system.log.d('dropping item to character', next)
-      // game.system.log.d(next.itemData);
+      
       const item = await prepareItemForDrop(next)
-
       try {
         const result = await dropItemOnCharacter(next.actor, item);
-        // game.system.log.d('dropItemOnCharacter result', result)
       } catch (error) {
-        // game.system.log.e('dropItemOnCharacter error', error)
+        // error handling...
       }
+      
       if (currentStore.length > 1) {
-
         if (!itemHasAdvancementChoices(next.itemData)) {
-          // game.system.log.d('!itemHasAdvancementChoices');
-          // game.system.log.d('get(activeTab)', get(activeTab));
+          game.system.log.d('Multiple items but no advancement choices, state:', {
+            currentLength: get(store).length,
+            nextItem: next,
+            activeTab: get(activeTab)
+          });
           if (get(activeTab) != 'advancements') {
-            // game.system.log.d('advanceQueue opening Advancements tab');
             await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
             activeTab.set('advancements');
-            // game.system.log.d('advanceQueue Advancements tab opened');
           }
-          // game.system.log.d('advanceQueue calling closeAdvancementManager');
-          //- @why: allow other async functions to complete before closing the advancement manager
           await new Promise(resolve => setTimeout(resolve, 200));
+          game.system.log.d('Calling closeAdvancementManager but returning true');
           return await Hooks.call('closeAdvancementManager');
-
         }
       }
       if (currentStore.length == 1) {
+        game.system.log.d('Single item in queue:', {
+          item: next.itemData,
+          hasAdvancementChoices: itemHasAdvancementChoices(next.itemData),
+          advancementData: next.itemData.system?.advancement,
+          version: game.system.version
+        });
         if (!itemHasAdvancementChoices(next.itemData)) {
-          // game.system.log.d('advanceQueue no more items in queue');
           return false
         }
+        game.system.log.d('Item has advancement choices, continuing queue');
       }
       if (currentStore.length == 0) {
-        // game.system.log.d('advanceQueue no more items in queue');
         return false
       }
       return true;

@@ -183,27 +183,78 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
 
 Hooks.on('closeAdvancementManager', async (...args) => {
   game.system.log.d('closeAdvancementManager args', args);
+  game.system.log.d('closeAdvancementManager args detailed:', {
+    app: args[0],
+    html: args[1],
+    appId: args[0]?.appId,
+    options: args[0]?.options,
+    advancement: args[0]?.advancement,
+    actor: args[0]?.actor
+  });
+  
   // Check if the panel is empty
   const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content')?.html()?.trim() === '';
-  game.system.log.d('isPanelEmpty', isPanelEmpty());
+  game.system.log.d('isPanelEmpty check:', {
+    result: isPanelEmpty(),
+    selector: '#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content',
+    exists: $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content').length,
+    html: $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content').html()
+  });
 
   const waitForPanelEmpty = async () => {
     while (!isPanelEmpty()) {
-      // Wait for a short delay before checking again
-      await new Promise(resolve => setTimeout(resolve, 100)); // Adjust the delay as needed
+      game.system.log.d('Panel not empty, waiting...');
+      await new Promise(resolve => setTimeout(resolve, 400)); // Adjust the delay as needed
     }
+    game.system.log.d('Panel is now empty');
   };
 
   // Wait for the panel to become empty
   await waitForPanelEmpty();
 
   game.system.log.d('closeAdvancementManager currentProcess', dropItemRegistry.currentProcess);
+  game.system.log.d('dropItemRegistry detailed:', {
+    currentProcess: get(dropItemRegistry.currentProcess),
+    store: dropItemRegistry,
+    storeKeys: Object.keys(dropItemRegistry)
+  });
 
   // Once the panel is empty, proceed with the queue
   const queue = await dropItemRegistry.advanceQueue();
-  game.system.log.d('closeAdvancementManager queue', queue)
+  game.system.log.d('closeAdvancementManager queue', queue);
+  game.system.log.d('Queue state:', {
+    queueResult: queue,
+    currentProcessAfterQueue: get(dropItemRegistry.currentProcess),
+    dropItemRegistryAfterQueue: dropItemRegistry
+  });
+
   if (!queue) {
+    game.system.log.d('No queue, preparing to close');
+    const actor = get(dropItemRegistry.currentProcess)?.actor;
+    game.system.log.d('Actor before close:', {
+      actor,
+      actorId: actor?.id,
+      hasSheet: !!actor?.sheet,
+      currentProcess: get(dropItemRegistry.currentProcess)
+    });
+    
     Hooks.call("gas.close");
+    game.system.log.d('After gas.close:', {
+      actorStillExists: !!actor,
+      actorSheetStillExists: !!actor?.sheet,
+      currentProcessAfterClose: get(dropItemRegistry.currentProcess)
+    });
+    
+    if (actor) {
+      game.system.log.d('Opening actor sheet for:', actor.name);
+      game.system.log.d('Actor sheet render attempt:', {
+        actor,
+        sheet: actor.sheet,
+        sheetApp: actor.sheet?._state,
+        rendered: actor.sheet?._state > 0
+      });
+      actor.sheet.render(true);
+    }
   }
 });
 

@@ -1,4 +1,3 @@
-
 import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
 
@@ -325,9 +324,25 @@ export const dropItemOnCharacter = async (actor, item) => {
 }
 
 export const itemHasAdvancementChoices = (item) => {
+  game.system.log.d('itemHasAdvancementChoices check:', {
+    item,
+    advancement: item?.system?.advancement,
+    version: game.system.version
+  });
+
   let hasAdvancementChoices = false;
   if (!item?.system?.advancement.length) return false;
+  
   for (const adv of item.system.advancement) {
+    game.system.log.d('Checking advancement:', {
+      advancement: adv,
+      configuration: adv.configuration,
+      choices: adv.configuration.choices,
+      completed: adv.configuration.completed,
+      value: adv.value,
+      state: adv.state
+    });
+
     if (adv.configuration.choices) {
       hasAdvancementChoices = true;
       break;
