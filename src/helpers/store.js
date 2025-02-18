@@ -1,5 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { dropItemOnCharacter, prepareItemForDrop, itemHasAdvancementChoices } from "~/src/helpers/Utility";
+import { dropItemOnCharacter, prepareItemForDrop, itemHasAdvancementChoices, isAdvancementsForLevelInItem } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
   { label: "Race", id: "race", component: "Race" },
@@ -61,12 +61,19 @@ const arrayOfObjectsStore = () => {
       const item = await prepareItemForDrop(next)
       try {
         const result = await dropItemOnCharacter(next.actor, item);
+        
+        const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
+        if (skipDomMove) {
+          game.system.log.d('Dev setting: Skipping advancement DOM movement');
+          return true;
+        }
       } catch (error) {
         // error handling...
       }
       
       if (currentStore.length > 1) {
-        if (!itemHasAdvancementChoices(next.itemData)) {
+        game.system.log.d('next.itemData', next.itemData)
+        if (!itemHasAdvancementChoices(next.itemData) && isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
           game.system.log.d('Multiple items but no advancement choices, state:', {
             currentLength: get(store).length,
             nextItem: next,
@@ -89,6 +96,11 @@ const arrayOfObjectsStore = () => {
           version: game.system.version
         });
         if (!itemHasAdvancementChoices(next.itemData)) {
+          game.system.log.d('Item has no advancement choices, returning false');
+          return false
+        }
+        if (!isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
+          game.system.log.d('Item has no advancements for level, returning false');
           return false
         }
         game.system.log.d('Item has advancement choices, continuing queue');

@@ -1,6 +1,12 @@
 import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
 
+export const getDnd5eVersion = () => {
+  const system = game.system;
+  if (system.id !== 'dnd5e') return null;
+  return Number(system.version.split('.')[0]); // Returns 3 or 4
+};
+
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
   set level(level) {
