@@ -88,7 +88,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   // game.system.log.d('currentProcess', currentProcess)
   // game.system.log.d('app._stepIndex', app._stepIndex)
 
-  if (currentProcess.id && app._stepIndex === 0) {
+  if (currentProcess.id && app.steps?.[0] === app.step) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
@@ -126,22 +126,23 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
 
 Hooks.on('gas.renderAdvancement', () => {
   game.system.log.d('gas.renderAdvancement')
-  // game.system.log.d('Advancements tab found, rendering the advancment workflow')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
-  // Get all stored advancement apps
+  game.system.log.d('currentProcess in gas.renderAdvancement:', {
+    id: currentProcess?.id,
+    app: currentProcess?.app,
+    element: currentProcess?.app?.element
+  });
+
   if (currentProcess) {
     const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
-    // Move each app's dialog to your application's content area
-    // Check if the app's element is already appended
     if (!isAppElementAppended(currentProcess.id)) {
       game.system.log.d(currentProcess);
-      const element = currentProcess.app?.element
+      const element = $(currentProcess.app?.element)
       if(element) {
         element.removeClass(); // Remove all classes from the root element itself
         element.addClass('gas-advancements')
         element.attr('gas-appid', currentProcess.id);
-        // Move each app's dialog to your application's content area
         element.appendTo(panelElement);
       }
     }
