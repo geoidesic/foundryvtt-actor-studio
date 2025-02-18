@@ -6,6 +6,9 @@ export const LOG_PREFIX = 'ACTOR STUDIO |';
 export const MYSTERY_MAN = 'icons/svg/mystery-man.svg';
 export const NONE_ICON = 'icons/svg/cancel.svg';
 
+// Check if we're in development mode
+export const IS_DEV = process.env.NODE_ENV === 'development';
+
 export const enum DEFAULT_PACKS {
   RACES = 'dnd5e.races',
   RACE_FEATURES = 'dnd5e.races',

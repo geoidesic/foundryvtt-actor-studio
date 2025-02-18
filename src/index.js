@@ -153,6 +153,13 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
 })
 
 Hooks.on('gas.renderAdvancement', () => {
+
+  const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
+  if (skipDomMove) {
+    game.system.log.d('Dev setting: Skipping advancement DOM movement');
+    return;
+  }
+
   game.system.log.d('gas.renderAdvancement')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
@@ -182,6 +189,12 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
 })
 
 Hooks.on('closeAdvancementManager', async (...args) => {
+
+  const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
+  if (skipDomMove) {
+    game.system.log.d('Dev setting: Skipping advancement DOM movement');
+    return;
+  }
   game.system.log.d('closeAdvancementManager args', args);
   game.system.log.d('closeAdvancementManager args detailed:', {
     app: args[0],

@@ -1,6 +1,6 @@
 import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
-import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
+import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, IS_DEV } from '../helpers/constants';
 
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
@@ -23,7 +23,7 @@ export type Source = {
   [key in SourceType]: any;
 };
 
-export function registerSettings(app): void {
+export function registerSettings(app: Game): void {
   game.system.log.d("Building module settings");
 
   Handlebars.registerHelper('checkedIf', function (condition) {
@@ -66,6 +66,18 @@ export function registerSettings(app): void {
 
   /** User settings */
   dontShowWelcome();
+
+  // Dev-only settings
+  if (IS_DEV) {
+    game.settings.register(MODULE_ID, 'devDisableAdvancementMove', {
+      name: 'Disable Advancement DOM Movement',
+      hint: 'Developer setting: Prevents advancements from being moved in the DOM',
+      scope: 'client',
+      config: true,
+      type: Boolean,
+      default: false
+    });
+  }
 }
 
 function sourcesConfiguration() {
