@@ -134,4 +134,17 @@
   
 :global(.gas-advancements .gas-content)
   padding: 0.5rem
+
+:global(.warning.notification)
+  background: rgba(var(--color-warning-rgb), 0.1)
+  border: 1px solid var(--color-warning)
+  border-radius: 4px
+  padding: 0.5rem
+  margin-bottom: 0.5rem
+
+:global(.gas-advancements .header-control)
+  display: none
+
+.warnings
+  margin-top: 1rem
 </style>
