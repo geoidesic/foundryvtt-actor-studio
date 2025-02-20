@@ -107,26 +107,27 @@ const getAdvancementElement = (currentProcess) => {
 };
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  // game.system.log.d('renderAdvancementManager')
-
-  // Check if the application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
-  // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
-
-  // game.system.log.d('currentProcess', currentProcess)
-  // game.system.log.d('app._stepIndex', app._stepIndex)
+  
+  game.system.log.d('renderAdvancementManager diagnostic:', {
+    currentProcess,
+    hasId: !!currentProcess?.id,
+    isFirstStep: isFirstAdvancementStep(app),
+    appElement: $('#foundryvtt-actor-studio-pc-sheet').length,
+    app,
+    html,
+    data
+  });
 
   if (currentProcess.id && isFirstAdvancementStep(app)) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       dropItemRegistry.updateCurrentProcess({ app, html, data })
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
-      // console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
         Hooks.call("gas.renderAdvancement");
       } else {
         game.system.log.i('Advancements tab not found, adding it to the tabs')
-        // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
         if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         } else {

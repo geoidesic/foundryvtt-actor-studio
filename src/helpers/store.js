@@ -1,4 +1,5 @@
-import { writable, get, derived } from 'svelte/store';;
+import { writable, get, derived } from 'svelte/store';
+import { MODULE_ID } from '~/src/helpers/constants';
 import { dropItemOnCharacter, prepareItemForDrop, itemHasAdvancementChoices, isAdvancementsForLevelInItem } from "~/src/helpers/Utility";
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
@@ -56,14 +57,6 @@ const arrayOfObjectsStore = () => {
       const currentStore = get(store);
       const next = currentStore[0] || false;
       
-      console.log('NEXT ITEM PRE-PROCESSING:', {
-        next,
-        nextId: next?.id,
-        itemData: next?.itemData,
-        hasSystem: next?.itemData?.system !== undefined,
-        systemKeys: next?.itemData?.system ? Object.keys(next.itemData.system) : null
-      });
-
       if (!next) {
         inProcess.set(false);
         return false;
@@ -72,25 +65,10 @@ const arrayOfObjectsStore = () => {
       inProcess.set(next);
       remove(next.id);
       
-      console.log('PRE-PREPARE ITEM:', {
-        nextBeforePrepare: next,
-        itemDataBeforePrepare: next.itemData
-      });
-      
       const item = await prepareItemForDrop(next);
-      
-      console.log('POST-PREPARE ITEM:', {
-        preparedItem: item,
-        hasSystem: item?.system !== undefined,
-        systemKeys: item?.system ? Object.keys(item.system) : null
-      });
 
       try {
         const result = await dropItemOnCharacter(next.actor, item);
-        console.log('POST-DROP RESULT:', {
-          result,
-          itemAfterDrop: item
-        });
         
         const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
         if (skipDomMove) {
@@ -98,48 +76,53 @@ const arrayOfObjectsStore = () => {
           return true;
         }
       } catch (error) {
-        // error handling...
+        console.error('Error dropping item:', error);
+        return false;
       }
       
-      if (currentStore.length > 1) {
-        game.system.log.d('next.itemData', next.itemData)
-        if (!itemHasAdvancementChoices(next.itemData) && isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
-          game.system.log.d('Multiple items but no advancement choices, state:', {
-            currentLength: get(store).length,
-            nextItem: next,
-            activeTab: get(activeTab)
-          });
-          if (get(activeTab) != 'advancements') {
-            await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
-            activeTab.set('advancements');
-          }
-          await new Promise(resolve => setTimeout(resolve, 200));
-          game.system.log.d('Calling closeAdvancementManager but returning true');
-          return await Hooks.call('closeAdvancementManager');
-        }
-      }
-      if (currentStore.length == 1) {
-        game.system.log.d('Single item in queue:', {
-          item: next.itemData,
-          hasAdvancementChoices: itemHasAdvancementChoices(next.itemData),
-          advancementData: next.itemData.system?.advancement,
-          version: game.system.version
+      // If this is a class or subclass with advancements, handle them
+      if ((item.type === 'class' || item.type === 'subclass') && 
+          itemHasAdvancementChoices(item)) {
+        
+        // For subclasses, we need to check the parent class identifier
+        const classIdentifier = item.type === 'subclass' ? 
+          item.system?.classIdentifier : 
+          item.system?.identifier;
+        
+        // Add debug logging
+        game.system.log.d('Checking advancements for:', {
+          itemType: item.type,
+          itemName: item.name,
+          classIdentifier,
+          hasClasses: !!next.actor.classes,
+          classExists: next.actor.classes?.[classIdentifier],
+          advancements: item.system?.advancement
         });
-        if (!itemHasAdvancementChoices(next.itemData)) {
-          game.system.log.d('Item has no advancement choices, returning false');
-          return false
+
+        // Check if we can process advancements
+        if (next.actor.classes?.[classIdentifier]) {
+          const levels = next.actor.classes[classIdentifier].system.levels;
+          if (isAdvancementsForLevelInItem(levels, item)) {
+            if (get(activeTab) !== 'advancements') {
+              await tabs.update(t => [...t, { 
+                label: "Advancements", 
+                id: "advancements", 
+                component: "Advancements" 
+              }]);
+              activeTab.set('advancements');
+            }
+            await new Promise(resolve => setTimeout(resolve, 200));
+            return await Hooks.call('closeAdvancementManager');
+          }
         }
-        //- @why: without this check, the queue will continue to run even if the item has no advancements for the current level
-        if (!isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
-          game.system.log.d('Item has no advancements for level, returning false');
-          return false
-        }
-        game.system.log.d('Item has advancement choices, continuing queue');
       }
-      if (currentStore.length == 0) {
-        return false
+
+      // If there are more items in the queue, process the next one
+      if (currentStore.length > 0) {
+        return this.advanceQueue(initial);
       }
-      return true;
+
+      return false;
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({ ...p, ...obj })),
