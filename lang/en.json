@@ -84,6 +84,10 @@
         "Name": "Enable Donation Tracker",
         "Hint": "Enable the donation tracker to show the current donation amount and goal"
       },
+      "DisableAdvancementMove": {
+        "Name": "Disable Advancement Tab",
+        "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window."
+      },
       "DonationTrackerRank": {
         "Name": "Rank",
         "Hint": "Enter the folder name for the rank"

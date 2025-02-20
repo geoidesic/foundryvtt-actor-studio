@@ -66,18 +66,20 @@ export function registerSettings(app: Game): void {
 
   /** User settings */
   dontShowWelcome();
+  disableAdvancementCapture();
 
   // Dev-only settings
-  if (IS_DEV) {
-    game.settings.register(MODULE_ID, 'devDisableAdvancementMove', {
-      name: 'Disable Advancement DOM Movement',
-      hint: 'Developer setting: Prevents advancements from being moved in the DOM',
-      scope: 'client',
-      config: true,
-      type: Boolean,
-      default: false
-    });
   }
+
+function disableAdvancementCapture() {
+  game.settings.register(MODULE_ID, 'devDisableAdvancementMove', {
+    name: game.i18n.localize('GAS.Setting.DisableAdvancementMove.Name'),
+    hint: game.i18n.localize('GAS.Setting.DisableAdvancementMove.Hint'),
+    scope: 'user',
+    config: true,
+    type: Boolean,
+    default: false
+  });
 }
 
 function sourcesConfiguration() {
