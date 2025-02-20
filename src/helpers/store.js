@@ -25,42 +25,72 @@ const arrayOfObjectsStore = () => {
   return {
     subscribe,
     add: (app) => {
-      update(apps => {
-        const filteredApps = apps.filter(existingApp => existingApp.id !== app.id); // Remove any app with the same id
-        return [...filteredApps, app]; // Add the new app
+      console.log('ADDING TO QUEUE:', {
+        app,
+        currentStoreLength: get(store).length,
+        currentStore: get(store)
       });
-      game.system.log.d('currentStore.length', get(store).length);
+      
+      update(apps => {
+        const filteredApps = apps.filter(existingApp => existingApp.id !== app.id);
+        const newApps = [...filteredApps, app];
+        console.log('QUEUE UPDATED:', {
+          filteredApps,
+          newApps,
+          newLength: newApps.length
+        });
+        return newApps;
+      });
     },
 
 
     remove,
     removeAll: () => set([]),
     advanceQueue: async function (initial) {
-      game.system.log.d('advanceQueue called with store state:', {
-        storeContents: get(store),
+      console.log('QUEUE START STATE:', {
+        store: get(store),
         storeLength: get(store).length,
         currentProcess: get(inProcess)
       });
 
       const currentStore = get(store);
       const next = currentStore[0] || false;
-      game.system.log.d('Next item:', {
+      
+      console.log('NEXT ITEM PRE-PROCESSING:', {
         next,
-        remainingLength: currentStore.length,
-        hasAdvancementChoices: next ? itemHasAdvancementChoices(next.itemData) : false
+        nextId: next?.id,
+        itemData: next?.itemData,
+        hasSystem: next?.itemData?.system !== undefined,
+        systemKeys: next?.itemData?.system ? Object.keys(next.itemData.system) : null
       });
 
       if (!next) {
         inProcess.set(false);
-        game.system.log.d('No next item, queue empty');
         return false;
       }
+      
       inProcess.set(next);
       remove(next.id);
       
-      const item = await prepareItemForDrop(next)
+      console.log('PRE-PREPARE ITEM:', {
+        nextBeforePrepare: next,
+        itemDataBeforePrepare: next.itemData
+      });
+      
+      const item = await prepareItemForDrop(next);
+      
+      console.log('POST-PREPARE ITEM:', {
+        preparedItem: item,
+        hasSystem: item?.system !== undefined,
+        systemKeys: item?.system ? Object.keys(item.system) : null
+      });
+
       try {
         const result = await dropItemOnCharacter(next.actor, item);
+        console.log('POST-DROP RESULT:', {
+          result,
+          itemAfterDrop: item
+        });
         
         const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
         if (skipDomMove) {

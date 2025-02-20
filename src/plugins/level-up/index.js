@@ -12,17 +12,6 @@ const pulseKeyframes = `
 }
 `;
 
-export function registerSettings() {
-  game.settings.register(MODULE_ID, 'enableLevelUp', {
-    name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
-    hint: game.i18n.localize('GAS.Setting.EnableLevelUp.Hint'),
-    scope: 'world',
-    config: true,
-    default: true,
-    type: Boolean,
-  });
-}
-
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
@@ -95,8 +84,6 @@ export function tidy5eSheetUI(app, element, data) {
 }
 
 export function initLevelup() {
-
-  registerSettings();
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
     // game.system.log.d(app.constructor.name)

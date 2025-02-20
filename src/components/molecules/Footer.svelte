@@ -1,5 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { get } from 'svelte/store';
   import { MODULE_ID } from "~/src/helpers/constants";
   import {
     race,
@@ -68,7 +69,7 @@
     const total = $stores.slice(0, 5).length; // Only count the main five stores for total
     const completed = $stores.slice(0, 5).filter((value, index) => {
       if (index === 4) { // Index of abilityGenerationMethod
-        return isAbilityGenerationMethodReady(abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues);
+        return isAbilityGenerationMethodReady(abilityGenerationMethod);
       }
       return !!value;
     }).length;
@@ -107,6 +108,89 @@
     // drop class on actor and catch advancements
   };
 
+  const createActorInGameAndEmbedItems = async () => {
+    console.log('QUEUE BUILD START:', {
+        background: $background,
+        race: $race,
+        characterClass: $characterClass,
+        characterSubClass: $characterSubClass
+    });
+
+    const test = $actor.toObject();
+    test.name = $actor.name;
+    $actorInGame = await Actor.create($actor.toObject());
+
+    // Before each dropItemRegistry.add call
+    if ($background) {
+        console.log('PRE-QUEUE ADD BACKGROUND:', {
+            item: $background,
+            hasSystem: !!$background.system,
+            queueData: {
+                actor: $actorInGame,
+                id: "background",
+                itemData: $background,
+                isLevelUp: $isLevelUp,
+            }
+        });
+        dropItemRegistry.add({
+            actor: $actorInGame,
+            id: "background",
+            itemData: $background,
+            isLevelUp: $isLevelUp,
+        });
+    }
+
+    // Similar for race, class, and subclass...
+    if ($characterClass) {
+        console.log('PRE-QUEUE ADD CLASS:', {
+            item: $characterClass,
+            hasSystem: !!$characterClass.system,
+            queueData: {
+                actor: $actorInGame,
+                id: "characterClass",
+                itemData: $characterClass,
+                isLevelUp: $isLevelUp,
+            }
+        });
+        dropItemRegistry.add({
+            actor: $actorInGame,
+            id: "characterClass",
+            itemData: $characterClass,
+            isLevelUp: $isLevelUp,
+        });
+    }
+
+    if ($characterSubClass) {
+        console.log('PRE-QUEUE ADD SUBCLASS:', {
+            item: $characterSubClass,
+            hasSystem: !!$characterSubClass.system,
+            queueData: {
+                actor: $actorInGame,
+                id: "characterSubClass",
+                itemData: $characterSubClass,
+                isLevelUp: $isLevelUp,
+            }
+        });
+        dropItemRegistry.add({
+            actor: $actorInGame,
+            id: "characterSubClass",
+            itemData: $characterSubClass,
+            isLevelUp: $isLevelUp,
+        });
+    }
+
+    console.log('PRE-QUEUE ADVANCE:', {
+        registry: dropItemRegistry,
+        queueContents: get(dropItemRegistry)?.map(item => ({
+            id: item.id,
+            hasSystem: !!item.itemData?.system,
+            itemData: item.itemData
+        })) || []
+    });
+
+    dropItemRegistry.advanceQueue(true);
+  };
+
   const updateActorAndEmbedItems = async () => {
     await $actor.update({name: actorName});
     $actorInGame = $actor;
@@ -128,101 +212,38 @@
       dropItemRegistry.add(data);
     }
     dropItemRegistry.advanceQueue(true);
-  }
 
+    // For Race selection
+    console.log('RACE SELECTION:', {
+        selectedRace: $race,
+        raceProperties: Object.keys($race || {}),
+        raceSystem: $race?.system,
+        raceType: typeof $race
+    });
 
-  /**
-   * So the only viable strategy is to keep the race additions in storage
-   * and then only add them after the Actor is added to the game
-   */
-  const createActorInGameAndEmbedItems = async () => {
+    // For Background selection
+    console.log('BACKGROUND SELECTION:', {
+        selectedBackground: $background,
+        backgroundProperties: Object.keys($background || {}),
+        backgroundSystem: $background?.system,
+        backgroundType: typeof $background
+    });
 
-    //@todo WIP: fix this
-    const test = $actor.toObject();
-    test.name = $actor.name // this works but it's a hack
-    $actorInGame = await Actor.create($actor.toObject());
+    // For Class selection
+    console.log('CLASS SELECTION:', {
+        selectedClass: $characterClass,
+        classProperties: Object.keys($characterClass || {}),
+        classSystem: $characterClass?.system,
+        classType: typeof $characterClass
+    });
 
-    // // set flags
-    // const abilityFlags = {
-    //   abilityGenerationMethod: $abilityGenerationMethod,
-    // };
-    // $actorInGame.setFlag(MODULE_ID, "abilities", abilityFlags);
-
-    // background
-    if ($background) {
-      game.system.log.i("Adding background to character");
-      const backgroundData = $background;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "background",
-        itemData: backgroundData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // race
-    if ($race) {
-      game.system.log.i("Adding race to character");
-      const raceData = $race;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "race",
-        itemData: raceData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // subrace
-    if ($subRace) {
-      game.system.log.i("Adding subrace to character");
-      const subRaceData = $subRace;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "subRace",
-        itemData: subRaceData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // character class
-    if ($characterClass) {
-      game.system.log.i("Adding class to character", $characterClass);
-      const characterClassData = $characterClass;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "characterClass",
-        itemData: characterClassData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // character subclass
-    if ($characterSubClass) {
-      game.system.log.i("Adding subclass to character");
-      const characterSubClassData = $characterSubClass;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "characterSubClass",
-        itemData: characterSubClassData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // spells
-    if ($spells) {
-      game.system.log.i("Adding spells to character");
-      const spellsData = $spells;
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "spells",
-        itemData: spellsData,
-        isLevelUp: $isLevelUp,
-      });
-    }
-
-    // game.system.log.d('dropItemRegistry', $dropItemRegistry)
-
-    dropItemRegistry.advanceQueue(true);
+    // For Subclass selection
+    console.log('SUBCLASS SELECTION:', {
+        selectedSubclass: $characterSubClass,
+        subclassProperties: Object.keys($characterSubClass || {}),
+        subclassSystem: $characterSubClass?.system,
+        subclassType: typeof $characterSubClass
+    });
   };
 
 

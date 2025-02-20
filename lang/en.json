@@ -42,6 +42,9 @@
       "World": "World Settings",
       "User": "User Settings",
       "AbilityScoreEntryOptions": "Ability Score Entry Options",
+      "LevelingOptions": "Leveling Options",
+      "DisplayOptions": "Display Options",
+      "DebugOptions": "Debug Options",
       "AbilityEntry": {
         "AllowManualInput": {
           "Name": "Allow manual input",
