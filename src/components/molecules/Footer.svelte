@@ -109,38 +109,47 @@
   };
 
   const createActorInGameAndEmbedItems = async () => {
-    console.log('QUEUE BUILD START:', {
-        background: $background,
-        race: $race,
-        characterClass: $characterClass,
-        characterSubClass: $characterSubClass
+    const startTime = Date.now();
+    
+    game.system.log.d('Starting actor creation:', {
+      time: startTime,
+      actorData: $actor.toObject()
     });
 
-    const test = $actor.toObject();
-    test.name = $actor.name;
     $actorInGame = await Actor.create($actor.toObject());
+    
+    game.system.log.d('Actor created:', {
+      elapsed: Date.now() - startTime,
+      actorId: $actorInGame.id
+    });
 
-    // Before each dropItemRegistry.add call
+    // Add items with timing info
     if ($background) {
-        console.log('PRE-QUEUE ADD BACKGROUND:', {
-            item: $background,
-            hasSystem: !!$background.system,
-            queueData: {
-                actor: $actorInGame,
-                id: "background",
-                itemData: $background,
-                isLevelUp: $isLevelUp,
-            }
-        });
-        dropItemRegistry.add({
-            actor: $actorInGame,
-            id: "background",
-            itemData: $background,
-            isLevelUp: $isLevelUp,
-        });
+      game.system.log.d('Adding background:', {
+        elapsed: Date.now() - startTime,
+        queueLength: get(dropItemRegistry).length
+      });
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "background",
+        itemData: $background,
+        isLevelUp: $isLevelUp,
+      });
     }
 
-    // Similar for race, class, and subclass...
+    if ($race) {
+      game.system.log.d('Adding race:', {
+        elapsed: Date.now() - startTime,
+        queueLength: get(dropItemRegistry).length
+      });
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "race",
+        itemData: $race,
+        isLevelUp: $isLevelUp,
+      });
+    }
+
     if ($characterClass) {
         console.log('PRE-QUEUE ADD CLASS:', {
             item: $characterClass,
@@ -188,7 +197,14 @@
         })) || []
     });
 
-    dropItemRegistry.advanceQueue(true);
+    // Log before starting queue
+    game.system.log.d('Starting queue processing:', {
+      elapsed: Date.now() - startTime,
+      queueLength: get(dropItemRegistry).length,
+      queueItems: get(dropItemRegistry).map(i => i.id)
+    });
+
+    await dropItemRegistry.advanceQueue(true);
   };
 
   const updateActorAndEmbedItems = async () => {
@@ -272,7 +288,7 @@ div
           //-   .flex2
           //-     input.left(type="text" value="{tokenValue}" on:input="{handleTokenNameInput}")
       +if("!$isLevelUp")
-        //- button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
+        button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
         .flex1
           ProgressBar(progress="{progress}")
           +if("$progress != '100'")

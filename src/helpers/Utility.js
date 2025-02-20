@@ -329,31 +329,46 @@ export const dropItemOnCharacter = async (actor, item) => {
   return await actor.sheet._onDropItemCreate(item);
 }
 
-export const itemHasAdvancementChoices = (item) => {
-  game.system.log.d('itemHasAdvancementChoices check:', {
-    item,
-    advancement: item?.system?.advancement,
-    version: game.system.version
+export function itemHasAdvancementChoices(item) {
+  game.system.log.d('Advancement check:', {
+    itemName: item.name,
+    itemType: item.type,
+    hasSystemAdvancement: !!item.system?.advancement,
+    hasDirectAdvancement: !!item.advancement,
+    systemAdvLength: item.system?.advancement?.length,
+    directAdvLength: Array.isArray(item.advancement) ? item.advancement.length : 0
   });
 
   let hasAdvancementChoices = false;
-  if (!item?.system?.advancement.length) return false;
+  const advancements = [];
   
-  for (const adv of item.system.advancement) {
+  // Collect advancements from both possible locations
+  if (Array.isArray(item.advancement)) {
+    advancements.push(...item.advancement);
+  }
+  if (Array.isArray(item.system?.advancement)) {
+    advancements.push(...item.system.advancement);
+  }
+
+  if (!advancements.length) {
+    game.system.log.d('No advancements found');
+    return false;
+  }
+
+  // Check each advancement for choices
+  for (const adv of advancements) {
     game.system.log.d('Checking advancement:', {
-      advancement: adv,
-      configuration: adv.configuration,
-      choices: adv.configuration.choices,
-      completed: adv.configuration.completed,
-      value: adv.value,
-      state: adv.state
+      type: adv.type,
+      hasChoices: !!(adv.choices || adv.configuration?.choices),
+      choicesLocation: adv.choices ? 'direct' : adv.configuration?.choices ? 'configuration' : 'none'
     });
 
-    if (adv.configuration.choices) {
+    if (adv.choices || adv.configuration?.choices) {
       hasAdvancementChoices = true;
       break;
     }
   }
+
   return hasAdvancementChoices;
 }
 

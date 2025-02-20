@@ -25,20 +25,26 @@ const arrayOfObjectsStore = () => {
   return {
     subscribe,
     add: (app) => {
-      console.log('ADDING TO QUEUE:', {
-        app,
-        currentStoreLength: get(store).length,
-        currentStore: get(store)
+      const now = Date.now();
+      game.system.log.d('Queue add operation:', {
+        itemId: app.id,
+        itemType: app.itemData?.type,
+        queueLength: get(store).length,
+        queueContents: get(store).map(i => ({id: i.id, type: i.itemData?.type})),
+        timestamp: now
       });
-      
+
       update(apps => {
         const filteredApps = apps.filter(existingApp => existingApp.id !== app.id);
         const newApps = [...filteredApps, app];
-        console.log('QUEUE UPDATED:', {
-          filteredApps,
-          newApps,
-          newLength: newApps.length
+        
+        game.system.log.d('Queue updated:', {
+          itemId: app.id,
+          elapsed: Date.now() - now,
+          newLength: newApps.length,
+          newContents: newApps.map(i => ({id: i.id, type: i.itemData?.type}))
         });
+        
         return newApps;
       });
     },
@@ -47,24 +53,24 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async function (initial) {
-      console.log('QUEUE START STATE:', {
-        store: get(store),
-        storeLength: get(store).length,
+      const currentStore = get(store);
+      game.system.log.d('Queue state at start:', {
+        currentStore,
+        storeLength: currentStore.length,
+        initial,
         currentProcess: get(inProcess)
       });
 
-      const currentStore = get(store);
       const next = currentStore[0] || false;
-      
-      console.log('NEXT ITEM PRE-PROCESSING:', {
+      game.system.log.d('Next item:', {
         next,
         nextId: next?.id,
-        itemData: next?.itemData,
-        hasSystem: next?.itemData?.system !== undefined,
-        systemKeys: next?.itemData?.system ? Object.keys(next.itemData.system) : null
+        nextType: next?.itemData?.type,
+        remainingItems: currentStore.slice(1)
       });
-
+      
       if (!next) {
+        game.system.log.d('Queue empty, finishing');
         inProcess.set(false);
         return false;
       }
@@ -72,74 +78,67 @@ const arrayOfObjectsStore = () => {
       inProcess.set(next);
       remove(next.id);
       
-      console.log('PRE-PREPARE ITEM:', {
-        nextBeforePrepare: next,
-        itemDataBeforePrepare: next.itemData
-      });
-      
       const item = await prepareItemForDrop(next);
-      
-      console.log('POST-PREPARE ITEM:', {
-        preparedItem: item,
-        hasSystem: item?.system !== undefined,
-        systemKeys: item?.system ? Object.keys(item.system) : null
+      game.system.log.d('Item prepared:', {
+        item,
+        type: item.type,
+        hasAdvancement: itemHasAdvancementChoices(item),
+        advancementDetails: item.advancement
       });
 
       try {
         const result = await dropItemOnCharacter(next.actor, item);
-        console.log('POST-DROP RESULT:', {
+        game.system.log.d('Item dropped:', {
           result,
-          itemAfterDrop: item
+          remainingQueue: get(store),
+          currentProcess: get(inProcess)
         });
-        
-        const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
-        if (skipDomMove) {
-          game.system.log.d('Dev setting: Skipping advancement DOM movement');
-          return true;
-        }
-      } catch (error) {
-        // error handling...
-      }
-      
-      if (currentStore.length > 1) {
-        game.system.log.d('next.itemData', next.itemData)
-        if (!itemHasAdvancementChoices(next.itemData) && isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
-          game.system.log.d('Multiple items but no advancement choices, state:', {
-            currentLength: get(store).length,
-            nextItem: next,
-            activeTab: get(activeTab)
+
+        if (itemHasAdvancementChoices(item)) {
+          game.system.log.d('Processing advancement:', {
+            type: item.type,
+            name: item.name,
+            advancement: item.advancement,
+            currentTab: get(activeTab),
+            queueState: get(store)
           });
-          if (get(activeTab) != 'advancements') {
-            await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+          
+          if (get(activeTab) !== 'advancements') {
+            await tabs.update(t => [...t, { 
+              label: "Advancements", 
+              id: "advancements", 
+              component: "Advancements" 
+            }]);
             activeTab.set('advancements');
           }
           await new Promise(resolve => setTimeout(resolve, 200));
-          game.system.log.d('Calling closeAdvancementManager but returning true');
-          return await Hooks.call('closeAdvancementManager');
+          await Hooks.call('closeAdvancementManager');
+
+          game.system.log.d('Advancement check details:', {
+            itemType: item.type,
+            advancementArray: Array.isArray(item.advancement) ? item.advancement : [],
+            hasChoices: itemHasAdvancementChoices(item),
+            advancementTypes: Array.isArray(item.advancement) ? item.advancement.map(a => a.type) : [],
+            choices: Array.isArray(item.advancement) ? item.advancement.map(a => a.choices) : []
+          });
         }
-      }
-      if (currentStore.length == 1) {
-        game.system.log.d('Single item in queue:', {
-          item: next.itemData,
-          hasAdvancementChoices: itemHasAdvancementChoices(next.itemData),
-          advancementData: next.itemData.system?.advancement,
-          version: game.system.version
+
+        game.system.log.d('Before next queue iteration:', {
+          remainingQueue: get(store),
+          currentProcess: get(inProcess),
+          activeTab: get(activeTab)
         });
-        if (!itemHasAdvancementChoices(next.itemData)) {
-          game.system.log.d('Item has no advancement choices, returning false');
-          return false
-        }
-        //- @why: without this check, the queue will continue to run even if the item has no advancements for the current level
-        if (!isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
-          game.system.log.d('Item has no advancements for level, returning false');
-          return false
-        }
-        game.system.log.d('Item has advancement choices, continuing queue');
+
+        return this.advanceQueue(initial);
+
+      } catch (error) {
+        game.system.log.d('Error in queue processing:', {
+          error,
+          item,
+          remainingQueue: get(store)
+        });
+        return this.advanceQueue(initial);
       }
-      if (currentStore.length == 0) {
-        return false
-      }
-      return true;
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({ ...p, ...obj })),
