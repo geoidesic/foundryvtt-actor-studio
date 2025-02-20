@@ -11,23 +11,44 @@ if (!validVersionTypes.includes(versionType)) {
   process.exit(1);
 }
 
+// Build the project
 execSync('yarn build', { stdio: 'inherit' });
 
-// Run `yarn version` with the specified version type
-execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
-
-// Read the updated version from package.json
+// Read current version from package.json
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-const newVersion = packageJson.version;
+const currentVersion = packageJson.version;
 
-// Read module.json
+// Calculate new version
+const [major, minor, patch] = currentVersion.split('.').map(Number);
+let newVersion;
+switch (versionType) {
+  case 'major':
+    newVersion = `${major + 1}.0.0`;
+    break;
+  case 'minor':
+    newVersion = `${major}.${minor + 1}.0`;
+    break;
+  case 'patch':
+    newVersion = `${major}.${minor}.${patch + 1}`;
+    break;
+}
+
+// Update package.json
+packageJson.version = newVersion;
+fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2) + '\n', 'utf-8');
+
+// Update module.json
 const moduleJsonPath = 'module.json';
 const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
-
-// Update the version in module.json
 moduleJson.version = newVersion;
-
-// Write back the updated module.json
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
-console.log(`Updated module.json to version ${newVersion}`);
+// Commit the build and version changes
+execSync('git add .', { stdio: 'inherit' });
+execSync(`git commit -m "chore: release version ${newVersion}"`, { stdio: 'inherit' });
+
+// Create and push the tag
+execSync(`git tag -a v${newVersion} -m "Release ${newVersion}"`, { stdio: 'inherit' });
+execSync('git push --follow-tags', { stdio: 'inherit' });
+
+console.log(`Released version ${newVersion}`);
