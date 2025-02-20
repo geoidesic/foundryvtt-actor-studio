@@ -47,6 +47,7 @@ export function registerSettings(app: Game): void {
   // lastMigration();
   // abilityScoreMethods();
 
+
   /** World Settings */
   sourcesConfiguration();
   allowManualInput();
@@ -55,6 +56,7 @@ export function registerSettings(app: Game): void {
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
+  enableLevelUp();
   milestoneLeveling();
   forceDnd5eLevelUpAutomation();
   showButtonInSideBar(app);
@@ -65,11 +67,24 @@ export function registerSettings(app: Game): void {
   donationTracker();
   debugSetting();
   debugHooksSetting();
+
   /** User settings */
   dontShowWelcome();
   disableAdvancementCapture();
-
 }
+
+
+export function enableLevelUp() {
+  game.settings.register(MODULE_ID, 'enableLevelUp', {
+    name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableLevelUp.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
 
 function nonGmsCanOnlyCreatePCs() {
   game.settings.register(MODULE_ID, 'nonGmsCanOnlyCreatePCs', {
