@@ -1,5 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { get } from 'svelte/store';
   import { MODULE_ID } from "~/src/helpers/constants";
   import {
     race,
@@ -68,7 +69,7 @@
     const total = $stores.slice(0, 5).length; // Only count the main five stores for total
     const completed = $stores.slice(0, 5).filter((value, index) => {
       if (index === 4) { // Index of abilityGenerationMethod
-        return isAbilityGenerationMethodReady(abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues);
+        return isAbilityGenerationMethodReady(abilityGenerationMethod);
       }
       return !!value;
     }).length;

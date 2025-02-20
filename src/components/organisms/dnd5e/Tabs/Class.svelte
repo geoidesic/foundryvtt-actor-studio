@@ -94,18 +94,26 @@
   };
 
   const selectClassHandler = async (option) => {
+    console.log('CLASS SELECTION START:', {
+        option,
+        optionType: typeof option
+    });
+
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
-    $characterClass = await fromUuid(option);
+    
+    const selectedClass = await fromUuid(option);
+    console.log('CLASS FROM UUID:', {
+        selectedClass,
+        properties: Object.keys(selectedClass || {}),
+        system: selectedClass?.system,
+        advancement: selectedClass?.system?.advancement
+    });
 
-    // game.system.log.d($characterClass.system.advancement);
-    // game.system.log.d(Array.isArray($characterClass.system.advancement));
-    // game.system.log.d($characterClass?.system?.advancement.filter);
-    // game.system.log.d($characterClass?.system?.advancement.map);
-
+    $characterClass = selectedClass;
     activeClass = option;
 
     await tick();
@@ -131,13 +139,28 @@
   };
 
   const selectSubClassHandler = async (option) => {
-    $characterSubClass = await fromUuid(option);
+    console.log('SUBCLASS SELECTION START:', {
+        option,
+        optionType: typeof option,
+        currentClass: $characterClass
+    });
+
+    const selectedSubClass = await fromUuid(option);
+    console.log('SUBCLASS FROM UUID:', {
+        selectedSubClass,
+        properties: Object.keys(selectedSubClass || {}),
+        system: selectedSubClass?.system,
+        advancement: selectedSubClass?.system?.advancement,
+        classIdentifier: selectedSubClass?.system?.classIdentifier
+    });
+
+    $characterSubClass = selectedSubClass;
     activeSubClass = option;
     await tick();
     importClassAdvancements();
     importSubClassAdvancements();
     richSubClassHTML = await TextEditor.enrichHTML(
-      $characterSubClass.system.description.value,
+        $characterSubClass.system.description.value,
     );
   };
 

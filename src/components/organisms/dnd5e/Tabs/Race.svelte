@@ -44,7 +44,20 @@
   };
 
   const selectHandler = async (option) => {
-    $race = await fromUuid(option);
+    console.log('RACE SELECTION START:', {
+        option,
+        optionType: typeof option
+    });
+
+    const selectedRace = await fromUuid(option);
+    console.log('RACE FROM UUID:', {
+        selectedRace,
+        properties: Object.keys(selectedRace || {}),
+        system: selectedRace?.system,
+        advancement: selectedRace?.system?.advancement
+    });
+
+    $race = selectedRace;
     active = option;
     await tick();
     // must be after tick to avoid reactiverace conditions
