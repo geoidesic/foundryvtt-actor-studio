@@ -188,38 +188,31 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
   // game.system.log.d(args)
 })
 
-Hooks.on('closeAdvancementManager', async (...args) => {
-
-  const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
-  if (skipDomMove) {
-    game.system.log.d('Dev setting: Skipping advancement DOM movement');
-    return;
-  }
-  game.system.log.d('closeAdvancementManager args', args);
-  game.system.log.d('closeAdvancementManager args detailed:', {
-    app: args[0],
-    html: args[1],
-    appId: args[0]?.appId,
-    options: args[0]?.options,
-    advancement: args[0]?.advancement,
-    actor: args[0]?.actor
+Hooks.on('closeAdvancementManager', async (app, html, data) => {
+  game.system.log.d('closeAdvancementManager detailed state:', {
+    panelSelector: '#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content',
+    panelExists: $('#foundryvtt-actor-studio-pc-sheet').length,
+    appElement: app?.element,
+    currentProcess: get(dropItemRegistry.currentProcess),
+    isApplicationOpen: !!$('#foundryvtt-actor-studio-pc-sheet').length,
+    activeTab: get(activeTab),
+    appClosed: !app?.element?.closest('.window-app')?.length,
+    parentAppExists: !!$('#foundryvtt-actor-studio-pc-sheet').length
   });
   
   // Check if the panel is empty
-  const isPanelEmpty = () => $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content')?.html()?.trim() === '';
-  game.system.log.d('isPanelEmpty check:', {
-    result: isPanelEmpty(),
-    selector: '#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content',
-    exists: $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content').length,
-    html: $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content').html()
-  });
+  const isPanelEmpty = () => {
+    const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
+    const panelNotEmpty = Boolean(panel.html()?.trim());
+    game.system.log.d('isPanelEmpty panelNotEmpty', panelNotEmpty);
+    return !panelNotEmpty;
+  }
+  
 
   const waitForPanelEmpty = async () => {
     while (!isPanelEmpty()) {
-      game.system.log.d('Panel not empty, waiting...');
-      await new Promise(resolve => setTimeout(resolve, 400)); // Adjust the delay as needed
+      await new Promise(resolve => setTimeout(resolve, 400));
     }
-    game.system.log.d('Panel is now empty');
   };
 
   // Wait for the panel to become empty
@@ -275,7 +268,10 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
   if (game.user.isGM) {
     $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
   }
-  $(`[data-setting-id="${MODULE_ID}.allowManualInput"]`, html).before(`<h4>${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
+  $(`[data-setting-id="${MODULE_ID}.allowManualInput"]`, html).before(`<h4 class="gas-settings-h4">${game.i18n.localize('GAS.Setting.AbilityScoreEntryOptions')}</h4>`)
+  $(`[data-setting-id="${MODULE_ID}.enableLevelUp"]`, html).before(`<h4 class="gas-settings-h4">${game.i18n.localize('GAS.Setting.LevelingOptions')}</h4>`)
+  $(`[data-setting-id="${MODULE_ID}.showButtonInSideBar"]`, html).before(`<h4 class="gas-settings-h4">${game.i18n.localize('GAS.Setting.DisplayOptions')}</h4>`)
+  $(`[data-setting-id="${MODULE_ID}.debug"]`, html).before(`<h4 class="gas-settings-h4">${game.i18n.localize('GAS.Setting.DebugOptions')}</h4>`)
   $(`[data-setting-id="${MODULE_ID}.dontShowWelcome"]`, html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
 })
 
