@@ -1,6 +1,6 @@
 import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
-import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES, IS_DEV } from '../helpers/constants';
+import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
