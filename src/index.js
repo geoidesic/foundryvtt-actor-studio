@@ -343,10 +343,11 @@ function isActorTypeValid(actorTypes, type) {
   return actorTypes.hasOwnProperty(type) && actorTypes[type] === true;
 }
 
-function getActorStudioButton(buttonId) {
+function getActorStudioButton(buttonId, text=false) {
   const gasButton = $(
     `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
       <img src="modules/${MODULE_ID}/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
+      ${text ? `<span>${text}</span>` : ''}
     </button>`,
   );
   return gasButton;
@@ -366,6 +367,15 @@ Hooks.on('renderApplication', (app, html, data) => {
       const actorType = select.val();
       // game.system.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
+        // disable the button if the setting is enabled
+        const hideOtherButtons = !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
+        const nonGmsCanOnlyCreatePCs = !game.user.isGM && game.settings.get(MODULE_ID, 'nonGmsCanOnlyCreatePCs');
+        if (!game.user.isGM && hideOtherButtons) {
+          $('.dialog-buttons .dialog-button:not(#gas-dialog-button)', html).hide();
+        }
+        if (!game.user.isGM && nonGmsCanOnlyCreatePCs) {
+          $('#document-create .form-fields select', html).prop('disabled', true);
+        }
         if (!$('#gas-dialog-button', html).length) {
           const $gasButton = getActorStudioButton('gas-dialog-button');
           // game.system.log.d('html', html)
@@ -392,6 +402,7 @@ Hooks.on('renderApplication', (app, html, data) => {
           $gasButton.on('keydown', handleButtonClick);
 
         }
+        
       } else {
         $('#gas-dialog-button', html).remove(); // Remove button if actorType is not "character"
       }
@@ -431,5 +442,6 @@ Hooks.on('renderActorDirectory', async (app) => {
 
     $gasButton.on('mousedown', handleButtonClick);
     $gasButton.on('keydown', handleButtonClick);
+
   }
 })

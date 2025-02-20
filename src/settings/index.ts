@@ -48,8 +48,6 @@ export function registerSettings(app: Game): void {
   // abilityScoreMethods();
 
   /** World Settings */
-  debugSetting();
-  debugHooksSetting();
   sourcesConfiguration();
   allowManualInput();
   allowStandardArray();
@@ -57,19 +55,42 @@ export function registerSettings(app: Game): void {
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
-  donationTracker();
-  showButtonInSideBar(app);
-  forceDnd5eLevelUpAutomation();
   milestoneLeveling();
+  forceDnd5eLevelUpAutomation();
+  showButtonInSideBar(app);
+  disableOtherActorCreationOptionsForPlayers();
+  nonGmsCanOnlyCreatePCs();
   windowX();
   windowY();
-
+  donationTracker();
+  debugSetting();
+  debugHooksSetting();
   /** User settings */
   dontShowWelcome();
   disableAdvancementCapture();
 
-  // Dev-only settings
-  }
+}
+
+function nonGmsCanOnlyCreatePCs() {
+  game.settings.register(MODULE_ID, 'nonGmsCanOnlyCreatePCs', {
+    name: game.i18n.localize('GAS.Setting.NonGmsCanOnlyCreatePCs.Name'),
+    hint: game.i18n.localize('GAS.Setting.NonGmsCanOnlyCreatePCs.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: true
+  });
+}
+function disableOtherActorCreationOptionsForPlayers() {
+  game.settings.register(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers', {
+    name: game.i18n.localize('GAS.Setting.DisableOtherActorCreationOptionsForPlayers.Name'),
+    hint: game.i18n.localize('GAS.Setting.DisableOtherActorCreationOptionsForPlayers.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+}
 
 function disableAdvancementCapture() {
   game.settings.register(MODULE_ID, 'devDisableAdvancementMove', {

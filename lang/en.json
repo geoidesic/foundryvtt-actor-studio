@@ -5,6 +5,7 @@
       "PackIndexNotFound": "The compendium pack from which the character class was imported not found in this world"
     },
     "ActorStudio": "Actor Studio",
+    "CreateActor": "Create Actor",
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",
     "Level": "Level",
@@ -88,6 +89,10 @@
         "Name": "Disable Advancement Tab",
         "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window."
       },
+      "DisableOtherActorCreationOptionsForPlayers": {
+        "Name": "Disable other Create Actor button",
+        "Hint": "Prevents players from creating actors using the standard Create Actor button. Only Actor Studio will be available."
+      },
       "DonationTrackerRank": {
         "Name": "Rank",
         "Hint": "Enter the folder name for the rank"
@@ -166,6 +171,10 @@
       "ButtonOnDialogInsteadOfActorsDirectory": {
         "Name": "Create Actor dialog button",
         "Hint": "If the button interferes with other modules, or you prefer the aesthetic of having a single 'create actor' button to not confuse your players"
+      },
+      "NonGmsCanOnlyCreatePCs": {
+        "Name": "Non-GMs can only create PCs",
+        "Hint": "If enabled, non-GMs will only be able to create Player Characters, not other actor types"
       },
       "WindowX": {
         "Name": "Actor Studio application window width",
