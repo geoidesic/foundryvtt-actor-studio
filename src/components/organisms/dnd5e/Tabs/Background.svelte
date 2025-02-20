@@ -55,8 +55,20 @@
   };
   
   const selectHandler = async (option) => {
-    $background = await fromUuid(option);
-    // game.system.log.d('background', $background)
+    console.log('BACKGROUND SELECTION START:', {
+        option,
+        optionType: typeof option
+    });
+
+    const selectedBackground = await fromUuid(option);
+    console.log('BACKGROUND FROM UUID:', {
+        selectedBackground,
+        properties: Object.keys(selectedBackground || {}),
+        system: selectedBackground?.system,
+        advancement: selectedBackground?.advancement
+    });
+
+    $background = selectedBackground;
     active = option;
     await tick();
     await importAdvancements();
