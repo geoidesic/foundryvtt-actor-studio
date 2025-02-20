@@ -2,6 +2,8 @@ import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
+import { activeTab, actorInGame } from "~/src/helpers/store";
+import { get } from 'svelte/store';
 
 export default class PCApplication extends SvelteApplication {
   /**
@@ -62,6 +64,51 @@ export default class PCApplication extends SvelteApplication {
         },
       },
     });
+  }
+
+    /**
+   * Gets the header buttons configuration for the sheet
+   * @return {Array<object>} Returns an array of button configurations for the sheet header
+   */
+  _getHeaderButtons() {
+    const buttons = super._getHeaderButtons();
+    
+    // Find the close button
+    const closeIndex = buttons.findIndex(button => button.class === 'close');
+    if (closeIndex === -1) return buttons;
+    
+    // Modify the close button's onClick handler
+    buttons[closeIndex].onclick = async (ev) => {
+      const currentTab = get(activeTab);
+      const actor = get(actorInGame);
+      
+      // Only show confirmation if advancements tab is active
+      if (currentTab === 'advancements') {
+        const confirmed = await Dialog.confirm({
+          title: 'Close',
+          content: 'Are you sure you want to close? If you have incomplete advancements, they will be lost.',
+          yes: () => true,
+          no: () => false,
+          defaultYes: false
+        });
+        
+        if (confirmed) {
+          // Delete the actor if it exists
+          if (actor) {
+            await actor.delete();
+          }
+          this.close();
+        }
+      } else {
+        // If not on advancements tab, just close normally
+        if (actor) {
+          await actor.delete();
+        }
+        this.close();
+      }
+    };
+
+    return buttons;
   }
 
   /**
