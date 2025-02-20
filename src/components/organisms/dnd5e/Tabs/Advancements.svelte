@@ -6,6 +6,14 @@
 
   const doc = getContext("#doc");
 
+  $: currentDrops = $dropItemRegistry?.currentProcess || [];
+  $: itemsWithoutAdvancements = currentDrops.filter(drop => 
+    !drop.itemData.advancement || drop.itemData.advancement.length === 0
+  );
+
+  $: console.log('currentDrops', currentDrops);
+  $: console.log('itemsWithoutAdvancements', itemsWithoutAdvancements);
+  $: console.log('$dropItemRegistry', $dropItemRegistry);
   //- for debugging purposes only
   // async function addAdvancement() {
   //   game.system.log.d("currentProcess", $dropItemRegistry.currentProcess);
@@ -30,6 +38,10 @@
   //- button for debugging only
   //- button.btn.btn-primary.mt-sm(on:click="{addAdvancement}") Add Advancement
   .content
+  +if('itemsWithoutAdvancements.length > 0')
+    .warnings.p-2
+      +each('itemsWithoutAdvancements as item')
+        .warning.notification {item.itemData.name} has no advancements at this level.
 
 </template>
 
