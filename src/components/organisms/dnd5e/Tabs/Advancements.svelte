@@ -6,6 +6,14 @@
 
   const doc = getContext("#doc");
 
+  $: currentDrops = $dropItemRegistry?.currentProcess || [];
+  $: itemsWithoutAdvancements = currentDrops.filter(drop => 
+    !drop.itemData.advancement || drop.itemData.advancement.length === 0
+  );
+
+  $: console.log('currentDrops', currentDrops);
+  $: console.log('itemsWithoutAdvancements', itemsWithoutAdvancements);
+  $: console.log('$dropItemRegistry', $dropItemRegistry);
   //- for debugging purposes only
   // async function addAdvancement() {
   //   game.system.log.d("currentProcess", $dropItemRegistry.currentProcess);
@@ -21,7 +29,7 @@
   // }
   onMount(() => {
     // game.system.log.d("Advancements tab mounted");
-    Hooks.call("gas.renderAdvancement");
+    Hooks.call("gas.captureAdvancement");
   });
 </script>
 
@@ -30,6 +38,10 @@
   //- button for debugging only
   //- button.btn.btn-primary.mt-sm(on:click="{addAdvancement}") Add Advancement
   .content
+  +if('itemsWithoutAdvancements.length > 0')
+    .warnings.p-2
+      +each('itemsWithoutAdvancements as item')
+        .warning.notification {item.itemData.name} has no advancements at this level.
 
 </template>
 
@@ -134,4 +146,17 @@
   
 :global(.gas-advancements .gas-content)
   padding: 0.5rem
+
+:global(.warning.notification)
+  background: rgba(var(--color-warning-rgb), 0.1)
+  border: 1px solid var(--color-warning)
+  border-radius: 4px
+  padding: 0.5rem
+  margin-bottom: 0.5rem
+
+:global(.gas-advancements .header-control)
+  display: none
+
+.warnings
+  margin-top: 1rem
 </style>

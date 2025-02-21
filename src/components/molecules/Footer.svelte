@@ -21,7 +21,7 @@
     isStandardArrayValues,
     subClassesForClass
   } from "~/src/helpers/store";
-  // import { prepareItemForDrop } from "~/src/helpers/Utility";
+  import { prepareItemForDrop, getLevelByDropType, itemHasAdvancementChoices, isAdvancementsForLevelInItem } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/helpers/store";
   import { derived, writable } from "svelte/store";
@@ -137,8 +137,40 @@
             id: "background",
             itemData: $background,
             isLevelUp: $isLevelUp,
+            hasAdvancementChoices: itemHasAdvancementChoices($background),
+            hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $background), $background)
         });
     }
+
+
+    // race
+    if ($race) {
+      game.system.log.i("Adding race to character");
+      const raceData = $race;
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "race",
+        itemData: raceData,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($race),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $race), $race)
+      });
+    }
+
+    // subrace
+    if ($subRace) {
+      game.system.log.i("Adding subrace to character");
+      const subRaceData = $subRace;
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "subRace",
+        itemData: subRaceData,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($subRace),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $subRace), $subRace)
+      });
+    }
+
 
     // Similar for race, class, and subclass...
     if ($characterClass) {
@@ -157,6 +189,9 @@
             id: "characterClass",
             itemData: $characterClass,
             isLevelUp: $isLevelUp,
+            isMultiClass: $isMultiClass,
+            hasAdvancementChoices: itemHasAdvancementChoices($characterClass),
+            hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, "class"), $characterClass)
         });
     }
 
@@ -176,18 +211,14 @@
             id: "characterSubClass",
             itemData: $characterSubClass,
             isLevelUp: $isLevelUp,
+            hasAdvancementChoices: itemHasAdvancementChoices($characterSubClass),
+            hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, "subclass"), $characterSubClass)
         });
     }
 
-    console.log('PRE-QUEUE ADVANCE:', {
-        registry: dropItemRegistry,
-        queueContents: get(dropItemRegistry)?.map(item => ({
-            id: item.id,
-            hasSystem: !!item.itemData?.system,
-            itemData: item.itemData
-        })) || []
-    });
+    console.log('PRE-QUEUE ADVANCE:', $dropItemRegistry);
 
+    //- @why: start the queue, which will activate the advancement tab
     dropItemRegistry.advanceQueue(true);
   };
 
@@ -204,7 +235,7 @@
         isLevelUp: $isLevelUp,
         isMultiClass: $isMultiClass,
       };
-    // const item = prepareItemForDrop(data)
+    const item = prepareItemForDrop(data)
     // game.system.log.d("item", item);
     // return;
     if ($characterClass) {

@@ -1,5 +1,7 @@
 import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
+import { dropItemRegistry } from "~/src/helpers/store";
+import { get } from "svelte/store";
 
 export const getDnd5eVersion = () => {
   const system = game.system;
@@ -20,6 +22,23 @@ export const log = {
   },
   get level() { return this.loggingLevel; }
 };
+
+export function getLevelByDropType(actor, droppedItem) {
+  game.system.log.d('getLevelByDropType', droppedItem);
+  game.system.log.d('actor', actor);
+  const currentDropItemRegistry = get(dropItemRegistry);
+  game.system.log.d('currentDropItemRegistry', currentDropItemRegistry);
+  switch (droppedItem.type) {
+    case 'class':
+      return actor.classes[droppedItem.system.identifier].system.levels
+    case 'subclass':
+      return actor.classes[droppedItem.system.classIdentifier].system.levels
+    case 'race':
+    case 'background':
+    default:
+      return parseInt(actor.system.details.level) + 1
+  }
+}
 
 
 /**
@@ -47,7 +66,7 @@ export function filterPackForDTPackItems(pack, entries) {
   // game.system.log.d('filterPackForDTPackItems', pack, entries);
   // game.system.log.d('filterPackForDTPackItems filter', entries.filter);
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
-    
+
 
     //- if the pack has no DT folders, include everything, @why: as this compendium is not managed by DT
     if (!DTPlugin.packHasDTFolders(pack)) {
@@ -59,10 +78,10 @@ export function filterPackForDTPackItems(pack, entries) {
     // game.system.log.d('allowedDTFolderIds', allowedDTFolderIds);
     const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false)
     // game.system.log.d('allDTFolderIds', allDTFolderIds);
-    
+
     const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
 
-    if(game.user.isGM && game.membership.DEVELOPER_IS_ADMIN) return entries;
+    if (game.user.isGM && game.membership.DEVELOPER_IS_ADMIN) return entries;
     // filter the index.entries accordingly
     entries = entries.filter(([key, value]) => {
 
@@ -72,22 +91,22 @@ export function filterPackForDTPackItems(pack, entries) {
       if (!value.folder) {
         return unregisteredAccess;
       }
-      
+
       //- if the item is in a folder that is not a real folder (e.g. deleted folder)
       // game.system.log.d(2)
       if (!pack.folders.get(value.folder)) return false;
-     
+
       //- if the item is in a DT folder tree, include it
       // game.system.log.d(4)
       if (allowedDTFolderIds.includes(value.folder)) return true;
       // game.system.log.d(5)
-      
+
       //- if item is in a folder that is not a DT folder
-      if(!allDTFolderIds.includes(value.folder)) {
+      if (!allDTFolderIds.includes(value.folder)) {
         // game.system.log.d(6)
         return unregisteredAccess;
       }
-      
+
       // game.system.log.d(7)
 
       return false;
@@ -152,7 +171,7 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
     // game.system.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
     // game.system.log.d('extractItemsFromPacks entries post', entries);
-    
+
     const packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
     items.push(...packItems);
   }
@@ -329,31 +348,46 @@ export const dropItemOnCharacter = async (actor, item) => {
   return await actor.sheet._onDropItemCreate(item);
 }
 
-export const itemHasAdvancementChoices = (item) => {
-  game.system.log.d('itemHasAdvancementChoices check:', {
-    item,
-    advancement: item?.system?.advancement,
-    version: game.system.version
+export function itemHasAdvancementChoices(item) {
+  game.system.log.d('Advancement check:', {
+    itemName: item.name,
+    itemType: item.type,
+    hasSystemAdvancement: !!item.system?.advancement,
+    hasDirectAdvancement: !!item.advancement,
+    systemAdvLength: item.system?.advancement?.length,
+    directAdvLength: Array.isArray(item.advancement) ? item.advancement.length : 0
   });
 
   let hasAdvancementChoices = false;
-  if (!item?.system?.advancement.length) return false;
-  
-  for (const adv of item.system.advancement) {
+  const advancements = [];
+
+  // Collect advancements from both possible locations
+  if (Array.isArray(item.advancement)) {
+    advancements.push(...item.advancement);
+  }
+  if (Array.isArray(item.system?.advancement)) {
+    advancements.push(...item.system.advancement);
+  }
+
+  if (!advancements.length) {
+    game.system.log.d('No advancements found');
+    return false;
+  }
+
+  // Check each advancement for choices
+  for (const adv of advancements) {
     game.system.log.d('Checking advancement:', {
-      advancement: adv,
-      configuration: adv.configuration,
-      choices: adv.configuration.choices,
-      completed: adv.configuration.completed,
-      value: adv.value,
-      state: adv.state
+      type: adv.type,
+      hasChoices: !!(adv.choices || adv.configuration?.choices),
+      choicesLocation: adv.choices ? 'direct' : adv.configuration?.choices ? 'configuration' : 'none'
     });
 
-    if (adv.configuration.choices) {
+    if (adv.choices || adv.configuration?.choices) {
       hasAdvancementChoices = true;
       break;
     }
   }
+
   return hasAdvancementChoices;
 }
 

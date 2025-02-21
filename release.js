@@ -33,10 +33,6 @@ switch (versionType) {
     break;
 }
 
-// Update package.json
-packageJson.version = newVersion;
-fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2) + '\n', 'utf-8');
-
 // Update module.json
 const moduleJsonPath = 'module.json';
 const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
@@ -45,10 +41,9 @@ fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
 // Commit the build and version changes
 execSync('git add .', { stdio: 'inherit' });
-execSync(`git commit -m "chore: release version ${newVersion}"`, { stdio: 'inherit' });
+execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
 
-// Create and push the tag
-execSync(`git tag -a v${newVersion} -m "Release ${newVersion}"`, { stdio: 'inherit' });
-execSync('git push --follow-tags', { stdio: 'inherit' });
+// Run `yarn version` with the specified version type
+execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
 
 console.log(`Released version ${newVersion}`);
