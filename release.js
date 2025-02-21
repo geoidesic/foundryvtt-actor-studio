@@ -11,10 +11,16 @@ if (!validVersionTypes.includes(versionType)) {
   process.exit(1);
 }
 
+// Build the project
 execSync('yarn build', { stdio: 'inherit' });
+
+// Commit the build and version changes
+execSync('git add .', { stdio: 'inherit' });
+execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
 
 // Run `yarn version` with the specified version type
 execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
+
 
 // Read the updated version from package.json
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
