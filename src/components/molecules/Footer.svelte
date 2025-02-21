@@ -218,6 +218,7 @@
 
     console.log('PRE-QUEUE ADVANCE:', $dropItemRegistry);
 
+    //- @why: start the queue, which will activate the advancement tab
     dropItemRegistry.advanceQueue(true);
   };
 

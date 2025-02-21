@@ -13,6 +13,34 @@ const upTabs = [
 
 ]
 
+async function closeAdvancementManager() {
+  const isPanelEmpty = () => {
+    const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
+    const panelNotEmpty = Boolean(panel.html()?.trim());
+    return !panelNotEmpty;
+  }
+  
+  const waitForPanelEmpty = async () => {
+    while (!isPanelEmpty()) {
+      await new Promise(resolve => setTimeout(resolve, 600));
+    }
+  };
+
+  // Wait for the panel to become empty
+  await waitForPanelEmpty();
+
+  // Once the panel is empty, proceed with the queue
+  const queue = await dropItemRegistry.advanceQueue();
+
+  if (!queue) {
+    const actor = get(dropItemRegistry.currentProcess)?.actor;
+    Hooks.call("gas.close");
+    if (actor) {
+      actor.sheet.render(true);
+    }
+  }
+}
+
 let lastDrop = writable(false);
 
 const arrayOfObjectsStore = () => {
@@ -47,44 +75,18 @@ const arrayOfObjectsStore = () => {
     remove,
     removeAll: () => set([]),
     advanceQueue: async function (initial) {
-      console.log('QUEUE START STATE:', {
-        store: get(store),
-        storeLength: get(store).length,
-        currentProcess: get(inProcess)
-      });
-
       const currentStore = get(store);
       const next = currentStore[0] || false;
 
-      console.log('NEXT ITEM PRE-PROCESSING:', {
-        next,
-        nextId: next?.id,
-        itemData: next?.itemData,
-        hasSystem: next?.itemData?.system !== undefined,
-        systemKeys: next?.itemData?.system ? Object.keys(next.itemData.system) : null
-      });
-
       if (!next) {
         inProcess.set(false);
-        await Hooks.call('closeAdvancementManager');
         return false;
       }
 
       inProcess.set(next);
       remove(next.id);
 
-      console.log('PRE-PREPARE ITEM:', {
-        nextBeforePrepare: next,
-        itemDataBeforePrepare: next.itemData
-      });
-
       const item = await prepareItemForDrop(next);
-
-      console.log('POST-PREPARE ITEM:', {
-        preparedItem: item,
-        hasSystem: item?.system !== undefined,
-        systemKeys: item?.system ? Object.keys(item.system) : null
-      });
 
       try {
         const result = await dropItemOnCharacter(next.actor, item);
@@ -102,48 +104,21 @@ const arrayOfObjectsStore = () => {
         // error handling...
       }
 
-      if (currentStore.length > 1) {
-        game.system.log.d('next.itemData', next.itemData)
-        game.system.log.d('Multiple items but no advancement choices, state:', {
-          currentLength: get(store).length,
-          nextItem: next,
-          activeTab: get(activeTab)
-        });
-        if (get(activeTab) != 'advancements') {
-          await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
-          activeTab.set('advancements');
-        }
-        await new Promise(resolve => setTimeout(resolve, 200));
-        game.system.log.d('Calling closeAdvancementManager but returning true');
-        return await Hooks.call('closeAdvancementManager');
+      if (get(activeTab) != 'advancements') {
+        await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        activeTab.set('advancements');
       }
-      if (currentStore.length == 1) {
-        game.system.log.d('Single item in queue:', {
-          item: next.itemData,
-          hasAdvancementChoices: itemHasAdvancementChoices(next.itemData),
-          advancementData: next.itemData.system?.advancement,
-          version: game.system.version
-        });
-        if (!itemHasAdvancementChoices(next.itemData)) {
-          game.system.log.d('Item has no advancement choices, returning false');
-          return false
-        }
-        //- @why: without this check, the queue will continue to run even if the item has no advancements for the current level
-        if (!isAdvancementsForLevelInItem(next.actor.classes[next.itemData.system.classIdentifier].system.levels, next.itemData)) {
-          game.system.log.d('Item has no advancements for level, returning false');
-          return false
-        }
-        game.system.log.d('Item has advancement choices, continuing queue');
-      }
-      if (currentStore.length == 0) {
-        return false
-      }
-      return true;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+      //- @why: this hook will recursively call advanceQueue until it returns false, it's a hook because it needs access to the jQuery DOM
+      // return await Hooks.call('closeAdvancementManager');
+      return await closeAdvancementManager()
     },
     currentProcess: derived(inProcess, $inProcess => $inProcess),
     updateCurrentProcess: (obj) => inProcess.update(p => ({ ...p, ...obj })),
   };
 }
+
 
 export const race = writable(false);
 export const subRace = writable(false);

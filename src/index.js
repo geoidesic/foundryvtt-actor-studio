@@ -123,10 +123,10 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
       // console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
-        Hooks.call("gas.renderAdvancement");
+        Hooks.call("gas.captureAdvancement");
       } else {
         game.system.log.i('Advancements tab not found, adding it to the tabs')
-        // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.renderAdvancement
+        // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.captureAdvancement
         if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         } else {
@@ -152,7 +152,7 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
   // game.system.log.d("dropActorSheetData", actor, type, info);
 })
 
-Hooks.on('gas.renderAdvancement', () => {
+Hooks.on('gas.captureAdvancement', () => {
 
   const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
   if (skipDomMove) {
@@ -160,10 +160,10 @@ Hooks.on('gas.renderAdvancement', () => {
     return;
   }
 
-  game.system.log.d('gas.renderAdvancement')
+  game.system.log.d('gas.captureAdvancement')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
-  game.system.log.d('currentProcess in gas.renderAdvancement:', {
+  game.system.log.d('currentProcess in gas.captureAdvancement:', {
     id: currentProcess?.id,
     app: currentProcess?.app,
     element: currentProcess?.app?.element
@@ -188,82 +188,6 @@ Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
   // game.system.log.d(args)
 })
 
-Hooks.on('closeAdvancementManager', async (app, html, data) => {
-  game.system.log.d('closeAdvancementManager detailed state:', {
-    panelSelector: '#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content',
-    panelExists: $('#foundryvtt-actor-studio-pc-sheet').length,
-    appElement: app?.element,
-    currentProcess: get(dropItemRegistry.currentProcess),
-    isApplicationOpen: !!$('#foundryvtt-actor-studio-pc-sheet').length,
-    activeTab: get(activeTab),
-    appClosed: !app?.element?.closest('.window-app')?.length,
-    parentAppExists: !!$('#foundryvtt-actor-studio-pc-sheet').length
-  });
-  
-  // Check if the panel is empty
-  const isPanelEmpty = () => {
-    const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
-    const panelNotEmpty = Boolean(panel.html()?.trim());
-    game.system.log.d('isPanelEmpty panelNotEmpty', panelNotEmpty);
-    return !panelNotEmpty;
-  }
-  
-
-  const waitForPanelEmpty = async () => {
-    while (!isPanelEmpty()) {
-      await new Promise(resolve => setTimeout(resolve, 400));
-    }
-  };
-
-  // Wait for the panel to become empty
-  await waitForPanelEmpty();
-
-  game.system.log.d('closeAdvancementManager currentProcess', dropItemRegistry.currentProcess);
-  game.system.log.d('dropItemRegistry detailed:', {
-    currentProcess: get(dropItemRegistry.currentProcess),
-    store: dropItemRegistry,
-    storeKeys: Object.keys(dropItemRegistry)
-  });
-
-  // Once the panel is empty, proceed with the queue
-  const queue = await dropItemRegistry.advanceQueue();
-  game.system.log.d('closeAdvancementManager queue', queue);
-  game.system.log.d('Queue state:', {
-    queueResult: queue,
-    currentProcessAfterQueue: get(dropItemRegistry.currentProcess),
-    dropItemRegistryAfterQueue: dropItemRegistry
-  });
-
-  if (!queue) {
-    game.system.log.d('No queue, preparing to close');
-    const actor = get(dropItemRegistry.currentProcess)?.actor;
-    game.system.log.d('Actor before close:', {
-      actor,
-      actorId: actor?.id,
-      hasSheet: !!actor?.sheet,
-      currentProcess: get(dropItemRegistry.currentProcess)
-    });
-    
-    Hooks.call("gas.close");
-    game.system.log.d('After gas.close:', {
-      actorStillExists: !!actor,
-      actorSheetStillExists: !!actor?.sheet,
-      currentProcessAfterClose: get(dropItemRegistry.currentProcess)
-    });
-    
-    if (actor) {
-      game.system.log.d('Opening actor sheet for:', actor.name);
-      game.system.log.d('Actor sheet render attempt:', {
-        actor,
-        sheet: actor.sheet,
-        sheetApp: actor.sheet?._state,
-        rendered: actor.sheet?._state > 0
-      });
-      actor.sheet.render(true);
-    }
-  }
-});
-
 Hooks.on('renderSettingsConfig', (app, html, context) => {
   if (game.user.isGM) {
     $(`section[data-tab="${MODULE_ID}"] h2`, html).after(`<h3>${game.i18n.localize('GAS.Setting.World')}</h3>`)
@@ -274,7 +198,6 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
   $(`[data-setting-id="${MODULE_ID}.debug"]`, html).before(`<h4 class="gas-settings-h4">${game.i18n.localize('GAS.Setting.DebugOptions')}</h4>`)
   $(`[data-setting-id="${MODULE_ID}.dontShowWelcome"]`, html).before(`<h3>${game.i18n.localize('GAS.Setting.User')}</h3>`)
 })
-
 
 Hooks.on('renderCompendium', async (app, html, data) => {
   // game.system.log.d('renderCompendium', app, html, data)
