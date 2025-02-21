@@ -14,6 +14,31 @@ if (!validVersionTypes.includes(versionType)) {
 // Build the project
 execSync('yarn build', { stdio: 'inherit' });
 
+// Read current version from package.json
+const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+const currentVersion = packageJson.version;
+
+// Calculate new version
+const [major, minor, patch] = currentVersion.split('.').map(Number);
+let newVersion;
+switch (versionType) {
+  case 'major':
+    newVersion = `${major + 1}.0.0`;
+    break;
+  case 'minor':
+    newVersion = `${major}.${minor + 1}.0`;
+    break;
+  case 'patch':
+    newVersion = `${major}.${minor}.${patch + 1}`;
+    break;
+}
+
+// Update module.json
+const moduleJsonPath = 'module.json';
+const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
+moduleJson.version = newVersion;
+fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
+
 // Commit the build and version changes
 execSync('git add .', { stdio: 'inherit' });
 execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
@@ -21,19 +46,4 @@ execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
 // Run `yarn version` with the specified version type
 execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
 
-
-// Read the updated version from package.json
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
-const newVersion = packageJson.version;
-
-// Read module.json
-const moduleJsonPath = 'module.json';
-const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
-
-// Update the version in module.json
-moduleJson.version = newVersion;
-
-// Write back the updated module.json
-fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
-
-console.log(`Updated module.json to version ${newVersion}`);
+console.log(`Released version ${newVersion}`);
