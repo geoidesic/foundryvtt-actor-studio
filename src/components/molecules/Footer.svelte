@@ -142,6 +142,36 @@
         });
     }
 
+
+    // race
+    if ($race) {
+      game.system.log.i("Adding race to character");
+      const raceData = $race;
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "race",
+        itemData: raceData,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($race),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $race), $race)
+      });
+    }
+
+    // subrace
+    if ($subRace) {
+      game.system.log.i("Adding subrace to character");
+      const subRaceData = $subRace;
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "subRace",
+        itemData: subRaceData,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($subRace),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $subRace), $subRace)
+      });
+    }
+
+
     // Similar for race, class, and subclass...
     if ($characterClass) {
         console.log('PRE-QUEUE ADD CLASS:', {
