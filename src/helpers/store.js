@@ -9,8 +9,7 @@ const initialTabs = [
 
 // Tabs for level up
 const upTabs = [
-  { label: "Level Up", id: "level-up", component: "LevelUp" },
-
+  { label: "Level Up", id: "level-up", component: "LevelUp" }
 ]
 
 async function closeAdvancementManager() {

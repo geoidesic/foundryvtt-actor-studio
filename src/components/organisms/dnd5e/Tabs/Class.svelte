@@ -80,27 +80,27 @@
       ["system.classIdentifier"],
     );
     
-    game.system.log.d('mappedSubClassIndex', mappedSubClassIndex);
+    // game.system.log.d('mappedSubClassIndex', mappedSubClassIndex);
 
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
-      game.system.log.d("subclass", x);
-      game.system.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
+      // game.system.log.d("subclass", x);
+      // game.system.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
       return x.system.classIdentifier == $characterClass.system.identifier;
     });
 
     const output = mappedSubClassIndex
       .flat()
       .sort((a, b) => a.label.localeCompare(b.label));
-    game.system.log.d("subclass output", output);
+    // game.system.log.d("subclass output", output);
     return output;
 
   };
 
   const selectClassHandler = async (option) => {
-    console.log('CLASS SELECTION START:', {
-        option,
-        optionType: typeof option
-    });
+    // console.log('CLASS SELECTION START:', {
+    //     option,
+    //     optionType: typeof option
+    // });
 
     activeSubClass = null;
     $characterSubClass = null;
@@ -109,12 +109,12 @@
     richSubClassHTML = "";
     
     const selectedClass = await fromUuid(option);
-    console.log('CLASS FROM UUID:', {
-        selectedClass,
-        properties: Object.keys(selectedClass || {}),
-        system: selectedClass?.system,
-        advancement: selectedClass?.system?.advancement
-    });
+    // console.log('CLASS FROM UUID:', {
+    //     selectedClass,
+    //     properties: Object.keys(selectedClass || {}),
+    //     system: selectedClass?.system,
+    //     advancement: selectedClass?.system?.advancement
+    // });
 
     $characterClass = selectedClass;
     activeClass = option;
@@ -142,20 +142,10 @@
   };
 
   const selectSubClassHandler = async (option) => {
-    console.log('SUBCLASS SELECTION START:', {
-        option,
-        optionType: typeof option,
-        currentClass: $characterClass
-    });
+
 
     const selectedSubClass = await fromUuid(option);
-    console.log('SUBCLASS FROM UUID:', {
-        selectedSubClass,
-        properties: Object.keys(selectedSubClass || {}),
-        system: selectedSubClass?.system,
-        advancement: selectedSubClass?.system?.advancement,
-        classIdentifier: selectedSubClass?.system?.classIdentifier
-    });
+   
 
     $characterSubClass = selectedSubClass;
     activeSubClass = option;

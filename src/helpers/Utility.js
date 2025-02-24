@@ -40,7 +40,6 @@ export function getLevelByDropType(actor, droppedItem) {
   }
 }
 
-
 /**
  * Gets a rules from a journal by ID and Page
  *
@@ -114,7 +113,6 @@ export function filterPackForDTPackItems(pack, entries) {
   }
   return entries;
 }
-
 
 /**
  * Extracts items from all compendium packs including subfolders.
@@ -199,7 +197,6 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   return newArray;
 }
 
-
 export function getNestedProperty(obj, path) {
   return path.split('.').reduce((acc, key) => acc && acc[key], obj);
 }
@@ -210,8 +207,6 @@ export function setNestedProperty(obj, path, value) {
   const lastObj = keys.reduce((acc, key) => acc[key] = acc[key] || {}, obj);
   lastObj[lastKey] = value;
 }
-
-
 
 export function getFoldersFromMultiplePacks(packs, depth = 1) {
   const folders = [];
@@ -280,12 +275,10 @@ export function getAdvancementValue(advancement, key) {
   }
 }
 
-
 export function ucfirst(str) {
   if (!str) return str;
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
-
 
 export function camelCaseToTitleCase(camelCaseStr) {
   // Split the string at each uppercase letter

@@ -61,13 +61,25 @@
     }
   }
 
+  function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
+    const subClassLevel = characterClass?.getFlag ? characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
+    const actorLevel = $actor?.system?.details?.level ? $actor.system.details.level + 1 : 1;
+    game.system.log.d("[FOOTER - derived store] subClassLevel", subClassLevel);
+    game.system.log.d("[FOOTER - derived store] level", actorLevel);
+    game.system.log.d("[FOOTER - derived store] subClassLevel === level", subClassLevel === actorLevel);
+    return subClassLevel && parseInt(actorLevel) !== parseInt(subClassLevel);
+  }
+
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
-    const [race, characterClass, characterSubClass, background, abilityGenerationMethod, pointBuy, abilityRolls, isStandardArrayValues] = $stores;
+    const [race, characterClass, characterSubClass, background, abilityGenerationMethod] = $stores;
     //- @why: some classes don't have subclasses until later levels
     const length = $subClassesForClass.length > 0 ? 5 : 4;
     const total = $stores.slice(0, 5).length; // Only count the main five stores for total
     const completed = $stores.slice(0, 5).filter((value, index) => {
+      if (index === 2) { // Index of abilityGenerationMethod
+        return isSubclassForThisCharacterLevel(characterClass, characterSubClass);
+      }
       if (index === 4) { // Index of abilityGenerationMethod
         return isAbilityGenerationMethodReady(abilityGenerationMethod);
       }

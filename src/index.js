@@ -309,9 +309,7 @@ Hooks.on('renderApplication', (app, html, data) => {
               if (userHasRightPermissions()) {
                 const actorName = $('input', html).val();
                 const folderName = $('select[name="folder"]', html).val();
-                // game.system.log.d('actorType', actorType);
                 try {
-                  // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
                   new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });
                   app.close();
                 } catch (error) {
