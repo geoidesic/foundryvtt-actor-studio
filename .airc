@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "modifications": {
+      "understand_before_edit": true,
+      "preserve_functionality": true,
+      "comment_required": true
+    }
+  }
+} 
