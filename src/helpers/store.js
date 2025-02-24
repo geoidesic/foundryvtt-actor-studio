@@ -14,6 +14,9 @@ const upTabs = [
 
 async function closeAdvancementManager() {
   const isPanelEmpty = () => {
+    // First check if we're on the advancements tab
+    if (get(activeTab) !== 'advancements') return false;
+    
     const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
     const panelNotEmpty = Boolean(panel.html()?.trim());
     return !panelNotEmpty;
