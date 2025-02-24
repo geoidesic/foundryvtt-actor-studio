@@ -284,12 +284,12 @@
             ul.icon-list
               +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
                 li.left {localize('GAS.NoAdvancements')}
-              +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel")
-                  li.left 
-                    .flexrow
-                      .flex0.relative.image
-                        img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
-                      .flex2 {localize('GAS.SubClass')}
+              +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancmentExpanded")
+                li.left 
+                  .flexrow
+                    .flex0.relative.image
+                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
+                    .flex2 {localize('GAS.SubClass')}
               +if("classAdvancementArrayFiltered.length && classAdvancmentExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
