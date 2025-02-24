@@ -44,5 +44,17 @@
     "build": "vite build",
     "eslint": "eslint .",
     "release": "node release.js"
+  },
+  "svelte": {
+    "preprocess": "svelte-preprocess"
+  },
+  "preprocessConfig": {
+    "template": "pug",
+    "style": "sass",
+    "conventions": {
+      "template": "Use Pug syntax (+if, +each, attributes)",
+      "style": "Use SASS/SCSS syntax",
+      "script": "Standard JavaScript"
+    }
   }
 }
