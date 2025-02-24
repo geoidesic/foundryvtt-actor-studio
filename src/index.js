@@ -14,6 +14,7 @@ import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
+import SubclassLevelPlugin from './plugins/subclass-level';
 
 
 
@@ -56,6 +57,9 @@ Hooks.once("ready", (app, html, data) => {
   }
 
   Hooks.call("gas.readyIsComplete");
+
+  // Initialize the subclass level plugin
+  SubclassLevelPlugin.init();
 });
 
 //- donation-tracker integration

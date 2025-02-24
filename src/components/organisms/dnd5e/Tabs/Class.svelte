@@ -17,6 +17,7 @@
   } from "~/src/helpers/store";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
 
   let richHTML = "",
@@ -34,7 +35,9 @@
     subClassesPack = game.packs.get("dnd5e.subclasses"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
+    classAdvancmentExpanded = false,
     subClassAdvancementArrayFiltered = [],
+    subClassAdvancmentExpanded = false,
     mappedClassIndex = extractItemsFromPacksSync(packs, [
       "name->label",
       "img",
@@ -182,6 +185,14 @@
     }
   };
 
+  const toggleClassAdvancements = () => {
+    classAdvancmentExpanded = !classAdvancmentExpanded;
+  };
+
+  const toggleSubClassAdvancements = () => {
+    subClassAdvancmentExpanded = !subClassAdvancmentExpanded;
+  };
+
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
@@ -218,6 +229,9 @@
     classAdvancementArrayFiltered = [];
   }
 
+  $: subClassLevel = $characterClass.getFlag ? $characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
+  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
+
   onMount(async () => {
     if ($characterClass) {
       game.system.log.d($characterClass);
@@ -248,7 +262,7 @@
           .flex3 
             IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         +if("$characterClass")
-          +if("subclasses.length")
+          +if("subclasses.length && classGetsSubclassThisLevel")
             h3.left.mt-md {localize('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
@@ -260,35 +274,51 @@
               TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
           +if("classAdvancementArrayFiltered")
             h3.left.mt-sm.flexrow
+              .flex0(on:click="{toggleClassAdvancements}")
+                +if("classAdvancmentExpanded")
+                  span [-]
+                +if("!classAdvancmentExpanded")
+                  spen [+]
               .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
               .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
             ul.icon-list
-              +if("!classAdvancementArrayFiltered.length")
+              +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
                 li.left {localize('GAS.NoAdvancements')}
-                +else()
-                  +each("classAdvancementArrayFiltered as advancement")
-                    //- @todo: this should be broken out into components for each advancement.type
-                    li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                        .flex0.relative.image
-                          img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                        .flex2 {advancement.title}
-                      .flexrow
-                        //- pre advancement.type {advancement.type}
-                        svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
+              +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel")
+                  li.left 
+                    .flexrow
+                      .flex0.relative.image
+                        img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
+                      .flex2 {localize('GAS.SubClass')}
+              +if("classAdvancementArrayFiltered.length && classAdvancmentExpanded")
+                +each("classAdvancementArrayFiltered as advancement")
+                  //- @todo: this should be broken out into components for each advancement.type
+                  li.left(data-type="{advancement.type}")
+                    .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                      .flex0.relative.image
+                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                      .flex2 {advancement.title}
+                    .flexrow
+                      //- pre advancement.type {advancement.type}
+                      svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
   
           +if("subclasses.length")
             //- h3.left.mt-sm Description
             //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
-            +if("subClassAdvancementArrayFiltered")
+            +if("subClassAdvancementArrayFiltered.length")
               h3.left.mt-sm.flexrow
+                .flex0(on:click="{toggleSubClassAdvancements}")
+                  +if("subClassAdvancmentExpanded")
+                    span [-]
+                  +if("!subClassAdvancmentExpanded")
+                    spen [+]
                 .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
                 .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
               ul.icon-list
                 +if("!subClassAdvancementArrayFiltered.length")
                   li.left {localize('GAS.NoAdvancements')}
-                  +else()
-                    +each("subClassAdvancementArrayFiltered as advancement")
+                +if("subClassAdvancementArrayFiltered.length && subClassAdvancmentExpanded")
+                  +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type
                       li.left(data-type="{advancement.type}")
                         .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
