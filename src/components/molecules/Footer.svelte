@@ -61,6 +61,19 @@
     }
   }
 
+  function calculateProgressStoreLength(characterClass, characterSubClass) {
+    let length = 5;
+    if ($subClassesForClass.length > 0 && isSubclassForThisCharacterLevel(characterClass, characterSubClass)) {
+      length = length - 1;
+    }
+    return length;
+  }
+
+  /**
+   * @why: some classes don't have subclasses until later levels
+   * @param characterClass
+   * @param characterSubClass
+   */
   function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
     const subClassLevel = characterClass?.getFlag ? characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
     const actorLevel = $actor?.system?.details?.level ? $actor.system.details.level + 1 : 1;
@@ -73,18 +86,16 @@
   // Derive the progress value from the store states
   const progress = derived(stores, ($stores) => {
     const [race, characterClass, characterSubClass, background, abilityGenerationMethod] = $stores;
-    //- @why: some classes don't have subclasses until later levels
-    const length = $subClassesForClass.length > 0 ? 5 : 4;
-    const total = $stores.slice(0, 5).length; // Only count the main five stores for total
+    const length = calculateProgressStoreLength(characterClass, characterSubClass)
+    const total = $stores.slice(0, length).length; // Only count the main five stores for total
     const completed = $stores.slice(0, 5).filter((value, index) => {
-      if (index === 2) { // Index of abilityGenerationMethod
-        return isSubclassForThisCharacterLevel(characterClass, characterSubClass);
-      }
       if (index === 4) { // Index of abilityGenerationMethod
         return isAbilityGenerationMethodReady(abilityGenerationMethod);
       }
       return !!value;
     }).length;
+    game.system.log.d("[FOOTER - derived store] completed", completed);
+    game.system.log.d("[FOOTER - derived store] total", total);
     return (completed / total) * 100;
   });
 
@@ -153,7 +164,6 @@
             hasAdvancementsForLevel: isAdvancementsForLevelInItem(getLevelByDropType($actorInGame, $background), $background)
         });
     }
-
 
     // race
     if ($race) {
@@ -289,12 +299,8 @@
     });
   };
 
-
-
   $: value = $actor?.name || "";
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
-
-
   
 </script>
 
