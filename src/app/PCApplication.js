@@ -101,9 +101,6 @@ export default class PCApplication extends SvelteApplication {
         }
       } else {
         // If not on advancements tab, just close normally
-        if (actor) {
-          await actor.delete();
-        }
         this.close();
       }
     };
