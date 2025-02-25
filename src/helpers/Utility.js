@@ -302,6 +302,19 @@ export const getCompendiumSource = (item) => {
   return sourceId;
 }
 
+/**
+ * Prepares an item for dropping onto an actor by creating a new Item instance from the provided data.
+ * Handles both level-up and initial character creation scenarios differently:
+ * - For level-up with multi-class: Uses the direct UUID of the item
+ * - For regular level-up: Uses the compendium source of the item
+ * - For initial character creation: Creates from the direct UUID
+ * 
+ * @param {Object} options
+ * @param {Object} options.itemData - The source item data containing UUID and compendium information
+ * @param {boolean} options.isLevelUp - Whether this is being called during level-up
+ * @param {boolean} options.isMultiClass - Whether this is a multi-class level-up
+ * @returns {Promise<Item|undefined>} The prepared Item instance, or undefined if item creation fails
+ */
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
   game.system.log.d('prepareItemForDrop');
   game.system.log.d('isLevelUp? ', isLevelUp);

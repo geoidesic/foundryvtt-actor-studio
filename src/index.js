@@ -9,7 +9,7 @@ import manifestJson from '../module.json';
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
-import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs } from '~/src/helpers/store.js';
+import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/helpers/store.js';
 import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
@@ -156,22 +156,32 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
   // game.system.log.d("dropActorSheetData", actor, type, info);
 })
 
-Hooks.on('gas.captureAdvancement', () => {
-
+Hooks.on('gas.captureAdvancement', (initial = false) => {
+  game.system.log.d('[gas.captureAdvancement] initial', initial)
   const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
   if (skipDomMove) {
-    game.system.log.d('Dev setting: Skipping advancement DOM movement');
+    game.system.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
     return;
   }
 
-  game.system.log.d('gas.captureAdvancement')
 
   const currentProcess = get(dropItemRegistry.currentProcess);
-  game.system.log.d('currentProcess in gas.captureAdvancement:', {
+  game.system.log.d('[gas.captureAdvancement] currentProcess in gas.captureAdvancement:', {
     id: currentProcess?.id,
     app: currentProcess?.app,
     element: currentProcess?.app?.element
   });
+
+  // Cache initial state if this is the first capture
+  if (initial) {
+    preAdvancementSelections.set({
+      race: get(race),
+      background: get(background),
+      class: get(characterClass),
+      subclass: get(characterSubClass)
+    });
+    game.system.log.d('[gas.captureAdvancement] Caching initial advancement state', get(preAdvancementSelections));
+  }
 
   if (currentProcess) {
     const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');

@@ -52,6 +52,9 @@ const arrayOfObjectsStore = () => {
 
   const remove = (id) => update(apps => apps.filter(app => app.id !== id));
 
+  // Define the expected order of items
+  const expectedOrder = ['race', 'background', 'characterClass', 'characterSubClass'];
+
   return {
     subscribe,
     add: (app) => {
@@ -72,7 +75,42 @@ const arrayOfObjectsStore = () => {
         return newApps;
       });
     },
+    splice: (app) => {
+      console.log('SPLICING INTO QUEUE:', {
+        app,
+        currentStore: get(store)
+      });
 
+      update(apps => {
+        // Remove any existing instance of this item
+        const filteredApps = apps.filter(existingApp => existingApp.id !== app.id);
+        
+        // Find the correct position based on expectedOrder
+        const appIndex = expectedOrder.indexOf(app.id);
+        if (appIndex === -1) {
+          // If not in expected order, just append
+          return [...filteredApps, app];
+        }
+
+        // Find the insertion point by looking at the next expected item
+        let insertIndex = filteredApps.length;
+        for (let i = appIndex + 1; i < expectedOrder.length; i++) {
+          const nextExpectedId = expectedOrder[i];
+          const nextItemIndex = filteredApps.findIndex(item => item.id === nextExpectedId);
+          if (nextItemIndex !== -1) {
+            insertIndex = nextItemIndex;
+            break;
+          }
+        }
+
+        // Insert the item at the correct position
+        return [
+          ...filteredApps.slice(0, insertIndex),
+          app,
+          ...filteredApps.slice(insertIndex)
+        ];
+      });
+    },
 
     remove,
     removeAll: () => set([]),
@@ -107,7 +145,12 @@ const arrayOfObjectsStore = () => {
       }
 
       if (get(activeTab) != 'advancements') {
-        await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        const currentTabs = get(tabs);
+        const advancementTabExists = currentTabs.some(tab => tab.id === 'advancements');
+        
+        if (!advancementTabExists) {
+          await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+        }
         activeTab.set('advancements');
       }
 
@@ -150,6 +193,47 @@ export const isMultiClass = derived([characterClass, activeClass, newClassLevel]
   if ($characterClass && !$newClassLevel) return true;
 });
 
+// Cache store for initial character selection state
+export const preAdvancementSelections = writable(null);
+
+// Derived store to track changes from initial state
+export const hasCharacterCreationChanges = derived(
+  [race, background, characterClass, characterSubClass, preAdvancementSelections],
+  ([$race, $background, $characterClass, $characterSubClass, $initialState]) => {
+    game.system.log.d("hasCharacterCreationChanges initialState", $initialState);
+    if (!$initialState) return false;
+    
+    return (
+      $race?.id !== $initialState.race?.id ||
+      $background?.id !== $initialState.background?.id ||
+      $characterClass?.id !== $initialState.class?.id ||
+      $characterSubClass?.id !== $initialState.subclass?.id
+    );
+  }
+);
+
+//- Derived store to get the changed items
+export const changedCharacterCreationItems = derived([race, background, characterClass, characterSubClass, preAdvancementSelections], 
+  ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
+    if (!$preAdvancementSelections) return [];
+    
+    const changes = [];
+    if ($race?.id !== $preAdvancementSelections.race?.id) {
+      changes.push({ type: 'race', item: $preAdvancementSelections.race });
+    }
+    if ($background?.id !== $preAdvancementSelections.background?.id) {
+      changes.push({ type: 'background', item: $preAdvancementSelections.background });
+    }
+    if ($characterClass?.id !== $preAdvancementSelections.class?.id) {
+      changes.push({ type: 'class', item: $preAdvancementSelections.class });
+    }
+    if ($characterSubClass?.id !== $preAdvancementSelections.subclass?.id) {
+      changes.push({ type: 'subclass', item: $preAdvancementSelections.subclass });
+    }
+    return changes;
+  }
+);
+
 // Function to reset all stores
 export function resetStores() {
   race.set(false);
@@ -174,5 +258,5 @@ export function resetStores() {
   actorInGame.set(false);
   abilityGenerationMethod.set(null);
   subClassesForClass.set([]);
-
+  preAdvancementSelections.set(null);
 }

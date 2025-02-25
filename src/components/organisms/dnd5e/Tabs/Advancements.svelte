@@ -29,7 +29,7 @@
   // }
   onMount(() => {
     // game.system.log.d("Advancements tab mounted");
-    Hooks.call("gas.captureAdvancement");
+    Hooks.call("gas.captureAdvancement", true);
   });
 </script>
 

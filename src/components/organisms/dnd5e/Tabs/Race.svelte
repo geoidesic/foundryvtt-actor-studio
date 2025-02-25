@@ -24,7 +24,7 @@
     "uuid->value",
     "_id",
   ]);
-  game.system.log.d('allRaceItems', allRaceItems)
+  // game.system.log.d('allRaceItems', allRaceItems)
   let raceDefinitions = allRaceItems
     .filter((x) => x.type == "race")
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -44,26 +44,23 @@
   };
 
   const selectHandler = async (option) => {
-    console.log('RACE SELECTION START:', {
-        option,
-        optionType: typeof option
+    game.system.log.d('RACE TAB | Selection Change:', {
+      previousValue: value,
+      newValue: option,
+      currentRace: $race,
+      active
     });
 
     const selectedRace = await fromUuid(option);
-    console.log('RACE FROM UUID:', {
-        selectedRace,
-        properties: Object.keys(selectedRace || {}),
-        system: selectedRace?.system,
-        advancement: selectedRace?.system?.advancement
-    });
-
     $race = selectedRace;
     active = option;
     await tick();
-    // must be after tick to avoid reactiverace conditions
-    await importAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
-
+    
+    game.system.log.d('RACE TAB | After Update:', {
+      value,
+      active,
+      race: $race
+    });
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
