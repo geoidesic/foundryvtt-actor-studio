@@ -46,7 +46,7 @@ export default class SubclassLevelPlugin {
     const subclassOption = `
       <li class="item flexrow">
         <div class="item-name flexrow">
-          <div class="item-image" style="background-image: url('systems/dnd5e/icons/svg/items/subclass.svg')"></div>
+          <div class="item-image" style="background-image: url('modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg')"></div>
           <h3>Subclass</h3>
         </div>
         <div class="item-controls flexrow">

@@ -53,7 +53,6 @@
   };
 
   const processGrant = async (grant) => {
-    // game.system.log.d("Trait grant ", grant);
     const split = grant.split(":");
     // game.system.log.d('Trait split', split);
     // game.system.log.d('switch', split[0]);
@@ -93,7 +92,9 @@
   };
 
   const initializeGrants = async () => {
-    // game.system.log.d(advancement.configuration.grants)
+    // game.system.log.d("Trait config", advancement.configuration);
+    // game.system.log.d("Trait config", advancement.configuration);
+    // game.system.log.d("Trait grants", advancement.configuration.grants);
     const grantPromises = Array.from(advancement.configuration.grants).map(processGrant);
     grants = await Promise.all(grantPromises);
     // game.system.log.d('Grants', grants);

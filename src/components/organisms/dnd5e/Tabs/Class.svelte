@@ -285,8 +285,8 @@
                       //- pre {JSON.stringify(advancement, null, 2)}
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           
-              +if("classAdvancmentExpanded && $characterClass?.system?.startingEquipment?.length")
-                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+            +if("$characterClass?.system?.startingEquipment?.length")
+              StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
   
           +if("subclasses.length")
             //- h3.left.mt-sm Description

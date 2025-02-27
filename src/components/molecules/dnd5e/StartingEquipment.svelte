@@ -81,7 +81,10 @@
 <template lang="pug">
   +if("startingEquipment?.length")
     section.starting-equipment
-      h2 {localize('GAS.StartingEquipment')}
+      .flexrow
+        .flex0.required(class="{equipmentSelectionEnabled ? 'active' : ''}") *
+        .flex3
+          h2.left {localize('GAS.StartingEquipment')}
       
       +if("equipmentSelectionEnabled")
 
@@ -104,7 +107,7 @@
                       span.count (x{item.count})
             +else()
               +each("group.items as item")
-                .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
+                .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''}")
                   .flexrow.justify-flexrow-vertical
                     .flex0.mr-sm
                       img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
