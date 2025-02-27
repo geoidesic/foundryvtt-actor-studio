@@ -16,6 +16,7 @@
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
     "Source": "Source",
+    "StartingEquipment": "Starting Equipment",
     "Permissions": {
       "NeedCreateActorError": "User requires the 'Create New Actors' permission. Ask your DM to add it to your role",
       "NeedCreateItemWarn": "User without 'Create New Items' permission. You will not be able to create custom Features",
@@ -206,6 +207,12 @@
         "Name": "Trim Subclass names",
         "Hint": "Shows subclass names without any last part in parenthesis, mostly for DDBImporter subclasses like 'Assassin (Rogue)' to be just 'Assassin' (does NOT modify the items added to actor, just show they are shown in the tool)"
       }
+    },
+    "Equipment": {
+      "Choice": "Choose one",
+      "Focus": "Spellcasting Focus",
+      "SelectEquipment": "Select Equipment",
+      "SelectOne": "Select one of the following options:"
     }
   }
 }

@@ -4,6 +4,46 @@
       "understand_before_edit": true,
       "preserve_functionality": true,
       "comment_required": true
+    },
+    "pug_template": {
+      "indentation": {
+        "description": "In Pug templates, +else() statements must be indented one level deeper than their parent +if() statement. This maintains proper template hierarchy and readability.",
+        "example": {
+          "correct": `
++if("condition")
+  element
+  +else()
+    other-element`,
+          "incorrect": `
++if("condition")
+  element
++else()
+  other-element`
+        }
+      },
+      "content": {
+        "description": "Content must always be contained within an element, never as a bare pipe beneath an +if statement or other control flow.",
+        "example": {
+          "correct": `
++if("condition")
+  span content here`,
+          "incorrect": `
++if("condition")
+  | content here`
+        }
+      },
+      "event_handlers": {
+        "description": "Event handlers in templates must reference functions defined in the script section, not inline arrow functions.",
+        "example": {
+          "correct": `
+// In script:
+function handleClick(param) { ... }
+// In template:
+button(on:click='{handleClick(param)}'`,
+          "incorrect": `
+button(on:click='{() => doSomething(param)}'`
+        }
+      }
     }
   }
 } 

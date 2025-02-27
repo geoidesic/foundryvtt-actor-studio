@@ -19,6 +19,9 @@
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
+  import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
+  import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
+
 
   let richHTML = "",
     html = "",
@@ -118,6 +121,8 @@
 
     $characterClass = selectedClass;
     activeClass = option;
+
+    clearEquipmentSelections();
 
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
@@ -285,8 +290,10 @@
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
                     .flexrow
-                      //- pre advancement.type {advancement.type}
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
+          
+              +if("classAdvancmentExpanded && $characterClass?.system?.startingEquipment?.length")
+                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
   
           +if("subclasses.length")
             //- h3.left.mt-sm Description

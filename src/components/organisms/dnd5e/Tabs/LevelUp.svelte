@@ -24,6 +24,7 @@
   import LevelUpExisting from "~/src/components/organisms/dnd5e/Tabs/LevelUpExistingClassLeftCol.svelte";
   import LevelUpButtonInnards from "~/src/components/atoms/button/LevelUpButtonInnards.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
 
   let richHTML = "",
     richSubClassHTML = "",
@@ -365,6 +366,10 @@
           +if("activeClassObj")
             h3.left.mt-md Advancements
             LevelUpExisting(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newClassLevel}")
+            
+            // Add the StartingEquipment component here
+            +if("$characterClass?.system?.startingEquipment?.length")
+              StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
           +if("subclasses.length && classGetsSubclassThisLevel")
             ul.icon-list
               li.left 
