@@ -14,7 +14,7 @@
         );
         classAdvancementComponents[classAdvancement.type] = module.default;
       } catch (error) {
-        log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+        gmae.system.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
       }
     }
   };
@@ -29,16 +29,18 @@
 
 <template lang="pug">
   .component
+    //- pre level {level}
     +if("classAdvancementArrayFiltered")
       ul.icon-list
         +if("!classAdvancementArrayFiltered.length")
           li.left {localize('GAS.NoAdvancements')}
           +else()
             +each("classAdvancementArrayFiltered as advancement")
+              //- pre advancement {advancement.type}
               //- @todo: this should be broken out into components for each advancement.type
               li.left(data-type="{advancement.type}")
                 .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                  .flex0.relative.image
+                  .flex0.relative.image.mr-sm
                     img.icon(src="{advancement.icon}" alt="{advancement.title}")
                   .flex2 {advancement.title}
                 .flexrow
