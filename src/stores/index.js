@@ -165,28 +165,28 @@ const arrayOfObjectsStore = () => {
 }
 
 
-export const race = writable(false);
-export const subRace = writable(false);
-export const characterClass = writable(false);
-export const characterSubClass = writable(false);
-export const background = writable(false);
-export const abilities = writable(false);
-export const spells = writable(false);
-export const isLevelUp = writable(false);
-export const pointBuy = writable(false);
-export const abilityRolls = writable(false);
-export const isStandardArrayValues = writable(false);
-export const newClassLevel = writable(false);
-export const level = writable(1);
-export const activeTab = writable('');
-export const activeClass = writable(false);
-export const isActorCreated = writable(false);
-export const dropItemRegistry = arrayOfObjectsStore();
-export const tabs = writable(initialTabs);
-export const levelUpTabs = writable(upTabs);
-export const actorInGame = writable(false);
-export const abilityGenerationMethod = writable(null);
-export const subClassesForClass = writable([]);
+export const race = writable(false); race.name = "race";
+export const subRace = writable(false); subRace.name = "subRace";
+export const characterClass = writable(false); characterClass.name = "characterClass";
+export const characterSubClass = writable(false); characterSubClass.name = "characterSubClass";
+export const background = writable(false); background.name = "background";
+export const abilities = writable(false); abilities.name = "abilities";
+export const spells = writable(false); spells.name = "spells";
+export const isLevelUp = writable(false); isLevelUp.name = "isLevelUp";
+export const pointBuy = writable(false); pointBuy.name = "pointBuy";
+export const abilityRolls = writable(false); abilityRolls.name = "abilityRolls";
+export const isStandardArrayValues = writable(false); isStandardArrayValues.name = "isStandardArrayValues";
+export const newClassLevel = writable(false); newClassLevel.name = "newClassLevel";
+export const level = writable(1); level.name = "level";
+export const activeTab = writable(''); activeTab.name = "activeTab";
+export const activeClass = writable(false); activeClass.name = "activeClass";
+export const isActorCreated = writable(false); isActorCreated.name = "isActorCreated";
+export const dropItemRegistry = arrayOfObjectsStore(); dropItemRegistry.name = "dropItemRegistry";
+export const tabs = writable(initialTabs); tabs.name = "tabs";
+export const levelUpTabs = writable(upTabs); levelUpTabs.name = "levelUpTabs";
+export const actorInGame = writable(false); actorInGame.name = "actorInGame";
+export const abilityGenerationMethod = writable(null); abilityGenerationMethod.name = "abilityGenerationMethod";
+export const subClassesForClass = writable([]); subClassesForClass.name = "subClassesForClass";
 
 export const isMultiClass = derived([characterClass, activeClass, newClassLevel], ([$characterClass, $characterSubClass, $newClassLevel]) => {
   if ($newClassLevel) return false;

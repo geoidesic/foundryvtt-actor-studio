@@ -1,4 +1,4 @@
-import { derived, get } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import {
   race,
   characterClass,
@@ -33,17 +33,6 @@ function isAbilityGenerationMethodReady(method) {
   }
 }
 
-function calculateProgressStoreLength(characterClass, characterSubClass) {
-  let length = 5;
-  if (
-    get(subClassesForClass).length > 0 &&
-    isSubclassForThisCharacterLevel(characterClass, characterSubClass)
-  ) {
-    length = length - 1;
-  }
-  return length;
-}
-
 /**
  * @why: some classes don't have subclasses until later levels
  * @param characterClass
@@ -56,10 +45,10 @@ function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
   const actorLevel = game.actor?.system?.details?.level
     ? game.actor.system.details.level + 1
     : 1;
-  game.system.log.d("[PROGRESS - derived store] subClassLevel", subClassLevel);
-  game.system.log.d("[PROGRESS - derived store] level", actorLevel);
+  game.system.log.d("[PROGRESS] subClassLevel", subClassLevel);
+  game.system.log.d("[PROGRESS] level", actorLevel);
   game.system.log.d(
-    "[PROGRESS - derived store] subClassLevel === level",
+    "[PROGRESS] subClassLevel === level",
     subClassLevel === actorLevel,
   );
   return subClassLevel && parseInt(actorLevel) !== parseInt(subClassLevel);
@@ -76,28 +65,37 @@ const stores = [
   isStandardArrayValues,
 ];
 
-// Derive the progress value from the store states
-export const progress = derived(stores, ($stores) => {
-  const [
-    race,
-    characterClass,
-    characterSubClass,
-    background,
-    abilityGenerationMethod,
-  ] = $stores;
-  const length = calculateProgressStoreLength(
-    characterClass,
-    characterSubClass,
-  );
-  const total = $stores.slice(0, length).length; // Only count the main five stores for total
-  const completed = $stores.slice(0, 5).filter((value, index) => {
-    if (index === 4) {
-      // Index of abilityGenerationMethod
-      return isAbilityGenerationMethodReady(abilityGenerationMethod);
+// Create a derived store for the total length
+export const totalSteps = derived(
+  [characterClass, characterSubClass, subClassesForClass],
+  ([$characterClass, $characterSubClass, $subClassesForClass]) => {
+    let length = 5;
+    if (
+      $subClassesForClass.length > 0 &&
+      isSubclassForThisCharacterLevel($characterClass, $characterSubClass)
+    ) {
+      length = length - 1;
     }
-    return !!value;
-  }).length;
-  game.system.log.d("[PROGRESS - derived store] completed", completed);
-  game.system.log.d("[PROGRESS - derived store] total", total);
-  return (completed / total) * 100;
-});
+    game.system.log.d("[PROGRESS] totalSteps", length);
+    return length;
+  }
+);
+
+// Derive the progress value from the store states
+export const progress = derived(
+  [...stores, totalSteps],
+  ([$race, $characterClass, $characterSubClass, $background, $abilityGenerationMethod, , , , $totalSteps]) => {
+    const completed = [$race, $characterClass, $background, $abilityGenerationMethod].filter((value, index) => {
+      if (index === 3) { // Index of abilityGenerationMethod
+        game.system.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
+        return isAbilityGenerationMethodReady($abilityGenerationMethod);
+      }
+      game.system.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
+      return !!value;
+    }).length;
+
+    game.system.log.d("[PROGRESS] completed", completed);
+    game.system.log.d("[PROGRESS] total", $totalSteps);
+    return (completed / $totalSteps) * 100;
+  }
+);
