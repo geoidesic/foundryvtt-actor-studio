@@ -19,6 +19,8 @@ Actor Studio is most useful for players to create their own characters. To enabl
 - Level Up! as of v1.2.1 this module now supports multi-classing and leveling up. Look for the level up button
 - Supports standard dnd5e (v3+) character sheet
 - Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) 
+- Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system. This is effectively a smoke & mirrors backport of the functionality available in dnd5e system v4.x
+- Also supports Subclass selection for dnd5e system v4.x
 
 ## SRD Screenshots
 ![ability-score-generation-tab](https://github.com/user-attachments/assets/c651d816-7a61-48e8-a12b-1431b5fdf4ea)
