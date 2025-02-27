@@ -7,6 +7,7 @@ export default class SubclassLevelPlugin {
    * Initialize the plugin
    */
   static init() {
+    
 
     const dnd5eVersion = game.system.version.split('.')[0];
     if (dnd5eVersion > 3) {
@@ -59,12 +60,18 @@ export default class SubclassLevelPlugin {
     typeList.append(subclassOption);
     const button = html.find('[data-button="submit"]');
     game.system.log.d('Button: ', button);
+    
+    // Store the original click handler
+    const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
+    
     button.off('click').on('click', async function(event) {
-      event.preventDefault();
       const selectedType = html.find('input[name="type"]:checked').val();
       if (selectedType === 'Subclass') {
         await SubclassLevelPlugin._showLevelDialog(item);
         app.close();
+      } else if (originalClickHandler) {
+        // Call the original handler for non-Subclass selections
+        originalClickHandler.call(this, event);
       }
     });
   }
