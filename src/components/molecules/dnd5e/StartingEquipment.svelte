@@ -17,7 +17,8 @@
         id: entry._id,
         sort: entry.sort,
         type: 'choice',
-        items: []
+        items: [],
+        key: entry.key
       };
     } else if (entry.group) {
       // Add item to existing group
@@ -30,7 +31,8 @@
         acc.standalone = {
           id: 'standalone',
           type: 'standalone',
-          items: []
+          items: [],
+          key: entry.key
         };
       }
       acc.standalone.items.push(entry);
@@ -69,6 +71,7 @@
   }
 
   function handleSelection(groupId, itemId) {
+    game.system.log.d("[Starting Equipment] handleSelection", { groupId, itemId });
     selectEquipment(groupId, itemId);
   }
 

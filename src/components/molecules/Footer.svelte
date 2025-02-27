@@ -23,6 +23,8 @@
     preAdvancementSelections,
     hasCharacterCreationChanges,
     changedCharacterCreationItems,
+    level,
+    tabs,
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import {
@@ -34,6 +36,9 @@
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
   import { log } from "../../helpers/Utility";
+  import { localize } from "#runtime/svelte/helper";
+  import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { equipmentSelections } from "~/src/stores/equipmentSelections";
 
   // Add this after your store imports
   const storeMap = {
@@ -172,7 +177,6 @@
 
     $actorInGame = await Actor.create($actor.toObject());
 
-    
     // race
     if ($race) {
       game.system.log.i("Adding race to character");
@@ -234,7 +238,62 @@
           $characterClass,
         ),
       });
+
+      // Handle starting equipment if enabled in settings
+      if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $characterClass.system?.startingEquipment?.length) {
+        game.system.log.i("[Starting Equipment] Adding starting equipment to character");
+        game.system.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
+        
+        // Process standalone items first
+        const standaloneItems = $characterClass.system.startingEquipment.filter(item => !item.group);
+        game.system.log.d("[Starting Equipment] Standalone items:", standaloneItems);
+        for (const item of standaloneItems) {
+          if (item.key) {
+            const itemData = await fromUuid(item.key);
+            if (itemData) {
+              game.system.log.d("[Starting Equipment] Adding standalone item:", itemData);
+              dropItemRegistry.add({
+                actor: $actorInGame,
+                id: `equipment_${item.key}`,
+                itemData: itemData,
+                isLevelUp: false,
+              });
+            }
+          }
+        }
+
+        // Process equipment selections from groups
+        const selections = Object.entries($equipmentSelections);
+        game.system.log.d("[Starting Equipment] Processing selections:", selections);
+        
+        for (const [groupId, selection] of selections) {
+          game.system.log.d("[Starting Equipment] Processing group:", { groupId, selection });
+          
+          // Find all items in this group
+          const groupItems = $characterClass.system.startingEquipment.filter(item => item.group === groupId);
+          game.system.log.d("[Starting Equipment] Group items:", groupItems);
+          
+          // Find the selected item
+          const selectedItem = groupItems.find(item => item._id === selection.selectedItemId);
+          game.system.log.d("[Starting Equipment] Selected item:", selectedItem);
+          
+          if (selectedItem?.key) {
+            const itemData = await fromUuid(selectedItem.key);
+            if (itemData) {
+              game.system.log.d("[Starting Equipment] Adding selected item:", itemData);
+              dropItemRegistry.add({
+                actor: $actorInGame,
+                id: `equipment_${selectedItem.key}`,
+                itemData: itemData,
+                isLevelUp: false,
+                count: selection.count || 1,
+              });
+            }
+          }
+        }
+      }
     }
+
     if ($characterSubClass) {
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -250,8 +309,6 @@
     }
 
     console.log("PRE-QUEUE ADVANCE:", $dropItemRegistry);
-
-    //- @why: start the queue, which will activate the advancement tab
     dropItemRegistry.advanceQueue(true);
   };
 
