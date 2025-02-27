@@ -100,11 +100,6 @@
   };
 
   const selectClassHandler = async (option) => {
-    // console.log('CLASS SELECTION START:', {
-    //     option,
-    //     optionType: typeof option
-    // });
-
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -112,13 +107,6 @@
     richSubClassHTML = "";
     
     const selectedClass = await fromUuid(option);
-    // console.log('CLASS FROM UUID:', {
-    //     selectedClass,
-    //     properties: Object.keys(selectedClass || {}),
-    //     system: selectedClass?.system,
-    //     advancement: selectedClass?.system?.advancement
-    // });
-
     $characterClass = selectedClass;
     activeClass = option;
 
@@ -129,17 +117,21 @@
     $subClassesForClass = subClassesIndex;
 
     await tick();
-    importClassAdvancements();
+    await importClassAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
   };
 
   const importClassAdvancements = async () => {
+    // Reset the components object first
+    classAdvancementComponents = {};
+    
     for (const classAdvancement of classAdvancementArrayFiltered) {
       try {
         const module = await import(
           `~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`
         );
         classAdvancementComponents[classAdvancement.type] = module.default;
+        await tick();
       } catch (error) {
         log.e(`Failed to load component for ${classAdvancement.type}:`, error);
       }
@@ -290,6 +282,7 @@
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
                     .flexrow
+                      //- pre {JSON.stringify(advancement, null, 2)}
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           
               +if("classAdvancmentExpanded && $characterClass?.system?.startingEquipment?.length")
