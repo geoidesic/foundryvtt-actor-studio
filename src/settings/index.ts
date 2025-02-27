@@ -67,6 +67,7 @@ export function registerSettings(app: Game): void {
   donationTracker();
   debugSetting();
   debugHooksSetting();
+  enableEquipmentSelection();
 
   /** User settings */
   dontShowWelcome();
@@ -448,5 +449,16 @@ function lastMigration() {
     config: false,
     default: 0,
     type: Number,
+  });
+}
+
+function enableEquipmentSelection() {
+  game.settings.register(MODULE_ID, 'enableEquipmentSelection', {
+    name: game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
   });
 }
