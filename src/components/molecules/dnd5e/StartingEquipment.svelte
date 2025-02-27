@@ -38,13 +38,14 @@
     return acc;
   }, {});
 
-  $: game.system.log.d("StartingEquipment processedGroups", processedGroups);
-
+  
   // Sort groups by their sort value
   $: sortedGroups = Object.values(processedGroups)
-    .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-
+  .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+  
   $: game.system.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
+  $: game.system.log.d("StartingEquipment processedGroups", processedGroups);
+  $: game.system.log.d("StartingEquipment sortedGroups", sortedGroups);
 
   async function getItemName(key) {
     if (!key) return 'Unknown Item';
@@ -82,37 +83,64 @@
     section.starting-equipment
       h2 {localize('GAS.StartingEquipment')}
       
-      //- Process each group
-      +each("sortedGroups as group")
-        +if("group.type === 'choice'")
-          .equipment-group
-            span.group-label Choose one
-            .options
+      +if("equipmentSelectionEnabled")
+
+        //- Process each group
+        +each("sortedGroups as group")
+          +if("group.type === 'choice'")
+            .equipment-group
+              span.group-label Choose one...
+              .options
+                +each("group.items as item")
+                  button.option(
+                    class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''}"
+                    on:click="{handleSelection(group.id, item._id)}"
+                  )
+                    .flexrow.justify-flexrow-vertical
+                      .flex0.mr-sm
+                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                      .flex2.left.name {item.label}
+                    +if("item.count")
+                      span.count (x{item.count})
+            +else()
               +each("group.items as item")
-                button.option(
-                  class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''}"
-                  on:click="{handleSelection(group.id, item._id)}"
-                )
+                .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
                   .flexrow.justify-flexrow-vertical
                     .flex0.mr-sm
                       img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
                     .flex2.left.name {item.label}
-                  +if("item.count")
-                    span.count (x{item.count})
+                    +if("item.count")
+                      span.count (x{item.count})
         +else()
-          +each("group.items as item")
-            .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
-              img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-              span.name {item.label}
-              +if("item.count")
-                span.count (x{item.count})
+          //- Show read-only list when equipment selection is disabled
+          +each("sortedGroups as group")
+            .equipment-group
+              +if("group.type === 'choice'")
+                span.group-label Choose one from... 
+                +each("group.items as item")
+                  .equipment-item
+                    .flexrow.justify-flexrow-vertical
+                      .flex0.mr-sm
+                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                      .flex2.left.name {item.label}
+                      +if("item.count")
+                        span.count (x{item.count})
+                +else()
+                  +each("group.items as item")
+                    .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
+                      .flexrow.justify-flexrow-vertical
+                        .flex0.mr-sm
+                          img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                        .flex2.left.name {item.label}
+                        +if("item.count")
+                          span.count (x{item.count})
 </template>
 
 <style lang="sass">
 .starting-equipment
   background: rgba(0, 0, 0, 0.2)
-  border-radius: 8px
-  padding: 1rem
+  border-radius: var(--border-radius)
+  padding: 0.5rem
   margin-top: 1rem
 
 .section-header
