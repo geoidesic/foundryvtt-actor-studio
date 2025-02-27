@@ -2,8 +2,12 @@
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { equipmentSelections, selectEquipment } from "~/src/stores/equipmentSelections";
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   export let startingEquipment = [];
+
+  // Check if equipment selection is enabled in settings
+  $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
   // Process and group equipment
   $: processedGroups = startingEquipment.reduce((acc, entry) => {
@@ -120,10 +124,10 @@
   padding-bottom: 0.5rem
 
 .equipment-group
-  margin-bottom: 1.5rem
+  margin-bottom: 0.75rem
   background: rgba(0, 0, 0, 0.3)
-  padding: 1rem
-  border-radius: 6px
+  padding: 0.5rem
+  border-radius: var(--border-radius)
   
   &:last-child
     margin-bottom: 0
@@ -132,7 +136,7 @@
   display: block
   font-size: 1em
   color: var(--color-text-dark-secondary)
-  margin-bottom: 0.75rem
+  margin-bottom: 0.5rem
   font-style: italic
 
 .options
@@ -142,7 +146,7 @@
 
 .option, .equipment-item
   display: flex
-  padding: 0.75rem
+  padding: 0.3rem 0.75rem
   border: 1px solid rgba(255, 255, 255, 0.1)
   border-radius: 4px
   background: rgba(0, 0, 0, 0.4)
