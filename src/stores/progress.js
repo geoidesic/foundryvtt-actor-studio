@@ -85,8 +85,8 @@ export const totalSteps = derived(
 export const progress = derived(
   [...stores, totalSteps],
   ([$race, $characterClass, $characterSubClass, $background, $abilityGenerationMethod, , , , $totalSteps]) => {
-    const completed = [$race, $characterClass, $background, $abilityGenerationMethod].filter((value, index) => {
-      if (index === 3) { // Index of abilityGenerationMethod
+    const completed = [$race, $background, $characterClass, $characterSubClass, $abilityGenerationMethod].filter((value, index) => {
+      if (index === 4) { // Index of abilityGenerationMethod
         game.system.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
         return isAbilityGenerationMethodReady($abilityGenerationMethod);
       }
