@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { log, dropItemOnCharacter } from "~/src/helpers/Utility";
+  import { dropItemOnCharacter } from "~/src/helpers/Utility";
   import { dropItemRegistry, isLevelUp } from "~/src/stores/index.js";
   import { getContext } from "svelte";
 

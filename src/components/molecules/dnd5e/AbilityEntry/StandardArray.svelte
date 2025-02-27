@@ -1,5 +1,4 @@
 <script>
-  import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import {
     createEventDispatcher,

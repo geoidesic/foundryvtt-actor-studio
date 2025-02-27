@@ -1,5 +1,4 @@
 <script>
-  import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, setContext, onDestroy, onMount, tick  } from "svelte";
   import { abilities, race, pointBuy, abilityRolls } from "~/src/stores/index"

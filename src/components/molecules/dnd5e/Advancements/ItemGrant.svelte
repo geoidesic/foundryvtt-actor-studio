@@ -1,11 +1,10 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { log } from "~/src/helpers/Utility";
   
   export let advancement = null;
 
-  $: items = [];
   let initialId = null;
+  let items = [];
 
   async function getItemsFromUUIDs(uuids) {
     const itemPromises = uuids.map(async (uuid) => {

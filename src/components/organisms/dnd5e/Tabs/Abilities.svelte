@@ -3,7 +3,6 @@
   import {
     extractMapIteratorObjectProperties,
     getPackFolders,
-    log,
     getRules
   } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
