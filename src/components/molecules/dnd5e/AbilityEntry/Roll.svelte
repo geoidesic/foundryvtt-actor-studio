@@ -2,7 +2,7 @@
   import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, abilityRolls } from "~/src/helpers/store"
+  import { abilities, race, abilityRolls } from "~/src/stores/index"
   import { MODULE_ID } from "~/src/helpers/constants"
   
   export let document = false;

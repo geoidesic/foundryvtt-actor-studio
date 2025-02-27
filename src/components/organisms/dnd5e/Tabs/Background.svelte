@@ -9,7 +9,7 @@
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-  import { background } from "~/src/helpers/store";
+  import { background } from "~/src/stores/index";
 
   let active = null,
     value = null,

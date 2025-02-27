@@ -1,6 +1,6 @@
 import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
-import { dropItemRegistry } from "~/src/helpers/store";
+import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
 
 export const getDnd5eVersion = () => {

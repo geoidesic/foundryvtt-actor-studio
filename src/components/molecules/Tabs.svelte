@@ -3,7 +3,7 @@
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { log } from "~/src/helpers/Utility";
-  import { dropItemRegistry } from "~/src/helpers/store";
+  import { dropItemRegistry } from "~/src/stores/index";
 
   export let tabs = [];
   export let sheet;

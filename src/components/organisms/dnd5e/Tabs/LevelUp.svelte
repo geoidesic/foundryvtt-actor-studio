@@ -17,7 +17,7 @@
     newClassLevel,
     activeClass,
     isMultiClass
-  } from "~/src/helpers/store";
+  } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import DonationTracker from "~/src/plugins/donation-tracker"

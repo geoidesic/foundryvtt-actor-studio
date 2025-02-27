@@ -15,7 +15,7 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { abilityGenerationMethod } from "~/src/helpers/store";
+  import { abilityGenerationMethod } from "~/src/stores/index";
 
   const actor = getContext("#doc");
   const ruleConfig = {

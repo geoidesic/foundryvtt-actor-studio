@@ -14,7 +14,7 @@
     characterSubClass,
     level,
     subClassesForClass,
-  } from "~/src/helpers/store";
+  } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { MODULE_ID } from "~/src/helpers/constants";

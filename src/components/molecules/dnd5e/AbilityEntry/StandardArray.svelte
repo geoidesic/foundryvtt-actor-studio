@@ -8,7 +8,7 @@
     onMount,
     tick,
   } from "svelte";
-  import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/helpers/store";
+  import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/stores/index";
   import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
 
   export let document = false;

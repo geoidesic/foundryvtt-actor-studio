@@ -9,7 +9,7 @@ import manifestJson from '../module.json';
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
-import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/helpers/store.js';
+import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';

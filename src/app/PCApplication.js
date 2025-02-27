@@ -2,7 +2,7 @@ import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
-import { activeTab, actorInGame } from "~/src/helpers/store";
+import { activeTab, actorInGame } from "~/src/stores/index";
 import { get } from 'svelte/store';
 
 export default class PCApplication extends SvelteApplication {

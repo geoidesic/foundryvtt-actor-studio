@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { activeClass, characterClass, newClassLevel, isMultiClass } from "~/src/helpers/store";
+  import { activeClass, characterClass, newClassLevel, isMultiClass } from "~/src/stores/index";
   import { log } from "../../../helpers/Utility";
   import { ucfirst } from "~/src/helpers/Utility.js";
   export let src = false;

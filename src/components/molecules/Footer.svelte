@@ -23,27 +23,17 @@
     preAdvancementSelections,
     hasCharacterCreationChanges,
     changedCharacterCreationItems,
-  } from "~/src/helpers/store";
+  } from "~/src/stores/index";
+  import { progress } from "~/src/stores/progress";
   import {
     getLevelByDropType,
     itemHasAdvancementChoices,
     isAdvancementsForLevelInItem,
   } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
-  import { abilityGenerationMethod } from "~/src/helpers/store";
+  import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
   import { log } from "../../helpers/Utility";
-
-  const stores = [
-    race,
-    characterClass,
-    characterSubClass,
-    background,
-    abilityGenerationMethod,
-    pointBuy,
-    abilityRolls,
-    isStandardArrayValues,
-  ];
 
   // Add this after your store imports
   const storeMap = {
@@ -52,88 +42,6 @@
     'characterClass': characterClass,
     'characterSubClass': characterSubClass
   };
-
-  // Sample helper function to process abilityGenerationMethod
-  function isAbilityGenerationMethodReady(method) {
-    if (!method) {
-      return false;
-    }
-
-    switch (method) {
-      case 2:
-        // Check if points are allocated correctly
-        game.system.log.d("pointBuy", $pointBuy);
-        return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
-      case 3:
-        // Check if all abilities are assigned
-        game.system.log.d("abilityRolls", $abilityRolls);
-        return Object.keys($abilityRolls).length === 6;
-      case 4:
-        // Check if all rolls are assigned
-        return $isStandardArrayValues;
-      default:
-        return true;
-    }
-  }
-
-  function calculateProgressStoreLength(characterClass, characterSubClass) {
-    let length = 5;
-    if (
-      $subClassesForClass.length > 0 &&
-      isSubclassForThisCharacterLevel(characterClass, characterSubClass)
-    ) {
-      length = length - 1;
-    }
-    return length;
-  }
-
-  /**
-   * @why: some classes don't have subclasses until later levels
-   * @param characterClass
-   * @param characterSubClass
-   */
-  function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
-    const subClassLevel = characterClass?.getFlag
-      ? characterClass.getFlag(MODULE_ID, "subclassLevel")
-      : false;
-    const actorLevel = $actor?.system?.details?.level
-      ? $actor.system.details.level + 1
-      : 1;
-    game.system.log.d("[FOOTER - derived store] subClassLevel", subClassLevel);
-    game.system.log.d("[FOOTER - derived store] level", actorLevel);
-    game.system.log.d(
-      "[FOOTER - derived store] subClassLevel === level",
-      subClassLevel === actorLevel,
-    );
-    return subClassLevel && parseInt(actorLevel) !== parseInt(subClassLevel);
-  }
-
-  // Derive the progress value from the store states
-  const progress = derived(stores, ($stores) => {
-    const [
-      race,
-      characterClass,
-      characterSubClass,
-      background,
-      abilityGenerationMethod,
-    ] = $stores;
-    const length = calculateProgressStoreLength(
-      characterClass,
-      characterSubClass,
-    );
-    const total = $stores.slice(0, length).length; // Only count the main five stores for total
-    const completed = $stores.slice(0, 5).filter((value, index) => {
-      if (index === 4) {
-        // Index of abilityGenerationMethod
-        return isAbilityGenerationMethodReady(abilityGenerationMethod);
-      }
-      return !!value;
-    }).length;
-    game.system.log.d("[FOOTER - derived store] completed", completed);
-    game.system.log.d("[FOOTER - derived store] total", total);
-    return (completed / total) * 100;
-  });
-
 
   $: game.system.log.d("preAdvancementSelections", $preAdvancementSelections);
   $: game.system.log.d("hasCharacterCreationChanges", $hasCharacterCreationChanges);
