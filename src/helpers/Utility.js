@@ -322,7 +322,7 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
   game.system.log.d('itemData', itemData);
 
   let item
-  if (isLevelUp) {
+  if (isLevelUp && itemData.type === 'class') {
     if (isMultiClass) {
       item = await Item.implementation.fromDropData({ type: 'Item', uuid: itemData.uuid });
     } else {

@@ -142,11 +142,7 @@
   };
 
   const selectSubClassHandler = async (option) => {
-
-
     const selectedSubClass = await fromUuid(option);
-   
-
     $characterSubClass = selectedSubClass;
     activeSubClass = option;
     await tick();

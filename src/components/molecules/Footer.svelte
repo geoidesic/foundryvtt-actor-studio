@@ -72,6 +72,20 @@
   };
 
   const clickUpdateLevelUpHandler = async () => {
+    //- add the subClass to the dropItemRegistry
+    if ($characterSubClass) {
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterSubClass",
+        itemData: $characterSubClass,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($characterSubClass),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(
+          getLevelByDropType($actorInGame, "subclass"),
+          $characterSubClass,
+        ),
+      });
+    }
     await updateActorAndEmbedItems();
   };
 
@@ -156,8 +170,6 @@
       characterSubClass: $characterSubClass,
     });
 
-    const test = $actor.toObject();
-    test.name = $actor.name;
     $actorInGame = await Actor.create($actor.toObject());
 
     

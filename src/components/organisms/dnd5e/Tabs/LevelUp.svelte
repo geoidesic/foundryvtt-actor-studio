@@ -65,6 +65,7 @@
 
   /** IMPORTERS */
   const importClassAdvancements = async () => {
+    if (!classAdvancementArrayFiltered?.length) return;
     for (const classAdvancement of classAdvancementArrayFiltered) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
@@ -76,6 +77,7 @@
   };
 
   const importSubClassAdvancements = async () => {
+    if (!subClassAdvancementArrayFiltered?.length) return;
     for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
@@ -264,7 +266,7 @@
    * Maps advancement data to include IDs for component rendering
    */
   $: if ($characterSubClass?.system?.advancement.length) {
-    game.system.log.d('characterSubClass', $characterSubClass)
+    // game.system.log.d('characterSubClass', $characterSubClass)
     subClassAdvancementArrayFiltered =
       $characterSubClass.advancement?.byLevel[$newClassLevel]
   } else {
@@ -272,9 +274,6 @@
   }
 
 
-
-  $: game.system.log.d('characterClass', $characterClass?.advancement?.byLevel[$newClassLevel])
-  $: game.system.log.d('characterSubClass', $characterSubClass?.advancement?.byLevel[$newClassLevel])
   /**
    * Tracks existing class data and levels
    * Updates when classes or active class changes
@@ -288,6 +287,10 @@
   $: activeClassObj = $actor._classes[activeClassKey];
   $: activeClassIndex = classKeys.indexOf(activeClassKey);
   $: activeClassLevel = classLevels[activeClassIndex];
+
+  $: subClassLevel = $characterClass.getFlag ? $characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
+  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
+
 
   /**
    * Filters available classes for multiclassing
@@ -356,13 +359,13 @@
               .flex0
                 button.pr-none.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
                   i(class="fas fa-times")
-          IconSelect.icon-select( options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+          IconSelect.icon-select( options="{filteredClassIndex}" placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
         
         +if("$characterClass")
           +if("activeClassObj")
             h3.left.mt-md Advancements
             LevelUpExisting(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newClassLevel}")
-          +if("subclasses.length")
+          +if("subclasses.length && classGetsSubclassThisLevel")
             ul.icon-list
               li.left 
                 .flexrow
@@ -382,7 +385,7 @@
                 .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
                 .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$newClassLevel}
               ul.icon-list
-                +if("!subClassAdvancementArrayFiltered.length")
+                +if("!subClassAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
                   li.left {localize('GAS.NoAdvancements')}
                   +else()
                     +each("subClassAdvancementArrayFiltered as advancement")
