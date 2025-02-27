@@ -206,6 +206,10 @@
       "TrimSubclasses": {
         "Name": "Trim Subclass names",
         "Hint": "Shows subclass names without any last part in parenthesis, mostly for DDBImporter subclasses like 'Assassin (Rogue)' to be just 'Assassin' (does NOT modify the items added to actor, just show they are shown in the tool)"
+      },
+      "EnableEquipmentSelection": {
+        "Name": "Enable Equipment Selection",
+        "Hint": "Allows players to select their starting equipment during character creation. If disabled, equipment will need to be added manually after creation."
       }
     },
     "Equipment": {
