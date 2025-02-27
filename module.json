@@ -1,7 +1,7 @@
 {
     "title": "Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "1.0.0",
+    "version": "1.7.0",
     "styles": [
         "dist/style.css"
     ],
@@ -13,14 +13,18 @@
             "lang": "en",
             "name": "English",
             "path": "lang/en.json",
-            "isDefault": true,
+            "flags": {}
+        },
+        {
+            "lang": "zh-tw",
+            "name": "正體中文",
+            "path": "lang/zh-tw.json",
             "flags": {}
         }
     ],
-    "packs": [],
     "url": "https://github.com/geoidesic/foundryvtt-actor-studio",
     "manifest": "https://raw.githubusercontent.com/geoidesic/foundryvtt-actor-studio/next/module.json",
-    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/0.0.10/module.zip",
+    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/1.7.0/module.zip",
     "authors": [
         {
             "name": "Noel da Costa",
@@ -31,7 +35,7 @@
     ],
     "compatibility": {
         "minimum": "11",
-        "verified": "11.315",
+        "verified": "12",
         "maximum": "12"
     },
     "flags": {
@@ -51,8 +55,8 @@
                 "type": "system",
                 "compatibility": {
                     "minimum": "3.0.0",
-                    "verified": "3.1.0",
-                    "maximum": "4"
+                    "verified": "4",
+                    "maximum": "5"
                 }
             }
         ]
