@@ -14,13 +14,16 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { abilityGenerationMethod, abilityRolls } from "~/src/stores/index";
+  import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
 
   const actor = getContext("#doc");
   const ruleConfig = {
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
+
+  $: isDisabled = $readOnlyTabs.includes("abilities");
+
   const importAdvancements = async () => {
     // window.GAS.log.d('options',options)
     for (const option of options) {
@@ -97,13 +100,16 @@
       .flex2.pr-sm.col-a
         h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         +if("options.length > 1")
-          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" )
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
           +else()
             ol.properties-list
               +each("options as option")
                 li {option.label}
         +if("$abilityGenerationMethod")
-          svelte:component(this="{abilityModule}")
+          .relative
+            svelte:component(this="{abilityModule}")
+            +if("isDisabled")
+              .overlay
       .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
@@ -113,6 +119,23 @@
 .content 
   @include staticOptions
 
-  :global(.icon-select)
-    position: relative
+:global(.icon-select)
+  position: relative
+
+.relative
+  position: relative
+
+.overlay
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background-color: rgba(200, 200, 200, 0.3)
+  pointer-events: all
+  cursor: not-allowed
+  z-index: 100
+  transition: background-color 0.2s ease
+  &:hover
+    background-color: rgba(200, 200, 200, 0.4)
 </style>
