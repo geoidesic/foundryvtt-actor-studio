@@ -111,6 +111,17 @@ export function illuminatedDescription() {
   });
 }
 
+export function allRolledAbilityScoresToBeMoved() {
+  game.settings.register(MODULE_ID, 'allRolledAbilityScoresToBeMoved', {
+    name: game.i18n.localize('GAS.Setting.allRolledAbilityScoresToBeMoved.Name'),
+    hint: game.i18n.localize('GAS.Setting.allRolledAbilityScoresToBeMoved.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
 export function enableLevelUp() {
   game.settings.register(MODULE_ID, 'enableLevelUp', {
     name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
