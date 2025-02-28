@@ -26,13 +26,17 @@
   $: hasRolled = $goldRoll > 0;
 
   async function rollGold() {
-    const roll = await new Roll(formula).evaluate();
+    const roll = await new Roll(formula).evaluate({async: true});
     const className = characterClass?.name || "Character";
     const flavor = `Rolling starting gold for ${className}`;
     await roll.toMessage({
       flavor,
       speaker: ChatMessage.getSpeaker()
-    });
+    }, {rollMode: game.settings.get('core', 'rollMode')});
+    // Wait for any 3D dice animations to complete
+    if (game.dice3d) {
+      await game.dice3d.waitFor(roll);
+    }
     $goldRoll = roll.total;
   }
 
