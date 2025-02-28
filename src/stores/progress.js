@@ -45,9 +45,9 @@ function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
   const actorLevel = game.actor?.system?.details?.level
     ? game.actor.system.details.level + 1
     : 1;
-  game.system.log.d("[PROGRESS] subClassLevel", subClassLevel);
-  game.system.log.d("[PROGRESS] level", actorLevel);
-  game.system.log.d(
+  window.GAS.log.d("[PROGRESS] subClassLevel", subClassLevel);
+  window.GAS.log.d("[PROGRESS] level", actorLevel);
+  window.GAS.log.d(
     "[PROGRESS] subClassLevel === level",
     subClassLevel === actorLevel,
   );
@@ -76,7 +76,7 @@ export const totalSteps = derived(
     ) {
       length = length - 1;
     }
-    game.system.log.d("[PROGRESS] totalSteps", length);
+    window.GAS.log.d("[PROGRESS] totalSteps", length);
     return length;
   }
 );
@@ -87,15 +87,15 @@ export const progress = derived(
   ([$race, $characterClass, $characterSubClass, $background, $abilityGenerationMethod, , , , $totalSteps]) => {
     const completed = [$race, $background, $characterClass, $characterSubClass, $abilityGenerationMethod].filter((value, index) => {
       if (index === 4) { // Index of abilityGenerationMethod
-        game.system.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
+        window.GAS.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
         return isAbilityGenerationMethodReady($abilityGenerationMethod);
       }
-      game.system.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
+      window.GAS.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
       return !!value;
     }).length;
 
-    game.system.log.d("[PROGRESS] completed", completed);
-    game.system.log.d("[PROGRESS] total", $totalSteps);
+    window.GAS.log.d("[PROGRESS] completed", completed);
+    window.GAS.log.d("[PROGRESS] total", $totalSteps);
     return (completed / $totalSteps) * 100;
   }
 );

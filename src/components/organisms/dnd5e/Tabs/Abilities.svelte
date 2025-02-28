@@ -22,7 +22,7 @@
     pageId: "yuSwUFIjK31Mr3DI",
   };
   const importAdvancements = async () => {
-    // game.system.log.d('options',options)
+    // window.GAS.log.d('options',options)
     for (const option of options) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/AbilityEntry/${option.type}.svelte`);
@@ -38,9 +38,9 @@
     await importAdvancements();
     tick();
     $abilityGenerationMethod = active;
-    // game.system.log.d('option', option)
-    // game.system.log.d('active', active)
-    // game.system.log.d('abilityGenerationMethod', $abilityGenerationMethod)
+    // window.GAS.log.d('option', option)
+    // window.GAS.log.d('active', active)
+    // window.GAS.log.d('abilityGenerationMethod', $abilityGenerationMethod)
   };
   
 

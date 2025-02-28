@@ -45,7 +45,7 @@ class plugin {
 
     const DTfolders = membershipFolderArray
       .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
-    // game.system.log.d('DTfolders', DTfolders)
+    // window.GAS.log.d('DTfolders', DTfolders)
     return DTfolders.length > 0
   }
 
@@ -55,12 +55,12 @@ class plugin {
    */
   getAllowedDTFolderNames() {
     const membershipRanks = game.membership.RANKS
-    // game.system.log.d('membershipRanks', membershipRanks)
+    // window.GAS.log.d('membershipRanks', membershipRanks)
     const membershipFolderArray = Object.entries(membershipRanks).filter(([_, value]) => value !== -1);
-    // game.system.log.d('membershipFolderArray', membershipFolderArray)
+    // window.GAS.log.d('membershipFolderArray', membershipFolderArray)
     const allowedMembershipFolderNames = membershipFolderArray.filter(([key, _]) =>
       {
-        // game.system.log.d('key', key);
+        // window.GAS.log.d('key', key);
         return game.membership.hasPermission(key)
         //-@why: #102, unregistered = "member"
         || (
@@ -70,7 +70,7 @@ class plugin {
       }
     )
       .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
-    // game.system.log.d('allowedMembershipFolderNames', allowedMembershipFolderNames)
+    // window.GAS.log.d('allowedMembershipFolderNames', allowedMembershipFolderNames)
     return allowedMembershipFolderNames
   }
 
@@ -90,41 +90,41 @@ class plugin {
      * @returns {Array<string>} - An array of allowed folder IDs.
     */
     const getFolderAndSubfolderIds = (folders) => {
-      // game.system.log.d('folders', folders)
+      // window.GAS.log.d('folders', folders)
       for (let i = 0; i < folders.length; i++) {
         const folder = folders[i];
-        //  game.system.log.d('folder.id', folder.id)
+        //  window.GAS.log.d('folder.id', folder.id)
 
         allowedFolderIds.push(folder.id);
 
         // If the folder has subfolders, recursively add their IDs
-        //  game.system.log.d(folder.id+'_folder.folders', folder.children)
+        //  window.GAS.log.d(folder.id+'_folder.folders', folder.children)
         if (folder.children && folder.children.length > 0) {
           getFolderAndSubfolderIds(folder.children.map(f => f.folder));
         }
 
-        // game.system.log.d('allowedFolderIds', allowedFolderIds)
+        // window.GAS.log.d('allowedFolderIds', allowedFolderIds)
       }
     };
 
 
-    // game.system.log.d('>>>>>>>>>>>>> pack.name', pack.metadata.name)
+    // window.GAS.log.d('>>>>>>>>>>>>> pack.name', pack.metadata.name)
 
-    // game.system.log.d('filterByPermissions', filterByPermissions)
+    // window.GAS.log.d('filterByPermissions', filterByPermissions)
     //- Filter pack root folders based on the user's membership rank and get their IDs and subfolder IDs     
     const validRootFolderNames = this.getAllowedDTFolderNames();
-    // game.system.log.d('id', pack.metadata.id);
-    // game.system.log.d('this.getDTFolderNames()', this.getAllowedDTFolderNames());
-    // game.system.log.d('validRootFolderNames', validRootFolderNames)
-    // game.system.log.d('pack.folders', pack.folders)
-    // game.system.log.d('pack.folders.filtered', pack.folders.filter(f => validRootFolderNames.includes(f.name)))
+    // window.GAS.log.d('id', pack.metadata.id);
+    // window.GAS.log.d('this.getDTFolderNames()', this.getAllowedDTFolderNames());
+    // window.GAS.log.d('validRootFolderNames', validRootFolderNames)
+    // window.GAS.log.d('pack.folders', pack.folders)
+    // window.GAS.log.d('pack.folders.filtered', pack.folders.filter(f => validRootFolderNames.includes(f.name)))
 
     if (filterByPermissions) {
       getFolderAndSubfolderIds(pack.folders.filter(f => validRootFolderNames.includes(f.name)));
     } else {
       getFolderAndSubfolderIds(Array.from(pack.folders));
     }
-    // game.system.log.d('allowedFolderIds', allowedFolderIds)
+    // window.GAS.log.d('allowedFolderIds', allowedFolderIds)
     return allowedFolderIds;
   }
 }

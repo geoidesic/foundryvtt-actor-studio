@@ -85,18 +85,18 @@
       ["system.classIdentifier"],
     );
     
-    // game.system.log.d('mappedSubClassIndex', mappedSubClassIndex);
+    // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
 
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
-      // game.system.log.d("subclass", x);
-      // game.system.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
+      // window.GAS.log.d("subclass", x);
+      // window.GAS.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
       return x.system.classIdentifier == $characterClass.system.identifier;
     });
 
     const output = mappedSubClassIndex
       .flat()
       .sort((a, b) => a.label.localeCompare(b.label));
-    // game.system.log.d("subclass output", output);
+    // window.GAS.log.d("subclass output", output);
     return output;
 
   };
@@ -222,7 +222,7 @@
 
   onMount(async () => {
     if ($characterClass) {
-      game.system.log.d($characterClass);
+      window.GAS.log.d($characterClass);
 
       classValue = $characterClass.uuid;
       await tick();

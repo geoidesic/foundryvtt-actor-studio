@@ -49,8 +49,8 @@
     'characterSubClass': characterSubClass
   };
 
-  $: game.system.log.d("preAdvancementSelections", $preAdvancementSelections);
-  $: game.system.log.d("hasCharacterCreationChanges", $hasCharacterCreationChanges);
+  $: window.GAS.log.d("preAdvancementSelections", $preAdvancementSelections);
+  $: window.GAS.log.d("hasCharacterCreationChanges", $hasCharacterCreationChanges);
 
   export let value = null;
 
@@ -96,13 +96,13 @@
   };
 
   const clickUpdateHandler = async () => {
-    game.system.log.d(
+    window.GAS.log.d(
       "[clickUpdateHandler] preAdvancementSelections",
       $preAdvancementSelections
     );
     
     if (!$hasCharacterCreationChanges) {
-      game.system.log.d("[clickUpdateHandler] no changes, skipping update");
+      window.GAS.log.d("[clickUpdateHandler] no changes, skipping update");
       return;
     }
 
@@ -116,14 +116,14 @@
     });
 
     if (!confirmed) {
-      game.system.log.d("[clickUpdateHandler] update cancelled");
+      window.GAS.log.d("[clickUpdateHandler] update cancelled");
       return;
     }
 
     // Close any open advancement dialogs first
     const currentProcess = get(dropItemRegistry).currentProcess;
     if (currentProcess?.app) {
-      game.system.log.d("[clickUpdateHandler] closing advancement for", currentProcess.id);
+      window.GAS.log.d("[clickUpdateHandler] closing advancement for", currentProcess.id);
       currentProcess.app.close();
     }
 
@@ -133,15 +133,15 @@
     }
 
     for (const item of $changedCharacterCreationItems) {
-      game.system.log.d("[clickUpdateHandler] processing item", item);
+      window.GAS.log.d("[clickUpdateHandler] processing item", item);
       
       // Find the item on the actor that matches the type
       const actorItem = $actorInGame.items.find(i => i.type === item.type);
-      game.system.log.d("[clickUpdateHandler] found actor item", actorItem);
+      window.GAS.log.d("[clickUpdateHandler] found actor item", actorItem);
 
       // Delete the item from the actor (not the compendium)
       if (actorItem) {
-        game.system.log.d("[clickUpdateHandler] deleting actor item", actorItem);
+        window.GAS.log.d("[clickUpdateHandler] deleting actor item", actorItem);
         await actorItem.delete();
       }
 
@@ -169,18 +169,18 @@
   };
 
   const createActorInGameAndEmbedItems = async () => {
-    game.system.log.i("Building queue for actor creation");
-    game.system.log.d("Background:", $background);
-    game.system.log.d("Race:", $race);
-    game.system.log.d("Class:", $characterClass);
-    game.system.log.d("Subclass:", $characterSubClass);
+    window.GAS.log.i("Building queue for actor creation");
+    window.GAS.log.d("Background:", $background);
+    window.GAS.log.d("Race:", $race);
+    window.GAS.log.d("Class:", $characterClass);
+    window.GAS.log.d("Subclass:", $characterSubClass);
 
     // Create the actor first
     $actorInGame = await Actor.create($actor.toObject());
 
     // Update actor's gold after all items are added
     if ($goldRoll > 0) {
-      game.system.log.i("Setting starting gold:", $goldRoll);
+      window.GAS.log.i("Setting starting gold:", $goldRoll);
       await $actorInGame.update({
         "system.currency.gp": $goldRoll
       });
@@ -190,7 +190,7 @@
 
     // race
     if ($race) {
-      game.system.log.i("Adding race to character");
+      window.GAS.log.i("Adding race to character");
       const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -207,7 +207,7 @@
     
     // subrace
     if ($subRace) {
-      game.system.log.i("Adding subrace to character");
+      window.GAS.log.i("Adding subrace to character");
       const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -252,17 +252,17 @@
 
       // Handle starting equipment if enabled in settings
       if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $characterClass.system?.startingEquipment?.length) {
-        game.system.log.i("[Starting Equipment] Adding starting equipment to character");
-        game.system.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
+        window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
+        window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
         
         // Process standalone items first
         const standaloneItems = $characterClass.system.startingEquipment.filter(item => !item.group);
-        game.system.log.d("[Starting Equipment] Standalone items:", standaloneItems);
+        window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
         for (const item of standaloneItems) {
           if (item.key) {
             const itemData = await fromUuid(item.key);
             if (itemData) {
-              game.system.log.d("[Starting Equipment] Adding standalone item:", itemData);
+              window.GAS.log.d("[Starting Equipment] Adding standalone item:", itemData);
               dropItemRegistry.add({
                 actor: $actorInGame,
                 id: `equipment_${item.key}`,
@@ -275,23 +275,23 @@
 
         // Process equipment selections from groups
         const selections = Object.entries($equipmentSelections);
-        game.system.log.d("[Starting Equipment] Processing selections:", selections);
+        window.GAS.log.d("[Starting Equipment] Processing selections:", selections);
         
         for (const [groupId, selection] of selections) {
-          game.system.log.d("[Starting Equipment] Processing group:", { groupId, selection });
+          window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
           
           // Find all items in this group
           const groupItems = $characterClass.system.startingEquipment.filter(item => item.group === groupId);
-          game.system.log.d("[Starting Equipment] Group items:", groupItems);
+          window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
           
           // Find the selected item
           const selectedItem = groupItems.find(item => item._id === selection.selectedItemId);
-          game.system.log.d("[Starting Equipment] Selected item:", selectedItem);
+          window.GAS.log.d("[Starting Equipment] Selected item:", selectedItem);
           
           if (selectedItem?.key) {
             const itemData = await fromUuid(selectedItem.key);
             if (itemData) {
-              game.system.log.d("[Starting Equipment] Adding selected item:", itemData);
+              window.GAS.log.d("[Starting Equipment] Adding selected item:", itemData);
               dropItemRegistry.add({
                 actor: $actorInGame,
                 id: `equipment_${selectedItem.key}`,

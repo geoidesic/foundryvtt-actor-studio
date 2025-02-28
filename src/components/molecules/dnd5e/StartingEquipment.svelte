@@ -45,9 +45,9 @@
   $: sortedGroups = Object.values(processedGroups)
   .sort((a, b) => (a.sort || 0) - (b.sort || 0));
   
-  $: game.system.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
-  $: game.system.log.d("StartingEquipment processedGroups", processedGroups);
-  $: game.system.log.d("StartingEquipment sortedGroups", sortedGroups);
+  $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
+  $: window.GAS.log.d("StartingEquipment processedGroups", processedGroups);
+  $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
 
   async function getItemName(key) {
     if (!key) return 'Unknown Item';
@@ -71,12 +71,12 @@
   }
 
   function handleSelection(groupId, itemId) {
-    game.system.log.d("[Starting Equipment] handleSelection", { groupId, itemId });
+    window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, itemId });
     selectEquipment(groupId, itemId);
   }
 
   onMount(async () => {
-    game.system.log.d("StartingEquipment", startingEquipment);
+    window.GAS.log.d("StartingEquipment", startingEquipment);
   });
 
 </script>

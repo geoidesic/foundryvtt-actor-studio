@@ -73,7 +73,7 @@
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${classAdvancement.type}.svelte`);
         classAdvancementComponents[classAdvancement.type] = module.default;
       } catch (error) {
-        game.system.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+        window.GAS.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
       }
     }
   };
@@ -86,7 +86,7 @@
         await tick();
         subClassAdvancementComponents[subClassAdvancement.type] = module.default;
       } catch (error) {
-        game.system.log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
+        window.GAS.log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
       }
     }
   };
@@ -173,7 +173,7 @@
     activeSubClassUUID = option.value ?? option ?? null;
     $characterSubClass = await fromUuid(activeSubClassUUID);
     subclassValue = activeSubClassUUID;
-    game.system.log.d('activeSubClassUUID', activeSubClassUUID)
+    window.GAS.log.d('activeSubClassUUID', activeSubClassUUID)
     await tick();
     importSubClassAdvancements();
     richSubClassHTML = await TextEditor.enrichHTML(
@@ -268,7 +268,7 @@
    * Maps advancement data to include IDs for component rendering
    */
   $: if ($characterSubClass?.system?.advancement.length) {
-    // game.system.log.d('characterSubClass', $characterSubClass)
+    // window.GAS.log.d('characterSubClass', $characterSubClass)
     subClassAdvancementArrayFiltered =
       $characterSubClass.advancement?.byLevel[$newClassLevel]
   } else {
@@ -322,12 +322,12 @@
         $characterSubClass?.system?.description?.value,
       );
     }
-    // game.system.log.d("classKeys", classKeys);
-    // game.system.log.d(typeof classKeys);
-    // game.system.log.d(classKeys.length);
-    // game.system.log.d(Array.isArray(classKeys.length));
-    // game.system.log.d(getCharacterClass('fighter'))
-    // game.system.log.d($characterClass)
+    // window.GAS.log.d("classKeys", classKeys);
+    // window.GAS.log.d(typeof classKeys);
+    // window.GAS.log.d(classKeys.length);
+    // window.GAS.log.d(Array.isArray(classKeys.length));
+    // window.GAS.log.d(getCharacterClass('fighter'))
+    // window.GAS.log.d($characterClass)
   });
 
 

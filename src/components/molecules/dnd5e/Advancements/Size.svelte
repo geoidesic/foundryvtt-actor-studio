@@ -7,8 +7,8 @@
   $: sizes = advancement.configuration.sizes;
   
   onMount(async () => {
-    // game.system.log.d('advancement'+advancement.type, advancement)
-    // game.system.log.d('Sizes', sizes);
+    // window.GAS.log.d('advancement'+advancement.type, advancement)
+    // window.GAS.log.d('Sizes', sizes);
   });
   
 </script>

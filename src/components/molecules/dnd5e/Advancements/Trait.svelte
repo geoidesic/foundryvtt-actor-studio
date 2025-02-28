@@ -11,7 +11,7 @@
     if (!identifier) {
       return null;
     }
-    game.system.log.d("identifier", identifier);
+    window.GAS.log.d("identifier", identifier);
     let pack = CONFIG.DND5E.sourcePacks.ITEMS;
     let [scope, collection, id] = identifier.split(".");
     if (scope && collection) pack = `${scope}.${collection}`;
@@ -48,14 +48,14 @@
 
   const fetchAndSetItem = async (uuid) => {
     const itemObj = await fromUuid(uuid);
-    // game.system.log.d('Item', itemObj);
+    // window.GAS.log.d('Item', itemObj);
     item.set(itemObj);
   };
 
   const processGrant = async (grant) => {
     const split = grant.split(":");
-    // game.system.log.d('Trait split', split);
-    // game.system.log.d('switch', split[0]);
+    // window.GAS.log.d('Trait split', split);
+    // window.GAS.log.d('switch', split[0]);
     switch (split[0]) {
       case "languages":
         return { label: ucfirst(split[1]), value: ucfirst(split[2]) };
@@ -92,16 +92,16 @@
   };
 
   const initializeGrants = async () => {
-    // game.system.log.d("Trait config", advancement.configuration);
-    // game.system.log.d("Trait config", advancement.configuration);
-    // game.system.log.d("Trait grants", advancement.configuration.grants);
+    // window.GAS.log.d("Trait config", advancement.configuration);
+    // window.GAS.log.d("Trait config", advancement.configuration);
+    // window.GAS.log.d("Trait grants", advancement.configuration.grants);
     const grantPromises = Array.from(advancement.configuration.grants).map(processGrant);
     grants = await Promise.all(grantPromises);
-    // game.system.log.d('Grants', grants);
+    // window.GAS.log.d('Grants', grants);
   };
 
   onMount(async () => {
-    // game.system.log.d("Advancement", advancement);
+    // window.GAS.log.d("Advancement", advancement);
     if (advancement.configuration.grants.size > 0) {
       await initializeGrants();
     }

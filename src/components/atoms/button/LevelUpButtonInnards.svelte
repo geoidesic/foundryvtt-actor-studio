@@ -14,7 +14,7 @@
   };
 
   onMount(() => {
-    // game.system.log.d("mounted LevelUpButtonInnards", src, level, classKey);
+    // window.GAS.log.d("mounted LevelUpButtonInnards", src, level, classKey);
   });
 </script>
 

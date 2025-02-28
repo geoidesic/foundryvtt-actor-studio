@@ -137,7 +137,7 @@ const arrayOfObjectsStore = () => {
 
         const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
         if (skipDomMove) {
-          game.system.log.d('Dev setting: Skipping advancement DOM movement');
+          window.GAS.log.d('Dev setting: Skipping advancement DOM movement');
           return true;
         }
       } catch (error) {
@@ -200,7 +200,7 @@ export const preAdvancementSelections = writable(null);
 export const hasCharacterCreationChanges = derived(
   [race, background, characterClass, characterSubClass, preAdvancementSelections],
   ([$race, $background, $characterClass, $characterSubClass, $initialState]) => {
-    game.system.log.d("hasCharacterCreationChanges initialState", $initialState);
+    window.GAS.log.d("hasCharacterCreationChanges initialState", $initialState);
     if (!$initialState) return false;
     
     return (

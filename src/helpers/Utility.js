@@ -24,10 +24,10 @@ export const log = {
 };
 
 export function getLevelByDropType(actor, droppedItem) {
-  game.system.log.d('getLevelByDropType', droppedItem);
-  game.system.log.d('actor', actor);
+  window.GAS.log.d('getLevelByDropType', droppedItem);
+  window.GAS.log.d('actor', actor);
   const currentDropItemRegistry = get(dropItemRegistry);
-  game.system.log.d('currentDropItemRegistry', currentDropItemRegistry);
+  window.GAS.log.d('currentDropItemRegistry', currentDropItemRegistry);
   switch (droppedItem.type) {
     case 'class':
       return actor.classes[droppedItem.system.identifier].system.levels
@@ -62,21 +62,21 @@ export async function getRules(rule) {
 }
 
 export function filterPackForDTPackItems(pack, entries) {
-  // game.system.log.d('filterPackForDTPackItems', pack, entries);
-  // game.system.log.d('filterPackForDTPackItems filter', entries.filter);
+  // window.GAS.log.d('filterPackForDTPackItems', pack, entries);
+  // window.GAS.log.d('filterPackForDTPackItems filter', entries.filter);
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
 
     //- if the pack has no DT folders, include everything, @why: as this compendium is not managed by DT
     if (!DTPlugin.packHasDTFolders(pack)) {
-      // game.system.log.d('packHasDTFolders false');
+      // window.GAS.log.d('packHasDTFolders false');
       return true;
     }
     // get dt folder id's from this pack
     const allowedDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack)
-    // game.system.log.d('allowedDTFolderIds', allowedDTFolderIds);
+    // window.GAS.log.d('allowedDTFolderIds', allowedDTFolderIds);
     const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false)
-    // game.system.log.d('allDTFolderIds', allDTFolderIds);
+    // window.GAS.log.d('allDTFolderIds', allDTFolderIds);
 
     const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
 
@@ -84,29 +84,29 @@ export function filterPackForDTPackItems(pack, entries) {
     // filter the index.entries accordingly
     entries = entries.filter(([key, value]) => {
 
-      // game.system.log.d('key', key, value)
+      // window.GAS.log.d('key', key, value)
       //- if item is not in a folder
-      // game.system.log.d(1)
+      // window.GAS.log.d(1)
       if (!value.folder) {
         return unregisteredAccess;
       }
 
       //- if the item is in a folder that is not a real folder (e.g. deleted folder)
-      // game.system.log.d(2)
+      // window.GAS.log.d(2)
       if (!pack.folders.get(value.folder)) return false;
 
       //- if the item is in a DT folder tree, include it
-      // game.system.log.d(4)
+      // window.GAS.log.d(4)
       if (allowedDTFolderIds.includes(value.folder)) return true;
-      // game.system.log.d(5)
+      // window.GAS.log.d(5)
 
       //- if item is in a folder that is not a DT folder
       if (!allDTFolderIds.includes(value.folder)) {
-        // game.system.log.d(6)
+        // window.GAS.log.d(6)
         return unregisteredAccess;
       }
 
-      // game.system.log.d(7)
+      // window.GAS.log.d(7)
 
       return false;
     });
@@ -125,7 +125,7 @@ export function extractItemsFromPacksSync(packs, keys) {
   const items = [];
 
   for (const pack of packs) {
-    game.system.log.d('pack.metadata.name', pack.metadata.name);
+    window.GAS.log.d('pack.metadata.name', pack.metadata.name);
     if (!pack.index) {
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
@@ -133,7 +133,7 @@ export function extractItemsFromPacksSync(packs, keys) {
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
     const packItems = extractMapIteratorObjectProperties(entries, keys);
-    // game.system.log.d('packItems', packItems);
+    // window.GAS.log.d('packItems', packItems);
     items.push(...packItems);
   }
   return items;
@@ -149,8 +149,8 @@ export function extractItemsFromPacksSync(packs, keys) {
  */
 export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = false) {
   const items = [];
-  // game.system.log.d('extractItemsFromPacks packs', packs);
-  // game.system.log.d('nonIndexKeys', nonIndexKeys);
+  // window.GAS.log.d('extractItemsFromPacks packs', packs);
+  // window.GAS.log.d('nonIndexKeys', nonIndexKeys);
   for (const pack of packs) {
 
     let index = await pack.getIndex({
@@ -162,18 +162,18 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    // game.system.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    // game.system.log.d('extractItemsFromPacks pack', pack);
-    // game.system.log.d('extractItemsFromPacks packindex', index);
+    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // window.GAS.log.d('extractItemsFromPacks pack', pack);
+    // window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    // game.system.log.d('extractItemsFromPacks entries', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    // game.system.log.d('extractItemsFromPacks entries post', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     const packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
     items.push(...packItems);
   }
-  game.system.log.d('items', items)
+  window.GAS.log.d('items', items)
   return items;
 }
 
@@ -261,7 +261,7 @@ export const getAllPacksFromAllSettings = () => {
 
 export const getAllPackIdsFromAllSettings = () => {
   const packs = getAllPacksFromAllSettings();
-  // game.system.log.d('getAllPackIdsFromAllSettings', packs);
+  // window.GAS.log.d('getAllPackIdsFromAllSettings', packs);
   return packs.map(p => {
     return p.collection
   });
@@ -291,14 +291,14 @@ export function camelCaseToTitleCase(camelCaseStr) {
 }
 
 export const getCompendiumSource = (item) => {
-  // game.system.log.d('getCompendiumSource', item);
+  // window.GAS.log.d('getCompendiumSource', item);
   let sourceId;
   if (game.version < 12) {
     sourceId = item.flags.core.sourceId;
   } else {
     sourceId = item._stats.compendiumSource;
   }
-  // game.system.log.d('sourceId', sourceId);
+  // window.GAS.log.d('sourceId', sourceId);
   return sourceId;
 }
 
@@ -316,10 +316,10 @@ export const getCompendiumSource = (item) => {
  * @returns {Promise<Item|undefined>} The prepared Item instance, or undefined if item creation fails
  */
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
-  game.system.log.d('prepareItemForDrop');
-  game.system.log.d('isLevelUp? ', isLevelUp);
-  game.system.log.d('isMultiClass? ', isMultiClass);
-  game.system.log.d('itemData', itemData);
+  window.GAS.log.d('prepareItemForDrop');
+  window.GAS.log.d('isLevelUp? ', isLevelUp);
+  window.GAS.log.d('isMultiClass? ', isMultiClass);
+  window.GAS.log.d('itemData', itemData);
 
   let item
   if (isLevelUp && itemData.type === 'class') {
@@ -339,23 +339,23 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
       type: 'Item',
       uuid: itemData.uuid,
     }
-    game.system.log.d('dropData', dropData);
+    window.GAS.log.d('dropData', dropData);
     item = await Item.implementation.fromDropData(dropData);
-    game.system.log.d('item', item);
+    window.GAS.log.d('item', item);
   }
   return item;
 }
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
-  game.system.log.d('dropItemOnCharacter');
-  game.system.log.d('dropItemOnCharacter item', item);
-  game.system.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
+  window.GAS.log.d('dropItemOnCharacter');
+  window.GAS.log.d('dropItemOnCharacter item', item);
+  window.GAS.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
   return await actor.sheet._onDropItemCreate(item);
 }
 
 export function itemHasAdvancementChoices(item) {
-  game.system.log.d('Advancement check:', {
+  window.GAS.log.d('Advancement check:', {
     itemName: item.name,
     itemType: item.type,
     hasSystemAdvancement: !!item.system?.advancement,
@@ -376,13 +376,13 @@ export function itemHasAdvancementChoices(item) {
   }
 
   if (!advancements.length) {
-    game.system.log.d('No advancements found');
+    window.GAS.log.d('No advancements found');
     return false;
   }
 
   // Check each advancement for choices
   for (const adv of advancements) {
-    game.system.log.d('Checking advancement:', {
+    window.GAS.log.d('Checking advancement:', {
       type: adv.type,
       hasChoices: !!(adv.choices || adv.configuration?.choices),
       choicesLocation: adv.choices ? 'direct' : adv.configuration?.choices ? 'configuration' : 'none'

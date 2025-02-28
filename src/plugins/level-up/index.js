@@ -15,7 +15,7 @@ const pulseKeyframes = `
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
-  // game.system.log.d(actor);
+  // window.GAS.log.d(actor);
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
@@ -86,7 +86,7 @@ export function tidy5eSheetUI(app, element, data) {
 export function initLevelup() {
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
-    // game.system.log.d(app.constructor.name)
+    // window.GAS.log.d(app.constructor.name)
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
 
     if(app.constructor.name === "ActorSheet5eCharacter") {

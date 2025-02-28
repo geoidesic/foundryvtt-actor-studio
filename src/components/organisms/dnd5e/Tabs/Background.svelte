@@ -77,7 +77,7 @@
 
   onMount(async () => {
     if ($background) {
-      // game.system.log.d('background', background)
+      // window.GAS.log.d('background', background)
       value = $background.uuid;
       await tick();
       await importAdvancements();

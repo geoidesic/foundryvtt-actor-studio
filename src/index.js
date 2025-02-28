@@ -8,7 +8,7 @@ import packageJson from '../package.json';
 import manifestJson from '../module.json';
 
 import { MODULE_ID } from '~/src/helpers/constants';
-import { userHasRightPermissions, log, getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
+import { userHasRightPermissions, log, getAllPackIdsFromAllSettings, getDnd5eVersion } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
@@ -16,18 +16,19 @@ import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
 import SubclassLevelPlugin from './plugins/subclass-level';
 
-
+window.GAS = {};
 
 Hooks.once("init", (app, html, data) => {
 
-  game.system.log = log;
+  window.GAS.dnd5eversion = getDnd5eVersion();
+  window.GAS.log = log;
   log.level = log.DEBUG;
 
-  game.system.log.i(`Starting System ${MODULE_ID}`);
-  game.system.log.i('Initialising for foundry version:', game.version);
-  game.system.log.i('Initialising module manifest version:', manifestJson.version);
-  game.system.log.i('Initialising module package version:', packageJson.version);
-  game.system.log.i('Initialising game module version:', game.modules.get(MODULE_ID).version);
+  window.GAS.log.i(`Starting System ${MODULE_ID}`);
+  window.GAS.log.i('Initialising for foundry version:', game.version);
+  window.GAS.log.i('Initialising module manifest version:', manifestJson.version);
+  window.GAS.log.i('Initialising module package version:', packageJson.version);
+  window.GAS.log.i('Initialising game module version:', game.modules.get(MODULE_ID).version);
 
   initLevelup();
   registerSettings(app);
@@ -42,9 +43,9 @@ Hooks.once("init", (app, html, data) => {
     CONFIG.debug.hooks = true;
   }
 
-  game.system.log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
-  game.system.log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
-  game.system.log.d('Log level: ',log.level)
+  window.GAS.log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
+  window.GAS.log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
+  window.GAS.log.d('Log level: ',log.level)
 
   Hooks.call("gas.initIsComplete");
 
@@ -65,7 +66,7 @@ Hooks.once("ready", (app, html, data) => {
 //- donation-tracker integration
 Hooks.once("membershipReady", (app, html, data) => {
   const dtExists = game.modules.get('donation-tracker')?.active
-  game.system.log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
+  window.GAS.log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
   if (dtExists) {
     DonationTrackerGameSettings.init();
   }
@@ -81,16 +82,10 @@ const isAppElementAppended = (appId) => {
 
 const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
-// Helper to check dnd5e version
-const getDnd5eVersion = () => {
-  const system = game.system;
-  if (system.id !== 'dnd5e') return null;
-  return Number(system.version.split('.')[0]); // Returns 3 or 4
-};
 
 // Helper to check if we're on first step based on version
 const isFirstAdvancementStep = (app) => {
-  const version = getDnd5eVersion();
+  const version = window.GAS.dnd5eversion;
   if (version >= 4) {
     return app.steps?.[0] === app.step;
   }
@@ -99,7 +94,7 @@ const isFirstAdvancementStep = (app) => {
 
 // Helper to get advancement element based on version
 const getAdvancementElement = (currentProcess) => {
-  const version = getDnd5eVersion();
+  const version = window.GAS.dnd5eversion;
   const rawElement = currentProcess.app?.element;
   
   if (version >= 4) {
@@ -111,14 +106,14 @@ const getAdvancementElement = (currentProcess) => {
 };
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  // game.system.log.d('renderAdvancementManager')
+  // window.GAS.log.d('renderAdvancementManager')
 
   // Check if the application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
   // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
 
-  // game.system.log.d('currentProcess', currentProcess)
-  // game.system.log.d('app._stepIndex', app._stepIndex)
+  // window.GAS.log.d('currentProcess', currentProcess)
+  // window.GAS.log.d('app._stepIndex', app._stepIndex)
 
   if (currentProcess.id && isFirstAdvancementStep(app)) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
@@ -129,7 +124,7 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
       if (advancementsTab) {
         Hooks.call("gas.captureAdvancement");
       } else {
-        game.system.log.i('Advancements tab not found, adding it to the tabs')
+        window.GAS.log.i('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.captureAdvancement
         if(get(isLevelUp)) {
           await levelUpTabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
@@ -143,30 +138,30 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
 });
 
 Hooks.on("renderFolderConfig", (app, html, folder) => {
-  game.system.log.d("folder", folder);
+  window.GAS.log.d("folder", folder);
 })
 Hooks.on("renderActorSheet", (app, html, actor) => {
-  game.system.log.d("actor", actor);
+  window.GAS.log.d("actor", actor);
 })
 Hooks.on("renderItemSheet5e", (app, html, item) => {
-  game.system.log.d("item", item);
+  window.GAS.log.d("item", item);
 })
 
 Hooks.on("dropActorSheetData", (actor, type, info) => {
-  // game.system.log.d("dropActorSheetData", actor, type, info);
+  // window.GAS.log.d("dropActorSheetData", actor, type, info);
 })
 
 Hooks.on('gas.captureAdvancement', (initial = false) => {
-  game.system.log.d('[gas.captureAdvancement] initial', initial)
+  window.GAS.log.d('[gas.captureAdvancement] initial', initial)
   const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
   if (skipDomMove) {
-    game.system.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
+    window.GAS.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
     return;
   }
 
 
   const currentProcess = get(dropItemRegistry.currentProcess);
-  game.system.log.d('[gas.captureAdvancement] currentProcess in gas.captureAdvancement:', {
+  window.GAS.log.d('[gas.captureAdvancement] currentProcess in gas.captureAdvancement:', {
     id: currentProcess?.id,
     app: currentProcess?.app,
     element: currentProcess?.app?.element
@@ -180,13 +175,13 @@ Hooks.on('gas.captureAdvancement', (initial = false) => {
       class: get(characterClass),
       subclass: get(characterSubClass)
     });
-    game.system.log.d('[gas.captureAdvancement] Caching initial advancement state', get(preAdvancementSelections));
+    window.GAS.log.d('[gas.captureAdvancement] Caching initial advancement state', get(preAdvancementSelections));
   }
 
   if (currentProcess) {
     const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
     if (!isAppElementAppended(currentProcess.id)) {
-      game.system.log.d(currentProcess);
+      window.GAS.log.d(currentProcess);
       const element = getAdvancementElement(currentProcess);
       if(element) {
         element.removeClass(); // Remove all classes from the root element itself
@@ -199,7 +194,7 @@ Hooks.on('gas.captureAdvancement', (initial = false) => {
 });
 
 Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
-  // game.system.log.d(args)
+  // window.GAS.log.d(args)
 })
 
 Hooks.on('renderSettingsConfig', (app, html, context) => {
@@ -214,7 +209,7 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 })
 
 Hooks.on('renderCompendium', async (app, html, data) => {
-  // game.system.log.d('renderCompendium', app, html, data)
+  // window.GAS.log.d('renderCompendium', app, html, data)
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
     const pack = app.collection
@@ -226,14 +221,14 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 
     // don't render the button if it already exists
     if (DTaction.length) {
-      game.system.log.i('Donation Tracker button already exists, skipping')
+      window.GAS.log.i('Donation Tracker button already exists, skipping')
       return;
     }
 
     // if the metadata.id of the pack matches any of the packs that are mapped to Actor Studio Sources, then render the DT folders button
     if (!allPacks.includes(pack.metadata.id)) {
       // @why commented out? Apparently these were annoying
-      // game.system.log.i('Pack is not mapped to Actor Studio Sources, skipping')
+      // window.GAS.log.i('Pack is not mapped to Actor Studio Sources, skipping')
       // ui.notifications.warn(`Pack ${pack.metadata.label} is not mapped to Actor Studio Sources. Please map it to enable the Donation Tracker feature.`)
       return;
     }
@@ -244,7 +239,7 @@ Hooks.on('renderCompendium', async (app, html, data) => {
       if (value === -1) continue;
       const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
       if (folder) {
-        game.system.log.i('Donation Tracker folders already exist, skipping')
+        window.GAS.log.i('Donation Tracker folders already exist, skipping')
         return;
       }
     }
@@ -291,14 +286,14 @@ function getActorStudioButton(buttonId, text=false) {
 Hooks.on('renderApplication', (app, html, data) => {
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
-    game.system.log.i('Adding Create New Actor button');
+    window.GAS.log.i('Adding Create New Actor button');
 
     const select = $('select', html);
     const systemActorDocumentTypes = dnd5e.actorTypes
 
     function updateButton() {
       const actorType = select.val();
-      // game.system.log.d('actorType', actorType)
+      // window.GAS.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         // disable the button if the setting is enabled
         const hideOtherButtons = !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
@@ -311,7 +306,7 @@ Hooks.on('renderApplication', (app, html, data) => {
         }
         if (!$('#gas-dialog-button', html).length) {
           const $gasButton = getActorStudioButton('gas-dialog-button');
-          // game.system.log.d('html', html)
+          // window.GAS.log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
           const handleButtonClick = function (e) {

@@ -11,7 +11,7 @@ export default class SubclassLevelPlugin {
 
     const dnd5eVersion = game.system.version.split('.')[0];
     if (dnd5eVersion > 3) {
-      game.system.log.i('Subclass Level Plugin is not supported for DND5E version 3 and above, as it is now handled by the DND5E system.');
+      window.GAS.log.i('Subclass Level Plugin is not supported for DND5E version 3 and above, as it is now handled by the DND5E system.');
       return false;
     }
 
@@ -38,11 +38,11 @@ export default class SubclassLevelPlugin {
     if (!item || item.type !== 'class') return;
 
     // Add our subclass option to the types list
-    game.system.log.d('html', html);
-    game.system.log.d('$(html)', $(html));
+    window.GAS.log.d('html', html);
+    window.GAS.log.d('$(html)', $(html));
     const typeList = html.find('.items-list');
     html.addClass('gas dnd5e v3x')
-    game.system.log.d('Type List: ', typeList);
+    window.GAS.log.d('Type List: ', typeList);
     const subclassOption = `
       <li class="item flexrow">
         <div class="item-name flexrow">
@@ -59,7 +59,7 @@ export default class SubclassLevelPlugin {
     `;
     typeList.append(subclassOption);
     const button = html.find('[data-button="submit"]');
-    game.system.log.d('Button: ', button);
+    window.GAS.log.d('Button: ', button);
     
     // Store the original click handler
     const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
@@ -116,10 +116,10 @@ export default class SubclassLevelPlugin {
   }
 
   static _onRenderItemSheet5e(app, html, data) {
-    game.system.log.d('_onRenderItemSheet5e called');
+    window.GAS.log.d('_onRenderItemSheet5e called');
     // Only proceed if this is a class item
     const item = app.item;
-    game.system.log.d('item.type', item.type);
+    window.GAS.log.d('item.type', item.type);
     if (!item || item.type !== 'class') return;
 
     // Add click listener to advancement tab
@@ -131,21 +131,21 @@ export default class SubclassLevelPlugin {
     // Only proceed with subclass rendering if advancement tab is active
     if (!html.find('.tab.advancement.active').length) return;
 
-    game.system.log.d('html', html);
+    window.GAS.log.d('html', html);
 
     const subclassLevel = this.getSubclassLevel(item);
-    game.system.log.d('subclassLevel', subclassLevel);
+    window.GAS.log.d('subclassLevel', subclassLevel);
     if (!subclassLevel) return;
 
     // Find the level group where we should insert the subclass
     const levelHeader = html.find(`[data-level="${subclassLevel}"]`);
-    game.system.log.d('levelHeader', levelHeader);
+    window.GAS.log.d('levelHeader', levelHeader);
     if (!levelHeader.length) return;
 
     // Find the items-list that's a sibling of the level header
     const itemsList = html.find(`[data-level="${subclassLevel}"] + .item-list`);
     // const itemsList = levelHeader.siblings('.item-list');
-    game.system.log.d('itemsList', itemsList);
+    window.GAS.log.d('itemsList', itemsList);
     if (!itemsList.length) return;
 
     // Create the subclass advancement entry

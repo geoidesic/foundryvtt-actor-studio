@@ -24,7 +24,7 @@
     "uuid->value",
     "_id",
   ]);
-  // game.system.log.d('allRaceItems', allRaceItems)
+  // window.GAS.log.d('allRaceItems', allRaceItems)
   let raceDefinitions = allRaceItems
     .filter((x) => x.type == "race")
     .sort((a, b) => a.label.localeCompare(b.label));
@@ -32,7 +32,7 @@
   const actor = getContext("#doc");
 
   const importAdvancements = async () => {
-    // game.system.log.d('advancementArray',advancementArray)
+    // window.GAS.log.d('advancementArray',advancementArray)
     for (const advancement of advancementArray) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
@@ -44,7 +44,7 @@
   };
 
   const selectHandler = async (option) => {
-    game.system.log.d('RACE TAB | Selection Change:', {
+    window.GAS.log.d('RACE TAB | Selection Change:', {
       previousValue: value,
       newValue: option,
       currentRace: $race,
@@ -56,7 +56,7 @@
     active = option;
     await tick();
     
-    game.system.log.d('RACE TAB | After Update:', {
+    window.GAS.log.d('RACE TAB | After Update:', {
       value,
       active,
       race: $race
@@ -97,7 +97,7 @@
         )
     : [];
 
-  $: game.system.log.d(advancementArray)
+  $: window.GAS.log.d(advancementArray)
 
 
   onMount(async () => {
