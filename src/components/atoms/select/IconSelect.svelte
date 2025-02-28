@@ -36,7 +36,7 @@
     const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
 
     function getLabel(option) {
-      if (showPackLabelInSelect) {
+      if (showPackLabelInSelect && option.packLabel) {
         return `[${option.packLabel}] ${option.label}`;
       }
       return option.label;
