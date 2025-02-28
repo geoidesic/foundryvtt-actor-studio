@@ -12,6 +12,10 @@
   $: {
     if (characterClass?.system?.wealth) {
       formula = characterClass.system.wealth;
+      // If formula doesn't contain 'd', set goldRoll directly
+      if (!formula.includes('d')) {
+        $goldRoll = parseInt(formula) || 0;
+      }
     } else {
       // Use default gold dice from settings if no class-specific formula
       formula = game.settings.get(MODULE_ID, "defaultGoldDice") || "5d4 * 10";
