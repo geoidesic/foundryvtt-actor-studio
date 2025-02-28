@@ -124,7 +124,6 @@
 div.content
   .flexrow
     .flex2.pr-sm.col-a
-      pre isDisabled {isDisabled}
       .flexrow
         .flex0.required(class="{$race ? '' : 'active'}") *
         .flex3 

@@ -8,6 +8,7 @@
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log } from '~/src/helpers/Utility';
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -24,19 +25,14 @@
 
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
 
-  // $: if($characterClass?.system?.spellcasting?.progression && $characterClass?.system?.spellcasting?.progression !== "none") {
-    // @todo: [NB: this has been disabled for MVP as the bounty wasn't reached to fund this work.
-    // ensure that tabs includes spells
-    // if(!$tabs.find(x => x.id === "spells")) {
-    //   $tabs = [...$tabs, { label: "Spells", id: "spells", component: "Spells" }]
-    // }
-  // } else {
-    // remove spells tab
-    // $tabs = $tabs.filter(x => x.id !== "spells")
-  // }
+  // Get illumination settings
+  const illuminatedHeight = game.settings.get(MODULE_ID, 'illuminatedHeight');
+  const illuminatedWidth = game.settings.get(MODULE_ID, 'illuminatedWidth');
 
-  const stylesApp = {
-      '--tjs-app-overflow': 'visible'
+  $: stylesApp = {
+    '--tjs-app-overflow': 'visible',
+    '--illuminated-initial-height': illuminatedHeight,
+    '--illuminated-initial-width': illuminatedWidth
   };
 
   onMount( async () => {
@@ -45,6 +41,8 @@
       // window.GAS.log.d($actorInGame);
     }
     isLevelUp.set(levelUp);
+
+    window.GAS.log.d(stylesApp)
 
     // window.GAS.log.d($isLevelUp)
   });
@@ -101,7 +99,7 @@
 <!-- ApplicationShell exports `elementRoot` which is the outer application shell element -->
 
 <template lang="pug">
-  ApplicationShell(bind:elementRoot stylesApp)
+  ApplicationShell(bind:elementRoot bind:stylesApp)
     main
       section.a
         Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")

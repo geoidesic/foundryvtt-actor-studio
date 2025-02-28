@@ -13,6 +13,8 @@ export async function illuminatedDescription(html, store) {
   if (jEnriched.length === 1 && jEnriched[0].nodeName === 'DIV') {
     content = jEnriched.html();
   }
+
+  if (!content) return null;
   
   const richHTML = `
     <div class="illuminated-description">

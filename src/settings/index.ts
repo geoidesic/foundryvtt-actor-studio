@@ -58,16 +58,19 @@ export function registerSettings(app: Game): void {
   allowRolling(app);
   abilityRollFormula();
   showPackLabelInSelect();
-  forceDnd5eLevelUpAutomation();
   showButtonInSideBar(app);
   disableOtherActorCreationOptionsForPlayers();
   nonGmsCanOnlyCreatePCs();
+  illuminatedDescription();
+  illuminatedHeight();
+  illuminatedWidth();
   enableEquipmentSelection();
   showPackLabelInSelect();
   windowX();
   windowY();
   enableLevelUp();
   milestoneLeveling();
+  forceDnd5eLevelUpAutomation();
   debugSetting();
   debugHooksSetting();
 
@@ -76,6 +79,37 @@ export function registerSettings(app: Game): void {
   disableAdvancementCapture();
 }
 
+function illuminatedHeight() {
+  game.settings.register(MODULE_ID, 'illuminatedHeight', {
+    name: game.i18n.localize('GAS.Setting.illuminatedHeight.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedHeight.Hint'),
+    scope: 'world',
+    config: true,
+    default: '64px',
+    type: String,
+  });
+}
+function illuminatedWidth() {
+  game.settings.register(MODULE_ID, 'illuminatedWidth', {
+    name: game.i18n.localize('GAS.Setting.illuminatedWidth.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedWidth.Hint'),
+    scope: 'world',
+    config: true,
+    default: '64px',
+    type: String,
+  });
+}
+
+export function illuminatedDescription() {
+  game.settings.register(MODULE_ID, 'illuminatedDescription', {
+    name: game.i18n.localize('GAS.Setting.illuminatedDescription.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedDescription.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
 
 export function enableLevelUp() {
   game.settings.register(MODULE_ID, 'enableLevelUp', {
