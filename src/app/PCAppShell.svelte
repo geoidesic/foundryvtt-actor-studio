@@ -6,6 +6,7 @@
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
+  import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log } from '~/src/helpers/Utility';
 
   export let elementRoot; //- passed in by SvelteApplication
@@ -66,7 +67,32 @@
   }
 
   Hooks.once("gas.close", gasClose);
-    
+
+  // Equipment selection hook handler
+  function handleEquipmentSelection() {
+    // Add Equipment tab
+    if(!$tabs.find(x => x.id === "equipment")) {
+      tabs.update(t => [...t, { label: "Equipment", id: "equipment", component: "Equipment" }]);
+    }
+
+    // Remove Advancements tab as it will be empty
+    tabs.update(t => t.filter(x => x.id !== "advancements"));
+
+    // Set active tab to equipment
+    activeTab.set("equipment");
+
+    // Mark other tabs as read-only
+    const readOnlyTabs = ["race", "background", "abilityScores", "class"];
+    Hooks.call("gas.setTabsReadOnly", readOnlyTabs);
+  }
+
+  Hooks.once("gas.equipmentSelection", handleEquipmentSelection);
+
+  onDestroy(() => {
+    resetStores();
+    Hooks.off("gas.close", gasClose);
+    Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
+  });
 </script>
 
 <!-- This is necessary for Svelte to generate accessors TRL can access for `elementRoot` -->

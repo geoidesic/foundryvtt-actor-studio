@@ -57,6 +57,8 @@
     levelOptions.push({ label: "Level " + i, value: i });
   }
 
+  window.GAS.log.d('$characterClass', $characterClass)
+
   const selectStyles = {
     // width: '50%',
     // display: 'inline-block',

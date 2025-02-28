@@ -212,6 +212,7 @@
   filter: brightness(1) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))
   border: none
   min-width: 32px
+  max-height: 32px
   margin-right: 0.2rem
   width: 90%
   height: 90%

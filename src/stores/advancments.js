@@ -4,7 +4,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { tabs, activeTab } from '~/src/stores/index';
 
 export const advancementQueueStore = () => {
-  const store = writable([]); 
+  const store = writable([]);
   const inProcess = writable(false);
   const { subscribe, set, update } = store;
 
@@ -41,7 +41,7 @@ export const advancementQueueStore = () => {
       update(apps => {
         // Remove any existing instance of this item
         const filteredApps = apps.filter(existingApp => existingApp.id !== app.id);
-        
+
         // Find the correct position based on expectedOrder
         const appIndex = expectedOrder.indexOf(app.id);
         if (appIndex === -1) {
@@ -77,16 +77,16 @@ export const advancementQueueStore = () => {
   // Define closeAdvancementManager with access to storeObj
   async function closeAdvancementManager() {
     let monitoringPromise = null;
-    
+
     const isPanelEmpty = () => {
       if (get(activeTab) !== 'advancements') return false;
       const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
       return !Boolean(panel.html()?.trim());
     }
-    
+
     const waitForPanelEmpty = async () => {
       if (monitoringPromise) return monitoringPromise;
-      
+
       monitoringPromise = new Promise(resolve => {
         const checkPanel = () => {
           if (isPanelEmpty()) {
@@ -97,7 +97,7 @@ export const advancementQueueStore = () => {
         };
         checkPanel();
       });
-      
+
       return monitoringPromise;
     };
 
@@ -105,10 +105,15 @@ export const advancementQueueStore = () => {
     monitoringPromise = null;
 
     const queue = await storeObj.advanceQueue();
-    
+
     if (!queue) {
       const actor = get(inProcess)?.actor;
-      Hooks.call("gas.close");
+
+      if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
+        Hooks.call("gas.equipmentSelection", actor);
+      } else {
+        Hooks.call("gas.close");
+      }
       if (actor) {
         actor.sheet.render(true);
       }
@@ -118,12 +123,24 @@ export const advancementQueueStore = () => {
   }
 
   // Add advanceQueue to storeObj
-  storeObj.advanceQueue = async function(initial) {
+  storeObj.advanceQueue = async function (initial) {
     const currentStore = get(store);
     const next = currentStore[0] || false;
 
     if (!next) {
       inProcess.set(false);
+      const actor = get(inProcess)?.actor;
+      
+      // Check if equipment selection is enabled
+      if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
+        Hooks.call("gas.equipmentSelection", actor);
+      } else {
+        Hooks.call("gas.close");
+      }
+      
+      if (actor) {
+        actor.sheet.render(true);
+      }
       return false;
     }
 
