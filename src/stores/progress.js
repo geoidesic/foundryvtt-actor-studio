@@ -40,7 +40,7 @@ function isAbilityGenerationMethodReady(method) {
  * @param characterClass
  * @param characterSubClass
  */
-function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
+function isSubclassForThisCharacterLevel(characterClass) {
   if (!characterClass) return false;
 
   const subClassLevel = getSubclassLevel(characterClass, MODULE_ID);
@@ -48,16 +48,16 @@ function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
 
   if (!subClassLevel) return false;
 
-  const actorLevel = game.actor?.system?.details?.level
+  const newActorLevel = game.actor?.system?.details?.level
     ? game.actor.system.details.level + 1
     : 1;
   window.GAS.log.d("[PROGRESS] subClassLevel", subClassLevel);
-  window.GAS.log.d("[PROGRESS] level", actorLevel);
+  window.GAS.log.d("[PROGRESS] level", newActorLevel);
   window.GAS.log.d(
     "[PROGRESS] subClassLevel === level",
-    subClassLevel === actorLevel,
+    subClassLevel === newActorLevel,
   );
-  return subClassLevel && parseInt(actorLevel) !== parseInt(subClassLevel);
+  return subClassLevel && parseInt(newActorLevel) === parseInt(subClassLevel);
 }
 
 const stores = [
@@ -77,8 +77,9 @@ export const totalSteps = derived(
   ([$characterClass, $characterSubClass, $subClassesForClass]) => {
     let length = 5;
     if (
-      $subClassesForClass.length > 0 &&
-      isSubclassForThisCharacterLevel($characterClass, $characterSubClass)
+      //- @why: if there are no subclasses for this class, or the subclass is not available for this level, reduce the total steps
+      !$subClassesForClass.length > 0 ||
+      !isSubclassForThisCharacterLevel($characterClass, $characterSubClass)
     ) {
       length = length - 1;
     }
