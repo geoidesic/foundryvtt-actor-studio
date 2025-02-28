@@ -10,7 +10,9 @@ import {
   isStandardArrayValues,
   subClassesForClass,
 } from './index';
+import { getDnd5eVersion } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
+
 
 // Sample helper function to process abilityGenerationMethod
 function isAbilityGenerationMethodReady(method) {
@@ -39,9 +41,20 @@ function isAbilityGenerationMethodReady(method) {
  * @param characterSubClass
  */
 function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
-  const subClassLevel = characterClass?.getFlag
+  const dnd5eVersion = getDnd5eVersion();
+  let subClassLevel = false;
+  if (dnd5eVersion === 3) {
+    subClassLevel = characterClass?.getFlag
     ? characterClass.getFlag(MODULE_ID, "subclassLevel")
     : false;
+  }
+  window.GAS.log.d("[PROGRESS] characterClass", characterClass);
+  if (dnd5eVersion >= 4) {
+    subClassLevel = characterClass.system.advancement
+      .filter(advancement => advancement.type === "Subclass")
+      .map(advancement => advancement.level);
+  }
+
   const actorLevel = game.actor?.system?.details?.level
     ? game.actor.system.details.level + 1
     : 1;

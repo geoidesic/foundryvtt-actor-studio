@@ -20,10 +20,11 @@ window.GAS = {};
 
 Hooks.once("init", (app, html, data) => {
 
-  window.GAS.dnd5eVersion = getDnd5eVersion();
   window.GAS.log = log;
   log.level = log.DEBUG;
-
+  
+  window.GAS.dnd5eVersion = getDnd5eVersion();
+  
   window.GAS.log.i(`Starting System ${MODULE_ID}`);
   window.GAS.log.i('Initialising for foundry version:', game.version);
   window.GAS.log.i('Initialising module manifest version:', manifestJson.version);
