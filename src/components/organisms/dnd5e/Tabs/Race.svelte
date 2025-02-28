@@ -10,6 +10,7 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
   import { race } from "~/src/stores/index";
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   let active = null,
     value = null,
@@ -24,10 +25,12 @@
     "uuid->value",
     "_id",
   ]);
+  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+
   // window.GAS.log.d('allRaceItems', allRaceItems)
   let raceDefinitions = allRaceItems
     .filter((x) => x.type == "race")
-    .sort((a, b) => a.label.localeCompare(b.label));
+    .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
 
   const actor = getContext("#doc");
 

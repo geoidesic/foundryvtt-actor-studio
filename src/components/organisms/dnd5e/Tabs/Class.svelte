@@ -24,7 +24,6 @@
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/goldRoll";
 
-
   let richHTML = "",
     html = "",
     richSubClassHTML = "",
@@ -49,13 +48,24 @@
       "type",
       "folder",
       "uuid->value",
-      "_id",
+      "_id"
     ]),
-    filteredClassIndex = mappedClassIndex
-      .filter((i) => {
-        return i.type == "class";
-      })
-      .sort((a, b) => a.label.localeCompare(b.label));
+    filteredClassIndex
+  ;
+
+  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+
+  filteredClassIndex = mappedClassIndex
+    .filter((i) => {
+      return i.type == "class";
+    })
+    .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
+
+    
+  window.GAS.log.d('packs', packs);
+  window.GAS.log.d('mappedClassIndex', mappedClassIndex);
+
+
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
     levelOptions.push({ label: "Level " + i, value: i });
@@ -93,9 +103,10 @@
       return x.system.classIdentifier == $characterClass.system.identifier;
     });
 
+
     const output = mappedSubClassIndex
       .flat()
-      .sort((a, b) => a.label.localeCompare(b.label));
+      .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
     // window.GAS.log.d("subclass output", output);
     return output;
 

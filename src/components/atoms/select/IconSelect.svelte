@@ -9,6 +9,7 @@
 
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
+    import { MODULE_ID } from "~/src/helpers/constants";
 
     export let options = []; //- {value, label, icon || img}
     export let value = ""; //- the currently selected uuid
@@ -21,7 +22,6 @@
     export let truncateWidth = 20;
 
     let isOpen = false;
-
     export let handleSelect = (option) => {
       if (handler) {
         if (handler(option.value)) {
@@ -32,6 +32,15 @@
       }
       toggleDropdown();
     };
+
+    const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+
+    function getLabel(option) {
+      if (showPackLabelInSelect) {
+        return `[${option.packLabel}] ${option.label}`;
+      }
+      return option.label;
+    }
 
     function toggleDropdown() {
       isOpen = !isOpen;
@@ -109,7 +118,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
                   i(class="{option.icon}")
                   +else
                     img(src="{option.img}" alt="{option.label}")
-            div.option-label {option.label}
+            div.option-label {getLabel(option)}
 </template>
 
 <style lang="scss">

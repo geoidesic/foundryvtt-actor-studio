@@ -124,8 +124,6 @@ export function filterPackForDTPackItems(pack, entries) {
 export function extractItemsFromPacksSync(packs, keys) {
   const items = [];
 
-  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
-
   for (const pack of packs) {
     window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
 
@@ -141,7 +139,8 @@ export function extractItemsFromPacksSync(packs, keys) {
     let packItems = extractMapIteratorObjectProperties(entries, keys);
     packItems = packItems.map(item => ({
       ...item,
-      label: showPackLabelInSelect ? `[${pack.metadata.label}] ${item.label}` : item.label,
+      label: item.label,
+      compoundLabel: `[${pack.metadata.label}] ${item.label}`,
       packName: pack.metadata.name,
       packId: pack.metadata.id,
       packLabel: pack.metadata.label,
