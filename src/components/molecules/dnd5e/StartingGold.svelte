@@ -3,6 +3,7 @@
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/goldRoll";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { writable } from 'svelte/store';
 
   export let characterClass;
 
@@ -29,6 +30,10 @@
       speaker: ChatMessage.getSpeaker()
     });
     $goldRoll = roll.total;
+  }
+
+  export function resetGoldRoll() {
+    goldRoll.set(0);
   }
 </script>
 
@@ -83,6 +88,7 @@
     font-size: 1rem
     background-color: rgba(0, 0, 0, 0.1)
     padding: 2px 1px 0px 0px
+    visibility: hidden
     border: 1px solid var(--color-positive)
     border-radius: 4px
     color: var(--color-positive)
@@ -90,8 +96,9 @@
       cursor: pointer
       background-color: rgba(140, 90, 0, 0.2)
     &.active
-      border: 1px solid var(--color-negative)
-      color: var(--color-negative)
+      visibility: visible
+      border: 1px solid var(--dnd5e-color-gold)
+      color: var(--dnd5e-color-gold)
       animation: pulse 1s infinite
 
   .result

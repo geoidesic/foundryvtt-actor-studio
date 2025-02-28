@@ -181,9 +181,11 @@
     // Update actor's gold after all items are added
     if ($goldRoll > 0) {
       game.system.log.i("Setting starting gold:", $goldRoll);
-      await $actorInGame.updateSource({
+      await $actorInGame.update({
         "system.currency.gp": $goldRoll
       });
+      // Reset the gold roll after setting it on the actor
+      goldRoll.set(0);
     }
 
     // race

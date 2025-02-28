@@ -22,6 +22,7 @@
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
+  import { goldRoll } from "~/src/stores/goldRoll";
 
 
   let richHTML = "",
@@ -106,6 +107,9 @@
     subclassValue = null;
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
+    
+    // Reset gold roll when changing class
+    goldRoll.set(0);
     
     const selectedClass = await fromUuid(option);
     $characterClass = selectedClass;
