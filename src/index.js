@@ -20,7 +20,7 @@ window.GAS = {};
 
 Hooks.once("init", (app, html, data) => {
 
-  window.GAS.dnd5eversion = getDnd5eVersion();
+  window.GAS.dnd5eVersion = getDnd5eVersion();
   window.GAS.log = log;
   log.level = log.DEBUG;
 
@@ -85,7 +85,7 @@ const generateUniqueId = () => `app-${Math.random().toString(36).substr(2, 9)}`;
 
 // Helper to check if we're on first step based on version
 const isFirstAdvancementStep = (app) => {
-  const version = window.GAS.dnd5eversion;
+  const version = window.GAS.dnd5eVersion;
   if (version >= 4) {
     return app.steps?.[0] === app.step;
   }
@@ -94,7 +94,7 @@ const isFirstAdvancementStep = (app) => {
 
 // Helper to get advancement element based on version
 const getAdvancementElement = (currentProcess) => {
-  const version = window.GAS.dnd5eversion;
+  const version = window.GAS.dnd5eVersion;
   const rawElement = currentProcess.app?.element;
   
   if (version >= 4) {
