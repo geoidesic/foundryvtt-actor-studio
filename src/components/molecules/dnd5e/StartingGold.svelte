@@ -49,10 +49,11 @@
         h2.left {localize('GAS.Equipment.StartingGold')}
     
     .flexcol.gold-section.gap-10
-      .flexrow.left.gap-4
-        .flex3.gold Starting Gold Formula: 
-        .flex1.badge {formula}
-      .flexrow.left
+      +if("!hasRolled")
+        .flexrow.left.gap-4
+          .flex3.gold Starting Gold Formula: 
+          .flex1.badge {formula}
+      .flexrow.left.justify-flexrow-vertical
         .flex3 
           +if("hasRolled")
             .result
