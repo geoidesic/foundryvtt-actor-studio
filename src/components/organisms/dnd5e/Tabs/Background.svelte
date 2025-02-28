@@ -5,7 +5,8 @@
     getFoldersFromMultiplePacks,
     extractItemsFromPacksSync,
     getPacksFromSettings,
-    getAdvancementValue
+    getAdvancementValue,
+    illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
@@ -74,8 +75,9 @@
     active = option;
     await tick();
     await importAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $background);
   };
+
 
   onMount(async () => {
     if ($background) {
@@ -83,7 +85,7 @@
       value = $background.uuid;
       await tick();
       await importAdvancements();
-      richHTML = await TextEditor.enrichHTML(html);
+      richHTML = await illuminatedDescription(html, $background);
     }
   });
 

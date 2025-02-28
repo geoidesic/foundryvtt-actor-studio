@@ -8,6 +8,7 @@
     getPacksFromSettings,
     getAdvancementValue,
     getSubclassLevel,
+    illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -137,7 +138,7 @@
 
     await tick();
     await importClassAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $characterClass);
   };
 
   const importClassAdvancements = async () => {
@@ -164,8 +165,9 @@
     await tick();
     importClassAdvancements();
     importSubClassAdvancements();
-    richSubClassHTML = await TextEditor.enrichHTML(
+    richSubClassHTML = await illuminatedDescription(
         $characterSubClass.system.description.value,
+        $characterSubClass
     );
   };
 
@@ -205,11 +207,10 @@
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
-  $: combinedHtml =
-    richHTML +
-    (richSubClassHTML
-      ? `<h1>${localize("GAS.SubClass")}</h1>` + richSubClassHTML
-      : "");
+  $: combinedHtml = $characterClass ? `
+      ${richHTML}
+      ${richSubClassHTML ? `<h1>${localize("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
+  ` : "";
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
 
@@ -252,15 +253,16 @@
       classValue = $characterClass.uuid;
       await tick();
       importClassAdvancements();
-      richHTML = await TextEditor.enrichHTML(html);
+      richHTML = await illuminatedDescription(html, $characterClass);
       subClassesIndex = await getFilteredSubclassIndex();
     }
     if ($characterSubClass) {
       subclassValue = $characterSubClass.uuid;
       await tick();
       importSubClassAdvancements();
-      richSubClassHTML = await TextEditor.enrichHTML(
+      richSubClassHTML = await illuminatedDescription(
         $characterSubClass.system.description.value,
+        $characterSubClass
       );
     }
   });
@@ -367,6 +369,7 @@
   @import "../../../../../styles/Mixins.scss"
   .content 
     @include staticOptions
+
     .badge.inset
       @include badge()
       @include inset
@@ -385,4 +388,5 @@
     border-radius: 5px
     box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
     font-size: smaller
+
 </style>

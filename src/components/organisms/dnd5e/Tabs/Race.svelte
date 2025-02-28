@@ -5,7 +5,8 @@
     getFoldersFromMultiplePacks,
     extractItemsFromPacksSync,
     getPacksFromSettings,
-    getAdvancementValue
+    getAdvancementValue,
+    illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
@@ -64,9 +65,8 @@
       active,
       race: $race
     });
-    
-    richHTML = await TextEditor.enrichHTML(html);
-
+    await importAdvancements();
+    richHTML = await illuminatedDescription(html, $race);
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
@@ -107,13 +107,15 @@
 
   $: isDisabled = $readOnlyTabs.includes("race");
 
+
+
   onMount(async () => {
     if ($race) {
       value = $race.uuid;
     }
     await tick();
     await importAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $race);
   });
 
 </script>

@@ -4,6 +4,24 @@ import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
 
 
+export async function illuminatedDescription(html, store) {
+  const enriched = await TextEditor.enrichHTML(html);
+  const jEnriched = jQuery(enriched);
+  let content = enriched;
+  
+  // Check if the content is wrapped in a div
+  if (jEnriched.length === 1 && jEnriched[0].nodeName === 'DIV') {
+    content = jEnriched.html();
+  }
+  
+  const richHTML = `
+    <div class="illuminated-description">
+      <div class="illuminated-initial" style="background-image: url('${store.img}')"></div>
+      ${content}
+    </div>
+  `;
+  return richHTML;
+}
 
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
