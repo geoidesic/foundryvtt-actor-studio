@@ -49,6 +49,8 @@
   $: window.GAS.log.d("StartingEquipment processedGroups", processedGroups);
   $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
 
+  $: dnd5eVersion = window.GAS.dnd5eVersion;
+
   async function getItemName(key) {
     if (!key) return 'Unknown Item';
     if (key === 'arcane') return 'Arcane Focus';
@@ -102,19 +104,19 @@
                     class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''}"
                     on:click="{handleSelection(group.id, item._id)}"
                   )
-                    .flexrow.justify-flexrow-vertical
-                      .flex0.mr-sm
+                    .flexrow.justify-flexrow-vertical.no-wrap
+                      .flex0.relative.icon
                         img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                      .flex2.left.name {item.label}
+                      .flex2.left.name.black-link {@html item.label}
                     +if("item.count")
                       span.count (x{item.count})
             +else()
               +each("group.items as item")
                 .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''}")
-                  .flexrow.justify-flexrow-vertical
-                    .flex0.mr-sm
+                  .flexrow.justify-flexrow-vertical.no-wrap
+                    .flex0.relative.icon
                       img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                    .flex2.left.name {item.label}
+                    .flex2.left.name.black-link {@html item.label}
                     +if("item.count")
                       span.count (x{item.count})
         +else()
@@ -125,19 +127,19 @@
                 span.group-label Choose one from... 
                 +each("group.items as item")
                   .equipment-item
-                    .flexrow.justify-flexrow-vertical
-                      .flex0.mr-sm
+                    .flexrow.justify-flexrow-vertical.no-wrap
+                      .flex0.relative.icon
                         img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                      .flex2.left.name {item.label}
+                      .flex2.left.name.black-link {@html item.label}
                       +if("item.count")
                         span.count (x{item.count})
                 +else()
                   +each("group.items as item")
                     .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
-                      .flexrow.justify-flexrow-vertical
-                        .flex0.mr-sm
+                      .flexrow.justify-flexrow-vertical.no-wrap
+                        .flex0.relative.icon
                           img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                        .flex2.left.name {item.label}
+                        .flex2.left.name.black-link {@html item.label}
                         +if("item.count")
                           span.count (x{item.count})
 </template>
@@ -159,7 +161,7 @@
 
 .equipment-group
   margin-bottom: 0.75rem
-  background: rgba(0, 0, 0, 0.3)
+  margin-right: 0.2rem
   padding: 0.5rem
   border-radius: var(--border-radius)
   
@@ -176,11 +178,11 @@
 .options
   display: grid
   grid-template-columns: repeat(1, 1fr)
-  gap: 0.5rem
+  gap: 0.2rem
 
 .option, .equipment-item
   display: flex
-  padding: 0.3rem 0.75rem
+  padding: 0.3rem 0.5rem
   border: 1px solid rgba(255, 255, 255, 0.1)
   border-radius: 4px
   background: rgba(0, 0, 0, 0.4)
@@ -205,13 +207,16 @@
   &.focus
     border-left: 3px solid var(--color-text-highlight)
 
+
 .icon
-  width: 32px
-  height: 32px
-  margin-right: 0.75rem
   filter: brightness(1) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))
   border: none
   min-width: 32px
+  margin-right: 0.2rem
+  width: 90%
+  height: 90%
+  object-fit: cover
+  object-position: center
 
 .name
   flex: 1
