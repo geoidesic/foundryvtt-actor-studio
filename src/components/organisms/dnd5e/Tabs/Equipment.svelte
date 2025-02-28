@@ -7,6 +7,7 @@
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import { characterClass, characterSubClass } from "~/src/stores/index";
+  import { goldRoll } from "~/src/stores/goldRoll";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const doc = getContext("#doc");
@@ -25,17 +26,15 @@
 .container
   .content
     .flexrow
-      .flex3.left.scroll.col-b
-        h2 {localize('GAS.Equipment.Title')}
-        +if("equipmentSelectionEnabled")
-          section.equipment-flow
-            StartingGold(characterClass="{$characterClass}")
-            +if("hasRolledGold")
-              StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}")
-      .flex0.border-right.right-border-gradient-mask
       .flex2.pr-sm.col-a
-        h3 {localize('GAS.Equipment.Summary')}
-        // Equipment summary will go here
+        h3 {localize('GAS.Equipment.Selection')}
+        section.equipment-flow
+          StartingGold(characterClass="{$characterClass}")
+          +if("hasRolledGold")
+            StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}")
+      .flex0.border-right.right-border-gradient-mask
+      .flex3.left.scroll.col-b
+        h2 {localize('GAS.Equipment.Detail')}
 </template>
 
 <style lang="sass">
@@ -57,4 +56,14 @@ section
   background: rgba(0, 0, 0, 0.05)
   border-radius: var(--border-radius)
   padding: 1rem
+
+:global(.equipment-flow .starting-gold)
+  background: transparent !important
+  margin-top: 0 !important
+  padding: 0 !important
+
+:global(.equipment-flow .starting-equipment)
+  background: transparent !important
+  margin-top: 0 !important
+  padding: 0 !important
 </style> 

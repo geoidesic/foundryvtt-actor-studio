@@ -221,7 +221,9 @@
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
       "SelectOne": "Select one of the following options:",
-      "StartingGold": "Starting Gold"
+      "StartingGold": "Starting Gold",
+      "Selection": "Equipment Selection",
+      "Detail": "Equipment Detail"
     }
   }
 }

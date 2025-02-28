@@ -1,7 +1,7 @@
 <script>
   import { ApplicationShell }   from '#runtime/svelte/component/core';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
-  import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame } from "~/src/stores/index"
+  import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs } from "~/src/stores/index"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
@@ -81,9 +81,8 @@
     // Set active tab to equipment
     activeTab.set("equipment");
 
-    // Mark other tabs as read-only
-    const readOnlyTabs = ["race", "background", "abilityScores", "class"];
-    Hooks.call("gas.setTabsReadOnly", readOnlyTabs);
+    // Set read-only state for other tabs
+    readOnlyTabs.set(["race", "background", "abilities", "class"]);
   }
 
   Hooks.once("gas.equipmentSelection", handleEquipmentSelection);

@@ -9,7 +9,7 @@
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-  import { race } from "~/src/stores/index";
+  import { race, subRace, readOnlyTabs } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   let active = null,
@@ -105,6 +105,7 @@
 
   $: window.GAS.log.d(advancementArray)
 
+  $: isDisabled = $readOnlyTabs.includes("race");
 
   onMount(async () => {
     if ($race) {
@@ -121,10 +122,11 @@
 div.content
   .flexrow
     .flex2.pr-sm.col-a
+      pre isDisabled {isDisabled}
       .flexrow
         .flex0.required(class="{$race ? '' : 'active'}") *
         .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value )
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value disabled="{isDisabled}")
       +if("value")
         +if("source")
           //- h3.left {localize('GAS.Source')}

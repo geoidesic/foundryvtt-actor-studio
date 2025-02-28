@@ -9,7 +9,7 @@
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-  import { background } from "~/src/stores/index";
+  import { background, readOnlyTabs } from "~/src/stores/index";
 
   let active = null,
     value = null,
@@ -42,6 +42,8 @@
     : [];
 
   let richHTML = "";
+
+  $: isDisabled = $readOnlyTabs.includes("background");
 
   const importAdvancements = async () => {
     for (const advancement of advancementArray) {
@@ -94,7 +96,7 @@ div.content
       .flexrow
         .flex0.required(class="{$background ? '' : 'active'}") *
         .flex3 
-          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value disabled="{isDisabled}")
      
       +if("advancementArray.length")
         h3.left {localize('GAS.Advancements')}

@@ -15,6 +15,7 @@
     characterSubClass,
     level,
     subClassesForClass,
+    readOnlyTabs
   } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
@@ -234,6 +235,8 @@
   $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
 
+  $: isDisabled = $readOnlyTabs.includes("class");
+
   onMount(async () => {
     if ($characterClass) {
       window.GAS.log.d($characterClass);
@@ -262,14 +265,14 @@
         .flexrow
           .flex0.required(class="{$characterClass ? '' : 'active'}") *
           .flex3 
-            IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+            IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
         +if("$characterClass")
           +if("subclasses.length && classGetsSubclassThisLevel")
             h3.left.mt-md {localize('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
-                IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+                IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
           h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
           .flexrow
             .flex2.left
