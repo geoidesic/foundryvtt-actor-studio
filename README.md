@@ -1,9 +1,12 @@
 # foundryvtt-actor-studio
-A FoundryVTT module for creating Actors 
+A FoundryVTT module for creating Actors. Join the community on [Discord](https://discord.gg/sQgVnSGRUj).
 
 ## New feature donations
 There are [features waiting for funding](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/6).
 If you would like to fund these features, you can do so by [donating here](https://github.com/sponsors/geoidesic?frequency=one-time), just include the feature # number in your reference, or hit me up on Discord (geoidesic).
+
+# Coming soon
+These are scheduled for work imminently: [Upcoming](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/7).
 
 ## Player permissions
 Actor Studio is most useful for players to create their own characters. To enable this, you must give your players the `Create New Actors` permission. Probably you should assign this to `Trusted Players` only.
