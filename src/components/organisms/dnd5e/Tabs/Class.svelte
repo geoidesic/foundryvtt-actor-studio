@@ -149,7 +149,7 @@
         classAdvancementComponents[classAdvancement.type] = module.default;
         await tick();
       } catch (error) {
-        log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+        window.GAS.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
       }
     }
   };
@@ -176,7 +176,7 @@
         subClassAdvancementComponents[subClassAdvancement.type] =
           module.default;
       } catch (error) {
-        log.e(
+        window.GAS.log.e(
           `Failed to load component for ${subClassAdvancement.type}:`,
           error,
         );
