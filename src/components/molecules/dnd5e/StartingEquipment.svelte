@@ -89,7 +89,7 @@
       .flexrow
         .flex0.required(class="{equipmentSelectionEnabled ? 'active' : ''}") *
         .flex3
-          h2.left {localize('GAS.StartingEquipment')}
+          h2.left {localize('GAS.Equipment.Label')}
       
       +if("equipmentSelectionEnabled")
 

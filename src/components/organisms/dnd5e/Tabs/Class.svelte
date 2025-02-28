@@ -41,6 +41,7 @@
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
     classAdvancmentExpanded = false,
+    equipmentSelectionExpanded = false,
     subClassAdvancementArrayFiltered = [],
     subClassAdvancmentExpanded = false,
     mappedClassIndex = extractItemsFromPacksSync(packs, [
@@ -189,10 +190,17 @@
   const toggleClassAdvancements = () => {
     classAdvancmentExpanded = !classAdvancmentExpanded;
   };
+  const toggleEquipmentSelection = () => {
+    equipmentSelectionExpanded = !equipmentSelectionExpanded;
+  };
 
   const toggleSubClassAdvancements = () => {
     subClassAdvancmentExpanded = !subClassAdvancmentExpanded;
   };
+
+  $: if(isDisabled) {
+    classAdvancmentExpanded = true
+  }
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
@@ -273,10 +281,11 @@
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
                 IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
-          h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
-          .flexrow
-            .flex2.left
-              TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
+          +if("!isDisabled")
+            h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
+            .flexrow
+              .flex2.left
+                TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
           +if("classAdvancementArrayFiltered")
             h3.left.mt-sm.flexrow
               .flex0(on:click="{toggleClassAdvancements}")
@@ -307,9 +316,21 @@
                       //- pre {JSON.stringify(advancement, null, 2)}
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           
-            +if("$characterClass?.system?.startingEquipment?.length")
-              StartingGold(characterClass="{$characterClass}")
-              StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+          +if("$characterClass?.system?.startingEquipment?.length")
+            h3.left.mt-sm.flexrow
+              .flex0(on:click="{toggleEquipmentSelection}")
+                +if("equipmentSelectionExpanded")
+                  span [-]
+                +if("!equipmentSelectionExpanded")
+                  spen [+]
+              .flex Starting Equipment
+            +if("equipmentSelectionExpanded && !isDisabled")
+              .flexrow
+                StartingGold(characterClass="{$characterClass}")
+              .flexrow
+                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+            +if("equipmentSelectionExpanded && isDisabled")
+              p.left See Equipment tab
   
           +if("subclasses.length")
             //- h3.left.mt-sm Description

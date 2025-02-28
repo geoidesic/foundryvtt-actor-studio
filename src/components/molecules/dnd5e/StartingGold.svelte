@@ -46,7 +46,7 @@
     .flexrow
       .flex0.required(class="{!hasRolled ? 'active' : ''}") *
       .flex3
-        h2.left {localize('GAS.Equipment.StartingGold')}
+        h2.left {localize('GAS.Equipment.Gold')}
     
     .flexcol.gold-section.gap-10
       +if("!hasRolled")
@@ -71,7 +71,6 @@
     background: rgba(0, 0, 0, 0.2)
     border-radius: var(--border-radius)
     padding: 0.5rem
-    margin-top: 1rem
 
   .gold-section
     padding: 0.5rem
