@@ -61,6 +61,9 @@
       active,
       race: $race
     });
+    
+    richHTML = await TextEditor.enrichHTML(html);
+
   };
 
   const importPath = "components/molecules/dnd5e/Advancements/";
