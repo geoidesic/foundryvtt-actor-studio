@@ -105,6 +105,9 @@
   .white
     color: var(--li-background-color)
 
+  .black
+    color: #000000
+
   .gold
     color: var(--dnd5e-color-gold)
 
@@ -155,6 +158,10 @@
 
   .no-wrap, .nowrap
     white-space: nowrap
+    flex-wrap: nowrap
+
+  .pre-wrap
+    white-space: pre-wrap
 
   .required
     font-size: large
@@ -313,6 +320,15 @@
   //- dnd
   dnd5e-checkbox
     flex: 0
+
+
+  .black-link
+    white-space: pre-wrap
+    
+    a.content-link
+      color: #000000 !important
+    &:not(a.content-link)
+      padding-left: 4px
 
 .app.window-app.dnd5e.sheet.advancement.gas.v3x
   height: 565px !important
