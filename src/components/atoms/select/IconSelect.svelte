@@ -9,7 +9,6 @@
 
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
-    import { log } from "../../../helpers/Utility";
 
     export let options = []; //- {value, label, icon || img}
     export let value = ""; //- the currently selected uuid
