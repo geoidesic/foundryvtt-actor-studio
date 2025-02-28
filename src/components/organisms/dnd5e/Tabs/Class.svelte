@@ -7,6 +7,7 @@
     extractItemsFromPacksAsync,
     getPacksFromSettings,
     getAdvancementValue,
+    getSubclassLevel,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -36,7 +37,6 @@
     classesPlaceholder = "Classes",
     subclassesPlaceholder = "Subclasses",
     packs = getPacksFromSettings("classes"),
-    subClassesPack = game.packs.get("dnd5e.subclasses"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
     classAdvancmentExpanded = false,
@@ -62,8 +62,9 @@
     .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
 
     
-  window.GAS.log.d('packs', packs);
-  window.GAS.log.d('mappedClassIndex', mappedClassIndex);
+  // window.GAS.log.d('packs', packs);
+  // window.GAS.log.d('mappedClassIndex', mappedClassIndex);
+  window.GAS.log.d('subClassesPacks', subClassesPacks);
 
 
   const levelOptions = [];
@@ -95,19 +96,18 @@
       ["system.classIdentifier"],
     );
     
-    // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
-
+    window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
-      // window.GAS.log.d("subclass", x);
-      // window.GAS.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
+      window.GAS.log.d("subclass", x);
+      window.GAS.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
       return x.system.classIdentifier == $characterClass.system.identifier;
     });
 
-
+    window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     const output = mappedSubClassIndex
       .flat()
       .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
-    // window.GAS.log.d("subclass output", output);
+    window.GAS.log.d("subclass output", output);
     return output;
 
   };
@@ -131,6 +131,7 @@
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
     $subClassesForClass = subClassesIndex;
+    window.GAS.log.d('subClassesForClass', $subClassesForClass);
 
     await tick();
     await importClassAdvancements();
@@ -211,6 +212,8 @@
     subclasses = [];
   }
 
+  $: window.GAS.log.d('subclasses', subclasses);
+
   $: if ($characterSubClass?.system?.advancement.length) {
     subClassAdvancementArrayFiltered =
       $characterSubClass.system.advancement.filter(
@@ -228,7 +231,7 @@
     classAdvancementArrayFiltered = [];
   }
 
-  $: subClassLevel = $characterClass.getFlag ? $characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
+  $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
 
   onMount(async () => {

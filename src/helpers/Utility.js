@@ -131,17 +131,17 @@ export function extractItemsFromPacksSync(packs, keys) {
   const items = [];
 
   for (const pack of packs) {
-    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
 
-    window.GAS.log.d('pack.metadata.name', pack.metadata.name);
+    // window.GAS.log.d('pack.metadata.name', pack.metadata.name);
     if (!pack.index) {
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
     let entries = pack.index.entries()
-    window.GAS.log.d('entries', entries);
+    // window.GAS.log.d('entries', entries);
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
-    window.GAS.log.d('entries post', entries);
+    // window.GAS.log.d('entries post', entries);
     let packItems = extractMapIteratorObjectProperties(entries, keys);
     packItems = packItems.map(item => ({
       ...item,
@@ -154,7 +154,7 @@ export function extractItemsFromPacksSync(packs, keys) {
       packPath: pack.metadata.path,
       packSystem: pack.metadata.system,
     }));
-    window.GAS.log.d('packItems', packItems);
+    // window.GAS.log.d('packItems', packItems);
     items.push(...packItems);
   }
   return items;
@@ -170,8 +170,8 @@ export function extractItemsFromPacksSync(packs, keys) {
  */
 export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = false) {
   const items = [];
-  window.GAS.log.d('extractItemsFromPacks packs', packs);
-  window.GAS.log.d('nonIndexKeys', nonIndexKeys);
+  // window.GAS.log.d('extractItemsFromPacks packs', packs);
+  // window.GAS.log.d('nonIndexKeys', nonIndexKeys);
   for (const pack of packs) {
 
     let index = await pack.getIndex({
@@ -183,14 +183,14 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
-    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    window.GAS.log.d('extractItemsFromPacks pack', pack);
-    window.GAS.log.d('extractItemsFromPacks packindex', index);
+    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // window.GAS.log.d('extractItemsFromPacks pack', pack);
+    // window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    window.GAS.log.d('extractItemsFromPacks entries', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
     packItems = packItems.map(item => ({
@@ -202,10 +202,10 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       packPath: pack.metadata.path,
       packSystem: pack.metadata.system,
     }));
-    window.GAS.log.d('packItems', packItems)
+    // window.GAS.log.d('packItems', packItems)
     items.push(...packItems);
   }
-  window.GAS.log.d('items', items)
+  // window.GAS.log.d('items', items)
   return items;
 }
 
@@ -348,10 +348,10 @@ export const getCompendiumSource = (item) => {
  * @returns {Promise<Item|undefined>} The prepared Item instance, or undefined if item creation fails
  */
 export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
-  window.GAS.log.d('prepareItemForDrop');
-  window.GAS.log.d('isLevelUp? ', isLevelUp);
-  window.GAS.log.d('isMultiClass? ', isMultiClass);
-  window.GAS.log.d('itemData', itemData);
+  // window.GAS.log.d('prepareItemForDrop');
+  // window.GAS.log.d('isLevelUp? ', isLevelUp);
+  // window.GAS.log.d('isMultiClass? ', isMultiClass);
+  // window.GAS.log.d('itemData', itemData);
 
   let item
   if (isLevelUp && itemData.type === 'class') {
@@ -371,30 +371,30 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) 
       type: 'Item',
       uuid: itemData.uuid,
     }
-    window.GAS.log.d('dropData', dropData);
+    // window.GAS.log.d('dropData', dropData);
     item = await Item.implementation.fromDropData(dropData);
-    window.GAS.log.d('item', item);
+    // window.GAS.log.d('item', item);
   }
   return item;
 }
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
-  window.GAS.log.d('dropItemOnCharacter');
-  window.GAS.log.d('dropItemOnCharacter item', item);
-  window.GAS.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
+  // window.GAS.log.d('dropItemOnCharacter');
+  // window.GAS.log.d('dropItemOnCharacter item', item);
+  // window.GAS.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
   return await actor.sheet._onDropItemCreate(item);
 }
 
 export function itemHasAdvancementChoices(item) {
-  window.GAS.log.d('Advancement check:', {
-    itemName: item.name,
-    itemType: item.type,
-    hasSystemAdvancement: !!item.system?.advancement,
-    hasDirectAdvancement: !!item.advancement,
-    systemAdvLength: item.system?.advancement?.length,
-    directAdvLength: Array.isArray(item.advancement) ? item.advancement.length : 0
-  });
+  // window.GAS.log.d('Advancement check:', {
+  //   itemName: item.name,
+  //   itemType: item.type,
+  //   hasSystemAdvancement: !!item.system?.advancement,
+  //   hasDirectAdvancement: !!item.advancement,
+  //   systemAdvLength: item.system?.advancement?.length,
+  //   directAdvLength: Array.isArray(item.advancement) ? item.advancement.length : 0
+  // });
 
   let hasAdvancementChoices = false;
   const advancements = [];
@@ -408,17 +408,17 @@ export function itemHasAdvancementChoices(item) {
   }
 
   if (!advancements.length) {
-    window.GAS.log.d('No advancements found');
+    window.GAS.log.i('No advancements found');
     return false;
   }
 
   // Check each advancement for choices
   for (const adv of advancements) {
-    window.GAS.log.d('Checking advancement:', {
-      type: adv.type,
-      hasChoices: !!(adv.choices || adv.configuration?.choices),
-      choicesLocation: adv.choices ? 'direct' : adv.configuration?.choices ? 'configuration' : 'none'
-    });
+    // window.GAS.log.d('Checking advancement:', {
+    //   type: adv.type,
+    //   hasChoices: !!(adv.choices || adv.configuration?.choices),
+    //   choicesLocation: adv.choices ? 'direct' : adv.configuration?.choices ? 'configuration' : 'none'
+    // });
 
     if (adv.choices || adv.configuration?.choices) {
       hasAdvancementChoices = true;
@@ -466,4 +466,26 @@ export function userHasRightPermissions() {
   //   ui.notifications?.warn(game.i18n.localize('GAS.Permissions.NeedFileBrowseWarn'));
   // }
   return true;
+}
+
+/**
+ * Determines the level at which a class gains its subclass
+ * @param {Object} characterClass - The character class object
+ * @param {string} MODULE_ID - The module ID constant
+ * @returns {number|boolean} The level at which subclass is gained, or false if not found
+ */
+export function getSubclassLevel(characterClass, MODULE_ID) {
+  if (!characterClass) return false;
+
+  // Check for dnd5e system 3.x flag
+  const subclassFlag = characterClass.getFlag?.(MODULE_ID, "subclassLevel");
+  if (subclassFlag) {
+    return characterClass.getFlag(MODULE_ID, "subclassLevel");
+  }
+
+  // Check for dnd5e system 4.x advancement array
+  const subclassLevel = characterClass.system?.advancement
+    ?.find(advancement => advancement.type === "Subclass")?.level;
+
+  return subclassLevel || false;
 }
