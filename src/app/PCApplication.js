@@ -146,8 +146,10 @@ export default class PCApplication extends SvelteApplication {
   async #handleDocUpdate(doc, options) {
     const { action, data, documentType } = options;
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
+      const isDebug = game.settings.get(MODULE_ID, 'debug');
+      const moduleVersion = game.modules.get(MODULE_ID)?.version;
       const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : "";
-      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio') + ' - ' + game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
+      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')} - ${isDebug ? moduleVersion : ''} - ${game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
     }
   }
 
