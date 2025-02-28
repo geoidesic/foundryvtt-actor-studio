@@ -168,6 +168,10 @@
         "Name": "Equipment Blacklist",
         "Hint": "Items (Equipment) not shown for purchase, by name (case-sensitive, separated by ';', spaces are ok). Only 'common' rarity items are shown, but this list excludes the few magical/unreasonable common items. Default - 'Potion of Climbing; Potion of Healing; Spell Scroll 1st Level; Spell Scroll Cantrip Level; Unarmed Strike'"
       },
+      "ShowPackLabelInSelect": {
+        "Name": "Show Compendium Label in Select",
+        "Hint": "Show the pack label along with the item label in the select options"
+      },
       "SubraceNameBlacklist": {
         "Name": "Subrace Names Blacklist",
         "Hint": "Items excluded by name from been Subraces (case-sensitive, separated by ';', spaces are ok). Used by default to exclude things like Gnome Cunning from registering as Gnome subclasses. Default - 'Gnome Cunning; Halfling Nimbleness'"

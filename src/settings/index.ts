@@ -50,24 +50,26 @@ export function registerSettings(app: Game): void {
 
   /** World Settings */
   sourcesConfiguration();
+  donationTracker();
   allowManualInput();
   allowStandardArray();
   allowPointBuy();
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
-  enableLevelUp();
-  milestoneLeveling();
+  showPackLabelInSelect();
   forceDnd5eLevelUpAutomation();
   showButtonInSideBar(app);
   disableOtherActorCreationOptionsForPlayers();
   nonGmsCanOnlyCreatePCs();
+  enableEquipmentSelection();
+  showPackLabelInSelect();
   windowX();
   windowY();
-  donationTracker();
+  enableLevelUp();
+  milestoneLeveling();
   debugSetting();
   debugHooksSetting();
-  enableEquipmentSelection();
 
   /** User settings */
   dontShowWelcome();
@@ -82,6 +84,17 @@ export function enableLevelUp() {
     scope: 'world',
     config: true,
     default: true,
+    type: Boolean,
+  });
+}
+
+export function showPackLabelInSelect() {
+  game.settings.register(MODULE_ID, 'showPackLabelInSelect', {
+    name: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Name'),
+    hint: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
     type: Boolean,
   });
 }

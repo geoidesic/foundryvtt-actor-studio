@@ -124,16 +124,32 @@ export function filterPackForDTPackItems(pack, entries) {
 export function extractItemsFromPacksSync(packs, keys) {
   const items = [];
 
+  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+
   for (const pack of packs) {
+    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+
     window.GAS.log.d('pack.metadata.name', pack.metadata.name);
     if (!pack.index) {
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
     let entries = pack.index.entries()
+    window.GAS.log.d('entries', entries);
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
-    const packItems = extractMapIteratorObjectProperties(entries, keys);
-    // window.GAS.log.d('packItems', packItems);
+    window.GAS.log.d('entries post', entries);
+    let packItems = extractMapIteratorObjectProperties(entries, keys);
+    packItems = packItems.map(item => ({
+      ...item,
+      label: showPackLabelInSelect ? `[${pack.metadata.label}] ${item.label}` : item.label,
+      packName: pack.metadata.name,
+      packId: pack.metadata.id,
+      packLabel: pack.metadata.label,
+      packType: pack.metadata.type,
+      packPath: pack.metadata.path,
+      packSystem: pack.metadata.system,
+    }));
+    window.GAS.log.d('packItems', packItems);
     items.push(...packItems);
   }
   return items;
@@ -149,8 +165,8 @@ export function extractItemsFromPacksSync(packs, keys) {
  */
 export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = false) {
   const items = [];
-  // window.GAS.log.d('extractItemsFromPacks packs', packs);
-  // window.GAS.log.d('nonIndexKeys', nonIndexKeys);
+  window.GAS.log.d('extractItemsFromPacks packs', packs);
+  window.GAS.log.d('nonIndexKeys', nonIndexKeys);
   for (const pack of packs) {
 
     let index = await pack.getIndex({
@@ -162,15 +178,26 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    // window.GAS.log.d('extractItemsFromPacks pack', pack);
-    // window.GAS.log.d('extractItemsFromPacks packindex', index);
+    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    window.GAS.log.d('extractItemsFromPacks pack', pack);
+    window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    // window.GAS.log.d('extractItemsFromPacks entries', entries);
+    window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
-    const packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    packItems = packItems.map(item => ({
+      ...item,
+      packName: pack.metadata.name,
+      packId: pack.metadata.id,
+      packLabel: pack.metadata.label,
+      packType: pack.metadata.type,
+      packPath: pack.metadata.path,
+      packSystem: pack.metadata.system,
+    }));
+    window.GAS.log.d('packItems', packItems)
     items.push(...packItems);
   }
   window.GAS.log.d('items', items)
