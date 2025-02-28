@@ -146,7 +146,7 @@ Hooks.on("renderFolderConfig", (app, html, folder) => {
   game.system.log.d("folder", folder);
 })
 Hooks.on("renderActorSheet", (app, html, actor) => {
-  // game.system.log.d("actor", actor);
+  game.system.log.d("actor", actor);
 })
 Hooks.on("renderItemSheet5e", (app, html, item) => {
   game.system.log.d("item", item);

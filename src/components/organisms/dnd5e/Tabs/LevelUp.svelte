@@ -25,6 +25,7 @@
   import LevelUpButtonInnards from "~/src/components/atoms/button/LevelUpButtonInnards.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
+  import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
 
   let richHTML = "",
     richSubClassHTML = "",
@@ -370,6 +371,7 @@
             // Add the StartingEquipment component here
             +if("$characterClass?.system?.startingEquipment?.length")
               StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+              StartingGold(characterClass="{$characterClass}")
           +if("subclasses.length && classGetsSubclassThisLevel")
             ul.icon-list
               li.left 
@@ -437,6 +439,4 @@
     box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
     font-size: smaller
 
-  :global(img.icon[src*="subclass.svg"])
-    --icon-fill: #000
 </style>

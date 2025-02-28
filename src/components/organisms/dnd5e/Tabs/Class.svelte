@@ -20,6 +20,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
+  import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
 
 
@@ -286,6 +287,7 @@
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           
             +if("$characterClass?.system?.startingEquipment?.length")
+              StartingGold(characterClass="{$characterClass}")
               StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
   
           +if("subclasses.length")

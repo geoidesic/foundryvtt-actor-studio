@@ -39,6 +39,7 @@
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
+  import { goldRoll } from "~/src/stores/goldRoll";
 
   // Add this after your store imports
   const storeMap = {
@@ -168,14 +169,22 @@
   };
 
   const createActorInGameAndEmbedItems = async () => {
-    console.log("QUEUE BUILD START:", {
-      background: $background,
-      race: $race,
-      characterClass: $characterClass,
-      characterSubClass: $characterSubClass,
-    });
+    game.system.log.i("Building queue for actor creation");
+    game.system.log.d("Background:", $background);
+    game.system.log.d("Race:", $race);
+    game.system.log.d("Class:", $characterClass);
+    game.system.log.d("Subclass:", $characterSubClass);
 
+    // Create the actor first
     $actorInGame = await Actor.create($actor.toObject());
+
+    // Update actor's gold after all items are added
+    if ($goldRoll > 0) {
+      game.system.log.i("Setting starting gold:", $goldRoll);
+      await $actorInGame.updateSource({
+        "system.currency.gp": $goldRoll
+      });
+    }
 
     // race
     if ($race) {
@@ -309,7 +318,8 @@
     }
 
     console.log("PRE-QUEUE ADVANCE:", $dropItemRegistry);
-    dropItemRegistry.advanceQueue(true);
+    await dropItemRegistry.advanceQueue(true);
+
   };
 
   const updateActorAndEmbedItems = async () => {
