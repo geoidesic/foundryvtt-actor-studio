@@ -43,6 +43,10 @@
     }
 
     function toggleDropdown() {
+      if (disabled) {
+        isOpen = false;
+        return;
+      }
       isOpen = !isOpen;
     }
 
@@ -92,7 +96,7 @@
 
 <template lang="pug">
 div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0")
-  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}")
+  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
     +each("options as option, index")
@@ -121,85 +125,83 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
             div.option-label {getLabel(option)}
 </template>
 
-<style lang="scss">
-  .custom-select {
-    position: relative;
-    display: inline-block;
-  }
+<style lang="sass">
+.custom-select
+  position: relative
+  display: inline-block
 
-  .selected-option {
-    display: flex;
-    align-items: left;
-    padding: 0.35rem 1.75rem 0.35rem 0.15rem;
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;
-  }
+.selected-option
+  display: flex
+  align-items: left
+  padding: 0.35rem 1.75rem 0.35rem 0.15rem
+  font-size: 0.875rem
+  font-weight: 400
+  color: #212529
+  background-color: #fff
+  border: 1px solid #ced4da
+  border-radius: 0.25rem
+  cursor: pointer
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+  position: relative
 
-  img {
-    position: absolute;
-    top: -3px;
-    left: 0;
-    width: 24px;
-    height: 24px;
-    vertical-align: middle;
-  }
+img
+  position: absolute
+  top: -3px
+  left: 0
+  width: 24px
+  height: 24px
+  vertical-align: middle
 
-  .selected-option:selected {
-    border-color: #80bdff;
-  }
+.selected-option
+  &.disabled
+    cursor: not-allowed
+    opacity: 0.6
+    .chevron-icon
+      i
+        color: var(--color-text-disabled)
+        
+  &:selected
+    display: none
+    border-color: #80bdff
+  
+        
+.option-icon
+  position: relative
+  min-width: 24px
+  margin-right: 8px
 
-  .option-icon {
-    position: relative;
-    min-width: 24px;
-    margin-right: 8px;
-  }
+.option-label
+  flex-grow: 1
+  text-align: left
 
-  .option-label {
-    flex-grow: 1;
-    text-align: left;
-  }
+.chevron-icon
+  position: absolute
+  right: 0.5rem
 
-  .chevron-icon {
-    position: absolute;
-    right: 0.5rem;
-  }
+.options-dropdown
+  position: absolute
+  top: calc(100% + 4px)
+  left: 0
+  width: 100%
+  background-color: #fff
+  border: 1px solid #ced4da
+  border-radius: 0.25rem
+  overflow: hidden
+  z-index: 999
 
-  .options-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 100%;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    overflow: hidden;
-    z-index: 999;
-  }
-
-  .option {
-    display: flex;
-    align-items: left;
-    padding: 4px;
-    font-size: 0.875rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    cursor: pointer;
+.option
+  display: flex
+  align-items: left
+  padding: 4px
+  font-size: 0.875rem
+  font-weight: 400
+  line-height: 1.5
+  color: #212529
+  cursor: pointer
 
 
-    &:hover {
-      background-color: var(--select-option-highlight-color);
-    }
-    
-  }
-
+  &:hover
+    background-color: var(--select-option-highlight-color)
 </style>
