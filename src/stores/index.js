@@ -90,27 +90,20 @@ export const changedCharacterCreationItems = derived([race, background, characte
 
 // Function to reset all stores
 export function resetStores() {
-  race.set(false);
-  subRace.set(false);
-  characterClass.set(false);
-  characterSubClass.set(false);
-  background.set(false);
-  abilities.set(false);
-  isLevelUp.set(false);
-  pointBuy.set(false);
-  isStandardArrayValues.set(false);
-  abilityRolls.set({});
-  newClassLevel.set(false);
-  spells.set(false);
+  race.set(null);
+  background.set(null);
+  characterClass.set(null);
+  characterSubClass.set(null);
   level.set(1);
-  activeTab.set('');
-  activeClass.set(false);
   tabs.set(initialTabs);
-  levelUpTabs.set(upTabs)
+  levelUpTabs.set(upTabs);
+  activeTab.set(initialTabs[0].id);
   dropItemRegistry.removeAll();
   isActorCreated.set(false);
-  actorInGame.set(false);
+  actorInGame.set(null);
   abilityGenerationMethod.set(null);
   subClassesForClass.set([]);
   preAdvancementSelections.set(null);
+  goldRoll.set(0);
+  readOnlyTabs.set([]);
 }
