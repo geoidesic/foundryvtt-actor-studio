@@ -34,9 +34,13 @@ export const isActorCreated = writable(false); isActorCreated.name = "isActorCre
 export const dropItemRegistry = advancementQueueStore(); dropItemRegistry.name = "dropItemRegistry";
 export const tabs = writable(initialTabs); tabs.name = "tabs";
 export const levelUpTabs = writable(upTabs); levelUpTabs.name = "levelUpTabs";
-export const actorInGame = writable(false); actorInGame.name = "actorInGame";
+export const actorInGame = writable(null); actorInGame.name = "actorInGame";
 export const abilityGenerationMethod = writable(null); abilityGenerationMethod.name = "abilityGenerationMethod";
 export const subClassesForClass = writable([]); subClassesForClass.name = "subClassesForClass";
+export const goldRoll = writable(0);
+
+// Store to track which tabs are in read-only mode
+export const readOnlyTabs = writable([]);
 
 export const isMultiClass = derived([characterClass, activeClass, newClassLevel], ([$characterClass, $characterSubClass, $newClassLevel]) => {
   if ($newClassLevel) return false;
