@@ -41,18 +41,21 @@ function isAbilityGenerationMethodReady(method) {
  * @param characterSubClass
  */
 function isSubclassForThisCharacterLevel(characterClass, characterSubClass) {
-  const dnd5eVersion = getDnd5eVersion();
-  let subClassLevel = false;
-  if (dnd5eVersion === 3) {
+  if (!characterClass) return false;
+
+  const subclassFlag = characterClass.getFlag?.(MODULE_ID, "subclassLevel")
+
+  //- @why: if subclass level is not found, default to 1
+  let subClassLevel = 1;
+  if (subclassFlag) {
+    //- @why: cater for dnd5e system 3.x where subclass level is stored as a flag by Actor Studio
     subClassLevel = characterClass?.getFlag
     ? characterClass.getFlag(MODULE_ID, "subclassLevel")
     : false;
-  }
-  window.GAS.log.d("[PROGRESS] characterClass", characterClass);
-  if (dnd5eVersion >= 4) {
-    subClassLevel = characterClass.system.advancement
-      .filter(advancement => advancement.type === "Subclass")
-      .map(advancement => advancement.level);
+  } else {
+    //- @why: cater for dnd5e system 4.x where subclass level is stored in the system.advancement array
+    subClassLevel = characterClass.system?.advancement
+      ?.find(advancement => advancement.type === "Subclass")?.level
   }
 
   const actorLevel = game.actor?.system?.details?.level
