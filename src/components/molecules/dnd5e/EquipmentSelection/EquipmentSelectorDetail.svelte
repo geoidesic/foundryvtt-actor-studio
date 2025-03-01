@@ -89,13 +89,21 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
   if (!acc[type]) {
     acc[type] = allEquipmentItemsFromPacks
       .filter(item => {
+        window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
         if (item.type !== type) return false;
         if (item.type === 'weapon' && group.selectedItem?.key) {
+          // Handle composite weapon types
+          if (group.selectedItem.key === 'sim') {
+            return ['simpleM', 'simpleR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+          }
+          if (group.selectedItem.key === 'mar') {
+            return ['martialM', 'martialR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+          }
+          // Handle specific weapon types
           if (['martialM', 'martialR', 'simpleM', 'simpleR'].includes(group.selectedItem.key)) {
-            window.GAS.log.d('EQUIPMENT DETAIL | Weapon Type Filter:', { item });
-            //- filter out magical items for starter equipment at level 1
             return item.system?.type?.value === group.selectedItem.key && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
           }
+          // Handle base item matching
           return item.system?.baseItem === group.selectedItem.key;
         }
         return true;
