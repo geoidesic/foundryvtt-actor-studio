@@ -102,7 +102,7 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
 
 function handleSelection(groupId, option) {
   window.GAS.log.d('EQUIPMENT DETAIL | Selection Change:', { groupId, option });
-  addGranularSelection(groupId, option.value);
+  addGranularSelection(groupId, option.uuid || option.value);
 }
 
 // Create a handler factory function

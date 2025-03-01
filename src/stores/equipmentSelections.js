@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 
 // Store structure will track selections by group
 // { 
@@ -37,6 +37,8 @@ function getRequiredSelectionsCount(item) {
 export function selectEquipment(groupId, itemId) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
+    window.GAS.log.d('[EquipSelect STORE] selectEquipment group', group);
+    window.GAS.log.d('[EquipSelect STORE] selectEquipment Flattened selections', flattenedSelections);
     if (!group) return selections;
     
     // Return early if group is not in progress
@@ -44,6 +46,7 @@ export function selectEquipment(groupId, itemId) {
 
     // Find the selected item from the group's items
     const selectedItem = group.items.find(item => item._id === itemId);
+    window.GAS.log.d('[EquipSelect STORE] selectEquipment selectedItem', selectedItem);
     if (!selectedItem) return selections;
 
     // Find the next uncompleted group
@@ -58,18 +61,12 @@ export function selectEquipment(groupId, itemId) {
     // Initialize granular selections structure based on item type
     const granularSelections = requiresGranular ? { self: [] } : undefined;
 
-    // Find the full item data from the original items array
-    const fullItemData = group.allEquipmentItems?.find(item => item._id === itemId) || selectedItem;
-
-    return {
+    const result = {
       ...selections,
       [groupId]: {
         ...group,
+        selectedItem,
         selectedItemId: itemId,
-        selectedItem: {
-          ...fullItemData,
-          system: fullItemData.system
-        },
         completed: !requiresGranular,
         inProgress: requiresGranular,
         granularSelections
@@ -81,8 +78,17 @@ export function selectEquipment(groupId, itemId) {
         }
       } : {})
     };
+    window.GAS.log.d('[EquipSelect STORE] selectEquipment result', result);
+    return result;
   });
 }
+
+export const flattenedSelections = derived(equipmentSelections, ($equipmentSelections) => {
+  window.GAS.log.d('[EquipSelect STORE] flattenedSelections equipmentSelections', $equipmentSelections);
+  return Object.values($equipmentSelections)
+    .filter(group => group.selectedItem) // Only include groups with selections
+    .map(group => group.selectedItem);
+});
 
 // Add granular selection for special types
 export function addGranularSelection(groupId, uuid) {

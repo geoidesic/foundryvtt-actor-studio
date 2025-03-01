@@ -23,7 +23,7 @@
   $: {
     if (startingEquipment?.length) {
       startingEquipment.forEach(entry => {
-        window.GAS.log.d("StartingEquipment entry", entry);
+        // window.GAS.log.d("StartingEquipment entry", entry);
         if (entry.type === 'OR') {
           initializeGroup(entry._id, {
             type: 'choice',
@@ -50,7 +50,7 @@
 
   // Group items by type for specialized handling
   $: groupedByType = sortedGroups.reduce((acc, group) => {
-    window.GAS.log.d("StartingEquipment groupedByType group", group);
+    // window.GAS.log.d("StartingEquipment groupedByType group", group);
     const itemTypes = group.items.map(item => item.type);
     if (itemTypes.includes('focus')) {
       if (!acc.focus) acc.focus = [];
@@ -73,26 +73,26 @@
 
 
 
-  $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
-  $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
-  $: window.GAS.log.d("StartingEquipment groupedByType", groupedByType);
+  // $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
+  // $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
+  // $: window.GAS.log.d("StartingEquipment groupedByType", groupedByType);
 
   $: dnd5eVersion = window.GAS.dnd5eVersion;
 
 
   function handleSelection(groupId, item) {
     if (disabled) return;
-    window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, item });
+    // window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, item });
     selectEquipment(groupId, item._id);
   }
 
   function handleEditGroup(groupId) {
-    window.GAS.log.d("[Starting Equipment] editGroup", { groupId });
+    // window.GAS.log.d("[Starting Equipment] editGroup", { groupId });
     editGroup(groupId);
   }
 
   onMount(async () => {
-    window.GAS.log.d("StartingEquipment", startingEquipment);
+    // window.GAS.log.d("StartingEquipment", startingEquipment);
   });
 
 </script>

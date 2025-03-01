@@ -6,8 +6,8 @@
   import { characterClass, characterSubClass } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
-  import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelectorDetail.svelte";
-
+  import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
+  import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";
   const doc = getContext("#doc");
 
   // Get equipment selection setting
@@ -32,7 +32,7 @@
             StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
-        h2 {localize('GAS.Equipment.Detail')}
+        PlannedInventory
         EquipmentSelectorDetail
 </template>
 
