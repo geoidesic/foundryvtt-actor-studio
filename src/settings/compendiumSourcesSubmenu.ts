@@ -78,6 +78,7 @@ type BuildData = {
     classes: string[];
     subclasses: string[];
     backgrounds: string[];
+    equipment: string[];
     // racialFeatures: string[];
     // classFeatures: string[];
     // spells: string[];
@@ -100,9 +101,10 @@ type DefaultCollection = {
   classes: string[];
   subclasses: string[];
   backgrounds: string[];
-  spells: string[];
-  feats: string[];
-  items: string[];
+  equipment: string[];
+  // spells: string[];
+  // feats: string[];
+  // items: string[];
 };
 
 function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
@@ -144,6 +146,10 @@ function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
       //   label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
       //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
       // },
+      equipment: {
+        label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
+        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
+      },
     },
   };
 }
