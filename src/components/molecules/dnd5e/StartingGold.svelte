@@ -28,7 +28,7 @@
 
   async function rollGold() {
     if (disabled) return;
-    const roll = await new Roll(formula).evaluate({async: true});
+    const roll = await new Roll(formula).evaluate();
     const className = characterClass?.name || "Character";
     const flavor = `Rolling starting gold for ${className}`;
     await roll.toMessage({
