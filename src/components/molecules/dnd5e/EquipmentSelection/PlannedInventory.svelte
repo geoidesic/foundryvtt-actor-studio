@@ -10,10 +10,13 @@ $: rawSelections = $flattenedSelections || [];
 
 // Handle async updates when selections change
 $: {
-  Promise.all(rawSelections
-  .filter(selection => selection.type === 'linked')
-  .map(async (selection) => {
+  Promise.all(rawSelections.map(async (selection) => {
+    // For linked items, fetch from UUID
     if(selection.type === 'linked') {
+      return await fromUuid(selection.key);
+    }
+    // For other types (weapon, armor, etc), fetch from UUID
+    if(selection.key) {
       return await fromUuid(selection.key);
     }
     return selection;
