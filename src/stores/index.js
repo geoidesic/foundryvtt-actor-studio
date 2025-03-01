@@ -1,5 +1,5 @@
 import { writable, get, derived } from 'svelte/store';;
-import { advancementQueueStore } from "~/src/stores/advancments";
+import { advancementQueueStore } from "~/src/stores/advancements";
 
 
 const initialTabs = [
