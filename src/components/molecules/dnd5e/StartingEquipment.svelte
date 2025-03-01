@@ -116,21 +116,23 @@
       //- Process each group
       +each("sortedGroups as group")
         +if("group.type === 'choice'")
-          .equipment-group
-            span.group-label {group.label}
-            .options
-              +each("group.items as item")
-                button.option(
-                  class="{group.selectedItem?.label === item.label ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-                  on:click="{handleSelection(group.id, item)}"
-                  disabled="{disabled}"
-                )
-                  .flexrow.justify-flexrow-vertical.no-wrap
-                    .flex0.relative.icon
-                      img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                    .flex2.left.name.black-link {@html item.label}
-                  +if("item.count")
-                    span.count (x{item.count})
+          pre groupCompleted: {group.completed} groupInProgress: {group.inProgress}
+          +if("(group.completed || group.inProgress)")
+            .equipment-group
+              span.group-label {group.label}
+              .options
+                +each("group.items as item")
+                  button.option(
+                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+                    on:click="{handleSelection(group.id, item)}"
+                    disabled="{disabled}"
+                  )
+                    .flexrow.justify-flexrow-vertical.no-wrap
+                      .flex0.relative.icon
+                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                      .flex2.left.name.black-link {@html item.label}
+                    +if("item.count")
+                      span.count (x{item.count})
           +else()
             +each("group.items as item")
               .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
