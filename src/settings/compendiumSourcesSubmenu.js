@@ -4,16 +4,16 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
     super({});
     this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item');
+    this.filterPackSourcesAppropriatelyByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
   }
-
-  baseCompendiumList: any;
 
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ['form'],
       popOut: true,
-      width: 400,
-      height: 400,
+      width: 420,
+      height: 600,
+
       template: `/modules/foundryvtt-actor-studio/templates/sources-submenu.html`,
       id: 'gas-settings-submenu',
       title: 'Actor Studio - Sources',
@@ -21,135 +21,131 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
     });
   }
 
-  activateListeners(html: JQuery) {
+  activateListeners(html) {
     super.activateListeners(html);
   }
 
   getData() {
-    let selected: any = game.settings.get(MODULE_ID, 'compendiumSources');
-    //@ts-expect-error Foundry.utils TS def not updated yet
+    let selected = game.settings.get(MODULE_ID, 'compendiumSources');
     if (foundry.utils.isEmpty(selected)) {
       selected = DEFAULT_SOURCES;
     }
-    const data = buildTemplateData({
+    const data = this.buildTemplateData({
       compendiaList: this.baseCompendiumList,
       selectedCompendia: selected,
     });
-    return data as any;
+    return data;
   }
 
-  _updateObject(event: Event, formData?: any) {
+  _updateObject(event, formData) {
     console.info(`${LOG_PREFIX} | Saving compendia sources:`);
     console.info(formData);
     return game.settings.set(MODULE_ID, 'compendiumSources', formData);
   }
 
-  protected _getSubmitData(updateData?: any | null | undefined): Record<string, unknown> {
+  _getSubmitData(updateData) {
     if (!this.form) throw new Error('The FormApplication subclass has no registered form element');
-    const fd = new FormDataExtended(this.form as HTMLFormElement, { editors: this.editors });
-    const data = (fd as any).object;
-    Object.keys(data).forEach((k) => (data[k] = []));
-    this.form.querySelectorAll('[type="checkbox"]:checked').forEach((el: any) => {
+    const fd = new FormDataExtended(this.form, { editors: this.editors });
+    const data = fd.object;
+    Object.keys(data).forEach((k) => data[k] = []);
+    this.form.querySelectorAll('[type="checkbox"]:checked').forEach((el) => {
       if (!Array.isArray(data[el.name]) || typeof data[el.name][0] === 'boolean') data[el.name] = [];
       data[el.name].push(el.value);
     });
     return data;
   }
-}
 
-function buildCompendiaList(compendiaList: Compendium[], defaultCollection: DefaultCollection, defaultType: keyof DefaultCollection) {
-  return compendiaList
-    .filter((p: any) => {
-      return p.metadata.packageName !== 'dnd5e' || p.metadata.id === `dnd5e.${defaultType}`
-    })
-    .map((p: any) => {
-      return {
-        collection: p.collection as string,
-        label: `${p.metadata.label} [${p.metadata.packageName}]`,
-        checked: defaultCollection[defaultType]?.includes(p.collection),
-      };
+  buildTemplateData({ compendiaList, selectedCompendia }) {
+    return {
+      source: {
+        races: {
+          label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'races',['race'])
+        },
+        classes: {
+          label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'classes', ['class'], ['subclass'])
+        },
+        subclasses: {
+          label: game.i18n.localize('GAS.Setting.Sources.SubclassCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'subclasses', ['subclass'])
+        },
+        backgrounds: {
+          label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds', ['background'])
+        },
+        equipment: {
+          label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'equipment', ['item', 'equipment'])
+        }
+      }
+    };
+  }
+
+  /**
+   * Builds a list of compendia based on the inclusions and storage key.
+   * @param {Array} compendiaList - The list of compendia to filter.
+   * @param {string} defaultCollection - The default collection to filter by.
+   * @param {string} storageKey - The storage key to use for the filtered list.
+   * @param {Array} inclusions - The list of terms to include when filtering.
+   * @param {Array} exclusions - The list of exclusions to filter by.
+   * @returns {Array} The filtered list of compendia.
+   */
+  buildCompendiaList(compendiaList, defaultCollection, storageKey, inclusions = [], exclusions = []) {
+    window.GAS.log.d('buildCompendiaList input:', {
+      compendiaListLength: compendiaList.length,
+      defaultCollection,
+      inclusions,
+      storageKey,
+      exclusions,
+      filterEnabled: this.filterPackSourcesAppropriatelyByName
     });
-}
 
-type BuildData = {
-  compendiaList: any[];
-  selectedCompendia: {
-    races: string[];
-    classes: string[];
-    subclasses: string[];
-    backgrounds: string[];
-    equipment: string[];
-    // racialFeatures: string[];
-    // classFeatures: string[];
-    // spells: string[];
-    // feats: string[];
-    // items: string[];
-  };
-};
+    let filter = (pack) => {
+      const hasMatch = inclusions.some(inclusion =>
+        pack.metadata.id.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.name.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.path.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.label.toLowerCase().includes(inclusion.toLowerCase())
+      );
 
-type Compendium = {
-  collection: string;
-  metadata: {
-    packageName: string;
-    label: string;
-  };
-};
+      const hasExclusion = exclusions.some(exclusion => 
+        pack.metadata.id.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.name.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.path.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.label.toLowerCase().includes(exclusion.toLowerCase())
+      );
 
-type DefaultCollection = {
-  races: string[];
-  racialFeatures: string[];
-  classes: string[];
-  subclasses: string[];
-  backgrounds: string[];
-  equipment: string[];
-  // spells: string[];
-  // feats: string[];
-  // items: string[];
-};
+      window.GAS.log.d('Filtering pack:', {
+        id: pack.metadata.id,
+        name: pack.metadata.name,
+        path: pack.metadata.path,
+        label: pack.metadata.label,
+        inclusions,
+        hasMatch,
+        hasExclusion,
+        exclusions
+      });
 
-function buildTemplateData({ compendiaList, selectedCompendia }: BuildData) {
-  return {
-    source: {
-      races: {
-        label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'races'),
-      },
-      // racialFeatures: {
-      //   label: game.i18n.localize('GAS.Setting.Sources.RacialFeatureCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'racialFeatures'),
-      // },
-      classes: {
-        label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'classes'),
-      },
-      subclasses: {
-        label: game.i18n.localize('GAS.Setting.Sources.SubclassCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'subclasses'),
-      },
-      // classFeatures: {
-      //   label: game.i18n.localize('GAS.Setting.Sources.ClassFeatureCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'classFeatures'),
-      // },
-      backgrounds: {
-        label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds'),
-      },
-      // spells: {
-      //   label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'spells'),
-      // },
-      // feats: {
-      //   label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'feats'),
-      // },
-      // items: {
-      //   label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
-      //   compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
-      // },
-      equipment: {
-        label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),
-        compendia: buildCompendiaList(compendiaList, selectedCompendia, 'items'),
-      },
-    },
-  };
+      return hasMatch && !hasExclusion;
+    };
+
+    const filteredCompendia = this.filterPackSourcesAppropriatelyByName ? compendiaList.filter(filter) : compendiaList;
+    
+    window.GAS.log.d('After filtering:', {
+      originalLength: compendiaList.length,
+      filteredLength: filteredCompendia.length,
+      filtered: filteredCompendia.map(p => ({
+        id: p.metadata.id,
+        name: p.metadata.name
+      }))
+    });
+
+    return filteredCompendia
+      .map((p) => ({
+        collection: p.collection,
+        label: `${p.metadata.label} [${p.metadata.packageName}]`,
+        checked: defaultCollection[storageKey]?.includes(p.collection),
+      }));
+  }
 }
