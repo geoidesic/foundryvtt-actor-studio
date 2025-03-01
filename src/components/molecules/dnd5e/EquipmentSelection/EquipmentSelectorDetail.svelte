@@ -1,6 +1,6 @@
 <script>
 import { getContext, onMount } from "svelte";
-import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount } from "~/src/stores/equipmentSelections";
+import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { localize } from "#runtime/svelte/helper";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
@@ -84,6 +84,7 @@ $: configurableSelections = Object.values($equipmentSelections)
 // Filter equipment items by type for each configurable selection
 $: equipmentByType = configurableSelections.reduce((acc, group) => {
   const type = group.selectedItem.type;
+  window.GAS.log.d('EQUIPMENT DETAIL | Equipment By Type:', { type, group });
   //- accumulate the items by group type
   if (!acc[type]) {
     acc[type] = allEquipmentItemsFromPacks
@@ -91,6 +92,7 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
         if (item.type !== type) return false;
         if (item.type === 'weapon' && group.selectedItem?.key) {
           if (['martialM', 'martialR', 'simpleM', 'simpleR'].includes(group.selectedItem.key)) {
+            window.GAS.log.d('EQUIPMENT DETAIL | Weapon Type Filter:', { item });
             //- filter out magical items for starter equipment at level 1
             return item.system?.type?.value === group.selectedItem.key && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
           }
@@ -130,6 +132,12 @@ function createSelectionHandler(groupId, parentGroup) {
     handleSelection(groupId, option, parentGroup);
   }
 }
+
+// Add this function to handle cancel
+function handleCancelSelection(group) {
+  const groupId = group.parentGroup ? group.parentGroup.id : group.id;
+  editGroup(groupId);
+}
 </script>
 
 <template lang="pug">
@@ -145,6 +153,9 @@ section
             )
           .flex2.left.name
             span {group.selectedItem.label}
+          .flex0.right
+            button.cancel-button(on:click!="{handleCancelSelection(group)}")
+              i.fas.fa-times
         
         .equipment-select
           +if("group.parentGroup")
@@ -220,4 +231,18 @@ section
 
 :global(.icon-select)
   position: relative
+
+.cancel-button
+  background: none
+  border: none
+  color: var(--color-text-dark-secondary)
+  padding: 0.5rem
+  cursor: pointer
+  transition: color 0.2s ease
+
+  &:hover
+    color: var(--color-text-highlight)
+
+  i
+    font-size: 1.2em
 </style>

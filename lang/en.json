@@ -13,6 +13,8 @@
       "Button": "Level Up",
       "ClassLevelUp": "Level up this class"
     },
+    "Name": "Name",
+    "Type": "Type",
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
     "Source": "Source",
@@ -121,6 +123,10 @@
       "EnableLevelUp": {
         "Name": "Enable Level Up",
         "Hint": "Check this to include a button on the character sheet for leveling up via Actor Studio"
+      },
+      "FilterPackSourcesAppropriatelyByName": {
+        "Name": "Filter Pack Sources Appropriately by Name",
+        "Hint": "If enabled, the Source sections will only include packs that have a name, path, id, or label that matches the source type"
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "Force D&D5e Level Up Automation",
@@ -249,7 +255,11 @@
         "Weapon": "Weapon",
         "Tool": "Tool",
         "Focus": "Focus"
-      }
+      },
+      "PlannedInventory": "Planned Inventory",
+      "NoItemsSelected": "No items selected",
+      "Weight": "Weight",
+      "Quantity": "Quantity"
     }
   }
 }

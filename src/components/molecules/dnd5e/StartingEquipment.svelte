@@ -95,6 +95,18 @@
     // window.GAS.log.d("StartingEquipment", startingEquipment);
   });
 
+  function isOptionDisabled(group, item) {
+    return disabled || (group.inProgress && group.selectedItemId && group.selectedItemId !== item._id);
+  }
+
+  function getOptionClasses(group, item) {
+    const classes = [];
+    if (group.selectedItemId === item._id) classes.push('selected');
+    if (isOptionDisabled(group, item)) classes.push('disabled');
+    if (group.completed) classes.push('completed');
+    return classes.join(' ');
+  }
+
 </script>
 
 <template lang="pug">
@@ -128,16 +140,16 @@
               .options
                 +each("group.items as item")
                   button.option(
-                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled  ? 'disabled' : ''} {group.completed ? 'completed' : ''}"
-                    on:click="{handleSelection(group.id, item)}"
-                    disabled="{disabled}"
+                    class="{getOptionClasses(group, item)}"
+                    on:click!="{handleSelection(group.id, item)}"
+                    disabled="{isOptionDisabled(group, item)}"
                   )
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex0.relative.icon
                         img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                       .flex2.left.name.black-link {@html item.label}
-                        +if("group.selectedItemId === item._id && $selectedItems[group.id]")
-                          span.selected-name &nbsp;({$selectedItems[group.id].name})
+                      +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                        span.selected-name &nbsp;({$selectedItems[group.id].name})
 
           +else()
             +each("group.items as item")
