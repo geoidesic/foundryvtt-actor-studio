@@ -29,7 +29,7 @@
       .flex2.pr-sm.col-a
         h3 {localize('GAS.Equipment.Selection')}
         section.equipment-flow
-          StartingGold(characterClass="{$characterClass}")
+          StartingGold(characterClass="{$characterClass}" disabled="{false}")
           +if("hasRolledGold")
             StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask

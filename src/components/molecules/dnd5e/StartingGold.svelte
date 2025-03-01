@@ -6,6 +6,7 @@
   import { writable } from 'svelte/store';
 
   export let characterClass;
+  export let disabled = false;
 
   let formula = "";
 
@@ -26,6 +27,7 @@
   $: hasRolled = $goldRoll > 0;
 
   async function rollGold() {
+    if (disabled) return;
     const roll = await new Roll(formula).evaluate({async: true});
     const className = characterClass?.name || "Character";
     const flavor = `Rolling starting gold for ${className}`;
@@ -35,7 +37,7 @@
     }, {rollMode: game.settings.get('core', 'rollMode')});
     // Wait for any 3D dice animations to complete
     if (game.dice3d) {
-      await game.dice3d.waitFor(roll);
+      await game.dice3d.showForRoll(roll);
     }
     $goldRoll = roll.total;
   }
@@ -48,23 +50,25 @@
 <template lang="pug">
   section.starting-gold
     .flexrow
-      .flex0.required(class="{!hasRolled ? 'active' : ''}") *
+      +if("!disabled")
+        .flex0.required(class="{!hasRolled ? 'active' : ''}") *
       .flex3
         h2.left {localize('GAS.Equipment.Gold')}
     
-    .flexcol.gold-section.gap-10
+    .flexcol.gold-section.gap-10(class="{disabled ? 'disabled' : ''}")
       +if("!hasRolled")
         .flexrow.left.gap-4
-          .flex3.gold Starting Gold Formula: 
-          .flex1.badge {formula}
-      .flexrow.left.justify-flexrow-vertical
-        .flex3 
-          +if("hasRolled")
-            .result
-              span.label.gold Result: 
-              span.value {$goldRoll} gp
-        .flex0.right.controls(class="{hasRolled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
-          i.fas.fa-dice
+          .flex1 Formula: 
+          .flex1.badge.center {formula}
+      +if("!disabled")
+        .flexrow.left.justify-flexrow-vertical
+          .flex3 
+            +if("hasRolled")
+              .result
+                span.label.gold Result: 
+                span.value {$goldRoll} gp
+          .flex0.right.controls(class="{hasRolled || disabled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
+            i.fas.fa-dice
 </template>
 
 <style lang="sass">
@@ -78,10 +82,13 @@
 
   .gold-section
     padding: 0.5rem
-    background: #000000
-    border: 1px solid var(--dnd5e-color-gold)
     border-radius: var(--border-radius)
-    color: var(--li-background-color)
+    &:not(.disabled)
+      border: 1px solid var(--dnd5e-color-gold)
+      background: rgba(0, 0, 0, 0.2)
+      background: #000000
+      color: var(--dnd5e-color-gold)
+
 
   .formula
     .label

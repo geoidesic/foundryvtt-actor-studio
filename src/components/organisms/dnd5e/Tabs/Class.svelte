@@ -328,7 +328,7 @@
               .flex Starting Equipment
             +if("equipmentSelectionExpanded && !isDisabled")
               .flexrow
-                StartingGold(characterClass="{$characterClass}")
+                StartingGold(characterClass="{$characterClass}" disabled="{true}")
               .flexrow
                 StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}" disabled="{true}")
             +if("equipmentSelectionExpanded && isDisabled")

@@ -89,7 +89,8 @@
   +if("startingEquipment?.length")
     section.starting-equipment
       .flexrow
-        .flex0.required(class="{equipmentSelectionEnabled ? 'active' : ''}") *
+        +if("!disabled")
+          .flex0.required(class="{equipmentSelectionEnabled ? 'active' : ''}") *
         .flex3
           h2.left {localize('GAS.Equipment.Label')}
       
