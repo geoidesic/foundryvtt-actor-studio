@@ -1,31 +1,73 @@
 <script>
 import { getContext, onMount } from "svelte";
-import { equipmentSelections } from "~/src/stores/equipmentSelections";
+import { equipmentSelections, addGranularSelection, removeGranularSelection } from "~/src/stores/equipmentSelections";
 import { localize } from "#runtime/svelte/helper";
+import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+import { extractItemsFromPacksSync, getPacksFromSettings } from "~/src/helpers/Utility.js";
+import { MODULE_ID } from "~/src/helpers/constants";
 
 // Types that need additional configuration
-const CONFIGURABLE_TYPES = ['tool', 'armor', 'weapon', 'focus'];
+const CONFIGURABLE_TYPES = ['tool', 'weapon', 'armor', 'focus'];
+
+// Get equipment sources
+let packs = getPacksFromSettings("equipment");
+let allEquipmentItems = extractItemsFromPacksSync(packs, [
+  "name->label",
+  "img",
+  "type",
+  "folder",
+  "uuid->value",
+  "_id",
+]);
+
+const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
 
 // Get the currently selected items that need configuration
 $: configurableSelections = Object.values($equipmentSelections)
-  .filter(group => group.completed && group.selectedItem)
   .filter(group => {
-    const item = group.selectedItem;
-    return CONFIGURABLE_TYPES.includes(item.type);
+    window.GAS.log.d('EQUIPMENT DETAIL | Filtering group:', { 
+      group,
+      hasSelectedItem: !!group.selectedItem,
+      selectedItemType: group.selectedItem?.type,
+      isConfigurable: group.selectedItem ? CONFIGURABLE_TYPES.includes(group.selectedItem.type) : false
+    });
+    return group.selectedItem && 
+           CONFIGURABLE_TYPES.includes(group.selectedItem.type) && 
+           group.inProgress;
   });
 
-// Group them by type for organized display
-$: groupedSelections = configurableSelections.reduce((acc, group) => {
+// Filter equipment items by type for each configurable selection
+$: equipmentByType = configurableSelections.reduce((acc, group) => {
   const type = group.selectedItem.type;
-  if (!acc[type]) acc[type] = [];
-  acc[type].push(group);
+  window.GAS.log.d('EQUIPMENT DETAIL | Building equipment by type:', {
+    type,
+    itemCount: allEquipmentItems.filter(item => item.type === type).length
+  });
+  if (!acc[type]) {
+    acc[type] = allEquipmentItems
+      .filter(item => item.type === type)
+      .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
+  }
   return acc;
 }, {});
+
+function handleSelection(groupId, option) {
+  window.GAS.log.d('EQUIPMENT DETAIL | Selection Change:', { groupId, option });
+  addGranularSelection(groupId, option.value);
+}
+
+// Create a handler factory function
+function createSelectionHandler(groupId) {
+  return function selectionHandler(option) {
+    handleSelection(groupId, option);
+  }
+}
 
 onMount(async () => {
   window.GAS.log.d('EquipmentSelectorDetail mounted', { 
     configurableSelections, 
-    groupedSelections 
+    equipmentByType,
+    allEquipmentItems: allEquipmentItems.filter(item => item.type === 'focus')
   });
 });
 </script>
@@ -41,29 +83,22 @@ section.equipment-selector-detail
       span {localize('GAS.Equipment.NoItemsToConfig')}
 
   +if("configurableSelections.length > 0")
-    +each("Object.entries(groupedSelections) as [type, groups]")
-      .equipment-type-section
-        h3.type-header
-          span {localize(`GAS.Equipment.Type.${type}`)}
-        +each("groups as group")
-          .equipment-config-item
-            .flexrow.justify-flexrow-vertical.no-wrap
-              .flex0.relative.icon
-                img.icon(src="{group.selectedItem.img || `icons/svg/${type}.svg`}" alt="{type}")
-              .flex2.left.name
-                span {group.selectedItem.label}
-            +if("type === 'tool'")
-              .tool-config
-                //- Tool-specific options here
-            +if("type === 'armor'")
-              .armor-config
-                //- Armor-specific options here
-            +if("type === 'weapon'")
-              .weapon-config
-                //- Weapon-specific options here
-            +if("type === 'focus'")
-              .focus-config
-                //- Focus-specific options here
+    +each("configurableSelections as group")
+      .equipment-config-item
+        .flexrow.justify-flexrow-vertical.no-wrap
+          .flex0.relative.icon
+            img.icon(src="{group.selectedItem.img || `icons/svg/${group.selectedItem.type}.svg`}" alt="{group.selectedItem.type}")
+          .flex2.left.name
+            span {group.selectedItem.label}
+        
+        .equipment-select
+          IconSelect.mb-md.icon-select(
+            options="{equipmentByType[group.selectedItem.type] || []}"
+            active="{group.granularSelections?.self?.[0]}"
+            placeHolder="{`Select ${group.selectedItem.type}`}"
+            handler="{createSelectionHandler(group.id)}"
+            id="equipment-select-{group.id}"
+          )
 </template>
 
 <style lang="sass">
@@ -119,4 +154,12 @@ section.equipment-selector-detail
   margin-top: 0.75rem
   padding-top: 0.75rem
   border-top: 1px solid rgba(255, 255, 255, 0.1)
+
+.equipment-select
+  margin-top: 0.75rem
+  padding-top: 0.75rem
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+
+:global(.icon-select)
+  position: relative
 </style>
