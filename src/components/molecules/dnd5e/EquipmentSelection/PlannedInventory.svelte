@@ -22,8 +22,8 @@ $: {
   });
 }
 
-$: window.GAS.log.d('[PlannedInventory] flattenedSelections', $flattenedSelections);
-$: window.GAS.log.d('[PlannedInventory] plannedItems', plannedItems);
+// $: window.GAS.log.d('[PlannedInventory] flattenedSelections', $flattenedSelections);
+// $: window.GAS.log.d('[PlannedInventory] plannedItems', plannedItems);
 let unsubscribe;
 
 onMount(() => {

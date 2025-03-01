@@ -78,6 +78,7 @@
   // $: window.GAS.log.d("StartingEquipment groupedByType", groupedByType);
 
   $: dnd5eVersion = window.GAS.dnd5eVersion;
+  $: console.log('$equipmentSelections', $equipmentSelections);
 
 
   function handleSelection(groupId, item) {
