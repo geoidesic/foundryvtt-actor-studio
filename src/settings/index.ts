@@ -57,10 +57,11 @@ export function registerSettings(app: Game): void {
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
-  showPackLabelInSelect();
+  allowAbilityRollScoresToBeMoved();
   showButtonInSideBar(app);
   disableOtherActorCreationOptionsForPlayers();
   nonGmsCanOnlyCreatePCs();
+  showPackLabelInSelect();
   illuminatedDescription();
   illuminatedHeight();
   illuminatedWidth();
@@ -111,10 +112,10 @@ export function illuminatedDescription() {
   });
 }
 
-export function allRolledAbilityScoresToBeMoved() {
-  game.settings.register(MODULE_ID, 'allRolledAbilityScoresToBeMoved', {
-    name: game.i18n.localize('GAS.Setting.allRolledAbilityScoresToBeMoved.Name'),
-    hint: game.i18n.localize('GAS.Setting.allRolledAbilityScoresToBeMoved.Hint'),
+function allowAbilityRollScoresToBeMoved() {
+  game.settings.register(MODULE_ID, 'allowAbilityRollScoresToBeMoved', {
+    name: game.i18n.localize('GAS.Setting.AllowAbilityRollScoresToBeMoved.Name'),
+    hint: game.i18n.localize('GAS.Setting.AllowAbilityRollScoresToBeMoved.Hint'),
     scope: 'world',
     config: true,
     default: true,
@@ -122,7 +123,7 @@ export function allRolledAbilityScoresToBeMoved() {
   });
 }
 
-export function enableLevelUp() {
+function enableLevelUp() {
   game.settings.register(MODULE_ID, 'enableLevelUp', {
     name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
     hint: game.i18n.localize('GAS.Setting.EnableLevelUp.Hint'),
@@ -133,7 +134,7 @@ export function enableLevelUp() {
   });
 }
 
-export function showPackLabelInSelect() {
+function showPackLabelInSelect() {
   game.settings.register(MODULE_ID, 'showPackLabelInSelect', {
     name: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Name'),
     hint: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Hint'),

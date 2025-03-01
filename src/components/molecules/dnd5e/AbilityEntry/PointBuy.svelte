@@ -48,53 +48,78 @@
 
 <template lang="pug">
 .attribute-entry.mt-sm
-  h5.flexrow.mb-sm
-    .flex2.left Ability
-    .flex1.center Race / Feat
-    .flex1.center Base Score
-    .flex1.center Score
-    .flex1.center Modifier
-  .indent
-    +each("systemAbilitiesArray as ability, index")
-      .flexrow.mb-sm
-        .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input
-          +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
-            span +
-          span {abilityAdvancements?.[ability[1].abbreviation] || 0}
-        .flex1.center.relative
-          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
-          .controls
-            .up.chevron
-              i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
-            .down.chevron
-              i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
-        .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
-            span +
-          span {$doc.system.abilities[ability[1].abbreviation]?.mod}
-    hr
-    .flexrow.justify-flexrow-vertical
-      .flex1 Points total: 
-      .flex
-        +if("isNaN(scoreTotal)")
-          span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
-          +else()
-            input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
-      .flex0 / 
-      .flex1 
-        input.center.small(disabled  type="number" value="{pointBuyLimit}") 
-    
-    +if("isNaN(scoreTotal)")
-      hr
-      button.btn.btn-primary(on:click="{reset}") Reset scores
+  table
+    thead
+      tr
+        th.ability Ability
+        th.center Race / Feat
+        th.center Base Score
+        th.center Score
+        th.center Modifier
+    tbody
+      +each("systemAbilitiesArray as ability, index")
+        tr
+          td.ability {ability[1].label}
+          td.center
+            +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+              span +
+            span {abilityAdvancements?.[ability[1].abbreviation] || 0}
+          td.center.relative
+            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
+            .controls
+              .up.chevron
+                i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
+              .down.chevron
+                i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
+          td.center {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
+          td.center
+            +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
+              span +
+            span {$doc.system.abilities[ability[1].abbreviation]?.mod}
+      tr
+        td(colspan="5")
+          hr
+          .flexrow.justify-flexrow-vertical
+            .flex1 Points total: 
+            .flex
+              +if("isNaN(scoreTotal)")
+                span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
+                +else()
+                  input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
+            .flex0 / 
+            .flex1 
+              input.center.small(disabled  type="number" value="{pointBuyLimit}") 
+      
+      +if("isNaN(scoreTotal)")
+        tr
+          td(colspan="5")
+            hr
+            button.btn.btn-primary(on:click="{reset}") Reset scores
 
 </template>
 
 <style lang="sass">
-  .align-text-with-input
-    margin-top: 0.3rem
+  table
+    width: 100%
+    border-collapse: separate
+    border-spacing: 0 0.5rem
+   
+  th
+    padding: 0.1rem 0.5rem
+    text-align: left
+    font-family: var(--dnd5e-font-modesto)
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+   
+  td
+    text-align: left
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+ 
   .green
     color: green
   .red
@@ -102,7 +127,6 @@
   .mainscore
     min-width: 40px
   .score
-
     &.active
       animation: pulse 0.5s infinite
   .controls
