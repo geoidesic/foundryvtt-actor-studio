@@ -1,8 +1,18 @@
 import { writable } from 'svelte/store';
 
 // Store structure will track selections by group
-// { groupId: { selectedItemId: string, selectedItem: object, completed: boolean, inProgress: boolean } }
+// { 
+//   groupId: { 
+//     selectedItemId: string, 
+//     selectedItem: object, 
+//     completed: boolean, 
+//     inProgress: boolean,
+//     granularSelection: string | null // UUID for tool/weapon/armor/focus specific selection
+//   } 
+// }
 export const equipmentSelections = writable({});
+
+const GRANULAR_TYPES = ['tool', 'weapon', 'armor', 'focus'];
 
 // Helper functions to manage selections
 export function selectEquipment(groupId, itemId) {
@@ -22,12 +32,47 @@ export function selectEquipment(groupId, itemId) {
     );
 
     // Mark this group as completed and no longer in progress
+    // If it's a special type, set completed to false until granular selection is made
+    const needsGranularSelection = GRANULAR_TYPES.includes(selectedItem.type);
+
     return {
       ...selections,
       [groupId]: {
         ...group,
         selectedItemId: itemId,
         selectedItem,
+        completed: !needsGranularSelection,
+        inProgress: needsGranularSelection,
+        granularSelection: null
+      },
+      ...(nextGroup && !needsGranularSelection ? {
+        [nextGroup.id]: {
+          ...nextGroup,
+          inProgress: true
+        }
+      } : {})
+    };
+  });
+}
+
+// Add new function to handle granular selection
+export function setGranularSelection(groupId, uuid) {
+  equipmentSelections.update(selections => {
+    const group = selections[groupId];
+    if (!group || !group.selectedItem) return selections;
+
+    // Find the next uncompleted group
+    const sortedGroups = Object.values(selections)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    const nextGroup = sortedGroups.find(g => 
+      !g.completed && g.id !== groupId
+    );
+
+    return {
+      ...selections,
+      [groupId]: {
+        ...group,
+        granularSelection: uuid,
         completed: true,
         inProgress: false
       },
