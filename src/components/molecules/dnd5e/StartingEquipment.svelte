@@ -14,11 +14,16 @@
   // Check if equipment selection is enabled in settings
   const equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
+  function getGroupFromSelection(groupId) {
+    return $equipmentSelections[groupId];
+  }
+
 
   // Process and group equipment
   $: {
     if (startingEquipment?.length) {
       startingEquipment.forEach(entry => {
+        window.GAS.log.d("StartingEquipment entry", entry);
         if (entry.type === 'OR') {
           initializeGroup(entry._id, {
             type: 'choice',
@@ -128,7 +133,10 @@
             .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
               .flexrow.justify-flexrow-vertical.no-wrap
                 .flex3.left
-                  span.group-label {group.label}
+                  +if("group.completed")
+                    span.group-label One chosen:
+                  +if("!group.completed")
+                    span.group-label Choose one...
                 +if("!group.inProgress")
                   .flex0.right
                     IconButton.option(
@@ -139,7 +147,7 @@
               .options
                 +each("group.items as item")
                   button.option(
-                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled || group.completed ? 'disabled' : ''}"
                     on:click="{handleSelection(group.id, item)}"
                     disabled="{disabled}"
                   )
@@ -187,7 +195,7 @@
     margin-bottom: 0
 
   &.in-progress
-    box-shadow: 0px 0px 15px rgba(159, 146, 117)
+    box-shadow: 0px 0px 15px var(--color-highlight)
     border: 1px solid var(--dnd5e-color-gold)
 
 .group-label
@@ -214,11 +222,11 @@
 .option
   cursor: pointer
   
-  &:hover
+  &:hover:not(.disabled, .selected)
     background: rgba(0, 0, 0, 0.6)
     border-color: rgba(255, 255, 255, 0.2)
 
-  &.selected:not(.disabled)
+  &.selected
     background: rgba(0, 0, 0, 0.8)
     border-color: #b59e54
     box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
@@ -227,8 +235,8 @@
     cursor: auto
     opacity: 0.7
     &:hover
-      background: rgba(0, 0, 0, 0.4)
-      border-color: rgba(255, 255, 255, 0.1)
+      box-shadow: none
+    
 
 .equipment-item
   margin-bottom: 0.5rem
