@@ -109,7 +109,7 @@
     const confirmed = await Dialog.confirm({
       title: "Update",
       content:
-        "You have advancments in progress, if you update the actor, any advancements related to the changes will be lost. Are you sure you want to update the actor?",
+        "You have advancements in progress, if you update the actor, any advancements related to the changes will be lost. Are you sure you want to update the actor?",
       yes: () => true,
       no: () => false,
       defaultYes: false,

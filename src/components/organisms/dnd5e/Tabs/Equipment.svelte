@@ -1,6 +1,3 @@
-// Reuse existing StartingGold/StartingEquipment components in select mode
-// Add additional selection interfaces for spells, purchases, etc. 
-
 <script>
   import { getContext } from "svelte";
   import { localize } from "#runtime/svelte/helper";

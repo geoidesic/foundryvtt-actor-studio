@@ -41,10 +41,10 @@
     packs = getPacksFromSettings("classes"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
-    classAdvancmentExpanded = false,
+    classAdvancementExpanded = false,
     equipmentSelectionExpanded = false,
     subClassAdvancementArrayFiltered = [],
-    subClassAdvancmentExpanded = false,
+    subClassAdvancementExpanded = false,
     mappedClassIndex = extractItemsFromPacksSync(packs, [
       "name->label",
       "img",
@@ -190,18 +190,18 @@
   };
 
   const toggleClassAdvancements = () => {
-    classAdvancmentExpanded = !classAdvancmentExpanded;
+    classAdvancementExpanded = !classAdvancementExpanded;
   };
   const toggleEquipmentSelection = () => {
     equipmentSelectionExpanded = !equipmentSelectionExpanded;
   };
 
   const toggleSubClassAdvancements = () => {
-    subClassAdvancmentExpanded = !subClassAdvancmentExpanded;
+    subClassAdvancementExpanded = !subClassAdvancementExpanded;
   };
 
   $: if(isDisabled) {
-    classAdvancmentExpanded = true
+    classAdvancementExpanded = true
   }
 
   $: html = $characterClass?.system?.description.value || "";
@@ -291,22 +291,22 @@
           +if("classAdvancementArrayFiltered")
             h3.left.mt-sm.flexrow
               .flex0(on:click="{toggleClassAdvancements}")
-                +if("classAdvancmentExpanded")
+                +if("classAdvancementExpanded")
                   span [-]
-                +if("!classAdvancmentExpanded")
+                +if("!classAdvancementExpanded")
                   spen [+]
               .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
               .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
             ul.icon-list
               +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
                 li.left {localize('GAS.NoAdvancements')}
-              +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancmentExpanded")
+              +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
                 li.left 
                   .flexrow
                     .flex0.relative.image
                       img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
                     .flex2 {localize('GAS.SubClass')}
-              +if("classAdvancementArrayFiltered.length && classAdvancmentExpanded")
+              +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
                   li.left(data-type="{advancement.type}")
@@ -340,16 +340,16 @@
             +if("subClassAdvancementArrayFiltered.length")
               h3.left.mt-sm.flexrow
                 .flex0(on:click="{toggleSubClassAdvancements}")
-                  +if("subClassAdvancmentExpanded")
+                  +if("subClassAdvancementExpanded")
                     span [-]
-                  +if("!subClassAdvancmentExpanded")
+                  +if("!subClassAdvancementExpanded")
                     spen [+]
                 .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
                 .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
               ul.icon-list
                 +if("!subClassAdvancementArrayFiltered.length")
                   li.left {localize('GAS.NoAdvancements')}
-                +if("subClassAdvancementArrayFiltered.length && subClassAdvancmentExpanded")
+                +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
                   +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type
                       li.left(data-type="{advancement.type}")
