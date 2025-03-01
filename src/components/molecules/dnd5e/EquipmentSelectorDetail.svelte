@@ -1,9 +1,9 @@
 <script>
 import { getContext, onMount } from "svelte";
-import { equipmentSelections, addGranularSelection, removeGranularSelection } from "~/src/stores/equipmentSelections";
+import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup } from "~/src/stores/equipmentSelections";
 import { localize } from "#runtime/svelte/helper";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
-import { extractItemsFromPacksSync, getPacksFromSettings } from "~/src/helpers/Utility.js";
+import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";
 
 // Types that need additional configuration
@@ -11,26 +11,52 @@ const CONFIGURABLE_TYPES = ['tool', 'weapon', 'armor', 'focus'];
 
 // Get equipment sources
 let packs = getPacksFromSettings("equipment");
-let allEquipmentItems = extractItemsFromPacksSync(packs, [
-  "name->label",
-  "img",
-  "type",
-  "folder",
-  "uuid->value",
-  "_id",
-]);
+let allEquipmentItems = [];
+
+onMount(async () => {
+  // Fetch full item data including system data
+  const rawItems = await extractItemsFromPacksAsync(packs, [
+    "name->label",
+    "img",
+    "type",
+    "folder",
+    "uuid->value",
+    "_id"
+  ], ["system.type", "system.magicalBonus", "system.properties"]);
+
+  // Process items to only keep the needed system fields
+  allEquipmentItems = rawItems.map(item => ({
+    ...item,
+    system: item.system ? {
+      type: item.system.type,
+      magicalBonus: item.system.magicalBonus,
+      properties: item.system.properties
+    } : undefined
+  }));
+
+  // window.GAS.log.d('EquipmentSelectorDetail mounted', { 
+  //   configurableSelections, 
+  //   equipmentByType,
+  //   allEquipmentItems: allEquipmentItems.filter(item => item.type === 'focus')
+  // });
+});
 
 const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
 
 // Get the currently selected items that need configuration
 $: configurableSelections = Object.values($equipmentSelections)
   .filter(group => {
-    window.GAS.log.d('EQUIPMENT DETAIL | Filtering group:', { 
-      group,
-      hasSelectedItem: !!group.selectedItem,
-      selectedItemType: group.selectedItem?.type,
-      isConfigurable: group.selectedItem ? CONFIGURABLE_TYPES.includes(group.selectedItem.type) : false
-    });
+    // Pass allEquipmentItems to the store for this group if not already present
+    if (!group.allEquipmentItems) {
+      initializeGroup(group.id, { ...group, allEquipmentItems });
+    }
+    
+    // window.GAS.log.d('EQUIPMENT DETAIL | Filtering group:', { 
+    //   group,
+    //   hasSelectedItem: !!group.selectedItem,
+    //   selectedItemType: group.selectedItem?.type,
+    //   isConfigurable: group.selectedItem ? CONFIGURABLE_TYPES.includes(group.selectedItem.type) : false
+    // });
     return group.selectedItem && 
            CONFIGURABLE_TYPES.includes(group.selectedItem.type) && 
            group.inProgress;
@@ -39,13 +65,36 @@ $: configurableSelections = Object.values($equipmentSelections)
 // Filter equipment items by type for each configurable selection
 $: equipmentByType = configurableSelections.reduce((acc, group) => {
   const type = group.selectedItem.type;
-  window.GAS.log.d('EQUIPMENT DETAIL | Building equipment by type:', {
-    type,
-    itemCount: allEquipmentItems.filter(item => item.type === type).length
-  });
+  // window.GAS.log.d('EQUIPMENT DETAIL | Building equipment by type:', {
+  //   type,
+  //   itemCount: allEquipmentItems.filter(item => item.type === type).length,
+  //   group,
+  // });
   if (!acc[type]) {
     acc[type] = allEquipmentItems
-      .filter(item => item.type === type)
+      .filter(item => {
+        // Basic type filter
+        // window.GAS.log.d('EQUIPMENT DETAIL | Filtering item:', item);
+        // window.GAS.log.d('EQUIPMENT DETAIL | type mismatch:', item.type !== type);
+        if (item.type !== type) return false;
+        
+        // window.GAS.log.d('EQUIPMENT DETAIL | type:', type);
+        // window.GAS.log.d('EQUIPMENT DETAIL | group:', group);
+        // Additional weapon type filter
+        if (item.type === 'weapon' && group.selectedItem?.key) {
+          // window.GAS.log.d('EQUIPMENT DETAIL | Weapon filtering');
+          
+          // For martial/simple weapons, check if the key matches the weapon type
+          if (['martialM', 'martialR', 'simpleM', 'simpleR'].includes(group.selectedItem.key)) {
+            // window.GAS.log.d('EQUIPMENT DETAIL | Martial/simple weapon:', item.system?.type?.value, group.selectedItem.key);
+            // Match exactly against system.type.value
+            return item.system?.type?.value === group.selectedItem.key && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+          }
+          // For specific weapon types (like 'shortsword'), match exactly
+          return item.system?.baseItem === group.selectedItem.key;
+        }
+        return true;
+      })
       .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
   }
   return acc;
@@ -62,14 +111,6 @@ function createSelectionHandler(groupId) {
     handleSelection(groupId, option);
   }
 }
-
-onMount(async () => {
-  window.GAS.log.d('EquipmentSelectorDetail mounted', { 
-    configurableSelections, 
-    equipmentByType,
-    allEquipmentItems: allEquipmentItems.filter(item => item.type === 'focus')
-  });
-});
 </script>
 
 <template lang="pug">
@@ -87,7 +128,7 @@ section.equipment-selector-detail
       .equipment-config-item
         .flexrow.justify-flexrow-vertical.no-wrap
           .flex0.relative.icon
-            img.icon(src="{group.selectedItem.img || `icons/svg/${group.selectedItem.type}.svg`}" alt="{group.selectedItem.type}")
+            img.icon(src="{getEquipmentIcon(group.selectedItem.type)}" alt="{group.selectedItem.type}")
           .flex2.left.name
             span {group.selectedItem.label}
         

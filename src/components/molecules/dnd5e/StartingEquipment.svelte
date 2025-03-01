@@ -1,7 +1,7 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { equipmentSelections, selectEquipment, initializeGroup, editGroup } from "~/src/stores/equipmentSelections";
+  import { equipmentSelections, selectEquipment, initializeGroup, editGroup, getEquipmentIcon } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
   import ImageButton from "~/src/components/atoms/button/ImageButton.svelte";
@@ -79,25 +79,6 @@
 
   $: dnd5eVersion = window.GAS.dnd5eVersion;
 
-
-  function getEquipmentIcon(type) {
-    switch(type) {
-      case 'armor':
-        return 'icons/svg/shield.svg';
-      case 'weapon':
-        return 'icons/svg/sword.svg';
-      case 'tool':
-        return 'icons/svg/padlock.svg';
-      case 'focus':
-        return 'icons/svg/book.svg';
-      case 'linked':
-        return 'icons/svg/item-bag.svg';
-      case 'OR':
-        return 'icons/svg/dice-target.svg';
-      default:
-        return 'icons/svg/item-bag.svg';
-    }
-  }
 
   function handleSelection(groupId, item) {
     if (disabled) return;

@@ -38,6 +38,9 @@ export function selectEquipment(groupId, itemId) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
     if (!group) return selections;
+    
+    // Return early if group is not in progress
+    if (!group.inProgress) return selections;
 
     // Find the selected item from the group's items
     const selectedItem = group.items.find(item => item._id === itemId);
@@ -50,30 +53,23 @@ export function selectEquipment(groupId, itemId) {
       !g.completed && g.id !== groupId
     );
 
-    const requiresGranular = needsGranularSelection(selectedItem);
+    const requiresGranular = GRANULAR_TYPES.includes(selectedItem.type);
     
     // Initialize granular selections structure based on item type
-    const granularSelections = {
-      // For special types
-      ...(GRANULAR_TYPES.includes(selectedItem.type) ? { self: [] } : {}),
-      // For subgroups, initialize children structure only if item has children
-      ...(SUBGROUP_TYPES.includes(selectedItem.type) && selectedItem.items ? {
-        children: selectedItem.items.reduce((acc, child) => ({
-          ...acc,
-          [child._id]: {
-            type: child.type,
-            selections: []
-          }
-        }), {})
-      } : {})
-    };
+    const granularSelections = requiresGranular ? { self: [] } : undefined;
+
+    // Find the full item data from the original items array
+    const fullItemData = group.allEquipmentItems?.find(item => item._id === itemId) || selectedItem;
 
     return {
       ...selections,
       [groupId]: {
         ...group,
         selectedItemId: itemId,
-        selectedItem,
+        selectedItem: {
+          ...fullItemData,
+          system: fullItemData.system
+        },
         completed: !requiresGranular,
         inProgress: requiresGranular,
         granularSelections
@@ -285,4 +281,24 @@ export function editGroup(groupId) {
 
 export function clearEquipmentSelections() {
   equipmentSelections.set({});
+}
+
+// Add getEquipmentIcon function to the store
+export function getEquipmentIcon(type) {
+  switch(type) {
+    case 'armor':
+      return 'icons/svg/shield.svg';
+    case 'weapon':
+      return 'icons/svg/sword.svg';
+    case 'tool':
+      return 'icons/svg/padlock.svg';
+    case 'focus':
+      return 'icons/svg/book.svg';
+    case 'linked':
+      return 'icons/svg/item-bag.svg';
+    case 'OR':
+      return 'icons/svg/dice-target.svg';
+    default:
+      return 'icons/svg/item-bag.svg';
+  }
 } 
