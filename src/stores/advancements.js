@@ -124,6 +124,8 @@ export const advancementQueueStore = () => {
 
   // Add advanceQueue to storeObj
   storeObj.advanceQueue = async function (initial) {
+
+
     const currentStore = get(store);
     const next = currentStore[0] || false;
 
@@ -146,6 +148,12 @@ export const advancementQueueStore = () => {
 
     inProcess.set(next);
     remove(next.id);
+
+
+    // @todo: temporary for debug
+    const actor = get(inProcess)?.actor;
+    Hooks.call("gas.equipmentSelection", actor);
+    return;
 
     const item = await prepareItemForDrop(next);
 

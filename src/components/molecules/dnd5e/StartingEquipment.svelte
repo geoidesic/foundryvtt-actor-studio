@@ -138,8 +138,6 @@
                       .flex2.left.name.black-link {@html item.label}
                         +if("group.selectedItemId === item._id && $selectedItems[group.id]")
                           span.selected-name &nbsp;({$selectedItems[group.id].name})
-                    +if("item.count")
-                      span.count (x{item.count})
 
           +else()
             +each("group.items as item")
@@ -148,8 +146,6 @@
                   .flex0.relative.icon
                     img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                   .flex2.left.name.black-link {@html item.label}
-                  +if("item.count")
-                    span.count (x{item.count})
 
 </template>
 

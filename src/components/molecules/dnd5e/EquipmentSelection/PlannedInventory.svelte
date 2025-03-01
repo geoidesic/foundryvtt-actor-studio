@@ -8,20 +8,37 @@ let plannedItems = [];
 // Track the raw selections
 $: rawSelections = $flattenedSelections || [];
 
-// Handle async updates when selections change
+// Handle async updates when selections change and group identical items
 $: {
   Promise.all(rawSelections.map(async (selection) => {
-    // For linked items, fetch from UUID
     if(selection.type === 'linked') {
       return await fromUuid(selection.key);
     }
-    // For other types (weapon, armor, etc), fetch from UUID
     if(selection.key) {
       return await fromUuid(selection.key);
     }
     return selection;
   })).then(items => {
-    plannedItems = items;
+    // Group identical items and sum their quantities
+    const groupedItems = items.reduce((acc, item) => {
+      if (!item) return acc;
+      
+      const key = item.uuid || item._id;
+      if (!acc[key]) {
+        acc[key] = {
+          ...item,
+          system: {
+            ...item.system,
+            quantity: 1
+          }
+        };
+      } else {
+        acc[key].system.quantity = (acc[key].system.quantity || 1) + 1;
+      }
+      return acc;
+    }, {});
+
+    plannedItems = Object.values(groupedItems);
   });
 }
 

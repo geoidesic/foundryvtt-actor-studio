@@ -118,17 +118,26 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
         const selections = [];
         for(const item of group.items) {
           if(item.type === 'linked') {
-            window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone group, linked item', item);
-            alert('linked')
+            // Repeat based on count
+            const count = item.count || 1;
+            for(let i = 0; i < count; i++) {
+              selections.push({
+                type: item.type,
+                key: item.key,
+              });
+            }
           } 
           if(item.type === 'AND') {
             for(const child of item.children) {
-              window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone `AND` group, child', child);
               if(child.type === 'linked') {
-                selections.push({
-                  type: child.type,
-                  key: child.key,
-                })
+                // Repeat based on count
+                const count = child.count || 1;
+                for(let i = 0; i < count; i++) {
+                  selections.push({
+                    type: child.type,
+                    key: child.key,
+                  });
+                }
               }
             }
           }
@@ -144,12 +153,20 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
         selectedItem.children.forEach(child => {
           if (GRANULAR_TYPES.includes(child.type)) {
             const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
-            selections.push(...childSelections.map(uuid => ({
-              type: child.type,
-              key: uuid
-            })));
+            // Repeat based on count
+            const count = child.count || 1;
+            for(let i = 0; i < count; i++) {
+              selections.push(...childSelections.map(uuid => ({
+                type: child.type,
+                key: uuid
+              })));
+            }
           } else {
-            selections.push(child);
+            // Repeat based on count
+            const count = child.count || 1;
+            for(let i = 0; i < count; i++) {
+              selections.push(child);
+            }
           }
         });
         return selections;
@@ -157,26 +174,43 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
 
       // If no granular selections needed, just return the selected item
       if (!group.granularSelections) {
-        return selectedItem.type === 'linked' ? [selectedItem] : [];
+        if(selectedItem.type === 'linked') {
+          // Repeat based on count
+          const count = selectedItem.count || 1;
+          return Array(count).fill({
+            type: selectedItem.type,
+            key: selectedItem.key
+          });
+        }
+        return [];
       }
 
       // Handle granular selections
       const selections = [];
       
       if (group.granularSelections.self?.length) {
-        selections.push(...group.granularSelections.self.map(uuid => ({
-          type: selectedItem.type,
-          key: uuid
-        })));
+        // Repeat based on count
+        const count = selectedItem.count || 1;
+        for(let i = 0; i < count; i++) {
+          selections.push(...group.granularSelections.self.map(uuid => ({
+            type: selectedItem.type,
+            key: uuid
+          })));
+        }
       }
       
       if (group.granularSelections.children) {
         Object.entries(group.granularSelections.children).forEach(([childId, child]) => {
           if (child.selections?.length) {
-            selections.push(...child.selections.map(uuid => ({
-              type: child.type,
-              key: uuid
-            })));
+            // Find the child item to get its count
+            const childItem = selectedItem.children?.find(c => c._id === childId);
+            const count = childItem?.count || 1;
+            for(let i = 0; i < count; i++) {
+              selections.push(...child.selections.map(uuid => ({
+                type: child.type,
+                key: uuid
+              })));
+            }
           }
         });
       }
@@ -429,14 +463,15 @@ export function editGroup(groupId) {
       [id]: { ...group, inProgress: false }
     }), {});
 
-    // Then set the target group to in progress and incomplete
+    // Then set the target group to in progress and incomplete, and reset all selections
     if (updatedSelections[groupId]) {
       updatedSelections[groupId] = {
         ...updatedSelections[groupId],
         inProgress: true,
         completed: false,
         selectedItemId: null,
-        selectedItem: null
+        selectedItem: null,
+        granularSelections: null  // Reset granular selections
       };
     }
 

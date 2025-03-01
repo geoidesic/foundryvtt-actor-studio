@@ -133,20 +133,12 @@ function createSelectionHandler(groupId, parentGroup) {
 </script>
 
 <template lang="pug">
-section.equipment-selector-detail
-  .flexrow
-    .flex3
-      h2.left {localize('GAS.Equipment.ConfigureLabel')}
-  
-  +if("configurableSelections.length === 0")
-    p.empty-state
-      span {localize('GAS.Equipment.NoItemsToConfig')}
-
+section
   +if("configurableSelections.length > 0")
     +each("configurableSelections as group")
       .equipment-config-item
         .flexrow.justify-flexrow-vertical.no-wrap
-          .flex0.relative.icon
+          .flex0.relative
             img.icon(
               src="{getEquipmentIcon(group.selectedItem.type)}" 
               alt="{group.selectedItem.type}"
@@ -174,11 +166,6 @@ section.equipment-selector-detail
 </template>
 
 <style lang="sass">
-.equipment-selector-detail
-  background: rgba(0, 0, 0, 0.2)
-  border-radius: var(--border-radius)
-  padding: 1rem
-  height: 100%
 
 .empty-state
   text-align: center
@@ -201,16 +188,15 @@ section.equipment-selector-detail
 .equipment-config-item
   background: rgba(0, 0, 0, 0.3)
   border-radius: var(--border-radius)
-  padding: 0.75rem
-  margin-bottom: 0.75rem
+  padding: 0.3rem 1rem
+  margin-bottom: 0.3rem
 
   &:last-child
     margin-bottom: 0
 
 .icon
-  width: 32px
-  height: 32px
-  margin-right: 0.5rem
+  margin-right: 2rem
+  border: none
   filter: brightness(1) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))
 
 .name
@@ -223,13 +209,13 @@ section.equipment-selector-detail
 .armor-config,
 .weapon-config,
 .focus-config
-  margin-top: 0.75rem
-  padding-top: 0.75rem
+  margin-top: 0.3rem
+  padding-top: 0.3rem
   border-top: 1px solid rgba(255, 255, 255, 0.1)
 
 .equipment-select
-  margin-top: 0.75rem
-  padding-top: 0.75rem
+  margin-top: 0.3rem
+  padding-top: 0.3  rem
   border-top: 1px solid rgba(255, 255, 255, 0.1)
 
 :global(.icon-select)
