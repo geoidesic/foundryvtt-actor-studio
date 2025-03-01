@@ -38,7 +38,6 @@ export function selectEquipment(groupId, itemId) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
     window.GAS.log.d('[EquipSelect STORE] selectEquipment group', group);
-    window.GAS.log.d('[EquipSelect STORE] selectEquipment Flattened selections', flattenedSelections);
     if (!group) return selections;
     
     // Return early if group is not in progress
@@ -57,9 +56,23 @@ export function selectEquipment(groupId, itemId) {
     );
 
     const requiresGranular = GRANULAR_TYPES.includes(selectedItem.type);
+    const isSubgroup = SUBGROUP_TYPES.includes(selectedItem.type);
     
     // Initialize granular selections structure based on item type
-    const granularSelections = requiresGranular ? { self: [] } : undefined;
+    // AND types don't need granular selections since they include all items
+    const granularSelections = requiresGranular ? { self: [] } : 
+                              (isSubgroup && selectedItem.type !== 'AND') ? { children: {} } : 
+                              undefined;
+
+    // For subgroups, initialize children structure
+    if (isSubgroup && selectedItem.items) {
+      selectedItem.items.forEach(item => {
+        granularSelections.children[item._id] = {
+          type: item.type,
+          selections: []
+        };
+      });
+    }
 
     const result = {
       ...selections,
@@ -67,11 +80,12 @@ export function selectEquipment(groupId, itemId) {
         ...group,
         selectedItem,
         selectedItemId: itemId,
-        completed: !requiresGranular,
-        inProgress: requiresGranular,
+        // AND types are completed immediately since they include all items
+        completed: !requiresGranular && (selectedItem.type === 'AND' || !isSubgroup),
+        inProgress: requiresGranular || (isSubgroup && selectedItem.type !== 'AND'),
         granularSelections
       },
-      ...(nextGroup && !requiresGranular ? {
+      ...(nextGroup && (!requiresGranular && (selectedItem.type === 'AND' || !isSubgroup)) ? {
         [nextGroup.id]: {
           ...nextGroup,
           inProgress: true
@@ -85,9 +99,42 @@ export function selectEquipment(groupId, itemId) {
 
 export const flattenedSelections = derived(equipmentSelections, ($equipmentSelections) => {
   window.GAS.log.d('[EquipSelect STORE] flattenedSelections equipmentSelections', $equipmentSelections);
+  
   return Object.values($equipmentSelections)
     .filter(group => group.selectedItem) // Only include groups with selections
-    .map(group => group.selectedItem);
+    .flatMap(group => {
+      const selectedItem = group.selectedItem;
+      
+      // For AND types, include all their children
+      if (selectedItem.type === 'AND' && selectedItem.children) {
+        return selectedItem.children;
+      }
+
+      // If no granular selections needed, just return the selected item
+      if (!group.granularSelections) {
+        return [selectedItem];
+      }
+
+      // Handle granular selections
+      const selections = [];
+      
+      // Add self selections if they exist
+      if (group.granularSelections.self?.length) {
+        selections.push(...group.granularSelections.self);
+      }
+      
+      // Add children selections if they exist
+      if (group.granularSelections.children) {
+        Object.values(group.granularSelections.children).forEach(child => {
+          if (child.selections?.length) {
+            selections.push(...child.selections);
+          }
+        });
+      }
+      
+      // If we have granular selections, return those, otherwise return the selected item
+      return selections.length ? selections : [selectedItem];
+    });
 });
 
 // Add granular selection for special types

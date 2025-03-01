@@ -51,8 +51,8 @@ onMount(() => {
               td
                 img(src="{item.img}" width="32" height="32")
               td= "{item.name || '--'}"
-              td.weight= "{item.weight || 0}"
-              td.quantity= "{item.quantity || 1}"
+              td.weight= "{item.system.weight.value || 0}"
+              td.quantity= "{item.system.quantity || 1}"
 </template>
 
 <style lang="sass">
