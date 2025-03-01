@@ -7,22 +7,6 @@ export const enum PrivateSettingKeys {
   LAST_MIGRATION = 'lastMigration',
 }
 
-export const enum SourceType {
-  RACES = 'races',
-  RACIAL_FEATURES = 'racialFeatures',
-  CLASSES = 'classes',
-  CLASS_FEATURES = 'classFeatures',
-  SUBCLASSES = 'subclasses',
-  BACKGROUNDS = 'backgrounds',
-  SPELLS = 'spells',
-  FEATS = 'feats',
-  ITEMS = 'items',
-}
-
-export type Source = {
-  [key in SourceType]: any;
-};
-
 export function registerSettings(app: Game): void {
   window.GAS.log.d("Building module settings");
 
@@ -61,6 +45,7 @@ export function registerSettings(app: Game): void {
   showButtonInSideBar(app);
   disableOtherActorCreationOptionsForPlayers();
   nonGmsCanOnlyCreatePCs();
+  filterPackSourcesAppropriatelyByName();
   showPackLabelInSelect();
   illuminatedDescription();
   illuminatedHeight();
@@ -98,6 +83,17 @@ function illuminatedWidth() {
     config: true,
     default: '64px',
     type: String,
+  });
+}
+
+export function filterPackSourcesAppropriatelyByName() {
+  game.settings.register(MODULE_ID, 'filterPackSourcesAppropriatelyByName', {
+    name: game.i18n.localize('GAS.Setting.FilterPackSourcesAppropriatelyByName.Name'),
+    hint: game.i18n.localize('GAS.Setting.FilterPackSourcesAppropriatelyByName.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
   });
 }
 
