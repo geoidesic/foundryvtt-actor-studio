@@ -1,8 +1,10 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { equipmentSelections, selectEquipment, initializeGroup } from "~/src/stores/equipmentSelections";
+  import { equipmentSelections, selectEquipment, initializeGroup, editGroup } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import IconButton from "~/src/components/atoms/button/IconButton.svelte";
+  import ImageButton from "~/src/components/atoms/button/ImageButton.svelte";
   // import EquipmentSelector from "~/src/components/molecules/dnd5e/EquipmentSelector.svelte";
 
   export let startingEquipment = [];
@@ -98,6 +100,11 @@
     selectEquipment(groupId, item._id);
   }
 
+  function handleEditGroup(groupId) {
+    window.GAS.log.d("[Starting Equipment] editGroup", { groupId });
+    editGroup(groupId);
+  }
+
   onMount(async () => {
     window.GAS.log.d("StartingEquipment", startingEquipment);
   });
@@ -116,10 +123,19 @@
       //- Process each group
       +each("sortedGroups as group")
         +if("group.type === 'choice'")
-          pre groupCompleted: {group.completed} groupInProgress: {group.inProgress}
+          //- pre groupCompleted: {group.completed} groupInProgress: {group.inProgress}
           +if("(group.completed || group.inProgress)")
-            .equipment-group
-              span.group-label {group.label}
+            .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+              .flexrow.justify-flexrow-vertical.no-wrap
+                .flex3.left
+                  span.group-label {group.label}
+                +if("!group.inProgress")
+                  .flex0.right
+                    IconButton.option(
+                      on:click="{handleEditGroup(group.id)}"
+                      disabled="{disabled}"
+                      icon="fas fa-pencil"
+                    )
               .options
                 +each("group.items as item")
                   button.option(
@@ -169,6 +185,10 @@
   
   &:last-child
     margin-bottom: 0
+
+  &.in-progress
+    box-shadow: 0px 0px 15px rgba(159, 146, 117)
+    border: 1px solid var(--dnd5e-color-gold)
 
 .group-label
   display: block

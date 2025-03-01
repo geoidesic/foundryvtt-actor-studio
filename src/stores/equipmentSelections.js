@@ -88,6 +88,29 @@ export function setGroupInProgress(groupId) {
   });
 }
 
+export function editGroup(groupId) {
+  equipmentSelections.update(selections => {
+    // First, set all groups to not in progress
+    const updatedSelections = Object.entries(selections).reduce((acc, [id, group]) => ({
+      ...acc,
+      [id]: { ...group, inProgress: false }
+    }), {});
+
+    // Then set the target group to in progress and incomplete
+    if (updatedSelections[groupId]) {
+      updatedSelections[groupId] = {
+        ...updatedSelections[groupId],
+        inProgress: true,
+        completed: false,
+        selectedItemId: null,
+        selectedItem: null
+      };
+    }
+
+    return updatedSelections;
+  });
+}
+
 export function clearEquipmentSelections() {
   equipmentSelections.set({});
 } 
