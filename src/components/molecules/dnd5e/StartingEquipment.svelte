@@ -147,7 +147,7 @@
               .options
                 +each("group.items as item")
                   button.option(
-                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled || group.completed ? 'disabled' : ''}"
+                    class="{group.selectedItemId === item._id ? 'selected' : ''} {disabled  ? 'disabled' : ''} {group.completed ? 'completed' : ''}"
                     on:click="{handleSelection(group.id, item)}"
                     disabled="{disabled}"
                   )
@@ -222,7 +222,7 @@
 .option
   cursor: pointer
   
-  &:hover:not(.disabled, .selected)
+  &:hover:not(.disabled, .selected, .completed)
     background: rgba(0, 0, 0, 0.6)
     border-color: rgba(255, 255, 255, 0.2)
 
@@ -231,9 +231,16 @@
     border-color: #b59e54
     box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
 
+  &.completed
+    cursor: auto
+    &:hover
+      box-shadow: none
+
   &.disabled
     cursor: auto
-    opacity: 0.7
+    &:not(.completed)
+      opacity: 0.7
+
     &:hover
       box-shadow: none
     
