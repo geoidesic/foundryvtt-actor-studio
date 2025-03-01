@@ -115,7 +115,16 @@ function handleSelection(groupId, option, parentGroup) {
   }
 }
 
-// Create a handler factory function
+/**
+ * @description Create a handler factory function
+ * @why The handler can only accept the selected value as a parameter, 
+ * so to pass the remaining parameters for the group, we need to create a factory function
+ * which runs on mount and returns the handler function with the group details included
+ * Then once selected, the handler is called with the selected value and the group details are included
+ * @param {string} groupId - The id of the group
+ * @param {object} parentGroup - The parent group
+ * @returns {function} - The selection handler
+ */
 function createSelectionHandler(groupId, parentGroup) {
   return function selectionHandler(option) {
     handleSelection(groupId, option, parentGroup);
@@ -151,7 +160,7 @@ section.equipment-selector-detail
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.parentGroup.granularSelections?.children?.[group.selectedItem._id]?.selections?.[0]}"
               placeHolder="Select {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.selectedItem._id, group.parentGroup)}"
+              handler="{createSelectionHandler(group.id, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
           +if("!group.parentGroup")
@@ -159,7 +168,7 @@ section.equipment-selector-detail
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.granularSelections?.self?.[0]}"
               placeHolder="Select {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.selectedItem._id)}"
+              handler="{createSelectionHandler(group.id)}"
               id="equipment-select-{group.selectedItem._id}"
             )
 </template>

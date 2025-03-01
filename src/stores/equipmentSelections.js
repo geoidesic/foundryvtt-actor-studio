@@ -120,12 +120,12 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
         const selections = [];
         for(const item of group.items) {
           if(item.type === 'linked') {
-            window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone AND group child', item);
+            window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone group, linked item', item);
             alert('linked')
           } 
           if(item.type === 'AND') {
             for(const child of item.children) {
-              window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone AND group child', child);
+              window.GAS.log.d('[EquipSelect STORE] flattenedSelections standalone `AND` group, child', child);
               if(child.type === 'linked') {
                 selections.push({
                   type: child.type,
@@ -173,10 +173,12 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
       
       // Add self selections if they exist, converting UUIDs to objects
       if (group.granularSelections.self?.length) {
+        window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group, self', group.granularSelections.self);
         selections.push(...group.granularSelections.self.map(uuid => ({
           type: selectedItem.type,
           key: uuid
         })));
+        window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group, self selections', selections);
       }
       
       // Add children selections if they exist
@@ -198,15 +200,19 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
   // window.GAS.log.d('[EquipSelect STORE] flattenedSelections FINAL', {
   //   result
   // });
+  window.GAS.log.d('[EquipSelect STORE] flattenedSelections FINAL', result);
   
   return result;
 });
 
 // Add granular selection for special types
 export function addGranularSelection(groupId, uuid) {
-  alert('o')
   equipmentSelections.update(selections => {
+    window.GAS.log.d('[EquipSelect STORE] addGranularSelection selections', selections);
     const group = selections[groupId];
+    window.GAS.log.d('[EquipSelect STORE] addGranularSelection groupId', groupId);
+    window.GAS.log.d('[EquipSelect STORE] addGranularSelection group', group);
+    // window.GAS.log.d('[EquipSelect STORE] addGranularSelection group.selectedItem', group.selectedItem);
     if (!group?.selectedItem) return selections;
 
     const updatedSelections = {
@@ -223,7 +229,7 @@ export function addGranularSelection(groupId, uuid) {
       !g.completed && g.id !== groupId
     ) : null;
 
-    return {
+    const result = {
       ...selections,
       [groupId]: {
         ...group,
@@ -238,6 +244,9 @@ export function addGranularSelection(groupId, uuid) {
         }
       } : {})
     };
+
+    window.GAS.log.d('[EquipSelect STORE] addGranularSelection result', result);
+    return result;
   });
 }
 
