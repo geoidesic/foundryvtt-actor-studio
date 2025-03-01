@@ -35,10 +35,7 @@
       flavor,
       speaker: ChatMessage.getSpeaker()
     }, {rollMode: game.settings.get('core', 'rollMode')});
-    // Wait for any 3D dice animations to complete
-    if (game.dice3d) {
-      await game.dice3d.showForRoll(roll);
-    }
+
     $goldRoll = roll.total;
   }
 
