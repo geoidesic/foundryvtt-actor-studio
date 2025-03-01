@@ -52,10 +52,13 @@ onMount(() => {
           +each('plannedItems as item')
             tr
               td
-                img(src="{item.img}" width="32" height="32")
-              td= "{item.name || '--'}"
-              td.weight= "{item.system.weight.value || 0}"
-              td.quantity= "{item.system.quantity || 1}"
+                +if('item && item.img')
+                  img(src="{item.img}" width="32" height="32")
+                  +else()
+                    img(src="icons/svg/item-bag.svg" width="32" height="32")
+              td= "{item?.name || '--'}"
+              td.weight= "{item?.system?.weight?.value || 0}"
+              td.quantity= "{item?.system?.quantity || 1}"
 </template>
 
 <style lang="sass">

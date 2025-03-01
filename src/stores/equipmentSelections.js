@@ -111,11 +111,9 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
   const result = Object.values($equipmentSelections)
     .filter(group => {
       const hasSelection = !!group.selectedItem || group.type === 'standalone';
-
       return hasSelection;
     })
     .flatMap(group => {
-
       if(group.type === 'standalone') {
         const selections = [];
         for(const item of group.items) {
@@ -143,20 +141,14 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
       // For AND types, include all children (either direct or through granular selection)
       if (selectedItem.type === 'AND' && selectedItem.children) {
         const selections = [];
-        // window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group')
         selectedItem.children.forEach(child => {
           if (GRANULAR_TYPES.includes(child.type)) {
-            // window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group child', child);
-            // For granular type children, include their selections
             const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
-            
-            // Convert UUIDs to objects with type and key properties
             selections.push(...childSelections.map(uuid => ({
               type: child.type,
               key: uuid
             })));
           } else {
-            // For non-granular children (like linked), include them directly
             selections.push(child);
           }
         });
@@ -165,23 +157,19 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
 
       // If no granular selections needed, just return the selected item
       if (!group.granularSelections) {
-        return [selectedItem];
+        return selectedItem.type === 'linked' ? [selectedItem] : [];
       }
 
       // Handle granular selections
       const selections = [];
       
-      // Add self selections if they exist, converting UUIDs to objects
       if (group.granularSelections.self?.length) {
-        window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group, self', group.granularSelections.self);
         selections.push(...group.granularSelections.self.map(uuid => ({
           type: selectedItem.type,
           key: uuid
         })));
-        window.GAS.log.d('[EquipSelect STORE] flattenedSelections AND group, self selections', selections);
       }
       
-      // Add children selections if they exist
       if (group.granularSelections.children) {
         Object.entries(group.granularSelections.children).forEach(([childId, child]) => {
           if (child.selections?.length) {
@@ -193,15 +181,9 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
         });
       }
       
-      // If we have granular selections, return those, otherwise return the selected item
-      return selections.length ? selections : [selectedItem];
+      return selections;
     });
 
-  // window.GAS.log.d('[EquipSelect STORE] flattenedSelections FINAL', {
-  //   result
-  // });
-  window.GAS.log.d('[EquipSelect STORE] flattenedSelections FINAL', result);
-  
   return result;
 });
 
@@ -484,4 +466,37 @@ export function getEquipmentIcon(type) {
     default:
       return 'icons/svg/item-bag.svg';
   }
-} 
+}
+
+// Add to the store's state
+const selectedItemsData = writable({});
+
+// Add the function to update selected item data
+async function updateSelectedItemData(groupId, selection) {
+  if (!selection?.granularSelections?.self?.[0]) return;
+  const itemData = await fromUuid(selection.granularSelections.self[0]);
+  if (itemData) {
+    selectedItemsData.update(data => ({
+      ...data,
+      [groupId]: itemData
+    }));
+  }
+}
+
+// Create a derived store that returns the actual data object
+export const selectedItems = derived(equipmentSelections, ($equipmentSelections, set) => {
+  // Get current value of selectedItemsData
+  let currentData = {};
+  selectedItemsData.subscribe(value => currentData = value)();
+
+  // Update data for each group
+  Object.entries($equipmentSelections).forEach(([groupId, group]) => {
+    updateSelectedItemData(groupId, group);
+  });
+
+  // Return current data
+  set(currentData);
+
+  // Update when selectedItemsData changes
+  return selectedItemsData.subscribe(value => set(value));
+}); 

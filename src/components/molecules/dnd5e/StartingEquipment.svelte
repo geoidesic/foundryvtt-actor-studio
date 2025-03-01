@@ -1,7 +1,7 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { equipmentSelections, selectEquipment, initializeGroup, editGroup, getEquipmentIcon } from "~/src/stores/equipmentSelections";
+  import { equipmentSelections, selectEquipment, initializeGroup, editGroup, getEquipmentIcon, selectedItems } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
   import ImageButton from "~/src/components/atoms/button/ImageButton.svelte";
@@ -17,7 +17,6 @@
   function getGroupFromSelection(groupId) {
     return $equipmentSelections[groupId];
   }
-
 
   // Process and group equipment
   $: {
@@ -135,16 +134,19 @@
                   )
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex0.relative.icon
-                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                        img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                       .flex2.left.name.black-link {@html item.label}
+                        +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                          span.selected-name &nbsp;({$selectedItems[group.id].name})
                     +if("item.count")
                       span.count (x{item.count})
+
           +else()
             +each("group.items as item")
               .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
                 .flexrow.justify-flexrow-vertical.no-wrap
                   .flex0.relative.icon
-                    img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                    img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                   .flex2.left.name.black-link {@html item.label}
                   +if("item.count")
                     span.count (x{item.count})
