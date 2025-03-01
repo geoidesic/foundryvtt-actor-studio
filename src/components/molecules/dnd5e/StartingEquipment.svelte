@@ -1,67 +1,85 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { equipmentSelections, selectEquipment } from "~/src/stores/equipmentSelections";
+  import { equipmentSelections, selectEquipment, initializeGroup } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
+  // import EquipmentSelector from "~/src/components/molecules/dnd5e/EquipmentSelector.svelte";
 
   export let startingEquipment = [];
   export let disabled = false;
+  export let allEquipmentItems = [];
 
   // Check if equipment selection is enabled in settings
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
   // Process and group equipment
-  $: processedGroups = startingEquipment.reduce((acc, entry) => {
-    if (entry.type === 'OR') {
-      // Create a new choice group
-      acc[entry._id] = {
-        id: entry._id,
-        sort: entry.sort,
-        type: 'choice',
-        items: [],
-        key: entry.key
-      };
-    } else if (entry.group) {
-      // Add item to existing group
-      if (acc[entry.group]) {
-        acc[entry.group].items.push(entry);
-      }
+  $: {
+    if (startingEquipment?.length) {
+      startingEquipment.forEach(entry => {
+        if (entry.type === 'OR') {
+          initializeGroup(entry._id, {
+            type: 'choice',
+            label: 'Choose one...',
+            items: startingEquipment.filter(item => item.group === entry._id),
+            sort: entry.sort
+          });
+        } else if (!entry.group) {
+          initializeGroup(entry._id || 'standalone', {
+            type: 'standalone',
+            label: entry.label,
+            items: [entry],
+            sort: entry.sort
+          });
+        }
+      });
+    }
+  }
+
+  // Sort groups by their sort value
+  $: sortedGroups = Object.values($equipmentSelections)
+    .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+
+
+  // Group items by type for specialized handling
+  $: groupedByType = sortedGroups.reduce((acc, group) => {
+    window.GAS.log.d("StartingEquipment groupedByType group", group);
+    const itemTypes = group.items.map(item => item.type);
+    if (itemTypes.includes('focus')) {
+      if (!acc.focus) acc.focus = [];
+      acc.focus.push(group);
+    } else if (itemTypes.includes('weapon')) {
+      if (!acc.weapon) acc.weapon = [];
+      acc.weapon.push(group);
+    } else if (itemTypes.includes('armor')) {
+      if (!acc.armor) acc.armor = [];
+      acc.armor.push(group);
+    } else if (itemTypes.includes('tool')) {
+      if (!acc.tool) acc.tool = [];
+      acc.tool.push(group);
     } else {
-      // Standalone items
-      if (!acc.standalone) {
-        acc.standalone = {
-          id: 'standalone',
-          type: 'standalone',
-          items: [],
-          key: entry.key
-        };
-      }
-      acc.standalone.items.push(entry);
+      if (!acc.standard) acc.standard = [];
+      acc.standard.push(group);
     }
     return acc;
   }, {});
 
-  
-  // Sort groups by their sort value
-  $: sortedGroups = Object.values(processedGroups)
-  .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-  
+
+
   $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
-  $: window.GAS.log.d("StartingEquipment processedGroups", processedGroups);
   $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
+  $: window.GAS.log.d("StartingEquipment groupedByType", groupedByType);
 
   $: dnd5eVersion = window.GAS.dnd5eVersion;
 
-  async function getItemName(key) {
-    if (!key) return 'Unknown Item';
-    if (key === 'arcane') return 'Arcane Focus';
-    
-    const item = await fromUuid(key);
-    return item?.name || 'Unknown Item';
-  }
 
   function getEquipmentIcon(type) {
     switch(type) {
+      case 'armor':
+        return 'icons/svg/armor.svg';
+      case 'weapon':
+        return 'icons/svg/weapon.svg';
+      case 'tool':
+        return 'icons/svg/tool.svg';
       case 'focus':
         return 'icons/svg/book.svg';
       case 'linked':
@@ -73,10 +91,10 @@
     }
   }
 
-  function handleSelection(groupId, itemId) {
+  function handleSelection(groupId, item) {
     if (disabled) return;
-    window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, itemId });
-    selectEquipment(groupId, itemId);
+    window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, item });
+    selectEquipment(groupId, item._id);
   }
 
   onMount(async () => {
@@ -95,17 +113,16 @@
           h2.left {localize('GAS.Equipment.Label')}
       
       +if("equipmentSelectionEnabled")
-
         //- Process each group
         +each("sortedGroups as group")
           +if("group.type === 'choice'")
             .equipment-group
-              span.group-label Choose one...
+              span.group-label {group.label}
               .options
                 +each("group.items as item")
                   button.option(
-                    class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-                    on:click="{handleSelection(group.id, item._id)}"
+                    class="{group.selectedItem?.label === item.label ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+                    on:click="{handleSelection(group.id, item)}"
                     disabled="{disabled}"
                   )
                     .flexrow.justify-flexrow-vertical.no-wrap
