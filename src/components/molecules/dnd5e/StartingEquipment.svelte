@@ -10,7 +10,8 @@
   export let allEquipmentItems = [];
 
   // Check if equipment selection is enabled in settings
-  $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
+  const equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
+
 
   // Process and group equipment
   $: {
@@ -112,57 +113,34 @@
         .flex3
           h2.left {localize('GAS.Equipment.Label')}
       
-      +if("equipmentSelectionEnabled")
-        //- Process each group
-        +each("sortedGroups as group")
-          +if("group.type === 'choice'")
-            .equipment-group
-              span.group-label {group.label}
-              .options
-                +each("group.items as item")
-                  button.option(
-                    class="{group.selectedItem?.label === item.label ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-                    on:click="{handleSelection(group.id, item)}"
-                    disabled="{disabled}"
-                  )
-                    .flexrow.justify-flexrow-vertical.no-wrap
-                      .flex0.relative.icon
-                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                      .flex2.left.name.black-link {@html item.label}
-                    +if("item.count")
-                      span.count (x{item.count})
-            +else()
+      //- Process each group
+      +each("sortedGroups as group")
+        +if("group.type === 'choice'")
+          .equipment-group
+            span.group-label {group.label}
+            .options
               +each("group.items as item")
-                .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
+                button.option(
+                  class="{group.selectedItem?.label === item.label ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+                  on:click="{handleSelection(group.id, item)}"
+                  disabled="{disabled}"
+                )
                   .flexrow.justify-flexrow-vertical.no-wrap
                     .flex0.relative.icon
                       img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
                     .flex2.left.name.black-link {@html item.label}
-                    +if("item.count")
-                      span.count (x{item.count})
-        +else()
-          //- Show read-only list when equipment selection is disabled
-          +each("sortedGroups as group")
-            .equipment-group
-              +if("group.type === 'choice'")
-                span.group-label Choose one from... 
-                +each("group.items as item")
-                  .equipment-item
-                    .flexrow.justify-flexrow-vertical.no-wrap
-                      .flex0.relative.icon
-                        img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                      .flex2.left.name.black-link {@html item.label}
-                      +if("item.count")
-                        span.count (x{item.count})
-                +else()
-                  +each("group.items as item")
-                    .equipment-item(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
-                      .flexrow.justify-flexrow-vertical.no-wrap
-                        .flex0.relative.icon
-                          img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
-                        .flex2.left.name.black-link {@html item.label}
-                        +if("item.count")
-                          span.count (x{item.count})
+                  +if("item.count")
+                    span.count (x{item.count})
+          +else()
+            +each("group.items as item")
+              .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
+                .flexrow.justify-flexrow-vertical.no-wrap
+                  .flex0.relative.icon
+                    img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
+                  .flex2.left.name.black-link {@html item.label}
+                  +if("item.count")
+                    span.count (x{item.count})
+
 </template>
 
 <style lang="sass">
