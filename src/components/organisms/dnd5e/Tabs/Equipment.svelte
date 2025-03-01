@@ -31,7 +31,7 @@
         section.equipment-flow
           StartingGold(characterClass="{$characterClass}")
           +if("hasRolledGold")
-            StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}")
+            StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         h2 {localize('GAS.Equipment.Detail')}

@@ -330,7 +330,7 @@
               .flexrow
                 StartingGold(characterClass="{$characterClass}")
               .flexrow
-                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}" disabled="{true}")
             +if("equipmentSelectionExpanded && isDisabled")
               p.left See Equipment tab
   

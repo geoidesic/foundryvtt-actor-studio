@@ -5,6 +5,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
 
   export let startingEquipment = [];
+  export let disabled = false;
 
   // Check if equipment selection is enabled in settings
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
@@ -73,6 +74,7 @@
   }
 
   function handleSelection(groupId, itemId) {
+    if (disabled) return;
     window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, itemId });
     selectEquipment(groupId, itemId);
   }
@@ -101,8 +103,9 @@
               .options
                 +each("group.items as item")
                   button.option(
-                    class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''}"
+                    class="{$equipmentSelections[group.id]?.selectedItemId === item._id ? 'selected' : ''} {disabled ? 'disabled' : ''}"
                     on:click="{handleSelection(group.id, item._id)}"
+                    disabled="{disabled}"
                   )
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex0.relative.icon
@@ -112,7 +115,7 @@
                       span.count (x{item.count})
             +else()
               +each("group.items as item")
-                .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''}")
+                .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
                   .flexrow.justify-flexrow-vertical.no-wrap
                     .flex0.relative.icon
                       img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
@@ -135,7 +138,7 @@
                         span.count (x{item.count})
                 +else()
                   +each("group.items as item")
-                    .equipment-item(class="{item.type === 'focus' ? 'focus' : ''}")
+                    .equipment-item(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
                       .flexrow.justify-flexrow-vertical.no-wrap
                         .flex0.relative.icon
                           img.icon(src="{getEquipmentIcon(item.type)}" alt="{item.type}")
@@ -164,6 +167,7 @@
   margin-right: 0.2rem
   padding: 0.5rem
   border-radius: var(--border-radius)
+  background: rgba(0, 0, 0, 0.2)
   
   &:last-child
     margin-bottom: 0
@@ -196,10 +200,17 @@
     background: rgba(0, 0, 0, 0.6)
     border-color: rgba(255, 255, 255, 0.2)
 
-  &.selected
+  &.selected:not(.disabled)
     background: rgba(0, 0, 0, 0.8)
     border-color: #b59e54
     box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
+
+  &.disabled
+    cursor: auto
+    opacity: 0.7
+    &:hover
+      background: rgba(0, 0, 0, 0.4)
+      border-color: rgba(255, 255, 255, 0.1)
 
 .equipment-item
   margin-bottom: 0.5rem
@@ -220,8 +231,8 @@
   object-position: center
 
 .name
-  flex: 1
-  font-size: 1.1em
+  font-size: smaller
+  line-height: 0.8rem
 
 .count
   margin-left: 0.75rem
