@@ -32,6 +32,25 @@
   | content here`
         }
       },
+      "conditional_logic": {
+        "description": "When using svelte-preprocess, only separate +if() and +else() statements are supported. Never use if-else combinators or variations. Instead, structure your logic as separate conditional blocks.",
+        "example": {
+          "correct": `
++if("type === 'tool'")
+  .tool-config
++if("type === 'armor'")
+  .armor-config
++if("type === 'weapon'")
+  .weapon-config`,
+          "incorrect": `
++if("type === 'tool'")
+  .tool-config
++else if("type === 'armor'")
+  .armor-config
++else if("type === 'weapon'")
+  .weapon-config`
+        }
+      },
       "event_handlers": {
         "description": "Event handlers in templates must reference functions defined in the script section, not inline arrow functions.",
         "example": {
