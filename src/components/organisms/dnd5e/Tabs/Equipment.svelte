@@ -41,7 +41,6 @@
   height: 100%
   
 .content
-  padding: 1rem
   height: 100%
   overflow-y: auto
 
