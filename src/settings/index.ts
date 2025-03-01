@@ -92,7 +92,7 @@ export function filterPackSourcesAppropriatelyByName() {
     hint: game.i18n.localize('GAS.Setting.FilterPackSourcesAppropriatelyByName.Hint'),
     scope: 'world',
     config: true,
-    default: true,
+    default: false,
     type: Boolean,
   });
 }
