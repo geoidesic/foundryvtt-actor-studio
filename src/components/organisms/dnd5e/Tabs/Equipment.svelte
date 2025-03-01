@@ -1,11 +1,12 @@
 <script>
-  import { getContext } from "svelte";
+  import { goldRoll } from "~/src/stores/goldRoll";
   import { localize } from "#runtime/svelte/helper";
+  import { MODULE_ID } from "~/src/helpers/constants";
+  import { getContext } from "svelte";
+  import { characterClass, characterSubClass } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
-  import { characterClass, characterSubClass } from "~/src/stores/index";
-  import { goldRoll } from "~/src/stores/goldRoll";
-  import { MODULE_ID } from "~/src/helpers/constants";
+  import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelectorDetail.svelte";
 
   const doc = getContext("#doc");
 
@@ -32,6 +33,7 @@
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         h2 {localize('GAS.Equipment.Detail')}
+        EquipmentSelectorDetail
 </template>
 
 <style lang="sass">
