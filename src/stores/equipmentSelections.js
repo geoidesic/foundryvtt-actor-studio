@@ -7,12 +7,31 @@ import { writable } from 'svelte/store';
 //     selectedItem: object, 
 //     completed: boolean, 
 //     inProgress: boolean,
-//     granularSelection: string | null // UUID for tool/weapon/armor/focus specific selection
+//     granularSelections: {
+//       // For special types (tool, weapon, armor, focus)
+//       self?: string[], // UUIDs from equipment packs
+//       // For subgroups (AND/OR)
+//       children?: {
+//         [childId: string]: {
+//           type: string, // The special type if any
+//           selections: string[] // UUIDs from equipment packs
+//         }
+//       }
+//     }
 //   } 
 // }
 export const equipmentSelections = writable({});
 
 const GRANULAR_TYPES = ['tool', 'weapon', 'armor', 'focus'];
+const SUBGROUP_TYPES = ['AND', 'OR'];
+
+function needsGranularSelection(item) {
+  return GRANULAR_TYPES.includes(item.type) || SUBGROUP_TYPES.includes(item.type);
+}
+
+function getRequiredSelectionsCount(item) {
+  return item.count || 1;
+}
 
 // Helper functions to manage selections
 export function selectEquipment(groupId, itemId) {
@@ -31,9 +50,23 @@ export function selectEquipment(groupId, itemId) {
       !g.completed && g.id !== groupId
     );
 
-    // Mark this group as completed and no longer in progress
-    // If it's a special type, set completed to false until granular selection is made
-    const needsGranularSelection = GRANULAR_TYPES.includes(selectedItem.type);
+    const requiresGranular = needsGranularSelection(selectedItem);
+    
+    // Initialize granular selections structure based on item type
+    const granularSelections = {
+      // For special types
+      ...(GRANULAR_TYPES.includes(selectedItem.type) ? { self: [] } : {}),
+      // For subgroups, initialize children structure only if item has children
+      ...(SUBGROUP_TYPES.includes(selectedItem.type) && selectedItem.items ? {
+        children: selectedItem.items.reduce((acc, child) => ({
+          ...acc,
+          [child._id]: {
+            type: child.type,
+            selections: []
+          }
+        }), {})
+      } : {})
+    };
 
     return {
       ...selections,
@@ -41,11 +74,11 @@ export function selectEquipment(groupId, itemId) {
         ...group,
         selectedItemId: itemId,
         selectedItem,
-        completed: !needsGranularSelection,
-        inProgress: needsGranularSelection,
-        granularSelection: null
+        completed: !requiresGranular,
+        inProgress: requiresGranular,
+        granularSelections
       },
-      ...(nextGroup && !needsGranularSelection ? {
+      ...(nextGroup && !requiresGranular ? {
         [nextGroup.id]: {
           ...nextGroup,
           inProgress: true
@@ -55,26 +88,33 @@ export function selectEquipment(groupId, itemId) {
   });
 }
 
-// Add new function to handle granular selection
-export function setGranularSelection(groupId, uuid) {
+// Add granular selection for special types
+export function addGranularSelection(groupId, uuid) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    if (!group || !group.selectedItem) return selections;
+    if (!group?.selectedItem) return selections;
 
-    // Find the next uncompleted group
+    const updatedSelections = {
+      ...group.granularSelections,
+      self: [...(group.granularSelections.self || []), uuid]
+    };
+
+    const isComplete = updatedSelections.self.length >= getRequiredSelectionsCount(group.selectedItem);
+
+    // Find next group if complete
     const sortedGroups = Object.values(selections)
       .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-    const nextGroup = sortedGroups.find(g => 
+    const nextGroup = isComplete ? sortedGroups.find(g => 
       !g.completed && g.id !== groupId
-    );
+    ) : null;
 
     return {
       ...selections,
       [groupId]: {
         ...group,
-        granularSelection: uuid,
-        completed: true,
-        inProgress: false
+        granularSelections: updatedSelections,
+        completed: isComplete,
+        inProgress: !isComplete
       },
       ...(nextGroup ? {
         [nextGroup.id]: {
@@ -82,6 +122,93 @@ export function setGranularSelection(groupId, uuid) {
           inProgress: true
         }
       } : {})
+    };
+  });
+}
+
+// Add granular selection for subgroup children
+export function addChildGranularSelection(groupId, childId, uuid) {
+  equipmentSelections.update(selections => {
+    const group = selections[groupId];
+    if (!group?.selectedItem || !group.granularSelections.children?.[childId]) return selections;
+
+    const updatedChildren = {
+      ...group.granularSelections.children,
+      [childId]: {
+        ...group.granularSelections.children[childId],
+        selections: [...group.granularSelections.children[childId].selections, uuid]
+      }
+    };
+
+    // Check if all children have required selections
+    const isComplete = Object.entries(updatedChildren).every(([_, child]) => {
+      const childItem = group.selectedItem.items.find(item => item._id === childId);
+      return child.selections.length >= getRequiredSelectionsCount(childItem);
+    });
+
+    // Find next group if complete
+    const sortedGroups = Object.values(selections)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    const nextGroup = isComplete ? sortedGroups.find(g => 
+      !g.completed && g.id !== groupId
+    ) : null;
+
+    return {
+      ...selections,
+      [groupId]: {
+        ...group,
+        granularSelections: {
+          ...group.granularSelections,
+          children: updatedChildren
+        },
+        completed: isComplete,
+        inProgress: !isComplete
+      },
+      ...(nextGroup ? {
+        [nextGroup.id]: {
+          ...nextGroup,
+          inProgress: true
+        }
+      } : {})
+    };
+  });
+}
+
+// Remove granular selection (works for both special types and subgroup children)
+export function removeGranularSelection(groupId, uuid, childId = null) {
+  equipmentSelections.update(selections => {
+    const group = selections[groupId];
+    if (!group?.selectedItem) return selections;
+
+    let updatedSelections;
+    if (childId) {
+      // Remove from child selections
+      updatedSelections = {
+        ...group.granularSelections,
+        children: {
+          ...group.granularSelections.children,
+          [childId]: {
+            ...group.granularSelections.children[childId],
+            selections: group.granularSelections.children[childId].selections.filter(id => id !== uuid)
+          }
+        }
+      };
+    } else {
+      // Remove from self selections
+      updatedSelections = {
+        ...group.granularSelections,
+        self: (group.granularSelections.self || []).filter(id => id !== uuid)
+      };
+    }
+
+    return {
+      ...selections,
+      [groupId]: {
+        ...group,
+        granularSelections: updatedSelections,
+        completed: false,
+        inProgress: true
+      }
     };
   });
 }
