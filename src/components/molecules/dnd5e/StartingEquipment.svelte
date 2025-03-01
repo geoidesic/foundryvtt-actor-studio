@@ -75,11 +75,11 @@
   function getEquipmentIcon(type) {
     switch(type) {
       case 'armor':
-        return 'icons/svg/armor.svg';
+        return 'icons/svg/shield.svg';
       case 'weapon':
-        return 'icons/svg/weapon.svg';
+        return 'icons/svg/sword.svg';
       case 'tool':
-        return 'icons/svg/tool.svg';
+        return 'icons/svg/padlock.svg';
       case 'focus':
         return 'icons/svg/book.svg';
       case 'linked':
