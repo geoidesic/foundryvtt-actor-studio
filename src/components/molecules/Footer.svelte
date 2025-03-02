@@ -358,15 +358,59 @@
       return;
     }
 
-    
-    
     // Add starting gold to the actor
     await $actorInGame.update({
       "system.currency.gp": $goldRoll
     });
+
     const selections = get(flattenedSelections);
-    for (const selection of selections) { 
-      await dropItemOnCharacter($actorInGame, selection);
+    window.GAS.log.d('FOOTER | Raw selections:', selections);
+
+    // Group duplicates by their UUID BEFORE starting async operations
+    const groupedSelections = selections.reduce((acc, selection) => {
+      window.GAS.log.d('FOOTER | Grouping selection:', {
+        key: selection.key,
+        currentCount: acc[selection.key]?.count || 0,
+        newCount: (acc[selection.key]?.count || 0) + 1
+      });
+      
+      if (!acc[selection.key]) {
+        acc[selection.key] = {
+          key: selection.key,
+          count: 1
+        };
+      } else {
+        acc[selection.key].count++;
+      }
+      return acc;
+    }, {});
+
+    window.GAS.log.d('FOOTER | Final grouped selections:', groupedSelections);
+
+    // Drop each unique item with its accumulated quantity
+    for (const [uuid, data] of Object.entries(groupedSelections)) {
+      const item = await fromUuid(data.key);
+      if (item) {
+        window.GAS.log.d('FOOTER | Pre-modification item:', {
+          uuid: data.key,
+          intendedQuantity: data.count,
+          currentQuantity: item.system.quantity,
+          item
+        });
+
+        // Create a copy of the item data
+        const itemData = foundry.utils.deepClone(item);
+        window.GAS.log.d('FOOTER | Pre-modification item:', itemData);
+        window.GAS.log.d('FOOTER | Pre-modification item:', itemData.update);
+        window.GAS.log.d('FOOTER | Pre-modification item:', itemData.updateSource);
+        // Set the quantity
+
+        itemData.updateSource({ 
+          "system.quantity": data.count
+        });
+
+        await dropItemOnCharacter($actorInGame, itemData);
+      }
     }
 
     // Hooks.call("gas.close");
