@@ -413,9 +413,8 @@
       }
     }
 
-    // Hooks.call("gas.close");
+    Hooks.call("gas.close");
 
-    // await dropItemRegistry.advanceQueue(true);
   };
 
   // Derive whether equipment section is complete

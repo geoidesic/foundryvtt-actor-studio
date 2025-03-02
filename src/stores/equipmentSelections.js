@@ -41,12 +41,45 @@ export function getRequiredSelections(item) {
 
 // Helper functions to manage selections
 export function selectEquipment(groupId, itemId) {
+  window.GAS.log.d('SELECT EQUIPMENT | Entry', {
+    groupId,
+    itemId,
+    currentState: get(equipmentSelections)
+  });
+
   equipmentSelections.update(state => {
     const group = state[groupId];
     if (!group) return state;
 
     const selectedItem = group.items.find(i => i._id === itemId);
     if (!selectedItem) return state;
+
+    window.GAS.log.d('SELECT EQUIPMENT | Processing selection', {
+      selectedItem,
+      isAND: selectedItem.type === 'AND',
+      hasGranularChildren: selectedItem.type === 'AND' && 
+        selectedItem.children?.some(child => GRANULAR_TYPES.includes(child.type))
+    });
+
+    // For granular types (weapon, armor, tool, focus), keep the group in progress
+    if (GRANULAR_TYPES.includes(selectedItem.type)) {
+      window.GAS.log.d('SELECT EQUIPMENT | Granular type selection', {
+        type: selectedItem.type,
+        groupId,
+        itemId
+      });
+
+      return {
+        ...state,
+        [groupId]: {
+          ...group,
+          selectedItemId: itemId,
+          selectedItem,
+          completed: false,
+          inProgress: true
+        }
+      };
+    }
 
     // Find next group for progression
     const sortedGroups = Object.values(state)
@@ -57,21 +90,48 @@ export function selectEquipment(groupId, itemId) {
 
     // For regular linked items or AND groups, use the original simple selection logic
     if (selectedItem.type === 'linked' || selectedItem.type === 'AND') {
+      const hasGranularChildren = selectedItem.type === 'AND' && 
+        selectedItem.children?.some(child => GRANULAR_TYPES.includes(child.type));
+
+      window.GAS.log.d('SELECT EQUIPMENT | AND/linked processing', {
+        type: selectedItem.type,
+        hasGranularChildren,
+        children: selectedItem.children
+      });
+
       return {
         ...state,
         [groupId]: {
           ...group,
           selectedItemId: itemId,
           selectedItem,
-          completed: true,
-          inProgress: false
+          completed: !hasGranularChildren,
+          inProgress: hasGranularChildren
         },
-        ...(nextGroup ? {
+        ...((!hasGranularChildren && nextGroup) ? {
           [nextGroup.id]: {
             ...nextGroup,
             inProgress: true
           }
         } : {})
+      };
+    }
+
+    // For granular children in an AND group
+    if (group.selectedItem?.type === 'AND' && GRANULAR_TYPES.includes(selectedItem.type)) {
+      window.GAS.log.d('SELECT EQUIPMENT | Granular child in AND group', {
+        groupId,
+        selectedItem,
+        parentGroup: group
+      });
+
+      // Keep the group in progress and maintain the current selectedItem (the AND group)
+      return {
+        ...state,
+        [groupId]: {
+          ...group,
+          inProgress: true
+        }
       };
     }
 
@@ -314,55 +374,40 @@ export function addGranularSelection(groupId, uuid) {
 
 // Add granular selection for subgroup children
 export function addChildGranularSelection(groupId, childId, uuid) {
-  window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection ENTRY', { 
+  window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection called:', { 
     groupId, 
     childId, 
     uuid,
-    groupIdType: typeof groupId,
-    childIdType: typeof childId,
-    uuidType: typeof uuid 
+    currentStore: get(equipmentSelections)
   });
-  
+
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    window.GAS.log.d('[EquipSelect STORE] Found group', { 
+    window.GAS.log.d('AND GROUP DEBUG | Current group state:', { 
       group,
-      hasGroup: !!group,
-      hasSelectedItem: !!group?.selectedItem,
-      selectedItemType: group?.selectedItem?.type,
-      granularSelections: group?.granularSelections,
-      children: group?.selectedItem?.children?.map(c => ({id: c._id, type: c.type}))
+      selectedItem: group?.selectedItem,
+      children: group?.selectedItem?.children,
+      granularSelections: group?.granularSelections
     });
 
-    if (!group?.selectedItem) {
-      window.GAS.log.d('[EquipSelect STORE] No group or selected item found');
-      return selections;
-    }
+    if (!group?.selectedItem) return selections;
 
     const childItem = group.selectedItem.children?.find(c => c._id === childId);
-    window.GAS.log.d('[EquipSelect STORE] Found child item', { 
+    window.GAS.log.d('AND GROUP DEBUG | Found child item:', {
       childItem,
-      childId,
-      allChildren: group.selectedItem.children?.map(c => ({id: c._id, type: c.type})),
-      matchFound: !!childItem
+      allChildren: group.selectedItem.children
     });
 
-    if (!childItem) {
-      window.GAS.log.d('[EquipSelect STORE] No child item found');
-      return selections;
-    }
+    if (!childItem) return selections;
 
-    // Log the current state of granular selections before update
-    window.GAS.log.d('[EquipSelect STORE] Current granular selections', {
-      current: group.granularSelections,
-      currentChildren: group.granularSelections?.children,
-      currentChildSelections: group.granularSelections?.children?.[childId]
-    });
+    // Initialize the granular selections structure if it doesn't exist
+    const currentGranularSelections = group.granularSelections || { self: [], children: {} };
+    window.GAS.log.d('AND GROUP DEBUG | Current granular selections:', currentGranularSelections);
 
     const updatedSelections = {
-      ...group.granularSelections,
+      ...currentGranularSelections,
       children: {
-        ...group.granularSelections?.children,
+        ...currentGranularSelections.children,
         [childId]: {
           type: childItem.type,
           selections: [uuid]
@@ -370,11 +415,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
       }
     };
 
-    window.GAS.log.d('[EquipSelect STORE] Updated selections structure', {
-      updatedSelections,
-      updatedChildren: updatedSelections.children,
-      updatedChildSelections: updatedSelections.children[childId]
-    });
+    window.GAS.log.d('AND GROUP DEBUG | Updated selections:', updatedSelections);
 
     // For AND types, check if all children that need selections have them
     const isComplete = group.selectedItem.type === 'AND' ?
@@ -383,7 +424,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
         const childSelections = updatedSelections.children?.[child._id]?.selections || [];
         const hasEnoughSelections = childSelections.length >= getRequiredSelectionsCount(child);
         
-        window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection completion check for child', {
+        window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection completion check for child', {
           childId: child._id,
           childType: child.type,
           needsSelection,
@@ -402,7 +443,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
          updatedSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
       ) : false;
 
-    window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection completion status', {
+    window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection completion status', {
       isComplete,
       stillInProgress,
       groupType: group.selectedItem.type
@@ -431,12 +472,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
       } : {})
     };
 
-    // window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection final state', {
-    //   previousGroup: group,
-    //   updatedGroup: result[groupId],
-    //   fullResult: result
-    // });
-    window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection final state', result);
+    window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection final state', result);
 
     return result;
   });
