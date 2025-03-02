@@ -88,17 +88,65 @@
 
 
   function handleSelection(groupId, item) {
+    window.GAS.log.d('[StartingEquipment] handleSelection ENTRY', {
+      groupId,
+      itemDetails: {
+        id: item?._id,
+        type: item?.type,
+        label: item?.label
+      },
+      groupState: {
+        type: $equipmentSelections[groupId]?.type,
+        inProgress: $equipmentSelections[groupId]?.inProgress,
+        completed: $equipmentSelections[groupId]?.completed,
+        selectedItem: $equipmentSelections[groupId]?.selectedItem,
+        items: $equipmentSelections[groupId]?.items?.map(i => ({
+          id: i._id,
+          type: i.type,
+          isAND: i.type === 'AND'
+        }))
+      }
+    });
+    
     if (disabled) return;
     
     const group = $equipmentSelections[groupId];
     
+    window.GAS.log.d('[StartingEquipment] Group evaluation', {
+      isStandalone: group?.type === 'standalone',
+      hasItems: !!group?.items?.length,
+      firstItemType: group?.items?.[0]?.type,
+      isFirstItemAND: group?.items?.[0]?.type === 'AND',
+      isChoiceGroup: group?.type === 'choice'
+    });
+
     // For standalone groups with AND items
     if (group?.type === 'standalone' && group.items[0]?.type === 'AND') {
-      // Just select the AND item to trigger the granular selection
+      window.GAS.log.d('[StartingEquipment] Handling standalone AND group', {
+        andItemDetails: {
+          id: group.items[0]._id,
+          children: group.items[0].children?.map(c => ({
+            id: c._id,
+            type: c.type,
+            label: c.label
+          }))
+        },
+        currentGranularSelections: group.granularSelections
+      });
       selectEquipment(groupId, group.items[0]._id);
     } 
     // For choice groups
     else if (group?.type === 'choice') {
+      window.GAS.log.d('[StartingEquipment] Handling choice group', {
+        groupId,
+        selectedItemId: item._id,
+        selectedItemType: item.type,
+        isSelectedItemAND: item.type === 'AND',
+        groupItems: group.items.map(i => ({
+          id: i._id,
+          type: i.type
+        }))
+      });
       selectEquipment(groupId, item._id);
     }
   }

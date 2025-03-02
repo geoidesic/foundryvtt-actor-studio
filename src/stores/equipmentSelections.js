@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 
 // Store structure will track selections by group
 // { 
@@ -35,56 +35,170 @@ function needsGranularSelection(item) {
 
 // Helper functions to manage selections
 export function selectEquipment(groupId, itemId) {
+  window.GAS.log.d('[EquipSelect STORE] selectEquipment ENTRY', {
+    groupId,
+    itemId,
+    currentState: {
+      group: get(equipmentSelections)[groupId],
+      allGroups: Object.values(get(equipmentSelections)).map(g => ({
+        id: g.id,
+        type: g.type,
+        completed: g.completed,
+        inProgress: g.inProgress
+      }))
+    }
+  });
+
   equipmentSelections.update(selections => {
     const group = selections[groupId];
+    const selectedItem = group?.items.find(item => item._id === itemId);
+
+    window.GAS.log.d('[EquipSelect STORE] Selection details', {
+      group: {
+        id: group?.id,
+        type: group?.type,
+        inProgress: group?.inProgress,
+        completed: group?.completed
+      },
+      selectedItem: {
+        id: selectedItem?._id,
+        type: selectedItem?.type,
+        isAND: selectedItem?.type === 'AND',
+        children: selectedItem?.type === 'AND' ? 
+          selectedItem.children.map(c => ({
+            id: c._id,
+            type: c.type,
+            needsGranular: GRANULAR_TYPES.includes(c.type)
+          })) : null
+      },
+      needsGranularSelection: selectedItem ? needsGranularSelection(selectedItem) : null
+    });
+
     if (!group || !group.inProgress) return selections;
-    
-    const selectedItem = group.items.find(item => item._id === itemId);
     if (!selectedItem) return selections;
 
-    // For configurable items (weapons, armor, focus) or AND groups, set up for granular selection
     if (needsGranularSelection(selectedItem)) {
-      // Initialize granular selections structure
       let granularSelections;
       if (selectedItem.type === 'AND') {
-        // For AND groups, initialize each configurable child
+        const configurableChildren = selectedItem.children
+          .filter(child => GRANULAR_TYPES.includes(child.type));
+        
         granularSelections = {
-          children: selectedItem.children
-            .filter(child => GRANULAR_TYPES.includes(child.type))
-            .reduce((acc, child) => ({
-              ...acc,
-              [child._id]: {
-                type: child.type,
-                selections: []
-              }
-            }), {})
+          children: configurableChildren.reduce((acc, child) => ({
+            ...acc,
+            [child._id]: {
+              type: child.type,
+              selections: []
+            }
+          }), {})
         };
+
+        window.GAS.log.d('[EquipSelect STORE] Setting up AND group granular selections', {
+          configurableChildren: configurableChildren.map(c => ({
+            id: c._id,
+            type: c.type
+          })),
+          granularSelections,
+          childrenIds: Object.keys(granularSelections.children)
+        });
+
+        window.GAS.log.d('[EquipSelect STORE] AND group analysis', {
+          hasChildren: !!selectedItem.children?.length,
+          allChildrenAreLinked: selectedItem.children?.every(child => child.type === 'linked'),
+          children: selectedItem.children?.map(child => ({
+            id: child._id,
+            type: child.type,
+            isLinked: child.type === 'linked'
+          }))
+        });
+
+        // If all children are linked, treat it like a non-configurable item
+        if (selectedItem.children?.every(child => child.type === 'linked')) {
+          window.GAS.log.d('[EquipSelect STORE] AND group with all linked children - treating as complete');
+          
+          const sortedGroups = Object.values(selections)
+            .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+          
+          const nextGroup = sortedGroups.find(g => 
+            !g.completed && g.id !== groupId
+          );
+
+          return {
+            ...selections,
+            [groupId]: {
+              ...group,
+              selectedItem,
+              selectedItemId: itemId,
+              completed: true,
+              inProgress: false
+            },
+            ...(nextGroup ? {
+              [nextGroup.id]: {
+                ...nextGroup,
+                inProgress: true
+              }
+            } : {})
+          };
+        }
       } else {
-        // For regular configurable items, use self array
         granularSelections = { self: [] };
       }
 
+      const updatedGroup = {
+        ...group,
+        selectedItem,
+        selectedItemId: itemId,
+        completed: false,
+        inProgress: true,
+        granularSelections
+      };
+
+      window.GAS.log.d('[EquipSelect STORE] Updated group state for granular selection', {
+        previousState: {
+          completed: group.completed,
+          inProgress: group.inProgress,
+          hasGranularSelections: !!group.granularSelections
+        },
+        newState: {
+          completed: updatedGroup.completed,
+          inProgress: updatedGroup.inProgress,
+          hasGranularSelections: !!updatedGroup.granularSelections
+        }
+      });
+
       return {
         ...selections,
-        [groupId]: {
-          ...group,
-          selectedItem,
-          selectedItemId: itemId,
-          completed: false,
-          inProgress: true,
-          granularSelections
-        }
+        [groupId]: updatedGroup
       };
     }
 
-    // For non-configurable items in choice groups, complete and progress
+    // For non-configurable items in choice groups
     if (group.type === 'choice') {
-      // Find the next uncompleted group
       const sortedGroups = Object.values(selections)
         .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+      
       const nextGroup = sortedGroups.find(g => 
         !g.completed && g.id !== groupId
       );
+
+      window.GAS.log.d('[EquipSelect STORE] Choice group progression', {
+        currentGroup: {
+          id: group.id,
+          completed: group.completed,
+          inProgress: group.inProgress
+        },
+        nextGroup: nextGroup ? {
+          id: nextGroup.id,
+          type: nextGroup.type,
+          completed: nextGroup.completed,
+          inProgress: nextGroup.inProgress
+        } : null,
+        allGroups: sortedGroups.map(g => ({
+          id: g.id,
+          completed: g.completed,
+          inProgress: g.inProgress
+        }))
+      });
 
       return {
         ...selections,
