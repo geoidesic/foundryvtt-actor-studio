@@ -150,7 +150,7 @@ export const advancementQueueStore = () => {
     remove(next.id);
 
 
-    // @todo: temporary for debug
+    // @todo: temporary for debug - this causes the equipment selection happen before the advancements (and without the advancements tab)
     const actor = get(inProcess)?.actor;
     Hooks.call("gas.equipmentSelection", actor);
     return;
