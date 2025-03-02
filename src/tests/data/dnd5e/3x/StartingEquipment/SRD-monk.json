@@ -1,0 +1,61 @@
+[
+  {
+      "type": "OR",
+      "_id": "5yj0P4r9teJDnDtd",
+      "group": "",
+      "sort": 100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.osLzOwQdPtrK3rQH",
+      "_id": "R5tuRtaPonfjQCVU",
+      "group": "5yj0P4r9teJDnDtd",
+      "sort": 200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "simpleM",
+      "_id": "Mlf6kel8ws6xgDER",
+      "group": "5yj0P4r9teJDnDtd",
+      "sort": 300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "3TbVLmLPtjVaSh5O",
+      "group": "",
+      "sort": 400000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.XY8b594Dn7plACLL",
+      "_id": "AvDYtl0uvQsDuhnb",
+      "group": "3TbVLmLPtjVaSh5O",
+      "sort": 500000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.8KWz5DJbWUpNWniP",
+      "_id": "4QKQURCmIurbTAzp",
+      "group": "3TbVLmLPtjVaSh5O",
+      "sort": 600000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": 10,
+      "key": "Compendium.dnd5e.items.Item.3rCO8MTIdPGSW6IJ",
+      "_id": "AOYuulsULvsHbSLO",
+      "group": "",
+      "sort": 700000,
+      "requiresProficiency": false
+  }
+]

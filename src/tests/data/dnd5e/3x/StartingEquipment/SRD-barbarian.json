@@ -1,0 +1,77 @@
+[
+  {
+      "type": "OR",
+      "_id": "ibzIV7v9EHcUb8TP",
+      "group": "",
+      "sort": 100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.1Lxk6kmoRhG8qQ0u",
+      "_id": "6fTt5110T0AI6UGu",
+      "group": "ibzIV7v9EHcUb8TP",
+      "sort": 400000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "martialM",
+      "_id": "4dE11X5bLs1OUNgg",
+      "group": "ibzIV7v9EHcUb8TP",
+      "sort": 500000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "Qc9WbViMpWP8QWWY",
+      "group": "",
+      "sort": 200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd5e.items.Item.eO7Fbv5WBk5zvGOc",
+      "_id": "YE3Asa2h2sLH52t6",
+      "group": "Qc9WbViMpWP8QWWY",
+      "sort": 600000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "sim",
+      "_id": "hFCffUR4KAtVWSxs",
+      "group": "Qc9WbViMpWP8QWWY",
+      "sort": 700000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "AND",
+      "_id": "UYICcIEggAxtVjw9",
+      "group": "",
+      "sort": 300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.8KWz5DJbWUpNWniP",
+      "_id": "tCQ3ARfynhsldy40",
+      "group": "UYICcIEggAxtVjw9",
+      "sort": 800000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": 4,
+      "key": "Compendium.dnd5e.items.Item.DWLMnODrnHn8IbAG",
+      "_id": "MzzYDxTlR3mkfPmC",
+      "group": "UYICcIEggAxtVjw9",
+      "sort": 900000,
+      "requiresProficiency": false
+  }
+]

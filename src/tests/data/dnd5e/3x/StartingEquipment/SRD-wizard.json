@@ -1,0 +1,86 @@
+[
+  {
+      "type": "OR",
+      "_id": "Aj1qzubu2w9EwySy",
+      "group": "",
+      "sort": 100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.g2dWN7PQiMRYWzyk",
+      "_id": "2F4M1RbYS0Y5VSzH",
+      "group": "Aj1qzubu2w9EwySy",
+      "sort": 500000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.0E565kQUBmndJ1a2",
+      "_id": "5xnYEKKSQm7EsyZ5",
+      "group": "Aj1qzubu2w9EwySy",
+      "sort": 600000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "N1a4JG2AYEDyh7nU",
+      "group": "",
+      "sort": 200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.eZGmdOhaTWMicXPW",
+      "_id": "sBs3Qp7dmO7eLVpJ",
+      "group": "N1a4JG2AYEDyh7nU",
+      "sort": 700000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "arcane",
+      "_id": "oRSo3Ko1VcqLLNwf",
+      "group": "N1a4JG2AYEDyh7nU",
+      "sort": 800000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "5qAK3PT3xNBKe6ak",
+      "group": "",
+      "sort": 300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.UOE8RGOpgv2oWIvM",
+      "_id": "aWtirMXfzcZCxDOE",
+      "group": "5qAK3PT3xNBKe6ak",
+      "sort": 900000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.8KWz5DJbWUpNWniP",
+      "_id": "rD7fOao7HRj9FKp4",
+      "group": "5qAK3PT3xNBKe6ak",
+      "sort": 1000000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.LBajgahniRJbAgDr",
+      "_id": "aAtMAxLvrItU0XUe",
+      "group": "",
+      "sort": 400000,
+      "requiresProficiency": false
+  }
+]

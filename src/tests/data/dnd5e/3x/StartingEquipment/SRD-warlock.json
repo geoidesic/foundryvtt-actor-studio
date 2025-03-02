@@ -1,0 +1,127 @@
+[
+  {
+      "type": "OR",
+      "_id": "RPQn8qHHgFuv8iuq",
+      "group": "",
+      "sort": 100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "AND",
+      "_id": "MLmgWE8HTNyYUVCm",
+      "group": "RPQn8qHHgFuv8iuq",
+      "sort": 500000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.ddWvQRLmnnIS0eLF",
+      "_id": "0iXaDK1xGY1kplbv",
+      "group": "MLmgWE8HTNyYUVCm",
+      "sort": 700000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": 20,
+      "key": "Compendium.dnd5e.items.Item.SItCnYBqhzqBoaWG",
+      "_id": "bbVJesyEsqU9erZD",
+      "group": "MLmgWE8HTNyYUVCm",
+      "sort": 800000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "sim",
+      "_id": "K2etijekPhdrNlkA",
+      "group": "RPQn8qHHgFuv8iuq",
+      "sort": 900000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "Hmu9UVm2FLx8a0hP",
+      "group": "",
+      "sort": 200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.eZGmdOhaTWMicXPW",
+      "_id": "5gYnVm0OTjAAMqd0",
+      "group": "Hmu9UVm2FLx8a0hP",
+      "sort": 1000000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "arcane",
+      "_id": "nZok8xigEnLcyWLP",
+      "group": "Hmu9UVm2FLx8a0hP",
+      "sort": 1100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "A8YnFghs57uPBOZi",
+      "group": "",
+      "sort": 300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.UOE8RGOpgv2oWIvM",
+      "_id": "8GBnQwCSWcyuS3Dv",
+      "group": "A8YnFghs57uPBOZi",
+      "sort": 1150000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.XY8b594Dn7plACLL",
+      "_id": "M9kOyGGBcpwUMfB8",
+      "group": "A8YnFghs57uPBOZi",
+      "sort": 1200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "AND",
+      "_id": "KpUKt82Z6u8PNDMB",
+      "group": "",
+      "sort": 400000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.WwdpHLXGX5r8uZu5",
+      "_id": "E2VaqJAjcdI3qT9J",
+      "group": "KpUKt82Z6u8PNDMB",
+      "sort": 1300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "sim",
+      "_id": "U9v5V8RRZyxGGP0S",
+      "group": "KpUKt82Z6u8PNDMB",
+      "sort": 1400000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd5e.items.Item.0E565kQUBmndJ1a2",
+      "_id": "SKxshPIZaGUIe0hL",
+      "group": "KpUKt82Z6u8PNDMB",
+      "sort": 1500000,
+      "requiresProficiency": false
+  }
+]
