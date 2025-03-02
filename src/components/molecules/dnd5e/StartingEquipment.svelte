@@ -219,8 +219,19 @@
                     .flex3.left
                       +if("!group.completed")
                         span.group-label All of the following:
-                    +if("group.items[0].type === 'AND'")
-                      +each("group.items[0].children as item")
+                  +if("group.items[0].type === 'AND'")
+                    +each("group.items[0].children as item")
+                      .equipment-item.option(
+                        class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                        on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                      )
+                        .flexrow.justify-flexrow-vertical.no-wrap
+                          .flex0.relative.icon
+                            img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                          .flex2.left.name.black-link
+                            span {@html item.label}
+                    +else()
+                      +each("group.items as item")
                         .equipment-item.option(
                           class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
                           on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
@@ -230,17 +241,6 @@
                               img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                             .flex2.left.name.black-link
                               span {@html item.label}
-                      +else()
-                        +each("group.items as item")
-                          .equipment-item.option(
-                            class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
-                            on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
-                          )
-                            .flexrow.justify-flexrow-vertical.no-wrap
-                              .flex0.relative.icon
-                                img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                              .flex2.left.name.black-link
-                                span {@html item.label}
                 +else()
                   +each("group.items as item")
                     button.option(
