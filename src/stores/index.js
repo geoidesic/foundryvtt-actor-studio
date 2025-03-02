@@ -14,7 +14,6 @@ const upTabs = [
   { label: "Level Up", id: "level-up", component: "LevelUp" }
 ]
 
-
 export const race = writable(false); race.name = "race";
 export const subRace = writable(false); subRace.name = "subRace";
 export const characterClass = writable(false); characterClass.name = "characterClass";

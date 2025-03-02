@@ -33,179 +33,36 @@ function needsGranularSelection(item) {
   return GRANULAR_TYPES.includes(item.type) || SUBGROUP_TYPES.includes(item.type);
 }
 
+// Add this function to check if an item requires multiple selections
+export function getRequiredSelections(item) {
+  // If the item has a count > 1 and is not an AND type, it requires multiple selections
+  return item.count > 1 && item.type !== 'AND' ? item.count : 1;
+}
+
 // Helper functions to manage selections
 export function selectEquipment(groupId, itemId) {
-  window.GAS.log.d('[EquipSelect STORE] selectEquipment ENTRY', {
-    groupId,
-    itemId,
-    currentState: {
-      group: get(equipmentSelections)[groupId],
-      allGroups: Object.values(get(equipmentSelections)).map(g => ({
-        id: g.id,
-        type: g.type,
-        completed: g.completed,
-        inProgress: g.inProgress
-      }))
-    }
-  });
+  equipmentSelections.update(state => {
+    const group = state[groupId];
+    if (!group) return state;
 
-  equipmentSelections.update(selections => {
-    const group = selections[groupId];
-    const selectedItem = group?.items.find(item => item._id === itemId);
+    const selectedItem = group.items.find(i => i._id === itemId);
+    if (!selectedItem) return state;
 
-    window.GAS.log.d('[EquipSelect STORE] Selection details', {
-      group: {
-        id: group?.id,
-        type: group?.type,
-        inProgress: group?.inProgress,
-        completed: group?.completed
-      },
-      selectedItem: {
-        id: selectedItem?._id,
-        type: selectedItem?.type,
-        isAND: selectedItem?.type === 'AND',
-        children: selectedItem?.type === 'AND' ? 
-          selectedItem.children.map(c => ({
-            id: c._id,
-            type: c.type,
-            needsGranular: GRANULAR_TYPES.includes(c.type)
-          })) : null
-      },
-      needsGranularSelection: selectedItem ? needsGranularSelection(selectedItem) : null
-    });
+    // Find next group for progression
+    const sortedGroups = Object.values(state)
+      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    const nextGroup = sortedGroups.find(g => 
+      !g.completed && g.id !== groupId
+    );
 
-    if (!group || !group.inProgress) return selections;
-    if (!selectedItem) return selections;
-
-    if (needsGranularSelection(selectedItem)) {
-      let granularSelections;
-      if (selectedItem.type === 'AND') {
-        const configurableChildren = selectedItem.children
-          .filter(child => GRANULAR_TYPES.includes(child.type));
-        
-        granularSelections = {
-          children: configurableChildren.reduce((acc, child) => ({
-            ...acc,
-            [child._id]: {
-              type: child.type,
-              selections: []
-            }
-          }), {})
-        };
-
-        window.GAS.log.d('[EquipSelect STORE] Setting up AND group granular selections', {
-          configurableChildren: configurableChildren.map(c => ({
-            id: c._id,
-            type: c.type
-          })),
-          granularSelections,
-          childrenIds: Object.keys(granularSelections.children)
-        });
-
-        window.GAS.log.d('[EquipSelect STORE] AND group analysis', {
-          hasChildren: !!selectedItem.children?.length,
-          allChildrenAreLinked: selectedItem.children?.every(child => child.type === 'linked'),
-          children: selectedItem.children?.map(child => ({
-            id: child._id,
-            type: child.type,
-            isLinked: child.type === 'linked'
-          }))
-        });
-
-        // If all children are linked, treat it like a non-configurable item
-        if (selectedItem.children?.every(child => child.type === 'linked')) {
-          window.GAS.log.d('[EquipSelect STORE] AND group with all linked children - treating as complete');
-          
-          const sortedGroups = Object.values(selections)
-            .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-          
-          const nextGroup = sortedGroups.find(g => 
-            !g.completed && g.id !== groupId
-          );
-
-          return {
-            ...selections,
-            [groupId]: {
-              ...group,
-              selectedItem,
-              selectedItemId: itemId,
-              completed: true,
-              inProgress: false
-            },
-            ...(nextGroup ? {
-              [nextGroup.id]: {
-                ...nextGroup,
-                inProgress: true
-              }
-            } : {})
-          };
-        }
-      } else {
-        granularSelections = { self: [] };
-      }
-
-      const updatedGroup = {
-        ...group,
-        selectedItem,
-        selectedItemId: itemId,
-        completed: false,
-        inProgress: true,
-        granularSelections
-      };
-
-      window.GAS.log.d('[EquipSelect STORE] Updated group state for granular selection', {
-        previousState: {
-          completed: group.completed,
-          inProgress: group.inProgress,
-          hasGranularSelections: !!group.granularSelections
-        },
-        newState: {
-          completed: updatedGroup.completed,
-          inProgress: updatedGroup.inProgress,
-          hasGranularSelections: !!updatedGroup.granularSelections
-        }
-      });
-
+    // For regular linked items or AND groups, use the original simple selection logic
+    if (selectedItem.type === 'linked' || selectedItem.type === 'AND') {
       return {
-        ...selections,
-        [groupId]: updatedGroup
-      };
-    }
-
-    // For non-configurable items in choice groups
-    if (group.type === 'choice') {
-      const sortedGroups = Object.values(selections)
-        .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-      
-      const nextGroup = sortedGroups.find(g => 
-        !g.completed && g.id !== groupId
-      );
-
-      window.GAS.log.d('[EquipSelect STORE] Choice group progression', {
-        currentGroup: {
-          id: group.id,
-          completed: group.completed,
-          inProgress: group.inProgress
-        },
-        nextGroup: nextGroup ? {
-          id: nextGroup.id,
-          type: nextGroup.type,
-          completed: nextGroup.completed,
-          inProgress: nextGroup.inProgress
-        } : null,
-        allGroups: sortedGroups.map(g => ({
-          id: g.id,
-          completed: g.completed,
-          inProgress: g.inProgress
-        }))
-      });
-
-      return {
-        ...selections,
+        ...state,
         [groupId]: {
           ...group,
-          selectedItem,
           selectedItemId: itemId,
+          selectedItem,
           completed: true,
           inProgress: false
         },
@@ -218,7 +75,71 @@ export function selectEquipment(groupId, itemId) {
       };
     }
 
-    return selections;
+    // For weapon/armor/tool selections that need multiple of the same item
+    if (selectedItem.count > 1 && GRANULAR_TYPES.includes(selectedItem.type)) {
+      if (!group.selectedItemId) {
+        // First selection
+        return {
+          ...state,
+          [groupId]: {
+            ...group,
+            selectedItemId: itemId,
+            selectedItem,
+            inProgress: true,
+            remainingSelections: selectedItem.count - 1,
+            selections: [{ itemId, count: 1 }]
+          }
+        };
+      }
+
+      // Subsequent selections
+      const selections = [...(group.selections || [])];
+      const existingSelection = selections.find(s => s.itemId === itemId);
+      
+      if (existingSelection) {
+        existingSelection.count++;
+      } else {
+        selections.push({ itemId, count: 1 });
+      }
+
+      const remainingSelections = group.remainingSelections - 1;
+      const completed = remainingSelections === 0;
+
+      return {
+        ...state,
+        [groupId]: {
+          ...group,
+          selections,
+          remainingSelections,
+          completed,
+          inProgress: !completed
+        },
+        ...(completed && nextGroup ? {
+          [nextGroup.id]: {
+            ...nextGroup,
+            inProgress: true
+          }
+        } : {})
+      };
+    }
+
+    // Default case - single selection
+    return {
+      ...state,
+      [groupId]: {
+        ...group,
+        selectedItemId: itemId,
+        selectedItem,
+        completed: true,
+        inProgress: false
+      },
+      ...(nextGroup ? {
+        [nextGroup.id]: {
+          ...nextGroup,
+          inProgress: true
+        }
+      } : {})
+    };
   });
 }
 
@@ -256,15 +177,12 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
               // Handle granular selections for configurable children
               if (GRANULAR_TYPES.includes(child.type)) {
                 const childSelections = group.granularSelections?.self || [];
-                const count = child.count || 1;
-                for (let i = 0; i < count; i++) {
-                  childSelections.forEach(uuid => {
-                    selections.push({
-                      type: child.type,
-                      key: uuid
-                    });
+                childSelections.forEach(uuid => {
+                  selections.push({
+                    type: child.type,
+                    key: uuid
                   });
-                }
+                });
               }
             }
           }
@@ -280,14 +198,12 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
         selectedItem.children.forEach(child => {
           if (GRANULAR_TYPES.includes(child.type)) {
             const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
-            // Repeat based on count
-            const count = child.count || 1;
-            for(let i = 0; i < count; i++) {
-              selections.push(...childSelections.map(uuid => ({
+            childSelections.forEach(uuid => {
+              selections.push({
                 type: child.type,
                 key: uuid
-              })));
-            }
+              });
+            });
           } else {
             // Repeat based on count
             const count = child.count || 1;
@@ -316,14 +232,12 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
       const selections = [];
       
       if (group.granularSelections.self?.length) {
-        // Repeat based on count
-        const count = selectedItem.count || 1;
-        for(let i = 0; i < count; i++) {
-          selections.push(...group.granularSelections.self.map(uuid => ({
+        group.granularSelections.self.forEach(uuid => {
+          selections.push({
             type: selectedItem.type,
             key: uuid
-          })));
-        }
+          });
+        });
       }
       
       if (group.granularSelections.children) {
@@ -332,12 +246,14 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
             // Find the child item to get its count
             const childItem = selectedItem.children?.find(c => c._id === childId);
             const count = childItem?.count || 1;
-            for(let i = 0; i < count; i++) {
-              selections.push(...child.selections.map(uuid => ({
-                type: child.type,
-                key: uuid
-              })));
-            }
+            child.selections.forEach(uuid => {
+              for (let i = 0; i < count; i++) {
+                selections.push({
+                  type: child.type,
+                  key: uuid
+                });
+              }
+            });
           }
         });
       }
@@ -355,12 +271,15 @@ export function addGranularSelection(groupId, uuid) {
     const group = selections[groupId];
     window.GAS.log.d('[EquipSelect STORE] addGranularSelection groupId', groupId);
     window.GAS.log.d('[EquipSelect STORE] addGranularSelection group', group);
-    // window.GAS.log.d('[EquipSelect STORE] addGranularSelection group.selectedItem', group.selectedItem);
+    
     if (!group?.selectedItem) return selections;
 
+    // Initialize granularSelections if it doesn't exist
+    const currentGranularSelections = group.granularSelections || { self: [], children: {} };
+
     const updatedSelections = {
-      ...group.granularSelections,
-      self: [...(group.granularSelections.self || []), uuid]
+      ...currentGranularSelections,
+      self: [...(currentGranularSelections.self || []), uuid]
     };
 
     const isComplete = updatedSelections.self.length >= getRequiredSelectionsCount(group.selectedItem);

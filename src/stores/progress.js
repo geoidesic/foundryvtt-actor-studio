@@ -9,7 +9,11 @@ import {
   abilityRolls,
   isStandardArrayValues,
   subClassesForClass,
+  activeTab,
+  tabs
 } from './index';
+import { goldRoll } from './goldRoll';
+import { equipmentSelections } from './equipmentSelections';
 import { getDnd5eVersion, getSubclassLevel } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
 
@@ -60,6 +64,37 @@ function isSubclassForThisCharacterLevel(characterClass) {
   return subClassLevel && parseInt(newActorLevel) === parseInt(subClassLevel);
 }
 
+// Define progress calculation functions for different modes
+const progressCalculators = {
+  characterCreation: ({ race, background, characterClass, characterSubClass, abilityGenerationMethod, totalSteps }) => {
+    const completed = [race, background, characterClass, characterSubClass, abilityGenerationMethod]
+      .filter((value, index) => {
+        if (index === 4) {
+          return isAbilityGenerationMethodReady(abilityGenerationMethod);
+        }
+        return !!value;
+      }).length;
+
+    return (completed / totalSteps) * 100;
+  },
+
+  equipment: ({ equipmentSelections, goldRoll }) => {
+    const groups = Object.values(equipmentSelections);
+    window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
+    if (!goldRoll) return 0; // Nothing selected and no gold rolled
+    if (groups.length === 0) return 100; // No equipment to select, but gold is rolled
+    // Equipment is complete when all groups are complete AND gold is rolled
+    let completedGroups = groups.filter(group => group.completed).length ;
+    if(goldRoll > 0) {
+      completedGroups += 1;
+    }
+    const equipmentProgress = Math.round((completedGroups / (groups.length + 1)) * 100);
+    
+    // Only return 100 if both equipment and gold are done
+    return goldRoll > 0 ? equipmentProgress : Math.min(equipmentProgress, 99);
+  }
+};
+
 const stores = [
   race,
   characterClass,
@@ -88,21 +123,45 @@ export const totalSteps = derived(
   }
 );
 
-// Derive the progress value from the store states
+// Derive the progress value based on the current tab/mode
 export const progress = derived(
-  [...stores, totalSteps],
-  ([$race, $characterClass, $characterSubClass, $background, $abilityGenerationMethod, , , , $totalSteps]) => {
-    const completed = [$race, $background, $characterClass, $characterSubClass, $abilityGenerationMethod].filter((value, index) => {
-      if (index === 4) { // Index of abilityGenerationMethod
-        window.GAS.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
-        return isAbilityGenerationMethodReady($abilityGenerationMethod);
-      }
-      window.GAS.log.d(`[PROGRESS] val, idx, name`, value, index, stores[index]?.name);
-      return !!value;
-    }).length;
+  [
+    race,
+    characterClass,
+    characterSubClass,
+    background,
+    abilityGenerationMethod,
+    totalSteps,
+    activeTab,
+    equipmentSelections,
+    goldRoll
+  ],
+  ([
+    $race,
+    $characterClass,
+    $characterSubClass,
+    $background,
+    $abilityGenerationMethod,
+    $totalSteps,
+    $activeTab,
+    $equipmentSelections,
+    $goldRoll
+  ]) => {
+    // Select the appropriate calculator based on the active tab
+    const calculator = $activeTab === 'equipment' 
+      ? progressCalculators.equipment 
+      : progressCalculators.characterCreation;
 
-    window.GAS.log.d("[PROGRESS] completed", completed);
-    window.GAS.log.d("[PROGRESS] total", $totalSteps);
-    return (completed / $totalSteps) * 100;
+    // Pass relevant data to the calculator
+    return calculator({
+      race: $race,
+      background: $background,
+      characterClass: $characterClass,
+      characterSubClass: $characterSubClass,
+      abilityGenerationMethod: $abilityGenerationMethod,
+      totalSteps: $totalSteps,
+      equipmentSelections: $equipmentSelections,
+      goldRoll: $goldRoll
+    });
   }
 );

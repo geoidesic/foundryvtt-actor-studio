@@ -25,17 +25,19 @@
     changedCharacterCreationItems,
     level,
     tabs,
+    
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
+  import { flattenedSelections } from "~/src/stores/equipmentSelections";
   import {
     getLevelByDropType,
     itemHasAdvancementChoices,
     isAdvancementsForLevelInItem,
+    dropItemOnCharacter
   } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { log } from "../../helpers/Utility";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
@@ -343,33 +345,99 @@
 
   $: value = $actor?.name || "";
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
+
+  // Define valid tabs for footer visibility
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment'];
+  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
+
+  // Handler for adding equipment
+  const handleAddEquipment = async () => {
+    // Only proceed if we have gold rolled
+    if ($goldRoll <= 0) {
+      ui.notifications.warn("Please roll for starting gold first.");
+      return;
+    }
+
+    
+    
+    // Add starting gold to the actor
+    await $actorInGame.update({
+      "system.currency.gp": $goldRoll
+    });
+    const selections = get(flattenedSelections);
+    for (const selection of selections) { 
+      await dropItemOnCharacter($actorInGame, selection);
+    }
+
+    // Hooks.call("gas.close");
+
+    // await dropItemRegistry.advanceQueue(true);
+  };
+
+  // Derive whether equipment section is complete
+  $: isEquipmentComplete = $progress === 100 && $goldRoll > 0;
 </script>
 
 <template lang="pug">
-div
-  //- pre hasCharacterCreationChanges {$hasCharacterCreationChanges}
-  //- pre !hasCharacterCreationChanges {!$hasCharacterCreationChanges}
-  +if("$activeTab !== 'advancements'")  
+.footer-container
+  +if("FOOTER_TABS.includes($activeTab)")
     .flexrow.gap-10.pr-md.mt-sm
-      .flex2
-        .flexcol
-          .flexrow.gap-10
-            .flex0.right.mt-xs.no-wrap.ml-md
-              label Character Name
-            .flex2
-              input.left(type="text" value="{value}" on:input="{handleNameInput}")
-      +if("!$isLevelUp")
-        .flex1
-          ProgressBar(progress="{progress}")
-          +if("$progress != '100'")
-            +else()
-              +if("!$isActorCreated")
-                button.mt-xs(type="button" role="button" on:mousedown="{clickCreateHandler}") Create Character
-              +if("$isActorCreated && $hasCharacterCreationChanges")
-                button(type="button" role="button" on:mousedown="{clickUpdateHandler}") Update
-        +else()
-          button(disabled="{!$characterClass}" type="button" role="button" on:mousedown="{clickUpdateLevelUpHandler}" data-tooltip="{$characterClass ? '': 'First select a class to level up, or a multi-class to add'}") Update
-
+      //- Character name section
+      +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
+        .flex2
+          .flexcol
+            .flexrow.gap-10
+              .flex0.right.mt-xs.no-wrap.ml-md
+                label Character Name
+              .flex2
+                input.left(type="text" value="{value}" on:input="{handleNameInput}")
+      
+      //- Progress and buttons section
+      .flex1
+        +if("$isLevelUp")
+          .button-container
+            button(
+              disabled="{!$characterClass}"
+              type="button"
+              role="button"
+              on:mousedown="{clickUpdateLevelUpHandler}"
+              data-tooltip="{$characterClass ? '' : 'First select a class to level up, or a multi-class to add'}"
+            )
+              span Update
+        
+        +if("$activeTab === 'equipment'")
+          .progress-container
+            ProgressBar(progress="{progress}")
+            +if("isEquipmentComplete")
+              .button-container
+                button.mt-xs(
+                  type="button"
+                  role="button"
+                  on:mousedown="{handleAddEquipment}"
+                )
+                  span Add Equipment & Gold
+              
+        
+        +if("CHARACTER_CREATION_TABS.includes($activeTab)")
+          .progress-container
+            ProgressBar(progress="{progress}")
+            +if("$progress === 100")
+              .button-container
+                +if("!$isActorCreated")
+                  button.mt-xs(
+                    type="button"
+                    role="button"
+                    on:mousedown="{clickCreateHandler}"
+                  )
+                    span Create Character
+                  +else()
+                    +if("$hasCharacterCreationChanges")
+                      button(
+                        type="button"
+                        role="button"
+                        on:mousedown="{clickUpdateHandler}"
+                      )
+                        span Update
 </template>
 
 <style lang="sass">
@@ -387,4 +455,9 @@ button[disabled]
   &:hover
     background-color: #ccc
     color: #666
+.hint
+  font-size: 0.8em
+  color: var(--color-text-dark-secondary)
+  text-align: center
+  margin-top: 0.5rem
 </style>
