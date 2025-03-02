@@ -143,7 +143,7 @@
               .flex3.left
                 +if("group.type === 'choice'")
                   +if("group.completed")
-                    span.group-label One chosen:
+                    span.group-label Completed:
                   +if("!group.completed")
                     span.group-label Choose one...
               +if("!group.inProgress")
@@ -155,6 +155,11 @@
                   )
             .options
               +if("group.type === 'standalone' && group.inProgress")
+                .equipement-group
+                  .flexrow.justify-flexrow-vertical.no-wrap
+                    .flex3.left
+                      +if("!group.completed")
+                        span.group-label All of the following:
                 +each("group.items[0].type === 'AND' ? group.items[0].children : group.items as item")
                   .equipment-item.option(
                     class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
@@ -165,7 +170,6 @@
                         img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                       .flex2.left.name.black-link
                         +if("group.items[0].type === 'AND'")
-                          span.and-prefix and&nbsp;
                         span {@html item.label}
                 +else()
                   +each("group.items as item")
@@ -179,7 +183,7 @@
                           img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                         .flex2.left.name.black-link {@html item.label}
                         +if("group.selectedItemId === item._id && $selectedItems[group.id]")
-                          span.selected-name &nbsp;({$selectedItems[group.id].name})
+                          fspan.selected-name &nbsp;({$selectedItems[group.id].name})
 
 </template>
 

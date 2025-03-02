@@ -91,28 +91,40 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
       return hasSelection;
     })
     .flatMap(group => {
-      if(group.type === 'standalone') {
+      if (group.type === 'standalone') {
         const selections = [];
-        for(const item of group.items) {
-          if(item.type === 'linked') {
-            // Repeat based on count
+        for (const item of group.items) {
+          if (item.type === 'linked') {
             const count = item.count || 1;
-            for(let i = 0; i < count; i++) {
+            for (let i = 0; i < count; i++) {
               selections.push({
                 type: item.type,
                 key: item.key,
               });
             }
           } 
-          if(item.type === 'AND') {
-            for(const child of item.children) {
-              if(child.type === 'linked') {
-                // Repeat based on count
+          if (item.type === 'AND') {
+            // Handle linked children
+            for (const child of item.children) {
+              if (child.type === 'linked') {
                 const count = child.count || 1;
-                for(let i = 0; i < count; i++) {
+                for (let i = 0; i < count; i++) {
                   selections.push({
                     type: child.type,
                     key: child.key,
+                  });
+                }
+              }
+              // Handle granular selections for configurable children
+              if (GRANULAR_TYPES.includes(child.type)) {
+                const childSelections = group.granularSelections?.self || [];
+                const count = child.count || 1;
+                for (let i = 0; i < count; i++) {
+                  childSelections.forEach(uuid => {
+                    selections.push({
+                      type: child.type,
+                      key: uuid
+                    });
                   });
                 }
               }
