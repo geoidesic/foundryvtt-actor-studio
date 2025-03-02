@@ -44,6 +44,26 @@ export function selectEquipment(groupId, itemId) {
 
     // For configurable items (weapons, armor, focus) or AND groups, set up for granular selection
     if (needsGranularSelection(selectedItem)) {
+      // Initialize granular selections structure
+      let granularSelections;
+      if (selectedItem.type === 'AND') {
+        // For AND groups, initialize each configurable child
+        granularSelections = {
+          children: selectedItem.children
+            .filter(child => GRANULAR_TYPES.includes(child.type))
+            .reduce((acc, child) => ({
+              ...acc,
+              [child._id]: {
+                type: child.type,
+                selections: []
+              }
+            }), {})
+        };
+      } else {
+        // For regular configurable items, use self array
+        granularSelections = { self: [] };
+      }
+
       return {
         ...selections,
         [groupId]: {
@@ -52,7 +72,7 @@ export function selectEquipment(groupId, itemId) {
           selectedItemId: itemId,
           completed: false,
           inProgress: true,
-          granularSelections: selectedItem.type === 'AND' ? { children: {} } : { self: [] }
+          granularSelections
         }
       };
     }
@@ -261,30 +281,51 @@ export function addGranularSelection(groupId, uuid) {
 
 // Add granular selection for subgroup children
 export function addChildGranularSelection(groupId, childId, uuid) {
-  window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection ENTRY', { groupId, childId, uuid });
+  window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection ENTRY', { 
+    groupId, 
+    childId, 
+    uuid,
+    groupIdType: typeof groupId,
+    childIdType: typeof childId,
+    uuidType: typeof uuid 
+  });
   
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    // window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection group', { 
-    //   group,
-    //   hasSelectedItem: !!group?.selectedItem,
-    //   selectedItemType: group?.selectedItem?.type,
-    //   children: group?.selectedItem?.children
-    // });
+    window.GAS.log.d('[EquipSelect STORE] Found group', { 
+      group,
+      hasGroup: !!group,
+      hasSelectedItem: !!group?.selectedItem,
+      selectedItemType: group?.selectedItem?.type,
+      granularSelections: group?.granularSelections,
+      children: group?.selectedItem?.children?.map(c => ({id: c._id, type: c.type}))
+    });
 
-    if (!group?.selectedItem) return selections;
+    if (!group?.selectedItem) {
+      window.GAS.log.d('[EquipSelect STORE] No group or selected item found');
+      return selections;
+    }
 
-    // Get the actual child from the AND group's children
     const childItem = group.selectedItem.children?.find(c => c._id === childId);
-    // window.GAS.log.d('[EquipSelect STORE] addChildGranularSelection childItem', { 
-    //   childItem,
-    //   childId,
-    //   allChildren: group.selectedItem.children
-    // });
+    window.GAS.log.d('[EquipSelect STORE] Found child item', { 
+      childItem,
+      childId,
+      allChildren: group.selectedItem.children?.map(c => ({id: c._id, type: c.type})),
+      matchFound: !!childItem
+    });
 
-    if (!childItem) return selections;
+    if (!childItem) {
+      window.GAS.log.d('[EquipSelect STORE] No child item found');
+      return selections;
+    }
 
-    // Initialize or update the granular selections structure
+    // Log the current state of granular selections before update
+    window.GAS.log.d('[EquipSelect STORE] Current granular selections', {
+      current: group.granularSelections,
+      currentChildren: group.granularSelections?.children,
+      currentChildSelections: group.granularSelections?.children?.[childId]
+    });
+
     const updatedSelections = {
       ...group.granularSelections,
       children: {
@@ -295,6 +336,12 @@ export function addChildGranularSelection(groupId, childId, uuid) {
         }
       }
     };
+
+    window.GAS.log.d('[EquipSelect STORE] Updated selections structure', {
+      updatedSelections,
+      updatedChildren: updatedSelections.children,
+      updatedChildSelections: updatedSelections.children[childId]
+    });
 
     // For AND types, check if all children that need selections have them
     const isComplete = group.selectedItem.type === 'AND' ?

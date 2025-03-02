@@ -119,9 +119,33 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
 }, {});
 
 function handleSelection(groupId, option, parentGroup) {
+  window.GAS.log.d('[EquipSelect DETAIL] handleSelection ENTRY', {
+    groupId,
+    option,
+    parentGroup,
+    groupIdType: typeof groupId,
+    optionType: typeof option,
+    optionValue: typeof option === 'object' ? option.value : option
+  });
+
   const value = typeof option === 'object' ? option.value : option;
-  // Just use addGranularSelection - no need for special child handling
-  addGranularSelection(groupId, value);
+  
+  if (parentGroup) {
+    window.GAS.log.d('[EquipSelect DETAIL] Calling addChildGranularSelection with:', {
+      parentGroupId: parentGroup.id,
+      childId: groupId,
+      value,
+      fullParentGroup: parentGroup,
+      fullChildGroup: groupId
+    });
+    addChildGranularSelection(parentGroup.id, groupId._id, value);
+  } else {
+    window.GAS.log.d('[EquipSelect DETAIL] Calling addGranularSelection with:', {
+      groupId,
+      value
+    });
+    addGranularSelection(groupId, value);
+  }
 }
 
 /**
@@ -135,7 +159,24 @@ function handleSelection(groupId, option, parentGroup) {
  * @returns {function} - The selection handler
  */
 function createSelectionHandler(groupId, parentGroup) {
+  window.GAS.log.d('[EquipSelect DETAIL] Creating selection handler', {
+    groupId,
+    parentGroup,
+    groupIdType: typeof groupId,
+    hasParentGroup: !!parentGroup,
+    groupIdValue: groupId,
+    parentGroupValue: parentGroup
+  });
+  
   return function selectionHandler(option) {
+    window.GAS.log.d('[EquipSelect DETAIL] Selection handler called', {
+      groupId,
+      option,
+      parentGroup,
+      optionType: typeof option,
+      groupIdValue: groupId,
+      parentGroupValue: parentGroup
+    });
     handleSelection(groupId, option, parentGroup);
   }
 }
@@ -170,7 +211,7 @@ section
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.parentGroup.granularSelections?.children?.[group.selectedItem._id]?.selections?.[0]}"
               placeHolder="Select {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.id, group.parentGroup)}"
+              handler="{createSelectionHandler(group.selectedItem, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
           +if("!group.parentGroup")
