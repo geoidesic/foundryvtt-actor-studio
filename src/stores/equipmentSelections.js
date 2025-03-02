@@ -207,36 +207,60 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
   const result = Object.values($equipmentSelections)
     .filter(group => {
       const hasSelection = !!group.selectedItem || group.type === 'standalone';
+      window.GAS.log.d('[FlattenedSelections] Group filtering', {
+        groupId: group.id,
+        type: group.type,
+        hasSelection,
+        items: group.items
+      });
       return hasSelection;
     })
     .flatMap(group => {
+      window.GAS.log.d('[FlattenedSelections] Processing group', {
+        groupId: group.id,
+        groupType: group.type,
+        items: group.items?.map(item => ({
+          id: item._id,
+          type: item.type,
+          key: item.key,
+          count: item.count,
+          isAND: item.type === 'AND',
+          children: item.type === 'AND' ? item.children?.map(c => ({
+            id: c._id,
+            type: c.type,
+            key: c.key,
+            count: c.count
+          })) : null
+        })),
+        selectedItem: group.selectedItem,
+        granularSelections: group.granularSelections
+      });
+
+      const selections = [];
+
+      // For standalone groups, process all items
       if (group.type === 'standalone') {
-        const selections = [];
-        for (const item of group.items) {
-          if (item.type === 'linked') {
-            const count = item.count || 1;
-            for (let i = 0; i < count; i++) {
-              selections.push({
-                type: item.type,
-                key: item.key,
-              });
-            }
-          } 
+        group.items.forEach(item => {
+          // If it's an AND group, process its children
           if (item.type === 'AND') {
-            // Handle linked children
-            for (const child of item.children) {
+            window.GAS.log.d('[FlattenedSelections] Processing AND item in standalone', {
+              itemId: item._id,
+              children: item.children
+            });
+            
+            item.children.forEach(child => {
               if (child.type === 'linked') {
+                // For linked children, add them directly
                 const count = child.count || 1;
                 for (let i = 0; i < count; i++) {
                   selections.push({
                     type: child.type,
-                    key: child.key,
+                    key: child.key
                   });
                 }
-              }
-              // Handle granular selections for configurable children
-              if (GRANULAR_TYPES.includes(child.type)) {
-                const childSelections = group.granularSelections?.self || [];
+              } else if (GRANULAR_TYPES.includes(child.type)) {
+                // For configurable children, check granular selections
+                const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
                 childSelections.forEach(uuid => {
                   selections.push({
                     type: child.type,
@@ -244,82 +268,64 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
                   });
                 });
               }
+            });
+          } else if (item.type === 'linked') {
+            // Handle regular linked items
+            const count = item.count || 1;
+            for (let i = 0; i < count; i++) {
+              selections.push({
+                type: item.type,
+                key: item.key
+              });
             }
           }
-        }
+        });
+
+        window.GAS.log.d('[FlattenedSelections] Standalone group selections', {
+          groupId: group.id,
+          selections: selections.map(s => ({
+            type: s.type,
+            key: s.key
+          }))
+        });
+
         return selections;
       }
 
-      const selectedItem = group.selectedItem;
-      
-      // For AND types, include all children (either direct or through granular selection)
-      if (selectedItem.type === 'AND' && selectedItem.children) {
-        const selections = [];
-        selectedItem.children.forEach(child => {
-          if (GRANULAR_TYPES.includes(child.type)) {
-            const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
-            childSelections.forEach(uuid => {
+      // For choice groups with a selected item
+      if (group.selectedItem) {
+        if (GRANULAR_TYPES.includes(group.selectedItem.type)) {
+          if (group.granularSelections?.self?.length) {
+            group.granularSelections.self.forEach(uuid => {
               selections.push({
-                type: child.type,
+                type: group.selectedItem.type,
                 key: uuid
               });
             });
-          } else {
-            // Repeat based on count
-            const count = child.count || 1;
-            for(let i = 0; i < count; i++) {
-              selections.push(child);
-            }
           }
-        });
+        } else if (group.selectedItem.type === 'linked') {
+          const count = group.selectedItem.count || 1;
+          for (let i = 0; i < count; i++) {
+            selections.push({
+              type: group.selectedItem.type,
+              key: group.selectedItem.key
+            });
+          }
+        }
+
         return selections;
       }
 
-      // If no granular selections needed, just return the selected item
-      if (!group.granularSelections) {
-        if(selectedItem.type === 'linked') {
-          // Repeat based on count
-          const count = selectedItem.count || 1;
-          return Array(count).fill({
-            type: selectedItem.type,
-            key: selectedItem.key
-          });
-        }
-        return [];
-      }
-
-      // Handle granular selections
-      const selections = [];
-      
-      if (group.granularSelections.self?.length) {
-        group.granularSelections.self.forEach(uuid => {
-          selections.push({
-            type: selectedItem.type,
-            key: uuid
-          });
-        });
-      }
-      
-      if (group.granularSelections.children) {
-        Object.entries(group.granularSelections.children).forEach(([childId, child]) => {
-          if (child.selections?.length) {
-            // Find the child item to get its count
-            const childItem = selectedItem.children?.find(c => c._id === childId);
-            const count = childItem?.count || 1;
-            child.selections.forEach(uuid => {
-              for (let i = 0; i < count; i++) {
-                selections.push({
-                  type: child.type,
-                  key: uuid
-                });
-              }
-            });
-          }
-        });
-      }
-      
-      return selections;
+      return [];
     });
+
+  window.GAS.log.d('[FlattenedSelections] Final flattened result', {
+    resultCount: result.length,
+    items: result.map(item => ({
+      type: item.type,
+      key: item.key
+    }))
+  });
 
   return result;
 });

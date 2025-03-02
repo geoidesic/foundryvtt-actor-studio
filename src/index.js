@@ -138,6 +138,10 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   }
 });
 
+
+Hooks.on('renderCompendium', (pack, html, data ) => {
+  window.GAS.log.d('renderCompendium', pack);
+})
 Hooks.on("renderFolderConfig", (app, html, folder) => {
   window.GAS.log.d("folder", folder);
 })
