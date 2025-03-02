@@ -94,8 +94,12 @@
     
     // For standalone groups with AND items
     if (group?.type === 'standalone' && group.items[0]?.type === 'AND') {
-      // Select the AND item and set up granular selection for the clicked child
+      // Just select the AND item to trigger the granular selection
       selectEquipment(groupId, group.items[0]._id);
+    } 
+    // For choice groups
+    else if (group?.type === 'choice') {
+      selectEquipment(groupId, item._id);
     }
   }
 

@@ -119,15 +119,9 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
 }, {});
 
 function handleSelection(groupId, option, parentGroup) {
-  window.GAS.log.d('EQUIPMENT DETAIL | Selection Change:', { groupId, option, parentGroup });
   const value = typeof option === 'object' ? option.value : option;
-  if (parentGroup) {
-    // For AND group children, use addChildGranularSelection with the uuid directly
-    addChildGranularSelection(parentGroup.id, groupId, value);
-  } else {
-    // For regular selections, pass the uuid directly
-    addGranularSelection(groupId, value);
-  }
+  // Just use addGranularSelection - no need for special child handling
+  addGranularSelection(groupId, value);
 }
 
 /**

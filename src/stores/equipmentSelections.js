@@ -42,22 +42,34 @@ export function selectEquipment(groupId, itemId) {
     const selectedItem = group.items.find(item => item._id === itemId);
     if (!selectedItem) return selections;
 
-    // Initialize granular selections structure for AND items with configurable children
-    let granularSelections = null;
-    if (selectedItem.type === 'AND') {
-      granularSelections = {
-        children: selectedItem.children.reduce((acc, child) => {
-          if (GRANULAR_TYPES.includes(child.type)) {
-            acc[child._id] = {
-              type: child.type,
-              selections: []
-            };
+    // For choice groups with non-configurable items, complete and progress
+    if (group.type === 'choice' && !GRANULAR_TYPES.includes(selectedItem.type)) {
+      // Find the next uncompleted group
+      const sortedGroups = Object.values(selections)
+        .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+      const nextGroup = sortedGroups.find(g => 
+        !g.completed && g.id !== groupId
+      );
+
+      return {
+        ...selections,
+        [groupId]: {
+          ...group,
+          selectedItem,
+          selectedItemId: itemId,
+          completed: true,
+          inProgress: false
+        },
+        ...(nextGroup ? {
+          [nextGroup.id]: {
+            ...nextGroup,
+            inProgress: true
           }
-          return acc;
-        }, {})
+        } : {})
       };
     }
 
+    // For configurable items (like focus), just set up for granular selection
     return {
       ...selections,
       [groupId]: {
@@ -66,7 +78,7 @@ export function selectEquipment(groupId, itemId) {
         selectedItemId: itemId,
         completed: false,
         inProgress: true,
-        granularSelections
+        granularSelections: selectedItem.type === 'AND' ? { children: {} } : { self: [] }
       }
     };
   });
