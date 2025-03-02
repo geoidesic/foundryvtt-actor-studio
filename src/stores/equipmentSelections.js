@@ -42,8 +42,23 @@ export function selectEquipment(groupId, itemId) {
     const selectedItem = group.items.find(item => item._id === itemId);
     if (!selectedItem) return selections;
 
-    // For choice groups with non-configurable items, complete and progress
-    if (group.type === 'choice' && !GRANULAR_TYPES.includes(selectedItem.type)) {
+    // For configurable items (weapons, armor, focus) or AND groups, set up for granular selection
+    if (needsGranularSelection(selectedItem)) {
+      return {
+        ...selections,
+        [groupId]: {
+          ...group,
+          selectedItem,
+          selectedItemId: itemId,
+          completed: false,
+          inProgress: true,
+          granularSelections: selectedItem.type === 'AND' ? { children: {} } : { self: [] }
+        }
+      };
+    }
+
+    // For non-configurable items in choice groups, complete and progress
+    if (group.type === 'choice') {
       // Find the next uncompleted group
       const sortedGroups = Object.values(selections)
         .sort((a, b) => (a.sort || 0) - (b.sort || 0));
@@ -69,18 +84,7 @@ export function selectEquipment(groupId, itemId) {
       };
     }
 
-    // For configurable items (like focus), just set up for granular selection
-    return {
-      ...selections,
-      [groupId]: {
-        ...group,
-        selectedItem,
-        selectedItemId: itemId,
-        completed: false,
-        inProgress: true,
-        granularSelections: selectedItem.type === 'AND' ? { children: {} } : { self: [] }
-      }
-    };
+    return selections;
   });
 }
 
