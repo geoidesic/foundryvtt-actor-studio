@@ -89,9 +89,9 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
   if (!acc[type]) {
     acc[type] = allEquipmentItemsFromPacks
       .filter(item => {
-        window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
-        if (item.type !== type) return false;
-        if (item.type === 'weapon' && group.selectedItem?.key) {
+        // window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
+        if (type === 'weapon' && group.selectedItem?.key) {
+          if (item.type !== type) return false;
           // Handle composite weapon types
           if (group.selectedItem.key === 'sim') {
             return ['simpleM', 'simpleR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
@@ -105,6 +105,11 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
           }
           // Handle base item matching
           return item.system?.baseItem === group.selectedItem.key;
+        }
+        if(type === 'focus' && group.selectedItem?.key) {
+          // window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
+
+          return item.system?.properties?.includes('foc') && !item.system.properties?.includes('mgc');
         }
         return true;
       })
@@ -159,7 +164,7 @@ section
               src="{getEquipmentIcon(group.selectedItem.type)}" 
               alt="{group.selectedItem.type}"
             )
-          .flex2.left.name
+          .flex2.left.name.ml-sm
             span {group.selectedItem.label}
           .flex0.right
             button.cancel-button(on:click!="{handleCancelSelection(group)}")
