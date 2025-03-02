@@ -391,23 +391,44 @@ export function initializeGroup(groupId, groupData) {
     if (!selections[groupId] || 
         JSON.stringify(selections[groupId].items) !== JSON.stringify(groupData.items)) {
       
-      // Should be in progress if:
-      // 1. No other groups exist yet OR
-      // 2. No other groups are in progress or completed
-      const shouldBeInProgress = Object.keys(selections).length === 0 || 
-        !Object.values(selections).some(group => group.inProgress || group.completed);
+      // Check if any existing group is in progress or incomplete
+      const hasGroupInProgress = Object.values(selections).some(group => 
+        !group.completed || group.inProgress
+      );
+
+      // For standalone groups, check if all items are fixed (linked)
+      const isAutoComplete = groupData.type === 'standalone' && 
+        groupData.items.every(item => {
+          if (item.type === 'linked') return true;
+          if (item.type === 'AND') {
+            return item.children.every(child => child.type === 'linked');
+          }
+          return false;
+        });
+
+      // Find the next group if this one auto-completes
+      const nextGroup = isAutoComplete ? 
+        Object.values(selections)
+          .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+          .find(g => !g.completed) : null;
 
       return {
         ...selections,
         [groupId]: {
           id: groupId,
           ...groupData,
-          selectedItemId: null,
-          selectedItem: null,
-          completed: false,
-          inProgress: shouldBeInProgress,
+          selectedItemId: isAutoComplete ? groupData.items[0]._id : null,
+          selectedItem: isAutoComplete ? groupData.items[0] : null,
+          completed: isAutoComplete,
+          inProgress: !isAutoComplete && !hasGroupInProgress,
           granularSelections: null
-        }
+        },
+        ...(nextGroup && isAutoComplete ? {
+          [nextGroup.id]: {
+            ...nextGroup,
+            inProgress: true
+          }
+        } : {})
       };
     }
     return selections;
