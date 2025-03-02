@@ -8,6 +8,8 @@ let plannedItems = [];
 // Track the raw selections
 $: rawSelections = $flattenedSelections || [];
 
+$: window.GAS.log.d('PLANNED INVENTORY | flattenedSelections', $flattenedSelections);
+
 // Handle async updates when selections change and group identical items
 $: {
   Promise.all(rawSelections.map(async (selection) => {
@@ -30,7 +32,8 @@ $: {
           system: {
             ...item.system,
             quantity: 1
-          }
+          },
+          uuid: key
         };
       } else {
         acc[key].system.quantity = (acc[key].system.quantity || 1) + 1;
@@ -40,6 +43,11 @@ $: {
 
     plannedItems = Object.values(groupedItems);
   });
+}
+
+function getItemName(item) {
+  window.GAS.log.d('PLANNED INVENTORY | getItemName', item);
+  return `@UUID[${item?.uuid}]{${item?.name}}`
 }
 
 // $: window.GAS.log.d('[PlannedInventory] flattenedSelections', $flattenedSelections);
@@ -58,9 +66,9 @@ onMount(() => {
     thead
       tr
         th 
-        th {localize('GAS.Name')}
-        th {localize('GAS.Equipment.Weight')}
-        th {localize('GAS.Equipment.Quantity')}
+        th.white {localize('GAS.Item')}
+        th.white {localize('GAS.Equipment.Weight')}
+        th.white {localize('GAS.Equipment.Quantity')}
     tbody
       +if('plannedItems.length === 0')
         tr
@@ -73,7 +81,9 @@ onMount(() => {
                   img(src="{item.img}" width="32" height="32")
                   +else()
                     img(src="icons/svg/item-bag.svg" width="32" height="32")
-              td= "{item?.name || '--'}"
+              +await("TextEditor.enrichHTML(getItemName(item) || '')")
+                +then("Html")
+                  td= "{@html Html || '--'}"
               td.weight= "{item?.system?.weight?.value || 0}"
               td.quantity= "{item?.system?.quantity || 1}"
 </template>
