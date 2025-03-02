@@ -37,73 +37,38 @@ function needsGranularSelection(item) {
 export function selectEquipment(groupId, itemId) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    window.GAS.log.d('[EquipSelect STORE] selectEquipment group', group);
-    if (!group) return selections;
+    if (!group || !group.inProgress) return selections;
     
-    // Return early if group is not in progress
-    if (!group.inProgress) return selections;
-
-    // Find the selected item from the group's items
     const selectedItem = group.items.find(item => item._id === itemId);
-    // window.GAS.log.d('[EquipSelect STORE] selectEquipment selectedItem', selectedItem);
     if (!selectedItem) return selections;
 
-    // Find the next uncompleted group
-    const sortedGroups = Object.values(selections)
-      .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-    const nextGroup = sortedGroups.find(g => 
-      !g.completed && g.id !== groupId
-    );
-
-    const requiresGranular = GRANULAR_TYPES.includes(selectedItem.type);
-    const isSubgroup = SUBGROUP_TYPES.includes(selectedItem.type);
-    
-    // Initialize granular selections structure only for direct granular types
-    let granularSelections;
-    if (requiresGranular) {
-      granularSelections = { self: [] };
-    } else if (isSubgroup && selectedItem.type !== 'AND') {
-      granularSelections = { children: {} };
+    // Initialize granular selections structure for AND items with configurable children
+    let granularSelections = null;
+    if (selectedItem.type === 'AND') {
+      granularSelections = {
+        children: selectedItem.children.reduce((acc, child) => {
+          if (GRANULAR_TYPES.includes(child.type)) {
+            acc[child._id] = {
+              type: child.type,
+              selections: []
+            };
+          }
+          return acc;
+        }, {})
+      };
     }
 
-    // For AND types, we don't pre-initialize the granularSelections
-    // They will be created as selections are made
-
-    const result = {
+    return {
       ...selections,
       [groupId]: {
         ...group,
         selectedItem,
         selectedItemId: itemId,
-        // AND is complete only if all children that need selections have them
-        completed: !requiresGranular && (
-          selectedItem.type !== 'AND' || 
-          !selectedItem.children?.some(child => 
-            GRANULAR_TYPES.includes(child.type) && 
-            (!group.granularSelections?.children?.[child._id]?.selections?.length || 
-             group.granularSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
-          )
-        ),
-        inProgress: requiresGranular || (
-          selectedItem.type === 'AND' && 
-          selectedItem.children?.some(child => 
-            GRANULAR_TYPES.includes(child.type) && 
-            (!group.granularSelections?.children?.[child._id]?.selections?.length || 
-             group.granularSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
-          )
-        ),
-        granularSelections: granularSelections || group.granularSelections
-      },
-      ...(nextGroup && !requiresGranular && 
-          (selectedItem.type !== 'AND' || !selectedItem.children?.some(child => GRANULAR_TYPES.includes(child.type))) ? {
-        [nextGroup.id]: {
-          ...nextGroup,
-          inProgress: true
-        }
-      } : {})
+        completed: false,
+        inProgress: true,
+        granularSelections
+      }
     };
-    // window.GAS.log.d('[EquipSelect STORE] selectEquipment result', result);
-    return result;
   });
 }
 
@@ -414,10 +379,11 @@ export function initializeGroup(groupId, groupData) {
     if (!selections[groupId] || 
         JSON.stringify(selections[groupId].items) !== JSON.stringify(groupData.items)) {
       
-      // Set inProgress true only for the first unfinished group
-      const isFirstUnfinished = !Object.values(selections).some(group => 
-        !group.completed || group.inProgress
-      );
+      // Should be in progress if:
+      // 1. No other groups exist yet OR
+      // 2. No other groups are in progress or completed
+      const shouldBeInProgress = Object.keys(selections).length === 0 || 
+        !Object.values(selections).some(group => group.inProgress || group.completed);
 
       return {
         ...selections,
@@ -427,7 +393,8 @@ export function initializeGroup(groupId, groupData) {
           selectedItemId: null,
           selectedItem: null,
           completed: false,
-          inProgress: isFirstUnfinished
+          inProgress: shouldBeInProgress,
+          granularSelections: null
         }
       };
     }

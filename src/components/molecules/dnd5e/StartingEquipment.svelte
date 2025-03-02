@@ -21,30 +21,37 @@
   // Process and group equipment
   $: {
     if (startingEquipment?.length) {
-      startingEquipment.forEach(entry => {
-        // window.GAS.log.d("StartingEquipment entry", entry);
-        if (entry.type === 'OR') {
-          initializeGroup(entry._id, {
-            type: 'choice',
-            label: 'Choose one...',
-            items: startingEquipment.filter(item => item.group === entry._id),
-            sort: entry.sort
-          });
-        } else if (!entry.group) {
-          initializeGroup(entry._id || 'standalone', {
-            type: 'standalone',
-            label: entry.label,
-            items: [entry],
-            sort: entry.sort
-          });
-        }
-      });
+      startingEquipment
+        .sort((a, b) => {
+          // First sort by whether it's a standalone entry (not OR and no group)
+          if (a.type !== 'OR' && !a.group && (b.type === 'OR' || b.group)) return -1;
+          if (b.type !== 'OR' && !b.group && (a.type === 'OR' || a.group)) return 1;
+          // Then by sort value
+        })
+        .forEach(entry => {
+          // window.GAS.log.d("StartingEquipment entry", entry);
+          if (entry.type === 'OR') {
+            initializeGroup(entry._id, {
+              type: 'choice',
+              label: 'Choose one...',
+              items: startingEquipment.filter(item => item.group === entry._id),
+              sort: entry.sort
+            });
+          } else if (!entry.group) {
+            initializeGroup(entry._id || 'standalone', {
+              type: 'standalone',
+              label: entry.label,
+              items: [entry],
+              sort: entry.sort
+            });
+          }
+        });
     }
   }
 
   // Sort groups by their sort value
   $: sortedGroups = Object.values($equipmentSelections)
-    .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    // .sort((a, b) => (a.sort || 0) - (b.sort || 0));
 
 
   // Group items by type for specialized handling
@@ -82,8 +89,14 @@
 
   function handleSelection(groupId, item) {
     if (disabled) return;
-    // window.GAS.log.d("[Starting Equipment] handleSelection", { groupId, item });
-    selectEquipment(groupId, item._id);
+    
+    const group = $equipmentSelections[groupId];
+    
+    // For standalone groups with AND items
+    if (group?.type === 'standalone' && group.items[0]?.type === 'AND') {
+      // Select the AND item and set up granular selection for the clicked child
+      selectEquipment(groupId, group.items[0]._id);
+    }
   }
 
   function handleEditGroup(groupId) {
@@ -120,44 +133,49 @@
       
       //- Process each group
       +each("sortedGroups as group")
-        +if("group.type === 'choice'")
-          //- pre groupCompleted: {group.completed} groupInProgress: {group.inProgress}
-          +if("(group.completed || group.inProgress)")
-            .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
-              .flexrow.justify-flexrow-vertical.no-wrap
-                .flex3.left
+        +if("group.completed || group.inProgress")
+          .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+            .flexrow.justify-flexrow-vertical.no-wrap
+              .flex3.left
+                +if("group.type === 'choice'")
                   +if("group.completed")
                     span.group-label One chosen:
                   +if("!group.completed")
                     span.group-label Choose one...
-                +if("!group.inProgress")
-                  .flex0.right
-                    IconButton.option(
-                      on:click="{handleEditGroup(group.id)}"
-                      disabled="{disabled}"
-                      icon="fas fa-pencil"
-                    )
-              .options
-                +each("group.items as item")
-                  button.option(
-                    class="{getOptionClasses(group, item)}"
-                    on:click!="{handleSelection(group.id, item)}"
-                    disabled="{isOptionDisabled(group, item)}"
+              +if("!group.inProgress")
+                .flex0.right
+                  IconButton.option(
+                    on:click="{handleEditGroup(group.id)}"
+                    disabled="{disabled}"
+                    icon="fas fa-pencil"
+                  )
+            .options
+              +if("group.type === 'standalone' && group.inProgress")
+                +each("group.items[0].type === 'AND' ? group.items[0].children : group.items as item")
+                  .equipment-item.option(
+                    class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                    on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
                   )
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex0.relative.icon
                         img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                      .flex2.left.name.black-link {@html item.label}
-                      +if("group.selectedItemId === item._id && $selectedItems[group.id]")
-                        span.selected-name &nbsp;({$selectedItems[group.id].name})
-
-          +else()
-            +each("group.items as item")
-              .equipment-item.option.selected(class="{item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}")
-                .flexrow.justify-flexrow-vertical.no-wrap
-                  .flex0.relative.icon
-                    img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                  .flex2.left.name.black-link {@html item.label}
+                      .flex2.left.name.black-link
+                        +if("group.items[0].type === 'AND'")
+                          span.and-prefix and&nbsp;
+                        span {@html item.label}
+                +else()
+                  +each("group.items as item")
+                    button.option(
+                      class="{getOptionClasses(group, item)}"
+                      on:click!="{handleSelection(group.id, item)}"
+                      disabled="{isOptionDisabled(group, item)}"
+                    )
+                      .flexrow.justify-flexrow-vertical.no-wrap
+                        .flex0.relative.icon
+                          img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                        .flex2.left.name.black-link {@html item.label}
+                        +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                          span.selected-name &nbsp;({$selectedItems[group.id].name})
 
 </template>
 
