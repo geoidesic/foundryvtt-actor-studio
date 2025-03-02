@@ -111,6 +111,9 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
 
           return item.system?.properties?.includes('foc') && !item.system.properties?.includes('mgc');
         }
+        if(type === 'armor' && group.selectedItem?.key) {
+          return item.system?.type?.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
+        }
         return true;
       })
       .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
