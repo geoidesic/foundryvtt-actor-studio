@@ -172,6 +172,17 @@
     return classes.join(' ');
   }
 
+  function isGroupNonEditable(group) {
+    // Check if it's a standalone group and all items are linked type
+    return group.type === 'standalone' && group.items.every(item => {
+      if (item.type === 'linked') return true;
+      if (item.type === 'AND') {
+        return item.children.every(child => child.type === 'linked');
+      }
+      return false;
+    });
+  }
+
 </script>
 
 <template lang="pug">
@@ -192,9 +203,9 @@
                 +if("group.type === 'choice'")
                   +if("group.completed")
                     span.group-label Completed:
-                  +if("!group.completed")
-                    span.group-label Choose one...
-              +if("!group.inProgress")
+                    +else()
+                      span.group-label Choose one...
+              +if("!group.inProgress && !isGroupNonEditable(group)")
                 .flex0.right
                   IconButton.option(
                     on:click="{handleEditGroup(group.id)}"
@@ -203,22 +214,33 @@
                   )
             .options
               +if("group.type === 'standalone' && group.inProgress")
-                .equipement-group
+                .equipment-group
                   .flexrow.justify-flexrow-vertical.no-wrap
                     .flex3.left
                       +if("!group.completed")
                         span.group-label All of the following:
-                +each("group.items[0].type === 'AND' ? group.items[0].children : group.items as item")
-                  .equipment-item.option(
-                    class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
-                    on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
-                  )
-                    .flexrow.justify-flexrow-vertical.no-wrap
-                      .flex0.relative.icon
-                        img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                      .flex2.left.name.black-link
-                        +if("group.items[0].type === 'AND'")
-                        span {@html item.label}
+                    +if("group.items[0].type === 'AND'")
+                      +each("group.items[0].children as item")
+                        .equipment-item.option(
+                          class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                          on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                        )
+                          .flexrow.justify-flexrow-vertical.no-wrap
+                            .flex0.relative.icon
+                              img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                            .flex2.left.name.black-link
+                              span {@html item.label}
+                      +else()
+                        +each("group.items as item")
+                          .equipment-item.option(
+                            class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                            on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                          )
+                            .flexrow.justify-flexrow-vertical.no-wrap
+                              .flex0.relative.icon
+                                img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                              .flex2.left.name.black-link
+                                span {@html item.label}
                 +else()
                   +each("group.items as item")
                     button.option(
@@ -229,9 +251,10 @@
                       .flexrow.justify-flexrow-vertical.no-wrap
                         .flex0.relative.icon
                           img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                        .flex2.left.name.black-link {@html item.label}
-                        +if("group.selectedItemId === item._id && $selectedItems[group.id]")
-                          fspan.selected-name &nbsp;({$selectedItems[group.id].name})
+                        .flex2.left.name.black-link
+                          span {@html item.label}
+                          +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                            span.selected-name &nbsp;({$selectedItems[group.id].name})
 
 </template>
 
