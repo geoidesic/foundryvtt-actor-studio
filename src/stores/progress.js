@@ -19,26 +19,41 @@ import { getDnd5eVersion, getSubclassLevel } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
 
 
-// Sample helper function to process abilityGenerationMethod
-function isAbilityGenerationMethodReady(method) {
-  if (!method) {
-    return false;
-  }
+// Convert to derived store
+const isAbilityGenerationMethodReady = derived(
+  [abilityGenerationMethod, abilityRolls, pointBuy, isStandardArrayValues],
+  ([$abilityGenerationMethod, $abilityRolls, $pointBuy, $isStandardArrayValues]) => {
+    window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady called', {
+      method: $abilityGenerationMethod,
+      rolls: $abilityRolls,
+      pointBuy: $pointBuy,
+      standardArray: $isStandardArrayValues
+    });
 
-  switch (method) {
-    case 2:
-      // Check if points are allocated correctly
-      return get(pointBuy).scoreTotal === get(pointBuy).pointBuyLimit;
-    case 3:
-      // Check if all abilities are assigned
-      return Object.keys(get(abilityRolls)).length === 6;
-    case 4:
-      // Check if all rolls are assigned
-      return get(isStandardArrayValues);
-    default:
-      return true;
+    if (!$abilityGenerationMethod) {
+      return false;
+    }
+
+    const result = (() => {
+      switch ($abilityGenerationMethod) {
+        case 2:
+          // Check if points are allocated correctly
+          return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
+        case 3:
+          // Check if all abilities are assigned
+          return Object.keys($abilityRolls).length === 6;
+        case 4:
+          // Check if all rolls are assigned
+          return $isStandardArrayValues;
+        default:
+          return true;
+      }
+    })();
+
+    window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady result', result);
+    return result;
   }
-}
+);
 
 /**
  * @why: some classes don't have subclasses until later levels
@@ -68,15 +83,32 @@ function isSubclassForThisCharacterLevel(characterClass) {
 // Define progress calculation functions for different modes
 const progressCalculators = {
   characterCreation: ({ race, background, characterClass, characterSubClass, abilityGenerationMethod, totalSteps }) => {
+    window.GAS.log.d('[PROGRESS] characterCreation calculator called', {
+      race,
+      background,
+      characterClass,
+      characterSubClass,
+      abilityGenerationMethod,
+      totalSteps
+    });
+
     const completed = [race, background, characterClass, characterSubClass, abilityGenerationMethod]
       .filter((value, index) => {
         if (index === 4) {
-          return isAbilityGenerationMethodReady(abilityGenerationMethod);
+          const result = get(isAbilityGenerationMethodReady);
+          window.GAS.log.d('[PROGRESS] abilityGenerationMethod check result', result);
+          return result;
         }
         return !!value;
       }).length;
 
-    return (completed / totalSteps) * 100;
+    const progress = (completed / totalSteps) * 100;
+    window.GAS.log.d('[PROGRESS] characterCreation progress calculated', {
+      completed,
+      totalSteps,
+      progress
+    });
+    return progress;
   },
 
   equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete }) => {
@@ -149,7 +181,8 @@ export const progress = derived(
     activeTab,
     equipmentSelections,
     goldRoll,
-    areGoldChoicesComplete
+    areGoldChoicesComplete,
+    abilityRolls
   ],
   ([
     $race,
@@ -161,15 +194,22 @@ export const progress = derived(
     $activeTab,
     $equipmentSelections,
     $goldRoll,
-    $areGoldChoicesComplete
+    $areGoldChoicesComplete,
+    $abilityRolls
   ]) => {
+    window.GAS.log.d('[PROGRESS] progress store update triggered', {
+      activeTab: $activeTab,
+      abilityGenerationMethod: $abilityGenerationMethod,
+      abilityRolls: $abilityRolls
+    });
+
     // Select the appropriate calculator based on the active tab
     const calculator = $activeTab === 'equipment' 
       ? progressCalculators.equipment 
       : progressCalculators.characterCreation;
 
     // Pass relevant data to the calculator
-    return calculator({
+    const result = calculator({
       race: $race,
       background: $background,
       characterClass: $characterClass,
@@ -180,5 +220,8 @@ export const progress = derived(
       goldRoll: $goldRoll,
       areGoldChoicesComplete: $areGoldChoicesComplete
     });
+
+    window.GAS.log.d('[PROGRESS] progress store result', result);
+    return result;
   }
 );
