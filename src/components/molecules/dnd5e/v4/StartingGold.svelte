@@ -4,6 +4,7 @@
   import { goldRoll } from "~/src/stores/goldRoll";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import IconButton from "~/src/components/atoms/button/IconButton.svelte";
 
   export let characterClass;
   export let background;
@@ -13,6 +14,7 @@
   let classGoldWithEquipment = 0;
   let backgroundGoldOnly = 0;
   let backgroundGoldWithEquipment = 0;
+  let isEditing = false;
 
   // Function to extract gold value from description text
   function extractGoldFromDescription(description) {
@@ -49,20 +51,40 @@
   }
 
   function handleClassChoice(choice) {
-    console.log('Class choice clicked:', choice); // Debug log
+    if (disabled || ($goldChoices.fromClass.choice && !isEditing)) return;
+    console.log('Class choice clicked:', choice);
     const goldValue = choice === 'equipment' ? classGoldWithEquipment : classGoldOnly;
     setClassGoldChoice(choice, goldValue);
   }
 
   function handleBackgroundChoice(choice) {
-    console.log('Background choice clicked:', choice); // Debug log
+    if (disabled || ($goldChoices.fromBackground.choice && !isEditing)) return;
+    console.log('Background choice clicked:', choice);
     const goldValue = choice === 'equipment' ? backgroundGoldWithEquipment : backgroundGoldOnly;
     setBackgroundGoldChoice(choice, goldValue);
+  }
+
+  function makeClassChoiceHandler(choice) {
+    return function classChoiceHandler() {
+      handleClassChoice(choice);
+    };
+  }
+
+  function makeBackgroundChoiceHandler(choice) {
+    return function backgroundChoiceHandler() {
+      handleBackgroundChoice(choice);
+    };
+  }
+
+  function handleEdit() {
+    isEditing = !isEditing;
   }
 
   $: classChoice = $goldChoices.fromClass.choice;
   $: backgroundChoice = $goldChoices.fromBackground.choice;
   $: totalGold = parseInt($goldChoices.fromClass.goldValue) + parseInt($goldChoices.fromBackground.goldValue);
+  $: hasChoices = characterClass || background;
+  $: isComplete = classChoice && backgroundChoice;
 
   onMount(() => {
     // Initialize gold choices to null
@@ -79,22 +101,29 @@
 section.starting-gold
   .flexrow
     +if("!disabled")
-      .flex0.required(class="{!classChoice || !backgroundChoice ? 'active' : ''}")
+      .flex0.required(class!="{!classChoice || !backgroundChoice ? 'active' : ''}")
         span *
     .flex3
       h2.left
         span {localize('GAS.Equipment.Gold')}
+    +if("isComplete")
+      .flex0.right
+        IconButton.option(
+          on:click!="{handleEdit}"
+          disabled!="{disabled}"
+          icon="fas fa-pencil"
+        )
   
-  .flexcol.gold-section.gap-10(class="{disabled ? 'disabled' : ''}")
+  .flexcol.gold-section.gap-10(class!="{disabled ? 'disabled' : ''}")
     +if("characterClass")
       .equipment-group
         .flexrow.left
           span.group-label Class Options
         .options
           button.option(
-            class="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{() => handleClassChoice('equipment')}"
-            disabled="{disabled}"
+            class!="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeClassChoiceHandler('equipment')}"
+            disabled!="{disabled || (classChoice && !isEditing)}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -102,9 +131,9 @@ section.starting-gold
               .flex2.left.name
                 span Equipment + {classGoldWithEquipment} gp
           button.option(
-            class="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{() => handleClassChoice('gold')}"
-            disabled="{disabled}"
+            class!="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeClassChoiceHandler('gold')}"
+            disabled!="{disabled || (classChoice && !isEditing)}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -118,9 +147,9 @@ section.starting-gold
           span.group-label Background Options
         .options
           button.option(
-            class="{backgroundChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{() => handleBackgroundChoice('equipment')}"
-            disabled="{disabled}"
+            class!="{backgroundChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeBackgroundChoiceHandler('equipment')}"
+            disabled!="{disabled || (backgroundChoice && !isEditing)}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -128,9 +157,9 @@ section.starting-gold
               .flex2.left.name
                 span Equipment + {backgroundGoldWithEquipment} gp
           button.option(
-            class="{backgroundChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{() => handleBackgroundChoice('gold')}"
-            disabled="{disabled}"
+            class!="{backgroundChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
+            disabled!="{disabled || (backgroundChoice && !isEditing)}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -197,7 +226,7 @@ section.starting-gold
   transition: all 0.2s ease
   cursor: pointer
   
-  &:hover:not(.disabled, .selected)
+  &:hover:not(.disabled)
     background: rgba(0, 0, 0, 0.6)
     border-color: rgba(255, 255, 255, 0.2)
 
@@ -209,6 +238,13 @@ section.starting-gold
   &.disabled
     cursor: not-allowed
     opacity: 0.5
+
+  &.confirm
+    background: var(--color-positive)
+    border-color: var(--color-positive)
+    color: white
+    &:hover
+      background: var(--color-positive-dark)
 
 .icon
   min-width: 32px
@@ -233,4 +269,7 @@ section.starting-gold
   .value
     color: var(--color-text-highlight)
     font-weight: bold
+
+.mt-sm
+  margin-top: 0.5rem
 </style> 

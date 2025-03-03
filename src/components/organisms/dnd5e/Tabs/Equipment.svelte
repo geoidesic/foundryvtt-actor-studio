@@ -1,5 +1,6 @@
 <script>
   import { goldRoll } from "~/src/stores/goldRoll";
+  import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
@@ -14,8 +15,8 @@
   // Get equipment selection setting
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
-  // Track if gold has been rolled
-  $: hasRolledGold = $goldRoll > 0;
+  // Track if gold has been rolled/selected based on version
+  $: isGoldComplete = window.GAS.dnd5eVersion === 4 ? $areGoldChoicesComplete : $goldRoll > 0;
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
@@ -31,9 +32,9 @@
         section.equipment-flow
           +if("window.GAS.dnd5eVersion === 4")
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
-            +else
+            +else()
               StartingGold(characterClass="{$characterClass}" disabled="{false}")
-          +if("hasRolledGold")
+          +if("isGoldComplete")
             StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
