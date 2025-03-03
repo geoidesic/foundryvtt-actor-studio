@@ -46,40 +46,202 @@ const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelec
 // Get the currently selected items that need configuration
 $: configurableSelections = Object.values($equipmentSelections)
   .filter(group => {
-    // Check if this is an AND group with configurable children
-    if (group.selectedItem?.type === 'AND' && group.selectedItem.children) {
-      // Only include AND groups that have children needing configuration AND are in progress
-      return group.selectedItem.children.some(child => 
-        CONFIGURABLE_TYPES.includes(child.type) && 
-        (!group.granularSelections?.children?.[child._id]?.selections?.length || 
-         group.granularSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
-      ) && group.inProgress;
+    window.GAS.log.d('[EquipSelect DETAIL] Processing group:', {
+      id: group.id,
+      type: group.selectedItem?.type,
+      inProgress: group.inProgress,
+      hasSelectedItem: !!group.selectedItem,
+      selectedItemType: group.selectedItem?.type,
+      hasChildren: !!group.selectedItem?.children,
+      granularSelections: group.granularSelections,
+      parentType: group.selectedItem?.parent?.type,
+      fullGroup: group
+    });
+
+    // Skip if no selected item
+    if (!group.selectedItem) {
+      window.GAS.log.d('[EquipSelect DETAIL] Skipping group - no selection:', {
+        groupId: group.id
+      });
+      return false;
+    }
+
+    // For OR groups with selected AND children, check if the AND group needs configuration
+    if (group.selectedItem.parent?.type === 'OR' && group.selectedItem.type === 'AND') {
+      const hasConfigurableChildren = group.selectedItem.children?.some(child => {
+        const isConfigurable = CONFIGURABLE_TYPES.includes(child.type);
+        const childSelections = group.granularSelections?.children?.[child._id]?.selections;
+        const requiredCount = getRequiredSelectionsCount(child);
+        const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
+        
+        window.GAS.log.d('[EquipSelect DETAIL] OR->AND child evaluation:', {
+          childId: child._id,
+          childType: child.type,
+          isConfigurable,
+          hasSelections: !!childSelections?.length,
+          selectionCount: childSelections?.length,
+          requiredCount,
+          needsSelection
+        });
+        
+        return isConfigurable && needsSelection;
+      });
+
+      window.GAS.log.d('[EquipSelect DETAIL] OR->AND group evaluation:', {
+        groupId: group.id,
+        hasConfigurableChildren,
+        willInclude: hasConfigurableChildren
+      });
+
+      return hasConfigurableChildren;
+    }
+
+    // For direct OR group children that are configurable
+    if (group.selectedItem.parent?.type === 'OR') {
+      const isConfigurable = CONFIGURABLE_TYPES.includes(group.selectedItem.type);
+      const selfSelections = group.granularSelections?.self;
+      const requiredCount = getRequiredSelectionsCount(group.selectedItem);
+      const needsSelection = !selfSelections?.length || selfSelections.length < requiredCount;
+
+      window.GAS.log.d('[EquipSelect DETAIL] OR direct child evaluation:', {
+        groupId: group.id,
+        itemType: group.selectedItem.type,
+        isConfigurable,
+        hasSelections: !!selfSelections?.length,
+        selectionCount: selfSelections?.length,
+        requiredCount,
+        needsSelection,
+        willInclude: isConfigurable && needsSelection
+      });
+
+      return isConfigurable && needsSelection;
+    }
+
+    // Handle AND groups with configurable children
+    if (group.selectedItem.type === 'AND' && group.selectedItem.children) {
+      const hasConfigurableChildren = group.selectedItem.children.some(child => {
+        const isConfigurable = CONFIGURABLE_TYPES.includes(child.type);
+        const childSelections = group.granularSelections?.children?.[child._id]?.selections;
+        const requiredCount = getRequiredSelectionsCount(child);
+        const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
+        
+        window.GAS.log.d('[EquipSelect DETAIL] AND group child evaluation:', {
+          childId: child._id,
+          childType: child.type,
+          isConfigurable,
+          hasSelections: !!childSelections?.length,
+          selectionCount: childSelections?.length,
+          requiredCount,
+          needsSelection
+        });
+        
+        return isConfigurable && needsSelection;
+      });
+
+      window.GAS.log.d('[EquipSelect DETAIL] AND group evaluation result:', {
+        groupId: group.id,
+        hasConfigurableChildren,
+        willInclude: hasConfigurableChildren
+      });
+
+      return hasConfigurableChildren;
     }
     
-    // Regular check for configurable items - only include if they need selection
-    return group.selectedItem && 
-           CONFIGURABLE_TYPES.includes(group.selectedItem.type) && 
-           group.inProgress &&
-           (!group.granularSelections?.self?.length ||
-            group.granularSelections.self.length < getRequiredSelectionsCount(group.selectedItem));
+    // Regular check for configurable items
+    const isConfigurable = CONFIGURABLE_TYPES.includes(group.selectedItem.type);
+    const selfSelections = group.granularSelections?.self;
+    const requiredCount = getRequiredSelectionsCount(group.selectedItem);
+    const needsSelection = !selfSelections?.length || selfSelections.length < requiredCount;
+    
+    window.GAS.log.d('[EquipSelect DETAIL] Regular item evaluation:', {
+      groupId: group.id,
+      isConfigurable,
+      hasSelections: !!selfSelections?.length,
+      selectionCount: selfSelections?.length,
+      requiredCount,
+      needsSelection,
+      willInclude: isConfigurable && needsSelection
+    });
+
+    return isConfigurable && needsSelection;
   })
   .flatMap(group => {
+    window.GAS.log.d('[EquipSelect DETAIL] Processing filtered group for flatMap:', {
+      groupId: group.id,
+      type: group.selectedItem?.type,
+      hasChildren: !!group.selectedItem?.children,
+      fullGroup: group
+    });
+
     // If this is an AND group, create a config entry for each configurable child that needs selection
     if (group.selectedItem?.type === 'AND' && group.selectedItem.children) {
-      return group.selectedItem.children
-        .filter(child => 
-          CONFIGURABLE_TYPES.includes(child.type) &&
-          (!group.granularSelections?.children?.[child._id]?.selections?.length ||
-           group.granularSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
-        )
-        .map(child => ({
-          ...group,
-          selectedItem: child,
-          parentGroup: group
-        }));
+      const configurableChildren = group.selectedItem.children
+        .filter(child => {
+          const isConfigurable = CONFIGURABLE_TYPES.includes(child.type);
+          const childSelections = group.granularSelections?.children?.[child._id]?.selections;
+          const requiredCount = getRequiredSelectionsCount(child);
+          const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
+          
+          window.GAS.log.d('[EquipSelect DETAIL] AND group child in flatMap:', {
+            childId: child._id,
+            childType: child.type,
+            isConfigurable,
+            hasSelections: !!childSelections?.length,
+            selectionCount: childSelections?.length,
+            requiredCount,
+            needsSelection,
+            willInclude: isConfigurable && needsSelection,
+            fullChild: child
+          });
+          
+          return isConfigurable && needsSelection;
+        })
+        .map(child => {
+          const result = {
+            ...group,
+            selectedItem: child,
+            parentGroup: group
+          };
+          
+          window.GAS.log.d('[EquipSelect DETAIL] Created child config entry:', {
+            childId: child._id,
+            parentGroupId: group.id,
+            fullResult: result
+          });
+          
+          return result;
+        });
+
+      window.GAS.log.d('[EquipSelect DETAIL] AND group flatMap result:', {
+        groupId: group.id,
+        childCount: configurableChildren.length,
+        children: configurableChildren
+      });
+
+      return configurableChildren;
     }
+
+    // For OR groups, ensure we process the selected item
+    if (group.selectedItem.parent?.type === 'OR') {
+      window.GAS.log.d('[EquipSelect DETAIL] OR group item in flatMap:', {
+        groupId: group.id,
+        itemType: group.selectedItem.type,
+        isConfigurable: CONFIGURABLE_TYPES.includes(group.selectedItem.type)
+      });
+    }
+
+    window.GAS.log.d('[EquipSelect DETAIL] Regular item flatMap result:', {
+      groupId: group.id,
+      fullGroup: group
+    });
+
     return [group];
   });
+
+$: window.GAS.log.d('[EquipSelect DETAIL] Final configurableSelections:', {
+  count: configurableSelections.length,
+  selections: configurableSelections
+});
 
 // Filter equipment items by type for each configurable selection
 $: equipmentByType = configurableSelections.reduce((acc, group) => {
@@ -89,7 +251,7 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
   if (!acc[type]) {
     acc[type] = allEquipmentItemsFromPacks
       .filter(item => {
-        // window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
+        window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
         if (type === 'weapon' && group.selectedItem?.key) {
           if (item.type !== type) return false;
           // Handle composite weapon types
