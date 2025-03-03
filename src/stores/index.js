@@ -94,6 +94,7 @@ export function resetStores() {
   background.set(null);
   characterClass.set(null);
   characterSubClass.set(null);
+  abilityRolls.set(false);
   level.set(1);
   tabs.set(initialTabs);
   levelUpTabs.set(upTabs);
