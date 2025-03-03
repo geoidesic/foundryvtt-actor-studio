@@ -14,6 +14,7 @@ import {
 } from './index';
 import { goldRoll } from './goldRoll';
 import { equipmentSelections } from './equipmentSelections';
+import { areGoldChoicesComplete } from './goldChoices';
 import { getDnd5eVersion, getSubclassLevel } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
 
@@ -78,13 +79,26 @@ const progressCalculators = {
     return (completed / totalSteps) * 100;
   },
 
-  equipment: ({ equipmentSelections, goldRoll }) => {
+  equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete }) => {
     const groups = Object.values(equipmentSelections);
     window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
+    
+    // Handle v4 gold choices
+    if (window.GAS.dnd5eVersion === 4) {
+      if (!areGoldChoicesComplete) return 0; // Choices not made
+      if (groups.length === 0) return 100; // No equipment to select, but choices made
+      
+      // Equipment is complete when all groups are complete AND choices are made
+      const completedGroups = groups.filter(group => group.completed).length;
+      return Math.round((completedGroups / groups.length) * 100);
+    }
+    
+    // Handle v3 gold roll
     if (!goldRoll) return 0; // Nothing selected and no gold rolled
     if (groups.length === 0) return 100; // No equipment to select, but gold is rolled
+    
     // Equipment is complete when all groups are complete AND gold is rolled
-    let completedGroups = groups.filter(group => group.completed).length ;
+    let completedGroups = groups.filter(group => group.completed).length;
     if(goldRoll > 0) {
       completedGroups += 1;
     }
@@ -134,7 +148,8 @@ export const progress = derived(
     totalSteps,
     activeTab,
     equipmentSelections,
-    goldRoll
+    goldRoll,
+    areGoldChoicesComplete
   ],
   ([
     $race,
@@ -145,7 +160,8 @@ export const progress = derived(
     $totalSteps,
     $activeTab,
     $equipmentSelections,
-    $goldRoll
+    $goldRoll,
+    $areGoldChoicesComplete
   ]) => {
     // Select the appropriate calculator based on the active tab
     const calculator = $activeTab === 'equipment' 
@@ -161,7 +177,8 @@ export const progress = derived(
       abilityGenerationMethod: $abilityGenerationMethod,
       totalSteps: $totalSteps,
       equipmentSelections: $equipmentSelections,
-      goldRoll: $goldRoll
+      goldRoll: $goldRoll,
+      areGoldChoicesComplete: $areGoldChoicesComplete
     });
   }
 );

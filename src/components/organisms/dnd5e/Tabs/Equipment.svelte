@@ -3,8 +3,9 @@
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
-  import { characterClass, characterSubClass } from "~/src/stores/index";
+  import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
+  import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
   import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";
@@ -18,6 +19,7 @@
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
+  
 </script>
 
 <template lang="pug">
@@ -27,7 +29,10 @@
       .flex2.pr-sm.col-a
         h3 {localize('GAS.Equipment.Selection')}
         section.equipment-flow
-          StartingGold(characterClass="{$characterClass}" disabled="{false}")
+          +if("window.GAS.dnd5eVersion === 4")
+            StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
+            +else
+              StartingGold(characterClass="{$characterClass}" disabled="{false}")
           +if("hasRolledGold")
             StartingEquipment(startingEquipment="{$characterClass?.system?.startingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask
@@ -49,6 +54,7 @@
   display: flex
   flex-direction: column
   gap: 1rem
+
 
 section
   background: rgba(0, 0, 0, 0.05)

@@ -52,15 +52,24 @@
         }
       },
       "event_handlers": {
-        "description": "Event handlers in templates must reference functions defined in the script section, not inline arrow functions.",
+        "description": "Event handlers in templates must use the != operator to prevent HTML encoding of function calls and expressions. Never use arrow functions or the = operator for event handlers.",
         "example": {
-          "correct": `
-// In script:
-function handleClick(param) { ... }
-// In template:
-button(on:click='{handleClick(param)}'`,
-          "incorrect": `
-button(on:click='{() => doSomething(param)}'`
+          "correct": [
+            `// For function calls with parameters:
+button(on:click!="{handleClick(param)}")`,
+            `// For simple function references:
+button(on:click!="{handleClick})"`,
+            `// For attribute values that need expressions:
+div(class!="{isActive ? 'active' : ''}")`
+          ],
+          "incorrect": [
+            `// Never use arrow functions:
+button(on:click="{() => handleClick(param)}")`,
+            `// Never use = operator for function calls:
+button(on:click="{handleClick(param)}")`,
+            `// Never use = operator for expressions:
+div(class="{isActive ? 'active' : ''}")`
+          ]
         }
       }
     }
