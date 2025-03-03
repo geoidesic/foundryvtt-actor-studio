@@ -5,7 +5,8 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
-  import { startingEquipment, flattenedStartingEquipment } from "~/src/stores/startingEquipment";
+  import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
+  import { goldChoices } from "../../../../stores/goldChoices";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
@@ -22,8 +23,10 @@
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
 
-  $: window.GAS.log.d("Equipment startingEquipment", $startingEquipment);
-  $: window.GAS.log.d("Equipment flattenedStartingEquipment", $flattenedStartingEquipment);
+  $: window.GAS.log.d("Equipment goldChoices", $goldChoices);
+
+
+  $: window.GAS.log.d("Equipment compatibleStartingEquipment", $compatibleStartingEquipment);
   
 </script>
 
@@ -39,7 +42,7 @@
             +else()
               StartingGold(characterClass="{$characterClass}" disabled="{false}")
           +if("isGoldComplete")
-            StartingEquipment(startingEquipment="{$flattenedStartingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
+            StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         PlannedInventory

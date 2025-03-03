@@ -24,12 +24,13 @@
   $: {
     if (startingEquipment?.length) {
       startingEquipment
-        .sort((a, b) => {
-          // First sort by whether it's a standalone entry (not OR and no group)
-          if (a.type !== 'OR' && !a.group && (b.type === 'OR' || b.group)) return -1;
-          if (b.type !== 'OR' && !b.group && (a.type === 'OR' || a.group)) return 1;
-          // Then by sort value
-        })
+        // @deprecated: this breaks the order of the items for v4 in the flattenedStartingEquipment store
+        // .sort((a, b) => {
+        //   // First sort by whether it's a standalone entry (not OR and no group)
+        //   if (a.type !== 'OR' && !a.group && (b.type === 'OR' || b.group)) return -1;
+        //   if (b.type !== 'OR' && !b.group && (a.type === 'OR' || a.group)) return 1;
+        //   // Then by sort value
+        // })
         .forEach(entry => {
           // window.GAS.log.d("StartingEquipment entry", entry);
           if (entry.type === 'OR') {
