@@ -311,8 +311,30 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
               key: group.selectedItem.key
             });
           }
+        } else if (group.selectedItem.type === 'AND') {
+          // Process AND group children
+          group.selectedItem.children.forEach(child => {
+            if (child.type === 'linked') {
+              // For linked children, add them directly
+              const count = child.count || 1;
+              for (let i = 0; i < count; i++) {
+                selections.push({
+                  type: child.type,
+                  key: child.key
+                });
+              }
+            } else if (GRANULAR_TYPES.includes(child.type)) {
+              // For configurable children, check granular selections
+              const childSelections = group.granularSelections?.children?.[child._id]?.selections || [];
+              childSelections.forEach(uuid => {
+                selections.push({
+                  type: child.type,
+                  key: uuid
+                });
+              });
+            }
+          });
         }
-
         return selections;
       }
 
