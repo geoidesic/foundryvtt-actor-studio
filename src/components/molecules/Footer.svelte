@@ -29,6 +29,7 @@
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
+  import { combinedStartingEquipment } from "~/src/stores/startingEquipment";
   import {
     getLevelByDropType,
     itemHasAdvancementChoices,
@@ -253,12 +254,12 @@
       });
 
       // Handle starting equipment if enabled in settings
-      if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $characterClass.system?.startingEquipment?.length) {
+      if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $combinedStartingEquipment.length) {
         window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
         window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
         
         // Process standalone items first
-        const standaloneItems = $characterClass.system.startingEquipment.filter(item => !item.group);
+        const standaloneItems = $combinedStartingEquipment.filter(item => !item.group);
         window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
         for (const item of standaloneItems) {
           if (item.key) {
@@ -283,7 +284,7 @@
           window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
           
           // Find all items in this group
-          const groupItems = $characterClass.system.startingEquipment.filter(item => item.group === groupId);
+          const groupItems = $combinedStartingEquipment.filter(item => item.group === groupId);
           window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
           
           // Find the selected item
