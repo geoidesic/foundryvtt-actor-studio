@@ -1,54 +1,43 @@
 [
-  {
-      "type": "AND",
-      "requiresProficiency": false,
-      "_id": "FIqxCvfdb4YPaDyl",
-      "group": "",
-      "sort": 100000
-  },
-  {
-      "type": "linked",
-      "count": 2,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
-      "requiresProficiency": false,
-      "_id": "7B991PQwtEPst2lm",
-      "group": "FIqxCvfdb4YPaDyl",
-      "sort": 200000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulThievesToo",
-      "requiresProficiency": false,
-      "_id": "AlpgDfVKgcYd5rLC",
-      "group": "FIqxCvfdb4YPaDyl",
-      "sort": 300000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagCrowbar0000",
-      "requiresProficiency": false,
-      "_id": "8PuRM4pC5hnCsIxs",
-      "group": "FIqxCvfdb4YPaDyl",
-      "sort": 400000
-  },
-  {
-      "type": "linked",
-      "count": 2,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagPouch000000",
-      "requiresProficiency": false,
-      "_id": "mp0feeLVQbHaU276",
-      "group": "FIqxCvfdb4YPaDyl",
-      "sort": 500000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagClothesTrav",
-      "requiresProficiency": false,
-      "_id": "2txtXcXiPUM87Yb7",
-      "group": "FIqxCvfdb4YPaDyl",
-      "sort": 600000
-  }
-]
+    {
+        "type": "OR",
+        "requiresProficiency": false,
+        "_id": "iEStK5sr3bu18iLG",
+        "group": "",
+        "sort": 100000
+    },
+    {
+        "type": "AND",
+        "requiresProficiency": false,
+        "_id": "0Yx0DOCxeeNYZw7n",
+        "group": "iEStK5sr3bu18iLG",
+        "sort": 800000
+    },
+    {
+        "type": "linked",
+        "count": null,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbagExplorersPa",
+        "requiresProficiency": false,
+        "_id": "EFPVIxAZ7F488Wt8",
+        "group": "0Yx0DOCxeeNYZw7n",
+        "sort": 300000
+    },
+    {
+        "type": "linked",
+        "count": 4,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepHandaxe000",
+        "requiresProficiency": false,
+        "_id": "CF9oDnOKVLy0OehZ",
+        "group": "0Yx0DOCxeeNYZw7n",
+        "sort": 400000
+    },
+    {
+        "type": "linked",
+        "count": 1,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepGreataxe00",
+        "requiresProficiency": false,
+        "_id": "ubIakV0ZwY5Av8bB",
+        "group": "0Yx0DOCxeeNYZw7n",
+        "sort": 600000
+    }
+]x

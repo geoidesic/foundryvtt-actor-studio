@@ -1,0 +1,63 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "SE7gQkJVBVBLku2Z",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmLeatherArm",
+      "requiresProficiency": false,
+      "_id": "rkPZmPWx6nzImWwC",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmShield0000",
+      "requiresProficiency": false,
+      "_id": "9zoKn2Wfan8s4Zrw",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepSickle0000",
+      "requiresProficiency": false,
+      "_id": "CVZKjmb4PIYJViPx",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 400000
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "druidic",
+      "requiresProficiency": false,
+      "_id": "LSQ0jJVeVhuSyjFF",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagExplorersPa",
+      "requiresProficiency": false,
+      "_id": "anr8GUJzm5gPRqAR",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 600000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulHerbalismK",
+      "requiresProficiency": false,
+      "_id": "f6RriL1CTIForH9O",
+      "group": "SE7gQkJVBVBLku2Z",
+      "sort": 700000
+  }
+]

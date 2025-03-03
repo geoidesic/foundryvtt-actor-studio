@@ -1,0 +1,81 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "H3jVZpWr5rfZX6BH",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmLeatherArm",
+      "requiresProficiency": false,
+      "_id": "a5uNZ5i3Wkr3ArSg",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+      "requiresProficiency": false,
+      "_id": "uguY1ICYVysI5FNd",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepShortsword",
+      "requiresProficiency": false,
+      "_id": "0fHs18tKJmqxQtqv",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepShortbow00",
+      "requiresProficiency": false,
+      "_id": "G09ulNZRrt29qgTU",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": 20,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbamoArrows0000",
+      "requiresProficiency": false,
+      "_id": "6xP9mFhLJOLLE9xt",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 600000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagQuiver00000",
+      "requiresProficiency": false,
+      "_id": "xHDA0B0GHJuDOF4f",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 700000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulThievesToo",
+      "requiresProficiency": false,
+      "_id": "gczRNKxoXd20eUTQ",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 800000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagBurglarsPac",
+      "requiresProficiency": false,
+      "_id": "4tEh3PUpH9nhT646",
+      "group": "H3jVZpWr5rfZX6BH",
+      "sort": 900000
+  }
+]

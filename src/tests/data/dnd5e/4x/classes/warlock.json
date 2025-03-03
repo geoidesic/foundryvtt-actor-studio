@@ -1,0 +1,63 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "HNL3GVldnPCsg4BR",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmLeatherArm",
+      "requiresProficiency": false,
+      "_id": "E16bWj9PWbA3ZDHF",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepSickle0000",
+      "requiresProficiency": false,
+      "_id": "c2w1NtOevecavhT1",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+      "requiresProficiency": false,
+      "_id": "cbnBTbycZMQuhcSY",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbafcOrb0000000",
+      "requiresProficiency": false,
+      "_id": "O8EoDIxQhPCa9Y1L",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 600000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagBook0000000",
+      "requiresProficiency": false,
+      "_id": "azIjGwebr4IUGOUW",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 700000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagScholarsPac",
+      "requiresProficiency": false,
+      "_id": "QtlLMEGt8LF296xx",
+      "group": "HNL3GVldnPCsg4BR",
+      "sort": 800000
+  }
+]

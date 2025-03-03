@@ -1,0 +1,52 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "zcKhKDfR6l9mjjo0",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+      "requiresProficiency": false,
+      "_id": "Ac2gEqPAS8Y0xgxs",
+      "group": "zcKhKDfR6l9mjjo0",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbafcStaffalsoa",
+      "requiresProficiency": false,
+      "_id": "lVKJqhzrzUJbCutg",
+      "group": "zcKhKDfR6l9mjjo0",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagRobe0000000",
+      "requiresProficiency": false,
+      "_id": "01FYjSGd8b9I8peX",
+      "group": "zcKhKDfR6l9mjjo0",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagScholarsPac",
+      "requiresProficiency": false,
+      "_id": "ipKkaDAn6KnKgpVH",
+      "group": "zcKhKDfR6l9mjjo0",
+      "sort": 500000
+  },
+  {
+      "_id": "55XZWu7cay8zXGxa",
+      "group": "zcKhKDfR6l9mjjo0",
+      "sort": 600000,
+      "type": "OR",
+      "requiresProficiency": false
+  }
+]
