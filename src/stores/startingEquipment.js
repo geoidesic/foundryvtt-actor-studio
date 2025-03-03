@@ -2,19 +2,15 @@ import { derived, get, writable } from 'svelte/store';
 import { characterClass, background } from './index';
 
 // Base store for starting equipment
-const startingEquipment = writable({
-  fromClass: [],
-  fromBackground: []
-});
 
 // Derived store that automatically updates when class/background change
-const derivedStartingEquipment = derived(
+const startingEquipment = derived(
   [characterClass, background],
-  ([$class, $background], set) => {
-    startingEquipment.update(current => ({
-      fromClass: $class?.system?.startingEquipment || [],
-      fromBackground: $background?.system?.startingEquipment || []
-    }));
+  ([$class, $background]) => {
+      return {
+        fromClass: $class?.system?.startingEquipment || [],
+        fromBackground: $background?.system?.startingEquipment || []
+      }
   }
 );
 
@@ -28,7 +24,7 @@ const backgroundStartingEquipment = derived(startingEquipment, ($startingEquipme
 });
 
 // Combined flattened equipment for components that don't need source separation
-const combinedStartingEquipment = derived(startingEquipment, ($startingEquipment) => {
+const flattenedStartingEquipment = derived(startingEquipment, ($startingEquipment) => {
   return [...$startingEquipment.fromClass, ...$startingEquipment.fromBackground];
 });
 
@@ -44,6 +40,6 @@ export {
   startingEquipment,
   classStartingEquipment,
   backgroundStartingEquipment,
-  combinedStartingEquipment,
+  flattenedStartingEquipment,
   clearStartingEquipment
 };

@@ -18,6 +18,8 @@
     return $equipmentSelections[groupId];
   }
 
+  $: window.GAS.log.d("StartingEquipment startingEquipment", startingEquipment);
+
   // Process and group equipment
   $: {
     if (startingEquipment?.length) {

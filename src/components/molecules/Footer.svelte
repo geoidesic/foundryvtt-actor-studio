@@ -29,7 +29,7 @@
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
-  import { combinedStartingEquipment } from "~/src/stores/startingEquipment";
+  import { flattenedStartingEquipment } from "~/src/stores/startingEquipment";
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   
   import {
@@ -256,12 +256,12 @@
       });
 
       // Handle starting equipment if enabled in settings
-      // if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $combinedStartingEquipment.length) {
+      // if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $flattenedStartingEquipment.length) {
       //   window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
       //   window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
         
       //   // Process standalone items first
-      //   const standaloneItems = $combinedStartingEquipment.filter(item => !item.group);
+      //   const standaloneItems = $flattenedStartingEquipment.filter(item => !item.group);
       //   window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
       //   for (const item of standaloneItems) {
       //     if (item.key) {
@@ -286,7 +286,7 @@
       //     window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
           
       //     // Find all items in this group
-      //     const groupItems = $combinedStartingEquipment.filter(item => item.group === groupId);
+      //     const groupItems = $flattenedStartingEquipment.filter(item => item.group === groupId);
       //     window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
           
       //     // Find the selected item
