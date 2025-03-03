@@ -46,23 +46,11 @@ const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelec
 // Get the currently selected items that need configuration
 $: configurableSelections = Object.values($equipmentSelections)
   .filter(group => {
-    window.GAS.log.d('[EquipSelect DETAIL] Processing group:', {
-      id: group.id,
-      type: group.selectedItem?.type,
-      inProgress: group.inProgress,
-      hasSelectedItem: !!group.selectedItem,
-      selectedItemType: group.selectedItem?.type,
-      hasChildren: !!group.selectedItem?.children,
-      granularSelections: group.granularSelections,
-      parentType: group.selectedItem?.parent?.type,
-      fullGroup: group
-    });
+    
 
     // Skip if no selected item
     if (!group.selectedItem) {
-      window.GAS.log.d('[EquipSelect DETAIL] Skipping group - no selection:', {
-        groupId: group.id
-      });
+     
       return false;
     }
 
@@ -74,24 +62,12 @@ $: configurableSelections = Object.values($equipmentSelections)
         const requiredCount = getRequiredSelectionsCount(child);
         const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
         
-        window.GAS.log.d('[EquipSelect DETAIL] OR->AND child evaluation:', {
-          childId: child._id,
-          childType: child.type,
-          isConfigurable,
-          hasSelections: !!childSelections?.length,
-          selectionCount: childSelections?.length,
-          requiredCount,
-          needsSelection
-        });
+       
         
         return isConfigurable && needsSelection;
       });
 
-      window.GAS.log.d('[EquipSelect DETAIL] OR->AND group evaluation:', {
-        groupId: group.id,
-        hasConfigurableChildren,
-        willInclude: hasConfigurableChildren
-      });
+     
 
       return hasConfigurableChildren;
     }
@@ -103,16 +79,6 @@ $: configurableSelections = Object.values($equipmentSelections)
       const requiredCount = getRequiredSelectionsCount(group.selectedItem);
       const needsSelection = !selfSelections?.length || selfSelections.length < requiredCount;
 
-      window.GAS.log.d('[EquipSelect DETAIL] OR direct child evaluation:', {
-        groupId: group.id,
-        itemType: group.selectedItem.type,
-        isConfigurable,
-        hasSelections: !!selfSelections?.length,
-        selectionCount: selfSelections?.length,
-        requiredCount,
-        needsSelection,
-        willInclude: isConfigurable && needsSelection
-      });
 
       return isConfigurable && needsSelection;
     }
@@ -125,15 +91,6 @@ $: configurableSelections = Object.values($equipmentSelections)
         const requiredCount = getRequiredSelectionsCount(child);
         const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
         
-        window.GAS.log.d('[EquipSelect DETAIL] AND group child evaluation:', {
-          childId: child._id,
-          childType: child.type,
-          isConfigurable,
-          hasSelections: !!childSelections?.length,
-          selectionCount: childSelections?.length,
-          requiredCount,
-          needsSelection
-        });
         
         return isConfigurable && needsSelection;
       });
@@ -153,15 +110,6 @@ $: configurableSelections = Object.values($equipmentSelections)
     const requiredCount = getRequiredSelectionsCount(group.selectedItem);
     const needsSelection = !selfSelections?.length || selfSelections.length < requiredCount;
     
-    window.GAS.log.d('[EquipSelect DETAIL] Regular item evaluation:', {
-      groupId: group.id,
-      isConfigurable,
-      hasSelections: !!selfSelections?.length,
-      selectionCount: selfSelections?.length,
-      requiredCount,
-      needsSelection,
-      willInclude: isConfigurable && needsSelection
-    });
 
     return isConfigurable && needsSelection;
   })
@@ -181,18 +129,7 @@ $: configurableSelections = Object.values($equipmentSelections)
           const childSelections = group.granularSelections?.children?.[child._id]?.selections;
           const requiredCount = getRequiredSelectionsCount(child);
           const needsSelection = !childSelections?.length || childSelections.length < requiredCount;
-          
-          window.GAS.log.d('[EquipSelect DETAIL] AND group child in flatMap:', {
-            childId: child._id,
-            childType: child.type,
-            isConfigurable,
-            hasSelections: !!childSelections?.length,
-            selectionCount: childSelections?.length,
-            requiredCount,
-            needsSelection,
-            willInclude: isConfigurable && needsSelection,
-            fullChild: child
-          });
+     
           
           return isConfigurable && needsSelection;
         })
@@ -202,56 +139,32 @@ $: configurableSelections = Object.values($equipmentSelections)
             selectedItem: child,
             parentGroup: group
           };
-          
-          window.GAS.log.d('[EquipSelect DETAIL] Created child config entry:', {
-            childId: child._id,
-            parentGroupId: group.id,
-            fullResult: result
-          });
+         
           
           return result;
         });
 
-      window.GAS.log.d('[EquipSelect DETAIL] AND group flatMap result:', {
-        groupId: group.id,
-        childCount: configurableChildren.length,
-        children: configurableChildren
-      });
 
       return configurableChildren;
     }
 
     // For OR groups, ensure we process the selected item
     if (group.selectedItem.parent?.type === 'OR') {
-      window.GAS.log.d('[EquipSelect DETAIL] OR group item in flatMap:', {
-        groupId: group.id,
-        itemType: group.selectedItem.type,
-        isConfigurable: CONFIGURABLE_TYPES.includes(group.selectedItem.type)
-      });
+      
     }
 
-    window.GAS.log.d('[EquipSelect DETAIL] Regular item flatMap result:', {
-      groupId: group.id,
-      fullGroup: group
-    });
 
     return [group];
   });
 
-$: window.GAS.log.d('[EquipSelect DETAIL] Final configurableSelections:', {
-  count: configurableSelections.length,
-  selections: configurableSelections
-});
 
 // Filter equipment items by type for each configurable selection
 $: equipmentByType = configurableSelections.reduce((acc, group) => {
   const type = group.selectedItem.type;
-  window.GAS.log.d('EQUIPMENT DETAIL | Equipment By Type:', { type, group });
   //- accumulate the items by group type
   if (!acc[type]) {
     acc[type] = allEquipmentItemsFromPacks
       .filter(item => {
-        window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
         if (type === 'weapon' && group.selectedItem?.key) {
           if (item.type !== type) return false;
           // Handle composite weapon types
@@ -277,7 +190,6 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
           return item.system?.type?.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
         }
         if(type === 'tool' && group.selectedItem?.key) {
-          window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
           return item.type === type && item.system.type.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
         }
         return true;
@@ -288,31 +200,15 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
 }, {});
 
 function handleSelection(groupId, option, parentGroup) {
-  window.GAS.log.d('[EquipSelect DETAIL] handleSelection ENTRY', {
-    groupId,
-    option,
-    parentGroup,
-    groupIdType: typeof groupId,
-    optionType: typeof option,
-    optionValue: typeof option === 'object' ? option.value : option
-  });
+  
 
   const value = typeof option === 'object' ? option.value : option;
   
   if (parentGroup) {
-    window.GAS.log.d('[EquipSelect DETAIL] Calling addChildGranularSelection with:', {
-      parentGroupId: parentGroup.id,
-      childId: groupId,
-      value,
-      fullParentGroup: parentGroup,
-      fullChildGroup: groupId
-    });
+   
     addChildGranularSelection(parentGroup.id, groupId._id, value);
   } else {
-    window.GAS.log.d('[EquipSelect DETAIL] Calling addGranularSelection with:', {
-      groupId,
-      value
-    });
+    
     addGranularSelection(groupId, value);
   }
 }
@@ -328,24 +224,10 @@ function handleSelection(groupId, option, parentGroup) {
  * @returns {function} - The selection handler
  */
 function createSelectionHandler(groupId, parentGroup) {
-  window.GAS.log.d('[EquipSelect DETAIL] Creating selection handler', {
-    groupId,
-    parentGroup,
-    groupIdType: typeof groupId,
-    hasParentGroup: !!parentGroup,
-    groupIdValue: groupId,
-    parentGroupValue: parentGroup
-  });
+  
   
   return function selectionHandler(option) {
-    window.GAS.log.d('[EquipSelect DETAIL] Selection handler called', {
-      groupId,
-      option,
-      parentGroup,
-      optionType: typeof option,
-      groupIdValue: groupId,
-      parentGroupValue: parentGroup
-    });
+    
     handleSelection(groupId, option, parentGroup);
   }
 }
