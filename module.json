@@ -1,7 +1,7 @@
 {
     "title": "Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "1.6.8",
+    "version": "1.7.1",
     "styles": [
         "dist/style.css"
     ],
