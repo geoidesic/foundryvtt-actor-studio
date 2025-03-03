@@ -4,8 +4,8 @@
   import { goldRoll } from "~/src/stores/goldRoll";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
-
   export let characterClass;
   export let background;
   export let disabled = false;
@@ -69,6 +69,7 @@
 
   function handleEdit() {
     clearGoldChoices();
+    clearEquipmentSelections();
   }
 
   $: classChoice = $goldChoices.fromClass.choice;
@@ -97,36 +98,11 @@ section.starting-gold
         )
   
   .flexcol.gold-section.gap-10(class!="{disabled ? 'disabled' : ''}")
-    +if("characterClass")
-      .equipment-group
-        .flexrow.left
-          span.group-label Class Options
-        .options
-          button.option(
-            class!="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{makeClassChoiceHandler('equipment')}"
-            disabled!="{disabled}"
-          )
-            .flexrow.justify-flexrow-vertical.no-wrap
-              .flex0.relative.icon
-                i.fas.fa-sack-dollar
-              .flex2.left.name
-                span Equipment + {classGoldWithEquipment} gp
-          button.option(
-            class!="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
-            on:mousedown!="{makeClassChoiceHandler('gold')}"
-            disabled!="{disabled}"
-          )
-            .flexrow.justify-flexrow-vertical.no-wrap
-              .flex0.relative.icon
-                i.fas.fa-coins
-              .flex2.left.name
-                span {classGoldOnly} gp
     
     +if("background")
       .equipment-group
         .flexrow.left
-          span.group-label Background Options
+          .flex.group-label {background.name} Options
         .options
           button.option(
             class!="{backgroundChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
@@ -148,6 +124,32 @@ section.starting-gold
                 i.fas.fa-coins
               .flex2.left.name
                 span {backgroundGoldOnly} gp
+    
+    +if("characterClass")
+      .equipment-group
+        .flexrow.left
+          .flex.group-label {characterClass.name} Options
+        .options
+          button.option(
+            class!="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeClassChoiceHandler('equipment')}"
+            disabled!="{disabled}"
+          )
+            .flexrow.justify-flexrow-vertical.no-wrap
+              .flex0.relative.icon
+                i.fas.fa-sack-dollar
+              .flex2.left.name
+                span Equipment + {classGoldWithEquipment} gp
+          button.option(
+            class!="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            on:mousedown!="{makeClassChoiceHandler('gold')}"
+            disabled!="{disabled}"
+          )
+            .flexrow.justify-flexrow-vertical.no-wrap
+              .flex0.relative.icon
+                i.fas.fa-coins
+              .flex2.left.name
+                span {classGoldOnly} gp
     
     +if("classChoice && backgroundChoice")
       .equipment-group
@@ -189,7 +191,7 @@ section.starting-gold
 .group-label
   display: block
   font-size: 1em
-  color: var(--color-text-dark-secondary)
+  color: var(--dnd5e-color-gold)
   margin-bottom: 0.5rem
   font-style: italic
 
