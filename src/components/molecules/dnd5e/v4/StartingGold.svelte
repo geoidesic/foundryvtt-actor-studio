@@ -14,7 +14,6 @@
   let classGoldWithEquipment = 0;
   let backgroundGoldOnly = 0;
   let backgroundGoldWithEquipment = 0;
-  let isEditing = false;
 
   // Function to extract gold value from description text
   function extractGoldFromDescription(description) {
@@ -34,9 +33,6 @@
       classGoldOnly = characterClass.system.wealth || 0;
       // With equipment amount comes from description
       classGoldWithEquipment = extractGoldFromDescription(characterClass.system.description?.value) || 0;
-      
-      // If class changes, reset class choice
-      setClassGoldChoice(null, 0);
     }
     
     if (background) {
@@ -44,22 +40,17 @@
       backgroundGoldOnly = background.system.wealth || 0;
       // With equipment amount comes from description
       backgroundGoldWithEquipment = extractGoldFromDescription(background.system.description?.value) || 0;
-      
-      // If background changes, reset background choice
-      setBackgroundGoldChoice(null, 0);
     }
   }
 
   function handleClassChoice(choice) {
-    if (disabled || ($goldChoices.fromClass.choice && !isEditing)) return;
-    console.log('Class choice clicked:', choice);
+    if (disabled) return;
     const goldValue = choice === 'equipment' ? classGoldWithEquipment : classGoldOnly;
     setClassGoldChoice(choice, goldValue);
   }
 
   function handleBackgroundChoice(choice) {
-    if (disabled || ($goldChoices.fromBackground.choice && !isEditing)) return;
-    console.log('Background choice clicked:', choice);
+    if (disabled) return;
     const goldValue = choice === 'equipment' ? backgroundGoldWithEquipment : backgroundGoldOnly;
     setBackgroundGoldChoice(choice, goldValue);
   }
@@ -77,7 +68,7 @@
   }
 
   function handleEdit() {
-    isEditing = !isEditing;
+    clearGoldChoices();
   }
 
   $: classChoice = $goldChoices.fromClass.choice;
@@ -85,16 +76,7 @@
   $: totalGold = parseInt($goldChoices.fromClass.goldValue) + parseInt($goldChoices.fromBackground.goldValue);
   $: hasChoices = characterClass || background;
   $: isComplete = classChoice && backgroundChoice;
-
-  onMount(() => {
-    // Initialize gold choices to null
-    clearGoldChoices();
-  });
-
-  onDestroy(() => {
-    // Clean up gold choices when component is destroyed
-    clearGoldChoices();
-  });
+  $: showEditButton = classChoice && backgroundChoice;
 </script>
 
 <template lang="pug">
@@ -106,7 +88,7 @@ section.starting-gold
     .flex3
       h2.left
         span {localize('GAS.Equipment.Gold')}
-    +if("isComplete")
+    +if("showEditButton")
       .flex0.right
         IconButton.option(
           on:click!="{handleEdit}"
@@ -123,7 +105,7 @@ section.starting-gold
           button.option(
             class!="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('equipment')}"
-            disabled!="{disabled || (classChoice && !isEditing)}"
+            disabled!="{disabled}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -133,7 +115,7 @@ section.starting-gold
           button.option(
             class!="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
-            disabled!="{disabled || (classChoice && !isEditing)}"
+            disabled!="{disabled}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -149,7 +131,7 @@ section.starting-gold
           button.option(
             class!="{backgroundChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('equipment')}"
-            disabled!="{disabled || (backgroundChoice && !isEditing)}"
+            disabled!="{disabled}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -159,7 +141,7 @@ section.starting-gold
           button.option(
             class!="{backgroundChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
-            disabled!="{disabled || (backgroundChoice && !isEditing)}"
+            disabled!="{disabled}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
