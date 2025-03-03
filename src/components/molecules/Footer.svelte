@@ -30,7 +30,8 @@
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
   import { combinedStartingEquipment } from "~/src/stores/startingEquipment";
-  import { goldChoices, totalGoldFromChoices } from "~/src/stores/goldChoices";
+  import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
+  
   import {
     getLevelByDropType,
     itemHasAdvancementChoices,
@@ -485,7 +486,9 @@
   };
 
   // Derive whether equipment section is complete
-  $: isEquipmentComplete = $progress === 100 && $goldRoll > 0;
+  $: isEquipmentComplete = window.GAS.dnd5eVersion === 4 
+    ? ($progress === 100 && $areGoldChoicesComplete) 
+    : ($progress === 100 && $goldRoll > 0);
 </script>
 
 <template lang="pug">
