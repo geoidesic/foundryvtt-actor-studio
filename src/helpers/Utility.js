@@ -277,6 +277,11 @@ export function getPackFolders(pack, depth = 1) {
 
 export const getPacksFromSettings = (type) => {
   const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  // Return empty array if settings or type doesn't exist
+  if (!settings || !settings[type]) {
+    return [];
+  }
+
   let filteredPackNames = settings[type];
   const packs = [];
 

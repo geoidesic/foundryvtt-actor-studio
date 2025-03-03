@@ -31,7 +31,7 @@
     const roll = await new Roll(formula).evaluate();
     const className = characterClass?.name || "Character";
     const flavor = `Rolling starting gold for ${className}`;
-    await roll.toMessage({
+    roll.toMessage({
       flavor,
       speaker: ChatMessage.getSpeaker()
     }, {rollMode: game.settings.get('core', 'rollMode')});
