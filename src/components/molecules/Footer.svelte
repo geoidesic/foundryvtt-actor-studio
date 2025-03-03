@@ -256,58 +256,58 @@
       });
 
       // Handle starting equipment if enabled in settings
-      if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $combinedStartingEquipment.length) {
-        window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
-        window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
+      // if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $combinedStartingEquipment.length) {
+      //   window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
+      //   window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
         
-        // Process standalone items first
-        const standaloneItems = $combinedStartingEquipment.filter(item => !item.group);
-        window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
-        for (const item of standaloneItems) {
-          if (item.key) {
-            const itemData = await fromUuid(item.key);
-            if (itemData) {
-              window.GAS.log.d("[Starting Equipment] Adding standalone item:", itemData);
-              dropItemRegistry.add({
-                actor: $actorInGame,
-                id: `equipment_${item.key}`,
-                itemData: itemData,
-                isLevelUp: false,
-              });
-            }
-          }
-        }
+      //   // Process standalone items first
+      //   const standaloneItems = $combinedStartingEquipment.filter(item => !item.group);
+      //   window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
+      //   for (const item of standaloneItems) {
+      //     if (item.key) {
+      //       const itemData = await fromUuid(item.key);
+      //       if (itemData) {
+      //         window.GAS.log.d("[Starting Equipment] Adding standalone item:", itemData);
+      //         dropItemRegistry.add({
+      //           actor: $actorInGame,
+      //           id: `equipment_${item.key}`,
+      //           itemData: itemData,
+      //           isLevelUp: false,
+      //         });
+      //       }
+      //     }
+      //   }
 
-        // Process equipment selections from groups
-        const selections = Object.entries($equipmentSelections);
-        window.GAS.log.d("[Starting Equipment] Processing selections:", selections);
+      //   // Process equipment selections from groups
+      //   const selections = Object.entries($equipmentSelections);
+      //   window.GAS.log.d("[Starting Equipment] Processing selections:", selections);
         
-        for (const [groupId, selection] of selections) {
-          window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
+      //   for (const [groupId, selection] of selections) {
+      //     window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
           
-          // Find all items in this group
-          const groupItems = $combinedStartingEquipment.filter(item => item.group === groupId);
-          window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
+      //     // Find all items in this group
+      //     const groupItems = $combinedStartingEquipment.filter(item => item.group === groupId);
+      //     window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
           
-          // Find the selected item
-          const selectedItem = groupItems.find(item => item._id === selection.selectedItemId);
-          window.GAS.log.d("[Starting Equipment] Selected item:", selectedItem);
+      //     // Find the selected item
+      //     const selectedItem = groupItems.find(item => item._id === selection.selectedItemId);
+      //     window.GAS.log.d("[Starting Equipment] Selected item:", selectedItem);
           
-          if (selectedItem?.key) {
-            const itemData = await fromUuid(selectedItem.key);
-            if (itemData) {
-              window.GAS.log.d("[Starting Equipment] Adding selected item:", itemData);
-              dropItemRegistry.add({
-                actor: $actorInGame,
-                id: `equipment_${selectedItem.key}`,
-                itemData: itemData,
-                isLevelUp: false,
-                count: selection.count || 1,
-              });
-            }
-          }
-        }
-      }
+      //     if (selectedItem?.key) {
+      //       const itemData = await fromUuid(selectedItem.key);
+      //       if (itemData) {
+      //         window.GAS.log.d("[Starting Equipment] Adding selected item:", itemData);
+      //         dropItemRegistry.add({
+      //           actor: $actorInGame,
+      //           id: `equipment_${selectedItem.key}`,
+      //           itemData: itemData,
+      //           isLevelUp: false,
+      //           count: selection.count || 1,
+      //         });
+      //       }
+      //     }
+      //   }
+      // }
     }
 
     if ($characterSubClass) {
