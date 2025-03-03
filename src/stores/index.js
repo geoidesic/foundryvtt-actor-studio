@@ -1,5 +1,6 @@
 import { writable, get, derived } from 'svelte/store';;
 import { advancementQueueStore } from "~/src/stores/advancements";
+import { clearGoldChoices } from "~/src/stores/goldChoices";
 
 
 const initialTabs = [
@@ -105,4 +106,5 @@ export function resetStores() {
   preAdvancementSelections.set(null);
   goldRoll.set(0);
   readOnlyTabs.set([]);
+  clearGoldChoices();
 }
