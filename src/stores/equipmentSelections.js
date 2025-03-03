@@ -51,6 +51,14 @@ export function selectEquipment(groupId, itemId) {
     const group = state[groupId];
     if (!group) return state;
 
+    // Prevent additional selections if:
+    // 1. The group is completed and not being edited
+    // 2. The group has a selected item and is in progress (handling granular selection)
+    if ((group.completed && !group.inProgress) || 
+        (group.selectedItemId && group.inProgress)) {
+      return state;
+    }
+
     const selectedItem = group.items.find(i => i._id === itemId);
     if (!selectedItem) return state;
 
@@ -76,7 +84,8 @@ export function selectEquipment(groupId, itemId) {
           selectedItemId: itemId,
           selectedItem,
           completed: false,
-          inProgress: true
+          inProgress: true,
+          granularSelections: { self: [], children: {} } // Reset granular selections
         }
       };
     }
@@ -106,7 +115,8 @@ export function selectEquipment(groupId, itemId) {
           selectedItemId: itemId,
           selectedItem,
           completed: !hasGranularChildren,
-          inProgress: hasGranularChildren
+          inProgress: hasGranularChildren,
+          granularSelections: hasGranularChildren ? { self: [], children: {} } : null // Reset granular selections for AND groups
         },
         ...((!hasGranularChildren && nextGroup) ? {
           [nextGroup.id]: {
@@ -130,7 +140,8 @@ export function selectEquipment(groupId, itemId) {
         ...state,
         [groupId]: {
           ...group,
-          inProgress: true
+          inProgress: true,
+          completed: false
         }
       };
     }
@@ -146,8 +157,10 @@ export function selectEquipment(groupId, itemId) {
             selectedItemId: itemId,
             selectedItem,
             inProgress: true,
+            completed: false,
             remainingSelections: selectedItem.count - 1,
-            selections: [{ itemId, count: 1 }]
+            selections: [{ itemId, count: 1 }],
+            granularSelections: { self: [], children: {} } // Reset granular selections
           }
         };
       }
@@ -191,7 +204,8 @@ export function selectEquipment(groupId, itemId) {
         selectedItemId: itemId,
         selectedItem,
         completed: true,
-        inProgress: false
+        inProgress: false,
+        granularSelections: null // Reset granular selections
       },
       ...(nextGroup ? {
         [nextGroup.id]: {

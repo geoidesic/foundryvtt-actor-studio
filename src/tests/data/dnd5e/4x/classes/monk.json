@@ -1,131 +1,61 @@
 [
-  {
-      "type": "OR",
-      "requiresProficiency": false,
-      "_id": "bT680hdYfCJkbk1M",
-      "group": "",
-      "sort": 100000
-  },
-  {
-      "type": "AND",
-      "requiresProficiency": false,
-      "_id": "NgcVsnjvVJsL3xLw",
-      "group": "bT680hdYfCJkbk1M",
-      "sort": 200000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmChainMail0",
-      "requiresProficiency": false,
-      "_id": "2AgjcVGUTGP1cqCS",
-      "group": "NgcVsnjvVJsL3xLw",
-      "sort": 400000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepGreatsword",
-      "requiresProficiency": false,
-      "_id": "B4b5Em0xc9EDUtan",
-      "group": "NgcVsnjvVJsL3xLw",
-      "sort": 500000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepFlail00000",
-      "requiresProficiency": false,
-      "_id": "eMuasr6qhYhh0zsn",
-      "group": "NgcVsnjvVJsL3xLw",
-      "sort": 600000
-  },
-  {
-      "type": "linked",
-      "count": 8,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepJavelin000",
-      "requiresProficiency": false,
-      "_id": "iLcbTWDnJuSDtfC1",
-      "group": "NgcVsnjvVJsL3xLw",
-      "sort": 700000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagDungeoneers",
-      "requiresProficiency": false,
-      "_id": "HXnWybFbmiQJ7jxw",
-      "group": "NgcVsnjvVJsL3xLw",
-      "sort": 800000
-  },
-  {
-      "type": "AND",
-      "requiresProficiency": false,
-      "_id": "mXHlWriN3u7VGUmQ",
-      "group": "bT680hdYfCJkbk1M",
-      "sort": 300000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmStuddedLea",
-      "requiresProficiency": false,
-      "_id": "07VK1qiy28AWgHWE",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 900000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepScimitar00",
-      "requiresProficiency": false,
-      "_id": "q8p43JwNYPAJFk0v",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1000000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepShortsword",
-      "requiresProficiency": false,
-      "_id": "Z0BQ8xiUO9TdCpeY",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1100000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepLongbow000",
-      "requiresProficiency": false,
-      "_id": "7UT2I5hEuyETwaw8",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1200000
-  },
-  {
-      "type": "linked",
-      "count": 20,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbamoArrows0000",
-      "requiresProficiency": false,
-      "_id": "RAZO2ywuqreGQheI",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1300000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagQuiver00000",
-      "requiresProficiency": false,
-      "_id": "jzEWEiEKl0djfd2u",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1400000
-  },
-  {
-      "type": "linked",
-      "count": null,
-      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagDungeoneers",
-      "requiresProficiency": false,
-      "_id": "gf3zQAZHgglaMuN1",
-      "group": "mXHlWriN3u7VGUmQ",
-      "sort": 1500000
-  }
+    {
+        "type": "AND",
+        "requiresProficiency": false,
+        "_id": "z3xcULs5Q70zNQ2D",
+        "group": "",
+        "sort": 100000
+    },
+    {
+        "type": "linked",
+        "count": null,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepSpear00000",
+        "requiresProficiency": false,
+        "_id": "O0MjTQnMYC8Xq3AM",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 200000
+    },
+    {
+        "type": "linked",
+        "count": 5,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+        "requiresProficiency": false,
+        "_id": "0ZcOXGUX7x39CPpk",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 300000
+    },
+    {
+        "type": "OR",
+        "requiresProficiency": false,
+        "_id": "ncjqhMc9uV04Fsot",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 400000
+    },
+    {
+        "type": "tool",
+        "count": null,
+        "key": "art",
+        "requiresProficiency": false,
+        "_id": "OXoYOVMKJDenBZFc",
+        "group": "ncjqhMc9uV04Fsot",
+        "sort": 500000
+    },
+    {
+        "type": "tool",
+        "count": null,
+        "key": "music",
+        "requiresProficiency": false,
+        "_id": "RF2oOqFXh93aM6dA",
+        "group": "ncjqhMc9uV04Fsot",
+        "sort": 600000
+    },
+    {
+        "type": "linked",
+        "count": null,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbagExplorersPa",
+        "requiresProficiency": false,
+        "_id": "YZ87ItdbDaRpBDQ2",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 700000
+    }
 ]
