@@ -29,7 +29,7 @@ const flattenedStartingEquipment = derived(startingEquipment, ($startingEquipmen
 });
 
 const compatibleStartingEquipment = derived([classStartingEquipment, backgroundStartingEquipment, goldChoices], ([$classStartingEquipment, $backgroundStartingEquipment, $goldChoices]) => {
-  return window.GAS.dnd5eVersion < 4 ? $classStartingEquipment 
+  return window.GAS.dnd5eVersion < 4  && window.GAS.dnd5eRules === "2024" ? $classStartingEquipment 
   : $goldChoices.fromClass.choice !== 'gold' && $goldChoices.fromBackground.choice !== 'gold' ? [...$classStartingEquipment, ...$backgroundStartingEquipment]
   : $goldChoices.fromClass.choice !== 'gold' ? $classStartingEquipment
   : $goldChoices.fromBackground.choice !== 'gold' ? $backgroundStartingEquipment

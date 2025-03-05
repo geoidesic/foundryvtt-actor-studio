@@ -8,9 +8,7 @@ export default class SubclassLevelPlugin {
    */
   static init() {
     
-
-    const dnd5eVersion = game.system.version.split('.')[0];
-    if (dnd5eVersion > 3) {
+    if (window.GAS.dnd5eVersion > 3) {
       window.GAS.log.i('Subclass Level Plugin is not supported for DND5E version 3 and above, as it is now handled by the DND5E system.');
       return false;
     }

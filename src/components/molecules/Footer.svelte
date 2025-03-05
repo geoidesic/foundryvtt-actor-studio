@@ -356,7 +356,7 @@
   // Handler for adding equipment
   const handleAddEquipment = async () => {
     // For v4, check if choices are complete
-    if (window.GAS.dnd5eVersion === 4) {
+    if (window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === "2024") {
       const choices = get(goldChoices);
       if (!choices.fromClass.choice || !choices.fromBackground.choice) {
         ui.notifications.warn("Please make gold choices for both class and background first.");

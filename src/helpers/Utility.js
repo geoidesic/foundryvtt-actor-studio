@@ -49,6 +49,13 @@ export const getDnd5eVersion = () => {
   return Number(system.version.split('.')[0]); // Returns 3 or 4
 };
 
+export const getDndRulesVersion = () => {
+  if (getDnd5eVersion() === 3) {
+    return "2014";
+  } 
+  return game.settings.get("dnd5e", "rulesVersion") === "modern" ? "2024" : "2014";
+};
+
 export function getLevelByDropType(actor, droppedItem) {
   window.GAS.log.d('getLevelByDropType', droppedItem);
   window.GAS.log.d('actor', actor);

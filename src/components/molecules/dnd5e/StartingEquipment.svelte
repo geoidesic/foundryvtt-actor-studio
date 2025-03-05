@@ -85,9 +85,7 @@
   // $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
   // $: window.GAS.log.d("StartingEquipment sortedGroups", sortedGroups);
   // $: window.GAS.log.d("StartingEquipment groupedByType", groupedByType);
-
-  $: dnd5eVersion = window.GAS.dnd5eVersion;
-  $: console.log('$equipmentSelections', $equipmentSelections);
+  // $: window.GAS.log.d('$equipmentSelections', $equipmentSelections);
 
 
   function handleSelection(groupId, item) {

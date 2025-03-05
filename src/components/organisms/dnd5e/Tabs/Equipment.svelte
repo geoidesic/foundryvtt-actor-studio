@@ -18,7 +18,7 @@
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
   // Track if gold has been rolled/selected based on version
-  $: isGoldComplete = window.GAS.dnd5eVersion === 4 ? $areGoldChoicesComplete : $goldRoll > 0;
+  $: isGoldComplete = window.GAS.dnd5eVersion === 4  && window.GAS.dnd5eRules === "2024" ? $areGoldChoicesComplete : $goldRoll > 0;
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
@@ -37,7 +37,7 @@
       .flex2.pr-sm.col-a
         h3 {localize('GAS.Equipment.Selection')}
         section.equipment-flow
-          +if("window.GAS.dnd5eVersion === 4")
+          +if("window.GAS.dnd5eVersion === 4 && dndRulesVersion === '2024'")
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
             +else()
               StartingGold(characterClass="{$characterClass}" disabled="{false}")

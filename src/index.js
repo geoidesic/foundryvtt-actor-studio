@@ -8,7 +8,7 @@ import packageJson from '../package.json';
 import manifestJson from '../module.json';
 
 import { MODULE_ID } from '~/src/helpers/constants';
-import { userHasRightPermissions, log, getAllPackIdsFromAllSettings, getDnd5eVersion } from '~/src/helpers/Utility'
+import { userHasRightPermissions, log, getAllPackIdsFromAllSettings, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 import { initLevelup } from '~/src/plugins/level-up';
 import { get } from 'svelte/store';
@@ -24,6 +24,7 @@ Hooks.once("init", (app, html, data) => {
   log.level = log.DEBUG;
   
   window.GAS.dnd5eVersion = getDnd5eVersion();
+  window.GAS.dnd5eRules = getDndRulesVersion();
   
   window.GAS.log.i(`Starting System ${MODULE_ID}`);
   window.GAS.log.i('Initialising for foundry version:', game.version);
