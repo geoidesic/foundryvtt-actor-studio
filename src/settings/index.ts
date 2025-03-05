@@ -367,7 +367,7 @@ function windowX() {
     hint: game.i18n.localize('GAS.Setting.WindowX.Hint'),
     scope: 'world',
     config: true,
-    default: 700,
+    default: 720,
     type: Number,
   });
 }
