@@ -37,7 +37,7 @@
       .flex2.pr-sm.col-a
         h3 {localize('GAS.Equipment.Selection')}
         section.equipment-flow
-          +if("window.GAS.dnd5eVersion === 4 && dndRulesVersion === '2024'")
+          +if("window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === '2024'")
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
             +else()
               StartingGold(characterClass="{$characterClass}" disabled="{false}")
