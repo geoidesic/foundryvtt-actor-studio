@@ -115,9 +115,9 @@
 </template>
 
 <style lang="sass" scoped>
-@import "../../../../../styles/Mixins.scss"
+@use "../../../../../styles/Mixins.scss" as mixins
 .content 
-  @include staticOptions
+  +mixins.staticOptions
 
   .col-a
     max-width: 325px

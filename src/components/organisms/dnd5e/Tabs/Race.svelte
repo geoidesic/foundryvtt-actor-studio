@@ -165,9 +165,9 @@ div.content
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.scss"
+  @use "../../../../../styles/Mixins.scss" as mixins
   .content 
-    @include staticOptions
+    +mixins.staticOptions
 
   :global(.icon-select)
     position: relative
