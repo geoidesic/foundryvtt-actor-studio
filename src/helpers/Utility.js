@@ -6,6 +6,9 @@ import { get } from "svelte/store";
 
 export async function illuminatedDescription(html, store) {
   const enriched = await TextEditor.enrichHTML(html);
+  if(!game.settings.get(MODULE_ID, 'illuminatedDescription')) {
+    return enriched;
+  }
   const jEnriched = jQuery(enriched);
   let content = enriched;
   
