@@ -25,6 +25,14 @@ Actor Studio is most useful for players to create their own characters. To enabl
 - Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system. This is effectively a smoke & mirrors backport of the functionality available in dnd5e system v4.x
 - Also supports Subclass selection for dnd5e system v4.x
 
+## Usage Instructions
+- To create your character, work your way through the tabs and select from the options available. 
+- You can always go back and change your choices. Use this as a way to preview what each choice does to your character. 
+- Once you are happy with your character, click the "Create Character" button to create your character in Foundry VTT. 
+- At this point the Actor will be created and then the Advancement workflows will begin, where you select the various advancements for each choice you've made for your character (e.g. languages, skills, etc.).
+- Once Advancements are complete, starting gold and equipment can be selected
+- Once your character gains a new level, click the level up button to be guided through improving your character
+
 ## SRD Screenshots
 ![ability-score-generation-tab](https://github.com/user-attachments/assets/c651d816-7a61-48e8-a12b-1431b5fdf4ea)
 ![race-tab](https://github.com/user-attachments/assets/691a9da9-1ebf-4c0a-8f4e-001c9a325fb5)

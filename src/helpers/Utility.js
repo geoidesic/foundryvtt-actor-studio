@@ -1,4 +1,4 @@
-import { LOG_PREFIX, MODULE_ID } from "~/src/helpers/constants"
+import { LOG_PREFIX, MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
 import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
@@ -186,6 +186,17 @@ export function extractItemsFromPacksSync(packs, keys) {
   }
   return items;
 }
+
+/**
+ * Gets a localized string
+ * @param {string} string - The string to localize
+ * @return {string} The localized string
+ */
+export function localize(string) {
+  if (typeof game === 'undefined') return string; //- avoid lint error
+  return game.i18n.localize(`${MODULE_CODE}.${string}`);
+}
+
 
 /**
  * Extracts items from all compendium packs including subfolders.

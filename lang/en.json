@@ -18,6 +18,7 @@
     "Type": "Type",
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
+    "Title": "Actor Studio",
     "Source": "Source",
     "StartingEquipment": "Starting Equipment",
     "Permissions": {
@@ -41,6 +42,21 @@
         "SubClass": "Sublass",
         "FilterByLevel": "Explore Advancements by Level"
       }
+    },
+    "Welcome": {
+      "To": "Welcome to the",
+      "IntroductionTitle": "Introduction",
+      "Introduction": "Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e. It provides a guided workflow to help you create a character, and then guides you through the various advancements for your character.",
+      "UsageTitle": "Usage Instructions",
+      "Issues": "If you have any issues, please report them on ",
+      "Github": "GitHub.",
+      "CreatedBy": "for FoundryVTT developed by ",
+      "Support": "If you wish to support the development of this module, please consider a monthly donation via",
+      "SponsorLinkText": "GitHub Sponsors",
+      "IssuesLinkText": "GitHub Issues",
+      "PayPalLinkText": "PayPal",
+      "JoinDiscord": "Join the",
+      "DiscordLinkText": "Actor Studio Discord server"
     },
     "Setting": {
       "World": "World Settings",
