@@ -71,6 +71,7 @@
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
   $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[1].abbreviation] !== undefined);
+  $: scoreClass = allowMove && allRolled ? 'left' : 'center';
   
   onMount(async () => {
     formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
@@ -99,7 +100,7 @@
               span +
             span {abilityAdvancements?.[ability[1].abbreviation] || 0}
           td.center.relative
-            input.small.mainscore(class="{allowMove ? 'left' : 'center'}" disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}"  name="{ability[1].abbreviation}" id="{ability[1].abbreviation}")
+            input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}"  name="{ability[1].abbreviation}" id="{ability[1].abbreviation}")
             +if("allowMove && allRolled")
               .controls
                 .up.chevron
@@ -153,7 +154,6 @@
     input
       background: none
       width: 3em
-      text-align: left
       &:disabled
         color: var(--color-text-dark-primary)
       text-decoration: none
