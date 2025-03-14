@@ -23,7 +23,8 @@ export const background = writable(false); background.name = "background";
 export const abilities = writable(false); abilities.name = "abilities";
 export const spells = writable(false); spells.name = "spells";
 export const isLevelUp = writable(false); isLevelUp.name = "isLevelUp";
-export const pointBuy = writable(false); pointBuy.name = "pointBuy";
+export const pointBuyScoreTotal = writable(12); pointBuyScoreTotal.name = "pointBuyScoreTotal";
+export const pointBuyLimit = writable(27); pointBuyLimit.name = "pointBuyLimit";
 export const abilityRolls = writable(false); abilityRolls.name = "abilityRolls";
 export const isStandardArrayValues = writable(false); isStandardArrayValues.name = "isStandardArrayValues";
 export const newClassLevel = writable(false); newClassLevel.name = "newClassLevel";
@@ -98,6 +99,8 @@ export function resetStores() {
   level.set(1);
   tabs.set(initialTabs);
   levelUpTabs.set(upTabs);
+  pointBuyScoreTotal.set(12);
+  pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit"));
   activeTab.set(initialTabs[0].id);
   dropItemRegistry.removeAll();
   isActorCreated.set(false);

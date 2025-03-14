@@ -16,7 +16,6 @@
     dropItemRegistry,
     actorInGame,
     isMultiClass,
-    pointBuy,
     abilityRolls,
     isStandardArrayValues,
     subClassesForClass,

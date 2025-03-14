@@ -5,12 +5,12 @@ import {
   characterSubClass,
   background,
   abilityGenerationMethod,
-  pointBuy,
+  pointBuyScoreTotal, 
+  pointBuyLimit,
   abilityRolls,
   isStandardArrayValues,
   subClassesForClass,
   activeTab,
-  tabs
 } from './index';
 import { goldRoll } from './goldRoll';
 import { equipmentSelections } from './equipmentSelections';
@@ -21,12 +21,13 @@ import { MODULE_ID } from '~/src/helpers/constants';
 
 // Convert to derived store
 const isAbilityGenerationMethodReady = derived(
-  [abilityGenerationMethod, abilityRolls, pointBuy, isStandardArrayValues],
-  ([$abilityGenerationMethod, $abilityRolls, $pointBuy, $isStandardArrayValues]) => {
+  [abilityGenerationMethod, abilityRolls, pointBuyScoreTotal, pointBuyLimit, isStandardArrayValues],
+  ([$abilityGenerationMethod, $abilityRolls, $pointBuyScoreTotal, $pointBuyLimit, $isStandardArrayValues]) => {
     window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady called', {
       method: $abilityGenerationMethod,
       rolls: $abilityRolls,
-      pointBuy: $pointBuy,
+      scoreTotal: $pointBuyScoreTotal,
+      pointBuyLimit: $pointBuyLimit,
       standardArray: $isStandardArrayValues
     });
 
@@ -36,16 +37,17 @@ const isAbilityGenerationMethodReady = derived(
 
     const result = (() => {
       switch ($abilityGenerationMethod) {
-        case 2:
-          // Check if points are allocated correctly
-          return $pointBuy.scoreTotal === $pointBuy.pointBuyLimit;
+        case 2: // Point Buy
+          const isComplete = Number($pointBuyScoreTotal) === Number($pointBuyLimit);
+          
+          return isComplete;
         case 3:
           // Check if all abilities are assigned
           return Object.keys($abilityRolls).length === 6;
         case 4:
           // Check if all rolls are assigned
           return $isStandardArrayValues;
-        default:
+        case 1: default: // Manual Entry is always complete
           return true;
       }
     })();
@@ -82,20 +84,54 @@ function isSubclassForThisCharacterLevel(characterClass) {
 
 // Define progress calculation functions for different modes
 const progressCalculators = {
-  characterCreation: ({ race, background, characterClass, characterSubClass, abilityGenerationMethod, totalSteps }) => {
+  characterCreation: ({ 
+    race, 
+    background, 
+    characterClass, 
+    characterSubClass, 
+    abilityGenerationMethod, 
+    totalSteps,
+    pointBuyScoreTotal,
+    pointBuyLimit,
+    abilityRolls,
+    isStandardArrayValues
+  }) => {
     window.GAS.log.d('[PROGRESS] characterCreation calculator called', {
       race,
       background,
       characterClass,
       characterSubClass,
       abilityGenerationMethod,
-      totalSteps
+      totalSteps,
+      pointBuyScoreTotal,
+      pointBuyLimit
     });
 
     const completed = [race, background, characterClass, characterSubClass, abilityGenerationMethod]
       .filter((value, index) => {
         if (index === 4) {
-          const result = get(isAbilityGenerationMethodReady);
+          // Check ability generation method completion directly
+          let result = false;
+          
+          if (!abilityGenerationMethod) {
+            result = false;
+          } else {
+            switch (abilityGenerationMethod) {
+              case 2: // Point Buy
+                result = Number(pointBuyScoreTotal) === Number(pointBuyLimit);
+                break;
+              case 3: // Ability Rolls
+                result = Object.keys(abilityRolls).length === 6;
+                break;
+              case 4: // Standard Array
+                result = isStandardArrayValues;
+                break;
+              case 1: default: // Manual Entry is always complete
+                result = true;
+                break;
+            }
+          }
+          
           window.GAS.log.d('[PROGRESS] abilityGenerationMethod check result', result);
           return result;
         }
@@ -147,7 +183,8 @@ const stores = [
   characterSubClass,
   background,
   abilityGenerationMethod,
-  pointBuy,
+  pointBuyScoreTotal,
+  pointBuyLimit,
   abilityRolls,
   isStandardArrayValues,
 ];
@@ -182,7 +219,10 @@ export const progress = derived(
     equipmentSelections,
     goldRoll,
     areGoldChoicesComplete,
-    abilityRolls
+    abilityRolls,
+    pointBuyScoreTotal,
+    pointBuyLimit,
+    isStandardArrayValues
   ],
   ([
     $race,
@@ -195,12 +235,17 @@ export const progress = derived(
     $equipmentSelections,
     $goldRoll,
     $areGoldChoicesComplete,
-    $abilityRolls
+    $abilityRolls,
+    $pointBuyScoreTotal,
+    $pointBuyLimit,
+    $isStandardArrayValues
   ]) => {
     window.GAS.log.d('[PROGRESS] progress store update triggered', {
       activeTab: $activeTab,
       abilityGenerationMethod: $abilityGenerationMethod,
-      abilityRolls: $abilityRolls
+      abilityRolls: $abilityRolls,
+      pointBuyScoreTotal: $pointBuyScoreTotal,
+      pointBuyLimit: $pointBuyLimit
     });
 
     // Select the appropriate calculator based on the active tab
@@ -218,7 +263,11 @@ export const progress = derived(
       totalSteps: $totalSteps,
       equipmentSelections: $equipmentSelections,
       goldRoll: $goldRoll,
-      areGoldChoicesComplete: $areGoldChoicesComplete
+      areGoldChoicesComplete: $areGoldChoicesComplete,
+      pointBuyScoreTotal: $pointBuyScoreTotal,
+      pointBuyLimit: $pointBuyLimit,
+      abilityRolls: $abilityRolls,
+      isStandardArrayValues: $isStandardArrayValues
     });
 
     window.GAS.log.d('[PROGRESS] progress store result', result);

@@ -3,11 +3,8 @@
 
   export let progress;
   
-
-
   $: cssClass = $progress == 0 ? "center" : "";
   
-
 </script>
 <div class="progress">
   <div class="back">{$progress}% Complete</div>

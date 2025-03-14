@@ -1,7 +1,7 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, setContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, pointBuy, abilityRolls } from "~/src/stores/index"
+  import { abilities, race, pointBuyScoreTotal, pointBuyLimit, abilityRolls } from "~/src/stores/index"
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
   import { localize } from "#runtime/svelte/helper";
   
@@ -15,8 +15,19 @@
     if(event.target.value < 8) return false;
     if(event.target.value > 15) return false;
     const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
+    $doc.updateSource(options);
+    $doc = $doc;
+    
+    // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
+    $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
+      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 
+      0
+    ) || 12;
+  }
+
+  // Function to calculate pointBuyLimit
+  function calculatePointBuyLimit() {
+    return game.settings.get(MODULE_ID, "pointBuyLimit");
   }
 
   function reset() {
@@ -27,6 +38,12 @@
     });
     $doc.updateSource(options);
     $doc = $doc;
+    
+    // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
+    $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
+      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 
+      0
+    ) || 12;
   }
   
 
@@ -34,12 +51,9 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: scoreTotal = systemAbilitiesArray.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 0)
-  $: pointBuyLimit = game.settings.get(MODULE_ID, "pointBuyLimit")
-  $: activeClass = scoreTotal !== pointBuyLimit ? ' active' : '';
-  $: pointBuyClass = scoreTotal > pointBuyLimit ? 'red'+activeClass: 'green'+activeClass
-
-  $: $pointBuy = {scoreTotal, pointBuyLimit}
+  $: $pointBuyScoreTotal = systemAbilitiesArray?.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 0) || 12;
+  $: activeClass = $pointBuyScoreTotal !== $pointBuyLimit ? ' active' : '';
+  $: pointBuyClass = $pointBuyScoreTotal > $pointBuyLimit ? 'red'+activeClass: 'green'+activeClass
 
 
   onMount(async () => {
@@ -67,10 +81,10 @@
           td.center.relative
             input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
             .controls
-              .up.chevron
-                i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
-              .down.chevron
-                i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
+              .up.chevron(on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
+                i.fas.fa-chevron-up(alt="Decrease")
+              .down.chevron( on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
+                i.fas.fa-chevron-down(alt="Increase")
           td.center {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
           td.center
             +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
@@ -82,15 +96,15 @@
           .flexrow.justify-flexrow-vertical
             .flex1 Points total: 
             .flex
-              +if("isNaN(scoreTotal)")
+              +if("isNaN($pointBuyScoreTotal)")
                 span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
                 +else()
-                  input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{scoreTotal}") 
+                  input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{$pointBuyScoreTotal}") 
             .flex0 / 
             .flex1 
-              input.center.small(disabled  type="number" value="{pointBuyLimit}") 
+              input.center.small(disabled  type="number" value="{$pointBuyLimit}") 
       
-      +if("isNaN(scoreTotal)")
+      +if("isNaN($pointBuyScoreTotal)")
         tr
           td(colspan="5")
             hr
