@@ -1,4 +1,9 @@
-import { writable, get, derived } from 'svelte/store';;
+import { writable, get, derived } from 'svelte/store';
+// Import all store definitions
+import * as storeDefinitions from './storeDefinitions';
+// Re-export all store definitions
+export * from './storeDefinitions';
+
 import { advancementQueueStore } from "~/src/stores/advancements";
 import { clearGoldChoices } from "~/src/stores/goldChoices";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -16,62 +21,72 @@ const upTabs = [
   { label: "Level Up", id: "level-up", component: "LevelUp" }
 ]
 
-export const race = writable(false); race.name = "race";
-export const subRace = writable(false); subRace.name = "subRace";
-export const characterClass = writable(false); characterClass.name = "characterClass";
-export const characterSubClass = writable(false); characterSubClass.name = "characterSubClass";
-export const background = writable(false); background.name = "background";
-export const abilities = writable(false); abilities.name = "abilities";
-export const spells = writable(false); spells.name = "spells";
-export const isLevelUp = writable(false); isLevelUp.name = "isLevelUp";
-export const pointBuyScoreTotal = writable(12); pointBuyScoreTotal.name = "pointBuyScoreTotal";
-export const pointBuyLimit = writable(27); pointBuyLimit.name = "pointBuyLimit";
-export const abilityRolls = writable(false); abilityRolls.name = "abilityRolls";
-export const isStandardArrayValues = writable(false); isStandardArrayValues.name = "isStandardArrayValues";
-export const newClassLevel = writable(false); newClassLevel.name = "newClassLevel";
-export const level = writable(1); level.name = "level";
-export const activeTab = writable(''); activeTab.name = "activeTab";
-export const activeClass = writable(false); activeClass.name = "activeClass";
-export const isActorCreated = writable(false); isActorCreated.name = "isActorCreated";
-export const dropItemRegistry = advancementQueueStore(); dropItemRegistry.name = "dropItemRegistry";
-export const tabs = writable(initialTabs); tabs.name = "tabs";
-export const levelUpTabs = writable(upTabs); levelUpTabs.name = "levelUpTabs";
-export const actorInGame = writable(null); actorInGame.name = "actorInGame";
-export const abilityGenerationMethod = writable(null); abilityGenerationMethod.name = "abilityGenerationMethod";
-export const subClassesForClass = writable([]); subClassesForClass.name = "subClassesForClass";
-export const goldRoll = writable(0);
+// Set initial values for tabs
+storeDefinitions.tabs.set(initialTabs);
+storeDefinitions.levelUpTabs.set(upTabs);
+storeDefinitions.pointBuyLimit.set(27);
 
-// Store to track which tabs are in read-only mode
-export const readOnlyTabs = writable([]);
+// Set names for debugging
+storeDefinitions.race.name = "race";
+storeDefinitions.subRace.name = "subRace";
+storeDefinitions.characterClass.name = "characterClass";
+storeDefinitions.characterSubClass.name = "characterSubClass";
+storeDefinitions.background.name = "background";
+storeDefinitions.abilities.name = "abilities";
+storeDefinitions.spells.name = "spells";
+storeDefinitions.isLevelUp.name = "isLevelUp";
+storeDefinitions.pointBuyScoreTotal.name = "pointBuyScoreTotal";
+storeDefinitions.pointBuyLimit.name = "pointBuyLimit";
+storeDefinitions.abilityRolls.name = "abilityRolls";
+storeDefinitions.isStandardArrayValues.name = "isStandardArrayValues";
+storeDefinitions.newClassLevel.name = "newClassLevel";
+storeDefinitions.level.name = "level";
+storeDefinitions.activeTab.name = "activeTab";
+storeDefinitions.activeClass.name = "activeClass";
+storeDefinitions.isActorCreated.name = "isActorCreated";
+storeDefinitions.tabs.name = "tabs";
+storeDefinitions.levelUpTabs.name = "levelUpTabs";
+storeDefinitions.actorInGame.name = "actorInGame";
+storeDefinitions.abilityGenerationMethod.name = "abilityGenerationMethod";
+storeDefinitions.subClassesForClass.name = "subClassesForClass";
 
-export const isMultiClass = derived([characterClass, activeClass, newClassLevel], ([$characterClass, $characterSubClass, $newClassLevel]) => {
-  if ($newClassLevel) return false;
-  if ($characterClass && !$newClassLevel) return true;
-});
+// Export the advancement queue store
+export const dropItemRegistry = advancementQueueStore(); 
+dropItemRegistry.name = "dropItemRegistry";
+
+export const isMultiClass = derived(
+  [storeDefinitions.characterClass, storeDefinitions.activeClass, storeDefinitions.newClassLevel], 
+  ([$characterClass, $characterSubClass, $newClassLevel]) => {
+    if ($newClassLevel) return false;
+    if ($characterClass && !$newClassLevel) return true;
+  }
+);
 
 // Cache store for initial character selection state
-export const preAdvancementSelections = writable(null);
+export const preAdvancementSelections = writable({});
+preAdvancementSelections.name = "preAdvancementSelections";
 
 // Derived store to track changes from initial state
 export const hasCharacterCreationChanges = derived(
-  [race, background, characterClass, characterSubClass, preAdvancementSelections],
-  ([$race, $background, $characterClass, $characterSubClass, $initialState]) => {
-    window.GAS.log.d("hasCharacterCreationChanges initialState", $initialState);
-    if (!$initialState) return false;
+  [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections],
+  ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
+    window.GAS.log.d("hasCharacterCreationChanges preAdvancementSelections", $preAdvancementSelections);
+    if (Object.keys($preAdvancementSelections).length === 0) return false;
     
     return (
-      $race?.id !== $initialState.race?.id ||
-      $background?.id !== $initialState.background?.id ||
-      $characterClass?.id !== $initialState.class?.id ||
-      $characterSubClass?.id !== $initialState.subclass?.id
+      $race?.id !== $preAdvancementSelections.race?.id ||
+      $background?.id !== $preAdvancementSelections.background?.id ||
+      $characterClass?.id !== $preAdvancementSelections.class?.id ||
+      $characterSubClass?.id !== $preAdvancementSelections.subclass?.id
     );
   }
 );
 
 //- Derived store to get the changed items
-export const changedCharacterCreationItems = derived([race, background, characterClass, characterSubClass, preAdvancementSelections], 
+export const changedCharacterCreationItems = derived(
+  [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections], 
   ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
-    if (!$preAdvancementSelections) return [];
+    if (Object.keys($preAdvancementSelections).length === 0) return [];
     
     const changes = [];
     if ($race?.id !== $preAdvancementSelections.race?.id) {
@@ -92,24 +107,25 @@ export const changedCharacterCreationItems = derived([race, background, characte
 
 // Function to reset all stores
 export function resetStores() {
-  race.set(null);
-  background.set(null);
-  characterClass.set(null);
-  characterSubClass.set(null);
-  abilityRolls.set(false);
-  level.set(1);
-  tabs.set(initialTabs);
-  levelUpTabs.set(upTabs);
-  pointBuyScoreTotal.set(12);
-  pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit"));
-  activeTab.set(initialTabs[0].id);
+  storeDefinitions.race.set(null);
+  storeDefinitions.background.set(null);
+  storeDefinitions.characterClass.set(null);
+  storeDefinitions.characterSubClass.set(null);
+  storeDefinitions.abilityRolls.set(false);
+  storeDefinitions.level.set(1);
+  storeDefinitions.tabs.set(initialTabs);
+  storeDefinitions.levelUpTabs.set(upTabs);
+  storeDefinitions.pointBuyScoreTotal.set(12);
+  storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit"));
+  storeDefinitions.activeTab.set(initialTabs[0].id);
   dropItemRegistry.removeAll();
-  isActorCreated.set(false);
-  actorInGame.set(null);
-  abilityGenerationMethod.set(null);
-  subClassesForClass.set([]);
-  preAdvancementSelections.set(null);
-  goldRoll.set(0);
-  readOnlyTabs.set([]);
+  storeDefinitions.isActorCreated.set(false);
+  storeDefinitions.actorInGame.set(null);
+  storeDefinitions.abilityGenerationMethod.set(null);
+  storeDefinitions.subClassesForClass.set([]);
+  window.GAS.log.d("resetStores preAdvancementSelections", get(preAdvancementSelections));
+  preAdvancementSelections.set({});
+  storeDefinitions.goldRoll.set(0);
+  storeDefinitions.readOnlyTabs.set([]);
   clearGoldChoices();
 }

@@ -1,7 +1,7 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount } from "svelte";
-  import { goldRoll } from "~/src/stores/goldRoll";
+  import { goldRoll } from "~/src/stores/storeDefinitions";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";

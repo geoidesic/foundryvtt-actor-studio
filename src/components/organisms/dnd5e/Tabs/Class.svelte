@@ -8,7 +8,7 @@
     getPacksFromSettings,
     getAdvancementValue,
     getSubclassLevel,
-    illuminatedDescription
+    illuminatedDescription,
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -16,7 +16,7 @@
     characterSubClass,
     level,
     subClassesForClass,
-    readOnlyTabs
+    readOnlyTabs,
   } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
@@ -25,7 +25,7 @@
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
-  import { goldRoll } from "~/src/stores/goldRoll";
+  import { goldRoll } from "~/src/stores/storeDefinitions";
 
   let richHTML = "",
     html = "",
@@ -51,24 +51,26 @@
       "type",
       "folder",
       "uuid->value",
-      "_id"
+      "_id",
     ]),
-    filteredClassIndex
-  ;
+    filteredClassIndex;
 
-  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+  const showPackLabelInSelect = game.settings.get(
+    MODULE_ID,
+    "showPackLabelInSelect",
+  );
 
   filteredClassIndex = mappedClassIndex
     .filter((i) => {
       return i.type == "class";
     })
-    .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
+    .sort((a, b) =>
+      a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label),
+    );
 
-    
   // window.GAS.log.d('packs', packs);
   // window.GAS.log.d('mappedClassIndex', mappedClassIndex);
   // window.GAS.log.d('subClassesPacks', subClassesPacks);
-
 
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
@@ -91,14 +93,13 @@
   };
 
   const getFilteredSubclassIndex = async () => {
-
     let filteredSubClassIndex = [];
     let mappedSubClassIndex = await extractItemsFromPacksAsync(
       subClassesPacks,
       ["name->label", "img", "type", "folder", "uuid->value", "_id"],
       ["system.classIdentifier"],
     );
-    
+
     // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
       // window.GAS.log.d("subclass", x);
@@ -109,10 +110,13 @@
     // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     const output = mappedSubClassIndex
       .flat()
-      .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
+      .sort((a, b) =>
+        a.label.localeCompare(
+          showPackLabelInSelect ? b.compoundLabel : b.label,
+        ),
+      );
     // window.GAS.log.d("subclass output", output);
     return output;
-
   };
 
   const handleSelectClass = async (option) => {
@@ -121,13 +125,16 @@
     subclassValue = null;
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
-    
+
     // Reset gold roll when changing class
     goldRoll.set(0);
-    
+
     const selectedClass = await fromUuid(option);
     $characterClass = selectedClass;
     activeClass = option;
+    if(!classValue) {
+      classValue = option;
+    }
 
     clearEquipmentSelections();
 
@@ -144,7 +151,7 @@
   const importClassAdvancements = async () => {
     // Reset the components object first
     classAdvancementComponents = {};
-    
+
     for (const classAdvancement of classAdvancementArrayFiltered) {
       try {
         const module = await import(
@@ -153,7 +160,10 @@
         classAdvancementComponents[classAdvancement.type] = module.default;
         await tick();
       } catch (error) {
-        window.GAS.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
+        window.GAS.log.e(
+          `Failed to load component for ${classAdvancement.type}:`,
+          error,
+        );
       }
     }
   };
@@ -162,12 +172,15 @@
     const selectedSubClass = await fromUuid(option);
     $characterSubClass = selectedSubClass;
     activeSubClass = option;
+    if(!subclassValue) {
+      subclassValue = option;
+    }
     await tick();
     importClassAdvancements();
     importSubClassAdvancements();
     richSubClassHTML = await illuminatedDescription(
-        $characterSubClass.system.description.value,
-        $characterSubClass
+      $characterSubClass.system.description.value,
+      $characterSubClass,
     );
   };
 
@@ -200,7 +213,6 @@
     subClassAdvancementExpanded = !subClassAdvancementExpanded;
   };
 
-
   // $: window.GAS.log.d('subclasses', subclasses);
 
   $: html = $characterClass?.system?.description.value || "";
@@ -208,15 +220,19 @@
   $: classProp = activeClass;
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
-  $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
+  $: subClassLevel = $characterClass
+    ? getSubclassLevel($characterClass, MODULE_ID)
+    : false;
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
   $: isDisabled = $readOnlyTabs.includes("class");
 
-  $: combinedHtml = $characterClass ? `
+  $: combinedHtml = $characterClass
+    ? `
       ${richHTML}
       ${richSubClassHTML ? `<h1>${localize("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
-  ` : "";
-  
+  `
+    : "";
+
   $: if (subClassesIndex?.length) {
     subclasses = subClassesIndex
       .flat()
@@ -224,9 +240,9 @@
   } else {
     subclasses = [];
   }
-  
-  $: if(isDisabled) {
-    classAdvancementExpanded = true
+
+  $: if (isDisabled) {
+    classAdvancementExpanded = true;
   }
 
   $: if ($characterSubClass?.system?.advancement.length) {
@@ -246,32 +262,21 @@
     classAdvancementArrayFiltered = [];
   }
 
-
   onMount(async () => {
-    if(window.GAS.debug) {
-      $characterClass = await fromUuid(window.GAS.characterClass);
-      console.log('DEBUG: Class', $characterClass);
-      // handleSelectSubClass(window.GAS.characterSubClass);
+    let classUuid, subclassUuid;
+    if (window.GAS.debug) {
+      classUuid = window.GAS.characterClass;
+      subclassUuid = window.GAS.characterSubClass;
+    } else {
+      classUuid = $characterClass?.uuid;
+      subclassUuid = $characterSubClass?.uuid;
     }
-    if ($characterClass) {
-      window.GAS.log.d($characterClass);
-
-      classValue = $characterClass.uuid;
-      await tick();
-      importClassAdvancements();
-      richHTML = await illuminatedDescription(html, $characterClass);
-      subClassesIndex = await getFilteredSubclassIndex();
+    if (classUuid) {
+      await handleSelectClass(classUuid);
     }
-    if ($characterSubClass) {
-      subclassValue = $characterSubClass.uuid;
-      await tick();
-      importSubClassAdvancements();
-      richSubClassHTML = await illuminatedDescription(
-        $characterSubClass.system.description.value,
-        $characterSubClass
-      );
+    if (subclassUuid) {
+      await handleSelectSubClass(subclassUuid);
     }
-    
   });
 </script>
 

@@ -27,6 +27,7 @@
     "_id",
   ]);
   const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+  const importPath = "components/molecules/dnd5e/Advancements/";
 
   // window.GAS.log.d('allRaceItems', allRaceItems)
   let raceDefinitions = allRaceItems
@@ -35,7 +36,7 @@
 
   const actor = getContext("#doc");
 
-  const importAdvancements = async () => {
+  async function importAdvancements() {
     // window.GAS.log.d('advancementArray',advancementArray)
     for (const advancement of advancementArray) {
       try {
@@ -47,29 +48,16 @@
     }
   };
 
-  const selectHandler = async (option) => {
-    window.GAS.log.d('RACE TAB | Selection Change:', {
-      previousValue: value,
-      newValue: option,
-      currentRace: $race,
-      active
-    });
-
+  async function selectRaceHandler(option) {
     const selectedRace = await fromUuid(option);
     $race = selectedRace;
     active = option;
-    await tick();
-    
-    window.GAS.log.d('RACE TAB | After Update:', {
-      value,
-      active,
-      race: $race
-    });
+    if(!value) {
+      value = option;
+    }
     await importAdvancements();
     richHTML = await illuminatedDescription(html, $race);
   };
-
-  const importPath = "components/molecules/dnd5e/Advancements/";
 
   $: actorObject = $actor.toObject();
   $: options = raceDefinitions;
@@ -77,6 +65,12 @@
   $: movement = $race?.system?.movement;
   $: senses = $race?.system?.senses;
   $: advancementComponents = {};
+  $: units = $race?.system?.movement?.units || "";
+  $: type = $race?.system?.type || "";
+  $: source = $race?.system?.source || "";
+  $: book = source?.book || "";
+  $: page = source?.page ? ", p. " + source.page : "";
+  $: isDisabled = $readOnlyTabs.includes("race");
 
   $: filteredMovement = movement
     ? Object.keys(movement)
@@ -90,11 +84,6 @@
         .map((key) => ({ label: key, value: senses[key] }))
     : [];
 
-  $: units = $race?.system?.movement?.units || "";
-  $: type = $race?.system?.type || "";
-  $: source = $race?.system?.source || "";
-  $: book = source?.book || "";
-  $: page = source?.page ? ", p. " + source.page : "";
   $: advancementArray = $race?.system?.advancement
     ? $race.system.advancement
         .filter(
@@ -103,23 +92,16 @@
         )
     : [];
 
-  $: window.GAS.log.d(advancementArray)
-
-  $: isDisabled = $readOnlyTabs.includes("race");
-
-
+  // $: window.GAS.log.d(advancementArray)
 
   onMount(async () => {
+    let raceUuid;
     if (window.GAS.debug) {
-      $race = await fromUuid(window.GAS.race);
-      console.log('DEBUG: Race', $race);
+      raceUuid = window.GAS.race;
     }
-    if ($race) {
-      value = $race.uuid;
+    if (raceUuid) {
+      await selectRaceHandler(raceUuid);
     }
-    await tick();
-    await importAdvancements();
-    richHTML = await illuminatedDescription(html, $race);
   });
 
 </script>
@@ -131,7 +113,7 @@ div.content
       .flexrow
         .flex0.required(class="{$race ? '' : 'active'}") *
         .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="race-select" bind:value disabled="{isDisabled}")
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value disabled="{isDisabled}")
       +if("value")
         +if("source")
           //- h3.left {localize('GAS.Source')}

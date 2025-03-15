@@ -1,14 +1,15 @@
 import { derived, get, writable } from 'svelte/store';
-import { characterClass, background } from './index';
+// Import directly from storeDefinitions instead of index
+import { characterClass, background } from './storeDefinitions';
 import { goldChoices } from './goldChoices';
 // Base store for starting equipment
 
 // Derived store that automatically updates when class/background change
 const startingEquipment = derived(
   [characterClass, background],
-  ([$class, $background]) => {
+  ([$characterClass, $background]) => {
       return {
-        fromClass: $class?.system?.startingEquipment || [],
+        fromClass: $characterClass?.system?.startingEquipment || [],
         fromBackground: $background?.system?.startingEquipment || []
       }
   }

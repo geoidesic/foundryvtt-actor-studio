@@ -1,7 +1,7 @@
 <script>
   import { localize } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount } from "svelte";
-  import { goldRoll } from "~/src/stores/goldRoll";
+  import { goldRoll } from "~/src/stores/storeDefinitions";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { writable } from 'svelte/store';
 

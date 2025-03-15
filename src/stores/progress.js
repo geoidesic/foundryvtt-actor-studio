@@ -12,7 +12,7 @@ import {
   subClassesForClass,
   activeTab,
 } from './index';
-import { goldRoll } from './goldRoll';
+import { goldRoll } from './storeDefinitions';
 import { equipmentSelections } from './equipmentSelections';
 import { areGoldChoicesComplete } from './goldChoices';
 import { getDnd5eVersion, getSubclassLevel } from '~/src/helpers/Utility';
@@ -23,13 +23,13 @@ import { MODULE_ID } from '~/src/helpers/constants';
 const isAbilityGenerationMethodReady = derived(
   [abilityGenerationMethod, abilityRolls, pointBuyScoreTotal, pointBuyLimit, isStandardArrayValues],
   ([$abilityGenerationMethod, $abilityRolls, $pointBuyScoreTotal, $pointBuyLimit, $isStandardArrayValues]) => {
-    window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady called', {
-      method: $abilityGenerationMethod,
-      rolls: $abilityRolls,
-      scoreTotal: $pointBuyScoreTotal,
-      pointBuyLimit: $pointBuyLimit,
-      standardArray: $isStandardArrayValues
-    });
+    // window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady called', {
+    //   method: $abilityGenerationMethod,
+    //   rolls: $abilityRolls,
+    //   scoreTotal: $pointBuyScoreTotal,
+    //   pointBuyLimit: $pointBuyLimit,
+    //   standardArray: $isStandardArrayValues
+    // });
 
     if (!$abilityGenerationMethod) {
       return false;
@@ -52,7 +52,7 @@ const isAbilityGenerationMethodReady = derived(
       }
     })();
 
-    window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady result', result);
+    // window.GAS.log.d('[PROGRESS] isAbilityGenerationMethodReady result', result);
     return result;
   }
 );
@@ -66,19 +66,19 @@ function isSubclassForThisCharacterLevel(characterClass) {
   if (!characterClass) return false;
 
   const subClassLevel = getSubclassLevel(characterClass, MODULE_ID);
-  window.GAS.log.d('[PROGRESS] subClassLevel determined to be: ', subClassLevel);
+  // window.GAS.log.d('[PROGRESS] subClassLevel determined to be: ', subClassLevel);
 
   if (!subClassLevel) return false;
 
   const newActorLevel = game.actor?.system?.details?.level
     ? game.actor.system.details.level + 1
     : 1;
-  window.GAS.log.d("[PROGRESS] subClassLevel", subClassLevel);
-  window.GAS.log.d("[PROGRESS] level", newActorLevel);
-  window.GAS.log.d(
-    "[PROGRESS] subClassLevel === level",
-    subClassLevel === newActorLevel,
-  );
+  // window.GAS.log.d("[PROGRESS] subClassLevel", subClassLevel);
+  // window.GAS.log.d("[PROGRESS] level", newActorLevel);
+  // window.GAS.log.d(
+  //   "[PROGRESS] subClassLevel === level",
+  //   subClassLevel === newActorLevel,
+  // );
   return subClassLevel && parseInt(newActorLevel) === parseInt(subClassLevel);
 }
 
@@ -96,16 +96,16 @@ const progressCalculators = {
     abilityRolls,
     isStandardArrayValues
   }) => {
-    window.GAS.log.d('[PROGRESS] characterCreation calculator called', {
-      race,
-      background,
-      characterClass,
-      characterSubClass,
-      abilityGenerationMethod,
-      totalSteps,
-      pointBuyScoreTotal,
-      pointBuyLimit
-    });
+    // window.GAS.log.d('[PROGRESS] characterCreation calculator called', {
+    //   race,
+    //   background,
+    //   characterClass,
+    //   characterSubClass,
+    //   abilityGenerationMethod,
+    //   totalSteps,
+    //   pointBuyScoreTotal,
+    //   pointBuyLimit
+    // });
 
     const completed = [race, background, characterClass, characterSubClass, abilityGenerationMethod]
       .filter((value, index) => {
@@ -132,24 +132,24 @@ const progressCalculators = {
             }
           }
           
-          window.GAS.log.d('[PROGRESS] abilityGenerationMethod check result', result);
+          // window.GAS.log.d('[PROGRESS] abilityGenerationMethod check result', result);
           return result;
         }
         return !!value;
       }).length;
 
     const progress = (completed / totalSteps) * 100;
-    window.GAS.log.d('[PROGRESS] characterCreation progress calculated', {
-      completed,
-      totalSteps,
-      progress
-    });
+    // window.GAS.log.d('[PROGRESS] characterCreation progress calculated', {
+    //   completed,
+    //   totalSteps,
+    //   progress
+    // });
     return progress;
   },
 
   equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete }) => {
     const groups = Object.values(equipmentSelections);
-    window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
+    // window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
     
     // Handle v4 gold choices
     if (window.GAS.dnd5eVersion === 4  && window.GAS.dnd5eRules === "2024") {
@@ -201,7 +201,7 @@ export const totalSteps = derived(
     ) {
       length = length - 1;
     }
-    window.GAS.log.d("[PROGRESS] totalSteps", length);
+    // window.GAS.log.d("[PROGRESS] totalSteps", length);
     return length;
   }
 );
@@ -240,13 +240,13 @@ export const progress = derived(
     $pointBuyLimit,
     $isStandardArrayValues
   ]) => {
-    window.GAS.log.d('[PROGRESS] progress store update triggered', {
-      activeTab: $activeTab,
-      abilityGenerationMethod: $abilityGenerationMethod,
-      abilityRolls: $abilityRolls,
-      pointBuyScoreTotal: $pointBuyScoreTotal,
-      pointBuyLimit: $pointBuyLimit
-    });
+    // window.GAS.log.d('[PROGRESS] progress store update triggered', {
+    //   activeTab: $activeTab,
+    //   abilityGenerationMethod: $abilityGenerationMethod,
+    //   abilityRolls: $abilityRolls,
+    //   pointBuyScoreTotal: $pointBuyScoreTotal,
+    //   pointBuyLimit: $pointBuyLimit
+    // });
 
     // Select the appropriate calculator based on the active tab
     const calculator = $activeTab === 'equipment' 
@@ -270,7 +270,7 @@ export const progress = derived(
       isStandardArrayValues: $isStandardArrayValues
     });
 
-    window.GAS.log.d('[PROGRESS] progress store result', result);
+    // window.GAS.log.d('[PROGRESS] progress store result', result);
     return result;
   }
 );

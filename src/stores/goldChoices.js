@@ -1,5 +1,5 @@
 import { derived, writable } from 'svelte/store';
-import { goldRoll } from './goldRoll';
+import { goldRoll } from './storeDefinitions';
 
 // Base store for gold choices
 const goldChoices = writable({
@@ -26,7 +26,6 @@ const goldChoicesCompat = derived(totalGoldFromChoices, ($totalGoldFromChoices) 
 
 // Derived store to check if choices are complete
 const areGoldChoicesComplete = derived([goldChoices, goldRoll], ([$goldChoices, $goldRoll]) => {
-  window.GAS.log.d('[GoldChoices] goldRoll', $goldRoll);
   const isDnd2014 = window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules === '2014';
   let complete = false;
   if (isDnd2014) {

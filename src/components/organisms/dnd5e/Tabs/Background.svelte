@@ -57,7 +57,7 @@
     }
   };
   
-  const selectHandler = async (option) => {
+  const selectBackgroundHandler = async (option) => {
     console.log('BACKGROUND SELECTION START:', {
         option,
         optionType: typeof option
@@ -73,6 +73,9 @@
 
     $background = selectedBackground;
     active = option;
+    if(!value) {
+      value = option;
+    }
     await tick();
     await importAdvancements();
     richHTML = await illuminatedDescription(html, $background);
@@ -80,16 +83,14 @@
 
 
   onMount(async () => {
+    let backgroundUuid;
     if (window.GAS.debug) {
-      $background = await fromUuid(window.GAS.background);
-      console.log('DEBUG: Background', $background);
+      backgroundUuid = window.GAS.background;
+    } else {
+      backgroundUuid = $background?.uuid;
     }
-    if ($background) {
-      // window.GAS.log.d('background', background)
-      value = $background.uuid;
-      await tick();
-      await importAdvancements();
-      richHTML = await illuminatedDescription(html, $background);
+    if (backgroundUuid) {
+      await selectBackgroundHandler(backgroundUuid);
     }
   });
 
@@ -102,7 +103,7 @@ div.content
       .flexrow
         .flex0.required(class="{$background ? '' : 'active'}") *
         .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value disabled="{isDisabled}")
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
      
       +if("advancementArray.length")
         h3.left {localize('GAS.Advancements')}

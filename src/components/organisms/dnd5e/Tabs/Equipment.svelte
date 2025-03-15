@@ -1,5 +1,5 @@
 <script>
-  import { goldRoll } from "~/src/stores/goldRoll";
+  import { goldRoll } from "~/src/stores/storeDefinitions";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
