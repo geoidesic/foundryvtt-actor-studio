@@ -16,6 +16,7 @@ const startingEquipment = derived(
 
 // Derived stores for specific sources
 const classStartingEquipment = derived(startingEquipment, ($startingEquipment) => {
+  window.GAS.log.d('[StartingEquipment] startingEquipment', $startingEquipment);
   return $startingEquipment.fromClass;
 });
 
@@ -29,11 +30,20 @@ const flattenedStartingEquipment = derived(startingEquipment, ($startingEquipmen
 });
 
 const compatibleStartingEquipment = derived([classStartingEquipment, backgroundStartingEquipment, goldChoices], ([$classStartingEquipment, $backgroundStartingEquipment, $goldChoices]) => {
-  return window.GAS.dnd5eVersion < 4  && window.GAS.dnd5eRules === "2024" ? $classStartingEquipment 
-  : $goldChoices.fromClass.choice !== 'gold' && $goldChoices.fromBackground.choice !== 'gold' ? [...$classStartingEquipment, ...$backgroundStartingEquipment]
-  : $goldChoices.fromClass.choice !== 'gold' ? $classStartingEquipment
-  : $goldChoices.fromBackground.choice !== 'gold' ? $backgroundStartingEquipment
-  : [];
+  window.GAS.log.d('[StartingEquipment] classStartingEquipment', $classStartingEquipment);
+  if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules === "2014") {
+    return $classStartingEquipment;
+  } 
+  if ($goldChoices.fromClass.choice !== 'gold' && $goldChoices.fromBackground.choice !== 'gold') {
+    return [...$classStartingEquipment, ...$backgroundStartingEquipment];
+  } 
+  if ($goldChoices.fromClass.choice !== 'gold') {
+    return $classStartingEquipment;
+  } 
+  if ($goldChoices.fromBackground.choice !== 'gold') {
+    return $backgroundStartingEquipment;
+  }   
+  return [];
 });
 
 // Reset function
