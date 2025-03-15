@@ -42,7 +42,7 @@ storeDefinitions.isStandardArrayValues.name = "isStandardArrayValues";
 storeDefinitions.newClassLevel.name = "newClassLevel";
 storeDefinitions.level.name = "level";
 storeDefinitions.activeTab.name = "activeTab";
-storeDefinitions.activeClass.name = "activeClass";
+storeDefinitions.selectedMultiClass.name = "selectedMultiClass";
 storeDefinitions.isActorCreated.name = "isActorCreated";
 storeDefinitions.tabs.name = "tabs";
 storeDefinitions.levelUpTabs.name = "levelUpTabs";
@@ -117,6 +117,7 @@ export function resetStores() {
   storeDefinitions.levelUpTabs.set(upTabs);
   storeDefinitions.pointBuyScoreTotal.set(12);
   storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit"));
+  storeDefinitions.selectedMultiClass.set(false);
   storeDefinitions.activeTab.set(initialTabs[0].id);
   dropItemRegistry.removeAll();
   storeDefinitions.isActorCreated.set(false);

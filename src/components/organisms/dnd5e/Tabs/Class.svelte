@@ -30,7 +30,7 @@
   let richHTML = "",
     html = "",
     richSubClassHTML = "",
-    activeClass = null,
+    selectedCharacterClass = null,
     activeSubClass = null,
     classValue = null,
     subclassValue = null,
@@ -131,7 +131,7 @@
 
     const selectedClass = await fromUuid(option);
     $characterClass = selectedClass;
-    activeClass = option;
+    selectedCharacterClass = option;
     if(!classValue) {
       classValue = option;
     }
@@ -217,7 +217,7 @@
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
-  $: classProp = activeClass;
+  $: classProp = selectedCharacterClass;
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
   $: subClassLevel = $characterClass

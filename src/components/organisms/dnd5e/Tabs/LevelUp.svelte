@@ -15,7 +15,7 @@
     level,
     tabs,
     newClassLevel,
-    activeClass,
+    selectedMultiClass,
     isMultiClass
   } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
@@ -29,7 +29,7 @@
 
   let richHTML = "",
     richSubClassHTML = "",
-    activeClassKey = null,
+    selectedMultiClassKey = null,
     activeSubClassUUID = null,
     classValue = null,
     multiclassValue = null,
@@ -96,7 +96,7 @@
 
   /** DECORATORS */
   function existingClassesCssClassForRow(classKey) {
-    let css = getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''
+    let css = getCharacterClass(classKey).uuid === $selectedMultiClass ? 'active' : ''
     if(isInMulticlassMode) {
       css += ' gold-button-disabled'
     } else {
@@ -169,7 +169,7 @@
     // Load the class data for UI display
     const newClass = await fromUuid(option);
     $characterClass = newClass;
-    $activeClass = option;
+    $selectedMultiClass = option;
     
     await tick();
     subClassesIndex = await getFilteredSubclassIndex();
@@ -195,11 +195,11 @@
    * Resets all class and subclass related state
    */
   const clickCancelMulticlass = async () => {
-    $activeClass = false
+    $selectedMultiClass = false
     classValue = null
     multiclassValue = null
     activeSubClassUUID = null
-    activeClassKey = null
+    selectedMultiClassKey = null
     $characterClass = false
   }
 
@@ -210,7 +210,7 @@
    */
   async function clickAddLevel(classKey) {
     if (isInMulticlassMode) return;
-    const isUnset = Boolean($activeClass) && Boolean($newClassLevel);
+    const isUnset = Boolean($selectedMultiClass) && Boolean($newClassLevel);
     if(isUnset) return;
 
     const classObj = getCharacterClass(classKey)
@@ -223,8 +223,8 @@
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $characterClass = await fromUuid(uuid);
-    $activeClass = uuid;
-    activeClassKey = classKey
+    $selectedMultiClass = uuid;
+    selectedMultiClassKey = classKey
     
     /**
      * Updates the newClassLevel store with the next level for this class
@@ -247,7 +247,7 @@
    */
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClassUUID;
-  $: classProp = $activeClass;
+  $: classProp = $selectedMultiClass;
   $: combinedHtml = richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '');
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
@@ -293,12 +293,12 @@
   $: classKeys = Object.keys($actor._classes);
   $: classLevels = classKeys.map((classKey) => {
     const classObj = $actor._classes[classKey]
-    return classObj.uuid == $activeClass ? classObj.system.levels + 1 : classObj.system.levels;
+    return classObj.uuid == $selectedMultiClass ? classObj.system.levels + 1 : classObj.system.levels;
   });
 
-  $: activeClassObj = $actor._classes[activeClassKey];
-  $: activeClassIndex = classKeys.indexOf(activeClassKey);
-  $: activeClassLevel = classLevels[activeClassIndex];
+  $: selectedMultiClassObj = $actor._classes[selectedMultiClassKey];
+  $: selectedMultiClassIndex = classKeys.indexOf(selectedMultiClassKey);
+  $: selectedMultiClassLevel = classLevels[selectedMultiClassIndex];
 
   $: subClassLevel = $characterClass.getFlag ? $characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
@@ -331,7 +331,7 @@
     console.log('Current character subclass:', $characterSubClass);
     console.log('Multiclass value:', multiclassValue);
     console.log('Class value:', classValue);
-    console.log('Active class:', $activeClass);
+    console.log('Active class:', $selectedMultiClass);
     console.log('Is multiclass mode:', $isMultiClass);
     console.log('Is in multiclass mode (local):', isInMulticlassMode);
   }
@@ -374,7 +374,7 @@
 <template lang="pug">
   .content
     //- pre isMultiClass {$isMultiClass}
-    //- pre activeClass {$activeClass}
+    //- pre selectedMultiClass {$selectedMultiClass}
     //- pre characterClass {$characterClass}
     //- pre newClassLevel {$newClassLevel}
     .flexrow
@@ -385,7 +385,7 @@
           //- pre classKey {classKey}
           //- pre getCharacterClass(classKey) {getCharacterClass(classKey).system.img}
           //- pre getCharacterClass(classKey)?.system?.img {getCharacterClass(classKey)?.system?.img}
-          +if("$activeClass && !$newClassLevel")
+          +if("$selectedMultiClass && !$newClassLevel")
             .class-row(class="{existingClassesCssClassForRow(classKey)}")
               LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
             +else()
@@ -406,7 +406,7 @@
               span {localize('GAS.MulticlassMode')}
         
         +if("$characterClass")
-          +if("activeClassObj")
+          +if("selectedMultiClassObj")
             h3.left.mt-md Advancements
             LevelUpExisting(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newClassLevel}")
             

@@ -52,8 +52,8 @@
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
   $: $pointBuyScoreTotal = systemAbilitiesArray?.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 0) || 12;
-  $: activeClass = $pointBuyScoreTotal !== $pointBuyLimit ? ' active' : '';
-  $: pointBuyClass = $pointBuyScoreTotal > $pointBuyLimit ? 'red'+activeClass: 'green'+activeClass
+  $: activeCSSClass = $pointBuyScoreTotal !== $pointBuyLimit ? ' active' : '';
+  $: pointBuyClass = $pointBuyScoreTotal > $pointBuyLimit ? 'red'+activeCSSClass: 'green'+activeCSSClass
 
 
   onMount(async () => {
