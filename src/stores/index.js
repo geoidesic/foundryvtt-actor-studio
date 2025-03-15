@@ -55,8 +55,8 @@ export const dropItemRegistry = advancementQueueStore();
 dropItemRegistry.name = "dropItemRegistry";
 
 export const isMultiClass = derived(
-  [storeDefinitions.characterClass, storeDefinitions.activeClass, storeDefinitions.newClassLevel], 
-  ([$characterClass, $characterSubClass, $newClassLevel]) => {
+  [storeDefinitions.characterClass,  storeDefinitions.newClassLevel], 
+  ([$characterClass, $newClassLevel]) => {
     if ($newClassLevel) return false;
     if ($characterClass && !$newClassLevel) return true;
   }
