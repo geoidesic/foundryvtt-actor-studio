@@ -296,6 +296,8 @@
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
 
 
+  $: window.GAS.log.d('$characterClass', $characterClass)
+
   /**
    * Filters available classes for multiclassing
    * Excludes classes the character already has and sorts alphabetically
@@ -307,6 +309,18 @@
         !classKeys.includes(i.label.toLowerCase())
       })
       .sort((a, b) => a.label.localeCompare(b.label))
+
+  $: {
+    console.log('Current character class:', $characterClass);
+    console.log('Current character subclass:', $characterSubClass);
+  }
+
+  // Ensure that the character class is set before accessing its properties
+  $: if ($characterClass) {
+    subClassLevel = $characterClass.getFlag(MODULE_ID, "subclassLevel");
+  } else {
+    console.warn('Character class is not set, cannot access getFlag');
+  }
 
   onMount(async () => {
     if ($characterClass) {
