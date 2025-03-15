@@ -25,6 +25,15 @@ Hooks.once("init", (app, html, data) => {
   
   window.GAS.dnd5eVersion = getDnd5eVersion();
   window.GAS.dnd5eRules = getDndRulesVersion();
+
+  //- these settings are for debugging / testing purposes only
+  window.GAS.debug = true;
+  if(window.GAS.debug) {
+    window.GAS.race = "Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000"
+    window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000"
+    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000"
+    // window.GAS.characterSubClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkCelestialP"
+  }
   
   window.GAS.log.i(`Starting System ${MODULE_ID}`);
   window.GAS.log.i('Initialising for foundry version:', game.version);
@@ -59,6 +68,10 @@ Hooks.once("ready", (app, html, data) => {
     new WelcomeApplication().render(true, { focus: true });
   }
 
+  if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
+    game.settings.set("dnd5e", "disableAdvancements", false);
+  }
+
   Hooks.call("gas.readyIsComplete");
 
   // Initialize the subclass level plugin
@@ -71,9 +84,6 @@ Hooks.once("membershipReady", (app, html, data) => {
   window.GAS.log.i('Checking for Donation Tracker module: ', dtExists ? 'Found' : 'Not Found');
   if (dtExists) {
     DonationTrackerGameSettings.init();
-  }
-  if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
-    game.settings.set("dnd5e", "disableAdvancements", false);
   }
 });
 
@@ -108,18 +118,17 @@ const getAdvancementElement = (currentProcess) => {
 };
 
 Hooks.on('renderAdvancementManager', async (app, html, data) => {
-  // window.GAS.log.d('renderAdvancementManager')
 
-  // Check if the application is currently open by looking for its specific DOM element
+  // Check if the Actor Studio application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
-  // const methods = Object.getOwnPropertyNames(app).filter(item => typeof app[item] === 'function');
-
-  // window.GAS.log.d('currentProcess', currentProcess)
-  // window.GAS.log.d('app._stepIndex', app._stepIndex)
-
+  
   if (currentProcess.id && isFirstAdvancementStep(app)) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
+      const disableAdvancementCapture = game.settings.get(MODULE_ID, 'disableAdvancementCapture') || false;
+      if(disableAdvancementCapture) {
+        return;
+      }
       dropItemRegistry.updateCurrentProcess({ app, html, data })
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
       // console.log('advancementsTab', advancementsTab)

@@ -100,15 +100,15 @@
         "Name": "Enable extended debugging mode",
         "Hint": "Provides additional logging of all Foundry hooks"
       },
-      "DefaultGoldDice": {
+      "defaultGoldDice": {
         "Name": "Default starting gold roll",
-        "Hint": "Here you can customize the starting gold dice rolled on the tool"
+        "Hint": "Here you can customize the default starting gold dice rolled on the tool, this will be used if the character class does not have a custom starting gold formula"
       },
       "DonationTrackerEnabled": {
         "Name": "Enable Donation Tracker",
         "Hint": "Enable the donation tracker to show the current donation amount and goal"
       },
-      "DisableAdvancementMove": {
+      "disableAdvancementCapture": {
         "Name": "Disable Advancement Tab",
         "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window."
       },

@@ -66,7 +66,11 @@
 
   Hooks.once("gas.close", gasClose);
 
-  // Equipment selection hook handler
+  /**
+   * NB: this is called after advancements because some equipment selection
+   * is dependent on the proficiencies selected
+   * @todo: logic for those proficiency dependencies are not yet implemented
+   */
   function handleEquipmentSelection() {
     // Add Equipment tab
     if(!$tabs.find(x => x.id === "equipment")) {

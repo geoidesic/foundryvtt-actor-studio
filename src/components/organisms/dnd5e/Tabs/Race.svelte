@@ -110,6 +110,10 @@
 
 
   onMount(async () => {
+    if (window.GAS.debug) {
+      $race = {};
+      $race.uuid = window.GAS.race;
+    }
     if ($race) {
       value = $race.uuid;
     }

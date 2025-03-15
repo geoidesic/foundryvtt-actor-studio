@@ -80,6 +80,10 @@
 
 
   onMount(async () => {
+    if (window.GAS.debug) {
+      $background = {};
+      $background.uuid = window.GAS.background;
+    }
     if ($background) {
       // window.GAS.log.d('background', background)
       value = $background.uuid;

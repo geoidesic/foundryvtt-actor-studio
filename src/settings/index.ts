@@ -15,7 +15,6 @@ export function registerSettings(app: Game): void {
   });
 
   /**  Disabled settings */
-  // defaultStartingGoldDice();
   // showRollsAsChatMessages();
   // individualPanelScrolls();
   // tokenDisplayNameMode();
@@ -30,11 +29,12 @@ export function registerSettings(app: Game): void {
   // private settings
   // lastMigration();
   // abilityScoreMethods();
-
-
+  
+  
   /** World Settings */
   sourcesConfiguration();
   donationTracker();
+  defaultStartingGoldDice();
   allowManualInput();
   allowStandardArray();
   allowPointBuy();
@@ -164,9 +164,9 @@ function disableOtherActorCreationOptionsForPlayers() {
 }
 
 function disableAdvancementCapture() {
-  game.settings.register(MODULE_ID, 'devDisableAdvancementMove', {
-    name: game.i18n.localize('GAS.Setting.DisableAdvancementMove.Name'),
-    hint: game.i18n.localize('GAS.Setting.DisableAdvancementMove.Hint'),
+  game.settings.register(MODULE_ID, 'disableAdvancementCapture', {
+    name: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Name'),
+    hint: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Hint'),
     scope: 'user',
     config: true,
     type: Boolean,
@@ -261,8 +261,8 @@ function dontShowWelcome() {
 
 function defaultStartingGoldDice() {
   game.settings.register(MODULE_ID, 'defaultGoldDice', {
-    name: game.i18n.localize('GAS.Setting.DefaultGoldDice.Name'),
-    hint: game.i18n.localize('GAS.Setting.DefaultGoldDice.Hint'),
+    name: game.i18n.localize('GAS.Setting.defaultGoldDice.Name'),
+    hint: game.i18n.localize('GAS.Setting.defaultGoldDice.Hint'),
     scope: 'world',
     config: true,
     default: '5d4 * 10',

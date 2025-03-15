@@ -1,6 +1,7 @@
 import { writable, get, derived } from 'svelte/store';;
 import { advancementQueueStore } from "~/src/stores/advancements";
 import { clearGoldChoices } from "~/src/stores/goldChoices";
+import { MODULE_ID } from "~/src/helpers/constants";
 
 
 const initialTabs = [

@@ -103,7 +103,7 @@
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
       // window.GAS.log.d("subclass", x);
       // window.GAS.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
-      return x.system.classIdentifier == $characterClass.system.identifier;
+      return x.system?.classIdentifier == $characterClass?.system?.identifier;
     });
 
     // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
@@ -115,7 +115,7 @@
 
   };
 
-  const selectClassHandler = async (option) => {
+  const handleSelectClass = async (option) => {
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -158,7 +158,7 @@
     }
   };
 
-  const selectSubClassHandler = async (option) => {
+  const handleSelectSubClass = async (option) => {
     const selectedSubClass = await fromUuid(option);
     $characterSubClass = selectedSubClass;
     activeSubClass = option;
@@ -200,20 +200,23 @@
     subClassAdvancementExpanded = !subClassAdvancementExpanded;
   };
 
-  $: if(isDisabled) {
-    classAdvancementExpanded = true
-  }
+
+  // $: window.GAS.log.d('subclasses', subclasses);
 
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClass;
   $: classProp = activeClass;
+  $: classAdvancementComponents = {};
+  $: subClassAdvancementComponents = {};
+  $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
+  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
+  $: isDisabled = $readOnlyTabs.includes("class");
+
   $: combinedHtml = $characterClass ? `
       ${richHTML}
       ${richSubClassHTML ? `<h1>${localize("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
   ` : "";
-  $: classAdvancementComponents = {};
-  $: subClassAdvancementComponents = {};
-
+  
   $: if (subClassesIndex?.length) {
     subclasses = subClassesIndex
       .flat()
@@ -221,8 +224,10 @@
   } else {
     subclasses = [];
   }
-
-  // $: window.GAS.log.d('subclasses', subclasses);
+  
+  $: if(isDisabled) {
+    classAdvancementExpanded = true
+  }
 
   $: if ($characterSubClass?.system?.advancement.length) {
     subClassAdvancementArrayFiltered =
@@ -241,12 +246,13 @@
     classAdvancementArrayFiltered = [];
   }
 
-  $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
-  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
-
-  $: isDisabled = $readOnlyTabs.includes("class");
 
   onMount(async () => {
+    if(window.GAS.debug) {
+      $characterClass = {};
+      $characterClass.uuid = window.GAS.characterClass;
+      // handleSelectSubClass(window.GAS.characterSubClass);
+    }
     if ($characterClass) {
       window.GAS.log.d($characterClass);
 
@@ -265,6 +271,7 @@
         $characterSubClass
       );
     }
+    
   });
 </script>
 
@@ -275,14 +282,14 @@
         .flexrow
           .flex0.required(class="{$characterClass ? '' : 'active'}") *
           .flex3 
-            IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
+            IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
         +if("$characterClass")
           +if("subclasses.length && classGetsSubclassThisLevel")
             h3.left.mt-md {localize('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
-                IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
+                IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
           +if("!isDisabled")
             h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
             .flexrow

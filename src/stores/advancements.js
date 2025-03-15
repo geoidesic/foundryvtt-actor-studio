@@ -74,7 +74,12 @@ export const advancementQueueStore = () => {
     updateCurrentProcess: (obj) => inProcess.update(p => ({ ...p, ...obj })),
   };
 
-  // Define closeAdvancementManager with access to storeObj
+  /**
+   * Monitors the queue for advancements and closes the advancement manager when the queue is empty
+   * Also starts the equipment selection process when the queue is empty if that's enabled, passing 
+   * off the close responsibility to the equipment selection process
+   * @returns {Promise<boolean>}
+   */
   async function closeAdvancementManager() {
     let monitoringPromise = null;
 
@@ -122,28 +127,41 @@ export const advancementQueueStore = () => {
     return queue;
   }
 
-  // Add advanceQueue to storeObj
+  /**
+   * Advances the queue to the next item
+   * Will open the Advancements tab if it's required and not already open
+   * @param {boolean} initial - Whether this is the initial call to the queue
+   * @returns {Promise<boolean>}
+   */
   storeObj.advanceQueue = async function (initial) {
-
-
+    window.GAS.log.d('advanceQueue', get(store));
     const currentStore = get(store);
     const next = currentStore[0] || false;
+    const currentActor = get(inProcess)?.actor;
 
     if (!next) {
       inProcess.set(false);
-      const actor = get(inProcess)?.actor;
-      
+
       // Check if equipment selection is enabled
       if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
-        Hooks.call("gas.equipmentSelection", actor);
+        Hooks.call("gas.equipmentSelection", currentActor);
       } else {
         Hooks.call("gas.close");
       }
-      
-      if (actor) {
-        actor.sheet.render(true);
+
+      if (currentActor) {
+        currentActor.sheet.render(true);
       }
       return false;
+    } else {
+      if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+        // Check if equipment selection is enabled
+        if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
+          Hooks.call("gas.equipmentSelection", currentActor);
+        } else {
+          Hooks.call("gas.close");
+        }
+      }
     }
 
     inProcess.set(next);
@@ -173,15 +191,25 @@ export const advancementQueueStore = () => {
       // error handling...
     }
 
-    if (get(activeTab) != 'advancements') {
-      const currentTabs = get(tabs);
-      const advancementTabExists = currentTabs.some(tab => tab.id === 'advancements');
-      
-      if (!advancementTabExists) {
-        await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
-      }
-      activeTab.set('advancements');
-    }
+    // const devDisableAdvancementOpen = game.settings.get(MODULE_ID, 'devDisableAdvancementOpen') || false;
+
+    // if (get(activeTab) != 'advancements') {
+    //   if(!devDisableAdvancementOpen) {
+    //     const currentTabs = get(tabs);
+    //     const advancementTabExists = currentTabs.some(tab => tab.id === 'advancements');
+
+    //     if (!advancementTabExists) {
+    //       await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
+    //     }
+    //     activeTab.set('advancements');
+    //   } else {
+    //     if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
+    //       Hooks.call("gas.equipmentSelection", actor);
+    //     } else {
+    //       Hooks.call("gas.close");
+    //     }
+    //   }
+    // }
 
     await new Promise(resolve => setTimeout(resolve, 200));
     return await closeAdvancementManager();
