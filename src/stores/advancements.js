@@ -1,11 +1,12 @@
 import { writable, get, derived } from 'svelte/store';
-import { prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Utility';
+import { prepareItemForDrop, dropItemOnCharacter, delay } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { tabs, activeTab } from '~/src/stores/index';
 
 export const advancementQueueStore = () => {
   const store = writable([]);
   const inProcess = writable(false);
+  const currentActor = derived(inProcess, $inProcess => $inProcess?.actor);
   const { subscribe, set, update } = store;
 
   const remove = (id) => update(apps => apps.filter(app => app.id !== id));
@@ -74,37 +75,40 @@ export const advancementQueueStore = () => {
     updateCurrentProcess: (obj) => inProcess.update(p => ({ ...p, ...obj })),
   };
 
+
+  const isPanelEmpty = () => {
+    if (get(activeTab) !== 'advancements') return false;
+    const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
+    return !Boolean(panel.html()?.trim());
+  }
+
+  const waitForPanelEmpty = async () => {
+    if (monitoringPromise) return monitoringPromise;
+
+    monitoringPromise = new Promise(resolve => {
+      const checkPanel = () => {
+        if (isPanelEmpty()) {
+          resolve();
+        } else {
+          setTimeout(checkPanel, 600);
+        }
+      };
+      checkPanel();
+    });
+
+    return monitoringPromise;
+  };
+
   /**
    * Monitors the queue for advancements and closes the advancement manager when the queue is empty
    * Also starts the equipment selection process when the queue is empty if that's enabled, passing 
    * off the close responsibility to the equipment selection process
    * @returns {Promise<boolean>}
    */
-  async function closeAdvancementManager() {
+  async function watchAdvancementManager() {
+    await delay(200); //- delay to allow for the items to be dropped
+
     let monitoringPromise = null;
-
-    const isPanelEmpty = () => {
-      if (get(activeTab) !== 'advancements') return false;
-      const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
-      return !Boolean(panel.html()?.trim());
-    }
-
-    const waitForPanelEmpty = async () => {
-      if (monitoringPromise) return monitoringPromise;
-
-      monitoringPromise = new Promise(resolve => {
-        const checkPanel = () => {
-          if (isPanelEmpty()) {
-            resolve();
-          } else {
-            setTimeout(checkPanel, 600);
-          }
-        };
-        checkPanel();
-      });
-
-      return monitoringPromise;
-    };
 
     await waitForPanelEmpty();
     monitoringPromise = null;
@@ -128,91 +132,55 @@ export const advancementQueueStore = () => {
   }
 
   /**
+   * Opens equipment tab if enabled, otherwise closes the advancement manager
+   */
+  function closeOrEquip() {
+    if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
+      window.GAS.log.d('Equipment selection enabled for currentActor', currentActor);
+      if (currentActor.system.startingEquipment && currentActor.system.startingEquipment.length && currentActor.system.wealth) {
+        Hooks.call("gas.equipmentSelection", currentActor);
+        return;
+      }
+    }
+    Hooks.call("gas.close");
+  }
+
+  function handleEmptyQueue() {
+    inProcess.set(false);
+    closeOrEquip(currentActor);
+  }
+
+  async function handleNextItem(next) {
+    inProcess.set(next);
+    remove(next.id);
+    const item = await prepareItemForDrop(next);
+    const result = await dropItemOnCharacter(currentActor, item);
+    return result;
+  }
+
+  /**
    * Advances the queue to the next item
    * Will open the Advancements tab if it's required and not already open
    * @param {boolean} initial - Whether this is the initial call to the queue
    * @returns {Promise<boolean>}
    */
   storeObj.advanceQueue = async function (initial) {
-    window.GAS.log.d('advanceQueue', get(store));
+    //- get current state
     const currentStore = get(store);
     const next = currentStore[0] || false;
-    const currentActor = get(inProcess)?.actor;
 
+    //- handle empty queue
     if (!next) {
-      inProcess.set(false);
-
-      // Check if equipment selection is enabled
-      if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
-        Hooks.call("gas.equipmentSelection", currentActor);
-      } else {
-        Hooks.call("gas.close");
-      }
-
-      if (currentActor) {
-        currentActor.sheet.render(true);
-      }
+      handleEmptyQueue();
       return false;
-    } else {
-      if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
-        // Check if equipment selection is enabled
-        if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
-          Hooks.call("gas.equipmentSelection", currentActor);
-        } else {
-          Hooks.call("gas.close");
-        }
-      }
     }
 
-    inProcess.set(next);
-    remove(next.id);
+    //- handle next item
+    const result = await handleNextItem(next);
+    window.GAS.log.d('handleNextItem result', result);
 
-
-    // @todo: temporary for debug - this causes the equipment selection happen before the advancements (and without the advancements tab)
-    // const actor = get(inProcess)?.actor;
-    // Hooks.call("gas.equipmentSelection", actor);
-    // return;
-
-    const item = await prepareItemForDrop(next);
-
-    try {
-      const result = await dropItemOnCharacter(next.actor, item);
-      console.log('POST-DROP RESULT:', {
-        result,
-        itemAfterDrop: item
-      });
-
-      const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
-      if (skipDomMove) {
-        window.GAS.log.d('Dev setting: Skipping advancement DOM movement');
-        return true;
-      }
-    } catch (error) {
-      // error handling...
-    }
-
-    // const devDisableAdvancementOpen = game.settings.get(MODULE_ID, 'devDisableAdvancementOpen') || false;
-
-    // if (get(activeTab) != 'advancements') {
-    //   if(!devDisableAdvancementOpen) {
-    //     const currentTabs = get(tabs);
-    //     const advancementTabExists = currentTabs.some(tab => tab.id === 'advancements');
-
-    //     if (!advancementTabExists) {
-    //       await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
-    //     }
-    //     activeTab.set('advancements');
-    //   } else {
-    //     if (game.settings.get(MODULE_ID, 'enableEquipmentSelection')) {
-    //       Hooks.call("gas.equipmentSelection", actor);
-    //     } else {
-    //       Hooks.call("gas.close");
-    //     }
-    //   }
-    // }
-
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return await closeAdvancementManager();
+    //- set the advancement manager watcher
+    return await watchAdvancementManager();
   };
 
   return storeObj;
