@@ -41,7 +41,18 @@
   onMount( async () => {
     if(levelUp) {
       $actorInGame = $documentStore
-      // window.GAS.log.d($actorInGame);
+      // Initialize characterClass from the actor's class data if in level-up mode
+      if ($actorInGame) {
+        // Find the first class item in the actor's items
+        const classItem = $actorInGame.items.find(item => item.type === "class");
+        if (classItem) {
+          // Set the characterClass store with the class item
+          characterClass.set(classItem);
+          window.GAS.log.d('[PCAppShell] Initialized characterClass for level-up:', classItem);
+        } else {
+          window.GAS.log.d('[PCAppShell] No class found on actor for level-up');
+        }
+      }
     }
     isLevelUp.set(levelUp);
 
