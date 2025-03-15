@@ -110,7 +110,7 @@
       },
       "disableAdvancementCapture": {
         "Name": "Disable Advancement Tab",
-        "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window."
+        "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window. (Note: this is intended for debugging purposes only – there's not much point in using Actor Studio with this disabled.)"
       },
       "DisableOtherActorCreationOptionsForPlayers": {
         "Name": "Disable other Create Actor button",
