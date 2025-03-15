@@ -102,9 +102,11 @@ onMount(() => {
 
   th, td
     text-align: left
-    padding: 0.5rem
+    padding: 0 0.5rem
     border-bottom: 1px solid rgba(0, 0, 0, 0.1)
 
+    img
+      margin-top: 0.3rem
   th
     font-weight: bold
     color: var(--color-text-dark-primary)

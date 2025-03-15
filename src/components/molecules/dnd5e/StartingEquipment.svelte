@@ -279,7 +279,7 @@
   margin-right: 0.2rem
   padding: 0.5rem
   border-radius: var(--border-radius)
-  background: rgba(0, 0, 0, 0.2)
+  background: rgba(0, 0, 0, 0.1)
   
   &:last-child
     margin-bottom: 0
@@ -287,52 +287,56 @@
   &.in-progress
     box-shadow: 0px 0px 15px var(--color-highlight)
     border: 1px solid var(--dnd5e-color-gold)
+    .option.selected
+      background: rgba(0, 90, 0, 0.8)
 
-.group-label
-  display: block
-  font-size: 1em
-  color: var(--color-text-dark-secondary)
-  margin-bottom: 0.5rem
-  font-style: italic
 
-.options
-  display: grid
-  grid-template-columns: repeat(1, 1fr)
-  gap: 0.2rem
+  .group-label
+    display: block
+    font-size: 1em
+    color: var(--color-text-dark-secondary)
+    margin-bottom: 0.5rem
+    font-style: italic
 
-.option, .equipment-item
-  display: flex
-  padding: 0.3rem 0.5rem
-  border: 1px solid rgba(255, 255, 255, 0.1)
-  border-radius: 4px
-  background: rgba(0, 0, 0, 0.4)
-  color: var(--li-background-color)
-  transition: all 0.2s ease
+  .options
+    display: grid
+    grid-template-columns: repeat(1, 1fr)
+    gap: 0.2rem
 
-.option
-  cursor: pointer
-  
-  &:hover:not(.disabled, .selected, .completed)
-    background: rgba(0, 0, 0, 0.6)
-    border-color: rgba(255, 255, 255, 0.2)
+  .option, .equipment-item
+    display: flex
+    padding: 0.3rem 0.5rem
+    border: 1px solid rgba(255, 255, 255, 0.1)
+    border-radius: 4px
+    background: rgba(0, 0, 0, 0.4)
+    color: var(--li-background-color)
+    transition: all 0.2s ease
 
-  &.selected
-    background: rgba(0, 0, 0, 0.8)
-    border-color: #b59e54
-    box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
+  .option
+    cursor: pointer
+    
+    &:hover:not(.disabled, .selected, .completed)
+      background: rgba(0, 0, 0, 0.6)
+      border-color: rgba(255, 255, 255, 0.2)
 
-  &.completed
-    cursor: auto
-    &:hover
-      box-shadow: none
+    &.selected
+      border-color: #b59e54
+      box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
+      background: rgba(0, 90, 0, 0.4)
 
-  &.disabled
-    cursor: auto
-    &:not(.completed)
-      opacity: 0.7
 
-    &:hover
-      box-shadow: none
+    &.completed
+      cursor: auto
+      &:hover
+        box-shadow: none
+
+    &.disabled
+      cursor: auto
+      &:not(.completed)
+        opacity: 0.7
+
+      &:hover
+        box-shadow: none
     
 
 .equipment-item
