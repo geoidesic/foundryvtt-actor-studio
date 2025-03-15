@@ -199,6 +199,19 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
   return acc;
 }, {});
 
+$: if(configurableSelections.length > 0) {
+  window.GAS.log.d('[EquipmentSelectorDetail] Configurable selections:', configurableSelections);
+  window.scrollTo(0, 0);
+  
+  // Delay scrolling to ensure the element is rendered
+  setTimeout(() => {
+    const firstEquipmentSelect = document.querySelector('.equipment-select');
+    if (firstEquipmentSelect) {
+      firstEquipmentSelect.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, 100); // Adjust the delay as necessary
+}
+
 function handleSelection(groupId, option, parentGroup) {
   
 
