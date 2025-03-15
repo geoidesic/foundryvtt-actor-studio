@@ -14,6 +14,7 @@
       "ClassLevelUp": "Level up this class"
     },
     "Name": "Name",
+    "MulticlassMode": "Multiclass Mode",
     "Item": "Item",
     "Type": "Type",
     "NoAdvancements": "No advancements for this level",

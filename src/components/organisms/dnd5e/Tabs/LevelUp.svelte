@@ -32,6 +32,7 @@
     activeClassKey = null,
     activeSubClassUUID = null,
     classValue = null,
+    multiclassValue = null,
     subclassValue = null,
     subClassesIndex,
     subclasses,
@@ -96,7 +97,7 @@
   /** DECORATORS */
   function existingClassesCssClassForRow(classKey) {
     let css = getCharacterClass(classKey).uuid === $activeClass ? 'active' : ''
-    if($isMultiClass) {
+    if(isInMulticlassMode) {
       css += ' gold-button-disabled'
     } else {
         css += ' gold-button'
@@ -161,7 +162,13 @@
     $characterSubClass = null;
     subclassValue = null;
     richSubClassHTML = "";
-    $characterClass = await fromUuid(option);
+    
+    // Store the multiclass value separately
+    multiclassValue = option;
+    
+    // Load the class data for UI display
+    const newClass = await fromUuid(option);
+    $characterClass = newClass;
     $activeClass = option;
     
     await tick();
@@ -190,6 +197,7 @@
   const clickCancelMulticlass = async () => {
     $activeClass = false
     classValue = null
+    multiclassValue = null
     activeSubClassUUID = null
     activeClassKey = null
     $characterClass = false
@@ -201,7 +209,7 @@
    * @param {string} classKey - The key identifier for the character class
    */
   async function clickAddLevel(classKey) {
-    if ($isMultiClass) return;
+    if (isInMulticlassMode) return;
     const isUnset = Boolean($activeClass) && Boolean($newClassLevel);
     if(isUnset) return;
 
@@ -304,15 +312,28 @@
    */
   $: filteredClassIndex = mappedClassIndex
       .filter((i) => {
-        return i.type == 'class' 
-        //- @why: don't include classes that are already in the character
-        !classKeys.includes(i.label.toLowerCase())
+        // First check if it's a class type
+        if (i.type !== 'class') return false;
+        
+        // Then check if the class is already in the character's classes
+        // Compare by name (case-insensitive)
+        const classNameLower = i.label.toLowerCase();
+        return !classKeys.some(key => key.toLowerCase() === classNameLower);
       })
       .sort((a, b) => a.label.localeCompare(b.label))
 
+  // Local derived store to correctly determine multiclass mode
+  $: isInMulticlassMode = $characterClass && !$newClassLevel && multiclassValue;
+  
+  // Use this in the template instead of $isMultiClass where appropriate
   $: {
     console.log('Current character class:', $characterClass);
     console.log('Current character subclass:', $characterSubClass);
+    console.log('Multiclass value:', multiclassValue);
+    console.log('Class value:', classValue);
+    console.log('Active class:', $activeClass);
+    console.log('Is multiclass mode:', $isMultiClass);
+    console.log('Is in multiclass mode (local):', isInMulticlassMode);
   }
 
   // Ensure that the character class is set before accessing its properties
@@ -377,7 +398,12 @@
               .flex0
                 button.pr-none.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
                   i(class="fas fa-times")
-          IconSelect.icon-select( options="{filteredClassIndex}" placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{classValue}" )
+          IconSelect.icon-select( options="{filteredClassIndex}" placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{multiclassValue}" )
+          
+          +if("isInMulticlassMode")
+            .info-text.mt-sm
+              i.fas.fa-info-circle.mr-xs
+              span {localize('GAS.MulticlassMode')}
         
         +if("$characterClass")
           +if("activeClassObj")
@@ -454,5 +480,13 @@
     border-radius: 5px
     box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
     font-size: smaller
+    
+  .info-text
+    font-size: 0.85rem
+    color: var(--color-text-dark-secondary)
+    font-style: italic
+    
+    i
+      color: var(--color-text-hyperlink)
 
 </style>
