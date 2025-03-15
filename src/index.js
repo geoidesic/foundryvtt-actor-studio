@@ -27,8 +27,9 @@ Hooks.once("init", (app, html, data) => {
   window.GAS.dnd5eRules = getDndRulesVersion();
 
   //- these settings are for debugging / testing purposes only
-  window.GAS.debug = true;
-  if(window.GAS.debug) {
+
+  if(packageJson.debug) {
+    window.GAS.debug = true;
     window.GAS.race = "Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000"
     window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000"
     window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000"
@@ -326,8 +327,13 @@ Hooks.on('renderApplication', (app, html, data) => {
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
           const handleButtonClick = function (e) {
+            //- check if Actor Studio is already open
             if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
               if (userHasRightPermissions()) {
+                if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
+                  ui.notifications.error('Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
+                  return;
+                }
                 const actorName = $('input', html).val();
                 const folderName = $('select[name="folder"]', html).val();
                 try {

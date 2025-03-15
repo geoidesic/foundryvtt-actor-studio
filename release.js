@@ -16,6 +16,13 @@ execSync('yarn build', { stdio: 'inherit' });
 
 // Read current version from package.json
 const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+
+// Set debug to false
+packageJson.debug = false;
+
+// Write updated package.json back to file
+fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
+
 const currentVersion = packageJson.version;
 
 // Calculate new version
