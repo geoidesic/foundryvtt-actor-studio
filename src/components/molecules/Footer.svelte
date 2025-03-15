@@ -307,7 +307,7 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up'];
   const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
 
   // Handler for adding equipment
