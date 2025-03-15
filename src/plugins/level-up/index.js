@@ -32,6 +32,11 @@ export function dnd5eSheet2UI(app, html, data) {
   `);
 
   levelUpButton.on('click', async (event) => {
+    //- check if Actor Studio is already open
+    if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
+      ui.notifications.error('Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
+      return;
+    }
     //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
   })
