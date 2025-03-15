@@ -168,7 +168,7 @@ Hooks.on("dropActorSheetData", (actor, type, info) => {
 
 Hooks.on('gas.captureAdvancement', (initial = false) => {
   window.GAS.log.d('[gas.captureAdvancement] initial', initial)
-  const skipDomMove = game.settings.get(MODULE_ID, 'devDisableAdvancementMove');
+  const skipDomMove = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
   if (skipDomMove) {
     window.GAS.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
     return;
