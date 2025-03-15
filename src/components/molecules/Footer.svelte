@@ -43,7 +43,13 @@
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
-  import { goldRoll } from "~/src/stores/goldRoll";
+  import { goldRoll } from "~/src/stores/storeDefinitions";
+
+  // Add a local store to track if equipment has been added
+  const equipmentAdded = writable(false);
+  
+  // Add a flag to track if equipment has been added during this session
+  let hasAddedEquipmentThisSession = false;
 
   // Add this after your store imports
   const storeMap = {
@@ -53,14 +59,40 @@
     'characterSubClass': characterSubClass
   };
 
-  $: window.GAS.log.d("preAdvancementSelections", $preAdvancementSelections);
-  $: window.GAS.log.d("hasCharacterCreationChanges", $hasCharacterCreationChanges);
-
   export let value = null;
 
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
+
+  // Derived store to check if actor has items in inventory
+  const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
+    if (!$actorInGame) return false;
+    
+    // Check if the actor has any items
+    // In Foundry VTT, items is a Collection that has methods like filter and size
+    const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
+    
+    // First check if items collection exists and has any items
+    if (!$actorInGame.items || $actorInGame.items.size === 0) {
+      window.GAS.log.d('[FOOTER] No items found on actor');
+      return false;
+    }
+    
+    // Use the Foundry Collection's filter method
+    const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
+    const hasItems = inventoryItems.size > 0;
+    
+    window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
+      actorId: $actorInGame.id,
+      totalItems: $actorInGame.items.size,
+      inventoryItems: inventoryItems,
+      inventoryItemCount: inventoryItems.size,
+      hasItems: hasItems
+    });
+    
+    return hasItems;
+  });
 
   const handleNameInput = (e) => {
     if ($isLevelUp) {
@@ -100,13 +132,8 @@
   };
 
   const clickUpdateHandler = async () => {
-    window.GAS.log.d(
-      "[clickUpdateHandler] preAdvancementSelections",
-      $preAdvancementSelections
-    );
     
     if (!$hasCharacterCreationChanges) {
-      window.GAS.log.d("[clickUpdateHandler] no changes, skipping update");
       return;
     }
 
@@ -120,14 +147,12 @@
     });
 
     if (!confirmed) {
-      window.GAS.log.d("[clickUpdateHandler] update cancelled");
       return;
     }
 
     // Close any open advancement dialogs first
     const currentProcess = get(dropItemRegistry).currentProcess;
     if (currentProcess?.app) {
-      window.GAS.log.d("[clickUpdateHandler] closing advancement for", currentProcess.id);
       currentProcess.app.close();
     }
 
@@ -137,15 +162,12 @@
     }
 
     for (const item of $changedCharacterCreationItems) {
-      window.GAS.log.d("[clickUpdateHandler] processing item", item);
       
       // Find the item on the actor that matches the type
       const actorItem = $actorInGame.items.find(i => i.type === item.type);
-      window.GAS.log.d("[clickUpdateHandler] found actor item", actorItem);
 
       // Delete the item from the actor (not the compendium)
       if (actorItem) {
-        window.GAS.log.d("[clickUpdateHandler] deleting actor item", actorItem);
         await actorItem.delete();
       }
 
@@ -173,28 +195,13 @@
   };
 
   const createActorInGameAndEmbedItems = async () => {
-    window.GAS.log.i("Building queue for actor creation");
-    window.GAS.log.d("Background:", $background);
-    window.GAS.log.d("Race:", $race);
-    window.GAS.log.d("Class:", $characterClass);
-    window.GAS.log.d("Subclass:", $characterSubClass);
 
     // Create the actor first
     $actorInGame = await Actor.create($actor.toObject());
-
-    // Update actor's gold after all items are added
-    if ($goldRoll > 0) {
-      window.GAS.log.i("Setting starting gold:", $goldRoll);
-      await $actorInGame.update({
-        "system.currency.gp": $goldRoll
-      });
-      // Reset the gold roll after setting it on the actor
-      goldRoll.set(0);
-    }
+    window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems created actor', $actorInGame);
 
     // race
     if ($race) {
-      window.GAS.log.i("Adding race to character");
       const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -207,11 +214,11 @@
           $race,
         ),
       });
+      $preAdvancementSelections.race = $race;
     }
     
     // subrace
     if ($subRace) {
-      window.GAS.log.i("Adding subrace to character");
       const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -223,7 +230,8 @@
           getLevelByDropType($actorInGame, $subRace),
           $subRace,
         ),
-      });
+        });
+      $preAdvancementSelections.subRace = $subRace;
     }
     
     if ($background) {
@@ -238,6 +246,7 @@
           $background,
         ),
       });
+      $preAdvancementSelections.background = $background;
     }
 
     if ($characterClass) {
@@ -253,60 +262,7 @@
           $characterClass,
         ),
       });
-
-      // Handle starting equipment if enabled in settings
-      // if (game.settings.get(MODULE_ID, "enableEquipmentSelection") && $flattenedStartingEquipment.length) {
-      //   window.GAS.log.i("[Starting Equipment] Adding starting equipment to character");
-      //   window.GAS.log.d("[Starting Equipment] Current selections:", $equipmentSelections);
-        
-      //   // Process standalone items first
-      //   const standaloneItems = $flattenedStartingEquipment.filter(item => !item.group);
-      //   window.GAS.log.d("[Starting Equipment] Standalone items:", standaloneItems);
-      //   for (const item of standaloneItems) {
-      //     if (item.key) {
-      //       const itemData = await fromUuid(item.key);
-      //       if (itemData) {
-      //         window.GAS.log.d("[Starting Equipment] Adding standalone item:", itemData);
-      //         dropItemRegistry.add({
-      //           actor: $actorInGame,
-      //           id: `equipment_${item.key}`,
-      //           itemData: itemData,
-      //           isLevelUp: false,
-      //         });
-      //       }
-      //     }
-      //   }
-
-      //   // Process equipment selections from groups
-      //   const selections = Object.entries($equipmentSelections);
-      //   window.GAS.log.d("[Starting Equipment] Processing selections:", selections);
-        
-      //   for (const [groupId, selection] of selections) {
-      //     window.GAS.log.d("[Starting Equipment] Processing group:", { groupId, selection });
-          
-      //     // Find all items in this group
-      //     const groupItems = $flattenedStartingEquipment.filter(item => item.group === groupId);
-      //     window.GAS.log.d("[Starting Equipment] Group items:", groupItems);
-          
-      //     // Find the selected item
-      //     const selectedItem = groupItems.find(item => item._id === selection.selectedItemId);
-      //     window.GAS.log.d("[Starting Equipment] Selected item:", selectedItem);
-          
-      //     if (selectedItem?.key) {
-      //       const itemData = await fromUuid(selectedItem.key);
-      //       if (itemData) {
-      //         window.GAS.log.d("[Starting Equipment] Adding selected item:", itemData);
-      //         dropItemRegistry.add({
-      //           actor: $actorInGame,
-      //           id: `equipment_${selectedItem.key}`,
-      //           itemData: itemData,
-      //           isLevelUp: false,
-      //           count: selection.count || 1,
-      //         });
-      //       }
-      //     }
-      //   }
-      // }
+      $preAdvancementSelections.class = $characterClass;
     }
 
     if ($characterSubClass) {
@@ -321,9 +277,11 @@
           $characterSubClass,
         ),
       });
+      $preAdvancementSelections.subclass = $characterSubClass;
     }
 
-    console.log("PRE-QUEUE ADVANCE:", $dropItemRegistry);
+    window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems advancing queue with dropItemRegistry', $dropItemRegistry);
+
     await dropItemRegistry.advanceQueue(true);
 
   };
@@ -354,6 +312,7 @@
 
   // Handler for adding equipment
   const handleAddEquipment = async () => {
+    window.GAS.log.d('[FOOTER] handleAddEquipment for ', window.GAS.dnd5eVersion, window.GAS.dnd5eRules);
     // For v4, check if choices are complete
     if (window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === "2024") {
       const choices = get(goldChoices);
@@ -371,15 +330,9 @@
       // Only process equipment if either class or background chose equipment
       if (choices.fromClass.choice === 'equipment' || choices.fromBackground.choice === 'equipment') {
         const selections = get(flattenedSelections);
-        window.GAS.log.d('FOOTER | Raw selections:', selections);
 
         // Group duplicates by their UUID BEFORE starting async operations
         const groupedSelections = selections.reduce((acc, selection) => {
-          window.GAS.log.d('FOOTER | Grouping selection:', {
-            key: selection.key,
-            currentCount: acc[selection.key]?.count || 0,
-            newCount: (acc[selection.key]?.count || 0) + 1
-          });
           
           if (!acc[selection.key]) {
             acc[selection.key] = {
@@ -392,24 +345,14 @@
           return acc;
         }, {});
 
-        window.GAS.log.d('FOOTER | Final grouped selections:', groupedSelections);
 
         // Drop each unique item with its accumulated quantity
         for (const [uuid, data] of Object.entries(groupedSelections)) {
           const item = await fromUuid(data.key);
           if (item) {
-            window.GAS.log.d('FOOTER | Pre-modification item:', {
-              uuid: data.key,
-              intendedQuantity: data.count,
-              currentQuantity: item.system.quantity,
-              item
-            });
 
             // Create a copy of the item data
             const itemData = foundry.utils.deepClone(item);
-            window.GAS.log.d('FOOTER | Pre-modification item:', itemData);
-            window.GAS.log.d('FOOTER | Pre-modification item:', itemData.update);
-            window.GAS.log.d('FOOTER | Pre-modification item:', itemData.updateSource);
 
             itemData.updateSource({ 
               "system.quantity": data.count
@@ -432,15 +375,9 @@
       });
 
       const selections = get(flattenedSelections);
-      window.GAS.log.d('FOOTER | Raw selections:', selections);
 
       // Group duplicates by their UUID BEFORE starting async operations
       const groupedSelections = selections.reduce((acc, selection) => {
-        window.GAS.log.d('FOOTER | Grouping selection:', {
-          key: selection.key,
-          currentCount: acc[selection.key]?.count || 0,
-          newCount: (acc[selection.key]?.count || 0) + 1
-        });
         
         if (!acc[selection.key]) {
           acc[selection.key] = {
@@ -453,7 +390,6 @@
         return acc;
       }, {});
 
-      window.GAS.log.d('FOOTER | Final grouped selections:', groupedSelections);
 
       // Drop each unique item with its accumulated quantity
       for (const [uuid, data] of Object.entries(groupedSelections)) {
@@ -468,9 +404,6 @@
 
           // Create a copy of the item data
           const itemData = foundry.utils.deepClone(item);
-          window.GAS.log.d('FOOTER | Pre-modification item:', itemData);
-          window.GAS.log.d('FOOTER | Pre-modification item:', itemData.update);
-          window.GAS.log.d('FOOTER | Pre-modification item:', itemData.updateSource);
 
           itemData.updateSource({ 
             "system.quantity": data.count
@@ -482,12 +415,69 @@
     }
 
     Hooks.call("gas.close");
+    
+    // Mark equipment as added
+    equipmentAdded.set(true);
+    hasAddedEquipmentThisSession = true;
   };
 
   // Derive whether equipment section is complete
   $: isEquipmentComplete = window.GAS.dnd5eVersion === 4 
     ? ($progress === 100 && $areGoldChoicesComplete) 
     : ($progress === 100 && $goldRoll > 0);
+  
+  // Debug log for button visibility condition
+  $: {
+    if ($activeTab === 'equipment') {
+      window.GAS.log.d('[FOOTER] Button visibility check:', {
+        isEquipmentComplete,
+        hasInventoryItems: $hasInventoryItems,
+        equipmentAdded: $equipmentAdded,
+        shouldShowButton: isEquipmentComplete && !$equipmentAdded
+      });
+    }
+  }
+
+  // Helper function to check actor inventory and update equipmentAdded
+  function checkActorInventory(actor) {
+    if (actor && actor.items && actor.items.size > 0) {
+      const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
+      const hasInventory = actor.items.some(item => inventoryTypes.includes(item.type));
+      
+      if (hasInventory) {
+        window.GAS.log.d('[FOOTER] Actor has inventory items, setting equipmentAdded to true');
+        equipmentAdded.set(true);
+      }
+    }
+  }
+  
+  // Check actor inventory when actorInGame changes
+  $: if ($actorInGame) {
+    // If equipment has already been added this session, don't change the flag
+    if (!hasAddedEquipmentThisSession) {
+      checkActorInventory($actorInGame);
+    }
+  }
+  
+  // Reset equipmentAdded when tab changes to equipment
+  $: if ($activeTab === 'equipment') {
+    // If equipment has been added this session, keep the button hidden
+    if (hasAddedEquipmentThisSession) {
+      equipmentAdded.set(true);
+    } 
+    // Otherwise, check if the actor has inventory items
+    else if (!$hasInventoryItems) {
+      equipmentAdded.set(false);
+    } else {
+      equipmentAdded.set(true);
+    }
+    
+    window.GAS.log.d('[FOOTER] Tab changed to equipment:', {
+      hasAddedEquipmentThisSession,
+      hasInventoryItems: $hasInventoryItems,
+      equipmentAdded: $equipmentAdded
+    });
+  }
 </script>
 
 <template lang="pug">
@@ -520,7 +510,7 @@
         +if("$activeTab === 'equipment'")
           .progress-container
             ProgressBar(progress="{progress}")
-            +if("isEquipmentComplete")
+            +if("isEquipmentComplete && !$equipmentAdded")
               .button-container
                 button.mt-xs(
                   type="button"
