@@ -60,10 +60,10 @@ export const getDndRulesVersion = () => {
 };
 
 export function getLevelByDropType(actor, droppedItem) {
-  window.GAS.log.d('getLevelByDropType', droppedItem);
-  window.GAS.log.d('actor', actor);
+  // window.GAS.log.d('getLevelByDropType', droppedItem);
+  // window.GAS.log.d('actor', actor);
   const currentDropItemRegistry = get(dropItemRegistry);
-  window.GAS.log.d('currentDropItemRegistry', currentDropItemRegistry);
+  // window.GAS.log.d('currentDropItemRegistry', currentDropItemRegistry);
   switch (droppedItem.type) {
     case 'class':
       return actor.classes[droppedItem.system.identifier].system.levels
@@ -432,6 +432,30 @@ export const dropItemOnCharacter = async (actor, item) => {
   // window.GAS.log.d('dropItemOnCharacter');
   // window.GAS.log.d('dropItemOnCharacter item', item);
   // window.GAS.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
+  
+  // Track the item being dropped by adding it to the actor's flags
+  try {
+    // Create a simplified record of the item with just name and uuid
+    const itemRecord = {
+      name: item.name,
+      uuid: item.uuid
+    };
+    
+    // Get existing items of this type from flags, or initialize empty array
+    const existingItems = actor.getFlag(MODULE_ID, `droppedItems.${item.type}`) || [];
+    
+    // Add the new item to the array
+    const updatedItems = [...existingItems, itemRecord];
+    
+    // Update the flag with the new array
+    await actor.setFlag(MODULE_ID, `droppedItems.${item.type}`, updatedItems);
+    
+    // window.GAS.log.d(`Added ${item.name} to actor's ${item.type} tracking flags`);
+  } catch (error) {
+    window.GAS.log.e('Error updating actor flags for dropped item:', error);
+  }
+  
+  // Proceed with the original drop functionality
   return await actor.sheet._onDropItemCreate(item);
 }
 

@@ -15,6 +15,9 @@
   export let document; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
   export let levelUp = false;
 
+  //- register hooks
+  Hooks.once("gas.close", gasClose);
+  Hooks.once("gas.equipmentSelection", handleEquipmentSelection);
 
   setContext("#doc", documentStore);
 
@@ -50,13 +53,14 @@
   onDestroy(() => {
     resetStores();
     Hooks.off("gas.close", gasClose);
+    Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
   });
 
   function gasClose() {
-    // window.GAS.log.d('gas.close')
-    // window.GAS.log.d($actorInGame);
-    // window.GAS.log.d($actorInGame.sheet);
-    // window.GAS.log.d($isLevelUp)
+    window.GAS.log.d('gas.close')
+    window.GAS.log.d($actorInGame);
+    window.GAS.log.d($actorInGame.sheet);
+    window.GAS.log.d($isLevelUp)
     if(!$isLevelUp) {
       $actorInGame.sheet.render(true);
     }
@@ -64,16 +68,16 @@
     application.close();
   }
 
-  Hooks.once("gas.close", gasClose);
-
   /**
    * NB: this is called after advancements because some equipment selection
    * is dependent on the proficiencies selected
    * @todo: logic for those proficiency dependencies are not yet implemented
    */
   function handleEquipmentSelection() {
+    window.GAS.log.d('[PCAPP] handleEquipmentSelection')
     // Add Equipment tab
     if(!$tabs.find(x => x.id === "equipment")) {
+      window.GAS.log.d('[PCAPP] adding equipment tab')
       tabs.update(t => [...t, { label: "Equipment", id: "equipment", component: "Equipment" }]);
     }
 
@@ -87,13 +91,7 @@
     readOnlyTabs.set(["race", "background", "abilities", "class"]);
   }
 
-  Hooks.once("gas.equipmentSelection", handleEquipmentSelection);
 
-  onDestroy(() => {
-    resetStores();
-    Hooks.off("gas.close", gasClose);
-    Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
-  });
 </script>
 
 <!-- This is necessary for Svelte to generate accessors TRL can access for `elementRoot` -->

@@ -206,6 +206,7 @@ Hooks.on('gas.captureAdvancement', (initial = false) => {
       }
     }
   }
+  
 });
 
 Hooks.on('dnd5e.preAdvancementManagerComplete', (...args) => {
