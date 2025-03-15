@@ -150,6 +150,9 @@ export function filterPackForDTPackItems(pack, entries) {
   return entries;
 }
 
+export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+
 /**
  * Extracts items from all compendium packs including subfolders.
  * Use this if you're happy with the default pack index.
