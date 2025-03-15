@@ -59,10 +59,10 @@ export function registerSettings(app: Game): void {
   forceDnd5eLevelUpAutomation();
   debugSetting();
   debugHooksSetting();
+  disableAdvancementCapture();
 
   /** User settings */
   dontShowWelcome();
-  disableAdvancementCapture();
 }
 
 function illuminatedHeight() {
@@ -167,7 +167,7 @@ function disableAdvancementCapture() {
   game.settings.register(MODULE_ID, 'disableAdvancementCapture', {
     name: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Name'),
     hint: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Hint'),
-    scope: 'user',
+    scope: 'world',
     config: true,
     type: Boolean,
     default: false
