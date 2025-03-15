@@ -1,9 +1,9 @@
 ---
-description: Don't try to test the codebase using the CLI
+description: Do not suggest running the application or testing the codebase after making changes.
 globs: 
 alwaysApply: true
 ---
 
 # Your rule content
 
-- Don't try to test the codebase using the CLI - because I'm running HMR so I test as you code
+- Do not suggest running the application or testing the codebase after making changes.
