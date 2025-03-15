@@ -410,10 +410,10 @@
             h3.left.mt-md Advancements
             LevelUpExisting(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newClassLevel}")
             
-            // Add the StartingEquipment component here
-            +if("$characterClass?.system?.startingEquipment?.length")
-              StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
-              StartingGold(characterClass="{$characterClass}")
+            //@deprecated Add the StartingEquipment component here - only used for Character level 1
+            //- +if("$characterClass?.system?.startingEquipment?.length")
+            //-   StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}")
+            //-   StartingGold(characterClass="{$characterClass}")
           +if("subclasses.length && classGetsSubclassThisLevel")
             ul.icon-list
               li.left 
