@@ -15,7 +15,7 @@
     activeTab,
     dropItemRegistry,
     actorInGame,
-    isMultiClass,
+    isNewMultiClass,
     abilityRolls,
     isStandardArrayValues,
     subClassesForClass,
@@ -180,7 +180,7 @@
           id: item.type,
           itemData: newStoreItem,
           isLevelUp: $isLevelUp,
-          isMultiClass: item.type === "characterClass" ? $isMultiClass : undefined,
+          isNewMultiClass: item.type === "characterClass" ? $isNewMultiClass : undefined,
           hasAdvancementChoices: itemHasAdvancementChoices(newStoreItem),
           hasAdvancementsForLevel: isAdvancementsForLevelInItem(
             getLevelByDropType($actorInGame, item.type === "characterClass" ? "class" : item.type),
@@ -255,7 +255,7 @@
         id: "characterClass",
         itemData: $characterClass,
         isLevelUp: $isLevelUp,
-        isMultiClass: $isMultiClass,
+        isNewMultiClass: $isNewMultiClass,
         hasAdvancementChoices: itemHasAdvancementChoices($characterClass),
         hasAdvancementsForLevel: isAdvancementsForLevelInItem(
           getLevelByDropType($actorInGame, "class"),
@@ -294,7 +294,7 @@
       id: "characterClass",
       itemData: $characterClass,
       isLevelUp: $isLevelUp,
-      isMultiClass: $isMultiClass,
+      isNewMultiClass: $isNewMultiClass,
     };
     if ($characterClass) {
       const characterClassData = $characterClass;

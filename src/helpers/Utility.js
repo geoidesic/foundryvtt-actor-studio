@@ -393,18 +393,18 @@ export const getCompendiumSource = (item) => {
  * @param {Object} options
  * @param {Object} options.itemData - The source item data containing UUID and compendium information
  * @param {boolean} options.isLevelUp - Whether this is being called during level-up
- * @param {boolean} options.isMultiClass - Whether this is a multi-class level-up
+ * @param {boolean} options.isNewMultiClass - Whether this is a multi-class level-up
  * @returns {Promise<Item|undefined>} The prepared Item instance, or undefined if item creation fails
  */
-export const prepareItemForDrop = async ({ itemData, isLevelUp, isMultiClass }) => {
+export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass }) => {
   // window.GAS.log.d('prepareItemForDrop');
   // window.GAS.log.d('isLevelUp? ', isLevelUp);
-  // window.GAS.log.d('isMultiClass? ', isMultiClass);
+  // window.GAS.log.d('isNewMultiClass? ', isNewMultiClass);
   // window.GAS.log.d('itemData', itemData);
 
   let item
   if (isLevelUp && itemData.type === 'class') {
-    if (isMultiClass) {
+    if (isNewMultiClass) {
       item = await Item.implementation.fromDropData({ type: 'Item', uuid: itemData.uuid });
     } else {
       item = await Item.implementation.fromDropData({ type: 'Item', uuid: getCompendiumSource(itemData) });

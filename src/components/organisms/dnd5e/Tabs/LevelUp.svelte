@@ -16,7 +16,7 @@
     tabs,
     newClassLevel,
     selectedMultiClass,
-    isMultiClass
+    isNewMultiClass
   } from "~/src/stores/index";
   import { localize } from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
@@ -325,14 +325,14 @@
   // Local derived store to correctly determine multiclass mode
   $: isInMulticlassMode = $characterClass && !$newClassLevel && multiclassValue;
   
-  // Use this in the template instead of $isMultiClass where appropriate
+  // Use this in the template instead of $isNewMultiClass where appropriate
   $: {
     console.log('Current character class:', $characterClass);
     console.log('Current character subclass:', $characterSubClass);
     console.log('Multiclass value:', multiclassValue);
     console.log('Class value:', classValue);
     console.log('Active class:', $selectedMultiClass);
-    console.log('Is multiclass mode:', $isMultiClass);
+    console.log('Is multiclass mode:', $isNewMultiClass);
     console.log('Is in multiclass mode (local):', isInMulticlassMode);
   }
 
@@ -373,7 +373,7 @@
 
 <template lang="pug">
   .content
-    //- pre isMultiClass {$isMultiClass}
+    //- pre isNewMultiClass {$isNewMultiClass}
     //- pre selectedMultiClass {$selectedMultiClass}
     //- pre characterClass {$characterClass}
     //- pre newClassLevel {$newClassLevel}
@@ -385,7 +385,7 @@
           //- pre classKey {classKey}
           //- pre getCharacterClass(classKey) {getCharacterClass(classKey).system.img}
           //- pre getCharacterClass(classKey)?.system?.img {getCharacterClass(classKey)?.system?.img}
-          +if("$selectedMultiClass && !$newClassLevel")
+          +if("$isNewMultiClass")
             .class-row(class="{existingClassesCssClassForRow(classKey)}")
               LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
             +else()
@@ -396,7 +396,7 @@
             .flex2.left Add Multiclass
             +if("classProp")
               .flex0
-                button.pr-none.mt-sm.gold-button(type="button" role="button" on:mousedown="{clickCancelMulticlass}")
+                button.mt-sm.gold-button(style="padding-right: 2px" type="button" role="button" on:mousedown="{clickCancelMulticlass}")
                   i(class="fas fa-times")
           IconSelect.icon-select( options="{filteredClassIndex}" placeHolder="{classesPlaceholder}" handler="{selectClassHandler}" id="characterClass-select" bind:value="{multiclassValue}" )
           

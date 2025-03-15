@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { selectedMultiClass, characterClass, newClassLevel, isMultiClass } from "~/src/stores/index";
+  import { selectedMultiClass, characterClass, newClassLevel, isNewMultiClass } from "~/src/stores/index";
   import { ucfirst } from "~/src/helpers/Utility.js";
 
   export let src = false;
@@ -30,7 +30,7 @@
       .flex0.right.pr-md.py-xs
         +if("!$selectedMultiClass")
           i(class="fas fa-plus")
-        +if("$selectedMultiClass && !$isMultiClass")
+        +if("$selectedMultiClass && !$isNewMultiClass")
           i(class="fas fa-times" on:click!="{cancelLevelUp}")
 </template>
 
