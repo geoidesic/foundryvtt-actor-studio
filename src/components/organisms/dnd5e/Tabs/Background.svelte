@@ -81,8 +81,8 @@
 
   onMount(async () => {
     if (window.GAS.debug) {
-      $background = {};
-      $background.uuid = window.GAS.background;
+      $background = await fromUuid(window.GAS.background);
+      console.log('DEBUG: Background', $background);
     }
     if ($background) {
       // window.GAS.log.d('background', background)

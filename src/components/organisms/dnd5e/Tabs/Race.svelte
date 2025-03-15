@@ -111,8 +111,8 @@
 
   onMount(async () => {
     if (window.GAS.debug) {
-      $race = {};
-      $race.uuid = window.GAS.race;
+      $race = await fromUuid(window.GAS.race);
+      console.log('DEBUG: Race', $race);
     }
     if ($race) {
       value = $race.uuid;

@@ -23,6 +23,7 @@
   // Process and group equipment
   $: {
     if (startingEquipment?.length) {
+      
       startingEquipment
         // @deprecated: this breaks the order of the items for v4 in the flattenedStartingEquipment store
         // .sort((a, b) => {

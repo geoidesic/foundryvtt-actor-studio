@@ -41,6 +41,7 @@
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
             +else()
               StartingGold(characterClass="{$characterClass}" disabled="{false}")
+          pre isGoldComplete {isGoldComplete}
           +if("isGoldComplete")
             StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
       .flex0.border-right.right-border-gradient-mask

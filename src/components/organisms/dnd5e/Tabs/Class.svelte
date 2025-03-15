@@ -249,8 +249,8 @@
 
   onMount(async () => {
     if(window.GAS.debug) {
-      $characterClass = {};
-      $characterClass.uuid = window.GAS.characterClass;
+      $characterClass = await fromUuid(window.GAS.characterClass);
+      console.log('DEBUG: Class', $characterClass);
       // handleSelectSubClass(window.GAS.characterSubClass);
     }
     if ($characterClass) {
