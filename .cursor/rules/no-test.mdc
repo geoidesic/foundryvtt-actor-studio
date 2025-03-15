@@ -1,0 +1,9 @@
+---
+description: Don't try to test the codebase using the CLI
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- Don't try to test the codebase using the CLI - because I'm running HMR so I test as you code
