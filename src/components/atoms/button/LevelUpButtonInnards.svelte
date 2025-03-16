@@ -1,20 +1,13 @@
 <script>
   import { onMount } from "svelte";
-  import { selectedMultiClass, characterClass, newClassLevel, isNewMultiClass } from "~/src/stores/index";
   import { ucfirst } from "~/src/helpers/Utility.js";
 
   export let src = false;
   export let level = false;
   export let classKey = false;
-
-  const cancelLevelUp = () => {
-    $selectedMultiClass = false;
-    $characterClass = false
-    $newClassLevel = false
-  };
+  export let iconClass = 'fas fa-plus';
 
   onMount(() => {
-    window.GAS.log.d("mounted LevelUpButtonInnards", src, level, classKey, $selectedMultiClass, $characterClass, $newClassLevel);
   });
 </script>
 
@@ -28,10 +21,7 @@
       .flex0.right.mr-sm
         .lozenge.pa-xs {level} 
       .flex0.right.pr-md.py-xs
-        +if("!$selectedMultiClass")
-          i(class="fas fa-plus")
-        +if("$selectedMultiClass && !$isNewMultiClass")
-          i(class="fas fa-times" on:click!="{cancelLevelUp}")
+        i(class="{iconClass}")
 </template>
 
 <style lang="sass">
@@ -51,4 +41,7 @@
     align-items: center
   .icon
     min-width: 40px
+  i
+    &:not(.fa-plus):not(.fa-times)
+      margin-right: 0.8em
 </style>

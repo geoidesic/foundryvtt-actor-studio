@@ -190,6 +190,20 @@
     );
   }
 
+  function handleExistingClassClick(classKey) {
+    const isActive = getCharacterClass(classKey).name == $characterClass.name;
+    if(isActive) {
+      clickCancelMulticlass();
+    } else {
+      clickAddLevel(classKey);
+    }
+  }
+
+  function isRowActive(classKey) {
+    window.GAS.log.d('isRowActive', $characterClass.name, getCharacterClass(classKey).name)
+    return $characterClass.name && getCharacterClass(classKey).name == $characterClass.name
+  }
+
   /**
    * Handles cancellation of multiclass selection
    * Resets all class and subclass related state
@@ -201,7 +215,9 @@
     activeSubClassUUID = null
     selectedMultiClassKey = null
     $characterClass = false
+    newClassLevel.set(false)
   }
+
 
   /**
    * Handles adding a level to an existing class
@@ -248,7 +264,7 @@
   $: html = $characterClass?.system?.description.value || "";
   $: subClassProp = activeSubClassUUID;
   $: classProp = $selectedMultiClass;
-  $: combinedHtml = richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '');
+  $: combinedHtml = $characterClass ? richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
   $: classAdvancementComponents = {};
   $: subClassAdvancementComponents = {};
 
@@ -385,12 +401,9 @@
           //- pre classKey {classKey}
           //- pre getCharacterClass(classKey) {getCharacterClass(classKey).system.img}
           //- pre getCharacterClass(classKey)?.system?.img {getCharacterClass(classKey)?.system?.img}
-          +if("$isNewMultiClass")
-            .class-row(class="{existingClassesCssClassForRow(classKey)}")
-              LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
-            +else()
-              .class-row(class="{existingClassesCssClassForRow(classKey)}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{clickAddLevel(classKey)}")
-                LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}")  
+          
+          .class-row(class="{existingClassesCssClassForRow(classKey)}" role="button" aria-role="button" aria-label="{localize('GAS.LevelUp.Button')+' '+classKey}" data-tooltip="{localize('GAS.LevelUp.Button')+' '+classKey}" on:mousedown!="{handleExistingClassClick(classKey)}")
+            LevelUpButtonInnards(src="{getCharacterClass(classKey)?.img}" level="{classLevels[index]}" classKey="{classKey}" iconClass="{isRowActive(classKey) ? 'fas fa-times' : $characterClass ? '' : 'fas fa-plus'}")  
         +if("!$newClassLevel") 
           h1.flexrow.mt-md
             .flex2.left Add Multiclass
@@ -448,7 +461,10 @@
                           svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
   
       .flex0.border-right.right-border-gradient-mask 
-      .flex3.left.pl-md.scroll.col-b {@html combinedHtml}
+      .flex3.left.pl-md.scroll.col-b 
+        +if("$characterClass")
+          h1 {$characterClass.name || ''}
+        | {@html combinedHtml}
   
   </template>
 
