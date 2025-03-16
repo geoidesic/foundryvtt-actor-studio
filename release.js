@@ -46,12 +46,12 @@ const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
 moduleJson.version = newVersion;
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
-// Commit the build and version changes
-execSync('git add .', { stdio: 'inherit' });
-execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
-
 // Run `yarn version` with the specified version type but without creating a git tag
 execSync(`yarn version --${versionType} --no-git-tag-version`, { stdio: 'inherit' });
+
+// Commit the build and version changes
+execSync('git add .', { stdio: 'inherit' });
+execSync(`git commit -m "chore: build and bump version to ${newVersion}"`, { stdio: 'inherit' });
 
 // Create a git tag manually without the 'v' prefix
 execSync(`git tag ${newVersion}`, { stdio: 'inherit' });
