@@ -289,17 +289,46 @@
   const updateActorAndEmbedItems = async () => {
     await $actor.update({ name: actorName });
     $actorInGame = $actor;
-    const data = {
-      actor: $actorInGame,
-      id: "characterClass",
-      itemData: $characterClass,
-      isLevelUp: $isLevelUp,
-      isNewMultiClass: $isNewMultiClass,
-    };
+    
+    // Add the class level update to the queue
     if ($characterClass) {
-      const characterClassData = $characterClass;
-      dropItemRegistry.add(data);
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterClass",
+        itemData: $characterClass,
+        isLevelUp: $isLevelUp,
+        isNewMultiClass: $isNewMultiClass,
+      });
+      
+      // If we're leveling up an existing class (not multiclassing), update the class level
+      if (!$isNewMultiClass) {
+        // Get the class identifier to find the right class to update
+        const classIdentifier = $characterClass.system.identifier;
+        if (classIdentifier && $actorInGame.classes[classIdentifier]) {
+          // Update the class level
+          await $actorInGame.classes[classIdentifier].update({
+            "system.levels": $actorInGame.classes[classIdentifier].system.levels + 1
+          });
+        }
+      }
     }
+    
+    // Add the subclass to the queue if it exists
+    if ($characterSubClass) {
+      dropItemRegistry.add({
+        actor: $actorInGame,
+        id: "characterSubClass",
+        itemData: $characterSubClass,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($characterSubClass),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(
+          getLevelByDropType($actorInGame, "subclass"),
+          $characterSubClass,
+        ),
+      });
+    }
+    
+    // Process the queue
     dropItemRegistry.advanceQueue(true);
   };
 
