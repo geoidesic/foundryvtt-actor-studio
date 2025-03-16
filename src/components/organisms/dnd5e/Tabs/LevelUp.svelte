@@ -6,7 +6,8 @@
     extractItemsFromPacksSync,
     getFoldersFromMultiplePacks,
     getPacksFromSettings,
-    ucfirst
+    ucfirst,
+    getSubclassLevel
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -316,8 +317,9 @@
   $: selectedMultiClassIndex = classKeys.indexOf(selectedMultiClassKey);
   $: selectedMultiClassLevel = classLevels[selectedMultiClassIndex];
 
-  $: subClassLevel = $characterClass.getFlag ? $characterClass.getFlag(MODULE_ID, "subclassLevel") : false;
-  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
+  // Update subclass detection to match Class.svelte implementation
+  $: subClassLevel = $characterClass ? getSubclassLevel($characterClass, MODULE_ID) : false;
+  $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $newClassLevel;
 
 
   $: window.GAS.log.d('$characterClass', $characterClass)
@@ -350,13 +352,6 @@
     console.log('Active class:', $selectedMultiClass);
     console.log('Is multiclass mode:', $isNewMultiClass);
     console.log('Is in multiclass mode (local):', isInMulticlassMode);
-  }
-
-  // Ensure that the character class is set before accessing its properties
-  $: if ($characterClass) {
-    subClassLevel = $characterClass.getFlag(MODULE_ID, "subclassLevel");
-  } else {
-    console.warn('Character class is not set, cannot access getFlag');
   }
 
   onMount(async () => {
