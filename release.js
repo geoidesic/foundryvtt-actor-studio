@@ -50,7 +50,11 @@ fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 execSync('git add .', { stdio: 'inherit' });
 execSync(`git commit -m "chore: build"`, { stdio: 'inherit' });
 
-// Run `yarn version` with the specified version type
-execSync(`yarn version --${versionType}`, { stdio: 'inherit' });
+// Run `yarn version` with the specified version type but without creating a git tag
+execSync(`yarn version --${versionType} --no-git-tag-version`, { stdio: 'inherit' });
+
+// Create a git tag manually without the 'v' prefix
+execSync(`git tag ${newVersion}`, { stdio: 'inherit' });
+execSync(`git push --tags`, { stdio: 'inherit' });
 
 console.log(`Released version ${newVersion}`);
