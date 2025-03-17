@@ -129,6 +129,9 @@ div.content
   .content 
     @include staticOptions
 
+    .col-a
+      max-width: 325px
+
   :global(.icon-select)
     position: relative
 
