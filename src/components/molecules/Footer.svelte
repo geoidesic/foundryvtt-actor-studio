@@ -24,8 +24,10 @@
     changedCharacterCreationItems,
     level,
     tabs,
-    classUuidForLevelUp
-    
+    classUuidForLevelUp,
+    subClassUuidForLevelUp,
+    levelUpClassObject,
+    levelUpSubClassObject
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -41,7 +43,7 @@
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
@@ -76,7 +78,7 @@
     
     // First check if items collection exists and has any items
     if (!$actorInGame.items || $actorInGame.items.size === 0) {
-      window.GAS.log.d('[FOOTER] No items found on actor');
+      // window.GAS.log.d('[FOOTER] No items found on actor');
       return false;
     }
     
@@ -84,13 +86,13 @@
     const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
     const hasItems = inventoryItems.size > 0;
     
-    window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
-      actorId: $actorInGame.id,
-      totalItems: $actorInGame.items.size,
-      inventoryItems: inventoryItems,
-      inventoryItemCount: inventoryItems.size,
-      hasItems: hasItems
-    });
+    // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
+    //   actorId: $actorInGame.id,
+    //   totalItems: $actorInGame.items.size,
+    //   inventoryItems: inventoryItems,
+    //   inventoryItemCount: inventoryItems.size,
+    //   hasItems: hasItems
+    // });
     
     return hasItems;
   });
@@ -115,20 +117,8 @@
   };
 
   const clickUpdateLevelUpHandler = async () => {
-    //- add the subClass to the dropItemRegistry
-    if ($characterSubClass) {
-      dropItemRegistry.add({
-        actor: $actorInGame,
-        id: "characterSubClass",
-        itemData: $characterSubClass,
-        isLevelUp: $isLevelUp,
-        hasAdvancementChoices: itemHasAdvancementChoices($characterSubClass),
-        hasAdvancementsForLevel: isAdvancementsForLevelInItem(
-          getLevelByDropType($actorInGame, "subclass"),
-          $characterSubClass,
-        ),
-      });
-    }
+    window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
+
     await updateActorAndEmbedItems();
   };
 
@@ -199,7 +189,7 @@
 
     // Create the actor first
     $actorInGame = await Actor.create($actor.toObject());
-    window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems created actor', $actorInGame);
+    // window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems created actor', $actorInGame);
 
     // race
     if ($race) {
@@ -281,54 +271,58 @@
       $preAdvancementSelections.subclass = $characterSubClass;
     }
 
-    window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems advancing queue with dropItemRegistry', $dropItemRegistry);
+    // window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems advancing queue with dropItemRegistry', $dropItemRegistry);
 
     await dropItemRegistry.advanceQueue(true);
 
   };
 
   const updateActorAndEmbedItems = async () => {
+    window.GAS.log.d('[FOOTER] updateActorAndEmbedItems', $classUuidForLevelUp);
+
     await $actor.update({ name: actorName });
+
     $actorInGame = $actor;
     
     // Add the class level update to the queue
-    if ($characterClass) {
+    if ($classUuidForLevelUp) {
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "characterClass",
-        itemData: $characterClass,
+        itemData: $levelUpClassObject,
         isLevelUp: $isLevelUp,
         isNewMultiClass: $isNewMultiClass,
       });
       
       // If we're leveling up an existing class (not multiclassing), update the class level
-      if (!$isNewMultiClass) {
-        // Get the class identifier to find the right class to update
-        const classIdentifier = $characterClass.system.identifier;
-        if (classIdentifier && $actorInGame.classes[classIdentifier]) {
-          // Update the class level
-          await $actorInGame.classes[classIdentifier].update({
-            "system.levels": $actorInGame.classes[classIdentifier].system.levels + 1
-          });
-        }
-      }
+      // if (!$isNewMultiClass) {
+      //   // Get the class identifier to find the right class to update
+      //   const classIdentifier = $levelUpClassObject.system.identifier;
+      //   if (classIdentifier && $actorInGame.classes[classIdentifier]) {
+      //     // Update the class level
+      //     await $actorInGame.classes[classIdentifier].update({
+      //       "system.levels": $actorInGame.classes[classIdentifier].system.levels + 1
+      //     });
+      //   }
+      // }
     }
     
     // Add the subclass to the queue if it exists
-    if ($characterSubClass) {
+    if ($subClassUuidForLevelUp) {
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "characterSubClass",
-        itemData: $characterSubClass,
+        itemData: $levelUpSubClassObject,
         isLevelUp: $isLevelUp,
-        hasAdvancementChoices: itemHasAdvancementChoices($characterSubClass),
+        hasAdvancementChoices: itemHasAdvancementChoices($levelUpSubClassObject),
         hasAdvancementsForLevel: isAdvancementsForLevelInItem(
           getLevelByDropType($actorInGame, "subclass"),
           $characterSubClass,
         ),
       });
     }
-    
+
+    window.GAS.log.d('[FOOTER] updateActorAndEmbedItems advancing queue with dropItemRegistry', $dropItemRegistry);
     // Process the queue
     dropItemRegistry.advanceQueue(true);
   };
@@ -342,7 +336,7 @@
 
   // Handler for adding equipment
   const handleAddEquipment = async () => {
-    window.GAS.log.d('[FOOTER] handleAddEquipment for ', window.GAS.dnd5eVersion, window.GAS.dnd5eRules);
+    // window.GAS.log.d('[FOOTER] handleAddEquipment for ', window.GAS.dnd5eVersion, window.GAS.dnd5eRules);
     // For v4, check if choices are complete
     if (window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === "2024") {
       const choices = get(goldChoices);
@@ -459,12 +453,12 @@
   // Debug log for button visibility condition
   $: {
     if ($activeTab === 'equipment') {
-      window.GAS.log.d('[FOOTER] Button visibility check:', {
-        isEquipmentComplete,
-        hasInventoryItems: $hasInventoryItems,
-        equipmentAdded: $equipmentAdded,
-        shouldShowButton: isEquipmentComplete && !$equipmentAdded
-      });
+      // window.GAS.log.d('[FOOTER] Button visibility check:', {
+      //   isEquipmentComplete,
+      //   hasInventoryItems: $hasInventoryItems,
+      //   equipmentAdded: $equipmentAdded,
+      //   shouldShowButton: isEquipmentComplete && !$equipmentAdded
+      // });
     }
   }
 
@@ -475,7 +469,7 @@
       const hasInventory = actor.items.some(item => inventoryTypes.includes(item.type));
       
       if (hasInventory) {
-        window.GAS.log.d('[FOOTER] Actor has inventory items, setting equipmentAdded to true');
+        // window.GAS.log.d('[FOOTER] Actor has inventory items, setting equipmentAdded to true');
         equipmentAdded.set(true);
       }
     }
@@ -502,11 +496,11 @@
       equipmentAdded.set(true);
     }
     
-    window.GAS.log.d('[FOOTER] Tab changed to equipment:', {
-      hasAddedEquipmentThisSession,
-      hasInventoryItems: $hasInventoryItems,
-      equipmentAdded: $equipmentAdded
-    });
+    // window.GAS.log.d('[FOOTER] Tab changed to equipment:', {
+    //   hasAddedEquipmentThisSession,
+    //   hasInventoryItems: $hasInventoryItems,
+    //   equipmentAdded: $equipmentAdded
+    // });
   }
 </script>
 
@@ -515,12 +509,13 @@
   +if("FOOTER_TABS.includes($activeTab)")
     .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
+      //- pre $activeTab {$activeTab}
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
         .flex2
           .flexcol
             .flexrow.gap-10
               .flex0.right.mt-xs.no-wrap.ml-md
-                label Character Name
+                label {localize('Footer.CharacterName')}
               .flex2
                 input.left(type="text" value="{value}" on:input="{handleNameInput}")
       
@@ -529,13 +524,13 @@
         +if("$isLevelUp && $classUuidForLevelUp")
           .button-container
             button(
-              disabled="{!$characterClass}"
+              disabled="{!$classUuidForLevelUp}"
               type="button"
               role="button"
               on:mousedown="{clickUpdateLevelUpHandler}"
-              data-tooltip="{$characterClass ? '' : 'First select a class to level up, or a multi-class to add'}"
+              data-tooltip="{$classUuidForLevelUp ? '' : 'First select a class to level up, or a multi-class to add'}"
             )
-              span Add Character Level
+              span {localize('Footer.AddLevel')}
         
         +if("$activeTab === 'equipment'")
           .progress-container
@@ -547,7 +542,7 @@
                   role="button"
                   on:mousedown="{handleAddEquipment}"
                 )
-                  span Add Equipment & Gold
+                  span {localize('Footer.AddEquipment')}
               
         
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
@@ -561,7 +556,7 @@
                     role="button"
                     on:mousedown="{clickCreateHandler}"
                   )
-                    span Create Character
+                    span {localize('Footer.CreateCharacter')}
                   +else()
                     +if("$hasCharacterCreationChanges")
                       button(
@@ -569,7 +564,7 @@
                         role="button"
                         on:mousedown="{clickUpdateHandler}"
                       )
-                        span Update
+                        span {localize('Footer.UpdateCharacter')}
 </template>
 
 <style lang="sass">
