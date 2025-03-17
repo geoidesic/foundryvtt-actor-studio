@@ -11,7 +11,19 @@
     "Level": "Level",
     "LevelUp": {
       "Button": "Level Up",
-      "ClassLevelUp": "Level up this class"
+      "ClassLevelUp": "Level up this class",
+      "ExistingClassesTitle": "Level Up Existing Class",
+      "ExistingClassesDescription": "Click the class you want to level up, or select a class from the Multiclass dropdown to add a new one.",
+      "NewClassTitle": "Add Multiclass",
+      "SelectClass": "Select a class to add",
+      "CancelDescription": "Click the class to cancel the level up selection and return to the start. Or click \"Update Character\" to apply the changes."
+    },
+    "Footer": {
+      "AddLevel": "Add CharacterLevel",
+      "AddEquipment": "Add Equipment & Gold",
+      "CharacterName": "Character Name",
+      "CreateCharacter": "Create Character",
+      "UpdateCharacter": "Update Character"
     },
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
