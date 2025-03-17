@@ -1,31 +1,44 @@
 <script>
 import { getContext, onMount, tick } from "svelte";
+import { MODULE_ID } from "~/src/helpers/constants";
+import { localize } from "#runtime/svelte/helper";
+
 import { 
-  characterClass, 
   characterSubClass,
   classUuidForLevelUp, 
-  selectedMultiClass 
+  selectedMultiClassUUID,
+  newLevelValueForExistingClass,
+  levelUpClassObject,
+  resetLevelUpStores,
+  isLevelUp
 } from "~/src/stores";
-import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+
 import {
   extractItemsFromPacksSync,
   extractMapIteratorObjectProperties,
-  // getFoldersFromMultiplePacks,
   getPacksFromSettings,
-  // ucfirst,
-  // getSubclassLevel
-  } from "~/src/helpers/Utility.js";
+  getSubclassLevel
+} from "~/src/helpers/Utility.js";
+
+import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
+
 /** LOCAL VARIABLES */
-let multiclassValue = null,
+let 
+  classValue = null,
   activeSubClassUUID = null,
+  selectedMultiClassUUIDKey = null, //- tracks which class key (i.e. which existing class row) was selected
   subclassValue = null,
   subClassesIndex = [],
   classAdvancementArrayFiltered = [],
-  classesPlaceholder = "Classes",
+  subClassAdvancementArrayFiltered = [],
+  classesPlaceholder = "Select Multiclass",
   richHTML = "",
+  rowTooltip = "",
   richSubClassHTML = "",
   packs = getPacksFromSettings("classes"),
   subClassesPacks = getPacksFromSettings("subclasses"),
+  activeRowClassKey = null,
   mappedClassIndex = extractItemsFromPacksSync(packs, [
     "name->label",
     "img",
@@ -38,6 +51,19 @@ let multiclassValue = null,
 
 /** CONTEXT VARIABLES */
 const actor = getContext("#doc");
+
+/** DECORATORS */
+const decorators = {
+  existingClassesCssClassForRow(classKey) {
+    let css = getters.getCharacterClass(classKey).uuid === $selectedMultiClassUUID ? 'active' : ''
+    if(isNewMultiClassSelected) {
+      css += ' gold-button-disabled'
+    } else {
+        css += ' gold-button'
+    }
+    return css
+  }
+}
 
 /** FILTERS*/
 const filters = {
@@ -59,7 +85,7 @@ const filters = {
         ])
   
       filteredSubClassIndex.push(mappedSubClassIndex?.filter(
-        (x) => x.system.classIdentifier == $characterClass.system.identifier,
+        (x) => x.system.classIdentifier == $levelUpClassObject.system.identifier,
       ))
     }
     const output = filteredSubClassIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
@@ -74,8 +100,28 @@ const getters = {
    * @param {string} classKey - The key identifier for the character class
    * @returns {Object} The class data object from the actor
    */
-    getCharacterClass(classKey) {
+  getCharacterClass(classKey) {
     return $actor._classes[classKey];
+  },
+  /**
+   * Checks if a class row is active based on the selected class
+   * @param {string} classKey - The key identifier for the character class
+   * @returns {boolean} True if the class row is active, false otherwise
+   */
+  isRowActive(classKey) {
+  //   window.GAS.log.d('classKey', classKey)
+  //   window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
+    if(!$classUuidForLevelUp) return false;
+  //   window.GAS.log.d('classKey', classKey)
+  //   window.GAS.log.d('$levelUpClassObject.name.toLowerCase()', $levelUpClassObject.name.toLowerCase())
+    return classKey === $levelUpClassObject.name.toLowerCase()
+  },
+  rowTooltip(classKey) {
+    // Check if the class row is active
+    if ($classUuidForLevelUp && classKey === $levelUpClassObject.name.toLowerCase()) {
+      return 'Cancel'; // Return "Cancel" if the row is active
+    }
+    return localize('GAS.LevelUp.Button') + ' ' + classKey; // Default tooltip
   }
 }
 
@@ -97,39 +143,88 @@ const importers = {
 /** EVENT HANDLERS */
 const eventHandlers = {
   /**
+   * Handles adding a level to an existing class
+   * Updates state and loads relevant class advancements
+   * @param {string} classKey - The key identifier for the character class
+   */
+  clickAddLevel: async (classKey) => {
+    if (isNewMultiClassSelected) return;
+    const isUnset = Boolean($selectedMultiClassUUID) && Boolean($newLevelValueForExistingClass);
+    if(isUnset) return;
+
+    $levelUpClassObject = getters.getCharacterClass(classKey)
+    window.GAS.log.d('classKey', classKey)
+    window.GAS.log.d('$levelUpClassObject', $levelUpClassObject)
+    $classUuidForLevelUp = $levelUpClassObject.uuid
+    activeSubClassUUID = null;
+    $characterSubClass = null;
+    subclassValue = null;
+    subClassAdvancementArrayFiltered = [];
+    richSubClassHTML = "";
+    $selectedMultiClassUUID = false
+    activeRowClassKey = classKey;
+    /**
+     * Updates the newLevelValueForExistingClass store with the next level for this class
+     * Calculates new level by adding 1 to the character's current level in this class
+     * Example: If a Fighter is level 3, this sets newLevelValueForExistingClass to 4
+     */
+    $newLevelValueForExistingClass = $levelUpClassObject?.system?.levels + 1
+    
+    await tick();
+    subClassesIndex = await filters.getFilteredSubclassIndex();
+    await tick();
+    importers.importClassAdvancements();
+    richHTML = await TextEditor.enrichHTML(html);
+  },
+  /**
+   * Handles cancellation of multiclass selection
+   * Resets all class and subclass related state
+   */
+  clickCancel: async () => {
+    $selectedMultiClassUUID = false
+    classValue = null
+    activeSubClassUUID = null
+    selectedMultiClassUUIDKey = null
+    $classUuidForLevelUp = false
+    newLevelValueForExistingClass.set(false)
+    activeRowClassKey = null;
+  },
+  /**
    * Click will either add a level to the clicked class or cancel the level up selection
    * @param classKey
    */
-  handleExistingClassClick(classKey) {
-    const nameOfClickedClass = getters.getCharacterClass(classKey).name;
-    const isMultiClassMode = !classUuidForLevelUp && nameOfClickedClass == $characterClass.name;
+  handleRowActivation: (classKey) => {
+    return () => {
+      const nameOfClickedClass = getters.getCharacterClass(classKey).name;
+      const isMultiClassMode = $classUuidForLevelUp && nameOfClickedClass == $levelUpClassObject.name;
 
-
-    if(isMultiClassMode) {
-      eventHandlers.clickCancelMulticlass();
-    } else {
-      eventHandlers.clickAddLevel(classKey);
-    }
+      if(isMultiClassMode) {
+        eventHandlers.clickCancel();
+      } else {
+        eventHandlers.clickAddLevel(classKey);
+      }
+    };
   },
-    /**
+  handleRowDeactivation: (classKey) => {
+    return () => {
+      eventHandlers.clickCancel();
+    };
+  },
+  /**
    * Handles the selection of a new class for multiclassing
    * Resets subclass state and updates available options
    * @param {string} option - The UUID of the selected class
    */
-   async selectClassHandler(option) {
+  selectClassHandler: async (option) => {
     activeSubClassUUID = null;
     $characterSubClass = null;
     subclassValue = null;
     richSubClassHTML = "";
     
-    // Store the multiclass value separately
-    multiclassValue = option;
-    
-    // Load the class data for UI display
-    const newClass = await fromUuid(option);
-    $characterClass = newClass;
-    $selectedMultiClass = option;
+    $levelUpClassObject = await fromUuid(option);
+    $selectedMultiClassUUID = option;
     $classUuidForLevelUp = option;
+    activeRowClassKey = null;
     
     await tick();
     subClassesIndex = await filters.getFilteredSubclassIndex();
@@ -140,10 +235,18 @@ const eventHandlers = {
 }
 
 /** REACTIVE VARIABLES */
-$: html = $characterClass?.system?.description.value || "";
-$: classKeys = Object.keys($actor._classes);
 $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
+$: classKeys = Object.keys($actor._classes);
+$: html = $levelUpClassObject?.system?.description.value || "";
+$: subClassLevel = $classUuidForLevelUp ? getSubclassLevel($classUuidForLevelUp, MODULE_ID) : false; //- Update subclass detection to match Class.svelte implementation
+$: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $newLevelValueForExistingClass;
+$: isNewMultiClassSelected = $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID; //- Local derived store to correctly determine multiclass mode
+$: combinedHtml = $classUuidForLevelUp ? richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
+// Reactive variable for tooltip
+$: tooltipText = (classKey) => {
+  return $classUuidForLevelUp && classKey === $levelUpClassObject.name.toLowerCase() ? 'Cancel' : localize('GAS.LevelUp.Button') + ' ' + classKey;
+}
 
 /**
  * Filters available classes for multiclassing
@@ -160,17 +263,97 @@ $: subClassAdvancementComponents = {};
       return !classKeys.some(key => key.toLowerCase() === classNameLower);
     })
     .sort((a, b) => a.label.localeCompare(b.label))
+/**
+ * Tracks existing class data and levels
+ * Updates when classes or active class changes
+ */
+  $: existingCLassLevels = classKeys.map((classKey, index) => {
+    const classObj = $actor._classes[classKey]
+    window.GAS.log.d('classObj_' + index, classObj)
+    window.GAS.log.d('classObj.system.levels', classObj.system.levels)
+    return classObj.system.levels;
+  });
 
+$: window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
 
 onMount(async () => {
-  console.log('levelup', $characterClass);
+  resetLevelUpStores();
+  console.log('levelup', $classUuidForLevelUp);
 });
 </script>
 <template lang="pug">
-pre characterClass {Object.keys($characterClass)}
-pre selectedMultiClass {$selectedMultiClass}
-IconSelect.icon-select( options="{filteredClassIndex}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectClassHandler}" id="characterClass-select" bind:value="{multiclassValue}" )
+.content
+  .flexrow
+    .flex2.pr-sm.col-a
+      //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
+      //- pre classUuidForLevelUp {$classUuidForLevelUp}
+      //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+      +if("!$selectedMultiClassUUID")
+        h1.flex {localize('GAS.LevelUp.ExistingClassesTitle')}
+        +if("$classUuidForLevelUp")
+          p.left {localize('GAS.LevelUp.CancelDescription')}
+          +else 
+            p.left {localize('GAS.LevelUp.ExistingClassesDescription')}
+        +each("classKeys as classKey, index")
+          +if("activeRowClassKey == classKey")
+            // Active row with "Cancel" tooltip
+            ClassLevelRow(
+              cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
+              eventHandler!="{eventHandlers.handleRowDeactivation(classKey)}"
+              imgSrc="{getters.getCharacterClass(classKey)?.img}"
+              oldLevel="{existingCLassLevels[index]}"
+              classKey="{classKey}"
+              iconClass="fas fa-times"
+              newLevel="{$newLevelValueForExistingClass}"
+            )
+            +else
+              // Inactive row with default tooltip
+              +if("!$classUuidForLevelUp")
+                ClassLevelRow(
+                  imgSrc="{getters.getCharacterClass(classKey)?.img}"
+                  cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
+                  eventHandler!="{eventHandlers.handleRowActivation(classKey)}"
+                  oldLevel="{existingCLassLevels[index]}"
+                  classKey="{classKey}"
+                  tooltip="{getters.rowTooltip(classKey)}"
+                  iconClass="{$classUuidForLevelUp ? '' : 'fas fa-plus'}"
+                )
 
+      +if("!$newLevelValueForExistingClass") 
+        h1.flexrow.mt-md
+          .flex2.left {localize('GAS.LevelUp.NewClassTitle')}
+          +if("$selectedMultiClassUUID")
+            .flex0
+              button.mt-sm.gold-button(style="padding-right: 2px" type="button" role="button" on:mousedown="{eventHandlers.clickCancel}")
+                i(class="fas fa-times")
+        IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{localize('GAS.LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
+
+    .flex0.border-right.right-border-gradient-mask 
+    .flex3.left.pl-md.scroll.col-b 
+      pre isLevelUp: {$isLevelUp}
+      +if("$classUuidForLevelUp")
+        h1 {$levelUpClassObject.name || ''}
+      | {@html combinedHtml}
 </template>
 <style lang="sass">
+  @use "../../../../../styles/Mixins.scss" as mixins
+
+  :global(.icon-select)
+    position: relative
+
+  .gold-button-disabled
+    +mixins.gold-button(null)
+  .gold-button
+    +mixins.gold-button  
+
+  .content 
+    +mixins.staticOptions
+    .badge.inset
+      +mixins.badge
+      +mixins.inset
+      display: inline-block
+      white-space: nowrap
+
+    .col-a
+      max-width: 325px
 </style>

@@ -93,10 +93,6 @@ export default class PCApplication extends SvelteApplication {
         });
         
         if (confirmed) {
-          //- @deprecated [Rather leave this to the user to do]: Delete the actor if it exists
-          //   if (actor) {
-          //     await actor.delete();
-          //   }
           this.close();
         }
       } else {

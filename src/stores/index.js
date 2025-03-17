@@ -43,13 +43,14 @@ storeDefinitions.newLevelValueForExistingClass.name = "newLevelValueForExistingC
 storeDefinitions.classUuidForLevelUp.name = "classUuidForLevelUp";
 storeDefinitions.level.name = "level";
 storeDefinitions.activeTab.name = "activeTab";
-storeDefinitions.selectedMultiClass.name = "selectedMultiClass";
+storeDefinitions.selectedMultiClassUUID.name = "selectedMultiClassUUID";
 storeDefinitions.isActorCreated.name = "isActorCreated";
 storeDefinitions.tabs.name = "tabs";
 storeDefinitions.levelUpTabs.name = "levelUpTabs";
 storeDefinitions.actorInGame.name = "actorInGame";
 storeDefinitions.abilityGenerationMethod.name = "abilityGenerationMethod";
 storeDefinitions.subClassesForClass.name = "subClassesForClass";
+storeDefinitions.levelUpClassObject.name = "levelUpClassObject";
 
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore(); 
@@ -71,7 +72,7 @@ preAdvancementSelections.name = "preAdvancementSelections";
 export const hasCharacterCreationChanges = derived(
   [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections],
   ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
-    window.GAS.log.d("hasCharacterCreationChanges preAdvancementSelections", $preAdvancementSelections);
+    // window.GAS.log.d("hasCharacterCreationChanges preAdvancementSelections", $preAdvancementSelections);
     if (Object.keys($preAdvancementSelections).length === 0) return false;
     
     return (
@@ -106,6 +107,15 @@ export const changedCharacterCreationItems = derived(
   }
 );
 
+export const resetLevelUpStores = () => {
+  storeDefinitions.classUuidForLevelUp.set(null); //- tracks the class uuid for level up
+  storeDefinitions.newLevelValueForExistingClass.set(false); //- tracks new level value for existing class
+  storeDefinitions.selectedMultiClassUUID.set(false); //- tracks the selected multi class
+  storeDefinitions.levelUpClassObject.set(null); //- tracks the new multi class object
+
+  
+}
+
 // Function to reset all stores
 export function resetStores() {
   storeDefinitions.race.set(null); //- null | object
@@ -119,7 +129,7 @@ export function resetStores() {
   storeDefinitions.classUuidForLevelUp.set(null); //- null | uuid string
   storeDefinitions.pointBuyScoreTotal.set(12); //- number
   storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit")); //- number
-  storeDefinitions.selectedMultiClass.set(null); //- null | uuid string
+  storeDefinitions.selectedMultiClassUUID.set(null); //- null | uuid string
   storeDefinitions.activeTab.set(initialTabs[0].id); //- string
   storeDefinitions.isActorCreated.set(false); //- boolean
   storeDefinitions.actorInGame.set(null); //- null | object
@@ -127,6 +137,7 @@ export function resetStores() {
   storeDefinitions.subClassesForClass.set([]); //- array
   storeDefinitions.goldRoll.set(0); //- number
   storeDefinitions.readOnlyTabs.set([]); //- array
+  storeDefinitions.levelUpClassObject.set(null); //- null | object
   preAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void
