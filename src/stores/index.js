@@ -39,7 +39,8 @@ storeDefinitions.pointBuyScoreTotal.name = "pointBuyScoreTotal";
 storeDefinitions.pointBuyLimit.name = "pointBuyLimit";
 storeDefinitions.abilityRolls.name = "abilityRolls";
 storeDefinitions.isStandardArrayValues.name = "isStandardArrayValues";
-storeDefinitions.newClassLevel.name = "newClassLevel";
+storeDefinitions.newLevelValueForExistingClass.name = "newLevelValueForExistingClass";
+storeDefinitions.classUuidForLevelUp.name = "classUuidForLevelUp";
 storeDefinitions.level.name = "level";
 storeDefinitions.activeTab.name = "activeTab";
 storeDefinitions.selectedMultiClass.name = "selectedMultiClass";
@@ -55,10 +56,10 @@ export const dropItemRegistry = advancementQueueStore();
 dropItemRegistry.name = "dropItemRegistry";
 
 export const isNewMultiClass = derived(
-  [storeDefinitions.characterClass,  storeDefinitions.newClassLevel], 
-  ([$characterClass, $newClassLevel]) => {
-    if ($newClassLevel) return false;
-    if ($characterClass && !$newClassLevel) return true;
+  [storeDefinitions.characterClass,  storeDefinitions.newLevelValueForExistingClass], 
+  ([$characterClass, $newLevelValueForExistingClass]) => {
+    if ($newLevelValueForExistingClass) return false;
+    if ($characterClass && !$newLevelValueForExistingClass) return true;
   }
 );
 
@@ -107,26 +108,26 @@ export const changedCharacterCreationItems = derived(
 
 // Function to reset all stores
 export function resetStores() {
-  storeDefinitions.race.set(null);
-  storeDefinitions.background.set(null);
-  storeDefinitions.characterClass.set(null);
-  storeDefinitions.characterSubClass.set(null);
-  storeDefinitions.abilityRolls.set(false);
-  storeDefinitions.level.set(1);
-  storeDefinitions.tabs.set(initialTabs);
-  storeDefinitions.levelUpTabs.set(upTabs);
-  storeDefinitions.pointBuyScoreTotal.set(12);
-  storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit"));
-  storeDefinitions.selectedMultiClass.set(false);
-  storeDefinitions.activeTab.set(initialTabs[0].id);
-  dropItemRegistry.removeAll();
-  storeDefinitions.isActorCreated.set(false);
-  storeDefinitions.actorInGame.set(null);
-  storeDefinitions.abilityGenerationMethod.set(null);
-  storeDefinitions.subClassesForClass.set([]);
-  window.GAS.log.d("resetStores preAdvancementSelections", get(preAdvancementSelections));
-  preAdvancementSelections.set({});
-  storeDefinitions.goldRoll.set(0);
-  storeDefinitions.readOnlyTabs.set([]);
-  clearGoldChoices();
+  storeDefinitions.race.set(null); //- null | object
+  storeDefinitions.background.set(null); //- null | object
+  storeDefinitions.characterClass.set(null); //- null | object
+  storeDefinitions.characterSubClass.set(null); //- null | object
+  storeDefinitions.abilityRolls.set(false); //- boolean
+  storeDefinitions.level.set(1); //- number
+  storeDefinitions.tabs.set(initialTabs); //- array
+  storeDefinitions.levelUpTabs.set(upTabs); //- array
+  storeDefinitions.classUuidForLevelUp.set(null); //- null | uuid string
+  storeDefinitions.pointBuyScoreTotal.set(12); //- number
+  storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit")); //- number
+  storeDefinitions.selectedMultiClass.set(null); //- null | uuid string
+  storeDefinitions.activeTab.set(initialTabs[0].id); //- string
+  storeDefinitions.isActorCreated.set(false); //- boolean
+  storeDefinitions.actorInGame.set(null); //- null | object
+  storeDefinitions.abilityGenerationMethod.set(null); //- null | string
+  storeDefinitions.subClassesForClass.set([]); //- array
+  storeDefinitions.goldRoll.set(0); //- number
+  storeDefinitions.readOnlyTabs.set([]); //- array
+  preAdvancementSelections.set({}); //- void
+  dropItemRegistry.removeAll(); //- void
+  clearGoldChoices(); //- void
 }

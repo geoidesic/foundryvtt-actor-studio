@@ -24,6 +24,7 @@
     changedCharacterCreationItems,
     level,
     tabs,
+    classUuidForLevelUp
     
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
@@ -513,7 +514,7 @@
 .footer-container
   +if("FOOTER_TABS.includes($activeTab)")
     .flexrow.gap-10.pr-md.mt-sm
-      //- Character name section
+      //- Character name section (not available in level-up tab)
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
         .flex2
           .flexcol
@@ -525,7 +526,7 @@
       
       //- Progress and buttons section
       .flex1
-        +if("$isLevelUp")
+        +if("$isLevelUp && $classUuidForLevelUp")
           .button-container
             button(
               disabled="{!$characterClass}"
@@ -534,7 +535,7 @@
               on:mousedown="{clickUpdateLevelUpHandler}"
               data-tooltip="{$characterClass ? '' : 'First select a class to level up, or a multi-class to add'}"
             )
-              span Update
+              span Add Character Level
         
         +if("$activeTab === 'equipment'")
           .progress-container
