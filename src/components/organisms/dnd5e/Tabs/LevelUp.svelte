@@ -4,11 +4,12 @@ import { MODULE_ID } from "~/src/helpers/constants";
 import { localize } from "#runtime/svelte/helper";
 
 import { 
-  levelUpSubClassObject,
   classUuidForLevelUp, 
+  levelUpClassObject,
+  subClassUuidForLevelUp,
+  levelUpSubClassObject,
   selectedMultiClassUUID,
   newLevelValueForExistingClass,
-  levelUpClassObject,
   resetLevelUpStores,
   isLevelUp
 } from "~/src/stores";
@@ -28,7 +29,6 @@ import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.s
 /** LOCAL VARIABLES */
 let 
   classValue = null,
-  activeSubClassUUID = null,
   selectedMultiClassUUIDKey = null, //- tracks which class key (i.e. which existing class row) was selected
   subclassValue = null,
   subClassesIndex = [],
@@ -172,7 +172,7 @@ const eventHandlers = {
     window.GAS.log.d('classKey', classKey)
     window.GAS.log.d('$levelUpClassObject', $levelUpClassObject)
     $classUuidForLevelUp = $levelUpClassObject.uuid
-    activeSubClassUUID = null;
+    $subClassUuidForLevelUp = null;
     $levelUpSubClassObject = null;
     subclassValue = null;
     subClassAdvancementArrayFiltered = [];
@@ -199,7 +199,7 @@ const eventHandlers = {
   clickCancel: async () => {
     $selectedMultiClassUUID = false
     classValue = null
-    activeSubClassUUID = null
+    $subClassUuidForLevelUp = null
     selectedMultiClassUUIDKey = null
     $classUuidForLevelUp = false
     newLevelValueForExistingClass.set(false)
@@ -232,7 +232,7 @@ const eventHandlers = {
    * @param {string} option - The UUID of the selected class
    */
   selectClassHandler: async (option) => {
-    activeSubClassUUID = null;
+    $subClassUuidForLevelUp = null;
     $levelUpSubClassObject = null;
     subclassValue = null;
     richSubClassHTML = "";
@@ -254,10 +254,10 @@ const eventHandlers = {
    * @param {string} option - The UUID of the selected subclass
    */
   selectSubClassHandler: async (option) => {
-    activeSubClassUUID = option.value ?? option ?? null;
-    $levelUpSubClassObject = await fromUuid(activeSubClassUUID);
-    subclassValue = activeSubClassUUID;
-    window.GAS.log.d('activeSubClassUUID', activeSubClassUUID)
+    $subClassUuidForLevelUp = option.value ?? option ?? null;
+    $levelUpSubClassObject = await fromUuid($subClassUuidForLevelUp);
+    subclassValue = $subClassUuidForLevelUp;
+    window.GAS.log.d('$subClassUuidForLevelUp', $subClassUuidForLevelUp)
     await tick();
     importers.importSubClassAdvancements();
     richSubClassHTML = await illuminatedDescription(
@@ -270,7 +270,7 @@ const eventHandlers = {
 /** REACTIVE VARIABLES */
 $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
-$: subClassProp = activeSubClassUUID;
+$: subClassProp = $subClassUuidForLevelUp;
 $: classProp = $selectedMultiClassUUID;
 $: classKeys = Object.keys($actor._classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
@@ -394,7 +394,8 @@ onMount(async () => {
                     img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
                   .flex2 {localize('GAS.SubClass')}
                 
-          h3.left.mt-md Subclass
+          h3.left.mt-md {localize('GAS.LevelUp.Subclass')}
+          pre {$subClassUuidForLevelUp}
           IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
       
     .flex0.border-right.right-border-gradient-mask 

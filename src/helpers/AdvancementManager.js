@@ -134,6 +134,8 @@ export class AdvancementManager {
     this.store.remove(next.id);
     const item = await prepareItemForDrop(next);
     const currentActor = get(this.inProcessStore)?.actor;
+    // window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
+    // window.GAS.log.d('[ADVANCEMENT MANAGER] currentActor', currentActor);
     const result = await dropItemOnCharacter(currentActor, item);
     return result;
   }

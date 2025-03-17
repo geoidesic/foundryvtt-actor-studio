@@ -441,6 +441,8 @@ export const dropItemOnCharacter = async (actor, item) => {
       uuid: item.uuid
     };
     
+    // window.GAS.log.d('[UTILITY] itemRecord', itemRecord);
+    // window.GAS.log.d('[UTILITY] actor', actor);
     // Get existing items of this type from flags, or initialize empty array
     const existingItems = actor.getFlag(MODULE_ID, `droppedItems.${item.type}`) || [];
     

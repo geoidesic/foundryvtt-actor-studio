@@ -305,7 +305,7 @@
         hasAdvancementChoices: itemHasAdvancementChoices($levelUpSubClassObject),
         hasAdvancementsForLevel: isAdvancementsForLevelInItem(
           getLevelByDropType($actorInGame, "subclass"),
-          $characterSubClass,
+          $levelUpSubClassObject,
         ),
       });
     }
