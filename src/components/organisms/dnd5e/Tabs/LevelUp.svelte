@@ -22,6 +22,7 @@ import {
 
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
+import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
 
 /** LOCAL VARIABLES */
 let 
@@ -37,7 +38,9 @@ let
   rowTooltip = "",
   richSubClassHTML = "",
   packs = getPacksFromSettings("classes"),
+  subclasses,
   subClassesPacks = getPacksFromSettings("subclasses"),
+  subclassesPlaceholder = "Subclasses",
   activeRowClassKey = null,
   mappedClassIndex = extractItemsFromPacksSync(packs, [
     "name->label",
@@ -137,7 +140,19 @@ const importers = {
         window.GAS.log.e(`Failed to load component for ${classAdvancement.type}:`, error);
       }
     }
-  }
+  },
+  async importSubClassAdvancements() {
+    if (!subClassAdvancementArrayFiltered?.length) return;
+    for (const subClassAdvancement of subClassAdvancementArrayFiltered) {
+      try {
+        const module = await import(`~/src/components/molecules/dnd5e/Advancements/${subClassAdvancement.type}.svelte`);
+        await tick();
+        subClassAdvancementComponents[subClassAdvancement.type] = module.default;
+      } catch (error) {
+        window.GAS.log.e(`Failed to load component for ${subClassAdvancement.type}:`, error);
+      }
+    }
+  },
 }
 
 /** EVENT HANDLERS */
@@ -231,15 +246,28 @@ const eventHandlers = {
     await tick();
     importers.importClassAdvancements();
     richHTML = await TextEditor.enrichHTML(html);
+  },
+  selectSubClassHandler: async (option) => {
+    activeSubClassUUID = option.value ?? option ?? null;
+    $characterSubClass = await fromUuid(activeSubClassUUID);
+    subclassValue = activeSubClassUUID;
+    window.GAS.log.d('activeSubClassUUID', activeSubClassUUID)
+    await tick();
+    importers.importSubClassAdvancements();
+    richSubClassHTML = await TextEditor.enrichHTML(
+      $characterSubClass?.system?.description?.value,
+    );
   }
 }
 
 /** REACTIVE VARIABLES */
 $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
+$: subClassProp = activeSubClassUUID;
+$: classProp = $selectedMultiClassUUID;
 $: classKeys = Object.keys($actor._classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
-$: subClassLevel = $classUuidForLevelUp ? getSubclassLevel($classUuidForLevelUp, MODULE_ID) : false; //- Update subclass detection to match Class.svelte implementation
+$: subClassLevel = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false; //- Update subclass detection to match Class.svelte implementation
 $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $newLevelValueForExistingClass;
 $: isNewMultiClassSelected = $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID; //- Local derived store to correctly determine multiclass mode
 $: combinedHtml = $classUuidForLevelUp ? richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
@@ -273,6 +301,24 @@ $: tooltipText = (classKey) => {
     window.GAS.log.d('classObj.system.levels', classObj.system.levels)
     return classObj.system.levels;
   });
+/**
+ * Manages subclass list state
+ * Flattens and sorts subclass data when subClassesIndex changes
+ */
+   $: if(subClassesIndex?.length) {
+    subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+  } else {
+    subclasses = [];
+  }
+/**
+ * Filters class advancements for the current level
+ * Maps advancement data to include IDs for component rendering
+ */
+   $: if ($levelUpClassObject?.system?.advancement.length) {
+    classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel[$newLevelValueForExistingClass]
+  } else {
+    classAdvancementArrayFiltered = [];
+  }
 
 $: window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
 
@@ -285,9 +331,6 @@ onMount(async () => {
 .content
   .flexrow
     .flex2.pr-sm.col-a
-      //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
-      //- pre classUuidForLevelUp {$classUuidForLevelUp}
-      //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
       +if("!$selectedMultiClassUUID")
         h1.flex {localize('GAS.LevelUp.ExistingClassesTitle')}
         +if("$classUuidForLevelUp")
@@ -328,9 +371,26 @@ onMount(async () => {
                 i(class="fas fa-times")
         IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{localize('GAS.LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
 
+      +if("$classUuidForLevelUp")
+        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newLevelValueForExistingClass}" )
+        //- pre subclasses {subclasses.length}
+        //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+        //- pre subClassLevel {subClassLevel}
+        //- pre classGetsSubclassThisLevel {classGetsSubclassThisLevel}
+        +if("!!subclasses.length && classGetsSubclassThisLevel")
+          ul.icon-list
+            li.left
+              .flexrow
+                .flex0.relative.image
+                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
+                .flex2 {localize('GAS.SubClass')}
+                
+          h3.left.mt-md Subclass
+          IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+      
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b 
-      pre isLevelUp: {$isLevelUp}
+      //- pre isLevelUp: {$isLevelUp}
       +if("$classUuidForLevelUp")
         h1 {$levelUpClassObject.name || ''}
       | {@html combinedHtml}
