@@ -293,18 +293,6 @@
         isLevelUp: $isLevelUp,
         isNewMultiClass: $isNewMultiClass,
       });
-      
-      // If we're leveling up an existing class (not multiclassing), update the class level
-      // if (!$isNewMultiClass) {
-      //   // Get the class identifier to find the right class to update
-      //   const classIdentifier = $levelUpClassObject.system.identifier;
-      //   if (classIdentifier && $actorInGame.classes[classIdentifier]) {
-      //     // Update the class level
-      //     await $actorInGame.classes[classIdentifier].update({
-      //       "system.levels": $actorInGame.classes[classIdentifier].system.levels + 1
-      //     });
-      //   }
-      // }
     }
     
     // Add the subclass to the queue if it exists
