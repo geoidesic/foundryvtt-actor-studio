@@ -49,5 +49,4 @@
 </template>
 
 <style lang="sass">
-  @import '../../../../../styles/Mixins.scss'
 </style>
