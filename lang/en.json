@@ -16,7 +16,9 @@
       "ExistingClassesDescription": "Click the class you want to level up, or select a class from the Multiclass dropdown to add a new one.",
       "NewClassTitle": "Add Multiclass",
       "SelectClass": "Select a class to add",
-      "CancelDescription": "Click the class to cancel the level up selection and return to the start. Or click \"Update Character\" to apply the changes."
+      "CancelDescription": "Click the class button below to cancel the level up selection and return to the start. Or click \"Update Character\" to apply the changes.",
+      "Subclass": "Choose Subclass",
+      "LevelAdvancements": "Level Advancements"
     },
     "Footer": {
       "AddLevel": "Add CharacterLevel",

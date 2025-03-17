@@ -48,8 +48,8 @@ export function registerSettings(app: Game): void {
   filterPackSourcesAppropriatelyByName();
   showPackLabelInSelect();
   illuminatedDescription();
-  illuminatedHeight();
   illuminatedWidth();
+  illuminatedHeight();
   enableEquipmentSelection();
   showPackLabelInSelect();
   windowX();
@@ -71,7 +71,7 @@ function illuminatedHeight() {
     hint: game.i18n.localize('GAS.Setting.illuminatedHeight.Hint'),
     scope: 'world',
     config: true,
-    default: '64px',
+    default: '100',
     type: String,
   });
 }
@@ -81,7 +81,7 @@ function illuminatedWidth() {
     hint: game.i18n.localize('GAS.Setting.illuminatedWidth.Hint'),
     scope: 'world',
     config: true,
-    default: '64px',
+    default: '100',
     type: String,
   });
 }

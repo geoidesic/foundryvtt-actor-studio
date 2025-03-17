@@ -29,8 +29,8 @@
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
 
   // Get illumination settings
-  const illuminatedHeight = game.settings.get(MODULE_ID, 'illuminatedHeight');
-  const illuminatedWidth = game.settings.get(MODULE_ID, 'illuminatedWidth');
+  const illuminatedHeight = Number(game.settings.get(MODULE_ID, 'illuminatedHeight').replace(/[a-zA-Z]/g, '')) + 'px';
+  const illuminatedWidth = Number(game.settings.get(MODULE_ID, 'illuminatedWidth').replace(/[a-zA-Z]/g, '')) + 'px';
 
   $: stylesApp = {
     '--tjs-app-overflow': 'visible',

@@ -4,7 +4,7 @@ import { MODULE_ID } from "~/src/helpers/constants";
 import { localize } from "#runtime/svelte/helper";
 
 import { 
-  characterSubClass,
+  levelUpSubClassObject,
   classUuidForLevelUp, 
   selectedMultiClassUUID,
   newLevelValueForExistingClass,
@@ -17,7 +17,8 @@ import {
   extractItemsFromPacksSync,
   extractMapIteratorObjectProperties,
   getPacksFromSettings,
-  getSubclassLevel
+  getSubclassLevel,
+  illuminatedDescription
 } from "~/src/helpers/Utility.js";
 
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
@@ -172,7 +173,7 @@ const eventHandlers = {
     window.GAS.log.d('$levelUpClassObject', $levelUpClassObject)
     $classUuidForLevelUp = $levelUpClassObject.uuid
     activeSubClassUUID = null;
-    $characterSubClass = null;
+    $levelUpSubClassObject = null;
     subclassValue = null;
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
@@ -189,7 +190,7 @@ const eventHandlers = {
     subClassesIndex = await filters.getFilteredSubclassIndex();
     await tick();
     importers.importClassAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $levelUpClassObject);
   },
   /**
    * Handles cancellation of multiclass selection
@@ -232,7 +233,7 @@ const eventHandlers = {
    */
   selectClassHandler: async (option) => {
     activeSubClassUUID = null;
-    $characterSubClass = null;
+    $levelUpSubClassObject = null;
     subclassValue = null;
     richSubClassHTML = "";
     
@@ -245,17 +246,23 @@ const eventHandlers = {
     subClassesIndex = await filters.getFilteredSubclassIndex();
     await tick();
     importers.importClassAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $levelUpClassObject);
   },
+  /**
+   * Handles the selection of a subclass
+   * Updates state and loads relevant subclass advancements
+   * @param {string} option - The UUID of the selected subclass
+   */
   selectSubClassHandler: async (option) => {
     activeSubClassUUID = option.value ?? option ?? null;
-    $characterSubClass = await fromUuid(activeSubClassUUID);
+    $levelUpSubClassObject = await fromUuid(activeSubClassUUID);
     subclassValue = activeSubClassUUID;
     window.GAS.log.d('activeSubClassUUID', activeSubClassUUID)
     await tick();
     importers.importSubClassAdvancements();
-    richSubClassHTML = await TextEditor.enrichHTML(
-      $characterSubClass?.system?.description?.value,
+    richSubClassHTML = await illuminatedDescription(
+      $levelUpSubClassObject?.system?.description?.value,
+      $levelUpSubClassObject
     );
   }
 }
@@ -372,18 +379,20 @@ onMount(async () => {
         IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{localize('GAS.LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
 
       +if("$classUuidForLevelUp")
+        h2.flexrow.mt-md {localize('GAS.LevelUp.LevelAdvancements')}
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newLevelValueForExistingClass}" )
         //- pre subclasses {subclasses.length}
         //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
         //- pre subClassLevel {subClassLevel}
         //- pre classGetsSubclassThisLevel {classGetsSubclassThisLevel}
         +if("!!subclasses.length && classGetsSubclassThisLevel")
-          ul.icon-list
-            li.left
-              .flexrow
-                .flex0.relative.image
-                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
-                .flex2 {localize('GAS.SubClass')}
+          +if("window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014'")
+            ul.icon-list
+              li.left
+                .flexrow
+                  .flex0.relative.image
+                    img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
+                  .flex2 {localize('GAS.SubClass')}
                 
           h3.left.mt-md Subclass
           IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
