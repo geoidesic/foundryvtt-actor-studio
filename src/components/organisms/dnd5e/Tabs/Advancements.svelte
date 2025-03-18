@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { dropItemOnCharacter } from "~/src/helpers/Utility";
-  import { dropItemRegistry, isLevelUp } from "~/src/stores/index.js";
+  import { dropItemRegistry, isLevelUp, readOnlyTabs } from "~/src/stores/index.js";
   import { getContext } from "svelte";
 
   const doc = getContext("#doc");
@@ -27,9 +27,13 @@
   //     isLevelUp: $isLevelUp
   //   });
   // }
+  
   onMount(() => {
     // window.GAS.log.d("Advancements tab mounted");
     Hooks.call("gas.captureAdvancement", true);
+    
+    // Set read-only state for other tabs
+    readOnlyTabs.set(["race", "background", "abilities", "class"]);
   });
 </script>
 

@@ -2,7 +2,7 @@ import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
-import { activeTab, actorInGame } from "~/src/stores/index";
+import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
 
 export default class PCApplication extends SvelteApplication {
@@ -83,7 +83,7 @@ export default class PCApplication extends SvelteApplication {
       const actor = get(actorInGame);
       
       // Only show confirmation if advancements tab is active
-      if (currentTab === 'advancements') {
+      if (get(isAdvancementInProgress)) {
         const confirmed = await Dialog.confirm({
           title: 'Close',
           content: 'Are you sure you want to close? If you have incomplete advancements, they will be lost.',
