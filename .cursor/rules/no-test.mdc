@@ -1,9 +1,0 @@
----
-description: Do not suggest running the application or testing the codebase after making changes.
-globs: 
-alwaysApply: true
----
-
-# Your rule content
-
-- Do not suggest running the application or testing the codebase after making changes.

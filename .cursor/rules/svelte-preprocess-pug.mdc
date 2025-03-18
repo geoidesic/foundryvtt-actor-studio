@@ -1,0 +1,79 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+
+# Your rule content
+
+# svelte-preprocess-pug Rules
+
+## Indentation
+- **Description**: In Pug templates, +else() statements must be nested within the related +if statement, indented one level deeper.
+- **Examples**:
+  - **Correct**:
+    ```pug
+    +if("condition")
+      element
+      +else()
+        other-element
+    ```
+  - **Incorrect**:
+    ```pug
+    +if("condition")
+      element
+    +else()
+      other-element
+    ```
+
+## Content
+- **Description**: Content must always be contained within an element, never as a bare pipe beneath an +if statement.
+- **Examples**:
+  - **Correct**:
+    ```pug
+    +if("condition")
+      span content here
+    ```
+  - **Incorrect**:
+    ```pug
+    +if("condition")
+      | content here
+    ```
+
+## Conditional Logic
+- **Description**: Only separate +if() and +else() statements are supported. Structure logic as separate conditional blocks.
+- **Examples**:
+  - **Correct**:
+    ```pug
+    +if("type === 'tool'")
+      .tool-config
+    +if("type === 'armor'")
+      .armor-config
+    +if("type === 'weapon'")
+      .weapon-config
+    ```
+  - **Incorrect**:
+    ```pug
+    +if("type === 'tool'")
+      .tool-config
+    +else if("type === 'armor'")
+      .armor-config
+    +else if("type === 'weapon'")
+      .weapon-config
+    ```
+
+## Event Handlers
+- **Description**: Event handlers must use the != operator to prevent HTML encoding. Avoid arrow functions and the = operator.
+- **Examples**:
+  - **Correct**:
+    ```pug
+    button(on:click!="{handleClick(param)}")
+    button(on:click!="{handleClick}")
+    div(class!="{isActive ? 'active' : ''}")
+    ```
+  - **Incorrect**:
+    ```pug
+    button(on:click="{() => handleClick(param)}")
+    button(on:click="{handleClick(param)}")
+    div(class="{isActive ? 'active' : ''}")
+    ```

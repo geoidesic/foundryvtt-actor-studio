@@ -1,6 +1,6 @@
 ---
-description: Don't use require
-globs: 
+description: 
+globs: *.js,*.ts
 alwaysApply: false
 ---
 
