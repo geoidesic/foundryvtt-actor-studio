@@ -281,7 +281,7 @@ $: classProp = $selectedMultiClassUUID;
 $: classKeys = Object.keys($actor._classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
 // $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
-
+$: newLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
 $: if($classUuidForLevelUp) {
   $levelUpCombinedHtml = $levelUpRichHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '')
 } else {
@@ -326,7 +326,7 @@ $: if($classUuidForLevelUp) {
  * Maps advancement data to include IDs for component rendering
  */
    $: if ($levelUpClassObject?.system?.advancement.length) {
-    classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel[$newLevelValueForExistingClass]
+    classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel[newLevel]
   } else {
     classAdvancementArrayFiltered = [];
   }
@@ -419,7 +419,8 @@ onDestroy(() => {
 
       +if("$classUuidForLevelUp")
         h2.flexrow.mt-md {localize('GAS.LevelUp.LevelAdvancements')}
-        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newLevelValueForExistingClass}" )
+        +if("selectedMultiClassUUID")
+        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         // Subclass selection section
         +if("subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
@@ -444,6 +445,7 @@ onDestroy(() => {
             truncateWidth="17"
             disabled="{$isLevelUpAdvancementInProgress}"
           )
+
       
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b 
