@@ -105,6 +105,10 @@ export const isNewMultiClassSelected = derived(
 export const preAdvancementSelections = writable({});
 preAdvancementSelections.name = "preAdvancementSelections";
 
+// Cache store for initial character selection state
+export const levelUpPreAdvancementSelections = writable({});
+levelUpPreAdvancementSelections.name = "levelUpPreAdvancementSelections";
+
 // Derived store to track changes from initial state
 export const hasCharacterCreationChanges = derived(
   [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections],
@@ -198,6 +202,7 @@ export function resetStores() {
   storeDefinitions.levelUpRichHTML.set(''); //- string
   storeDefinitions.levelUpRichSubClassHTML.set(''); //- string
   preAdvancementSelections.set({}); //- void
+  levelUpPreAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void
 }

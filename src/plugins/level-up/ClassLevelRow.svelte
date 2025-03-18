@@ -45,4 +45,5 @@ pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
   +mixins.gold-button
   &.disabled
     opacity: 0.3
+    cursor: not-allowed
 </style>

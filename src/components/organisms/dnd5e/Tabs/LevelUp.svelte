@@ -19,7 +19,8 @@ import {
   subclassLevel,
   levelUpCombinedHtml,
   levelUpRichHTML,
-  levelUpRichSubClassHTML
+  levelUpRichSubClassHTML,
+  levelUpPreAdvancementSelections
 } from "~/src/stores";
 
 import {
@@ -174,6 +175,8 @@ const eventHandlers = {
     richSubClassHTML = "";
     $selectedMultiClassUUID = false
     $activeRowClassKey = classKey;
+    $levelUpPreAdvancementSelections.characterClass = classKey
+    $levelUpPreAdvancementSelections.isMultiClass = false
     /**
      * Updates the newLevelValueForExistingClass store with the next level for this class
      * Calculates new level by adding 1 to the character's current level in this class
@@ -199,6 +202,9 @@ const eventHandlers = {
     $classUuidForLevelUp = false
     newLevelValueForExistingClass.set(false)
     $activeRowClassKey = null;
+
+    delete $levelUpPreAdvancementSelections.characterClass
+    delete $levelUpPreAdvancementSelections.isMultiClass
   },
   /**
    * Click will either add a level to the clicked class or cancel the level up selection
@@ -226,7 +232,7 @@ const eventHandlers = {
    * Resets subclass state and updates available options
    * @param {string} option - The UUID of the selected class
    */
-  selectClassHandler: async (option) => {
+  selectMultiClassHandler: async (option) => {
     $subClassUuidForLevelUp = null;
     $levelUpSubClassObject = null;
     subclassValue = null;
@@ -236,6 +242,9 @@ const eventHandlers = {
     $selectedMultiClassUUID = option;
     $classUuidForLevelUp = option;
     $activeRowClassKey = null;
+    $levelUpPreAdvancementSelections.multiClass = option;
+    $levelUpPreAdvancementSelections.isMultiClass = true;
+    
     
     await tick();
     subClassesIndex = await filters.getFilteredSubclassIndex();
@@ -261,6 +270,7 @@ const eventHandlers = {
       $levelUpSubClassObject?.system?.description?.value,
       $levelUpSubClassObject
     );
+    $levelUpPreAdvancementSelections.subClass = $subClassUuidForLevelUp;
   }
 }
 
@@ -326,7 +336,17 @@ $: window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
 
 onMount(async () => {
   // resetLevelUpStores();
-  console.log('levelup', $classUuidForLevelUp);
+  window.GAS.log.d('$levelUpPreAdvancementSelections', $levelUpPreAdvancementSelections)
+  if($levelUpPreAdvancementSelections.isMultiClass) {
+    await eventHandlers.selectMultiClassHandler($levelUpPreAdvancementSelections.multiClass);
+  } else {
+    if($levelUpPreAdvancementSelections.characterClass) {
+      await eventHandlers.clickAddLevel($levelUpPreAdvancementSelections.characterClass);
+    }
+    if($levelUpPreAdvancementSelections.subClass) {
+      await eventHandlers.selectSubClassHandler($levelUpPreAdvancementSelections.subClass);
+    }
+  }
 });
 
 onDestroy(() => {
@@ -337,6 +357,21 @@ onDestroy(() => {
 .content
   .flexrow
     .flex2.pr-sm.col-a
+      pre classUuidForLevelUp {$classUuidForLevelUp}
+      pre selectedMultiClassUUID {$selectedMultiClassUUID}
+      pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+      pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+      pre levelUpClassObject {$levelUpClassObject}
+      pre classUuidForLevelUp {$classUuidForLevelUp}
+      pre levelUpSubClassObject {$levelUpSubClassObject}
+      pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
+      pre activeRowClassKey {$activeRowClassKey}
+      pre selectedMultiClassUUID {$selectedMultiClassUUID}
+      pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
+      pre subclasses {subclasses}
+      pre classKeys {classKeys}
+
+        
       +if("!$selectedMultiClassUUID")
         h1.flex {localize('GAS.LevelUp.ExistingClassesTitle')}
         +if("$classUuidForLevelUp")
@@ -379,7 +414,7 @@ onDestroy(() => {
             .flex0
               button.mt-sm.gold-button(style="padding-right: 2px" type="button" role="button" on:mousedown="{eventHandlers.clickCancel}")
                 i(class="fas fa-times")
-        IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{localize('GAS.LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
+        IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{localize('GAS.LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectMultiClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
 
       +if("$classUuidForLevelUp")
         h2.flexrow.mt-md {localize('GAS.LevelUp.LevelAdvancements')}
@@ -405,13 +440,14 @@ onDestroy(() => {
             id="subClass-select" 
             bind:value="{subclassValue}" 
             truncateWidth="17"
+            disabled="{$isLevelUpAdvancementInProgress}"
           )
       
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b 
       //- pre isLevelUp: {$isLevelUp}
       +if("$classUuidForLevelUp")
-        h1 {$levelUpClassObject.name || ''}
+        h1 {$levelUpClassObject?.name || ''}
       | {@html $levelUpCombinedHtml}
 </template>
 <style lang="sass">
