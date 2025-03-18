@@ -38,13 +38,11 @@
         h3 {localize('GAS.Equipment.Selection')}
         section.equipment-flow
           +if("window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === '2024'")
-            StartingGoldv4(characterClass="{$characterClass}" background="{$background}" disabled="{false}")
+            StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
             +else()
-              StartingGold(characterClass="{$characterClass}" disabled="{false}")
-          +if("window.GAS.debug")
-            pre isGoldComplete {isGoldComplete}
+              StartingGold(characterClass="{$characterClass}")
           +if("isGoldComplete")
-            StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}" disabled="{false}")
+            StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}")
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         PlannedInventory

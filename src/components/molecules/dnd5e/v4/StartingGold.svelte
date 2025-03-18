@@ -6,9 +6,10 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
+  
   export let characterClass;
   export let background;
-  export let disabled = false;
+
 
   let classGoldOnly = 0;
   let classGoldWithEquipment = 0;
@@ -44,13 +45,13 @@
   }
 
   function handleClassChoice(choice) {
-    if (disabled) return;
+    if (showEditButton) return;
     const goldValue = choice === 'equipment' ? classGoldWithEquipment : classGoldOnly;
     setClassGoldChoice(choice, goldValue);
   }
 
   function handleBackgroundChoice(choice) {
-    if (disabled) return;
+    if (showEditButton) return;
     const goldValue = choice === 'equipment' ? backgroundGoldWithEquipment : backgroundGoldOnly;
     setBackgroundGoldChoice(choice, goldValue);
   }
@@ -83,7 +84,7 @@
 <template lang="pug">
 section.starting-gold
   .flexrow
-    +if("!disabled")
+    +if("!showEditButton")
       .flex0.required(class!="{!classChoice || !backgroundChoice ? 'active' : ''}")
         span *
     .flex3
@@ -93,11 +94,10 @@ section.starting-gold
       .flex0.right
         IconButton.option(
           on:click!="{handleEdit}"
-          disabled!="{disabled}"
           icon="fas fa-pencil"
         )
   
-  .flexcol.gold-section.gap-10(class!="{disabled ? 'disabled' : ''}")
+  .flexcol.gold-section.gap-10(class!="{showEditButton ? 'disabled' : ''}")
     
     +if("background")
       .equipment-group
@@ -105,9 +105,9 @@ section.starting-gold
           .flex.group-label {background.name} Options
         .options
           button.option(
-            class!="{backgroundChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            class!="{backgroundChoice === 'equipment' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('equipment')}"
-            disabled!="{disabled}"
+            disabled!="{showEditButton}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -115,9 +115,9 @@ section.starting-gold
               .flex2.left.name
                 span Equipment + {backgroundGoldWithEquipment} gp
           button.option(
-            class!="{backgroundChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            class!="{backgroundChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
-            disabled!="{disabled}"
+            disabled!="{showEditButton}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -131,9 +131,9 @@ section.starting-gold
           .flex.group-label {characterClass.name} Options
         .options
           button.option(
-            class!="{classChoice === 'equipment' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            class!="{classChoice === 'equipment' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('equipment')}"
-            disabled!="{disabled}"
+            disabled!="{showEditButton}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -141,9 +141,9 @@ section.starting-gold
               .flex2.left.name
                 span Equipment + {classGoldWithEquipment} gp
           button.option(
-            class!="{classChoice === 'gold' ? 'selected' : ''} {disabled ? 'disabled' : ''}"
+            class!="{classChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
-            disabled!="{disabled}"
+            disabled!="{showEditButton}"
           )
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex0.relative.icon
@@ -207,21 +207,36 @@ section.starting-gold
   border-radius: 4px
   background: rgba(0, 0, 0, 0.4)
   color: var(--li-background-color)
-  transition: all 0.2s ease
   cursor: pointer
+  transition: all 0.5s ease
   
   &:hover:not(.disabled)
-    background: rgba(0, 0, 0, 0.6)
+    background: var(--dnd5e-color-gold)
     border-color: rgba(255, 255, 255, 0.2)
 
+    .icon
+      i
+        color: var(--dnd5e-color-dark)
+    span
+      color: var(--dnd5e-color-dark)
   &.selected
     background: rgba(0, 0, 0, 0.8)
     border-color: #b59e54
     box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
+    &:hover:not(.disabled)
+      background: rgba(0, 0, 0, 0.8)
+      border-color: #b59e54
+      box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
+      span
+        color: #fff
+      .icon
+        i
+          color: #fff
 
   &.disabled
     cursor: not-allowed
     opacity: 0.5
+    transition: opacity 0.5s ease
 
   &.confirm
     background: var(--color-positive)

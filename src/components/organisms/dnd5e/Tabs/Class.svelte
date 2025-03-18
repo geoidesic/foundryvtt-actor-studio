@@ -333,7 +333,7 @@
           
           +if("$characterClass?.system?.startingEquipment?.length")
             h3.left.mt-sm.flexrow
-              .flex0(on:click="{toggleEquipmentSelection}")
+              .flex0.pointer(on:click="{toggleEquipmentSelection}")
                 +if("equipmentSelectionExpanded")
                   span [-]
                 +if("!equipmentSelectionExpanded")
@@ -352,7 +352,7 @@
             //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
             +if("subClassAdvancementArrayFiltered.length")
               h3.left.mt-sm.flexrow
-                .flex0(on:click="{toggleSubClassAdvancements}")
+                .flex0.pointer(on:click="{toggleSubClassAdvancements}")
                   +if("subClassAdvancementExpanded")
                     span [-]
                   +if("!subClassAdvancementExpanded")
