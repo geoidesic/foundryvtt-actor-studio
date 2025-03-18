@@ -15,7 +15,7 @@ const goldChoices = writable({
 
 // Derived store for total gold from choices
 const totalGoldFromChoices = derived(goldChoices, ($goldChoices) => {
-  return $goldChoices.fromClass.goldValue + $goldChoices.fromBackground.goldValue;
+  return parseInt($goldChoices.fromClass.goldValue) + parseInt($goldChoices.fromBackground.goldValue);
 });
 
 // Derived store that updates goldRoll for backwards compatibility
