@@ -7,7 +7,7 @@ export * from './storeDefinitions';
 import { advancementQueueStore } from "~/src/stores/advancements";
 import { clearGoldChoices } from "~/src/stores/goldChoices";
 import { MODULE_ID } from "~/src/helpers/constants";
-
+import { getSubclassLevel } from '~/src/helpers/Utility';
 
 const initialTabs = [
   { label: "Abilities", id: "abilities", component: "Abilities" },
@@ -61,6 +61,25 @@ export const isNewMultiClass = derived(
   ([$characterClass, $newLevelValueForExistingClass]) => {
     if ($newLevelValueForExistingClass) return false;
     if ($characterClass && !$newLevelValueForExistingClass) return true;
+  }
+);
+
+// Derived store to check if the class gets a subclass at the current level up level
+export const classGetsSubclassThisLevel = derived(
+  [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
+  ([$classUuidForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject]) => {
+    if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
+    
+    const subClassLevel = getSubclassLevel($levelUpClassObject, MODULE_ID);
+    return subClassLevel && subClassLevel === $newLevelValueForExistingClass;
+  }
+);
+
+// Derived store to determine if a new multiclass is selected
+export const isNewMultiClassSelected = derived(
+  [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.selectedMultiClassUUID], 
+  ([$classUuidForLevelUp, $newLevelValueForExistingClass, $selectedMultiClassUUID]) => {
+    return $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID;
   }
 );
 

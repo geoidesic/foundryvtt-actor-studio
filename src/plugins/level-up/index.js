@@ -1,4 +1,6 @@
+import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { levelUpSubClassObject } from '~/src/stores/storeDefinitions';
 import PCApplication from '~/src/app/PCApplication.js';
 
 const pulseKeyframes = `
@@ -20,7 +22,8 @@ export function dnd5eSheet2UI(app, html, data) {
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
 
-  if (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
+  console.log('actor._classes', actor._classes);
+  if (!Object.keys(actor._classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   buttons.css('gap', '0.35rem');
   const levelUpButton = $(`
@@ -60,7 +63,7 @@ export function tidy5eSheetUI(app, element, data) {
 
   const actor = data.actor;
 
-  if (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
+  if (!Object.keys(actor._classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   const levelUpButton = $(`
     <button
@@ -90,6 +93,12 @@ export function tidy5eSheetUI(app, element, data) {
 
 export function initLevelup() {
 
+  Hooks.once("ready", async () => {
+    //- prevent the default subclass advancement
+    const { default: LevelUpSubclassExtension } = await import('./extensions/subclass.js');
+    CONFIG.DND5E.advancementTypes.Subclass.documentClass = LevelUpSubclassExtension;
+  });
+
   Hooks.on("renderActorSheet5e", (app, html, data) => {
     // window.GAS.log.d(app.constructor.name)
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
@@ -106,6 +115,30 @@ export function initLevelup() {
   Hooks.on("tidy5e-sheet.renderActorSheet", (app, element, data) => {
     tidy5eSheetUI(app, element, data);
   });
+
+  //- potentially hook into the subclass flow
+  Hooks.on("renderSubclassFlow", (SubClassFlow, html, app) => {
+    
+    html.find('.pill-lg').text(get(levelUpSubClassObject)?.name)
+    //- remove drop listener
+    html.find('.pill-lg').off('drop');
+    html.find('.pill-lg').off('dragover');
+    html.find('.pill-lg').off('dragleave');
+    html.find('.pill-lg').off('dragenter');
+    html.find('.pill-lg').off('dragend');
+    html.find('.pill-lg').off('dragstart');
+    //- remove the click listener
+    html.find('div.pill-lg.roboto-upper.empty').off('click');
+    
+    // Remove the handler via the element's onclick property
+    const pillElement = html.find('.pill-lg')[0];
+    if (pillElement) {
+      pillElement.onclick = null;
+      // If data-action attribute is triggering the event, remove it too
+      pillElement.removeAttribute('data-action');
+    }
+  });
+
 
 }
 

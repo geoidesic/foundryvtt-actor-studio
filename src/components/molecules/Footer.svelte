@@ -27,7 +27,9 @@
     classUuidForLevelUp,
     subClassUuidForLevelUp,
     levelUpClassObject,
-    levelUpSubClassObject
+    levelUpSubClassObject,
+    classGetsSubclassThisLevel,
+    isNewMultiClassSelected
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -61,6 +63,21 @@
     'characterClass': characterClass,
     'characterSubClass': characterSubClass
   };
+
+  // Derived store for level-up progress
+  const levelUpProgress = derived(
+    [classUuidForLevelUp, classGetsSubclassThisLevel, subClassUuidForLevelUp],
+    ([$classUuidForLevelUp, $classGetsSubclassThisLevel, $subClassUuidForLevelUp]) => {
+
+      window.GAS.log.d('levelUpProgress', $classUuidForLevelUp, $classGetsSubclassThisLevel, $subClassUuidForLevelUp);
+      // If a new multiclass is selected, show 100% progress
+      if ($classUuidForLevelUp && $classGetsSubclassThisLevel && !$subClassUuidForLevelUp) return 50;
+      if ($classUuidForLevelUp && $classGetsSubclassThisLevel && $subClassUuidForLevelUp) return 100;
+      if ($classUuidForLevelUp && !$classGetsSubclassThisLevel) return 100;
+      
+      return 0
+    }
+  );
 
   export let value = null;
 
@@ -509,16 +526,19 @@
       
       //- Progress and buttons section
       .flex1
-        +if("$isLevelUp && $classUuidForLevelUp")
-          .button-container
-            button(
-              disabled="{!$classUuidForLevelUp}"
-              type="button"
-              role="button"
-              on:mousedown="{clickUpdateLevelUpHandler}"
-              data-tooltip="{$classUuidForLevelUp ? '' : 'First select a class to level up, or a multi-class to add'}"
-            )
-              span {localize('Footer.AddLevel')}
+        +if("$isLevelUp")
+          .progress-container
+            ProgressBar(progress="{levelUpProgress}")
+            +if("$levelUpProgress === 100")
+              .button-container
+                button(
+                  disabled="{!$classUuidForLevelUp}"
+                  type="button"
+                  role="button"
+                  on:mousedown="{clickUpdateLevelUpHandler}"
+                  data-tooltip="{$classUuidForLevelUp ? '' : 'First select a class to level up, or a multi-class to add'}"
+                )
+                  span {localize('Footer.AddLevel')}
         
         +if("$activeTab === 'equipment'")
           .progress-container

@@ -1,5 +1,5 @@
 <script>
-import { getContext, onMount, tick } from "svelte";
+import { getContext, onMount, tick, onDestroy } from "svelte";
 import { MODULE_ID } from "~/src/helpers/constants";
 import { localize } from "#runtime/svelte/helper";
 
@@ -11,7 +11,9 @@ import {
   selectedMultiClassUUID,
   newLevelValueForExistingClass,
   resetLevelUpStores,
-  isLevelUp
+  isLevelUp,
+  classGetsSubclassThisLevel,
+  isNewMultiClassSelected
 } from "~/src/stores";
 
 import {
@@ -60,7 +62,7 @@ const actor = getContext("#doc");
 const decorators = {
   existingClassesCssClassForRow(classKey) {
     let css = getters.getCharacterClass(classKey).uuid === $selectedMultiClassUUID ? 'active' : ''
-    if(isNewMultiClassSelected) {
+    if($isNewMultiClassSelected) {
       css += ' gold-button-disabled'
     } else {
         css += ' gold-button'
@@ -164,7 +166,7 @@ const eventHandlers = {
    * @param {string} classKey - The key identifier for the character class
    */
   clickAddLevel: async (classKey) => {
-    if (isNewMultiClassSelected) return;
+    if ($isNewMultiClassSelected) return;
     const isUnset = Boolean($selectedMultiClassUUID) && Boolean($newLevelValueForExistingClass);
     if(isUnset) return;
 
@@ -275,8 +277,6 @@ $: classProp = $selectedMultiClassUUID;
 $: classKeys = Object.keys($actor._classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
 $: subClassLevel = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false; //- Update subclass detection to match Class.svelte implementation
-$: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $newLevelValueForExistingClass;
-$: isNewMultiClassSelected = $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID; //- Local derived store to correctly determine multiclass mode
 $: combinedHtml = $classUuidForLevelUp ? richHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
 // Reactive variable for tooltip
 $: tooltipText = (classKey) => {
@@ -333,6 +333,10 @@ onMount(async () => {
   resetLevelUpStores();
   console.log('levelup', $classUuidForLevelUp);
 });
+
+onDestroy(() => {
+  // resetLevelUpStores();
+});
 </script>
 <template lang="pug">
 .content
@@ -381,22 +385,28 @@ onMount(async () => {
       +if("$classUuidForLevelUp")
         h2.flexrow.mt-md {localize('GAS.LevelUp.LevelAdvancements')}
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newLevelValueForExistingClass}" )
-        //- pre subclasses {subclasses.length}
-        //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
-        //- pre subClassLevel {subClassLevel}
-        //- pre classGetsSubclassThisLevel {classGetsSubclassThisLevel}
-        +if("!!subclasses.length && classGetsSubclassThisLevel")
-          +if("window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014'")
-            ul.icon-list
-              li.left
-                .flexrow
-                  .flex0.relative.image
-                    img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
-                  .flex2 {localize('GAS.SubClass')}
-                
+        
+        // Subclass selection section
+        +if("!!subclasses.length && $classGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
+          ul.icon-list
+            li.left
+              .flexrow
+                .flex0.relative.image
+                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
+                .flex2 {localize('GAS.SubClass')}
+        
+        +if("!!subclasses.length && $classGetsSubclassThisLevel")  
           h3.left.mt-md {localize('GAS.LevelUp.Subclass')}
           pre {$subClassUuidForLevelUp}
-          IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" )
+          IconSelect.icon-select(
+            active="{subClassProp}" 
+            options="{subclasses}"  
+            placeHolder="{subclassesPlaceholder}" 
+            handler="{eventHandlers.selectSubClassHandler}" 
+            id="subClass-select" 
+            bind:value="{subclassValue}" 
+            truncateWidth="17"
+          )
       
     .flex0.border-right.right-border-gradient-mask 
     .flex3.left.pl-md.scroll.col-b 
