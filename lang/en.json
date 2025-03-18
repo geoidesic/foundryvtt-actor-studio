@@ -2,7 +2,8 @@
   "GAS": {
     "Error": {
       "ItemNotFoundInCompendium": "Item not found in compendium",
-      "PackIndexNotFound": "The compendium pack from which the character class was imported not found in this world"
+      "PackIndexNotFound": "The compendium pack from which the character class was imported not found in this world",
+      "EquipmentSelectionNotViable": "Starting Equipment could not be selected because the selected data types do not include starting equipment data."
     },
     "ActorStudio": "Actor Studio",
     "CreateActor": "Create Actor",

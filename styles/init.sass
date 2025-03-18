@@ -30,8 +30,6 @@
   color: var(--color-highlight)
 
 .GAS
-
-
   .left
     text-align: left
 
@@ -351,3 +349,9 @@
 
 .app.window-app.dnd5e.sheet.advancement.gas.v3x
   height: 565px !important
+
+// Ensure notifications have a proper background (for some reason they were transparent)
+#notifications .notification.warning
+  background-color: var(--color-level-warning-bg)
+  color: #fff
+  border-color: var(--color-level-warning)

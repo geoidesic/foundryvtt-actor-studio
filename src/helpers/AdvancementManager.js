@@ -76,25 +76,25 @@ export class AdvancementManager {
   }
 
   isEquipmentSelectionViable() {
-    let viable = true;
-    //- check for gold differently based on rules version
-    // if (window.GAS.dnd5eVersion === 4 || window.GAS.dnd5eRules === '2014') {}
-
+    // Get the pre-advancement selection data
     const preSelections = get(preAdvancementSelections);
-    window.GAS.log.d('[ADVANCEMENT MANAGER] preSelections', preSelections);
-    if (Object.keys(preSelections).length === 0) {
+    
+    // Basic checks for required data
+    if (Object.keys(preSelections).length === 0 || 
+        !preSelections.class || 
+        !preSelections.class.system || 
+        !preSelections.class.system.startingEquipment || 
+        preSelections.class.system.startingEquipment.length === 0 || 
+        preSelections.class.system.wealth === undefined) {
+      window.GAS.log.d('[ADVANCEMENT MANAGER] Equipment not viable - missing required data');
       return false;
     }
-    if (preSelections.class.system.startingEquipment.length === 0) {
-      return false;
-    }
-    if (preSelections.class.system.wealth === undefined) {
-      return false;
-    }
-    if (get(compatibleStartingEquipment).length === 0) {
-      viable = false;
-    }
-    window.GAS.log.d('[ADVANCEMENT MANAGER] isEquipmentSelectionViable', viable);
+    
+    // Check for compatible equipment options
+    const compatibleEquipment = get(compatibleStartingEquipment);
+    const viable = compatibleEquipment.length > 0;
+    
+    window.GAS.log.d('[ADVANCEMENT MANAGER] isEquipmentSelectionViable result:', viable);
     return viable;
   }
 
@@ -110,6 +110,10 @@ export class AdvancementManager {
       if (this.isEquipmentSelectionViable()) {
         Hooks.call("gas.equipmentSelection", currentActor);
         return;
+      } else {
+        // Show a simple localized notification
+        ui.notifications.warn(game.i18n.localize('GAS.Error.EquipmentSelectionNotViable'));
+        window.GAS.log.d('[ADVANCEMENT MANAGER] Equipment selection skipped - not viable');
       }
     }
     Hooks.call("gas.close");
