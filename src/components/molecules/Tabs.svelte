@@ -32,7 +32,6 @@
   });
   
   // Subscribe to the currentProcess to know when advancements are active
-  $: isAdvancementInProgress = $dropItemRegistry.currentProcess;
   $: isAdvancementTab = activeTab === 'advancements';
 </script>
 
@@ -43,7 +42,7 @@
     <!--For each tab-->
     {#each tabs as tab, idx}
       <button
-        class="{activeTab === tab.id ? 'active ' : ''} {isAdvancementInProgress && !isAdvancementTab ? 'readonly' : ''}"
+        class="{activeTab === tab.id ? 'active ' : ''}"
         on:click={() => {
           activeTab = tab.id;
         }}
@@ -57,13 +56,6 @@
 
   <!--Tab Content-->
   <div class="tab-content">
-    {#if isAdvancementInProgress && !isAdvancementTab}
-      <div class="readonly-overlay">
-        <div class="overlay-message">
-          Please complete your advancements before making other changes
-        </div>
-      </div>
-    {/if}
     {#each tabs as tab}
       {#if tab.id === activeTab && tabComponents[tab.component]}
         <svelte:component this={tabComponents[tab.component]} {sheet} />
