@@ -31,3 +31,4 @@ export const newLevelValueForExistingClass = writable(false); //- tracks new lev
 export const selectedMultiClassUUID = writable(false); //- tracks the selected multi class
 export const levelUpClassObject = writable(null); //- tracks the new multi class object
 export const levelUpSubClassObject = writable(null); //- tracks the new multi class object
+export const activeRowClassKey = writable(null); //- tracks the active row class key
