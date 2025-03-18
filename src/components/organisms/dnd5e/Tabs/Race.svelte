@@ -64,6 +64,8 @@
     const advancements = getAdvancements($race);
     await importAdvancements(advancements);
     richHTML = await illuminatedDescription(html, $race);
+
+    Hooks.call('gas.richhtmlReady', richHTML);
   };
 
   // Get the advancement array safely

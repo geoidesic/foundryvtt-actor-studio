@@ -79,6 +79,8 @@
     await tick();
     await importAdvancements();
     richHTML = await illuminatedDescription(html, $background);
+
+    Hooks.call('gas.richhtmlReady', richHTML);
   };
 
 

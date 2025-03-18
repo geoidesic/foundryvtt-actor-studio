@@ -146,6 +146,8 @@
     await tick();
     await importClassAdvancements();
     richHTML = await illuminatedDescription(html, $characterClass);
+
+    Hooks.call('gas.richhtmlReady', richHTML);
   };
 
   const importClassAdvancements = async () => {

@@ -251,6 +251,8 @@ const eventHandlers = {
     importers.importClassAdvancements();
     $levelUpRichHTML = await illuminatedDescription(html, $levelUpClassObject);
 
+    Hooks.call('gas.richhtmlReady', $levelUpRichHTML);
+
     window.GAS.log.d('subClassesIndex', subClassesIndex)
   },
   /**
