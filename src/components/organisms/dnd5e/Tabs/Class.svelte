@@ -289,7 +289,7 @@
           .flex3 
             IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
         +if("$characterClass")
-          +if("subclasses.length && classGetsSubclassThisLevel")
+          +if("subclasses.length && subClassLevel == 1")
             h3.left.mt-md {localize('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
@@ -327,7 +327,6 @@
                         img.icon(src="{advancement.icon}" alt="{advancement.title}")
                       .flex2 {advancement.title}
                     .flexrow
-                      //- pre {JSON.stringify(advancement, null, 2)}
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           
           +if("$characterClass?.system?.startingEquipment?.length")

@@ -66,7 +66,7 @@ export const isNewMultiClass = derived(
   }
 );
 
-export const subclassLevel = derived([storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject], ([$classUuidForLevelUp, $levelUpClassObject]) => {
+export const subclassLevelForLevelUp = derived([storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject], ([$classUuidForLevelUp, $levelUpClassObject]) => {
   if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
   const result = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false;
   window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
@@ -77,17 +77,17 @@ export const subclassLevel = derived([storeDefinitions.classUuidForLevelUp, stor
 });
 
 // Derived store to check if the class gets a subclass at the current level up level
-export const classGetsSubclassThisLevel = derived(
-  [storeDefinitions.classUuidForLevelUp, subclassLevel, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
-  ([$classUuidForLevelUp, $subClassLevel, $newLevelValueForExistingClass, $levelUpClassObject]) => {
+export const levelUpClassGetsSubclassThisLevel = derived(
+  [storeDefinitions.classUuidForLevelUp, subclassLevelForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
+  ([$classUuidForLevelUp, $subclassLevelForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject]) => {
     window.GAS.log.d('[classGetsSubclassThisLevel] classUuidForLevelUp', $classUuidForLevelUp)
     window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
     window.GAS.log.d('[classGetsSubclassThisLevel] levelUpClassObject', $levelUpClassObject)
     if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
     
-    window.GAS.log.d('[classGetsSubclassThisLevel] subClassLevel', $subClassLevel)
+    window.GAS.log.d('[classGetsSubclassThisLevel] subclassLevelForLevelUp', $subclassLevelForLevelUp)
     window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
-    const result = $subClassLevel && $subClassLevel === $newLevelValueForExistingClass;
+    const result = $subclassLevelForLevelUp && $subclassLevelForLevelUp === $newLevelValueForExistingClass;
     window.GAS.log.d('[classGetsSubclassThisLevel] result', result)
     return result;
   }

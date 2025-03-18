@@ -12,11 +12,10 @@ import {
   newLevelValueForExistingClass,
   resetLevelUpStores,
   isLevelUp,
-  classGetsSubclassThisLevel,
+  levelUpClassGetsSubclassThisLevel,
   isNewMultiClassSelected,
   isLevelUpAdvancementInProgress,
   activeRowClassKey,
-  subclassLevel,
   levelUpCombinedHtml,
   levelUpRichHTML,
   levelUpRichSubClassHTML,
@@ -369,7 +368,7 @@ onDestroy(() => {
         pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
         pre activeRowClassKey {$activeRowClassKey}
         pre selectedMultiClassUUID {$selectedMultiClassUUID}
-        pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
+        pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
         pre subclasses {subclasses}
         pre classKeys {classKeys}
 
@@ -423,7 +422,7 @@ onDestroy(() => {
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{$newLevelValueForExistingClass}" )
         
         // Subclass selection section
-        +if("subclasses.length && $classGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
+        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
           ul.icon-list
             li.left
               .flexrow
@@ -431,10 +430,10 @@ onDestroy(() => {
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
                 .flex2 {localize('GAS.SubClass')}
         
-        +if("($isLevelUpAdvancementInProgress || subclasses.length) && $classGetsSubclassThisLevel")  
+        +if("($isLevelUpAdvancementInProgress || subclasses.length) && $levelUpClassGetsSubclassThisLevel")  
           h3.left.mt-md {localize('GAS.LevelUp.Subclass')}
           +if("window.GAS.debug")
-            pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
+            pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
           IconSelect.icon-select(
             active="{subClassProp}" 
             options="{subclasses}"  

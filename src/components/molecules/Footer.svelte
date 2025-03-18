@@ -28,7 +28,7 @@
     subClassUuidForLevelUp,
     levelUpClassObject,
     levelUpSubClassObject,
-    classGetsSubclassThisLevel,
+    levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
@@ -66,14 +66,14 @@
 
   // Derived store for level-up progress
   const levelUpProgress = derived(
-    [classUuidForLevelUp, classGetsSubclassThisLevel, subClassUuidForLevelUp],
-    ([$classUuidForLevelUp, $classGetsSubclassThisLevel, $subClassUuidForLevelUp]) => {
+    [classUuidForLevelUp, levelUpClassGetsSubclassThisLevel, subClassUuidForLevelUp],
+    ([$classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp]) => {
 
-      window.GAS.log.d('levelUpProgress', $classUuidForLevelUp, $classGetsSubclassThisLevel, $subClassUuidForLevelUp);
+      window.GAS.log.d('levelUpProgress', $classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp);
       // If a new multiclass is selected, show 100% progress
-      if ($classUuidForLevelUp && $classGetsSubclassThisLevel && !$subClassUuidForLevelUp) return 50;
-      if ($classUuidForLevelUp && $classGetsSubclassThisLevel && $subClassUuidForLevelUp) return 100;
-      if ($classUuidForLevelUp && !$classGetsSubclassThisLevel) return 100;
+      if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && !$subClassUuidForLevelUp) return 50;
+      if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && $subClassUuidForLevelUp) return 100;
+      if ($classUuidForLevelUp && !$levelUpClassGetsSubclassThisLevel) return 100;
       
       return 0
     }

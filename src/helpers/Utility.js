@@ -556,13 +556,17 @@ export function userHasRightPermissions() {
  * @returns {number|boolean} The level at which subclass is gained, or false if not found
  */
 export function getSubclassLevel(characterClass, MODULE_ID) {
+  console.trace();
   window.GAS.log.d('[getSubclassLevel] characterClass', characterClass)
-  if (!characterClass) return false;
+  if (!characterClass) {
+    window.GAS.log.d('[getSubclassLevel] characterClass is false')
+    return false;
+  }
 
   // Check for dnd5e system 3.x flag
   const subclassFlag = characterClass.getFlag?.(MODULE_ID, "subclassLevel");
-  window.GAS.log.d('[getSubclassLevel] subclassFlag', subclassFlag)
   if (subclassFlag) {
+    window.GAS.log.d('[getSubclassLevel] from subclassFlag', subclassFlag)
     return characterClass.getFlag(MODULE_ID, "subclassLevel");
   }
 
@@ -571,5 +575,6 @@ export function getSubclassLevel(characterClass, MODULE_ID) {
   const subclassLevel = characterClass.system?.advancement
     ?.find(advancement => advancement.type === "Subclass")?.level;
 
+  window.GAS.log.d('[getSubclassLevel] subclassLevel from advancement', subclassLevel)
   return subclassLevel || false;
 }
