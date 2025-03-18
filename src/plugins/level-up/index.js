@@ -93,14 +93,6 @@ export function tidy5eSheetUI(app, element, data) {
 
 export function initLevelup() {
 
-  //- @deprecated: for some reason, extending this class was causing issues with the subclass advancement - where the subclass level was being set to 0
-  // Hooks.once("ready", async () => {
-  //   //- prevent the default subclass advancement
-  //   const { default: SubclassAdvancement } = await import('./extensions/subclass.js');
-  //   CONFIG.DND5E.advancementTypes.Subclass.documentClass = SubclassAdvancement;
-
-  //   window.GAS.log.d('[LEVEL UP] subclass advancement class replaced', CONFIG.DND5E.advancementTypes.Subclass.documentClass);
-  // });
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
     // window.GAS.log.d(app.constructor.name)
