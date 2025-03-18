@@ -433,7 +433,8 @@ onDestroy(() => {
         
         +if("($isLevelUpAdvancementInProgress || subclasses.length) && $classGetsSubclassThisLevel")  
           h3.left.mt-md {localize('GAS.LevelUp.Subclass')}
-          pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
+          +if("window.GAS.debug")
+            pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
           IconSelect.icon-select(
             active="{subClassProp}" 
             options="{subclasses}"  
