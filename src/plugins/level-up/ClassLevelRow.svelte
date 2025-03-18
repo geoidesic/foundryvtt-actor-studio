@@ -1,6 +1,6 @@
 <script>
 import { getContext, onMount } from "svelte";
-import { isAdvancementInProgress } from "~/src/stores";
+import { isLevelUpAdvancementInProgress } from "~/src/stores";
 import LevelUpButtonInnards from "~/src/plugins/level-up/LevelUpButtonInnards.svelte";
 
 export let cssClasses;
@@ -11,19 +11,21 @@ export let oldLevel;
 export let newLevel = false;
 export let classKey;
 export let iconClass;
+export let disabled = false;
 
 onMount(async () => {
   console.log('ClassLevelRow');
 });
 </script>
 <template lang="pug">
+pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
 .class-row(
-  class="{cssClasses}" 
+  class="{cssClasses} {disabled ? 'disabled' : ''}" 
   role="button" 
   aria-role="button" 
   aria-label="{tooltip}" 
   data-tooltip="{tooltip}" 
-  on:mousedown!="{$isAdvancementInProgress ? () => {} : eventHandler}"
+  on:mousedown!="{$isLevelUpAdvancementInProgress ? () => {} : eventHandler}"
 )
   LevelUpButtonInnards(
     src="{imgSrc}" 
@@ -38,6 +40,9 @@ onMount(async () => {
 
 .gold-button-disabled
   +mixins.gold-button(null)
+  
 .gold-button
-  +mixins.gold-button  
+  +mixins.gold-button
+  &.disabled
+    opacity: 0.3
 </style>

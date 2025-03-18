@@ -53,6 +53,7 @@ storeDefinitions.subClassesForClass.name = "subClassesForClass";
 storeDefinitions.levelUpClassObject.name = "levelUpClassObject";
 storeDefinitions.activeRowClassKey.name = "activeRowClassKey";
 storeDefinitions.levelUpSubClassObject.name = "levelUpSubClassObject";
+storeDefinitions.levelUpCombinedHtml.name = "levelUpCombinedHtml";
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore(); 
 dropItemRegistry.name = "dropItemRegistry";
@@ -193,6 +194,9 @@ export function resetStores() {
   storeDefinitions.activeRowClassKey.set(null); //- null | string
   storeDefinitions.classUuidForLevelUp.set(null); //- null | uuid string
   storeDefinitions.levelUpSubClassObject.set(null); //- null | object
+  storeDefinitions.levelUpCombinedHtml.set(''); //- string
+  storeDefinitions.levelUpRichHTML.set(''); //- string
+  storeDefinitions.levelUpRichSubClassHTML.set(''); //- string
   preAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void

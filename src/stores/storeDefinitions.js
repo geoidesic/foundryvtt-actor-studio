@@ -22,7 +22,6 @@ export const abilityGenerationMethod = writable(null); //- tracks the ability ge
 export const subClassesForClass = writable([]); //- tracks the subclasses for the class
 export const goldRoll = writable(0); //- tracks the gold roll
 export const readOnlyTabs = writable([]); //- tracks the read only tabs
-
 //- level-up store definitions
 export const isLevelUp = writable(false); //- tracks if the character is in level up mode
 export const classUuidForLevelUp = writable(null); //- tracks the class uuid for level up
@@ -32,3 +31,6 @@ export const selectedMultiClassUUID = writable(false); //- tracks the selected m
 export const levelUpClassObject = writable(null); //- tracks the new multi class object
 export const levelUpSubClassObject = writable(null); //- tracks the new multi class object
 export const activeRowClassKey = writable(null); //- tracks the active row class key
+export const levelUpCombinedHtml = writable(''); //- tracks the level up combined html
+export const levelUpRichHTML = writable(''); //- tracks the level up rich html
+export const levelUpRichSubClassHTML = writable(''); //- tracks the level up rich subclass html

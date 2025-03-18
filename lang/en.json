@@ -6,6 +6,8 @@
     },
     "ActorStudio": "Actor Studio",
     "CreateActor": "Create Actor",
+    "Cancel": "Cancel",
+    "Disabled": "Disabled",
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",
     "Level": "Level",
@@ -18,7 +20,9 @@
       "SelectClass": "Select a class to add",
       "CancelDescription": "Click the class button below to cancel the level up selection and return to the start. Or click \"Update Character\" to apply the changes.",
       "Subclass": "Choose Subclass",
-      "LevelAdvancements": "Level Advancements"
+      "LevelAdvancements": "Level Advancements",
+      "DisabledTooltip": "Disabled as advancement is in progress",
+      "DisabledDescription": "While advancement is in progress, this section is not editable"
     },
     "Footer": {
       "AddLevel": "Add Character Level",
