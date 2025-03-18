@@ -253,6 +253,12 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
   return items;
 }
 
+/**
+ * Extracts properties from a map iterator object
+ * @param {MapIterator} mapIterator - The map iterator object
+ * @param {Array} keys - The keys to extract
+ * @returns {Array} The extracted properties
+ */
 export function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
@@ -550,15 +556,18 @@ export function userHasRightPermissions() {
  * @returns {number|boolean} The level at which subclass is gained, or false if not found
  */
 export function getSubclassLevel(characterClass, MODULE_ID) {
+  window.GAS.log.d('[getSubclassLevel] characterClass', characterClass)
   if (!characterClass) return false;
 
   // Check for dnd5e system 3.x flag
   const subclassFlag = characterClass.getFlag?.(MODULE_ID, "subclassLevel");
+  window.GAS.log.d('[getSubclassLevel] subclassFlag', subclassFlag)
   if (subclassFlag) {
     return characterClass.getFlag(MODULE_ID, "subclassLevel");
   }
 
   // Check for dnd5e system 4.x advancement array
+  window.GAS.log.d('[getSubclassLevel] characterClass.system', characterClass.system.advancement)
   const subclassLevel = characterClass.system?.advancement
     ?.find(advancement => advancement.type === "Subclass")?.level;
 
