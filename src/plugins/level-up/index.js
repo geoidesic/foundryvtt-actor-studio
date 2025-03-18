@@ -93,6 +93,7 @@ export function tidy5eSheetUI(app, element, data) {
 
 export function initLevelup() {
 
+  //- @deprecated: for some reason, extending this class was causing issues with the subclass advancement - where the subclass level was being set to 0
   // Hooks.once("ready", async () => {
   //   //- prevent the default subclass advancement
   //   const { default: SubclassAdvancement } = await import('./extensions/subclass.js');
