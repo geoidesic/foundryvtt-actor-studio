@@ -35,42 +35,81 @@
     .sort((a, b) => a.label.localeCompare(showPackLabelInSelect ? b.compoundLabel : b.label));
 
   const actor = getContext("#doc");
+  let advancementComponents = {};
 
-  async function importAdvancements() {
-    // window.GAS.log.d('advancementArray',advancementArray)
-    for (const advancement of advancementArray) {
+  async function importAdvancements(advancements) {
+    if (!advancements || !Array.isArray(advancements)) return;
+    
+    // window.GAS.log.d('advancementArray',advancements)
+    for (const advancement of advancements) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/Advancements/${advancement.type}.svelte`);
         advancementComponents[advancement.type] = module.default;
       } catch (error) {
-        log.e(`Failed to load component for ${advancement.type}:`, error);
+        window.GAS.log.e(`Failed to load component for ${advancement.type}:`, error);
       }
     }
   };
 
   async function selectRaceHandler(option) {
+    if (isDisabled) return; // Don't allow changes in readonly mode
+    
     const selectedRace = await fromUuid(option);
     $race = selectedRace;
     active = option;
     if(!value) {
       value = option;
     }
-    await importAdvancements();
+    
+    const advancements = getAdvancements($race);
+    await importAdvancements(advancements);
     richHTML = await illuminatedDescription(html, $race);
   };
+
+  // Get the advancement array safely
+  function getAdvancements(race) {
+    if (!race || !race.system || !race.system.advancement) return [];
+    
+    return race.system.advancement.filter(
+      (value) => !(value.type == "Trait" && value.title == "Dwarven Resilience")
+    );
+  }
+
+  // Function to update richHTML based on current race
+  async function updateRichHTML() {
+    if ($race) {
+      const advancements = getAdvancements($race);
+      await importAdvancements(advancements);
+      richHTML = await illuminatedDescription($race.system?.description?.value || "", $race);
+    }
+  }
 
   $: actorObject = $actor.toObject();
   $: options = raceDefinitions;
   $: html = $race?.system?.description?.value || "";
   $: movement = $race?.system?.movement;
   $: senses = $race?.system?.senses;
-  $: advancementComponents = {};
   $: units = $race?.system?.movement?.units || "";
   $: type = $race?.system?.type || "";
   $: source = $race?.system?.source || "";
   $: book = source?.book || "";
   $: page = source?.page ? ", p. " + source.page : "";
   $: isDisabled = $readOnlyTabs.includes("race");
+  
+  // Calculate advancements
+  $: advancementArray = getAdvancements($race);
+  
+  // Make sure to update active/value when race changes to ensure display in readonly mode
+  $: if ($race && (!active || !value)) {
+    active = $race.uuid;
+    value = $race.uuid;
+    updateRichHTML();
+  }
+
+  // Also update richHTML when html changes (dependency of illuminatedDescription)
+  $: if ($race && html) {
+    updateRichHTML();
+  }
 
   $: filteredMovement = movement
     ? Object.keys(movement)
@@ -84,23 +123,35 @@
         .map((key) => ({ label: key, value: senses[key] }))
     : [];
 
-  $: advancementArray = $race?.system?.advancement
-    ? $race.system.advancement
-        .filter(
-          (value) =>
-            !(value.type == "Trait" && value.title == "Dwarven Resilience"),
-        )
-    : [];
-
-  // $: window.GAS.log.d(advancementArray)
+  // Debug logs
+  $: window.GAS.log.d("Race component:", { 
+    isDisabled, 
+    race: $race, 
+    active, 
+    value, 
+    readOnlyTabs: $readOnlyTabs,
+    richHTML: richHTML ? richHTML.substring(0, 50) + "..." : "", // truncate for logging
+    advancementArray: advancementArray?.length || 0
+  });
 
   onMount(async () => {
+    // Log mount
+    window.GAS.log.d("Race tab mounted");
+    
     let raceUuid;
     if (window.GAS.debug) {
       raceUuid = window.GAS.race;
     }
     if (raceUuid) {
       await selectRaceHandler(raceUuid);
+    }
+    
+    // If we have a race in the store but no active selection, set the active selection
+    if ($race && (!active || !value)) {
+      window.GAS.log.d("Setting active/value from $race:", $race);
+      active = $race.uuid;
+      value = $race.uuid;
+      await updateRichHTML();
     }
   });
 
@@ -114,6 +165,8 @@ div.content
         .flex0.required(class="{$race ? '' : 'active'}") *
         .flex3 
           IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value disabled="{isDisabled}")
+          +if("isDisabled")
+            .info-message This tab is read-only during advancement selection
       +if("value")
         +if("source")
           //- h3.left {localize('GAS.Source')}
@@ -161,6 +214,10 @@ div.content
   :global(.icon-select)
     position: relative
 
-
-
+  .info-message
+    font-size: 0.8rem
+    color: #666
+    font-style: italic
+    margin-top: -0.5rem
+    margin-bottom: 0.5rem
 </style>
