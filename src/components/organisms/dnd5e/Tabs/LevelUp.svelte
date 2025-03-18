@@ -357,19 +357,21 @@ onDestroy(() => {
 .content
   .flexrow
     .flex2.pr-sm.col-a
-      pre classUuidForLevelUp {$classUuidForLevelUp}
-      pre selectedMultiClassUUID {$selectedMultiClassUUID}
-      pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
-      pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
-      pre levelUpClassObject {$levelUpClassObject}
-      pre classUuidForLevelUp {$classUuidForLevelUp}
-      pre levelUpSubClassObject {$levelUpSubClassObject}
-      pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
-      pre activeRowClassKey {$activeRowClassKey}
-      pre selectedMultiClassUUID {$selectedMultiClassUUID}
-      pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
-      pre subclasses {subclasses}
-      pre classKeys {classKeys}
+
+      +if("window.GAS.debug")
+        pre classUuidForLevelUp {$classUuidForLevelUp}
+        pre selectedMultiClassUUID {$selectedMultiClassUUID}
+        pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+        pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+        pre levelUpClassObject {$levelUpClassObject}
+        pre classUuidForLevelUp {$classUuidForLevelUp}
+        pre levelUpSubClassObject {$levelUpSubClassObject}
+        pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
+        pre activeRowClassKey {$activeRowClassKey}
+        pre selectedMultiClassUUID {$selectedMultiClassUUID}
+        pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
+        pre subclasses {subclasses}
+        pre classKeys {classKeys}
 
         
       +if("!$selectedMultiClassUUID")
