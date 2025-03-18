@@ -1,5 +1,6 @@
 <script>
 import { getContext, onMount } from "svelte";
+import { isAdvancementInProgress } from "~/src/stores";
 import LevelUpButtonInnards from "~/src/plugins/level-up/LevelUpButtonInnards.svelte";
 
 export let cssClasses;
@@ -22,7 +23,7 @@ onMount(async () => {
   aria-role="button" 
   aria-label="{tooltip}" 
   data-tooltip="{tooltip}" 
-  on:mousedown!="{eventHandler}"
+  on:mousedown!="{$isAdvancementInProgress ? () => {} : eventHandler}"
 )
   LevelUpButtonInnards(
     src="{imgSrc}" 

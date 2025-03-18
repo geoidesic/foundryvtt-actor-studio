@@ -13,14 +13,16 @@ import {
   resetLevelUpStores,
   isLevelUp,
   classGetsSubclassThisLevel,
-  isNewMultiClassSelected
+  isNewMultiClassSelected,
+  isLevelUpAdvancementInProgress,
+  activeRowClassKey,
+  subclassLevel
 } from "~/src/stores";
 
 import {
   extractItemsFromPacksSync,
   extractMapIteratorObjectProperties,
   getPacksFromSettings,
-  getSubclassLevel,
   illuminatedDescription
 } from "~/src/helpers/Utility.js";
 
@@ -44,15 +46,8 @@ let
   subclasses,
   subClassesPacks = getPacksFromSettings("subclasses"),
   subclassesPlaceholder = "Subclasses",
-  activeRowClassKey = null,
-  mappedClassIndex = extractItemsFromPacksSync(packs, [
-    "name->label",
-    "img",
-    "type",
-    "folder",
-    "uuid->value",
-    "_id",
-  ])
+  mapKeys = ["name->label", "img", "type", "folder", "uuid->value", "_id"], //- keys to extract from the packs map
+  mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys)
 ;
 
 /** CONTEXT VARIABLES */
@@ -80,15 +75,7 @@ const filters = {
         fields: ["system.classIdentifier"],
       });
       if(!subClassesPack) continue
-      let mappedSubClassIndex =  extractMapIteratorObjectProperties(index.entries(), [
-          "name->label",
-          "img",
-          "type",
-          "folder",
-          "uuid->value",
-          "system",
-          "_id",
-        ])
+      let mappedSubClassIndex =  extractMapIteratorObjectProperties(index.entries(), [...mapKeys, "system"])
   
       filteredSubClassIndex.push(mappedSubClassIndex?.filter(
         (x) => x.system.classIdentifier == $levelUpClassObject.system.identifier,
@@ -180,7 +167,7 @@ const eventHandlers = {
     subClassAdvancementArrayFiltered = [];
     richSubClassHTML = "";
     $selectedMultiClassUUID = false
-    activeRowClassKey = classKey;
+    $activeRowClassKey = classKey;
     /**
      * Updates the newLevelValueForExistingClass store with the next level for this class
      * Calculates new level by adding 1 to the character's current level in this class
@@ -205,7 +192,7 @@ const eventHandlers = {
     selectedMultiClassUUIDKey = null
     $classUuidForLevelUp = false
     newLevelValueForExistingClass.set(false)
-    activeRowClassKey = null;
+    $activeRowClassKey = null;
   },
   /**
    * Click will either add a level to the clicked class or cancel the level up selection
@@ -242,13 +229,15 @@ const eventHandlers = {
     $levelUpClassObject = await fromUuid(option);
     $selectedMultiClassUUID = option;
     $classUuidForLevelUp = option;
-    activeRowClassKey = null;
+    $activeRowClassKey = null;
     
     await tick();
     subClassesIndex = await filters.getFilteredSubclassIndex();
     await tick();
     importers.importClassAdvancements();
     richHTML = await illuminatedDescription(html, $levelUpClassObject);
+
+    window.GAS.log.d('subClassesIndex', subClassesIndex)
   },
   /**
    * Handles the selection of a subclass
@@ -349,7 +338,8 @@ onDestroy(() => {
           +else 
             p.left {localize('GAS.LevelUp.ExistingClassesDescription')}
         +each("classKeys as classKey, index")
-          +if("activeRowClassKey == classKey")
+          
+          +if("$activeRowClassKey == classKey")
             // Active row with "Cancel" tooltip
             ClassLevelRow(
               cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
@@ -359,6 +349,7 @@ onDestroy(() => {
               classKey="{classKey}"
               iconClass="fas fa-times"
               newLevel="{$newLevelValueForExistingClass}"
+              disabled="{$isLevelUpAdvancementInProgress}"
             )
             +else
               // Inactive row with default tooltip
@@ -395,9 +386,9 @@ onDestroy(() => {
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
                 .flex2 {localize('GAS.SubClass')}
         
-        +if("!!subclasses.length && $classGetsSubclassThisLevel")  
+        +if("($isLevelUpAdvancementInProgress || !!subclasses.length) && $classGetsSubclassThisLevel")  
           h3.left.mt-md {localize('GAS.LevelUp.Subclass')}
-          pre {$subClassUuidForLevelUp}
+          pre classGetsSubclassThisLevel {$classGetsSubclassThisLevel}
           IconSelect.icon-select(
             active="{subClassProp}" 
             options="{subclasses}"  

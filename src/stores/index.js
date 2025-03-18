@@ -51,7 +51,8 @@ storeDefinitions.actorInGame.name = "actorInGame";
 storeDefinitions.abilityGenerationMethod.name = "abilityGenerationMethod";
 storeDefinitions.subClassesForClass.name = "subClassesForClass";
 storeDefinitions.levelUpClassObject.name = "levelUpClassObject";
-
+storeDefinitions.activeRowClassKey.name = "activeRowClassKey";
+storeDefinitions.levelUpSubClassObject.name = "levelUpSubClassObject";
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore(); 
 dropItemRegistry.name = "dropItemRegistry";
@@ -64,14 +65,30 @@ export const isNewMultiClass = derived(
   }
 );
 
+export const subclassLevel = derived([storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject], ([$classUuidForLevelUp, $levelUpClassObject]) => {
+  if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
+  const result = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false;
+  window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
+  window.GAS.log.d('[subclassLevel] levelUpClassObject', $levelUpClassObject)
+  window.GAS.log.d('[subclassLevel] getSubclassLevel($levelUpClassObject, MODULE_ID)', getSubclassLevel($levelUpClassObject, MODULE_ID))
+  window.GAS.log.d('[subclassLevel] result', result)
+  return result;
+});
+
 // Derived store to check if the class gets a subclass at the current level up level
 export const classGetsSubclassThisLevel = derived(
-  [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
-  ([$classUuidForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject]) => {
+  [storeDefinitions.classUuidForLevelUp, subclassLevel, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
+  ([$classUuidForLevelUp, $subClassLevel, $newLevelValueForExistingClass, $levelUpClassObject]) => {
+    window.GAS.log.d('[classGetsSubclassThisLevel] classUuidForLevelUp', $classUuidForLevelUp)
+    window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
+    window.GAS.log.d('[classGetsSubclassThisLevel] levelUpClassObject', $levelUpClassObject)
     if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
     
-    const subClassLevel = getSubclassLevel($levelUpClassObject, MODULE_ID);
-    return subClassLevel && subClassLevel === $newLevelValueForExistingClass;
+    window.GAS.log.d('[classGetsSubclassThisLevel] subClassLevel', $subClassLevel)
+    window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
+    const result = $subClassLevel && $subClassLevel === $newLevelValueForExistingClass;
+    window.GAS.log.d('[classGetsSubclassThisLevel] result', result)
+    return result;
   }
 );
 
@@ -103,6 +120,22 @@ export const hasCharacterCreationChanges = derived(
   }
 );
 
+// Derived store to check if advancements are in progress
+export const isAdvancementInProgress = derived(
+  [storeDefinitions.tabs],
+  ([$tabs]) => {
+    window.GAS.log.d('[isAdvancementInProgress] tabs', $tabs)
+    return $tabs.find(tab => tab.id === 'advancements') ? true : false;
+  }
+);
+export const isLevelUpAdvancementInProgress = derived(
+  [storeDefinitions.levelUpTabs],
+  ([$levelUpTabs]) => {
+    window.GAS.log.d('[isLevelUpAdvancementInProgress] tabs', $levelUpTabs)
+    return $levelUpTabs.find(tab => tab.id === 'advancements') ? true : false;
+  }
+);
+
 //- Derived store to get the changed items
 export const changedCharacterCreationItems = derived(
   [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections], 
@@ -131,12 +164,12 @@ export const resetLevelUpStores = () => {
   storeDefinitions.newLevelValueForExistingClass.set(false); //- tracks new level value for existing class
   storeDefinitions.selectedMultiClassUUID.set(false); //- tracks the selected multi class
   storeDefinitions.levelUpClassObject.set(null); //- tracks the new multi class object
-
-  
+  storeDefinitions.levelUpSubClassObject.set(null); //- tracks the new multi class object
 }
 
 // Function to reset all stores
 export function resetStores() {
+  window.GAS.log.d('[resetStores]')
   storeDefinitions.race.set(null); //- null | object
   storeDefinitions.background.set(null); //- null | object
   storeDefinitions.characterClass.set(null); //- null | object
@@ -144,11 +177,8 @@ export function resetStores() {
   storeDefinitions.abilityRolls.set(false); //- boolean
   storeDefinitions.level.set(1); //- number
   storeDefinitions.tabs.set(initialTabs); //- array
-  storeDefinitions.levelUpTabs.set(upTabs); //- array
-  storeDefinitions.classUuidForLevelUp.set(null); //- null | uuid string
   storeDefinitions.pointBuyScoreTotal.set(12); //- number
   storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit")); //- number
-  storeDefinitions.selectedMultiClassUUID.set(null); //- null | uuid string
   storeDefinitions.activeTab.set(initialTabs[0].id); //- string
   storeDefinitions.isActorCreated.set(false); //- boolean
   storeDefinitions.actorInGame.set(null); //- null | object
@@ -156,7 +186,13 @@ export function resetStores() {
   storeDefinitions.subClassesForClass.set([]); //- array
   storeDefinitions.goldRoll.set(0); //- number
   storeDefinitions.readOnlyTabs.set([]); //- array
+  storeDefinitions.levelUpTabs.set(upTabs); //- array
   storeDefinitions.levelUpClassObject.set(null); //- null | object
+  storeDefinitions.newLevelValueForExistingClass.set(false); //- boolean
+  storeDefinitions.selectedMultiClassUUID.set(null); //- null | uuid string
+  storeDefinitions.activeRowClassKey.set(null); //- null | string
+  storeDefinitions.classUuidForLevelUp.set(null); //- null | uuid string
+  storeDefinitions.levelUpSubClassObject.set(null); //- null | object
   preAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void
