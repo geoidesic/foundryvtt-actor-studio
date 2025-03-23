@@ -209,7 +209,7 @@
     // window.GAS.log.d('[FOOTER] createActorInGameAndEmbedItems created actor', $actorInGame);
 
     // race
-    if ($race) {
+    if ($race && !$isLevelUp) {
       const raceData = $race;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -226,7 +226,7 @@
     }
     
     // subrace
-    if ($subRace) {
+    if ($subRace && !$isLevelUp) {
       const subRaceData = $subRace;
       dropItemRegistry.add({
         actor: $actorInGame,
@@ -242,7 +242,7 @@
       $preAdvancementSelections.subRace = $subRace;
     }
     
-    if ($background) {
+    if ($background && !$isLevelUp) {
       dropItemRegistry.add({
         actor: $actorInGame,
         id: "background",
