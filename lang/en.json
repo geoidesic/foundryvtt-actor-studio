@@ -112,6 +112,10 @@
           "Hint": "E.g. 4d6kh3"
         }
       },
+      "AdvancementCaptureTimerThreshold": {
+        "Name": "Advancement Capture Timer Threshold",
+        "Hint": "Set the threshold for the advancement capture timer. If you find that Race or Background or Class is not being captured for new Actors, make this number higher. This represents the number of milliseconds to wait before the advancement capture is considered to have failed."
+      },
       "debug": {
         "Name": "Enable debug mode",
         "Hint": "Provides additional logging for debugging purposes"

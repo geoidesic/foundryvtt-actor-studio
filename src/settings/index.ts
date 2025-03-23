@@ -60,7 +60,7 @@ export function registerSettings(app: Game): void {
   debugSetting();
   debugHooksSetting();
   disableAdvancementCapture();
-
+  advancementCaptureTimerThreshold();
   /** User settings */
   dontShowWelcome();
 }
@@ -171,6 +171,18 @@ function disableAdvancementCapture() {
     config: true,
     type: Boolean,
     default: false
+  });
+}
+
+
+function advancementCaptureTimerThreshold() {
+  game.settings.register(MODULE_ID, 'advancementCaptureTimerThreshold', {
+    name: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Name'),
+    hint: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Hint'),
+    scope: 'world',
+    config: true,
+    default: 250,
+    type: Number,
   });
 }
 

@@ -60,7 +60,7 @@ export class AdvancementManager {
    * @returns {Promise<boolean>}
    */
   async watchAdvancementManager() {
-    await delay(200); //- delay to allow for the items to be dropped
+    await delay(game.settings.get(MODULE_ID, 'advancementCaptureTimerThreshold')); //- delay to allow for the items to be dropped
 
     //- if advancements are enabled handle advancement capture
     if (!game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
