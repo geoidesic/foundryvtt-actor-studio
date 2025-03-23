@@ -99,7 +99,6 @@
     padding: 1em
     font-size: 0.8em
     z-index: 3
-    img
     a
       color: white
       text-decoration: underline

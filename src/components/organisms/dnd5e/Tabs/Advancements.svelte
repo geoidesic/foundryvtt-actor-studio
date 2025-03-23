@@ -11,9 +11,9 @@
     !drop.itemData.advancement || drop.itemData.advancement.length === 0
   );
 
-  $: console.log('currentDrops', currentDrops);
-  $: console.log('itemsWithoutAdvancements', itemsWithoutAdvancements);
-  $: console.log('$dropItemRegistry', $dropItemRegistry);
+  // $: console.log('currentDrops', currentDrops);
+  // $: console.log('itemsWithoutAdvancements', itemsWithoutAdvancements);
+  // $: console.log('$dropItemRegistry', $dropItemRegistry);
   //- for debugging purposes only
   // async function addAdvancement() {
   //   window.GAS.log.d("currentProcess", $dropItemRegistry.currentProcess);
