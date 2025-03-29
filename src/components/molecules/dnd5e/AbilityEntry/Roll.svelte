@@ -76,7 +76,6 @@
   onMount(async () => {
     formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
     allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved")
-    window.GAS.log.d('systemAbilitiesArray', systemAbilitiesArray)
   });
 </script>
 
@@ -114,7 +113,7 @@
           td.center
             +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
               span +
-            span {$doc.system.abilities[ability[1].abbreviation]?.mod}
+            span {Number($doc.system.abilities[ability[1].abbreviation]?.mod) + (Number(abilityAdvancements?.[ability[1].abbreviation]) || 0)}
           td.center
             .buttons(class="{$abilityRolls[ability[1].abbreviation] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
               i.fas.fa-dice
