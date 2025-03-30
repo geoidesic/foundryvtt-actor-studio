@@ -77,8 +77,8 @@
 
     const options = { system: { abilities: {} } };
     systemAbilitiesArray.forEach((ability) => {
-      options.system.abilities[ability[1].abbreviation] = {
-        value: STANDARD_ARRAY[ability[1].abbreviation],
+      options.system.abilities[ability[0]] = {
+        value: STANDARD_ARRAY[ability[0]],
       };
     });
     $doc.updateSource(options);
@@ -103,20 +103,20 @@
   // $: isStandardArrayValues = arraysMatch(
   //   Object.values(STANDARD_ARRAY),
   //   systemAbilitiesArray.map(
-  //     (ability) => $doc.system.abilities[ability[1].abbreviation].value,
+  //     (ability) => $doc.system.abilities[ability[0]].value,
   //   ),
   // );
   $: $isStandardArrayValues = arraysMatch(
     Object.values(STANDARD_ARRAY),
     systemAbilitiesArray.map(
-      (ability) => $doc.system.abilities[ability[1].abbreviation]?.value,
+      (ability) => $doc.system.abilities[ability[0]]?.value,
     ),
   );
   // $: {
   //   const currentAbilities = systemAbilitiesArray.map(
   //     (ability) => {
   //       window.GAS.log.d(ability) 
-  //       return $doc.system.abilities[ability[1].abbreviation].value
+  //       return $doc.system.abilities[ability[0]].value
   //     }
   //   );
   //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
@@ -130,7 +130,7 @@
     if (
       systemAbilitiesArray.every(
         (ability) =>
-          $doc.system.abilities[ability[1].abbreviation]?.value === 10,
+          $doc.system.abilities[ability[0]]?.value === 10,
       )
     ) {
       reset();
@@ -153,23 +153,24 @@
         tr
           td.ability {ability[1].label}
           td.center
-            +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+            +if("abilityAdvancements?.[ability[0]] > 0")
               span +
-            span {abilityAdvancements?.[ability[1].abbreviation] || 0}
+            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
-            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}")
+            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
             .controls
               .up.chevron
                 +if("index != 0")
-                  i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, 1)}")
+                  i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[0], 1)}")
               .down.chevron
                 +if("index != 5")
-                  i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, -1)}")
-          td.center {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
+                  i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[0], -1)}")
+          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
+            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
               span +
-            span {$doc.system.abilities[ability[1].abbreviation]?.mod}
+            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+          
       +if("!$isStandardArrayValues")
         tr
           td(colspan="5")

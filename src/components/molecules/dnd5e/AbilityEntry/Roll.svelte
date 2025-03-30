@@ -70,7 +70,7 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[1].abbreviation] !== undefined);
+  $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[0]] !== undefined);
   $: scoreClass = allowMove && allRolled ? 'left' : 'center';
   
   onMount(async () => {
@@ -95,27 +95,27 @@
         tr
           td.ability {ability[1].label}
           td.center
-            +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+            +if("abilityAdvancements?.[ability[0]] > 0")
               span +
-            span {abilityAdvancements?.[ability[1].abbreviation] || 0}
+            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
-            input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}"  name="{ability[1].abbreviation}" id="{ability[1].abbreviation}")
+            input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}"  name="{ability[0]}" id="{ability[0]}")
             +if("allowMove && allRolled")
               .controls
                 .up.chevron
                   +if("index != 0")
-                    i.fas.fa-chevron-up(alt="Move Up" on:click!="{swapAbilities(ability[1].abbreviation, 1)}")
+                    i.fas.fa-chevron-up(alt="Move Up" on:click!="{swapAbilities(ability[0], 1)}")
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
-                    i.fas.fa-chevron-down(alt="Move Down" on:click!="{swapAbilities(ability[1].abbreviation, -1)}")
+                    i.fas.fa-chevron-down(alt="Move Down" on:click!="{swapAbilities(ability[0], -1)}")
           td.center
-            span {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
+            span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
+            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
               span +
-            span {Number($doc.system.abilities[ability[1].abbreviation]?.mod) + (Number(abilityAdvancements?.[ability[1].abbreviation]) || 0)}
+            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
           td.center
-            .buttons(class="{$abilityRolls[ability[1].abbreviation] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
+            .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[0])}")
               i.fas.fa-dice
 
 </template>

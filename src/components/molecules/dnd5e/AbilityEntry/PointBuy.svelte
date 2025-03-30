@@ -20,7 +20,7 @@
     
     // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
     $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
-      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 
+      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 
       0
     ) || 12;
   }
@@ -34,14 +34,14 @@
     $abilityRolls = {};
     const options = {system: {abilities: {}}};
     systemAbilitiesArray.forEach(ability => {
-      options.system.abilities[ability[1].abbreviation] = {value: 10};
+      options.system.abilities[ability[0]] = {value: 10};
     });
     $doc.updateSource(options);
     $doc = $doc;
     
     // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
     $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
-      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 
+      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 
       0
     ) || 12;
   }
@@ -51,7 +51,7 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: $pointBuyScoreTotal = systemAbilitiesArray?.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[1].abbreviation]?.value)], 0) || 12;
+  $: $pointBuyScoreTotal = systemAbilitiesArray?.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 0) || 12;
   $: activeCSSClass = $pointBuyScoreTotal !== $pointBuyLimit ? ' active' : '';
   $: pointBuyClass = $pointBuyScoreTotal > $pointBuyLimit ? 'red'+activeCSSClass: 'green'+activeCSSClass
 
@@ -75,21 +75,21 @@
         tr
           td.ability {ability[1].label}
           td.center
-            +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+            +if("abilityAdvancements?.[ability[0]] > 0")
               span +
-            span {abilityAdvancements?.[ability[1].abbreviation] || 0}
+            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
-            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" )
+            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}" name="{ability[0]}" id="{ability[0]}" )
             .controls
-              .up.chevron(on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) + 1}})}")
+              .up.chevron(on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) + 1}})}")
                 i.fas.fa-chevron-up(alt="Decrease")
-              .down.chevron( on:click!="{updateDebounce(ability[1].abbreviation, {target: {value: Number($doc.system.abilities[ability[1].abbreviation]?.value) - 1}})}")
+              .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
                 i.fas.fa-chevron-down(alt="Increase")
-          td.center {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
+          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
+            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
               span +
-            span {$doc.system.abilities[ability[1].abbreviation]?.mod}
+            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
       tr
         td(colspan="5")
           hr

@@ -20,6 +20,7 @@
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
 
+  $: console.log(systemAbilitiesArray)
   onMount(async () => {
   });
 </script>
@@ -39,16 +40,17 @@
         tr
           td.ability {ability[1].label}
           td.center
-            +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
+            +if("abilityAdvancements?.[ability[0]] > 0")
               span +
-            span {abilityAdvancements?.[ability[1].abbreviation] || 0}
+            span {abilityAdvancements?.[ability[0]] || 0}
           td.center
-            input.center.small(name="{ability[1].abbreviation}" id="{ability[1].abbreviation}" type="number" value="{$doc.system.abilities[ability[1].abbreviation]?.value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
-          td.center {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation]?.value || 0)}
+            input.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
+          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("$doc.system.abilities[ability[1].abbreviation]?.mod > 0")
+            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
               span +
-            span {$doc.system.abilities[ability[1].abbreviation]?.mod}
+            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+          
 </template>
 
 <style lang="sass">
