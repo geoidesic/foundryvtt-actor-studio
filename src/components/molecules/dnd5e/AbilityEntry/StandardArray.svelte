@@ -9,6 +9,7 @@
   } from "svelte";
   import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/stores/index";
   import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
+  import { dnd5eModCalc } from "~/src/helpers/Utility";
 
   export let document = false;
 
@@ -167,9 +168,9 @@
                   i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[0], -1)}")
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
               span +
-            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
           
       +if("!$isStandardArrayValues")
         tr

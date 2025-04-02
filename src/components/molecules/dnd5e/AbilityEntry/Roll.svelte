@@ -3,6 +3,7 @@
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
   import { abilities, race, abilityRolls } from "~/src/stores/index"
   import { MODULE_ID } from "~/src/helpers/constants"
+  import { dnd5eModCalc } from "~/src/helpers/Utility"
   
   export let document = false;
   
@@ -111,9 +112,9 @@
           td.center
             span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
               span +
-            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
           td.center
             .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[0])}")
               i.fas.fa-dice

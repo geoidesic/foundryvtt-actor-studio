@@ -3,6 +3,7 @@
   import { createEventDispatcher, getContext, setContext, onDestroy, onMount, tick  } from "svelte";
   import { abilities, race, pointBuyScoreTotal, pointBuyLimit, abilityRolls } from "~/src/stores/index"
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
+  import { dnd5eModCalc } from "~/src/helpers/Utility"
   import { localize } from "#runtime/svelte/helper";
   
   export let document = false;
@@ -87,9 +88,9 @@
                 i.fas.fa-chevron-down(alt="Increase")
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
               span +
-            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
       tr
         td(colspan="5")
           hr

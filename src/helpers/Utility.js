@@ -28,6 +28,10 @@ export async function illuminatedDescription(html, store) {
   return richHTML;
 }
 
+export function dnd5eModCalc(score) {
+  return Math.floor((score - 10) / 2);
+}
+
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
   set level(level) {
