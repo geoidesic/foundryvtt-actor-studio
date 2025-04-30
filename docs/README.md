@@ -14,6 +14,7 @@ Welcome to the documentation for the FoundryVTT module designed for creating dnd
   - [Advancements](features/advancements.md)
   - [Class and Subclass](features/class_subclass.md)
   - [Compendiums](features/compendiums.md)
+  - [Equipment Purchase](features/equipment_purchase.md)
   - [Race and Background](features/race_background.md)
   - [Starting Equipment](features/starting_equipment.md)
 - [Setup](setup/installation.md)

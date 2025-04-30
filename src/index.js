@@ -11,6 +11,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { userHasRightPermissions, log, getAllPackIdsFromAllSettings, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
 import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 import { initLevelup } from '~/src/plugins/level-up';
+import { initEquipmentPurchase } from './plugins/equipment-purchase'; // Import the new feature
 import { get } from 'svelte/store';
 import { registerSettings } from '~/src/settings';
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
@@ -44,7 +45,9 @@ Hooks.once("init", (app, html, data) => {
 
   initLevelup();
   registerSettings(app);
-  
+  initEquipmentPurchase(); // Initialize the new feature
+ 
+ 
   if(game.settings.get(MODULE_ID, 'debug')) {
     log.level = log.VERBOSE;
   } else {

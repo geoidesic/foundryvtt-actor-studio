@@ -28,6 +28,7 @@
     "Footer": {
       "AddLevel": "Add Character Level",
       "AddEquipment": "Add Equipment & Gold",
+      "FinalizePurchase": "Finalize Purchase",
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
       "UpdateCharacter": "Update Character"

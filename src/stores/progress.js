@@ -149,7 +149,8 @@ const progressCalculators = {
 
   equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete }) => {
     const groups = Object.values(equipmentSelections);
-    // window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
+    window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
+    window.GAS.log.d("[PROGRESS] equipmentSelections", equipmentSelections);
     
     // Handle v4 gold choices
     if (window.GAS.dnd5eVersion === 4  && window.GAS.dnd5eRules === "2024") {
@@ -158,6 +159,8 @@ const progressCalculators = {
       
       // Equipment is complete when all groups are complete AND choices are made
       const completedGroups = groups.filter(group => group.completed).length;
+      // Force 100% if all groups are completed
+      if (completedGroups === groups.length) return 100;
       return Math.round((completedGroups / groups.length) * 100);
     }
     
@@ -173,6 +176,8 @@ const progressCalculators = {
     const equipmentProgress = Math.round((completedGroups / (groups.length + 1)) * 100);
     
     // Only return 100 if both equipment and gold are done
+    // Force 100% if all groups are completed and gold is rolled
+    if (goldRoll > 0 && completedGroups === groups.length + 1) return 100;
     return goldRoll > 0 ? equipmentProgress : Math.min(equipmentProgress, 99);
   }
 };

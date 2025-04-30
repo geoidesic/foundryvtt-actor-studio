@@ -35,6 +35,7 @@
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
   import { flattenedStartingEquipment } from "~/src/stores/startingEquipment";
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
+  import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   
   import {
     getLevelByDropType,
@@ -336,49 +337,24 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop'];
   const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
 
-  // Handler for adding equipment
+  // Handle adding equipment to the actor
   const handleAddEquipment = async () => {
-    // window.GAS.log.d('[FOOTER] handleAddEquipment for ', window.GAS.dnd5eVersion, window.GAS.dnd5eRules);
-    // For v4, check if choices are complete
-    if (window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === "2024") {
-      const choices = get(goldChoices);
-      if (!choices.fromClass.choice || !choices.fromBackground.choice) {
-        ui.notifications.warn("Please make gold choices for both class and background first.");
-        return;
-      }
-
-      // Add total gold from choices to the actor
-      const totalGold = get(totalGoldFromChoices);
-      await $actorInGame.update({
-        "system.currency.gp": totalGold
-      });
-
-      // Only process equipment if either class or background chose equipment
-      if (choices.fromClass.choice === 'equipment' || choices.fromBackground.choice === 'equipment') {
-        const selections = get(flattenedSelections);
-
-        // Group duplicates by their UUID BEFORE starting async operations
-        const groupedSelections = selections.reduce((acc, selection) => {
-          
-          if (!acc[selection.key]) {
-            acc[selection.key] = {
-              key: selection.key,
-              count: 1
-            };
-          } else {
-            acc[selection.key].count++;
-          }
-          return acc;
-        }, {});
-
-
-        // Drop each unique item with its accumulated quantity
-        for (const [uuid, data] of Object.entries(groupedSelections)) {
+    // Add selected equipment from flattenedSelections
+    if ($actorInGame) {
+      // Add all items that have a count > 0
+      for (const [key, data] of Object.entries($flattenedSelections)) {
+        if (data.count > 0) {
           const item = await fromUuid(data.key);
           if (item) {
+            window.GAS.log.d('FOOTER | Pre-modification item:', {
+              uuid: data.key,
+              intendedQuantity: data.count,
+              currentQuantity: item.system.quantity,
+              item
+            });
 
             // Create a copy of the item data
             const itemData = foundry.utils.deepClone(item);
@@ -391,59 +367,52 @@
           }
         }
       }
-    } else {
-      // v3 logic
-      if ($goldRoll <= 0) {
-        ui.notifications.warn("Please roll for starting gold first.");
-        return;
-      }
 
-      // Add starting gold to the actor
-      await $actorInGame.update({
-        "system.currency.gp": $goldRoll
-      });
-
-      const selections = get(flattenedSelections);
-
-      // Group duplicates by their UUID BEFORE starting async operations
-      const groupedSelections = selections.reduce((acc, selection) => {
-        
-        if (!acc[selection.key]) {
-          acc[selection.key] = {
-            key: selection.key,
-            count: 1
-          };
-        } else {
-          acc[selection.key].count++;
+      // Check if equipment purchase is enabled
+      const enableEquipmentPurchase = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+      if (enableEquipmentPurchase) {
+        // Add Shop tab after equipment is added
+        if (!$tabs.find(x => x.id === "shop")) {
+          window.GAS.log.d('[FOOTER] Adding shop tab');
+          tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
+          
+          // Switch to the Shop tab
+          activeTab.set("shop");
+          
+          // Make the Equipment tab readonly, just like the earlier tabs became readonly when "Create Character" was clicked
+          readOnlyTabs.update(current => [...current, "equipment"]);
+          
+          // Set available gold in shop store based on DnD5e version
+          let goldValue;
+          
+          // Use the appropriate gold source based on DnD5e version
+          if (window.GAS.dnd5eVersion === 4) {
+            // For 5e v4, get gold from gold choices
+            goldValue = get(totalGoldFromChoices);
+            window.GAS.log.d('[FOOTER] Using totalGoldFromChoices for v4:', goldValue);
+          } else {
+            // For 5e v3, use goldRoll
+            goldValue = $goldRoll;
+            window.GAS.log.d('[FOOTER] Using goldRoll for v3:', goldValue);
+          }
+          
+          // Convert gold to copper (1 gp = 100 cp)
+          const goldValueInCopper = goldValue * 100;
+          window.GAS.log.d('[FOOTER] Setting available gold for shop', goldValueInCopper);
+          
+          // Ensure we're updating both the local store and the global reference
+          // This ensures proper synchronization between components
+          if (window.GAS.availableGold) {
+            window.GAS.availableGold.set(goldValueInCopper);
+          }
+          
+          // Don't close the application yet, let the user shop first
+          return;
         }
-        return acc;
-      }, {});
-
-
-      // Drop each unique item with its accumulated quantity
-      for (const [uuid, data] of Object.entries(groupedSelections)) {
-        const item = await fromUuid(data.key);
-        if (item) {
-          window.GAS.log.d('FOOTER | Pre-modification item:', {
-            uuid: data.key,
-            intendedQuantity: data.count,
-            currentQuantity: item.system.quantity,
-            item
-          });
-
-          // Create a copy of the item data
-          const itemData = foundry.utils.deepClone(item);
-
-          itemData.updateSource({ 
-            "system.quantity": data.count
-          });
-
-          await dropItemOnCharacter($actorInGame, itemData);
-        }
+      } else {
+        Hooks.call("gas.close");
       }
     }
-
-    Hooks.call("gas.close");
     
     // Mark equipment as added
     equipmentAdded.set(true);
@@ -507,6 +476,36 @@
     //   equipmentAdded: $equipmentAdded
     // });
   }
+
+  // Handle finalizing purchases in the shop
+  async function handleFinalizePurchase() {
+    if (!$actorInGame) {
+      ui.notifications.error("No active character found");
+      return;
+    }
+
+    if ($cartTotalCost === 0) {
+      ui.notifications.warn("Cart is empty");
+      return;
+    }
+
+    if ($remainingGold < 0) {
+      ui.notifications.error("Not enough gold for purchase");
+      return;
+    }
+
+    const success = await finalizePurchase($actorInGame);
+    
+    if (success) {
+      ui.notifications.info("Purchase completed successfully");
+      // Close the Actor Studio window after successful purchase
+      setTimeout(() => {
+        Hooks.call("gas.close");
+      }, 1500);
+    } else {
+      ui.notifications.error("Failed to complete purchase");
+    }
+  }
 </script>
 
 <template lang="pug">
@@ -514,7 +513,6 @@
   +if("FOOTER_TABS.includes($activeTab)")
     .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
-      //- pre $activeTab {$activeTab}
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
         .flex2
           .flexcol
@@ -551,8 +549,16 @@
                   on:mousedown="{handleAddEquipment}"
                 )
                   span {localize('Footer.AddEquipment')}
+        +if("$activeTab === 'shop'")
+          .progress-container
+            .button-container
+              button.mt-xs(
+                type="button"
+                role="button"
+                on:mousedown="{handleFinalizePurchase}"
+              )
+                span {localize('Footer.FinalizePurchase')}
               
-        
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
             ProgressBar(progress="{progress}")
@@ -565,7 +571,7 @@
                     on:mousedown="{clickCreateHandler}"
                   )
                     span {localize('Footer.CreateCharacter')}
-                  +else()
+                  +else
                     +if("$hasCharacterCreationChanges")
                       button(
                         type="button"
