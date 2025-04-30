@@ -8,6 +8,7 @@ Welcome to the documentation for the FoundryVTT module designed for creating dnd
 - [Architecture](architecture/module_structure.md)
   - [Data Flow](architecture/data_flow.md)
   - [Advancement Capture](advancement_capture.md)
+  - [Component Structure](architecture/component_structure.md)
 - [Features](features/actor_creation.md)
   - [Ability Scores](features/ability_scores.md)
   - [Advancements](features/advancements.md)

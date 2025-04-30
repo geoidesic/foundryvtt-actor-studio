@@ -276,7 +276,7 @@
       },
       "EnableEquipmentPurchase": {
         "Name": "Enable Equipment Purchase",
-        "Hint": "Allows players to purchase starting equipment during character creation. If disabled, equipment will need to be added manually after creation."
+        "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums."
       },
       "AllowAbilityRollScoresToBeMoved": {
         "Name": "All rolled ability scores to be moved",
