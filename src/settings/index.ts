@@ -51,6 +51,7 @@ export function registerSettings(app: Game): void {
   illuminatedWidth();
   illuminatedHeight();
   enableEquipmentSelection();
+  enableEquipmentPurchase();
   showPackLabelInSelect();
   windowX();
   windowY();
