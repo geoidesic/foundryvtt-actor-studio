@@ -1,10 +1,18 @@
 # Project Overview
 
-- A FoundryVTT module for creating dnd5e Actors
-- The DM / GM can set which compendiums are available to Actor Studio
-- Set your Ability Scores using either: point buy, manual entry, standard array or dice rolls
-- Preview and select your race, background, class and subclass
-- You can preview available advancements by level for class and subclass
-- Once your've made your selections, the actor will be created and the advancements triggered for completion
-- If the setting is enabled, once advancements are complete, the starting equipment tab will open
-- Once all is complete, Actor Studio closes.
+The FoundryVTT module for creating dnd5e Actors provides a comprehensive toolset for Dungeon Masters (DMs) and Game Masters (GMs) to streamline the character creation process. This document outlines the key features and functionalities of the module.
+
+## Key Features
+
+- **Actor Creation**: Facilitates the creation of dnd5e Actors with a user-friendly interface.
+- **Compendium Management**: DMs/GMs can configure which compendiums are accessible to Actor Studio, allowing for tailored content availability.
+- **Ability Score Configuration**: Users can set Ability Scores through various methods, including:
+  - Point buy
+  - Manual entry
+  - Standard array
+  - Dice rolls
+- **Character Customization**: Preview and select options for race, background, class, and subclass during the actor creation process.
+- **Advancement Preview**: Users can view available advancements by level for both class and subclass, aiding in character development planning.
+- **Automatic Advancement Triggering**: Upon selection completion, the actor is created, and advancements are automatically triggered.
+- **Starting Equipment Management**: If enabled, the starting equipment tab opens automatically once advancements are complete, ensuring players have their initial gear.
+- **Streamlined Closure**: Once all processes are complete, Actor Studio closes, providing a seamless user experience.
