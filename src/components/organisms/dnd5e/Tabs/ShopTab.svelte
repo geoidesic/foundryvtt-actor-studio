@@ -87,7 +87,6 @@
       // Update cart safely
       updateCart(itemId, newQuantity);
       
-      ui.notifications?.info(`Added ${item.name} to cart`);
     } catch(error) {
       console.error("Error adding item to cart:", error);
       ui.notifications?.warn("Failed to add item to cart");
@@ -135,16 +134,12 @@
   <div class="shop-tab">
     <!-- Left Panel: Cart Items and Gold Info -->
     <div class="left-panel">
-      <h3>Available Gold</h3>
-      <GoldDisplay {...availableCurrency} />
-      
-      <h3>Cart Total</h3>
-      <GoldDisplay {...cartCurrency} />
-
-      <h3>Remaining Gold</h3>
+      <h3 class="left no-margin">Available</h3>
       <div class:negative={$remainingGold < 0} class="remaining-currency">
         <GoldDisplay {...remainingCurrency} />
       </div>
+      <h3 class="left no-margin">Spent</h3>
+      <GoldDisplay {...cartCurrency} />
 
       <h3>Cart Items</h3>
       <div class="cart-items">
@@ -155,18 +150,20 @@
         {:else}
           {#each cartItems as cartItem}
             <div class="cart-item">
-              <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
-              <div class="cart-item-details">
+              <div class="cart-item-col1">
+                <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
+              </div>
+              <div class="cart-item-col2 left">
                 <div class="cart-item-name">{getItemDisplayName(cartItem.item)}</div>
-                <div class="cart-item-controls">
-                  <div class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</div>
-                  <div class="cart-item-info">
-                    <span class="quantity-display">×{cartItem.quantity}</span>
-                  </div>
-                  <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
-                    <i class="fas fa-trash"></i>
-                  </button>
+                <div class="cart-item-subdetails">
+                  <span class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</span>
+                  <span class="quantity-display">×{cartItem.quantity}</span>
                 </div>
+              </div>
+              <div class="cart-item-col3">
+                <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
+                  <i class="fas fa-trash"></i>
+                </button>
               </div>
             </div>
           {/each}
@@ -214,234 +211,218 @@
   {/if}
 </div>
 
-<style lang="scss">
-  /* Add additional component-specific styles here */
-  @import "../../../../../styles/features/equipment-purchase.scss";
+<style lang="sass">
+  @import "../../../../../styles/features/equipment-purchase.scss"
 
-  .shop-tab-container {
-    position: relative;
-    height: 100%;
-    width: 100%;
+  .shop-tab-container 
+    position: relative
+    height: 100%
+    width: 100%
 
-    &.disabled {
-      pointer-events: none; // Prevent interaction with underlying elements when disabled
-    }
-  }
-
-  .overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(200, 200, 200, 0.3);
-    pointer-events: all; // Ensure overlay itself can be interacted with if needed (though here it just blocks)
-    cursor: not-allowed;
-    z-index: 100; // Ensure overlay is on top
-    transition: background-color 0.2s ease;
-    &:hover {
-      background-color: rgba(200, 200, 200, 0.4);
-    }
-  }
-
-  .shop-tab {
-    display: flex;  /* Changed from grid to flex */
-    height: 100%;
-    overflow: hidden;
-  }
-
-  .left-panel {
-    flex: 1;  /* Take 1/3 of the space */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    padding: 0.5rem;
-    border-right: 1px solid var(--color-border-light-tertiary);
-  }
-
-  .right-panel {
-    flex: 2;  /* Take 2/3 of the space */
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow-y: auto;
-    padding: 0.5rem;
-  }
-
-  h3 {
-    margin-bottom: 0.5rem;
-    border-bottom: 1px solid var(--color-border-light-highlight);
-    padding-bottom: 0.25rem;
-  }
-
-  .loading, .empty-state, .empty-cart {
-    padding: 1rem;
-    text-align: center;
-    color: var(--color-text-dark-secondary);
-  }
-
-  .remaining-currency {
-    margin-bottom: 1rem;
+    &.disabled 
+      pointer-events: none
     
-    &.negative {
-      :global(.currency-display) {
-        background-color: rgba(255, 0, 0, 0.1);
-        border-color: rgba(255, 0, 0, 0.5);
-      }
-    }
-  }
+  .overlay
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background-color: rgba(200, 200, 200, 0.3)
+    pointer-events: all
+    cursor: not-allowed
+    z-index: 100
+    transition: background-color 0.2s ease
+    &:hover
+      background-color: rgba(200, 200, 200, 0.4)
 
-  .cart-items {
-    flex: 1;
-    overflow-y: auto;
-    margin-bottom: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+  .shop-tab
+    display: flex
+    height: 100%
+    overflow: hidden
 
-  .cart-item {
-    display: flex;
-    padding: 0.5rem;
-    background: rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--color-border-light-tertiary);
-    border-radius: 3px;
-    align-items: center;
-    gap: 0.5rem;
+  .left-panel
+    flex: 1
+    display: flex
+    flex-direction: column
+    height: 100%
+    overflow-y: auto
+    padding: 0.5rem
+    border-right: 1px solid var(--color-border-light-tertiary)
 
-    .item-icon {
-      width: 32px;
-      height: 32px;
-      border: none;
-    }
+  .right-panel
+    flex: 2
+    display: flex
+    flex-direction: column
+    height: 100%
+    overflow-y: auto
+    padding: 0.5rem
 
-    .cart-item-details {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
+  h3
+    margin-bottom: 0.5rem
+    border-bottom: 1px solid var(--color-border-light-highlight)
+    padding-bottom: 0.25rem
 
-    .cart-item-controls {
-      display: flex;
-      justify-content: flex-end; /* Right align all content */
-      align-items: center;
-      gap: 0.75rem; /* Increase spacing between elements */
-      width: 100%;
-    }
+  .loading, .empty-state, .empty-cart
+    padding: 1rem
+    text-align: center
+    color: var(--color-text-dark-secondary)
 
-    .cart-item-price {
-      color: var(--color-text-dark-secondary);
-      font-size: 0.9rem;
-    }
+  .remaining-currency
+    &.negative
+      :global(.currency-display)
+        background-color: rgba(255, 0, 0, 0.1)
+        border-color: rgba(255, 0, 0, 0.5)
 
-    .cart-item-info {
-      display: flex;
-      align-items: center;
+  .cart-items
+    flex: 1
+    overflow-y: auto
+    margin-bottom: 1rem
+    display: flex
+    flex-direction: column
+    gap: 0.5rem
+
+  .cart-item
+    display: flex
+    padding-right: 0.5rem
+    background: rgba(0, 0, 0, 0.05)
+    border: 1px solid var(--color-border-light-tertiary)
+    border-radius: 3px
+    align-items: stretch
+    gap: 0.75rem
+
+    .cart-item-col1
+      width: 100%
+      height: 100%
+      max-width: 50px
+    .item-icon
+      height: 100%
+      object-fit: contain
+      border: none
+      display: block
+
+    .cart-item-col2
+      flex: 1
+      display: flex
+      flex-direction: column
+      gap: 0.1rem
+      min-width: 0
+      padding-top: 0.5rem
+      padding-bottom: 0.5rem
+      justify-content: center
+
+    .cart-item-name
+      font-weight: bold
+      white-space: nowrap
+      overflow: hidden
+      text-overflow: ellipsis
+      line-height: 1.2
+
+    .cart-item-subdetails
+      display: flex
+      align-items: center
+      gap: 0.5rem
+      font-size: 0.9em
+      color: var(--color-text-dark-secondary)
+      line-height: 1.1
+
+    .cart-item-price
+      white-space: nowrap
+
+    .quantity-display
+      background: rgba(0, 0, 0, 0.1)
+      padding: 0.1rem 0.3rem
+      border-radius: 3px
+      font-weight: bold
+      min-width: 1.8rem
+      text-align: center
+      white-space: nowrap
+      font-size: 0.9em
+      color: var(--color-text-dark-primary)
+
+    .cart-item-col3
+      flex-shrink: 0
+      display: flex
+      align-items: center
+      padding-top: 0.5rem
+      padding-bottom: 0.5rem
+
+    .remove-btn
+      background: none
+      border: none
+      color: #990000
+      cursor: pointer
+      padding: 0.25rem
+      border-radius: 3px
+      line-height: 1
       
-      .quantity-display {
-        background: rgba(0, 0, 0, 0.1);
-        padding: 0.2rem 0.4rem;
-        border-radius: 3px;
-        font-weight: bold;
-        min-width: 2rem;
-        text-align: center;
-      }
-    }
+      &:hover
+        background: rgba(153, 0, 0, 0.1)
 
-    .remove-btn {
-      background: none;
-      border: none;
-      color: #990000;
-      cursor: pointer;
-      padding: 0.25rem;
-      border-radius: 3px;
-      
-      &:hover {
-        background: rgba(153, 0, 0, 0.1);
-      }
+      &:disabled
+        opacity: 0.5
+        cursor: not-allowed
+        &:hover
+          background: none
 
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        &:hover {
-          background: none; // Prevent hover effect when disabled
-        }
-      }
-    }
-  }
+  .category
+    margin-bottom: 1rem
 
-  .category {
-    margin-bottom: 1rem;
+    h4
+      margin-bottom: 0.5rem
+      padding-bottom: 0.25rem
+      border-bottom: 1px solid var(--color-border-light-highlight)
 
-    h4 {
-      margin-bottom: 0.5rem;
-      padding-bottom: 0.25rem;
-      border-bottom: 1px solid var(--color-border-light-highlight);
-    }
-  }
+  .item-row
+    display: flex
+    justify-content: space-between
+    padding: 0.25rem
+    align-items: center
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05)
 
-  .item-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.25rem;
-    align-items: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    &:hover
+      background: rgba(0, 0, 0, 0.05)
 
-    &:hover {
-      background: rgba(0, 0, 0, 0.05);
-    }
-  }
+  .item-details
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    flex: 1
 
-  .item-details {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex: 1;
-    
-    .item-icon {
-      width: 24px;
-      height: 24px;
-      border: none;
-    }
-  }
+    .item-icon
+      width: 24px
+      height: 24px
+      border: none
 
-  .item-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-width: 80px; /* Ensure consistent width */
-    justify-content: flex-end; /* Right align contents */
+  .item-actions
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    min-width: 80px
+    justify-content: flex-end
 
-    .item-price {
-      color: var(--color-text-dark-secondary);
-      font-size: 0.9rem;
-    }
+    .item-price
+      color: var(--color-text-dark-secondary)
+      font-size: 0.9rem
 
-    .add-btn {
-      background: var(--dnd5e-color-gold, #b59e54);
-      border: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 3px;
-      color: black;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      
-      &:hover {
-        background: darken(#b59e54, 10%);
-      }
+    .add-btn
+      background: var(--dnd5e-color-gold, #b59e54)
+      border: none
+      width: 24px
+      height: 24px
+      border-radius: 3px
+      color: black
+      display: flex
+      align-items: center
+      justify-content: center
+      cursor: pointer
 
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        &:hover {
-          background: var(--dnd5e-color-gold, #b59e54); // Prevent hover effect when disabled
-        }
-      }
-    }
-  }
+      &:hover
+        background: darken(#b59e54, 10%)
+
+      &:disabled
+        opacity: 0.5
+        cursor: not-allowed
+        &:hover
+          background: var(--dnd5e-color-gold, #b59e54)
 </style>
