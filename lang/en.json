@@ -274,6 +274,10 @@
         "Name": "Enable Equipment Selection",
         "Hint": "Allows players to select their starting equipment during character creation. If disabled, equipment will need to be added manually after creation."
       },
+      "EnableEquipmentPurchase": {
+        "Name": "Enable Equipment Purchase",
+        "Hint": "Allows players to purchase starting equipment during character creation. If disabled, equipment will need to be added manually after creation."
+      },
       "AllowAbilityRollScoresToBeMoved": {
         "Name": "All rolled ability scores to be moved",
         "Hint": "If enabled, rolled ability can be moved; similar to how Standard Array works."

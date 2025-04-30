@@ -529,3 +529,14 @@ function enableEquipmentSelection() {
     type: Boolean,
   });
 }
+
+function enableEquipmentPurchase() {
+  game.settings.register(MODULE_ID, 'enableEquipmentPurchase', {
+    name: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
