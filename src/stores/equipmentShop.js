@@ -3,6 +3,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings } from '~/src/helpers/Utility';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { totalGoldFromChoices } from '~/src/stores/goldChoices';
+import { readOnlyTabs } from '~/src/stores/index';
 
 // Store for managing the state of the equipment shop
 
@@ -255,6 +256,9 @@ export async function finalizePurchase(actor) {
     // Clear the cart
     shopCart.set(new Map());
     updateTotals();
+
+    // Make the shop tab readonly
+    readOnlyTabs.update(tabs => [...tabs, 'shop']);
     
     return true;
   } catch (error) {

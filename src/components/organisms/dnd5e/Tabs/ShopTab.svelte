@@ -1,6 +1,6 @@
 <script>
   import { shopItems, shopCart, availableGold, cartTotalCost, remainingGold, updateCart, loadShopItems, finalizePurchase, initializeGold } from '../../../../stores/equipmentShop';
-  import { actorInGame } from '../../../../stores/index';
+  import { actorInGame, readOnlyTabs } from '../../../../stores/index';
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, tick } from 'svelte';
@@ -12,6 +12,8 @@
   let remainingCurrency = { gp: 0, sp: 0, cp: 0 };
   let loading = true;
   let cartItems = [];
+
+  $: isDisabled = $readOnlyTabs.includes('shop');
 
   // Fetch items when component mounts
   onMount(async () => {
@@ -129,87 +131,118 @@
   $: categories = Object.keys(categoryGroups).sort();
 </script>
 
-<div class="shop-tab">
-  <!-- Left Panel: Cart Items and Gold Info -->
-  <div class="left-panel">
-    <h3>Available Gold</h3>
-    <GoldDisplay {...availableCurrency} />
-    
-    <h3>Cart Total</h3>
-    <GoldDisplay {...cartCurrency} />
+<div class="shop-tab-container" class:disabled={isDisabled}>
+  <div class="shop-tab">
+    <!-- Left Panel: Cart Items and Gold Info -->
+    <div class="left-panel">
+      <h3>Available Gold</h3>
+      <GoldDisplay {...availableCurrency} />
+      
+      <h3>Cart Total</h3>
+      <GoldDisplay {...cartCurrency} />
 
-    <h3>Remaining Gold</h3>
-    <div class:negative={$remainingGold < 0} class="remaining-currency">
-      <GoldDisplay {...remainingCurrency} />
-    </div>
+      <h3>Remaining Gold</h3>
+      <div class:negative={$remainingGold < 0} class="remaining-currency">
+        <GoldDisplay {...remainingCurrency} />
+      </div>
 
-    <h3>Cart Items</h3>
-    <div class="cart-items">
-      {#if cartItems.length === 0}
-        <div class="empty-cart">
-          <p>Your cart is empty</p>
-        </div>
-      {:else}
-        {#each cartItems as cartItem}
-          <div class="cart-item">
-            <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
-            <div class="cart-item-details">
-              <div class="cart-item-name">{getItemDisplayName(cartItem.item)}</div>
-              <div class="cart-item-controls">
-                <div class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</div>
-                <div class="cart-item-info">
-                  <span class="quantity-display">×{cartItem.quantity}</span>
+      <h3>Cart Items</h3>
+      <div class="cart-items">
+        {#if cartItems.length === 0}
+          <div class="empty-cart">
+            <p>Your cart is empty</p>
+          </div>
+        {:else}
+          {#each cartItems as cartItem}
+            <div class="cart-item">
+              <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
+              <div class="cart-item-details">
+                <div class="cart-item-name">{getItemDisplayName(cartItem.item)}</div>
+                <div class="cart-item-controls">
+                  <div class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</div>
+                  <div class="cart-item-info">
+                    <span class="quantity-display">×{cartItem.quantity}</span>
+                  </div>
+                  <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
+                    <i class="fas fa-trash"></i>
+                  </button>
                 </div>
-                <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)}>
-                  <i class="fas fa-trash"></i>
-                </button>
               </div>
             </div>
+          {/each}
+        {/if}
+      </div>
+    </div>
+
+    <!-- Right Panel: Available Equipment -->
+    <div class="right-panel item-list">
+      <h3>Available Equipment</h3>
+      
+      {#if loading}
+        <div class="loading">Loading items...</div>
+      {:else if $shopItems.length === 0}
+        <div class="empty-state">
+          <p>No equipment available. Please check your compendium sources in the module settings.</p>
+        </div>
+      {:else}
+        {#each categories as category}
+          <div class="category">
+            <h4>{category}</h4>
+            {#each categoryGroups[category] as item (item.id)}
+              <div class="item-row">
+                <div class="item-details">
+                  <img src={item.img} alt={item.name} class="item-icon" />
+                  <span class="item-name">{getItemDisplayName(item)}</span>
+                </div>
+                <div class="item-actions">
+                  <span class="item-price">
+                    {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
+                  </span>
+                  <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+            {/each}
           </div>
         {/each}
       {/if}
     </div>
   </div>
-
-  <!-- Right Panel: Available Equipment -->
-  <div class="right-panel item-list">
-    <h3>Available Equipment</h3>
-    
-    {#if loading}
-      <div class="loading">Loading items...</div>
-    {:else if $shopItems.length === 0}
-      <div class="empty-state">
-        <p>No equipment available. Please check your compendium sources in the module settings.</p>
-      </div>
-    {:else}
-      {#each categories as category}
-        <div class="category">
-          <h4>{category}</h4>
-          {#each categoryGroups[category] as item (item.id)}
-            <div class="item-row">
-              <div class="item-details">
-                <img src={item.img} alt={item.name} class="item-icon" />
-                <span class="item-name">{getItemDisplayName(item)}</span>
-              </div>
-              <div class="item-actions">
-                <span class="item-price">
-                  {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
-                </span>
-                <button class="add-btn" on:click|preventDefault={() => addToCart(item)}>
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
-            </div>
-          {/each}
-        </div>
-      {/each}
-    {/if}
-  </div>
+  {#if isDisabled}
+    <div class="overlay"></div>
+  {/if}
 </div>
 
 <style lang="scss">
   /* Add additional component-specific styles here */
   @import "../../../../../styles/features/equipment-purchase.scss";
+
+  .shop-tab-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    &.disabled {
+      pointer-events: none; // Prevent interaction with underlying elements when disabled
+    }
+  }
+
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(200, 200, 200, 0.3);
+    pointer-events: all; // Ensure overlay itself can be interacted with if needed (though here it just blocks)
+    cursor: not-allowed;
+    z-index: 100; // Ensure overlay is on top
+    transition: background-color 0.2s ease;
+    &:hover {
+      background-color: rgba(200, 200, 200, 0.4);
+    }
+  }
 
   .shop-tab {
     display: flex;  /* Changed from grid to flex */
@@ -328,6 +361,14 @@
       &:hover {
         background: rgba(153, 0, 0, 0.1);
       }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        &:hover {
+          background: none; // Prevent hover effect when disabled
+        }
+      }
     }
   }
 
@@ -392,6 +433,14 @@
       
       &:hover {
         background: darken(#b59e54, 10%);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        &:hover {
+          background: var(--dnd5e-color-gold, #b59e54); // Prevent hover effect when disabled
+        }
       }
     }
   }

@@ -29,7 +29,8 @@
     levelUpClassObject,
     levelUpSubClassObject,
     levelUpClassGetsSubclassThisLevel,
-    isNewMultiClassSelected
+    isNewMultiClassSelected,
+    readOnlyTabs // Added missing import
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -56,6 +57,9 @@
   
   // Add a flag to track if equipment has been added during this session
   let hasAddedEquipmentThisSession = false;
+
+  // Add state for processing purchase
+  const isProcessingPurchase = writable(false);
 
   // Add this after your store imports
   const storeMap = {
@@ -479,31 +483,46 @@
 
   // Handle finalizing purchases in the shop
   async function handleFinalizePurchase() {
+    // Prevent multiple clicks
+    if (get(isProcessingPurchase)) return; 
+    isProcessingPurchase.set(true);
+
     if (!$actorInGame) {
       ui.notifications.error("No active character found");
+      isProcessingPurchase.set(false); // Reset on early exit
       return;
     }
 
     if ($cartTotalCost === 0) {
       ui.notifications.warn("Cart is empty");
+      isProcessingPurchase.set(false); // Reset on early exit
       return;
     }
 
     if ($remainingGold < 0) {
       ui.notifications.error("Not enough gold for purchase");
+      isProcessingPurchase.set(false); // Reset on early exit
       return;
     }
 
-    const success = await finalizePurchase($actorInGame);
-    
-    if (success) {
-      ui.notifications.info("Purchase completed successfully");
-      // Close the Actor Studio window after successful purchase
-      setTimeout(() => {
-        Hooks.call("gas.close");
-      }, 1500);
-    } else {
-      ui.notifications.error("Failed to complete purchase");
+    try {
+      const success = await finalizePurchase($actorInGame);
+      
+      if (success) {
+        ui.notifications.info("Purchase completed successfully");
+        // Close the Actor Studio window after successful purchase
+        // No need to reset isProcessingPurchase here, as the tab becomes readonly
+        setTimeout(() => {
+          Hooks.call("gas.close");
+        }, 1500);
+      } else {
+        ui.notifications.error("Failed to complete purchase");
+        isProcessingPurchase.set(false); // Reset on failure
+      }
+    } catch (error) {
+      console.error("Error during finalize purchase handling:", error);
+      ui.notifications.error("An error occurred during purchase.");
+      isProcessingPurchase.set(false); // Reset on error
     }
   }
 </script>
@@ -556,6 +575,7 @@
                 type="button"
                 role="button"
                 on:mousedown="{handleFinalizePurchase}"
+                disabled="{$isProcessingPurchase || $readOnlyTabs.includes('shop')}" 
               )
                 span {localize('Footer.FinalizePurchase')}
               
