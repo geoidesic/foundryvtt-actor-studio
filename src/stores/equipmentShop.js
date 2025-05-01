@@ -1,6 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getPacksFromSettings } from '~/src/helpers/Utility';
+// Import extractItemsFromPacksAsync instead of Sync
+import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility'; 
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { totalGoldFromChoices } from '~/src/stores/goldChoices';
 import { readOnlyTabs } from '~/src/stores/index';
@@ -10,7 +11,7 @@ import { readOnlyTabs } from '~/src/stores/index';
 // List of items available in the shop, fetched from selected compendiums
 export const shopItems = writable([]);
 
-// Items currently selected/added to the virtual cart (Map<itemId, quantity>)
+// Items currently selected/added to the virtual cart (Map<itemId, { quantity, itemData }>)
 export const shopCart = writable(new Map());
 
 // Character's available gold (in copper)
@@ -79,38 +80,52 @@ export async function loadShopItems() {
       return;
     }
 
-    let allItems = [];
-    const seenItems = new Map(); // Track items by name to avoid duplicates
+    // Define the basic keys available in the default index
+    const indexKeys = [
+      "_id",
+      "name",
+      "img",
+      "type",
+      "uuid" // Keep uuid to fetch full item later
+    ];
     
-    // Fetch items from each pack
-    for (const pack of packs) {
-      const index = await pack.getIndex();
-      
-      for (const entry of index) {
-        // Only include equipment, weapons, tools, and consumables
-        const item = await pack.getDocument(entry._id);
-        
-        if (["weapon", "equipment", "tool", "consumable", "backpack"].includes(item.type)) {
-          // Make sure the item has a price
-          if (item.system?.price?.value) {
-            // Check if we've already seen an item with this name
-            if (!seenItems.has(item.name)) {
-              allItems.push(item);
-              seenItems.set(item.name, true);
-            } else {
-              window.GAS.log.d(`[SHOP] Skipping duplicate item: ${item.name}`);
-            }
-          }
-        }
+    // Define keys that are likely NOT in the index and need async loading
+    const nonIndexKeys = [
+      "system.price.value",
+      "system.price.denomination",
+      "system.quantity"
+    ];
+
+    // Extract item data using extractItemsFromPacksAsync
+    // This will fetch nonIndexKeys if they aren't in the default index
+    let lightweightItems = await extractItemsFromPacksAsync(packs, indexKeys, nonIndexKeys);
+    
+    // Filter for relevant types and items with a price
+    lightweightItems = lightweightItems.filter(item => 
+      ["weapon", "equipment", "tool", "consumable", "backpack"].includes(item.type) &&
+      item.system?.price?.value // Now this data should be available
+    );
+
+    // Handle duplicates - keep only the first instance of each item name
+    const seenItems = new Map();
+    const uniqueLightweightItems = [];
+    for (const item of lightweightItems) {
+      // Use uuid as the most reliable unique key from index/async fetch
+      const uniqueKey = item.uuid; 
+      if (!seenItems.has(uniqueKey)) {
+        uniqueLightweightItems.push(item);
+        seenItems.set(uniqueKey, true);
+      } else {
+         window.GAS.log.d(`[SHOP] Skipping duplicate item: ${item.name} (uuid: ${item.uuid})`);
       }
     }
-    
+
     // Sort items by name
-    allItems.sort((a, b) => a.name.localeCompare(b.name));
+    uniqueLightweightItems.sort((a, b) => a.name.localeCompare(b.name));
     
-    // Update the store
-    shopItems.set(allItems);
-    window.GAS.log.d('[SHOP] Loaded items:', allItems.length);
+    // Update the store with lightweight items
+    shopItems.set(uniqueLightweightItems);
+    window.GAS.log.d('[SHOP] Loaded lightweight items:', uniqueLightweightItems.length);
     
   } catch (error) {
     console.error("Error loading shop items:", error);
@@ -119,11 +134,12 @@ export async function loadShopItems() {
 }
 
 // Calculate the total cost in copper for an item
-function getItemCostInCopper(item, quantity) {
-  if (!item?.system?.price) return 0;
+// This function now expects the full item data, which will be retrieved when adding to cart
+function getItemCostInCopper(itemData, quantity) {
+  if (!itemData?.system?.price) return 0;
   
-  const value = item.system.price.value || 0;
-  const denomination = item.system.price.denomination || 'cp';
+  const value = itemData.system.price.value || 0;
+  const denomination = itemData.system.price.denomination || 'cp';
   
   // Convert to copper based on denomination
   let multiplier = 1;
@@ -136,7 +152,7 @@ function getItemCostInCopper(item, quantity) {
   }
   
   // Get the base quantity of the item (if it comes in a pack/bundle)
-  const baseQuantity = item.system.quantity || 1;
+  const baseQuantity = itemData.system.quantity || 1;
   
   // Calculate price per unit: If an item comes in a pack (like 20 arrows),
   // we need to divide the total price by the pack quantity to get price per unit
@@ -147,14 +163,16 @@ function getItemCostInCopper(item, quantity) {
 }
 
 // Function to update cart and totals
-export function updateCart(itemId, quantity) {
+// Now accepts fullItemData to store in the cart map
+export function updateCart(itemId, quantity, fullItemData) {
   shopCart.update(cart => {
     const newCart = new Map(cart);
     
     if (quantity <= 0) {
       newCart.delete(itemId);
     } else {
-      newCart.set(itemId, quantity);
+      // Store quantity and the full item data
+      newCart.set(itemId, { quantity: quantity, itemData: fullItemData }); 
     }
     
     return newCart;
@@ -167,24 +185,20 @@ export function updateCart(itemId, quantity) {
 // Update cart total and remaining gold
 function updateTotals() {
   // Get current values to avoid subscription leaks
-  const items = get(shopItems);
+  // No longer need shopItems here, get itemData from cart
   const cart = get(shopCart);
-  const availableGoldValue = get(availableGold);
   
   let total = 0;
   
-  // Calculate cart total
-  cart.forEach((quantity, itemId) => {
-    const item = items.find(i => i.id === itemId);
-    if (item) {
-      total += getItemCostInCopper(item, quantity);
+  // Calculate cart total using itemData stored in the cart
+  cart.forEach(({ quantity, itemData }, itemId) => {
+    if (itemData) {
+      total += getItemCostInCopper(itemData, quantity);
     }
   });
   
   // Update cart total - this will automatically update the derived remainingGold store
   cartTotalCost.set(total);
-  
-  // No need to set remainingGold manually as it's a derived store that updates automatically
 }
 
 // Function to finalize the purchase and add items to the actor
@@ -197,7 +211,6 @@ export async function finalizePurchase(actor) {
   try {
     // Get the current cart and items
     const currentCart = get(shopCart);
-    const currentItems = get(shopItems);
     const currentTotal = get(cartTotalCost);
     const currentAvailable = get(availableGold);
     
@@ -215,6 +228,7 @@ export async function finalizePurchase(actor) {
     const spValue = Math.floor((remainingGoldValue % 100) / 10);
     const cpValue = remainingGoldValue % 10;
     
+    // Update actor currency first
     await actor.update({
       "system.currency.gp": (actor.system.currency.gp || 0) + gpValue,
       "system.currency.sp": (actor.system.currency.sp || 0) + spValue,
@@ -223,31 +237,39 @@ export async function finalizePurchase(actor) {
     
     // Create a batch of items to add to character
     const itemsToCreate = [];
-    
-    // Add items to character
-    for (const [itemId, quantity] of currentCart.entries()) {
-      const item = currentItems.find(i => i.id === itemId);
-      if (item) {
-        // Check if actor already has this item
-        const existingItem = actor.items.find(i => i.name === item.name);
+    const itemsToUpdate = []; // Track updates separately
+
+    // Add items to character using itemData from the cart
+    for (const [itemId, { quantity, itemData }] of currentCart.entries()) {
+      if (itemData) {
+        // Check if actor already has this item by name
+        const existingItem = actor.items.find(i => i.name === itemData.name); 
         
         if (existingItem) {
-          // Update quantity of existing item
-          await existingItem.update({
+          // Prepare update for existing item
+          itemsToUpdate.push({
+            _id: existingItem._id,
             "system.quantity": (existingItem.system.quantity || 0) + quantity
           });
         } else {
-          // Prepare to create new item
-          const newItem = foundry.utils.deepClone(item.toObject());
+          // Prepare to create new item from the full itemData
+          const newItemObject = typeof itemData.toObject === 'function' 
+              ? itemData.toObject() 
+              : foundry.utils.deepClone(itemData);
+
+          // Ensure the quantity is set correctly for the purchased amount
+          newItemObject.system.quantity = quantity; 
           
-          // Set the quantity correctly for the purchased amount
-          newItem.system.quantity = quantity;
-          
-          itemsToCreate.push(newItem);
+          itemsToCreate.push(newItemObject);
         }
       }
     }
     
+    // Update existing items in a single batch
+    if (itemsToUpdate.length > 0) {
+       await actor.updateEmbeddedDocuments("Item", itemsToUpdate);
+    }
+
     // Create all new items in a single batch for better performance
     if (itemsToCreate.length > 0) {
       await actor.createEmbeddedDocuments("Item", itemsToCreate);
@@ -255,7 +277,7 @@ export async function finalizePurchase(actor) {
     
     // Clear the cart
     shopCart.set(new Map());
-    updateTotals();
+    updateTotals(); // Recalculate totals (should be 0)
 
     // Make the shop tab readonly
     readOnlyTabs.update(tabs => [...tabs, 'shop']);

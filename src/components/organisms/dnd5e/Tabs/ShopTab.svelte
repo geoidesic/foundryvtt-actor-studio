@@ -12,6 +12,7 @@
   let remainingCurrency = { gp: 0, sp: 0, cp: 0 };
   let loading = true;
   let cartItems = [];
+  let keywordFilter = ''; // Add variable for keyword filter
 
   $: isDisabled = $readOnlyTabs.includes('shop');
 
@@ -33,20 +34,18 @@
   $: cartCurrency = PurchaseHandler.formatCurrency($cartTotalCost);
   $: remainingCurrency = PurchaseHandler.formatCurrency($remainingGold);
 
-  // Update cart items whenever shopCart or shopItems changes
+  // Update cart items whenever shopCart changes (shopItems no longer needed here)
   $: {
-    if ($shopItems && $shopCart) {
-      cartItems = Array.from($shopCart.entries()).map(([itemId, quantity]) => {
-        const item = $shopItems.find(i => i.id === itemId);
-        if (item) {
+    if ($shopCart) {
+      cartItems = Array.from($shopCart.entries()).map(([itemId, { quantity, itemData }]) => {
+        if (itemData) {
           return {
             id: itemId,
-            item,
+            item: itemData,
             quantity,
-            // Calculate price for display
             price: {
-              value: item.system?.price?.value || 0,
-              denomination: item.system?.price?.denomination || 'cp'
+              value: itemData.system?.price?.value || 0,
+              denomination: itemData.system?.price?.denomination || 'cp'
             }
           };
         }
@@ -61,54 +60,68 @@
   }
 
   // Add item to cart
-  function addToCart(item) {
+  async function addToCart(item) {
     try {
       const itemId = item.id || item._id;
       
       if (!itemId) {
         console.error("Item has no id:", item);
-        ui.notifications?.warn(localize('GAS.Shop.ErrorItemNoId')); // Localize
+        ui.notifications?.warn(localize('GAS.Shop.ErrorItemNoId'));
+        return;
+      }
+
+      const fullItemData = await fromUuid(item.uuid);
+      if (!fullItemData) {
+        console.error("Could not load full item data for UUID:", item.uuid);
+        ui.notifications?.warn(localize('GAS.Shop.ErrorLoadingItem'));
         return;
       }
       
       const cart = get(shopCart);
-      const currentQuantity = cart.has(itemId) ? cart.get(itemId) : 0;
-      const bundleQuantity = item.system?.quantity || 1;
+      const currentQuantity = cart.has(itemId) ? cart.get(itemId).quantity : 0;
+      const bundleQuantity = fullItemData.system?.quantity || 1;
       const newQuantity = currentQuantity + bundleQuantity;
       
-      updateCart(itemId, newQuantity);
-      // Optional: Add localized success notification
-      // ui.notifications?.info(localize('GAS.Shop.InfoAddedToCart').replace('{item}', item.name));
+      updateCart(itemId, newQuantity, fullItemData);
       
     } catch(error) {
       console.error("Error adding item to cart:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorAddToCart')); // Localize
+      ui.notifications?.warn(localize('GAS.Shop.ErrorAddToCart'));
     }
   }
   
   // Update item quantity in cart
   function updateItemQuantity(itemId, newQuantity) {
     try {
+      const cart = get(shopCart);
+      if (!cart.has(itemId)) return;
+
+      const { itemData } = cart.get(itemId);
       const quantity = Math.max(0, newQuantity);
-      updateCart(itemId, quantity);
+      
+      updateCart(itemId, quantity, itemData);
     } catch(error) {
       console.error("Error updating item quantity:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorUpdateQuantity')); // Localize
+      ui.notifications?.warn(localize('GAS.Shop.ErrorUpdateQuantity'));
     }
   }
   
   // Remove item from cart completely
   function removeFromCart(itemId) {
     try {
-      updateCart(itemId, 0);
+      updateCart(itemId, 0, null);
     } catch(error) {
       console.error("Error removing item from cart:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorRemoveFromCart')); // Localize
+      ui.notifications?.warn(localize('GAS.Shop.ErrorRemoveFromCart'));
     }
   }
 
-  // Filter and group items by category
-  $: categoryGroups = $shopItems.reduce((acc, item) => {
+  // Filter and group items by category, applying keyword filter first
+  $: filteredItems = $shopItems.filter(item => 
+    item.name.toLowerCase().includes(keywordFilter.toLowerCase())
+  );
+
+  $: categoryGroups = filteredItems.reduce((acc, item) => {
     const category = item.type.charAt(0).toUpperCase() + item.type.slice(1) + 's';
     if (!acc[category]) {
       acc[category] = [];
@@ -166,17 +179,29 @@
     <div class="right-panel item-list">
       <h3>{localize('GAS.Shop.AvailableEquipment')}</h3>
       
+      <!-- Add Keyword Filter Input -->
+      <div class="filter-container mb-sm">
+        <input 
+          type="text" 
+          bind:value={keywordFilter} 
+          placeholder={localize('GAS.Shop.FilterPlaceholder')} 
+          class="keyword-filter"
+          disabled={isDisabled}
+        />
+      </div>
+
       {#if loading}
         <div class="loading">{localize('GAS.Shop.Loading')}</div>
-      {:else if $shopItems.length === 0}
+      {:else if filteredItems.length === 0} <!-- Check filteredItems length -->
         <div class="empty-state">
-          <p>{localize('GAS.Shop.NoEquipment')}</p>
+          <p>{keywordFilter ? localize('GAS.Shop.NoMatchingEquipment') : localize('GAS.Shop.NoEquipment')}</p> <!-- Adjust message based on filter -->
         </div>
       {:else}
         {#each categories as category}
           <div class="category">
             <h4>{category}</h4>
-            {#each categoryGroups[category] as item (item.id)}
+            <!-- Use categoryGroups which is derived from filteredItems -->
+            {#each categoryGroups[category] as item (item.uuid || item._id)} 
               <div class="item-row">
                 <div class="item-details">
                   <img src={item.img} alt={item.name} class="item-icon" />
@@ -416,4 +441,26 @@
         cursor: not-allowed
         &:hover
           background: var(--dnd5e-color-gold, #b59e54)
+          
+  .filter-container
+    padding: 0 0.25rem // Match item-row padding
+    margin-bottom: 0.5rem // Add margin like h4
+
+  .keyword-filter
+    width: 100%
+    padding: 0.3rem 0.5rem
+    border: 1px solid var(--color-border-light-tertiary)
+    border-radius: 3px
+    background: rgba(0, 0, 0, 0.05)
+    color: var(--color-text-dark-primary)
+
+    &:focus
+      outline: none
+      border-color: var(--color-border-light-highlight)
+      background: rgba(0, 0, 0, 0.08)
+
+    &:disabled
+      opacity: 0.7
+      cursor: not-allowed
+      background: rgba(0, 0, 0, 0.02)
 </style>
