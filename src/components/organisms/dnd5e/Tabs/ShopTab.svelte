@@ -63,46 +63,37 @@
   // Add item to cart
   function addToCart(item) {
     try {
-      // For Foundry Document objects, get the id property directly
-      const itemId = item.id || item._id; 
+      const itemId = item.id || item._id;
       
       if (!itemId) {
         console.error("Item has no id:", item);
-        ui.notifications?.warn("Failed to add item to cart: Missing item id");
+        ui.notifications?.warn(localize('GAS.Shop.ErrorItemNoId')); // Localize
         return;
       }
       
-      // Get current cart from the store
       const cart = get(shopCart);
-      
-      // Get current quantity with a fallback to 0
       const currentQuantity = cart.has(itemId) ? cart.get(itemId) : 0;
-      
-      // Get the bundle quantity from the item data
       const bundleQuantity = item.system?.quantity || 1;
-      
-      // Add the bundle quantity instead of just 1
       const newQuantity = currentQuantity + bundleQuantity;
       
-      // Update cart safely
       updateCart(itemId, newQuantity);
+      // Optional: Add localized success notification
+      // ui.notifications?.info(localize('GAS.Shop.InfoAddedToCart').replace('{item}', item.name));
       
     } catch(error) {
       console.error("Error adding item to cart:", error);
-      ui.notifications?.warn("Failed to add item to cart");
+      ui.notifications?.warn(localize('GAS.Shop.ErrorAddToCart')); // Localize
     }
   }
   
   // Update item quantity in cart
   function updateItemQuantity(itemId, newQuantity) {
     try {
-      // Ensure minimum quantity is 0
       const quantity = Math.max(0, newQuantity);
-      // Update cart
       updateCart(itemId, quantity);
     } catch(error) {
       console.error("Error updating item quantity:", error);
-      ui.notifications?.warn("Failed to update item quantity");
+      ui.notifications?.warn(localize('GAS.Shop.ErrorUpdateQuantity')); // Localize
     }
   }
   
@@ -112,7 +103,7 @@
       updateCart(itemId, 0);
     } catch(error) {
       console.error("Error removing item from cart:", error);
-      ui.notifications?.warn("Failed to remove item from cart");
+      ui.notifications?.warn(localize('GAS.Shop.ErrorRemoveFromCart')); // Localize
     }
   }
 
@@ -134,18 +125,18 @@
   <div class="shop-tab">
     <!-- Left Panel: Cart Items and Gold Info -->
     <div class="left-panel">
-      <h3 class="left no-margin">Available</h3>
+      <h3 class="left no-margin">{localize('GAS.Shop.AvailableGold')}</h3>
       <div class:negative={$remainingGold < 0} class="remaining-currency">
         <GoldDisplay {...remainingCurrency} />
       </div>
-      <h3 class="left no-margin">Spent</h3>
+      <h3 class="left no-margin">{localize('GAS.Shop.SpentGold')}</h3>
       <GoldDisplay {...cartCurrency} />
 
-      <h3>Cart Items</h3>
+      <h3>{localize('GAS.Shop.CartItems')}</h3>
       <div class="cart-items">
         {#if cartItems.length === 0}
           <div class="empty-cart">
-            <p>Your cart is empty</p>
+            <p>{localize('GAS.Shop.CartEmpty')}</p>
           </div>
         {:else}
           {#each cartItems as cartItem}
@@ -173,13 +164,13 @@
 
     <!-- Right Panel: Available Equipment -->
     <div class="right-panel item-list">
-      <h3>Available Equipment</h3>
+      <h3>{localize('GAS.Shop.AvailableEquipment')}</h3>
       
       {#if loading}
-        <div class="loading">Loading items...</div>
+        <div class="loading">{localize('GAS.Shop.Loading')}</div>
       {:else if $shopItems.length === 0}
         <div class="empty-state">
-          <p>No equipment available. Please check your compendium sources in the module settings.</p>
+          <p>{localize('GAS.Shop.NoEquipment')}</p>
         </div>
       {:else}
         {#each categories as category}

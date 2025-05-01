@@ -306,6 +306,20 @@
       "NoItemsSelected": "No items selected",
       "Weight": "Weight",
       "Quantity": "Quantity"
+    },
+    "Shop": {
+      "AvailableGold": "Available",
+      "SpentGold": "Spent",
+      "CartItems": "Cart Items",
+      "CartEmpty": "Your cart is empty",
+      "AvailableEquipment": "Available Equipment",
+      "Loading": "Loading items...",
+      "NoEquipment": "No equipment available. Please check your compendium sources in the module settings.",
+      "ErrorItemNoId": "Failed to add item to cart: Missing item id",
+      "ErrorAddToCart": "Failed to add item to cart",
+      "InfoAddedToCart": "Added {item} to cart",
+      "ErrorUpdateQuantity": "Failed to update item quantity",
+      "ErrorRemoveFromCart": "Failed to remove item from cart"
     }
   }
 }
