@@ -74,7 +74,6 @@
     window.GAS.log.d($isLevelUp)
     if(!$isLevelUp) {
       $actorInGame.sheet.render(true);
-      
     }
     resetStores();
     application.close();

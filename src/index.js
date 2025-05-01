@@ -420,5 +420,18 @@ Hooks.on('renderActorDirectory', async (app) => {
       $gasButton.on('mousedown', handleButtonClick);
       $gasButton.on('keydown', handleButtonClick);
     }
+  } else {
+    if(game.version > 13) {
+      if (!game.modules.get(MODULE_ID)?.active) return;
+      // Add Actor Studio button to the sidebar
+      if (app.constructor.name === "ActorDirectory") {
+        if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+        if ($('#gas-sidebar-button').length) return;
+        const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
+        $(app.element).find('header.directory-header .header-actions').after($gasButton);
+        $gasButton.on('mousedown', handleButtonClick);
+        $gasButton.on('keydown', handleButtonClick);
+      }
+    }
   }
 })

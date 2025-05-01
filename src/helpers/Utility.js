@@ -442,33 +442,57 @@ export const dropItemOnCharacter = async (actor, item) => {
   // window.GAS.log.d('dropItemOnCharacter');
   // window.GAS.log.d('dropItemOnCharacter item', item);
   // window.GAS.log.d('actor.sheet._onDropItemCreate fn', actor.sheet._onDropItemCreate);
-  
+  // window.GAS.log.d('actor.sheet._onDropItem fn', actor.sheet._onDropItem);
+
   // Track the item being dropped by adding it to the actor's flags
   try {
-    // Create a simplified record of the item with just name and uuid
     const itemRecord = {
       name: item.name,
       uuid: item.uuid
     };
-    
-    // window.GAS.log.d('[UTILITY] itemRecord', itemRecord);
-    // window.GAS.log.d('[UTILITY] actor', actor);
-    // Get existing items of this type from flags, or initialize empty array
     const existingItems = actor.getFlag(MODULE_ID, `droppedItems.${item.type}`) || [];
-    
-    // Add the new item to the array
     const updatedItems = [...existingItems, itemRecord];
-    
-    // Update the flag with the new array
     await actor.setFlag(MODULE_ID, `droppedItems.${item.type}`, updatedItems);
-    
     // window.GAS.log.d(`Added ${item.name} to actor's ${item.type} tracking flags`);
   } catch (error) {
     window.GAS.log.e('Error updating actor flags for dropped item:', error);
   }
-  
-  // Proceed with the original drop functionality
-  return await actor.sheet._onDropItemCreate(item);
+
+  // Proceed with adding the item to the actor
+  if (game.version < 13) {
+    // Use the older _onDropItemCreate for v11/v12
+    // window.GAS.log.d('[UTILITY] Using _onDropItemCreate for v < 13');
+    return await actor.sheet._onDropItemCreate(item);
+  } else {
+    // For v13+, simulate the drop event by calling _onDropItem
+    // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
+
+    // Prepare a mock event object with a target
+    // Use the sheet's main DOM element as the target
+    const mockEvent = {
+      preventDefault: () => {},
+      stopPropagation: () => {}, // Add stopPropagation as it's often used in event handlers
+      target: {
+        closest: () => false
+      }, // The actual DOM element
+      // Add other properties if specific sheet implementations require them
+      // For example, some might check clientX/clientY, but start minimal.
+    };
+    // window.GAS.log.d('[UTILITY] Prepared mockEvent for _onDropItem:', mockEvent);
+
+    try {
+      // window.GAS.log.d(`[UTILITY] Calling ${actor.id}.sheet._onDropItem with mock event and data:`, mockEvent, dropData);
+      // Note: _onDropItem often handles the creation internally and might not return the created item(s).
+      // We return true to indicate the simulation was attempted.
+      await actor.sheet._onDropItem(mockEvent, item);
+      // window.GAS.log.d(`[UTILITY] Call to _onDropItem completed for item ${item.uuid} on actor ${actor.id}`);
+      return true; // Indicate successful simulation attempt
+    } catch (error) {
+      window.GAS.log.e(`[UTILITY] Error calling _onDropItem for actor ${actor.id} and item ${item.uuid}:`, error);
+      ui.notifications.error(`Error adding item ${item.name} via simulated drop.`);
+      return false; // Indicate failure
+    }
+  }
 }
 
 export function itemHasAdvancementChoices(item) {
