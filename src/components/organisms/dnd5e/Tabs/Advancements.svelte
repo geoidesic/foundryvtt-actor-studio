@@ -70,6 +70,10 @@
 :global(.gas-advancements .step h2)
   border: none
 
+:global(.gas-advancements .step h4)
+  border: none
+  margin: 0
+
 :global(.gas-advancements .step ol.trait-slots)
   @include inset
   font-size: 1rem
@@ -113,6 +117,10 @@
   margin: 0.6rem 0
   list-style-type: none
 
+  :global(.gas-advancements flexrow)
+    display: flex
+    align-items: center
+
 :global(.gas-advancements form[data-type="ItemGrant"])
   min-height: 20px
   padding: 0
@@ -120,15 +128,21 @@
 :global(.gas-advancements form[data-type="ItemGrant"] .item-name)
   @include inset
   font-size: 1.5rem
+  padding: 0
+  margin: 0.5rem 0
+  border-radius: 4px
+
+:global(.gas-advancements .step ol.trait-slots li.trait-slot label::before)
+  margin-right: 5px
+  margin-top: 6px
+  transform: scale(1.5)
 
 :global(.gas-advancements form[data-type="ItemGrant"] .item-name h4)
   padding: 0
-  margin: 6px 0 0 0
+  margin: 0
 
 :global(.gas-advancements form[data-type="ItemGrant"] .item-image)
-  height: 40px
-  width: 40px
-  background-size: contain
+  background-size: cover
   background-repeat: no-repeat
 
 :global(.gas-advancements form[data-type="ItemChoice"] .drop-target .item-name)
