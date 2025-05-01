@@ -280,8 +280,8 @@
         "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums."
       },
       "AllowAbilityRollScoresToBeMoved": {
-        "Name": "All rolled ability scores to be moved",
-        "Hint": "If enabled, rolled ability can be moved; similar to how Standard Array works."
+        "Name": "Allow rolled ability scores to be moved",
+        "Hint": "If enabled, rolled abilities can be moved; similar to how Standard Array works."
       }
     },
     "Equipment": {

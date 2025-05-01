@@ -53,6 +53,12 @@
 @import "../../../../../styles/Mixins.scss"
 .content
   padding: 1rem
+:global(.window-header .window-title)
+  display: none
+:global(.window-header .window-icon)
+  display: none
+:global(.window-header .header-control)
+  display: none
 
 :global(.gas-advancements)
   display: inline
@@ -138,6 +144,16 @@
   width: 40px
   background-size: contain
   background-repeat: no-repeat
+
+:global(.gas-advancements form[data-type="AbilityScoreImprovement"] .ability-scores li)
+  display: grid
+  grid-template: "label label label" "minus value plus" "minus delta plus"
+  align-items: center
+
+:global(.gas-advancements form[data-type="AbilityScoreImprovement"] .ability-scores li input)
+  width: unset
+  text-align: unset
+  padding-left: 0.6rem
 
 :global(.step form[data-type="HitPoints"] .rolls)
     display: grid
