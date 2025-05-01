@@ -19,6 +19,7 @@ import SubclassLevelPlugin from './plugins/subclass-level';
 
 window.GAS = {};
 
+
 Hooks.once("init", (app, html, data) => {
 
   window.GAS.log = log;
@@ -26,6 +27,12 @@ Hooks.once("init", (app, html, data) => {
   
   window.GAS.dnd5eVersion = getDnd5eVersion();
   window.GAS.dnd5eRules = getDndRulesVersion();
+
+  if(game.version > 13) {
+    // V12 -> 13 SHIM
+    window.MIN_WINDOW_WIDTH = 200;
+    window.MIN_WINDOW_HEIGHT = 50;
+  }
 
   //- these settings are for debugging / testing purposes only
 
@@ -293,7 +300,7 @@ function isActorTypeValid(actorTypes, type) {
 
 function getActorStudioButton(buttonId, text=false) {
   const gasButton = $(
-    `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
+    `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start">
       <img src="modules/${MODULE_ID}/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
       ${text ? `<span>${text}</span>` : ''}
     </button>`,
@@ -301,6 +308,10 @@ function getActorStudioButton(buttonId, text=false) {
   return gasButton;
 }
 
+
+Hooks.on('renderApplicationV2', (app, html, data, position) => {
+
+})
 
 
 Hooks.on('renderApplication', (app, html, data) => {
@@ -367,32 +378,47 @@ Hooks.on('renderApplication', (app, html, data) => {
   }
 })
 
+const handleButtonClick = function (e) {
+  if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
+    if (userHasRightPermissions()) {
+      try {
+        // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
+        new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
+        app.close();
+      } catch (error) {
+        ui.notifications.error(error.message);
+      }
+    }
+  }
+};
+
+// activateDocumentDirectory
+Hooks.on('activateDocumentDirectory', async (app) => {
+  if(game.version > 13) {
+    if (!game.modules.get(MODULE_ID)?.active) return;
+    // Add Actor Studio button to the sidebar
+    if (app.constructor.name === "ActorDirectory") {
+      if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+      if ($('#gas-sidebar-button').length) return;
+      const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
+      $(app.element).find('header.directory-header .header-actions').after($gasButton);
+      $gasButton.on('mousedown', handleButtonClick);
+      $gasButton.on('keydown', handleButtonClick);
+    }
+  }
+})
 
 Hooks.on('renderActorDirectory', async (app) => {
-  if (!game.modules.get(MODULE_ID)?.active) return;
-  // Add Actor Studio button to the sidebar
-  if (app.constructor.name === "ActorDirectory") {
-    if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
-    if ($('#gas-sidebar-button').length) return;
-    const $gasButton = getActorStudioButton('gas-sidebar-button');
-    $(app._element).find('header.directory-header').append($gasButton);
-
-    const handleButtonClick = function (e) {
-      if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
-        if (userHasRightPermissions()) {
-          try {
-            // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
-            new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-            app.close();
-          } catch (error) {
-            ui.notifications.error(error.message);
-          }
-        }
-      }
-    };
-
-    $gasButton.on('mousedown', handleButtonClick);
-    $gasButton.on('keydown', handleButtonClick);
-
+  if(game.version < 13) {
+    if (!game.modules.get(MODULE_ID)?.active) return;
+    // Add Actor Studio button to the sidebar
+    if (app.constructor.name === "ActorDirectory") {
+      if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+      if ($('#gas-sidebar-button').length) return;
+      const $gasButton = getActorStudioButton('gas-sidebar-button');
+      $(app._element).find('header.directory-header').append($gasButton);
+      $gasButton.on('mousedown', handleButtonClick);
+      $gasButton.on('keydown', handleButtonClick);
+    }
   }
 })

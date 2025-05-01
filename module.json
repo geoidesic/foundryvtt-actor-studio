@@ -28,7 +28,7 @@
     "authors": [
         {
             "name": "Noel da Costa",
-            "url": "https://www.arc2.co.uk",
+            "url": "https://aardvark.games",
             "discord": "geoidesic",
             "flags": {}
         }
@@ -36,7 +36,7 @@
     "compatibility": {
         "minimum": "11",
         "verified": "12",
-        "maximum": "12"
+        "maximum": "13"
     },
     "flags": {
         "hotReload": {
@@ -56,7 +56,7 @@
                 "compatibility": {
                     "minimum": "3.0.0",
                     "verified": "4",
-                    "maximum": "5"
+                    "maximum": "6"
                 }
             }
         ]

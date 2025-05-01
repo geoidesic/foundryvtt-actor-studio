@@ -102,6 +102,21 @@
 
   .justify-flexrow-vertical
     align-items: center
+    
+body.game #gas-settings-submenu.app.window-app
+  .flexrow, .flexcol
+    .flex0
+      flex: 0
+#gas-sidebar-button
+  display: flex 
+  align-items: center
+  justify-content: center
+  background-color: white
+  padding: 0
+  margin: 0
+  height: 40px
+  &.v13
+    margin: 0.2rem 0.5rem
 
 #foundryvtt-actor-studio-pc-sheet
   --tjs-select-appearance: none
@@ -147,7 +162,6 @@
   // alignment, accent and visibility
   .bold
     font-weight: 700
-
 
   // headings and text
   h1, h2, h3, h4, h5
