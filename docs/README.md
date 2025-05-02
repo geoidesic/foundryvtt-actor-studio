@@ -1,37 +1,12 @@
-# FoundryVTT Actor Studio Documentation
+# Actor Studio Documentation
 
-Welcome to the documentation for the FoundryVTT module designed for creating dnd5e Actors. This module provides a comprehensive set of features to enhance the gameplay experience for both players and Dungeon Masters (DMs).
+Welcome to the documentation for Actor Studio, a Foundry VTT module designed for creating and leveling up dnd5e characters.
 
-## Table of Contents
+This documentation provides guides for both Gamemasters (GMs) setting up the module and Players using it to build their adventurers.
 
-- [Project Overview](app_overview.md)
-- [Architecture](architecture/module_structure.md)
-  - [Data Flow](architecture/data_flow.md)
-  - [Advancement Capture](advancement_capture.md)
-  - [Component Structure](architecture/component_structure.md)
-- [Features](features/actor_creation.md)
-  - [Ability Scores](features/ability_scores.md)
-  - [Advancements](features/advancements.md)
-  - [Class and Subclass](features/class_subclass.md)
-  - [Compendiums](features/compendiums.md)
-  - [Equipment Purchase](features/equipment_purchase.md)
-  - [Race and Background](features/race_background.md)
-  - [Starting Equipment](features/starting_equipment.md)
-- [Setup](setup/installation.md)
-  - [Configuration](setup/configuration.md)
+## Guides
 
-## Introduction
+*   **[GM Guide](./gm/README.md):** For Gamemasters - Covers installation, configuration (including compendium setup), and managing player permissions.
+*   **[Player Guide](./player/README.md):** For Players - Explains how to use Actor Studio to create a new character step-by-step and how to level up an existing character.
 
-This module allows DMs to create and manage dnd5e Actors efficiently, providing various options for character creation and customization. The documentation is structured to guide you through the features, setup, and architecture of the module.
-
-## Installation
-
-For installation instructions, please refer to the [Installation Guide](setup/installation.md).
-
-## Configuration
-
-To learn about the configuration settings required for optimal functionality, visit the [Configuration Guide](setup/configuration.md).
-
-## Additional Resources
-
-Explore the individual feature documents for detailed explanations of each functionality provided by the module.
+Explore the guides to learn how to get the most out of Actor Studio!

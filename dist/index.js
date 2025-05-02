@@ -1,2 +1,2 @@
-import "./index-BGwX2_nM.js";
+import "./index-YUPdtWaY.js";
 //# sourceMappingURL=index.js.map

@@ -8,30 +8,38 @@ If you would like to fund these features, you can do so by [donating here](https
 # Coming soon
 These are scheduled for work imminently: [Upcoming](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/7).
 
-## Player permissions
-Actor Studio is most useful for players to create their own characters. To enable this, you must give your players the `Create New Actors` permission. Probably you should assign this to `Trusted Players` only.
+## Documentation
 
-## dnd5e
+For detailed setup and usage instructions, please refer to the full documentation:
+
+*   **[GM Guide](./docs/gm/README.md):** Installation, configuration, and permissions.
+*   **[Player Guide](./docs/player/README.md):** Character creation and leveling up.
+
+## Key Features (dnd5e)
+
 - Supports both dnd5e v3.x and v4.x
-- The DM / GM can set which compendiums are available to Actor Studio
-- Set your Ability Scores using either: point buy, manual entry, standard array or dice rolls
-- Preview and select your race, background, class and subclass
-- You can preview available advancements by level for class and subclass
-- Once your've made your selections, the actor will be created and the advancements triggered for completion
-- NB: for the advancements to work you must have the "Disable level-up automation" setting switched off!
-- Level Up! as of v1.2.1 this module now supports multi-classing and leveling up. Look for the level up button
+- The DM / GM can set which compendiums are available to Actor Studio (See [GM Configuration](./docs/gm/configuration.md))
+- Set your Ability Scores using either: point buy, manual entry, standard array or dice rolls (See [Player Guide](./docs/player/ability_scores.md))
+- Preview and select your race, background, class and subclass (See [Player Guide](./docs/player/README.md))
+- Preview available advancements by level for class and subclass (See [Player Guide](./docs/player/advancements.md))
+- Creates the actor and triggers the dnd5e Advancement workflow for selecting features, skills, etc.
+- **NB:** For advancements to work you must have the "Disable level-up automation" setting switched off in dnd5e system settings! (See [GM Configuration](./docs/gm/configuration.md))
+- Level Up! Supports multi-classing and leveling up via a button on the character sheet. (See [Player Guide](./docs/player/leveling_up.md))
 - Supports standard dnd5e (v3+) character sheet
-- Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) 
-- Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system. This is effectively a smoke & mirrors backport of the functionality available in dnd5e system v4.x
+- Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets)
+- Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system.
 - Also supports Subclass selection for dnd5e system v4.x
 
-## Usage Instructions
-- To create your character, work your way through the tabs and select from the options available. 
-- You can always go back and change your choices. Use this as a way to preview what each choice does to your character. 
-- Once you are happy with your character, click the "Create Character" button to create your character in Foundry VTT. 
-- At this point the Actor will be created and then the Advancement workflows will begin, where you select the various advancements for each choice you've made for your character (e.g. languages, skills, etc.).
-- Once Advancements are complete, starting gold and equipment can be selected
-- Once your character gains a new level, click the level up button to be guided through improving your character
+## Basic Usage Overview (Player)
+
+1.  **Launch:** Start Actor Studio via the "Create Actor" button (requires GM permission - see [GM Guide](./docs/gm/player_permissions.md)).
+2.  **Tabs:** Work through the tabs (Ability Scores, Race, Background, Class/Subclass) making selections. You can go back and change choices.
+3.  **Create:** Click "Create Character".
+4.  **Advancements:** Follow the pop-up prompts to make choices (skills, languages, etc.).
+5.  **Equipment:** Select starting equipment/gold if prompted.
+6.  **Level Up:** When you gain a level, use the "Level Up" button on your character sheet.
+
+*(See the [Player Guide](./docs/player/README.md) for full details)*
 
 ## SRD Screenshots
 ![ability-score-generation-tab](https://github.com/user-attachments/assets/c651d816-7a61-48e8-a12b-1431b5fdf4ea)
