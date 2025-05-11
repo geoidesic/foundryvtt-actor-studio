@@ -53,11 +53,11 @@
 @import "../../../../../styles/Mixins.scss"
 .content
   padding: 1rem
-:global(.window-header .window-title)
+:global(#foundryvtt-actor-studio-pc-sheet .gas-advancements .window-header .window-title)
   display: none
-:global(.window-header .window-icon)
+:global(#foundryvtt-actor-studio-pc-sheet .gas-advancements .window-header .window-icon)
   display: none
-:global(.window-header .header-control)
+:global(#foundryvtt-actor-studio-pc-sheet .gas-advancements .window-header .header-control)
   display: none
 
 :global(.gas-advancements)
