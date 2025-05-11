@@ -401,7 +401,6 @@ Hooks.on('activateDocumentDirectory', async (app) => {
             try {
               // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
               new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-              app.close();
             } catch (error) {
               ui.notifications.error(error.message);
             }
@@ -454,7 +453,6 @@ Hooks.on('renderActorDirectory', async (app) => {
               try {
                 // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
                 new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-                app.close();
               } catch (error) {
                 ui.notifications.error(error.message);
               }
