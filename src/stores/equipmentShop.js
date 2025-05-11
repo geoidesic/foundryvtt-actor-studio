@@ -110,8 +110,8 @@ export async function loadShopItems() {
     const seenItems = new Map();
     const uniqueLightweightItems = [];
     for (const item of lightweightItems) {
-      // Use uuid as the most reliable unique key from index/async fetch
-      const uniqueKey = item.uuid; 
+      // Use item name for deduplication to avoid duplicate items in the shop UI
+      const uniqueKey = item.name.toLowerCase();
       if (!seenItems.has(uniqueKey)) {
         uniqueLightweightItems.push(item);
         seenItems.set(uniqueKey, true);
