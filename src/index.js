@@ -309,12 +309,17 @@ function getActorStudioButton(buttonId, text=false) {
 }
 
 
-Hooks.on('renderApplicationV2', (app, html, data, position) => {
-
-})
 
 
 Hooks.on('renderApplication', (app, html, data) => {
+  Hooks.call('gas.renderCreateActorButton', app, html, data);
+});
+
+Hooks.on('renderApplicationV2', (app, html, data) => {
+  Hooks.call('gas.renderCreateActorButton', app, html, data);
+});
+
+Hooks.on('gas.renderCreateActorButton', (app, html, data) => {
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
     window.GAS.log.i('Adding Create New Actor button');
