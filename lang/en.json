@@ -319,7 +319,8 @@
       "ErrorAddToCart": "Failed to add item to cart",
       "InfoAddedToCart": "Added {item} to cart",
       "ErrorUpdateQuantity": "Failed to update item quantity",
-      "ErrorRemoveFromCart": "Failed to remove item from cart"
+      "ErrorRemoveFromCart": "Failed to remove item from cart",
+      "FilterPlaceHolder": "Search items in the shop by keyword"
     }
   }
 }
