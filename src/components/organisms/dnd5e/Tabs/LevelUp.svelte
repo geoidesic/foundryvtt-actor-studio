@@ -96,7 +96,7 @@ const getters = {
    * @returns {Object} The class data object from the actor
    */
   getCharacterClass(classKey) {
-    return $actor._classes[classKey];
+    return classes[classKey];
   },
   /**
    * Checks if a class row is active based on the selected class
@@ -275,12 +275,14 @@ const eventHandlers = {
   }
 }
 
+
 /** REACTIVE VARIABLES */
 $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
 $: subClassProp = $subClassUuidForLevelUp;
 $: classProp = $selectedMultiClassUUID;
-$: classKeys = Object.keys($actor._classes);
+$: classes = window.GAS.dnd5eVersion >= 5 ? $actor.classes : $actor._classes;
+$: classKeys = Object.keys(classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
 // $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
 $: newLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
@@ -309,7 +311,7 @@ $: if($classUuidForLevelUp) {
  * Updates when classes or active class changes
  */
   $: existingCLassLevels = classKeys.map((classKey, index) => {
-    const classObj = $actor._classes[classKey]
+    const classObj = classes[classKey]
     window.GAS.log.d('classObj_' + index, classObj)
     window.GAS.log.d('classObj.system.levels', classObj.system.levels)
     return classObj.system.levels;
