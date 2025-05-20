@@ -17,13 +17,16 @@ const pulseKeyframes = `
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
-  // window.GAS.log.d(actor);
+  console.log('dnd5eSheet2UI actor', actor);
+
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
+  const classes = window.GAS.dnd5eVersion >= 5 ? actor.classes : actor._classes;
 
-  console.log('actor._classes', actor._classes);
-  if (!Object.keys(actor._classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
+  console.log('window.GAS.dnd5eVersion', window.GAS.dnd5eVersion)
+  console.log('actor._classes', classes);
+  if (!Object.keys(classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   buttons.css('gap', '0.35rem');
   const levelUpButton = $(`
@@ -93,6 +96,17 @@ export function tidy5eSheetUI(app, element, data) {
 
 export function initLevelup() {
 
+
+  Hooks.on("renderActorSheetV2", (app, html, data) => {
+    console.log(arguments);
+    // window.GAS.log.d(app.constructor.name)
+    if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
+
+    if(app.constructor.name === "CharacterActorSheet") {
+      dnd5eSheet2UI(app, $(app.element), data)
+    }
+
+  });
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
     // window.GAS.log.d(app.constructor.name)
