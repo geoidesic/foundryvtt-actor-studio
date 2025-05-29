@@ -11,43 +11,28 @@ if (!validVersionTypes.includes(versionType)) {
   process.exit(1);
 }
 
-// Build the project
-execSync('yarn build', { stdio: 'inherit' });
+// Run `yarn version` with the specified version type but without creating a git tag
+// This updates package.json with the new version
+execSync(`yarn version --${versionType} --no-git-tag-version`, { stdio: 'inherit' });
 
-// Read current version from package.json
-const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+// Read the updated package.json to get the new version
+let packageJson = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+const newVersion = packageJson.version; // Get the version set by `yarn version`
 
 // Set debug to false
 packageJson.debug = false;
 
-// Write updated package.json back to file
+// Write updated package.json back to file (with debug: false)
 fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 
-const currentVersion = packageJson.version;
+// Build the project (now with the correct version in package.json)
+execSync('yarn build', { stdio: 'inherit' });
 
-// Calculate new version
-const [major, minor, patch] = currentVersion.split('.').map(Number);
-let newVersion;
-switch (versionType) {
-  case 'major':
-    newVersion = `${major + 1}.0.0`;
-    break;
-  case 'minor':
-    newVersion = `${major}.${minor + 1}.0`;
-    break;
-  case 'patch':
-    newVersion = `${major}.${minor}.${patch + 1}`;
-    break;
-}
-
-// Update module.json
+// Update module.json with the new version
 const moduleJsonPath = 'module.json';
 const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
 moduleJson.version = newVersion;
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
-
-// Run `yarn version` with the specified version type but without creating a git tag
-execSync(`yarn version --${versionType} --no-git-tag-version`, { stdio: 'inherit' });
 
 // Commit the build and version changes
 execSync('git add .', { stdio: 'inherit' });
