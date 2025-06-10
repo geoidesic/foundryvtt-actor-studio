@@ -281,6 +281,17 @@
     return color;
   }
 
+  // Array of font families
+  const fontFamilies = [
+    'Gruppo',
+    'Bad Script',
+    'Kumar One Outline',
+    'League Script',
+    'Monoton',
+    'Sriracha',
+    'Yellowtail'
+  ];
+
   onMount(() => {
     const signs = document.querySelectorAll('.x-sign')
     const backgrounds = document.querySelectorAll('.x-background')
@@ -317,6 +328,10 @@
     document.documentElement.style.setProperty('--background-color2', backgroundColor2);
     document.documentElement.style.setProperty('--sign-color1', signColor1);
     document.documentElement.style.setProperty('--sign-color2', signColor2);
+
+    // Randomly select a font family
+    const randomFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
+    document.documentElement.style.setProperty('--random-font-family', randomFontFamily);
   });
 </script>
 
@@ -425,7 +440,7 @@ button[disabled]
   margin-top: 0.5rem
 .character-name-input-container
   height: 51px
-  padding: 0 1rem
+  padding: 1rem 1rem 1rem 1rem
   background: rgba(1, 1, 1, 0.1)
   font-size: xx-large
   font-family: var(--dnd5e-font-modesto)
@@ -464,7 +479,7 @@ button[disabled]
   filter: saturate(30%)
   animation: flicker steps(100) var(--interval) 1s infinite
   color: white
-  font-family: 'Bad Script', Yellowtail
+  font-family: var(--random-font-family)
 
 @keyframes flicker
   50%
