@@ -266,6 +266,25 @@
       setProcessing: (value) => isProcessingPurchase.set(value)
     });
   }
+
+  onMount(() => {
+    const signs = document.querySelectorAll('.x-sign')
+    const randomIn = (min, max) => (
+      Math.floor(Math.random() * (max - min + 1) + min)
+    )
+
+    const mixupInterval = el => {
+      const ms = randomIn(2000, 3000)
+      el.style.setProperty('--interval', `${ms}ms`)
+    }
+
+    signs.forEach(el => {
+      mixupInterval(el)
+      el.addEventListener('webkitAnimationIteration', () => {
+        mixupInterval(el)
+      })
+    })
+  });
 </script>
 
 <template lang="pug">
@@ -278,9 +297,9 @@
           .flexcol
             .flexrow.gap-10
               .flex0.right.mt-xs.no-wrap.ml-md
-                label {localize('Footer.CharacterName')}
+                label.character-name-label {localize('Footer.CharacterName')}
               .flex2
-                input.left(type="text" value="{value}" on:input="{handleNameInput}")
+                input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
       
       //- Progress and buttons section
       .flex1
@@ -336,6 +355,8 @@
                     on:mousedown="{clickCreateHandler}"
                   )
                     span {localize('Footer.CreateCharacter')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
                   +else
                     +if("$hasCharacterCreationChanges")
                       button(
@@ -368,4 +389,43 @@ button[disabled]
   color: var(--color-text-dark-secondary)
   text-align: center
   margin-top: 0.5rem
+.character-name-input
+  height: 51px
+  padding: 1rem
+  background: rgba(1, 1, 1, 0.1)
+  font-size: xx-large
+  font-family: var(--dnd5e-font-modesto)
+.character-name-label
+  font-size: 1.2rem
+  font-weight: 600
+  color: var(--color-text-dark-secondary)
+  vertical-align: top
+  line-height: 0.6rem
+  white-space: break-spaces
+  color: var(--color-highlight)
+
+.x-sign
+  --interval: 1s
+  display: block
+  text-shadow: 0 0 10px var(--color1), 0 0 20px var(--color2), 0 0 40px var(--color3), 0 0 80px var(--color4)
+  will-change: filter, color
+  filter: saturate(60%)
+  animation: flicker steps(100) var(--interval) 1s infinite
+  color: azure
+  --color1: azure
+  --color2: aqua
+  --color3: dodgerblue
+  --color4: blue
+
+  color: lightyellow
+  --color1: gold
+  --color2: firebrick
+  --color3: pink
+  --color4: red
+  font-family: 'Bad Script', Yellowtail
+
+@keyframes flicker
+  50%
+    color: white
+    filter: saturate(100%) hue-rotate(30deg)
 </style>
