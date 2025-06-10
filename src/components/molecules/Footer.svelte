@@ -291,6 +291,30 @@
   let selectedFontFamily;
   let inputClass;
 
+  // Function to randomize font and colors
+  function randomize() {
+    // Randomly select a font family
+    selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
+    document.documentElement.style.setProperty('--random-font-family', selectedFontFamily);
+
+    // Get random colors for the background and sign
+    const backgroundColor1 = getRandomColor();
+    const backgroundColor2 = getRandomColor();
+    const signColor1 = getRandomColor();
+    const signColor2 = getRandomColor();
+
+    // Set the colors in the style
+    document.documentElement.style.setProperty('--background-color1', backgroundColor1);
+    document.documentElement.style.setProperty('--background-color2', backgroundColor2);
+    document.documentElement.style.setProperty('--sign-color1', signColor1);
+    document.documentElement.style.setProperty('--sign-color2', signColor2);
+
+    // Set the input padding based on the selected font family
+    inputClass = (selectedFontFamily === 'Kumar One Outline' || selectedFontFamily === 'League Script') 
+      ? 'lowered' 
+      : '';
+  }
+
   onMount(() => {
     const signs = document.querySelectorAll('.x-sign')
     const backgrounds = document.querySelectorAll('.x-background')
@@ -316,28 +340,7 @@
     //   })
     // })
 
-    // Get random colors for the background and sign
-    const backgroundColor1 = getRandomColor();
-    const backgroundColor2 = getRandomColor();
-    const signColor1 = getRandomColor();
-    const signColor2 = getRandomColor();
-
-    // Set the colors in the style
-    document.documentElement.style.setProperty('--background-color1', backgroundColor1);
-    document.documentElement.style.setProperty('--background-color2', backgroundColor2);
-    document.documentElement.style.setProperty('--sign-color1', signColor1);
-    document.documentElement.style.setProperty('--sign-color2', signColor2);
-
-    // Randomly select a font family
-    selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
-    document.documentElement.style.setProperty('--random-font-family', selectedFontFamily);
-
-    // Set the input padding based on the selected font family
-    $: if (selectedFontFamily === 'Kumar One Outline' || selectedFontFamily === 'League Script') {
-      inputClass = 'lowered'
-    } else {
-      inputClass = ''
-    }
+    randomize(); // Call randomize on mount
   });
 </script>
 
@@ -351,7 +354,7 @@
           .flexcol
             .flexrow.gap-10
               .flex0.right.mt-xs.no-wrap.ml-md
-                label.character-name-label {localize('Footer.CharacterName')}
+                label.character-name-label(on:click="{randomize}") {localize('Footer.CharacterName')}
               .flex2
                 .x-background.character-name-input-container(class="{inputClass}")
                   input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
@@ -468,6 +471,7 @@ button[disabled]
     outline: none
     box-shadow: none
 .character-name-label
+  cursor: pointer
   font-size: 1.2rem
   font-weight: 600
   color: var(--color-text-dark-secondary)
