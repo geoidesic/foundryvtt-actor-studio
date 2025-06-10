@@ -330,22 +330,22 @@
                       .flex2 {advancement.title}
                     .flexrow
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-          
-          +if("$characterClass?.system?.startingEquipment?.length")
-            h3.left.mt-sm.flexrow
-              .flex0.pointer(on:click="{toggleEquipmentSelection}")
-                +if("equipmentSelectionExpanded")
-                  span [-]
-                +if("!equipmentSelectionExpanded")
-                  spen [+]
-              .flex Starting Equipment
-            +if("equipmentSelectionExpanded && !isDisabled")
-              .flexrow
-                StartingGold(characterClass="{$characterClass}" disabled="{true}")
-              .flexrow
-                StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}" disabled="{true}")
-            +if("equipmentSelectionExpanded && isDisabled")
-              p.left See Equipment tab
+          //- @deprecated in #159
+          //- +if("$characterClass?.system?.startingEquipment?.length")
+          //-   h3.left.mt-sm.flexrow
+          //-     .flex0.pointer(on:click="{toggleEquipmentSelection}")
+          //-       +if("equipmentSelectionExpanded")
+          //-         span [-]
+          //-       +if("!equipmentSelectionExpanded")
+          //-         spen [+]
+          //-     .flex Starting Equipment
+          //-   +if("equipmentSelectionExpanded && !isDisabled")
+          //-     .flexrow
+          //-       StartingGold(characterClass="{$characterClass}" disabled="{true}")
+          //-     .flexrow
+          //-       StartingEquipment(startingEquipment="{$characterClass.system.startingEquipment}" disabled="{true}")
+          //-   +if("equipmentSelectionExpanded && isDisabled")
+          //-     p.left See Equipment tab
   
           +if("subclasses.length")
             //- h3.left.mt-sm Description
