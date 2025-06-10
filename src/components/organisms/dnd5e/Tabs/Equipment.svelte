@@ -1,8 +1,10 @@
 <script>
+  import { onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { destroyAdvancementManagers } from "~/src/lib/advancements";
   import { getContext } from "svelte";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
@@ -27,7 +29,13 @@
 
 
   $: window.GAS.log.d("Equipment compatibleStartingEquipment", $compatibleStartingEquipment);
-  
+
+  onMount(() => {
+    if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+      destroyAdvancementManagers();
+    }
+  });
+
 </script>
 
 <template lang="pug">

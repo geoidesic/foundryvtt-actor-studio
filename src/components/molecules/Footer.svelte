@@ -2,7 +2,6 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { get } from "svelte/store";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { destroyAdvancementManagers } from "~/src/lib/advancements";
   import {
     race,
     abilities,
@@ -165,9 +164,6 @@
   };
 
   const clickCreateHandler = async () => {
-    if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
-      destroyAdvancementManagers();
-    }
     await createActorWorkflow({
       actor,
       stores: storeRefs,
