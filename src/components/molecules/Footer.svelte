@@ -292,6 +292,9 @@
     'Yellowtail'
   ];
 
+  let selectedFontFamily;
+  let inputClass;
+
   onMount(() => {
     const signs = document.querySelectorAll('.x-sign')
     const backgrounds = document.querySelectorAll('.x-background')
@@ -330,8 +333,15 @@
     document.documentElement.style.setProperty('--sign-color2', signColor2);
 
     // Randomly select a font family
-    const randomFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
-    document.documentElement.style.setProperty('--random-font-family', randomFontFamily);
+    selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
+    document.documentElement.style.setProperty('--random-font-family', selectedFontFamily);
+
+    // Set the input padding based on the selected font family
+    $: if (selectedFontFamily === 'Kumar One Outline' || selectedFontFamily === 'League Script') {
+      inputClass = 'lowered'
+    } else {
+      inputClass = ''
+    }
   });
 </script>
 
@@ -347,7 +357,7 @@
               .flex0.right.mt-xs.no-wrap.ml-md
                 label.character-name-label {localize('Footer.CharacterName')}
               .flex2
-                .x-background.character-name-input-container
+                .x-background.character-name-input-container(class="{inputClass}")
                   input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
       
       //- Progress and buttons section
@@ -458,6 +468,9 @@ button[disabled]
   line-height: normal
   padding: 0
   margin: 0
+  &:focus
+    outline: none
+    box-shadow: none
 .character-name-label
   font-size: 1.2rem
   font-weight: 600
@@ -480,6 +493,10 @@ button[disabled]
   animation: flicker steps(100) var(--interval) 1s infinite
   color: white
   font-family: var(--random-font-family)
+
+.lowered
+  padding: 1.5rem 1rem 1rem 1rem
+
 
 @keyframes flicker
   50%
