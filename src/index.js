@@ -395,23 +395,25 @@ Hooks.on('activateDocumentDirectory', async (app) => {
       if ($('#gas-sidebar-button').length) return;
       const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
       $(app.element).find('header.directory-header .header-actions').after($gasButton);
-      const handleButtonClick = function (e) {
-        if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
-          if (userHasRightPermissions()) {
-            try {
-              // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
-              new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-            } catch (error) {
-              ui.notifications.error(error.message);
-            }
-          }
-        }
-      };
-      $gasButton.on('mousedown', handleButtonClick);
-      $gasButton.on('keydown', handleButtonClick);
+      $gasButton.on('mousedown', handleActorStudioStartButtonClick);
+      $gasButton.on('keydown', handleActorStudioStartButtonClick);
     }
   }
 })
+
+const handleActorStudioStartButtonClick = function (e) {
+  if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
+    if (userHasRightPermissions()) {
+      try {
+        // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
+        new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
+        app.close();
+      } catch (error) {
+        ui.notifications.error(error.message);
+      }
+    }
+  }
+};
 
 Hooks.on('renderActorDirectory', async (app) => {
   if(game.version < 13) {
@@ -422,21 +424,8 @@ Hooks.on('renderActorDirectory', async (app) => {
       if ($('#gas-sidebar-button').length) return;
       const $gasButton = getActorStudioButton('gas-sidebar-button');
       $(app._element).find('header.directory-header').append($gasButton);
-      const handleButtonClick = function (e) {
-        if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
-          if (userHasRightPermissions()) {
-            try {
-              // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
-              new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-              app.close();
-            } catch (error) {
-              ui.notifications.error(error.message);
-            }
-          }
-        }
-      };
-      $gasButton.on('mousedown', handleButtonClick);
-      $gasButton.on('keydown', handleButtonClick);
+      $gasButton.on('mousedown', handleActorStudioStartButtonClick);
+      $gasButton.on('keydown', handleActorStudioStartButtonClick);
     }
   } else {
     if(game.version > 13) {
@@ -447,20 +436,8 @@ Hooks.on('renderActorDirectory', async (app) => {
         if ($('#gas-sidebar-button').length) return;
         const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
         $(app.element).find('header.directory-header .header-actions').after($gasButton);
-        const handleButtonClick = function (e) {
-          if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
-            if (userHasRightPermissions()) {
-              try {
-                // new PCApplication(new Actor.implementation({ name: actorName, flags: { [MODULE_ID]: {folderName}}, type: actorType })).render(true, { focus: true });
-                new PCApplication(new Actor.implementation({ name: game.user.name, folder: '', type: 'character' })).render(true, { focus: true });
-              } catch (error) {
-                ui.notifications.error(error.message);
-              }
-            }
-          }
-        };
-        $gasButton.on('mousedown', handleButtonClick);
-        $gasButton.on('keydown', handleButtonClick);
+        $gasButton.on('mousedown', handleActorStudioStartButtonClick);
+        $gasButton.on('keydown', handleActorStudioStartButtonClick);
       }
     }
   }
