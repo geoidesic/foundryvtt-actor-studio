@@ -2,6 +2,7 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { get } from "svelte/store";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { destroyAdvancementManagers } from "~/src/lib/advancements";
   import {
     race,
     abilities,
@@ -164,6 +165,9 @@
   };
 
   const clickCreateHandler = async () => {
+    if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+      destroyAdvancementManagers();
+    }
     await createActorWorkflow({
       actor,
       stores: storeRefs,
@@ -267,23 +271,52 @@
     });
   }
 
+  // Function to generate a random color
+  function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
   onMount(() => {
     const signs = document.querySelectorAll('.x-sign')
+    const backgrounds = document.querySelectorAll('.x-background')
     const randomIn = (min, max) => (
       Math.floor(Math.random() * (max - min + 1) + min)
     )
 
-    const mixupInterval = el => {
-      const ms = randomIn(2000, 3000)
+    const mixupInterval = (el, val1, val2) => {
+      const ms = randomIn(val1, val2)
       el.style.setProperty('--interval', `${ms}ms`)
     }
 
     signs.forEach(el => {
-      mixupInterval(el)
+      mixupInterval(el, 2000, 3000)
       el.addEventListener('webkitAnimationIteration', () => {
-        mixupInterval(el)
+        mixupInterval(el, 2000, 3000)
       })
     })
+    // backgrounds.forEach(el => {
+    //   mixupInterval(el, 10000, 10001)
+    //   el.addEventListener('webkitAnimationIteration', () => {
+    //     mixupInterval(el, 10000, 10001)
+    //   })
+    // })
+
+    // Get random colors for the background and sign
+    const backgroundColor1 = getRandomColor();
+    const backgroundColor2 = getRandomColor();
+    const signColor1 = getRandomColor();
+    const signColor2 = getRandomColor();
+
+    // Set the colors in the style
+    document.documentElement.style.setProperty('--background-color1', backgroundColor1);
+    document.documentElement.style.setProperty('--background-color2', backgroundColor2);
+    document.documentElement.style.setProperty('--sign-color1', signColor1);
+    document.documentElement.style.setProperty('--sign-color2', signColor2);
   });
 </script>
 
@@ -299,7 +332,8 @@
               .flex0.right.mt-xs.no-wrap.ml-md
                 label.character-name-label {localize('Footer.CharacterName')}
               .flex2
-                input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
+                .x-background.character-name-input-container
+                  input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
       
       //- Progress and buttons section
       .flex1
@@ -389,12 +423,26 @@ button[disabled]
   color: var(--color-text-dark-secondary)
   text-align: center
   margin-top: 0.5rem
-.character-name-input
+.character-name-input-container
   height: 51px
-  padding: 1rem
+  padding: 0 1rem
   background: rgba(1, 1, 1, 0.1)
   font-size: xx-large
   font-family: var(--dnd5e-font-modesto)
+  border: 1px solid #ccc
+  border-radius: 5px
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
+  display: flex
+  align-items: center
+  justify-content: flex-start
+
+.character-name-input
+  border: none
+  background: none
+  height: auto
+  line-height: normal
+  padding: 0
+  margin: 0
 .character-name-label
   font-size: 1.2rem
   font-weight: 600
@@ -404,28 +452,22 @@ button[disabled]
   white-space: break-spaces
   color: var(--color-highlight)
 
+.x-background
+  --interval: 13s
+  background: linear-gradient(to right, var(--background-color1), var(--background-color2))
+
 .x-sign
   --interval: 1s
   display: block
-  text-shadow: 0 0 10px var(--color1), 0 0 20px var(--color2), 0 0 40px var(--color3), 0 0 80px var(--color4)
+  text-shadow: 0 0 10px var(--sign-color1), 0 0 20px var(--sign-color2)
   will-change: filter, color
-  filter: saturate(60%)
+  filter: saturate(30%)
   animation: flicker steps(100) var(--interval) 1s infinite
-  color: azure
-  --color1: azure
-  --color2: aqua
-  --color3: dodgerblue
-  --color4: blue
-
-  color: lightyellow
-  --color1: gold
-  --color2: firebrick
-  --color3: pink
-  --color4: red
+  color: white
   font-family: 'Bad Script', Yellowtail
 
 @keyframes flicker
   50%
     color: white
-    filter: saturate(100%) hue-rotate(30deg)
+    filter: saturate(200%) hue-rotate(20deg)
 </style>
