@@ -71,12 +71,33 @@
         .forEach(entry => {
           // window.GAS.log.d("StartingEquipment entry", entry);
           if (entry.type === 'OR') {
-            initializeGroup(entry._id, {
-              type: 'choice',
-              label: 'Choose one...',
-              items: startingEquipment.filter(item => item.group === entry._id),
-              sort: entry.sort
-            });
+            const children = startingEquipment.filter(item => item.group === entry._id);
+            
+            // If there's only one child in this OR group, treat it as a standalone entry
+            if (children.length === 1) {
+              const singleChild = children[0];
+              window.GAS.log.d("StartingEquipment flattening single-child OR group", {
+                orGroupId: entry._id,
+                childType: singleChild.type,
+                childLabel: singleChild.label
+              });
+              
+              // Initialize as standalone instead of choice
+              initializeGroup(entry._id, {
+                type: 'standalone',
+                label: singleChild.label || entry.label,
+                items: [singleChild],
+                sort: entry.sort
+              });
+            } else {
+              // Normal OR group with multiple choices
+              initializeGroup(entry._id, {
+                type: 'choice',
+                label: 'Choose one...',
+                items: children,
+                sort: entry.sort
+              });
+            }
           } else if (!entry.group) {
             initializeGroup(entry._id || 'standalone', {
               type: 'standalone',

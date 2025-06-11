@@ -2,6 +2,17 @@ import { derived, get, writable } from 'svelte/store';
 // Import directly from storeDefinitions instead of index
 import { characterClass, background } from './storeDefinitions';
 import { goldChoices } from './goldChoices';
+
+// Function to clean equipment structure by removing unnecessary OR wrappers
+// Currently disabled - implementing fix at component level instead
+function cleanEquipmentStructure(equipment) {
+  if (!Array.isArray(equipment)) return equipment;
+  
+  // For now, just return the equipment as-is
+  // The cleaning will be handled in the component
+  return equipment;
+}
+
 // Base store for starting equipment
 
 // Derived store that automatically updates when class/background change
@@ -9,8 +20,8 @@ const startingEquipment = derived(
   [characterClass, background],
   ([$characterClass, $background]) => {
       return {
-        fromClass: $characterClass?.system?.startingEquipment || [],
-        fromBackground: $background?.system?.startingEquipment || []
+        fromClass: cleanEquipmentStructure($characterClass?.system?.startingEquipment || []),
+        fromBackground: cleanEquipmentStructure($background?.system?.startingEquipment || [])
       }
   }
 );
