@@ -12,6 +12,7 @@ import { captureAdvancement } from './hooks/captureAdvancement.js';
 import { renderAdvancementManager } from './hooks/advancementManager.js';
 import { renderCompendium } from './hooks/renderCompendium.js';
 import { renderASButtonInCreateActorApplication, activateDocumentDirectory, renderActorDirectory } from './hooks/actorStudioStartButtons.js';
+import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 Hooks.once("ready", (app, html, data) => {
   init(app, html, data);
@@ -92,12 +93,15 @@ Hooks.on('gas.renderASButtonInCreateActorApplication', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
 })
 
-
+//- Add Actor Studio button to the Actor Directory in game.version >= 13
 Hooks.on('activateDocumentDirectory', async (app) => {
   activateDocumentDirectory(app);
 })
-
-
+//- Add Actor Studio button to the Actor Directory in game.version < 13
 Hooks.on('renderActorDirectory', async (app) => {
   renderActorDirectory(app);
 })
+
+Hooks.on('gas.openActorStudio', (actorName, folderName, actorType) => {
+  openActorStudio(actorName, folderName, actorType);
+});

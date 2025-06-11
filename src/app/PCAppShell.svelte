@@ -18,6 +18,7 @@
   //- register hooks
   Hooks.once("gas.close", gasClose);
   Hooks.once("gas.equipmentSelection", handleEquipmentSelection);
+  
 
   setContext("#doc", documentStore);
 
