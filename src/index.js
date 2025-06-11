@@ -14,7 +14,7 @@ import { renderCompendium } from './hooks/renderCompendium.js';
 import { renderASButtonInCreateActorApplication, activateDocumentDirectory, renderActorDirectory } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
-Hooks.once("ready", (app, html, data) => {
+Hooks.once("init", (app, html, data) => {
   init(app, html, data);
 });
 

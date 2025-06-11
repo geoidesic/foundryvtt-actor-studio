@@ -6,7 +6,7 @@
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
-  import { destroyAdvancementManagers } from "~/src/lib/advancements";
+  import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager"
   import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
   import { getSecondarGoldAward } from "~/src/lib/equipment";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
