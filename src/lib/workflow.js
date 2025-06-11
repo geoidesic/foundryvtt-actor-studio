@@ -267,7 +267,7 @@ export async function handleAddEquipment({
         let goldValue;
         
         // Use the appropriate gold source based on DnD5e version
-        if (window.GAS.dnd5eVersion === 4) {
+        if (window.GAS.dnd5eVersion >= 4) {
           goldValue = get(totalGoldFromChoices);
           window.GAS.log.d('[WORKFLOW] Using totalGoldFromChoices for v4:', goldValue);
         } else {

@@ -34,7 +34,7 @@ export function initializeGold() {
     // Use the appropriate gold source based on DnD5e version
     let goldValue = 0;
     
-    if (window.GAS.dnd5eVersion === 4) {
+    if (window.GAS.dnd5eVersion >= 4) {
       // For 5e v4, get gold from gold choices
       goldValue = get(totalGoldFromChoices);
       window.GAS.log.d('[SHOP] Using totalGoldFromChoices for v4:', goldValue);

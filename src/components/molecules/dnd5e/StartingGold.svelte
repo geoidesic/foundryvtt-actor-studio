@@ -61,9 +61,13 @@
         .flexrow.left.justify-flexrow-vertical
           .flex3 
             +if("hasRolled")
-              .result
-                span.label.gold Result: 
-                span.value {$goldRoll} gp
+              .result.final-gold-result
+                .flexrow.justify-flexrow-vertical.no-wrap
+                  .flex0.relative.icon
+                    i.fas.fa-coins
+                  .flex2.left
+                    span.label Result: 
+                    span.value {$goldRoll} gp
           .flex0.right.controls(class="{hasRolled || disabled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
             i.fas.fa-dice
 </template>
@@ -114,10 +118,32 @@
       animation: pulse 1s infinite
 
   .result
-    .label
-      color: var(--color-text-dark-secondary)
-      margin-right: 0.5rem
-    .value
-      color: var(--color-text-highlight)
+    &.final-gold-result
+      padding: 0.5rem
+      border-radius: var(--border-radius)
+      border: 1px solid var(--dnd5e-color-gold)
+      background: #000000
+      color: var(--dnd5e-color-gold)
+      margin-top: 0.5rem
+      
+      .icon
+        min-width: 32px
+        max-height: 32px
+        margin-right: 0.5rem
+        display: flex
+        align-items: center
+        justify-content: center
+        
+        i
+          color: var(--dnd5e-color-gold)
+          font-size: 1.2em
+      
+      .label
+        color: var(--dnd5e-color-gold)
+        margin-right: 0.5rem
+      
+      .value
+        color: var(--dnd5e-color-gold)
+        font-weight: bold
       font-weight: bold
 </style> 

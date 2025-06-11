@@ -1,30 +1,27 @@
 <script>
   import { onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager"
-  import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
-  import { getSecondaryGoldAward } from "~/src/lib/equipment";
+  import { compatibleStartingEquipment, classStartingEquipment, backgroundStartingEquipment } from "~/src/stores/startingEquipment";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
-  import { minMaxGold2024 } from "~/src/stores/goldChoices";
   
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
   import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";
   const doc = getContext("#doc");
 
-  const minMax2024Gold = getSecondaryGoldAward
   // Get equipment selection setting
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
   // Track if gold has been rolled/selected based on version
-  $: isGoldComplete = window.GAS.dnd5eVersion === 4  && window.GAS.dnd5eRules === "2024" ? $areGoldChoicesComplete : $goldRoll > 0;
+  $: isGoldComplete = window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024" ? $areGoldChoicesComplete : $goldRoll > 0;
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
@@ -36,8 +33,6 @@
   onMount(() => {
     if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
       destroyAdvancementManagers();
-      getSecondaryGoldAward($doc);
-
     }
   });
 
@@ -46,17 +41,26 @@
 <template lang="pug">
 .container
   .content
-    pre {$minMaxGold2024.min} {$minMaxGold2024.max}
     .flexrow
       .flex2.pr-sm.col-a
-        h3 {localize('GAS.Equipment.Selection')}
+        //- pre dnd5eVersion { window.GAS.dnd5eVersion}
+        //- pre dnd5eRules { window.GAS.dnd5eRules}
+        h3 {t('GAS.Equipment.StartingGold')}
         section.equipment-flow
-          +if("window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === '2024'")
+          +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
             +else()
               StartingGold(characterClass="{$characterClass}")
           +if("isGoldComplete")
-            StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}")
+            h3 {t('GAS.Equipment.Selection')}
+            StartingEquipment(
+              startingEquipment="{$compatibleStartingEquipment}" 
+              classEquipment="{$classStartingEquipment}"
+              backgroundEquipment="{$backgroundStartingEquipment}"
+              characterClass="{$characterClass}"
+              background="{$background}"
+              proficiencies="{proficiencies}"
+            )
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         PlannedInventory

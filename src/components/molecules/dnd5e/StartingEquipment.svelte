@@ -8,6 +8,10 @@
   // import EquipmentSelector from "~/src/components/molecules/dnd5e/EquipmentSelector.svelte";
 
   export let startingEquipment = [];
+  export let classEquipment = [];
+  export let backgroundEquipment = [];
+  export let characterClass = null;
+  export let background = null;
   export let disabled = false;
   export let allEquipmentItems = [];
 
@@ -20,6 +24,38 @@
 
   $: window.GAS.log.d("StartingEquipment startingEquipment", startingEquipment);
 
+  $: window.GAS.log.d("StartingEquipment equipmentSelections", $equipmentSelections);
+  
+  // Group equipment by source for 2024 rules
+  $: equipmentBySource = (() => {
+    if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules !== "2024") {
+      // For non-2024 rules, just return equipment without source grouping
+      return [{ source: null, equipment: startingEquipment }];
+    }
+    
+    const groups = [];
+    
+    // Add class equipment if available
+    if (classEquipment?.length > 0) {
+      groups.push({
+        source: 'class',
+        label: characterClass?.name || 'Class',
+        equipment: classEquipment
+      });
+    }
+    
+    // Add background equipment if available
+    if (backgroundEquipment?.length > 0) {
+      groups.push({
+        source: 'background', 
+        label: background?.name || 'Background',
+        equipment: backgroundEquipment
+      });
+    }
+    
+    return groups;
+  })();
+  
   // Process and group equipment
   $: {
     if (startingEquipment?.length) {
@@ -174,6 +210,19 @@
     return classes.join(' ');
   }
 
+  // Helper function to check if a group belongs to a specific equipment source
+  function isGroupFromSource(group, sourceEquipment) {
+    if (!group?.items?.length || !sourceEquipment?.length) return false;
+    
+    // Check if any of the group's items match items from the source equipment
+    return group.items.some(groupItem => 
+      sourceEquipment.some(sourceItem => 
+        groupItem._id === sourceItem._id || 
+        (groupItem.group && sourceItem._id === groupItem.group)
+      )
+    );
+  }
+
   function isGroupNonEditable(group) {
     // Check if it's a standalone group and all items are linked type
     return group.type === 'standalone' && group.items.every(item => {
@@ -196,68 +245,142 @@
         .flex3
           h2.left {localize('GAS.Equipment.Label')}
       
-      //- Process each group
-      +each("sortedGroups as group")
-        +if("group.completed || group.inProgress")
-          .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
-            .flexrow.justify-flexrow-vertical.no-wrap
-              .flex3.left
-                +if("group.type === 'choice'")
-                  +if("group.completed")
-                    span.group-label Completed:
-                    +else()
-                      span.group-label Choose one...
-              +if("!group.inProgress && !isGroupNonEditable(group)")
-                .flex0.right
-                  IconButton.option(
-                    on:click="{handleEditGroup(group.id)}"
-                    disabled="{disabled}"
-                    icon="fas fa-pencil"
-                  )
-            .options
-              +if("group.type === 'standalone' && group.inProgress")
-                .equipment-group
-                  .flexrow.justify-flexrow-vertical.no-wrap
-                    .flex3.left
-                      +if("!group.completed")
-                        span.group-label All of the following:
-                  +if("group.items[0].type === 'AND'")
-                    +each("group.items[0].children as item")
-                      .equipment-item.option(
-                        class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
-                        on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+      //- For 2024 rules, group by source
+      +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024' && equipmentBySource.length > 1")
+        +each("equipmentBySource as sourceGroup")
+          +if("sourceGroup.equipment?.length")
+            .equipment-source-section
+              h3.source-header {sourceGroup.label} Equipment
+              
+              //- Process each group within this source
+              +each("sortedGroups as group")
+                +if("(group.completed || group.inProgress) && isGroupFromSource(group, sourceGroup.equipment)")
+                  .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+                    .flexrow.justify-flexrow-vertical.no-wrap
+                      .flex3.left
+                        +if("group.type === 'choice'")
+                          +if("group.completed")
+                            span.group-label Completed:
+                            +else()
+                              span.group-label Choose one...
+                      +if("!group.inProgress && !isGroupNonEditable(group)")
+                        .flex0.right
+                          IconButton.option(
+                            on:click="{handleEditGroup(group.id)}"
+                            disabled="{disabled}"
+                            icon="fas fa-pencil"
+                          )
+                    .options
+                      +if("group.type === 'standalone' && group.inProgress")
+                        .equipment-group
+                          .flexrow.justify-flexrow-vertical.no-wrap
+                            .flex3.left
+                              +if("!group.completed")
+                                span.group-label All of the following:
+                          +if("group.items[0].type === 'AND'")
+                            +each("group.items[0].children as item")
+                              .equipment-item.option(
+                                class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                                on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                              )
+                                .flexrow.justify-flexrow-vertical.no-wrap
+                                  .flex0.relative.icon
+                                    img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                                  .flex2.left.name.black-link
+                                    span {@html item.label}
+                            +else()
+                              +each("group.items as item")
+                                .equipment-item.option(
+                                  class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                                  on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                                )
+                                  .flexrow.justify-flexrow-vertical.no-wrap
+                                    .flex0.relative.icon
+                                      img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                                    .flex2.left.name.black-link
+                                      span {@html item.label}
+                        +else()
+                          .flex3.left
+                            +if("group.completed")
+                              span.group-label Pre-selected:
+                          +each("group.items as item")
+                            button.option(
+                              class="{getOptionClasses(group, item)}"
+                              on:click!="{handleSelection(group.id, item)}"
+                              disabled="{isOptionDisabled(group, item)}"
+                            )
+                              .flexrow.justify-flexrow-vertical.no-wrap
+                                .flex0.relative.icon
+                                  img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                                .flex2.left.name.black-link
+                                  span {@html item.label}
+                                  +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                                    span.selected-name &nbsp;({$selectedItems[group.id].name})
+        +else()
+          //- Fallback for single source or non-2024 rules
+          +each("sortedGroups as group")
+            +if("group.completed || group.inProgress")
+              .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+                .flexrow.justify-flexrow-vertical.no-wrap
+                  .flex3.left
+                    +if("group.type === 'choice'")
+                      +if("group.completed")
+                        span.group-label Completed:
+                        +else()
+                          span.group-label Choose one...
+                  +if("!group.inProgress && !isGroupNonEditable(group)")
+                    .flex0.right
+                      IconButton.option(
+                        on:click="{handleEditGroup(group.id)}"
+                        disabled="{disabled}"
+                        icon="fas fa-pencil"
                       )
-                        .flexrow.justify-flexrow-vertical.no-wrap
-                          .flex0.relative.icon
-                            img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                          .flex2.left.name.black-link
-                            span {@html item.label}
+                .options
+                  +if("group.type === 'standalone' && group.inProgress")
+                    .equipment-group
+                      .flexrow.justify-flexrow-vertical.no-wrap
+                        .flex3.left
+                          +if("!group.completed")
+                            span.group-label All of the following:
+                      +if("group.items[0].type === 'AND'")
+                        +each("group.items[0].children as item")
+                          .equipment-item.option(
+                            class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                            on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                          )
+                            .flexrow.justify-flexrow-vertical.no-wrap
+                              .flex0.relative.icon
+                                img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                              .flex2.left.name.black-link
+                                span {@html item.label}
+                        +else()
+                          +each("group.items as item")
+                            .equipment-item.option(
+                              class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                              on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                            )
+                              .flexrow.justify-flexrow-vertical.no-wrap
+                                .flex0.relative.icon
+                                  img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
+                                .flex2.left.name.black-link
+                                  span {@html item.label}
                     +else()
+                      .flex3.left
+                        +if("group.completed")
+                          span.group-label Pre-selected:
                       +each("group.items as item")
-                        .equipment-item.option(
-                          class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
-                          on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                        button.option(
+                          class="{getOptionClasses(group, item)}"
+                          on:click!="{handleSelection(group.id, item)}"
+                          disabled="{isOptionDisabled(group, item)}"
                         )
                           .flexrow.justify-flexrow-vertical.no-wrap
                             .flex0.relative.icon
                               img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
                             .flex2.left.name.black-link
                               span {@html item.label}
-                +else()
-                  +each("group.items as item")
-                    button.option(
-                      class="{getOptionClasses(group, item)}"
-                      on:click!="{handleSelection(group.id, item)}"
-                      disabled="{isOptionDisabled(group, item)}"
-                    )
-                      .flexrow.justify-flexrow-vertical.no-wrap
-                        .flex0.relative.icon
-                          img.icon(src="{getEquipmentIcon(item.type, group)}" alt="{item.type}")
-                        .flex2.left.name.black-link
-                          span {@html item.label}
-                          +if("group.selectedItemId === item._id && $selectedItems[group.id]")
-                            span.selected-name &nbsp;({$selectedItems[group.id].name})
-
+                              +if("group.selectedItemId === item._id && $selectedItems[group.id]")
+                                span.selected-name &nbsp;({$selectedItems[group.id].name})
 </template>
 
 <style lang="sass">
@@ -274,6 +397,25 @@
   color: var(--color-text-highlight)
   border-bottom: 1px solid rgba(255, 255, 255, 0.1)
   padding-bottom: 0.5rem
+
+.equipment-source-section
+  margin-bottom: 1.5rem
+  padding: 0.75rem
+  border-radius: var(--border-radius)
+  background: rgba(0, 0, 0, 0.1)
+  border-left: 3px solid var(--dnd5e-color-gold)
+
+  &:last-child
+    margin-bottom: 0
+
+.source-header
+  font-size: 1.1em
+  font-weight: bold
+  margin-bottom: 0.75rem
+  color: var(--dnd5e-color-gold)
+  text-transform: capitalize
+  border-bottom: 1px solid rgba(181, 158, 84, 0.3)
+  padding-bottom: 0.25rem
 
 .equipment-group
   margin-bottom: 0.75rem

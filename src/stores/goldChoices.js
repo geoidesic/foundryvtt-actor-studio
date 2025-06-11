@@ -13,8 +13,6 @@ const goldChoices = writable({
   }
 });
 
-export const minMaxGold2024 = writable({})
-
 // Derived store for total gold from choices
 const totalGoldFromChoices = derived(goldChoices, ($goldChoices) => {
   return parseInt($goldChoices.fromClass.goldValue) + parseInt($goldChoices.fromBackground.goldValue);

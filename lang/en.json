@@ -27,7 +27,7 @@
     },
     "Footer": {
       "AddLevel": "Add Character Level",
-      "AddEquipment": "Add Equipment & Gold. Then Shop.",
+      "AddEquipment": "Confirm",
       "FinalizePurchase": "Finalize Purchase",
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
@@ -320,7 +320,8 @@
       "InfoAddedToCart": "Added {item} to cart",
       "ErrorUpdateQuantity": "Failed to update item quantity",
       "ErrorRemoveFromCart": "Failed to remove item from cart",
-      "FilterPlaceholder": "Search items in the shop by keyword"
+      "FilterPlaceholder": "Search items in the shop by keyword",
+      "NoMatchingEquipment": "No matching equipment was found."
     }
   }
 }

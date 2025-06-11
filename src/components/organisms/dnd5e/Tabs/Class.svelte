@@ -10,7 +10,7 @@
     getSubclassLevel,
     illuminatedDescription,
   } from "~/src/helpers/Utility.js";
-  import { getSecondaryGoldAward } from "~/src/lib/equipment";
+
 
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -20,13 +20,12 @@
     subClassesForClass,
     readOnlyTabs,
   } from "~/src/stores/index";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t} from "#runtime/svelte/helper";
   import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
   import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
-  import { minMaxGold2024 } from "~/src/stores/goldChoices";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
 
@@ -135,7 +134,7 @@
     const selectedClass = await fromUuid(option);
 
 
-    $minMaxGold2024 = getSecondaryGoldAward(selectedClass);
+
 
     $characterClass = selectedClass;
     selectedCharacterClass = option;
@@ -238,7 +237,7 @@
   $: combinedHtml = $characterClass
     ? `
       ${richHTML}
-      ${richSubClassHTML ? `<h1>${localize("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
+      ${richSubClassHTML ? `<h1>${t("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
   `
     : "";
 
@@ -299,13 +298,13 @@
             IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
         +if("$characterClass")
           +if("subclasses.length && subClassLevel == 1")
-            h3.left.mt-md {localize('GAS.SubClass')}
+            h3.left.mt-md {t('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
                 IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
           +if("!isDisabled")
-            h3.left.mt-sm {localize('GAS.Tabs.Classes.FilterByLevel')}
+            h3.left.mt-sm {t('GAS.Tabs.Classes.FilterByLevel')}
             .flexrow
               .flex2.left
                 TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
@@ -316,17 +315,17 @@
                   span [-]
                 +if("!classAdvancementExpanded")
                   spen [+]
-              .flex {localize('GAS.Tabs.Classes.Class')} {localize('GAS.Advancements')}
-              .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
+              .flex {t('GAS.Tabs.Classes.Class')} {t('GAS.Advancements')}
+              .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
             ul.icon-list
               +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
-                li.left {localize('GAS.NoAdvancements')}
+                li.left {t('GAS.NoAdvancements')}
               +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
                 li.left 
                   .flexrow
                     .flex0.relative.image
                       img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
-                    .flex2 {localize('GAS.SubClass')}
+                    .flex2 {t('GAS.SubClass')}
               +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
@@ -364,11 +363,11 @@
                     span [-]
                   +if("!subClassAdvancementExpanded")
                     spen [+]
-                .flex {localize('GAS.Tabs.Classes.SubClass')} {localize('GAS.Advancements')}
-                .flex0.div.badge.right.inset.ml-sm.mb-xs {localize('GAS.Level')} {$level}
+                .flex {t('GAS.Tabs.Classes.SubClass')} {t('GAS.Advancements')}
+                .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
               ul.icon-list
                 +if("!subClassAdvancementArrayFiltered.length")
-                  li.left {localize('GAS.NoAdvancements')}
+                  li.left {t('GAS.NoAdvancements')}
                 +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
                   +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type

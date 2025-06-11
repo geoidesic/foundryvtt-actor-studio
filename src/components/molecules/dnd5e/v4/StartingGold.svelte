@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
@@ -16,16 +16,42 @@
   let backgroundGoldOnly = 0;
   let backgroundGoldWithEquipment = 0;
 
-  // Function to extract gold value from description text
-  function extractGoldFromDescription(description) {
-    if (!description) return 0;
+  export const scrape2024SecondaryGoldAward = (item) => {
+    // Extract awards using a regular expression
+    const awards = item.system?.description?.value?.match(/\[\[\/award (\d+)GP\]\]/g);
     
-    // Look for pattern ", X GP;" where X is a number
-    const match = description.match(/,\s*(\d+)\s*GP;/i);
-    if (match && match[1]) {
-      return parseInt(match[1]);
+    if (awards) {
+      const extractedAwards = awards.map(award => parseInt(award.match(/(\d+)GP/)[1], 10));
+      const max = Math.max(...extractedAwards);
+      const min = Math.min(...extractedAwards);
+      
+      return {max, min};
+    } else {
+      console.log('No awards found.');
+      return 0
     }
-    return 0;
+  }
+  
+  // @deprecated: not accurate.
+  // Function to extract gold value from description text
+  export function scrapeGoldFromBackground(background) {
+    // Look for pattern ", X GP;" where X is a number
+    // const match = background.system.description?.value.match(/,\s*(\d+)\s*GP;/i);
+    // Match all occurrences of digits followed by a space and 'GP'
+    const matches = background.system.description?.value.match(/(\d+)\s*GP/gi);
+    // Extract the number values as integers
+    const goldValues = matches ? matches.map(m => parseInt(m.match(/\d+/)[0], 10)) : [];
+    window.GAS.log.d("scrapeGoldFromBackground goldValues", goldValues);
+    if(goldValues) {
+      const max = Math.max(...goldValues);
+      const min = Math.min(...goldValues);
+      
+      return {max, min};
+    } else {
+      console.warn('No gold value found in description.');
+      return 0;
+    }
+
   }
 
   $: {
@@ -33,14 +59,14 @@
       // Gold only amount comes from system.wealth
       classGoldOnly = characterClass.system.wealth || 0;
       // With equipment amount comes from description
-      classGoldWithEquipment = extractGoldFromDescription(characterClass.system.description?.value) || 0;
+      classGoldWithEquipment = scrape2024SecondaryGoldAward(characterClass)?.min || 0
     }
     
     if (background) {
       // Gold only amount comes from system.wealth
       backgroundGoldOnly = background.system.wealth || 0;
       // With equipment amount comes from description
-      backgroundGoldWithEquipment = extractGoldFromDescription(background.system.description?.value) || 0;
+      backgroundGoldWithEquipment = scrapeGoldFromBackground(background)?.min || 0;
     }
   }
 
@@ -89,7 +115,7 @@ section.starting-gold
         span *
     .flex3
       h2.left
-        span {localize('GAS.Equipment.Gold')}
+        span {t('GAS.Equipment.Gold')}
     +if("showEditButton")
       .flex0.right
         IconButton.option(
@@ -113,7 +139,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span Equipment + {backgroundGoldWithEquipment} gp
+                span {t('GAS.Equipment.Label')} + {backgroundGoldWithEquipment} gp
           button.option(
             class!="{backgroundChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
@@ -139,7 +165,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span Equipment + {classGoldWithEquipment} gp
+                span {t('GAS.Equipment.Label')} + {classGoldWithEquipment} gp
           button.option(
             class!="{classChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
@@ -152,12 +178,15 @@ section.starting-gold
                 span {classGoldOnly} gp
     
     +if("classChoice && backgroundChoice")
-      .equipment-group
+      .equipment-group.final-gold
         .flexrow.left.result
-          .label
-            span Total Gold:
-          .value
-            span {totalGold} gp
+          .flex0.relative.icon
+            i.fas.fa-coins
+          .flex2.left
+            .label
+              span Total Gold:
+            .value
+              span {totalGold} gp
 </template>
 
 <style lang="sass">
@@ -187,6 +216,31 @@ section.starting-gold
   
   &:last-child
     margin-bottom: 0
+
+  &.final-gold
+    border: 1px solid var(--dnd5e-color-gold)
+    background: #000000
+    color: var(--dnd5e-color-gold)
+    
+    .icon
+      min-width: 32px
+      max-height: 32px
+      margin-right: 0.5rem
+      display: flex
+      align-items: center
+      justify-content: center
+      
+      i
+        color: var(--dnd5e-color-gold)
+        font-size: 1.2em
+    
+    .label
+      color: var(--dnd5e-color-gold)
+      margin-right: 0.5rem
+    
+    .value
+      color: var(--dnd5e-color-gold)
+      font-weight: bold
 
 .group-label
   display: block
@@ -259,15 +313,6 @@ section.starting-gold
 .name
   font-size: smaller
   line-height: 2rem
-
-.result
-  margin-top: 1rem
-  .label
-    color: var(--color-text-dark-secondary)
-    margin-right: 0.5rem
-  .value
-    color: var(--color-text-highlight)
-    font-weight: bold
 
 .mt-sm
   margin-top: 0.5rem
