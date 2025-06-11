@@ -7,7 +7,7 @@
   import { goldChoices } from "../../../../stores/goldChoices";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager"
-  import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
+  import { compatibleStartingEquipment, classStartingEquipment, backgroundStartingEquipment } from "~/src/stores/startingEquipment";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
@@ -53,7 +53,14 @@
               StartingGold(characterClass="{$characterClass}")
           +if("isGoldComplete")
             h3 {t('GAS.Equipment.Selection')}
-            StartingEquipment(startingEquipment="{$compatibleStartingEquipment}" proficiencies="{proficiencies}")
+            StartingEquipment(
+              startingEquipment="{$compatibleStartingEquipment}" 
+              classEquipment="{$classStartingEquipment}"
+              backgroundEquipment="{$backgroundStartingEquipment}"
+              characterClass="{$characterClass}"
+              background="{$background}"
+              proficiencies="{proficiencies}"
+            )
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         PlannedInventory
