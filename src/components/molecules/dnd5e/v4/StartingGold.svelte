@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "#runtime/svelte/helper";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
@@ -16,8 +16,24 @@
   let backgroundGoldOnly = 0;
   let backgroundGoldWithEquipment = 0;
 
+  export const scrape2024SecondaryGoldAward = (item) => {
+    // Extract awards using a regular expression
+    const awards = item.system?.description?.value?.match(/\[\[\/award (\d+)GP\]\]/g);
+    
+    if (awards) {
+      const extractedAwards = awards.map(award => parseInt(award.match(/(\d+)GP/)[1], 10));
+      const max = Math.max(...extractedAwards);
+      const min = Math.min(...extractedAwards);
+
+      return {max, min};
+    } else {
+      console.log('No awards found.');
+    }
+  }
+
+  // @deprecated: not accurate.
   // Function to extract gold value from description text
-  function extractGoldFromDescription(description) {
+  export function scrapeGoldFromBackground(description) {
     if (!description) return 0;
     
     // Look for pattern ", X GP;" where X is a number
@@ -33,14 +49,14 @@
       // Gold only amount comes from system.wealth
       classGoldOnly = characterClass.system.wealth || 0;
       // With equipment amount comes from description
-      classGoldWithEquipment = extractGoldFromDescription(characterClass.system.description?.value) || 0;
+      classGoldWithEquipment = scrape2024SecondaryGoldAward(characterClass)?.min || 0
     }
     
     if (background) {
       // Gold only amount comes from system.wealth
       backgroundGoldOnly = background.system.wealth || 0;
       // With equipment amount comes from description
-      backgroundGoldWithEquipment = extractGoldFromDescription(background.system.description?.value) || 0;
+      backgroundGoldWithEquipment = scrapeGoldFromBackground(background.system.description?.value) || 0;
     }
   }
 
@@ -89,7 +105,7 @@ section.starting-gold
         span *
     .flex3
       h2.left
-        span {localize('GAS.Equipment.Gold')}
+        span {t('GAS.Equipment.Gold')}
     +if("showEditButton")
       .flex0.right
         IconButton.option(
@@ -113,7 +129,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span Equipment + {backgroundGoldWithEquipment} gp
+                span {t('GAS.Equipment.Label')} + {backgroundGoldWithEquipment} gp
           button.option(
             class!="{backgroundChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
@@ -139,7 +155,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span Equipment + {classGoldWithEquipment} gp
+                span {t('GAS.Equipment.Label')} + {classGoldWithEquipment} gp
           button.option(
             class!="{classChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
