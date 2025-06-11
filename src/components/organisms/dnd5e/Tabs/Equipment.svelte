@@ -6,7 +6,7 @@
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
-  import { destroyAdvancementManagers } from "~/src/helpers/advancementManager";
+  import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager"
   import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
