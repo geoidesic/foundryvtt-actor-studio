@@ -13,6 +13,7 @@
   let loading = true;
   let cartItems = [];
   let keywordFilter = ''; // Add variable for keyword filter
+  let expandedCategories = {}; // Track which categories are expanded
 
   $: isDisabled = $readOnlyTabs.includes('shop');
 
@@ -132,6 +133,12 @@
 
   // Sort categories for consistent display order
   $: categories = Object.keys(categoryGroups).sort();
+
+  // Toggle category expansion
+  function toggleCategory(category) {
+    expandedCategories[category] = !expandedCategories[category];
+    expandedCategories = { ...expandedCategories }; // Trigger reactivity
+  }
 </script>
 
 <div class="shop-tab-container" class:disabled={isDisabled}>
@@ -199,24 +206,35 @@
       {:else}
         {#each categories as category}
           <div class="category">
-            <h4>{category}</h4>
-            <!-- Use categoryGroups which is derived from filteredItems -->
-            {#each categoryGroups[category] as item (item.uuid || item._id)} 
-              <div class="item-row">
-                <div class="item-details">
-                  <img src={item.img} alt={item.name} class="item-icon" />
-                  <span class="item-name">{getItemDisplayName(item)}</span>
-                </div>
-                <div class="item-actions">
-                  <span class="item-price">
-                    {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
-                  </span>
-                  <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
-                    <i class="fas fa-plus"></i>
-                  </button>
-                </div>
+            <h4 class="left mt-sm flexrow category-header pointer" on:click={() => toggleCategory(category)}>
+              <div class="flex0 mr-xs">
+                {#if expandedCategories[category]}
+                  <span>[-]</span>
+                {:else}
+                  <span>[+]</span>
+                {/if}
               </div>
-            {/each}
+              <div class="flex">{category}</div>
+            </h4>
+            {#if expandedCategories[category]}
+              <!-- Use categoryGroups which is derived from filteredItems -->
+              {#each categoryGroups[category] as item (item.uuid || item._id)} 
+                <div class="item-row">
+                  <div class="item-details">
+                    <img src={item.img} alt={item.name} class="item-icon" />
+                    <span class="item-name">{getItemDisplayName(item)}</span>
+                  </div>
+                  <div class="item-actions">
+                    <span class="item-price">
+                      {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
+                    </span>
+                    <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              {/each}
+            {/if}
           </div>
         {/each}
       {/if}
@@ -382,12 +400,13 @@
           background: none
 
   .category
-    margin-bottom: 1rem
-
     h4
-      margin-bottom: 0.5rem
-      padding-bottom: 0.25rem
+      color: var(--color-highlight)
+      font-size: 1rem
+      margin-bottom: 0.2rem
+      padding-bottom: 0.1rem
       border-bottom: 1px solid var(--color-border-light-highlight)
+      cursor: pointer
 
   .item-row
     display: flex
@@ -463,4 +482,9 @@
       opacity: 0.7
       cursor: not-allowed
       background: rgba(0, 0, 0, 0.02)
+
+  .toggle-icon
+    margin-left: 0.5rem
+    font-size: 0.8rem
+    color: var(--color-text-dark-secondary)
 </style>
