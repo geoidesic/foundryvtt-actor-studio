@@ -10,7 +10,7 @@
     getSubclassLevel,
     illuminatedDescription,
   } from "~/src/helpers/Utility.js";
-  import { getSecondaryGoldAward } from "~/src/lib/equipment";
+
 
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
@@ -26,7 +26,6 @@
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
-  import { minMaxGold2024 } from "~/src/stores/goldChoices";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
 
@@ -135,7 +134,7 @@
     const selectedClass = await fromUuid(option);
 
 
-    $minMaxGold2024 = getSecondaryGoldAward(selectedClass);
+
 
     $characterClass = selectedClass;
     selectedCharacterClass = option;

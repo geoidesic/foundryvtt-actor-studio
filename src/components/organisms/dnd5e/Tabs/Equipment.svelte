@@ -8,18 +8,15 @@
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { destroyAdvancementManagers } from "~/src/helpers/advancementManager";
   import { compatibleStartingEquipment } from "~/src/stores/startingEquipment";
-  import { getSecondaryGoldAward } from "~/src/lib/equipment";
   import { characterClass, characterSubClass, background } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
-  import { minMaxGold2024 } from "~/src/stores/goldChoices";
   
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
   import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";
   const doc = getContext("#doc");
 
-  const minMax2024Gold = getSecondaryGoldAward
   // Get equipment selection setting
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
@@ -36,7 +33,6 @@
   onMount(() => {
     if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
       destroyAdvancementManagers();
-      getSecondaryGoldAward($doc);
     }
   });
 
@@ -45,11 +41,10 @@
 <template lang="pug">
 .container
   .content
-    pre {$minMaxGold2024.min} {$minMaxGold2024.max}
     .flexrow
       .flex2.pr-sm.col-a
-        pre dnd5eVersion {typeof window.GAS.dnd5eVersion}
-        pre dnd5eRules {typeof window.GAS.dnd5eRules}
+        pre dnd5eVersion { window.GAS.dnd5eVersion}
+        pre dnd5eRules { window.GAS.dnd5eRules}
         h3 {t('GAS.Equipment.Selection')}
         section.equipment-flow
           +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
