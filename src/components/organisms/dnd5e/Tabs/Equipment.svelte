@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
@@ -37,7 +37,6 @@
     if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
       destroyAdvancementManagers();
       getSecondaryGoldAward($doc);
-
     }
   });
 
@@ -49,9 +48,11 @@
     pre {$minMaxGold2024.min} {$minMaxGold2024.max}
     .flexrow
       .flex2.pr-sm.col-a
-        h3 {localize('GAS.Equipment.Selection')}
+        pre dnd5eVersion {typeof window.GAS.dnd5eVersion}
+        pre dnd5eRules {typeof window.GAS.dnd5eRules}
+        h3 {t('GAS.Equipment.Selection')}
         section.equipment-flow
-          +if("window.GAS.dnd5eVersion === 4 && window.GAS.dnd5eRules === '2024'")
+          +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
             +else()
               StartingGold(characterClass="{$characterClass}")
