@@ -1,4 +1,4 @@
-import { LOG_PREFIX, MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
+import { LOG_PREFIX, MODULE_ID, MODULE_CODE, LOG_PREFIX_COLOR, LOG_STYLES} from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
 import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
@@ -32,6 +32,7 @@ export function dnd5eModCalc(score) {
   return Math.floor((score - 10) / 2);
 }
 
+
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,
   set level(level) {
@@ -41,6 +42,35 @@ export const log = {
     this.i = (level >= this.INFO) ? console.info.bind(window.console, LOG_PREFIX) : () => { };
     this.d = (level >= this.DEBUG) ? console.debug.bind(window.console, LOG_PREFIX) : () => { };
     this.v = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX) : () => { };
+
+    // Colorized log methods - short versions
+    this.p = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.p) : () => { };
+    this.g = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.g) : () => { };
+    this.r = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.r) : () => { };
+    this.o = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.o) : () => { };
+    this.b = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.b) : () => { };
+    this.y = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.y) : () => { };
+    this.c = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.c) : () => { };
+    this.m = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.m) : () => { };
+    this.gr = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.gr) : () => { };
+    this.br = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.br) : () => { };
+    this.pi = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.pi) : () => { };
+    this.t = (level >= this.VERBOSE) ? console.log.bind(window.console, LOG_PREFIX_COLOR, LOG_STYLES.t) : () => { };
+
+    // Colorized log methods - full name aliases
+    this.purple = this.p;
+    this.green = this.g;
+    this.red = this.r;
+    this.orange = this.o;
+    this.blue = this.b;
+    this.yellow = this.y;
+    this.cyan = this.c;
+    this.magenta = this.m;
+    this.gray = this.gr;
+    this.brown = this.br;
+    this.pink = this.pi;
+    this.teal = this.t;
+
     this.loggingLevel = level;
   },
   get level() { return this.loggingLevel; }

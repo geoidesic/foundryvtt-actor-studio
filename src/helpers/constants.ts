@@ -3,9 +3,25 @@
 export const MODULE_ID = 'foundryvtt-actor-studio';
 export const MODULE_CODE = 'GAS';
 export const MODULE_TITLE = 'Actor Studio';
-export const LOG_PREFIX = 'ACTOR STUDIO |';
 export const MYSTERY_MAN = 'icons/svg/mystery-man.svg';
 export const NONE_ICON = 'icons/svg/cancel.svg';
+export const LOG_PREFIX = 'ACTOR STUDIO |';
+export const LOG_PREFIX_COLOR = `%c[${MODULE_CODE}] |`;
+
+export const LOG_STYLES = {
+  p: 'color: purple;',
+  g: 'color: green;',
+  r: 'color: red;',
+  o: 'color: orange;',
+  b: 'color: blue;',
+  y: 'color: yellow;',
+  c: 'color: cyan;',
+  m: 'color: magenta;',
+  gr: 'color: gray;',
+  br: 'color: brown;',
+  pi: 'color: pink;',
+  t: 'color: teal;'
+};
 
 export const enum DEFAULT_PACKS {
   RACES = 'dnd5e.races',
