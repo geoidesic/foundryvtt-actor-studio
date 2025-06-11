@@ -14,7 +14,8 @@ window.GAS = {};
 export const init = (app, html, data) => {
 
   window.GAS.log = log;
-  log.level = log.DEBUG;
+  window.GAS.log.level = log.VERBOSE;
+  
   
   window.GAS.dnd5eVersion = getDnd5eVersion();
   window.GAS.dnd5eRules = getDndRulesVersion();
