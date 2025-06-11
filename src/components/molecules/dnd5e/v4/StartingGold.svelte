@@ -24,24 +24,34 @@
       const extractedAwards = awards.map(award => parseInt(award.match(/(\d+)GP/)[1], 10));
       const max = Math.max(...extractedAwards);
       const min = Math.min(...extractedAwards);
-
+      
       return {max, min};
     } else {
       console.log('No awards found.');
+      return 0
     }
   }
-
+  
   // @deprecated: not accurate.
   // Function to extract gold value from description text
-  export function scrapeGoldFromBackground(description) {
-    if (!description) return 0;
-    
+  export function scrapeGoldFromBackground(background) {
     // Look for pattern ", X GP;" where X is a number
-    const match = description.match(/,\s*(\d+)\s*GP;/i);
-    if (match && match[1]) {
-      return parseInt(match[1]);
+    // const match = background.system.description?.value.match(/,\s*(\d+)\s*GP;/i);
+    // Match all occurrences of digits followed by a space and 'GP'
+    const matches = background.system.description?.value.match(/(\d+)\s*GP/gi);
+    // Extract the number values as integers
+    const goldValues = matches ? matches.map(m => parseInt(m.match(/\d+/)[0], 10)) : [];
+    window.GAS.log.d("scrapeGoldFromBackground goldValues", goldValues);
+    if(goldValues) {
+      const max = Math.max(...goldValues);
+      const min = Math.min(...goldValues);
+      
+      return {max, min};
+    } else {
+      console.warn('No gold value found in description.');
+      return 0;
     }
-    return 0;
+
   }
 
   $: {
@@ -56,7 +66,7 @@
       // Gold only amount comes from system.wealth
       backgroundGoldOnly = background.system.wealth || 0;
       // With equipment amount comes from description
-      backgroundGoldWithEquipment = scrapeGoldFromBackground(background.system.description?.value) || 0;
+      backgroundGoldWithEquipment = scrapeGoldFromBackground(background)?.min || 0;
     }
   }
 
