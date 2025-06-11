@@ -210,7 +210,7 @@
   };
 
   // Derive whether equipment section is complete
-  $: isEquipmentComplete = window.GAS.dnd5eVersion === 4 
+  $: isEquipmentComplete = window.GAS.dnd5eVersion >= 4 
     ? ($progress === 100 && $areGoldChoicesComplete) 
     : ($progress === 100 && $goldRoll > 0);
   

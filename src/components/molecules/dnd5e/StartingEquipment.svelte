@@ -202,6 +202,7 @@
           .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
             .flexrow.justify-flexrow-vertical.no-wrap
               .flex3.left
+                //- pre group.type {group.type}
                 +if("group.type === 'choice'")
                   +if("group.completed")
                     span.group-label Completed:
@@ -216,12 +217,15 @@
                   )
             .options
               +if("group.type === 'standalone' && group.inProgress")
+                //- pre here 1 {group}
                 .equipment-group
                   .flexrow.justify-flexrow-vertical.no-wrap
                     .flex3.left
                       +if("!group.completed")
                         span.group-label All of the following:
                   +if("group.items[0].type === 'AND'")
+                    //- pre here 2
+
                     +each("group.items[0].children as item")
                       .equipment-item.option(
                         class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
@@ -233,6 +237,7 @@
                           .flex2.left.name.black-link
                             span {@html item.label}
                     +else()
+                      //- pre here 3
                       +each("group.items as item")
                         .equipment-item.option(
                           class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
@@ -244,6 +249,10 @@
                             .flex2.left.name.black-link
                               span {@html item.label}
                 +else()
+                  //- pre here 4 {group.type} {group.completed} {group.inProgress}
+                  .flex3.left
+                    +if("group.completed")
+                      span.group-label Pre-selected:
                   +each("group.items as item")
                     button.option(
                       class="{getOptionClasses(group, item)}"

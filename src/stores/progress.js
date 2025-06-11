@@ -153,7 +153,7 @@ const progressCalculators = {
     window.GAS.log.d("[PROGRESS] equipmentSelections", equipmentSelections);
     
     // Handle v4 gold choices
-    if (window.GAS.dnd5eVersion === 4  && window.GAS.dnd5eRules === "2024") {
+    if (window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024") {
       if (!areGoldChoicesComplete) return 0; // Choices not made
       if (groups.length === 0) return 100; // No equipment to select, but choices made
       
