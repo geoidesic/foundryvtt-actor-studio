@@ -178,12 +178,15 @@ section.starting-gold
                 span {classGoldOnly} gp
     
     +if("classChoice && backgroundChoice")
-      .equipment-group
+      .equipment-group.final-gold
         .flexrow.left.result
-          .label
-            span Total Gold:
-          .value
-            span {totalGold} gp
+          .flex0.relative.icon
+            i.fas.fa-coins
+          .flex2.left
+            .label
+              span Total Gold:
+            .value
+              span {totalGold} gp
 </template>
 
 <style lang="sass">
@@ -213,6 +216,31 @@ section.starting-gold
   
   &:last-child
     margin-bottom: 0
+
+  &.final-gold
+    border: 1px solid var(--dnd5e-color-gold)
+    background: #000000
+    color: var(--dnd5e-color-gold)
+    
+    .icon
+      min-width: 32px
+      max-height: 32px
+      margin-right: 0.5rem
+      display: flex
+      align-items: center
+      justify-content: center
+      
+      i
+        color: var(--dnd5e-color-gold)
+        font-size: 1.2em
+    
+    .label
+      color: var(--dnd5e-color-gold)
+      margin-right: 0.5rem
+    
+    .value
+      color: var(--dnd5e-color-gold)
+      font-weight: bold
 
 .group-label
   display: block
@@ -285,15 +313,6 @@ section.starting-gold
 .name
   font-size: smaller
   line-height: 2rem
-
-.result
-  margin-top: 1rem
-  .label
-    color: var(--color-text-dark-secondary)
-    margin-right: 0.5rem
-  .value
-    color: var(--color-text-highlight)
-    font-weight: bold
 
 .mt-sm
   margin-top: 0.5rem
