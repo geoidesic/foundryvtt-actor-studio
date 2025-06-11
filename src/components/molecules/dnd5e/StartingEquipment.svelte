@@ -419,25 +419,6 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1)
   padding-bottom: 0.5rem
 
-.equipment-source-section
-  margin-bottom: 1.5rem
-  padding: 0.75rem
-  border-radius: var(--border-radius)
-  background: rgba(0, 0, 0, 0.1)
-  border-left: 3px solid var(--dnd5e-color-gold)
-
-  &:last-child
-    margin-bottom: 0
-
-.source-header
-  font-size: 1.1em
-  font-weight: bold
-  margin-bottom: 0.75rem
-  color: var(--dnd5e-color-gold)
-  text-transform: capitalize
-  border-bottom: 1px solid rgba(181, 158, 84, 0.3)
-  padding-bottom: 0.25rem
-
 .equipment-group
   margin-bottom: 0.75rem
   margin-right: 0.2rem
