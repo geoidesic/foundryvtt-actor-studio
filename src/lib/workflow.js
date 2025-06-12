@@ -325,6 +325,7 @@ export async function handleFinalizePurchase({
     setProcessing(true);
   }
 
+
   if (!$actorInGame) {
     ui.notifications.error("No active character found");
     if (setProcessing) setProcessing(false);
@@ -343,9 +344,18 @@ export async function handleFinalizePurchase({
     return;
   }
 
+  window.GAS.log.d('[WORKFLOW] finalizePurchase', finalizePurchase);
   try {
-    const success = await get(finalizePurchase)($actorInGame);
+    var success = await finalizePurchase($actorInGame);
+    window.GAS.log.d('[WORKFLOW] Purchase finalized successfully:', success);
+  } catch (error) {
+    setProcessing(true);
+    console.trace();
+    console.error("Error during finalize purchase:", error);
+    ui.notifications.error("An error occurred during purchase.");
+  }
     
+  try {
     if (success) {
       ui.notifications.info("Purchase completed successfully");
       // Close the Actor Studio window after successful purchase
@@ -357,9 +367,10 @@ export async function handleFinalizePurchase({
       if (setProcessing) setProcessing(false);
     }
   } catch (error) {
-    console.error("Error during finalize purchase handling:", error);
-    ui.notifications.error("An error occurred during purchase.");
-    if (setProcessing) setProcessing(false);
+    setProcessing(true);
+    console.trace();
+    console.error("Error handling finalize purchase result:", error);
+    ui.notifications.error("An error occurred while processing the purchase result.");
   }
 }
 
