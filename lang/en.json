@@ -29,6 +29,7 @@
       "AddLevel": "Add Character Level",
       "AddEquipment": "Confirm",
       "FinalizePurchase": "Finalize Purchase",
+      "FinalizeSpells": "Finalize Spells",
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
       "UpdateCharacter": "Update Character"
@@ -322,6 +323,17 @@
       "ErrorRemoveFromCart": "Failed to remove item from cart",
       "FilterPlaceholder": "Search items in the shop by keyword",
       "NoMatchingEquipment": "No matching equipment was found."
+    },
+    "Spells": {
+      "CharacterLevel": "Character Level",
+      "MaxSpellLevel": "Max Spell Level",
+      "SelectedSpells": "Selected Spells",
+      "NoSpellsSelected": "No spells selected",
+      "AvailableSpells": "Available Spells",
+      "FilterPlaceholder": "Search spells by keyword",
+      "Loading": "Loading spells...",
+      "NoSpells": "No spells available. Please check your compendium sources in the module settings.",
+      "NoMatchingSpells": "No matching spells found."
     }
   }
 }

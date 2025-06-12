@@ -323,7 +323,7 @@
                         +else()
                           .flex3.left
                             +if("group.completed")
-                              span.group-label Pre-selected:
+                              span.group-label Selected:
                           +each("group.items as item")
                             button.option(
                               class="{getOptionClasses(group, item)}"
@@ -388,7 +388,7 @@
                     +else()
                       .flex3.left
                         +if("group.completed")
-                          span.group-label Pre-selected:
+                          span.group-label Selected:
                       +each("group.items as item")
                         button.option(
                           class="{getOptionClasses(group, item)}"

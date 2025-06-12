@@ -116,7 +116,7 @@ export class AdvancementManager {
         window.GAS.log.d('[ADVANCEMENT MANAGER] Equipment selection skipped - not viable');
       }
     }
-    Hooks.call("gas.close");
+    // Hooks.call("gas.close");
   }
 
   /**

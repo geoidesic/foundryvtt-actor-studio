@@ -6,6 +6,8 @@ export * from './storeDefinitions';
 
 import { advancementQueueStore } from "~/src/stores/advancements";
 import { clearGoldChoices } from "~/src/stores/goldChoices";
+// Import spell selection store to ensure it gets loaded
+import "~/src/stores/spellSelection";
 import { MODULE_ID } from "~/src/helpers/constants";
 import { getSubclassLevel } from '~/src/helpers/Utility';
 

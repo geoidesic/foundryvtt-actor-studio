@@ -9,7 +9,10 @@ export const LOG_PREFIX = 'ACTOR STUDIO |';
 export const LOG_PREFIX_COLOR = `%c[${MODULE_CODE}] |`;
 
 export const LOG_STYLES = {
+  go: 'color: goldenrod;',
+  q: 'color: aqua;',
   p: 'color: purple;',
+  s: 'color: steelblue;',
   g: 'color: green;',
   r: 'color: red;',
   o: 'color: orange;',

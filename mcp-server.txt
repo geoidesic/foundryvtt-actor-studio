@@ -1,0 +1,46 @@
+import { Server, Request, Response } from '@azure/mcp';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+const server = new Server();
+
+interface SettingParams {
+  name: string;
+  type: string;
+  scope: 'global' | 'workspace';
+}
+
+server.register('AddFoundrySetting', async (req: Request<SettingParams>): Promise<Response> => {
+  const { name, type, scope } = req.params;
+
+  // Validate inputs
+  if (!name || !type || !scope) {
+    return { success: false, message: 'Missing required parameters: name, type, scope' };
+  }
+
+  try {
+    // Paths to files
+    const settingsPath = path.join(process.cwd(), 'settings/index.ts');
+    const translationPath = path.join(process.cwd(), 'locales/en.json');
+
+    // Read and update settings/index.ts
+    let settingsContent = await fs.readFile(settingsPath, 'utf-8');
+    const exportLine = `export const ${name} = { name: "${name}", type: "${type}", scope: "${scope}" };`;
+    const invokeLine = `invokeSetting("${name}");`;
+    
+    // Append export and invocation (simplified, assumes invokeSetting exists)
+    settingsContent += `\n${exportLine}\n${invokeLine}\n`;
+    await fs.writeFile(settingsPath, settingsContent);
+
+    // Read and update en.json
+    const translationContent = JSON.parse(await fs.readFile(translationPath, 'utf-8'));
+    translationContent[`settings.${name}`] = `Description for ${name}`;
+    await fs.writeFile(translationPath, JSON.stringify(translationContent, null, 2));
+
+    return { success: true, message: `Setting ${name} added successfully` };
+  } catch (error) {
+    return { success: false, message: `Error: ${error.message}` };
+  }
+});
+
+server.listen();
