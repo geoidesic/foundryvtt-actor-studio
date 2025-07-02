@@ -36,7 +36,8 @@
           .flex2
             img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
           .flex3
-            p.thanks Thank you for using Actor Studio!
+            p.thanks.right.mr-md {localize('Welcome.Thanks')}
+        hr
         h1 {localize("Welcome.IntroductionTitle")}
         p {localize("Welcome.Introduction")}
         a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {localize("Welcome.UsageTitle")}
@@ -47,17 +48,25 @@
           i.fa-solid.fa-heart.mr-sm(style="color: #660000;")
           | {localize('Welcome.Support')} <a href='https://github.com/sponsors/geoidesic'> {localize('Welcome.SponsorLinkText')} </a> or <a href='https://https://paypal.me/geoidesic'>PayPal</a>
         
-        p 
+        p
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
           | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
-      .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
-        .flex0 
-          input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
-        .flex.dont-show
-          span {localize('Setting.DontShowWelcome.Name') }
+        hr
+        h3.flexrow
+          .flex0
+            i.fa-solid.fa-face-awesome.mr-sm
+          .flex1 
+            h3 New Final Fantasy Foundry system – 4th July!
+        a.flexrow(href="https://www.youtube.com/live/BceTqsITzek")
+          img(src="https://i.ytimg.com/vi/BceTqsITzek/maxresdefault.jpg")
+        .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
+          .flex0 
+            input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
+          .flex.dont-show
+            span {localize('Setting.DontShowWelcome.Name') }
     footer
       div.right.bg-green
-        a(href="https://www.aardvark.games")
+        a(href="https://www.aardvark.games") 
           img.white(src="/modules/foundryvtt-actor-studio/assets/aardvark-logo.webp" alt="Aardvark Game Studios Logo" height="50" width="50" style="fill: white; border: none; width: auto;")
       div.left
         div {localize("Title")} {localize("Welcome.CreatedBy")} 
@@ -82,6 +91,7 @@
   p.thanks
     font-size: 1.2em
     font-weight: bold
+    color: #416dbe
 
   footer
     border-top: 8px ridge var(--border-shadow)
@@ -105,5 +115,9 @@
       &:hover
         color: #ccc
 
-  
+  h3
+    color: purple
+    text-decoration: none
+    border: none
+
 </style>

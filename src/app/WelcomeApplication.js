@@ -22,7 +22,7 @@ export default class WelcomeApplication extends SvelteApplication
          resizable: true,
          minimizable: true,
          width: 500,
-         height: 450,
+         height: 770,
          headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
          title: game.i18n.localize('GAS.ActorStudio')+' v'+version,
          svelte: {

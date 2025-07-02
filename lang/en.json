@@ -77,7 +77,8 @@
       "IssuesLinkText": "GitHub Issues",
       "PayPalLinkText": "PayPal",
       "JoinDiscord": "Join the",
-      "DiscordLinkText": "Actor Studio Discord server"
+      "DiscordLinkText": "Actor Studio Discord server",
+      "Thanks": "Thank you for using Actor Studio!"
     },
     "Setting": {
       "World": "World Settings",
