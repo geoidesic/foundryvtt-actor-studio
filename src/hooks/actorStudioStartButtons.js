@@ -130,21 +130,8 @@ export const renderActorDirectory = (app) => {
       if ($('#gas-sidebar-button').length) return;
       const $gasButton = getActorStudioButton('gas-sidebar-button');
       $(app._element).find('header.directory-header').append($gasButton);
-      $gasButton.on('mousedown', Hooks.call('gas.openActorStudio', game.user.name));
-      $gasButton.on('keydown', Hooks.call('gas.openActorStudio', game.user.name));
-    }
-  } else {
-    if(game.version > 13) {
-      if (!game.modules.get(MODULE_ID)?.active) return;
-      // Add Actor Studio button to the sidebar
-      if (app.constructor.name === "ActorDirectory") {
-        if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
-        if ($('#gas-sidebar-button').length) return;
-        const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
-        $(app.element).find('header.directory-header .header-actions').after($gasButton);
-        $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-        $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-      }
+      $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
+      $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
     }
   }
 }
