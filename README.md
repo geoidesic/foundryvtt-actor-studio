@@ -1,4 +1,4 @@
-# foundryvtt-actor-studio
+# [foundryvtt-actor-studio](https://foundryvtt.com/packages/foundryvtt-actor-studio)
 A FoundryVTT module for creating Actors. Join the community on [Discord](https://discord.gg/sQgVnSGRUj).
 
 ## New feature donations
