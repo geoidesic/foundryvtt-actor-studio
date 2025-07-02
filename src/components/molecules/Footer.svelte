@@ -291,8 +291,24 @@
   let selectedFontFamily;
   let inputClass;
 
-  // Function to randomize font and colors
+  // Check if experimental styling is enabled
+  $: experimentalStylingEnabled = game.settings.get(MODULE_ID, 'experimentalCharacterNameStyling');
+  
+  // Clean up experimental styles when disabled
+  $: if (!experimentalStylingEnabled) {
+    // Reset CSS custom properties
+    document.documentElement.style.removeProperty('--random-font-family');
+    document.documentElement.style.removeProperty('--background-color1');
+    document.documentElement.style.removeProperty('--background-color2');
+    document.documentElement.style.removeProperty('--sign-color1');
+    document.documentElement.style.removeProperty('--sign-color2');
+    inputClass = '';
+  }
+
+  // Function to randomize font and colors (only if experimental styling is enabled)
   function randomize() {
+    if (!experimentalStylingEnabled) return;
+    
     // Randomly select a font family
     selectedFontFamily = fontFamilies[Math.floor(Math.random() * fontFamilies.length)];
     document.documentElement.style.setProperty('--random-font-family', selectedFontFamily);
@@ -316,31 +332,34 @@
   }
 
   onMount(() => {
-    const signs = document.querySelectorAll('.x-sign')
-    const backgrounds = document.querySelectorAll('.x-background')
-    const randomIn = (min, max) => (
-      Math.floor(Math.random() * (max - min + 1) + min)
-    )
+    // Only apply experimental animations if enabled
+    if (experimentalStylingEnabled) {
+      const signs = document.querySelectorAll('.x-sign')
+      const backgrounds = document.querySelectorAll('.x-background')
+      const randomIn = (min, max) => (
+        Math.floor(Math.random() * (max - min + 1) + min)
+      )
 
-    const mixupInterval = (el, val1, val2) => {
-      const ms = randomIn(val1, val2)
-      el.style.setProperty('--interval', `${ms}ms`)
-    }
+      const mixupInterval = (el, val1, val2) => {
+        const ms = randomIn(val1, val2)
+        el.style.setProperty('--interval', `${ms}ms`)
+      }
 
-    signs.forEach(el => {
-      mixupInterval(el, 2000, 3000)
-      el.addEventListener('webkitAnimationIteration', () => {
+      signs.forEach(el => {
         mixupInterval(el, 2000, 3000)
+        el.addEventListener('webkitAnimationIteration', () => {
+          mixupInterval(el, 2000, 3000)
+        })
       })
-    })
-    // backgrounds.forEach(el => {
-    //   mixupInterval(el, 10000, 10001)
-    //   el.addEventListener('webkitAnimationIteration', () => {
-    //     mixupInterval(el, 10000, 10001)
-    //   })
-    // })
+      // backgrounds.forEach(el => {
+      //   mixupInterval(el, 10000, 10001)
+      //   el.addEventListener('webkitAnimationIteration', () => {
+      //     mixupInterval(el, 10000, 10001)
+      //   })
+      // })
 
-    randomize(); // Call randomize on mount
+      randomize(); // Call randomize on mount
+    }
   });
 </script>
 
@@ -354,10 +373,21 @@
           .flexcol
             .flexrow.gap-10
               .flex0.right.mt-xs.no-wrap.ml-md
-                label.character-name-label(on:click="{randomize}") {localize('Footer.CharacterName')}
+                label.character-name-label(
+                  on:click="{randomize}" 
+                  class:experimental-label="{experimentalStylingEnabled}"
+                ) {localize('Footer.CharacterName')}
               .flex2
-                .x-background.character-name-input-container(class="{inputClass}")
-                  input.left.x-sign.character-name-input(type="text" value="{value}" on:input="{handleNameInput}")
+                .character-name-input-container(
+                  class:x-background="{experimentalStylingEnabled}"
+                  class="{inputClass}"
+                )
+                  input.left.character-name-input(
+                    class:x-sign="{experimentalStylingEnabled}"
+                    type="text" 
+                    value="{value}" 
+                    on:input="{handleNameInput}"
+                  )
       
       //- Progress and buttons section
       .flex1
@@ -450,15 +480,17 @@ button[disabled]
 .character-name-input-container
   height: 51px
   padding: 1rem 1rem 1rem 1rem
-  background: rgba(1, 1, 1, 0.1)
   font-size: xx-large
   font-family: var(--dnd5e-font-modesto)
   border: 1px solid #ccc
   border-radius: 5px
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
   display: flex
   align-items: center
   justify-content: flex-start
+  
+  // Default non-experimental styling
+  background: rgba(1, 1, 1, 0.1)
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
 
 .character-name-input
   border: none
@@ -467,9 +499,21 @@ button[disabled]
   line-height: normal
   padding: 0
   margin: 0
+  color: inherit
+  font-family: inherit
+  
   &:focus
     outline: none
     box-shadow: none
+  
+  // Experimental styling (when x-sign class is applied)
+  &.x-sign
+    text-shadow: 0 0 10px var(--sign-color1), 0 0 20px var(--sign-color2)
+    will-change: filter, color
+    filter: saturate(30%)
+    animation: flicker steps(100) var(--interval) 1s infinite
+    color: white
+    font-family: var(--random-font-family)
 .character-name-label
   cursor: pointer
   font-size: 1.2rem
@@ -478,21 +522,17 @@ button[disabled]
   vertical-align: top
   line-height: 0.6rem
   white-space: break-spaces
-  color: var(--color-highlight)
+  
+  &.experimental-label
+    color: var(--color-highlight)
 
 .x-background
   --interval: 13s
-  background: linear-gradient(to right, var(--background-color1), var(--background-color2))
+  background: linear-gradient(to right, var(--background-color1), var(--background-color2)) !important
 
 .x-sign
   --interval: 1s
   display: block
-  text-shadow: 0 0 10px var(--sign-color1), 0 0 20px var(--sign-color2)
-  will-change: filter, color
-  filter: saturate(30%)
-  animation: flicker steps(100) var(--interval) 1s infinite
-  color: white
-  font-family: var(--random-font-family)
 
 .lowered
   padding: 1.5rem 1rem 1rem 1rem

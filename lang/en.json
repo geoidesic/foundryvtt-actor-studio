@@ -279,6 +279,10 @@
         "Name": "Enable Equipment Purchase",
         "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums."
       },
+      "ExperimentalCharacterNameStyling": {
+        "Name": "Experimental Character Name Styling",
+        "Hint": "Enable experimental animated character name styling with random colors and fonts. This is an experimental feature that adds visual flair to the character name input."
+      },
       "AllowAbilityRollScoresToBeMoved": {
         "Name": "Allow rolled ability scores to be moved",
         "Hint": "If enabled, rolled abilities can be moved; similar to how Standard Array works."
