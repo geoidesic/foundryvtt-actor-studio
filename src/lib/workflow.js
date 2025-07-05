@@ -226,23 +226,23 @@ export async function handleAddEquipment({
   const $flattenedSelections = get(flattenedSelections);
   
   if ($actorInGame) {
-    // Add all items that have a count > 0
-    for (const [key, data] of Object.entries($flattenedSelections)) {
-      if (data.count > 0) {
-        const item = await fromUuid(data.key);
+    // flattenedSelections is an array, not an object
+    // Iterate over the array of selections
+    for (const selection of $flattenedSelections) {
+      if (selection.key) {
+        const item = await fromUuid(selection.key);
         if (item) {
           window.GAS.log.d('WORKFLOW | Pre-modification item:', {
-            uuid: data.key,
-            intendedQuantity: data.count,
-            currentQuantity: item.system.quantity,
+            uuid: selection.key,
+            type: selection.type,
             item
           });
 
           // Create a copy of the item data
           const itemData = foundry.utils.deepClone(item);
-          itemData.updateSource({ 
-            "system.quantity": data.count
-          });
+          // Keep the original quantity from the item
+          // The quantity is already handled in the flattened selections
+          // (i.e., if count > 1, there will be multiple entries in the array)
 
           await dropItemOnCharacter($actorInGame, itemData);
         }
