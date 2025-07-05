@@ -17,15 +17,15 @@ const pulseKeyframes = `
 export function dnd5eSheet2UI(app, html, data) {
 
   const actor = data.actor;
-  console.log('dnd5eSheet2UI actor', actor);
+  // console.log('dnd5eSheet2UI actor', actor);
 
 
   const sheetheader = html.find('.sheet-header');
   const buttons = sheetheader.find('.sheet-header-buttons')
   const classes = window.GAS.dnd5eVersion >= 5 ? actor.classes : actor._classes;
 
-  console.log('window.GAS.dnd5eVersion', window.GAS.dnd5eVersion)
-  console.log('actor._classes', classes);
+  // console.log('window.GAS.dnd5eVersion', window.GAS.dnd5eVersion)
+  // console.log('actor._classes', classes);
   if (!Object.keys(classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
 
   buttons.css('gap', '0.35rem');

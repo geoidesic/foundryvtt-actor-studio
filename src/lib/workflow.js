@@ -226,26 +226,27 @@ export async function handleAddEquipment({
   const $flattenedSelections = get(flattenedSelections);
   
   if ($actorInGame) {
-    // flattenedSelections is an array, not an object
-    // Iterate over the array of selections
+    // Count occurrences of each item by UUID
+    const itemCounts = new Map();
+    
+    // Count how many times each item appears in selections
     for (const selection of $flattenedSelections) {
       if (selection.key) {
-        const item = await fromUuid(selection.key);
-        if (item) {
-          window.GAS.log.d('WORKFLOW | Pre-modification item:', {
-            uuid: selection.key,
-            type: selection.type,
-            item
-          });
+        const count = itemCounts.get(selection.key) || 0;
+        itemCounts.set(selection.key, count + 1);
+      }
+    }
 
-          // Create a copy of the item data
-          const itemData = foundry.utils.deepClone(item);
-          // Keep the original quantity from the item
-          // The quantity is already handled in the flattened selections
-          // (i.e., if count > 1, there will be multiple entries in the array)
-
-          await dropItemOnCharacter($actorInGame, itemData);
-        }
+    // Process each unique item with its total quantity
+    for (const [uuid, quantity] of itemCounts.entries()) {
+      // Use fromDropData to create a properly formatted item for dropping
+      const item = await fromUuid(uuid)
+      if (item) {
+        // Create a copy of the item data and set the quantity
+        item.system.quantity = quantity;
+        const data = game.items.fromCompendium(item);
+        data.system.quantity = quantity;
+        await Item.create(data, { parent: $actorInGame })
       }
     }
 
