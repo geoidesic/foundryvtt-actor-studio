@@ -333,9 +333,18 @@ export async function handleFinalizePurchase({
   }
 
   if ($cartTotalCost === 0) {
-    ui.notifications.warn("Cart is empty");
-    if (setProcessing) setProcessing(false);
-    return;
+    const confirmed = await Dialog.confirm({
+      title: "Empty Cart",
+      content: "Your cart is empty. Do you want to continue without purchasing any equipment?",
+      yes: () => true,
+      no: () => false,
+      defaultYes: true,
+    });
+
+    if (!confirmed) {
+      if (setProcessing) setProcessing(false);
+      return;
+    }
   }
 
   if ($remainingGold < 0) {
