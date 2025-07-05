@@ -28,10 +28,12 @@ fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 4), 'utf-8');
 // Build the project (now with the correct version in package.json)
 execSync('yarn build', { stdio: 'inherit' });
 
-// Update module.json with the new version
+// Update module.json with the new version and URLs
 const moduleJsonPath = 'module.json';
 const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf-8'));
 moduleJson.version = newVersion;
+moduleJson.manifest = `https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/${newVersion}/module.json`;
+moduleJson.download = `https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/${newVersion}/module.zip`;
 fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4), 'utf-8');
 
 // Commit the build and version changes
