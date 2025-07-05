@@ -112,7 +112,7 @@
 
   // Sort groups by their sort value
   $: sortedGroups = Object.values($equipmentSelections)
-    // .sort((a, b) => (a.sort || 0) - (b.sort || 0));
+    .sort((a, b) => (a.sort || 0) - (b.sort || 0));
 
 
   // Group items by type for specialized handling
@@ -228,6 +228,16 @@
     if (group.selectedItemId === item._id) classes.push('selected');
     if (isOptionDisabled(group, item)) classes.push('disabled');
     if (group.completed) classes.push('completed');
+    if (group.inProgress && !isOptionDisabled(group, item)) classes.push('in-progress');
+    return classes.join(' ');
+  }
+
+  function getEquipmentItemClasses(group, item, disabled) {
+    const classes = [];
+    if (item.type === 'linked') classes.push('selected');
+    if (item.type === 'focus') classes.push('focus');
+    if (disabled) classes.push('disabled');
+    if (group.inProgress && item.type !== 'linked') classes.push('in-progress');
     return classes.join(' ');
   }
 
@@ -254,6 +264,16 @@
       return false;
     });
   }
+  function matchingGroupsForSource(sourceGroup) {
+    if (!sourceGroup || !sourceGroup.equipment) return [];
+    return sortedGroups.filter(
+      g =>
+        (g.completed || g.inProgress) &&
+        isGroupFromSource(g, sourceGroup.equipment) &&
+        Array.isArray(g.items) &&
+        g.items.length > 0
+    );
+  }
 
 </script>
 
@@ -270,13 +290,14 @@
       +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024' && equipmentBySource.length > 1")
         +each("equipmentBySource as sourceGroup")
           +if("sourceGroup.equipment?.length")
-            .equipment-source-section
-              h3.source-header {sourceGroup.label} Equipment
-              
+            .equipment-source-section.ml-md
+              h3.source-header.left {sourceGroup.label} Equipment
+              +if("!matchingGroupsForSource(sourceGroup).length") 
+                p.left None selected
               //- Process each group within this source
               +each("sortedGroups as group")
                 +if("(group.completed || group.inProgress) && isGroupFromSource(group, sourceGroup.equipment)")
-                  .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+                  .equipment-group
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex3.left
                         +if("group.type === 'choice'")
@@ -301,7 +322,7 @@
                           +if("group.items[0].type === 'AND'")
                             +each("group.items[0].children as item")
                               .equipment-item.option(
-                                class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                                class="{getEquipmentItemClasses(group, item, disabled)}"
                                 on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
                               )
                                 .flexrow.justify-flexrow-vertical.no-wrap
@@ -312,7 +333,7 @@
                             +else()
                               +each("group.items as item")
                                 .equipment-item.option(
-                                  class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                                  class="{getEquipmentItemClasses(group, item, disabled)}"
                                   on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
                                 )
                                   .flexrow.justify-flexrow-vertical.no-wrap
@@ -323,7 +344,10 @@
                         +else()
                           .flex3.left
                             +if("group.completed")
-                              span.group-label Pre-selected:
+                              +if("group.items?.length > 0")
+                                span.group-label Pre-selected:
+                              +else()
+                                span.group-label None selected
                           +each("group.items as item")
                             button.option(
                               class="{getOptionClasses(group, item)}"
@@ -341,7 +365,7 @@
           //- Fallback for single source or non-2024 rules
           +each("sortedGroups as group")
             +if("group.completed || group.inProgress")
-              .equipment-group(class="{group.inProgress ? 'in-progress' : ''}")
+              .equipment-group
                 .flexrow.justify-flexrow-vertical.no-wrap
                   .flex3.left
                     +if("group.type === 'choice'")
@@ -366,7 +390,7 @@
                       +if("group.items[0].type === 'AND'")
                         +each("group.items[0].children as item")
                           .equipment-item.option(
-                            class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                            class="{getEquipmentItemClasses(group, item, disabled)}"
                             on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
                           )
                             .flexrow.justify-flexrow-vertical.no-wrap
@@ -377,7 +401,7 @@
                         +else()
                           +each("group.items as item")
                             .equipment-item.option(
-                              class="{item.type === 'linked' ? 'selected' : ''} {item.type === 'focus' ? 'focus' : ''} {disabled ? 'disabled' : ''}"
+                              class="{getEquipmentItemClasses(group, item, disabled)}"
                               on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
                             )
                               .flexrow.justify-flexrow-vertical.no-wrap
@@ -388,7 +412,10 @@
                     +else()
                       .flex3.left
                         +if("group.completed")
-                          span.group-label Pre-selected:
+                          +if("group.items?.length > 0")
+                            span.group-label Pre-selected:
+                          +else()
+                            span.group-label None selected
                       +each("group.items as item")
                         button.option(
                           class="{getOptionClasses(group, item)}"
@@ -469,6 +496,10 @@
       box-shadow: 0 0 10px rgba(181, 158, 84, 0.2)
       background: rgba(0, 90, 0, 0.4)
 
+    &.in-progress
+      box-shadow: 0px 0px 10px var(--color-highlight)
+      border: 1px solid var(--dnd5e-color-gold)
+
 
     &.completed
       cursor: auto
@@ -489,6 +520,10 @@
   
   &.focus
     border-left: 3px solid var(--color-text-highlight)
+
+  &.in-progress
+    box-shadow: 0px 0px 10px var(--color-highlight)
+    border: 1px solid var(--dnd5e-color-gold)
 
 
 .icon

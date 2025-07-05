@@ -52,7 +52,6 @@
             +else()
               StartingGold(characterClass="{$characterClass}")
           +if("isGoldComplete")
-            h3 {t('GAS.Equipment.Selection')}
             StartingEquipment(
               startingEquipment="{$compatibleStartingEquipment}" 
               classEquipment="{$classStartingEquipment}"
