@@ -31,10 +31,31 @@ export function getRequiredSelectionsCount(item) {
 
 export function getEquipmentItemClasses(group, item, disabled) {
   const classes = [];
-  if (item.type === 'linked') classes.push('selected');
+  
+  // Add 'selected' class for linked items OR if the group is completed
+  if (item.type === 'linked' || group.completed) {
+    classes.push('selected');
+  }
+  
   if (item.type === 'focus') classes.push('focus');
   if (disabled) classes.push('disabled');
   if (group.inProgress && item.type !== 'linked') classes.push('in-progress');
+  
+  // Debug logging for musical instrument item
+  if (item.type === 'tool') {
+    window.GAS.log.d('[getEquipmentItemClasses] Tool item classes:', {
+      itemId: item._id,
+      itemType: item.type,
+      itemLabel: item.label,
+      groupId: group.id,
+      groupCompleted: group.completed,
+      groupInProgress: group.inProgress,
+      finalClasses: classes,
+      hasGranularSelections: !!group.granularSelections,
+      granularSelections: group.granularSelections
+    });
+  }
+  
   return classes.join(' ');
 }
 
@@ -458,11 +479,7 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
 // Add granular selection for special types
 export function addGranularSelection(groupId, uuid) {
   equipmentSelections.update(selections => {
-    window.GAS.log.d('[EquipSelect STORE] addGranularSelection selections', selections);
     const group = selections[groupId];
-    window.GAS.log.d('[EquipSelect STORE] addGranularSelection groupId', groupId);
-    window.GAS.log.d('[EquipSelect STORE] addGranularSelection group', group);
-
     if (!group?.selectedItem) return selections;
 
     // Initialize granularSelections if it doesn't exist
@@ -482,7 +499,7 @@ export function addGranularSelection(groupId, uuid) {
       !g.completed && g.id !== groupId
     ) : null;
 
-    const result = {
+    return {
       ...selections,
       [groupId]: {
         ...group,
@@ -497,9 +514,6 @@ export function addGranularSelection(groupId, uuid) {
         }
       } : {})
     };
-
-    window.GAS.log.d('[EquipSelect STORE] addGranularSelection result', result);
-    return result;
   });
 }
 

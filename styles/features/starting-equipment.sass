@@ -51,7 +51,8 @@
     transition: all 0.2s ease
 
   .option
-    cursor: pointer
+    &:not(&.selected)
+      cursor: pointer
     
     &:hover:not(.disabled, .selected, .completed)
       background: rgba(0, 0, 0, 0.6)
@@ -66,19 +67,15 @@
       box-shadow: 0px 0px 10px var(--color-highlight)
       border: 1px solid var(--dnd5e-color-gold)
 
-
-    &.completed
-      cursor: auto
-      &:hover
-        box-shadow: none
-
+    &.completed,
     &.disabled
-      cursor: auto
-      &:not(.completed)
-        opacity: 0.7
-
+      cursor: auto !important
+      
       &:hover
         box-shadow: none
+
+    &.disabled:not(.completed)
+      opacity: 0.7
     
 
 .equipment-item
