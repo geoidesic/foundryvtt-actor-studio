@@ -79,65 +79,45 @@
   })();
 
   let previousGroupId = null;
-  window.GAS.log.d("StartingEquipment startingEquipment", startingEquipment);
+  
+  // Reactive statement to initialize groups when equipment data changes
+  $: {
     startingEquipment.forEach((entry, index) => {
-    window.GAS.log.d(`[DEBUG] Processing entry ${index}:`, {
-      id: entry._id,
-      type: entry.type,
-      group: entry.group,
-      label: entry.label,
-      sort: entry.sort,
-      entry: entry
-    });
 
-    // For each entry in startingEquipment, process based on its type
+        // For each entry in startingEquipment, process based on its type
+    // Only process OR entries that are at the top level (no parent group)
     if (entry.type === "OR") {
-      // Find all children belonging to this OR group
-      const children = startingEquipment.filter(
-        (item) => item.group === entry._id,
-      );
-
-      window.GAS.log.d(`[DEBUG] OR group ${entry._id} has ${children.length} children:`, children);
-
-      // If there's only one child in this OR group, treat it as a standalone entry
-      if (children.length === 1) {
-        const singleChild = children[0];
-        window.GAS.log.d(`[DEBUG] Creating standalone group for single child:`, {
-          groupId: entry._id,
-          childLabel: singleChild.label,
-          entryLabel: entry.label,
-          child: singleChild
-        });
-        
-        initializeGroup(entry._id, {
-          type: "standalone",
-          label: singleChild.label || entry.label,
-          items: [singleChild],
-          sort: entry.sort,
-        });
+      if (entry.group) {
+        // Skip OR entries that belong to a parent group
       } else {
-        // Normal OR group with multiple choices: initialize as a choice group
-        window.GAS.log.d(`[DEBUG] Creating choice group for multiple children:`, {
-          groupId: entry._id,
-          childrenCount: children.length
-        });
         
-        initializeGroup(entry._id, {
-          type: "choice",
-          label: "Choose one...",
-          items: children,
-          sort: entry.sort,
-        });
+        // Find all children belonging to this OR group
+        const children = startingEquipment.filter(
+          (item) => item.group === entry._id,
+        );
+
+        // If there's only one child in this OR group, treat it as a standalone entry
+        if (children.length === 1) {
+          const singleChild = children[0];
+          initializeGroup(entry._id, {
+            type: "standalone",
+            label: singleChild.label || entry.label,
+            items: [singleChild],
+            sort: entry.sort,
+          });
+        } else if (children.length > 1) {
+          // Normal OR group with multiple choices: initialize as a choice group
+          initializeGroup(entry._id, {
+            type: "choice",
+            label: "Choose one...",
+            items: children,
+            sort: entry.sort,
+          });
+        }
+        // Update previousGroupId to the current OR group's id for the next iteration
+        previousGroupId = entry._id;
       }
-      // Update previousGroupId to the current OR group's id for the next iteration
-      previousGroupId = entry._id;
     } else if (!entry.group) {
-      window.GAS.log.d(`[DEBUG] Creating standalone entry:`, {
-        id: entry._id,
-        label: entry.label,
-        entry: entry
-      });
-      
       // Standalone entry (not part of a group): initialize as its own group
       initializeGroup(entry._id || "standalone", {
         type: "standalone",
@@ -147,36 +127,16 @@
       });
       // Update previousGroupId to this standalone's id
       previousGroupId = entry._id || "standalone";
-    } else {
-      window.GAS.log.d(`[DEBUG] Skipping entry (part of group):`, {
-        id: entry._id,
-        group: entry.group,
-        type: entry.type,
-        label: entry.label
-      });
     }
   });
+  }
 
   // Sort groups by their sort value
   $: sortedGroups = Object.values($equipmentSelections).sort(
     (a, b) => (a.sort || 0) - (b.sort || 0),
   );
 
-  $: {
-    window.GAS.log.d(`[DEBUG] Final sortedGroups:`, sortedGroups);
-    sortedGroups.forEach((group, index) => {
-      window.GAS.log.d(`[DEBUG] Group ${index}:`, {
-        id: group.id,
-        type: group.type,
-        label: group.label,
-        sort: group.sort,
-        completed: group.completed,
-        inProgress: group.inProgress,
-        itemCount: group.items?.length,
-        items: group.items
-      });
-    });
-  }
+
 
   // Group items by type for specialized handling
   $: groupedByType = sortedGroups.reduce((acc, group) => {

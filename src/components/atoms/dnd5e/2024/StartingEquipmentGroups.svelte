@@ -36,7 +36,7 @@ div
                       icon="fas fa-pencil"
                     )
               .options
-                +if("group.type === 'standalone' && group.inProgress")
+                +if("group.type === 'standalone'")
                   .equipment-group
                     .flexrow.justify-flexrow-vertical.no-wrap
                       .flex3.left

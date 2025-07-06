@@ -656,22 +656,11 @@ export function removeGranularSelection(groupId, uuid, childId = null) {
  */
 // Helper function to flatten single-child OR groups
 function flattenSingleChildORs(items) {
-  return items.map(item => {
-    window.GAS.log.d('[FLATTEN] Processing item:', {
-      type: item.type,
-      _id: item._id,
-      hasChildren: !!item.children,
-      childrenCount: item.children?.length
-    });
+  const result = items.map(item => {
     
     if (item.type === 'OR' && item.children && Array.isArray(item.children) && item.children.length === 1) {
       // Flatten single-child OR - return the child instead
       const child = item.children[0];
-      window.GAS.log.d('[FLATTEN] Found single-child OR, child:', {
-        childType: child?.type,
-        childId: child?._id,
-        originalId: item._id
-      });
       
       // Only flatten if the child is valid
       if (child && typeof child === 'object') {
@@ -679,46 +668,56 @@ function flattenSingleChildORs(items) {
           ...child,
           // Preserve the original OR's _id if child doesn't have one
           _id: child._id || item._id,
+          // Use the child's label, or fallback to the OR's label if child has no label
+          label: child.label || item.label,
+          // IMPORTANT: Preserve the OR's group, not the child's group
+          // This ensures the flattened item stays in the correct parent group
+          group: item.group,
           // If the child is an AND, flatten its children too
           children: child.children ? flattenSingleChildORs(child.children) : undefined
         };
-        window.GAS.log.d('[FLATTEN] Flattened result:', flattened);
+        
         return flattened;
       }
     }
     
     if (item.type === 'AND' && item.children) {
       // Recursively flatten children in AND groups
-      return {
+      const processed = {
         ...item,
         children: flattenSingleChildORs(item.children)
       };
+      
+      return processed;
     }
     
     return item;
   });
+  
+  return result;
 }
 
 export function initializeGroup(groupId, groupData) {
-  window.GAS.log.d('initializeGroup', groupId, groupData);
   equipmentSelections.update(selections => {
     // Flatten single-child OR groups before processing
-    const ENABLE_FLATTENING = false; // Set to false to disable flattening for debugging
+    const ENABLE_FLATTENING = true; // Enable to fix single-child OR display
+    
     const flattenedGroupData = ENABLE_FLATTENING ? {
       ...groupData,
       items: flattenSingleChildORs(groupData.items)
     } : groupData;
     
-
+    // Force re-initialization when flattening is enabled to apply the flattening
+    const needsInitialization = !selections[groupId] || 
+      ENABLE_FLATTENING ||
+      JSON.stringify(selections[groupId].items) !== JSON.stringify(flattenedGroupData.items);
     
     // Only initialize if group doesn't exist or its items have changed
-    if (!selections[groupId] ||
-      JSON.stringify(selections[groupId].items) !== JSON.stringify(flattenedGroupData.items)) {
-
-      // Check if any existing group is in progress or incomplete
-      // This is used to determine if the new group should be marked as inProgress
-      const hasGroupInProgress = Object.values(selections).some(group =>
-        !group.completed || group.inProgress
+    if (needsInitialization) {
+      // Check if any existing CHOICE group is in progress
+      // Standalone groups can all be in progress simultaneously, but only one choice group at a time
+      const hasChoiceGroupInProgress = Object.values(selections).some(group =>
+        group.type === 'choice' && (!group.completed || group.inProgress)
       );
 
       // For standalone groups, check if all items are fixed (type 'linked')
@@ -746,9 +745,20 @@ export function initializeGroup(groupId, groupData) {
           .sort((a, b) => (a.sort || 0) - (b.sort || 0))
           .find(g => !g.completed) : null;
 
+      // Determine if this group should be in progress
+      let shouldBeInProgress;
+      if (isAutoComplete) {
+        shouldBeInProgress = false; // Auto-complete groups are not in progress
+      } else if (flattenedGroupData.type === 'standalone') {
+        shouldBeInProgress = true; // Standalone groups are always in progress (visible)
+      } else if (flattenedGroupData.type === 'choice') {
+        shouldBeInProgress = !hasChoiceGroupInProgress; // Only one choice group in progress at a time
+      } else {
+        shouldBeInProgress = false; // Default fallback
+      }
+
       // Return the updated selections object, initializing or updating this group
       // If auto-complete, set selectedItem and mark as completed
-      // If not, set inProgress if no other group is in progress
       // If auto-complete, also set the next group as inProgress
       return {
         ...selections,
@@ -758,7 +768,7 @@ export function initializeGroup(groupId, groupData) {
           selectedItemId: isAutoComplete ? flattenedGroupData.items[0]._id : null,
           selectedItem: isAutoComplete ? flattenedGroupData.items[0] : null,
           completed: isAutoComplete,
-          inProgress: !isAutoComplete && !hasGroupInProgress,
+          inProgress: shouldBeInProgress,
           granularSelections: null
         },
         ...(nextGroup && isAutoComplete ? {
@@ -823,14 +833,42 @@ export function editGroup(groupId) {
 export function isGroupFromSource(group, sourceEquipment) {
   if (!group?.items?.length || !sourceEquipment?.length) return false;
 
+  window.GAS.log.d(`[isGroupFromSource] Checking group ${group.id}:`, {
+    groupItems: group.items.map(item => ({
+      id: item._id,
+      type: item.type,
+      hasChildren: !!item.children?.length,
+      childrenCount: item.children?.length || 0
+    })),
+    sourceEquipment: sourceEquipment.map(item => ({
+      id: item._id,
+      type: item.type,
+      group: item.group
+    }))
+  });
+
   // Check if any of the group's items match items from the source equipment
-  return group.items.some((groupItem) =>
-    sourceEquipment.some(
+  const matches = group.items.some((groupItem) => {
+    // If this is an AND/OR item, check its children
+    if (groupItem.type === 'AND' || groupItem.type === 'OR') {
+      return groupItem.children?.some(child => 
+        sourceEquipment.some(sourceItem => 
+          child._id === sourceItem._id ||
+          (child.group && sourceItem._id === child.group)
+        )
+      );
+    }
+    
+    // For direct items, check as before
+    return sourceEquipment.some(
       (sourceItem) =>
         groupItem._id === sourceItem._id ||
         (groupItem.group && sourceItem._id === groupItem.group),
-    ),
-  );
+    );
+  });
+
+  window.GAS.log.d(`[isGroupFromSource] Result for group ${group.id}:`, matches);
+  return matches;
 }
 
 export function isGroupNonEditable(group) {
