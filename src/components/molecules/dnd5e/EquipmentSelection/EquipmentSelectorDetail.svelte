@@ -244,9 +244,9 @@ section
           +if("group.parentGroup")
             IconSelect.mb-md.icon-select(
               options="{equipmentByType[group.selectedItem.type] || []}"
-              active="{group.parentGroup.granularSelections?.children?.[group.selectedItem._id]?.selections?.[0]}"
+              active="{group.parentGroup.granularSelections?.children?.[group.id === group.parentGroup.id ? group.selectedItem._id : group.id]?.selections?.[0]}"
               placeHolder="Select {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.selectedItem._id, group.parentGroup)}"
+              handler="{createSelectionHandler(group.id === group.parentGroup.id ? group.selectedItem._id : group.id, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
           +if("!group.parentGroup")

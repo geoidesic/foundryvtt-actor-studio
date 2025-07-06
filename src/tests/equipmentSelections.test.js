@@ -235,6 +235,28 @@ describe('Equipment Selections - Granular Selection', () => {
       expect(finalState[bardGroupId].completed).toBe(true);
       expect(finalState[bardGroupId].inProgress).toBe(false);
     });
+
+    it('should distinguish between monk choice groups and bard/artisan tool items for child ID logic', () => {
+      // Test the logic used in EquipmentSelectorDetail for determining child ID
+      
+      // Case 1: Monk-style choice group (group.id !== group.parentGroup.id)
+      const monkParentGroup = {id: 'parentAND123', type: 'standalone'};
+      const monkChoiceGroup = {id: 'choiceOR456', selectedItem: {_id: 'tool1'}, parentGroup: monkParentGroup};
+      
+      // For monk: should use group.id as child ID
+      const monkChildId = monkChoiceGroup.id === monkChoiceGroup.parentGroup.id ? 
+        monkChoiceGroup.selectedItem._id : monkChoiceGroup.id;
+      expect(monkChildId).toBe('choiceOR456'); // choice group ID
+      
+      // Case 2: Bard-style tool item (group.id === group.parentGroup.id after flatMap)
+      const bardParentGroup = {id: 'bardAND789', type: 'standalone'};
+      const bardToolGroup = {id: 'bardAND789', selectedItem: {_id: 'toolItem999'}, parentGroup: bardParentGroup};
+      
+      // For bard: should use group.selectedItem._id as child ID
+      const bardChildId = bardToolGroup.id === bardToolGroup.parentGroup.id ? 
+        bardToolGroup.selectedItem._id : bardToolGroup.id;
+      expect(bardChildId).toBe('toolItem999'); // tool item ID
+    });
   });
 
   describe('addChildGranularSelection', () => {
