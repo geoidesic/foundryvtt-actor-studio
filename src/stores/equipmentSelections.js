@@ -41,21 +41,6 @@ export function getEquipmentItemClasses(group, item, disabled) {
   if (disabled) classes.push('disabled');
   if (group.inProgress && item.type !== 'linked') classes.push('in-progress');
   
-  // Debug logging for musical instrument item
-  if (item.type === 'tool') {
-    window.GAS.log.d('[getEquipmentItemClasses] Tool item classes:', {
-      itemId: item._id,
-      itemType: item.type,
-      itemLabel: item.label,
-      groupId: group.id,
-      groupCompleted: group.completed,
-      groupInProgress: group.inProgress,
-      finalClasses: classes,
-      hasGranularSelections: !!group.granularSelections,
-      granularSelections: group.granularSelections
-    });
-  }
-  
   return classes.join(' ');
 }
 
@@ -716,14 +701,15 @@ export function initializeGroup(groupId, groupData) {
     // Flatten single-child OR groups before processing
     const ENABLE_FLATTENING = true; // Enable to fix single-child OR display
     
-    const flattenedGroupData = ENABLE_FLATTENING ? {
+    // Only apply flattening to standalone groups, not choice groups
+    const flattenedGroupData = (ENABLE_FLATTENING && groupData.type === 'standalone') ? {
       ...groupData,
       items: flattenSingleChildORs(groupData.items)
     } : groupData;
     
-    // Force re-initialization when flattening is enabled to apply the flattening
+    // Force re-initialization when flattening is enabled to apply the flattening (only for standalone groups)
     const needsInitialization = !selections[groupId] || 
-      ENABLE_FLATTENING ||
+      (ENABLE_FLATTENING && groupData.type === 'standalone') ||
       JSON.stringify(selections[groupId].items) !== JSON.stringify(flattenedGroupData.items);
     
     // Only initialize if group doesn't exist or its items have changed
