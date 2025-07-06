@@ -71,10 +71,9 @@ div
                         +else()
                           span.group-label None selected
                     +each("group.items as item")
-                      button.option(
+                      .equipment-item.option(
                         class="{getOptionClasses(disabled, group, item)}"
                         on:click!="{handleSelection(disabled, group.id, item)}"
-                        disabled="{isOptionDisabled(disabled,group, item)}"
                       )
                         .flexrow.justify-flexrow-vertical.no-wrap
                           .flex0.relative.icon
