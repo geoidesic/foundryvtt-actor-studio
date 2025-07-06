@@ -1,4 +1,3 @@
-# Create new file
 <script>
   import { localize } from "#runtime/svelte/helper";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";

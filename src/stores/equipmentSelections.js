@@ -61,12 +61,39 @@ export function isOptionDisabled(disabled, group, item) {
 export function handleSelection(disabled, groupId, item) {
   const selections = get(equipmentSelections);
 
+  window.GAS.log.d('[handleSelection] Entry', {
+    groupId,
+    itemType: item?.type,
+    itemLabel: item?.label,
+    groupType: selections[groupId]?.type,
+    isChoiceGroup: selections[groupId]?.type === 'choice'
+  });
+
+  if (disabled || !item) {
+    return;
+  }
+
+  // Handle choice groups
+  if (selections[groupId]?.type === 'choice') {
+    window.GAS.log.d('[handleSelection] Processing choice group selection', {
+      groupId,
+      selectedItemType: item.type,
+      selectedItemLabel: item.label,
+      isToolType: item.type === 'tool'
+    });
+    
+    selectEquipment(groupId, item._id);
+    return;
+  }
+
   window.GAS.log.d('[StartingEquipment] handleSelection ENTRY', {
     groupId,
     itemDetails: {
       id: item?._id,
       type: item?.type,
-      label: item?.label
+      label: item?.label,
+      key: item?.key,
+      fullItem: item
     },
     groupState: {
       type: selections[groupId]?.type,
@@ -76,21 +103,35 @@ export function handleSelection(disabled, groupId, item) {
       items: selections[groupId]?.items?.map(i => ({
         id: i._id,
         type: i.type,
+        key: i.key,
+        label: i.label,
         isAND: i.type === 'AND'
       }))
-    }
+    },
+    disabled,
+    isToolType: item?.type === 'tool'
   });
 
-  if (disabled) return;
+  if (disabled) {
+    window.GAS.log.d('[StartingEquipment] Selection disabled, returning early');
+    return;
+  }
 
   const group = selections[groupId];
+
+  if (!group) {
+    window.GAS.log.d('[StartingEquipment] No group found for groupId:', groupId);
+    return;
+  }
 
   window.GAS.log.d('[StartingEquipment] Group evaluation', {
     isStandalone: group?.type === 'standalone',
     hasItems: !!group?.items?.length,
     firstItemType: group?.items?.[0]?.type,
     isFirstItemAND: group?.items?.[0]?.type === 'AND',
-    isChoiceGroup: group?.type === 'choice'
+    isChoiceGroup: group?.type === 'choice',
+    selectedItemType: item?.type,
+    willCallSelectEquipment: true
   });
 
   // For standalone groups with AND items
@@ -114,11 +155,17 @@ export function handleSelection(disabled, groupId, item) {
       groupId,
       selectedItemId: item._id,
       selectedItemType: item.type,
+      selectedItemKey: item.key,
+      selectedItemLabel: item.label,
       isSelectedItemAND: item.type === 'AND',
+      isSelectedItemTool: item.type === 'tool',
       groupItems: group.items.map(i => ({
         id: i._id,
-        type: i.type
-      }))
+        type: i.type,
+        key: i.key,
+        label: i.label
+      })),
+      aboutToCallSelectEquipment: true
     });
     selectEquipment(groupId, item._id);
   }
@@ -169,7 +216,10 @@ export function selectEquipment(groupId, itemId) {
       window.GAS.log.d('SELECT EQUIPMENT | Granular type selection', {
         type: selectedItem.type,
         groupId,
-        itemId
+        itemId,
+        groupType: group.type,
+        isChoiceGroup: group.type === 'choice',
+        willStayInProgress: true
       });
 
       return {
@@ -218,7 +268,17 @@ export function selectEquipment(groupId, itemId) {
             ...nextGroup,
             inProgress: true
           }
-        } : {})
+        } : {}),
+        // When completing an AND group, also activate any OR choice groups that depend on it
+        ...(!hasGranularChildren ? Object.values(state).reduce((acc, otherGroup) => {
+          if (otherGroup.type === 'choice' && otherGroup.parentGroup === groupId) {
+            acc[otherGroup.id] = {
+              ...otherGroup,
+              inProgress: true
+            };
+          }
+          return acc;
+        }, {}) : {})
       };
     }
 
@@ -404,14 +464,24 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
       // For choice groups with a selected item
       if (group.selectedItem) {
         if (GRANULAR_TYPES.includes(group.selectedItem.type)) {
-          if (group.granularSelections?.self?.length) {
-            group.granularSelections.self.forEach(uuid => {
-              selections.push({
-                type: group.selectedItem.type,
-                key: uuid
-              });
-            });
+          let granularSelections = [];
+          
+          // Check if this group has a parentGroup (child choice group)
+          if (group.parentGroup) {
+            // Look up granular selections from the parent group
+            const parentGroup = $equipmentSelections[group.parentGroup];
+            granularSelections = parentGroup?.granularSelections?.children?.[group.id]?.selections || [];
+          } else {
+            // Look up granular selections from the group itself
+            granularSelections = group.granularSelections?.self || [];
           }
+          
+          granularSelections.forEach(uuid => {
+            selections.push({
+              type: group.selectedItem.type,
+              key: uuid
+            });
+          });
         } else if (group.selectedItem.type === 'linked') {
           const count = group.selectedItem.count || 1;
           for (let i = 0; i < count; i++) {
@@ -476,6 +546,14 @@ export function addGranularSelection(groupId, uuid) {
     };
 
     const isComplete = updatedSelections.self.length >= getRequiredSelectionsCount(group.selectedItem);
+
+    window.GAS.log.d('[addGranularSelection] Adding granular selection', {
+      groupId,
+      uuid,
+      groupType: group.type,
+      requiredCount: getRequiredSelectionsCount(group.selectedItem),
+      isComplete
+    });
 
     // Find next group if complete
     const sortedGroups = Object.values(selections)
@@ -612,28 +690,26 @@ export function addChildGranularSelection(groupId, childId, uuid) {
 export function removeGranularSelection(groupId, uuid, childId = null) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    if (!group?.selectedItem) return selections;
+    if (!group) return selections;
 
-    let updatedSelections;
+    let updatedSelections = { ...group.granularSelections };
+
     if (childId) {
       // Remove from child selections
-      updatedSelections = {
-        ...group.granularSelections,
-        children: {
-          ...group.granularSelections.children,
-          [childId]: {
-            ...group.granularSelections.children[childId],
-            selections: group.granularSelections.children[childId].selections.filter(id => id !== uuid)
-          }
-        }
+      updatedSelections.children = {
+        ...updatedSelections.children,
+        [childId]: (updatedSelections.children?.[childId] || []).filter(id => id !== uuid)
       };
     } else {
       // Remove from self selections
-      updatedSelections = {
-        ...group.granularSelections,
-        self: (group.granularSelections.self || []).filter(id => id !== uuid)
-      };
+      updatedSelections.self = (updatedSelections.self || []).filter(id => id !== uuid);
     }
+
+    window.GAS.log.d('[removeGranularSelection] Removing granular selection', {
+      groupId,
+      uuid,
+      groupType: group.type
+    });
 
     return {
       ...selections,
@@ -752,7 +828,13 @@ export function initializeGroup(groupId, groupData) {
       } else if (flattenedGroupData.type === 'standalone') {
         shouldBeInProgress = true; // Standalone groups are always in progress (visible)
       } else if (flattenedGroupData.type === 'choice') {
-        shouldBeInProgress = !hasChoiceGroupInProgress; // Only one choice group in progress at a time
+        // Choice groups with a parent should only be in progress if their parent is completed
+        if (flattenedGroupData.parentGroup) {
+          const parentGroup = selections[flattenedGroupData.parentGroup];
+          shouldBeInProgress = parentGroup && parentGroup.completed && !hasChoiceGroupInProgress;
+        } else {
+          shouldBeInProgress = !hasChoiceGroupInProgress; // Only one choice group in progress at a time
+        }
       } else {
         shouldBeInProgress = false; // Default fallback
       }
@@ -806,6 +888,11 @@ export function setGroupInProgress(groupId) {
 
 export function editGroup(groupId) {
   equipmentSelections.update(selections => {
+    window.GAS.log.d('[editGroup] Editing group', {
+      groupId,
+      groupType: selections[groupId]?.type
+    });
+
     // First, set all groups to not in progress
     const updatedSelections = Object.entries(selections).reduce((acc, [id, group]) => ({
       ...acc,

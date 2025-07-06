@@ -117,6 +117,69 @@
         // Update previousGroupId to the current OR group's id for the next iteration
         previousGroupId = entry._id;
       }
+    } else if (entry.type === "AND" && !entry.group) {
+      // Process top-level AND groups - find all children and build the group
+      const children = startingEquipment.filter(
+        (item) => item.group === entry._id,
+      );
+
+      // Separate OR children from regular children
+      const orChildren = children.filter(child => child.type === "OR");
+      const regularChildren = children.filter(child => child.type !== "OR");
+
+      window.GAS.log.d('[StartingEquipment] Processing AND group', {
+        andEntryId: entry._id,
+        childrenCount: children.length,
+        orChildrenCount: orChildren.length,
+        regularChildrenCount: regularChildren.length
+      });
+
+      // Create choice groups for each OR child
+      orChildren.forEach(orChild => {
+        const orGrandchildren = startingEquipment.filter(
+          (item) => item.group === orChild._id,
+        );
+        
+        if (orGrandchildren.length > 1) {
+          // Create a separate choice group for this OR
+          initializeGroup(orChild._id, {
+            type: "choice",
+            label: orChild.label || "Choose one...",
+            items: orGrandchildren,
+            sort: orChild.sort || entry.sort, // Use OR's sort or fallback to AND's sort
+            parentGroup: entry._id // Track that this belongs to the AND group
+          });
+          
+          window.GAS.log.d('[StartingEquipment] Created choice group for OR', {
+            orChildId: orChild._id,
+            orChildLabel: orChild.label,
+            orGrandchildrenCount: orGrandchildren.length,
+            parentGroupId: entry._id,
+            parentGroupLabel: entry.label
+          });
+        }
+      });
+
+      // Build the AND item with ALL children (including OR items for display)
+      // The OR items won't be interactive but will show what choice needs to be made
+      const andItemWithChildren = {
+        ...entry,
+        children: children // Keep all children for display
+      };
+
+      window.GAS.log.d('[StartingEquipment] Final AND item with all children', {
+        andItemId: entry._id,
+        totalChildrenCount: children.length
+      });
+
+      initializeGroup(entry._id, {
+        type: "standalone",
+        label: entry.label,
+        items: [andItemWithChildren],
+        sort: entry.sort,
+      });
+      
+      previousGroupId = entry._id;
     } else if (!entry.group) {
       // Standalone entry (not part of a group): initialize as its own group
       initializeGroup(entry._id || "standalone", {

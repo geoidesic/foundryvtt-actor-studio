@@ -65,11 +65,6 @@ div
                               .flex2.left.name.black-link
                                 span {@html item.label}
                   +else()
-                    .flex3.left
-                      +if("group.completed")
-                        +if("group.items?.length > 0")
-                        +else()
-                          span.group-label None selected
                     +each("group.items as item")
                       .equipment-item.option(
                         class="{getOptionClasses(disabled, group, item)}"
