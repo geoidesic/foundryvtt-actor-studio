@@ -2,7 +2,7 @@
     "description": "Easily create Heroes, Villains and everything in between.",
     "license": "MIT",
     "private": false,
-    "version": "1.10.5",
+    "version": "1.10.6",
     "type": "module",
     "debug": false,
     "authors": [
@@ -25,10 +25,10 @@
     },
     "devDependencies": {
         "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
-        "@typescript-eslint/eslint-plugin": "^7.8.0",
-        "@typescript-eslint/parser": "^7.8.0",
         "@sveltejs/vite-plugin-svelte": "^3.1.1",
         "@testing-library/svelte": "^4.0.5",
+        "@typescript-eslint/eslint-plugin": "^7.8.0",
+        "@typescript-eslint/parser": "^7.8.0",
         "@vitest/ui": "^1.6.0",
         "eslint": "^9.2.0",
         "html2pug": "^4.0.0",
