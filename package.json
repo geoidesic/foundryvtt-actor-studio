@@ -27,14 +27,19 @@
         "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
         "@typescript-eslint/eslint-plugin": "^7.8.0",
         "@typescript-eslint/parser": "^7.8.0",
+        "@sveltejs/vite-plugin-svelte": "^3.1.1",
+        "@testing-library/svelte": "^4.0.5",
+        "@vitest/ui": "^1.6.0",
         "eslint": "^9.2.0",
         "html2pug": "^4.0.0",
+        "jsdom": "^24.1.0",
         "prettier": "^3.2.5",
         "pug": "^3.0.2",
         "pug-cli": "^1.0.0-alpha6",
         "svelte-preprocess": "^5.1.4",
         "typescript": "^5.4.5",
-        "vite": "^5.2.11"
+        "vite": "^5.2.11",
+        "vitest": "^1.6.0"
     },
     "browserslist": [
         ">5%",
@@ -44,7 +49,10 @@
         "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
         "build": "vite build",
         "eslint": "eslint .",
-        "release": "node release.js"
+        "release": "node release.js",
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:run": "vitest run"
     },
     "svelte": {
         "preprocess": "svelte-preprocess"
