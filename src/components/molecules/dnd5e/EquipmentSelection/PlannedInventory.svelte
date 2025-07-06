@@ -8,7 +8,7 @@ let plannedItems = [];
 // Track the raw selections
 $: rawSelections = $flattenedSelections || [];
 
-$: window.GAS.log.d('PLANNED INVENTORY | flattenedSelections', $flattenedSelections);
+// $: window.GAS.log.d('PLANNED INVENTORY | flattenedSelections', $flattenedSelections);
 
 // Handle async updates when selections change and group identical items
 $: {
@@ -46,7 +46,7 @@ $: {
 }
 
 function getItemName(item) {
-  window.GAS.log.d('PLANNED INVENTORY | getItemName', item);
+  // window.GAS.log.d('PLANNED INVENTORY | getItemName', item);
   return `@UUID[${item?.uuid}]{${item?.name}}`
 }
 

@@ -12,6 +12,9 @@
     getOptionClasses,
     handleSelection,
     isOptionDisabled,
+    matchingGroupsForSource,
+    isGroupFromSource,
+    isGroupNonEditable,
   } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
@@ -45,7 +48,7 @@
     $equipmentSelections,
   );
 
-  // Group equipment by source for 2024 rules
+  // Group equipment by source for 2024 rules - main grouping function
   $: equipmentBySource = (() => {
     if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules !== "2024") {
       // For non-2024 rules, just return equipment without source grouping
@@ -75,68 +78,105 @@
     return groups;
   })();
 
-  // Process and group equipment
-  $: {
-    if (startingEquipment?.length) {
-      startingEquipment
-        // @deprecated: this breaks the order of the items for v4 in the flattenedStartingEquipment store
-        // .sort((a, b) => {
-        //   // First sort by whether it's a standalone entry (not OR and no group)
-        //   if (a.type !== 'OR' && !a.group && (b.type === 'OR' || b.group)) return -1;
-        //   if (b.type !== 'OR' && !b.group && (a.type === 'OR' || a.group)) return 1;
-        //   // Then by sort value
-        // })
-        .forEach((entry) => {
-          // window.GAS.log.d("StartingEquipment entry", entry);
-          if (entry.type === "OR") {
-            const children = startingEquipment.filter(
-              (item) => item.group === entry._id,
-            );
+  let previousGroupId = null;
+  window.GAS.log.d("StartingEquipment startingEquipment", startingEquipment);
+    startingEquipment.forEach((entry, index) => {
+    window.GAS.log.d(`[DEBUG] Processing entry ${index}:`, {
+      id: entry._id,
+      type: entry.type,
+      group: entry.group,
+      label: entry.label,
+      sort: entry.sort,
+      entry: entry
+    });
 
-            // If there's only one child in this OR group, treat it as a standalone entry
-            if (children.length === 1) {
-              const singleChild = children[0];
-              window.GAS.log.d(
-                "StartingEquipment flattening single-child OR group",
-                {
-                  orGroupId: entry._id,
-                  childType: singleChild.type,
-                  childLabel: singleChild.label,
-                },
-              );
+    // For each entry in startingEquipment, process based on its type
+    if (entry.type === "OR") {
+      // Find all children belonging to this OR group
+      const children = startingEquipment.filter(
+        (item) => item.group === entry._id,
+      );
 
-              // Initialize as standalone instead of choice
-              initializeGroup(entry._id, {
-                type: "standalone",
-                label: singleChild.label || entry.label,
-                items: [singleChild],
-                sort: entry.sort,
-              });
-            } else {
-              // Normal OR group with multiple choices
-              initializeGroup(entry._id, {
-                type: "choice",
-                label: "Choose one...",
-                items: children,
-                sort: entry.sort,
-              });
-            }
-          } else if (!entry.group) {
-            initializeGroup(entry._id || "standalone", {
-              type: "standalone",
-              label: entry.label,
-              items: [entry],
-              sort: entry.sort,
-            });
-          }
+      window.GAS.log.d(`[DEBUG] OR group ${entry._id} has ${children.length} children:`, children);
+
+      // If there's only one child in this OR group, treat it as a standalone entry
+      if (children.length === 1) {
+        const singleChild = children[0];
+        window.GAS.log.d(`[DEBUG] Creating standalone group for single child:`, {
+          groupId: entry._id,
+          childLabel: singleChild.label,
+          entryLabel: entry.label,
+          child: singleChild
         });
+        
+        initializeGroup(entry._id, {
+          type: "standalone",
+          label: singleChild.label || entry.label,
+          items: [singleChild],
+          sort: entry.sort,
+        });
+      } else {
+        // Normal OR group with multiple choices: initialize as a choice group
+        window.GAS.log.d(`[DEBUG] Creating choice group for multiple children:`, {
+          groupId: entry._id,
+          childrenCount: children.length
+        });
+        
+        initializeGroup(entry._id, {
+          type: "choice",
+          label: "Choose one...",
+          items: children,
+          sort: entry.sort,
+        });
+      }
+      // Update previousGroupId to the current OR group's id for the next iteration
+      previousGroupId = entry._id;
+    } else if (!entry.group) {
+      window.GAS.log.d(`[DEBUG] Creating standalone entry:`, {
+        id: entry._id,
+        label: entry.label,
+        entry: entry
+      });
+      
+      // Standalone entry (not part of a group): initialize as its own group
+      initializeGroup(entry._id || "standalone", {
+        type: "standalone",
+        label: entry.label,
+        items: [entry],
+        sort: entry.sort,
+      });
+      // Update previousGroupId to this standalone's id
+      previousGroupId = entry._id || "standalone";
+    } else {
+      window.GAS.log.d(`[DEBUG] Skipping entry (part of group):`, {
+        id: entry._id,
+        group: entry.group,
+        type: entry.type,
+        label: entry.label
+      });
     }
-  }
+  });
 
   // Sort groups by their sort value
   $: sortedGroups = Object.values($equipmentSelections).sort(
     (a, b) => (a.sort || 0) - (b.sort || 0),
   );
+
+  $: {
+    window.GAS.log.d(`[DEBUG] Final sortedGroups:`, sortedGroups);
+    sortedGroups.forEach((group, index) => {
+      window.GAS.log.d(`[DEBUG] Group ${index}:`, {
+        id: group.id,
+        type: group.type,
+        label: group.label,
+        sort: group.sort,
+        completed: group.completed,
+        inProgress: group.inProgress,
+        itemCount: group.items?.length,
+        items: group.items
+      });
+    });
+  }
 
   // Group items by type for specialized handling
   $: groupedByType = sortedGroups.reduce((acc, group) => {
@@ -175,43 +215,6 @@
     // window.GAS.log.d("StartingEquipment", startingEquipment);
   });
 
-  // Helper function to check if a group belongs to a specific equipment source
-  function isGroupFromSource(group, sourceEquipment) {
-    if (!group?.items?.length || !sourceEquipment?.length) return false;
-
-    // Check if any of the group's items match items from the source equipment
-    return group.items.some((groupItem) =>
-      sourceEquipment.some(
-        (sourceItem) =>
-          groupItem._id === sourceItem._id ||
-          (groupItem.group && sourceItem._id === groupItem.group),
-      ),
-    );
-  }
-
-  function isGroupNonEditable(group) {
-    // Check if it's a standalone group and all items are linked type
-    return (
-      group.type === "standalone" &&
-      group.items.every((item) => {
-        if (item.type === "linked") return true;
-        if (item.type === "AND") {
-          return item.children.every((child) => child.type === "linked");
-        }
-        return false;
-      })
-    );
-  }
-  function matchingGroupsForSource(sourceGroup) {
-    if (!sourceGroup || !sourceGroup.equipment) return [];
-    return sortedGroups.filter(
-      (g) =>
-        (g.completed || g.inProgress) &&
-        isGroupFromSource(g, sourceGroup.equipment) &&
-        Array.isArray(g.items) &&
-        g.items.length > 0,
-    );
-  }
 </script>
 
 <template lang="pug">
@@ -228,9 +231,6 @@
         StartingEquipmentGroups2024(
           equipmentBySource="{equipmentBySource}"
           sortedGroups="{sortedGroups}"
-          matchingGroupsForSource="{matchingGroupsForSource}"
-          isGroupFromSource="{isGroupFromSource}"
-          isGroupNonEditable="{isGroupNonEditable}"
           handleEditGroup="{handleEditGroup}"
           disabled="{disabled}"
           selectedItems="{selectedItems}"
@@ -240,9 +240,6 @@
           StartingEquipmentGroups2014(
             equipmentBySource="{equipmentBySource}"
             sortedGroups="{sortedGroups}"
-            matchingGroupsForSource="{matchingGroupsForSource}"
-            isGroupFromSource="{isGroupFromSource}"
-            isGroupNonEditable="{isGroupNonEditable}"
             handleEditGroup="{handleEditGroup}"
             disabled="{disabled}"
             selectedItems="{selectedItems}"

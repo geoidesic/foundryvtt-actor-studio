@@ -52,7 +52,7 @@ export function isOptionDisabled(disabled, group, item) {
 }
 
 
-export function handleSelection(groupId, item) {
+export function handleSelection(disabled, groupId, item) {
   const selections = get(equipmentSelections);
 
   window.GAS.log.d('[StartingEquipment] handleSelection ENTRY', {
@@ -648,40 +648,115 @@ export function removeGranularSelection(groupId, uuid, childId = null) {
   });
 }
 
+/**
+ * Initializes or updates a group in the equipmentSelections store.
+ *
+ * @param {string} groupId - The unique identifier for the group.
+ * @param {object} groupData - The data describing the group (type, items, etc).
+ */
+// Helper function to flatten single-child OR groups
+function flattenSingleChildORs(items) {
+  return items.map(item => {
+    window.GAS.log.d('[FLATTEN] Processing item:', {
+      type: item.type,
+      _id: item._id,
+      hasChildren: !!item.children,
+      childrenCount: item.children?.length
+    });
+    
+    if (item.type === 'OR' && item.children && Array.isArray(item.children) && item.children.length === 1) {
+      // Flatten single-child OR - return the child instead
+      const child = item.children[0];
+      window.GAS.log.d('[FLATTEN] Found single-child OR, child:', {
+        childType: child?.type,
+        childId: child?._id,
+        originalId: item._id
+      });
+      
+      // Only flatten if the child is valid
+      if (child && typeof child === 'object') {
+        const flattened = {
+          ...child,
+          // Preserve the original OR's _id if child doesn't have one
+          _id: child._id || item._id,
+          // If the child is an AND, flatten its children too
+          children: child.children ? flattenSingleChildORs(child.children) : undefined
+        };
+        window.GAS.log.d('[FLATTEN] Flattened result:', flattened);
+        return flattened;
+      }
+    }
+    
+    if (item.type === 'AND' && item.children) {
+      // Recursively flatten children in AND groups
+      return {
+        ...item,
+        children: flattenSingleChildORs(item.children)
+      };
+    }
+    
+    return item;
+  });
+}
+
 export function initializeGroup(groupId, groupData) {
+  window.GAS.log.d('initializeGroup', groupId, groupData);
   equipmentSelections.update(selections => {
-    // Only initialize if group doesn't exist or has different items
+    // Flatten single-child OR groups before processing
+    const ENABLE_FLATTENING = false; // Set to false to disable flattening for debugging
+    const flattenedGroupData = ENABLE_FLATTENING ? {
+      ...groupData,
+      items: flattenSingleChildORs(groupData.items)
+    } : groupData;
+    
+
+    
+    // Only initialize if group doesn't exist or its items have changed
     if (!selections[groupId] ||
-      JSON.stringify(selections[groupId].items) !== JSON.stringify(groupData.items)) {
+      JSON.stringify(selections[groupId].items) !== JSON.stringify(flattenedGroupData.items)) {
 
       // Check if any existing group is in progress or incomplete
+      // This is used to determine if the new group should be marked as inProgress
       const hasGroupInProgress = Object.values(selections).some(group =>
         !group.completed || group.inProgress
       );
 
-      // For standalone groups, check if all items are fixed (linked)
-      const isAutoComplete = groupData.type === 'standalone' &&
-        groupData.items.every(item => {
+      // For standalone groups, check if all items are fixed (type 'linked')
+      // If so, the group can be auto-completed without user input
+      const isAutoComplete = flattenedGroupData.type === 'standalone' &&
+        flattenedGroupData.items.reduce((canAutoComplete, item) => {
+          if (!canAutoComplete) return false; // Short circuit if already false
+          
           if (item.type === 'linked') return true;
-          if (item.type === 'AND') {
-            return item.children.every(child => child.type === 'linked');
+          
+          if (item.type === 'AND' || item.type === 'OR') {
+            // For AND/OR groups, all children must also be 'linked' to auto-complete
+            return item.children.reduce((childCanAutoComplete, child) => {
+              if (!childCanAutoComplete) return false;
+              return child.type === 'linked';
+            }, true);
           }
+          
           return false;
-        });
+        }, true);
 
-      // Find the next group if this one auto-completes
+      // If this group auto-completes, find the next incomplete group (by sort order)
       const nextGroup = isAutoComplete ?
         Object.values(selections)
           .sort((a, b) => (a.sort || 0) - (b.sort || 0))
           .find(g => !g.completed) : null;
 
+      // Return the updated selections object, initializing or updating this group
+      // If auto-complete, set selectedItem and mark as completed
+      // If not, set inProgress if no other group is in progress
+      // If auto-complete, also set the next group as inProgress
       return {
         ...selections,
         [groupId]: {
           id: groupId,
-          ...groupData,
-          selectedItemId: isAutoComplete ? groupData.items[0]._id : null,
-          selectedItem: isAutoComplete ? groupData.items[0] : null,
+          ...flattenedGroupData,
+          selectedItemId: isAutoComplete ? flattenedGroupData.items[0]._id : null,
+          selectedItem: isAutoComplete ? flattenedGroupData.items[0] : null,
           completed: isAutoComplete,
           inProgress: !isAutoComplete && !hasGroupInProgress,
           granularSelections: null
@@ -694,6 +769,7 @@ export function initializeGroup(groupId, groupData) {
         } : {})
       };
     }
+    // If the group already exists and items haven't changed, return selections unchanged
     return selections;
   });
 }
@@ -740,6 +816,52 @@ export function editGroup(groupId) {
 
     return updatedSelections;
   });
+}
+
+
+// Helper function to check if a group belongs to a specific equipment source
+export function isGroupFromSource(group, sourceEquipment) {
+  if (!group?.items?.length || !sourceEquipment?.length) return false;
+
+  // Check if any of the group's items match items from the source equipment
+  return group.items.some((groupItem) =>
+    sourceEquipment.some(
+      (sourceItem) =>
+        groupItem._id === sourceItem._id ||
+        (groupItem.group && sourceItem._id === groupItem.group),
+    ),
+  );
+}
+
+export function isGroupNonEditable(group) {
+  // Check if it's a standalone group and all items are linked type
+  window.GAS.log.d('isGroupNonEditable', group);
+  return (
+    group.type === "standalone" &&
+    group.items.every((item) => {
+      if (item.type === "linked") return true;
+      if (item.type === "AND" || item.type === "OR") {
+        return item.children.every((child) => child.type === "linked");
+      }
+      return false;
+    })
+  );
+}
+
+export function isGroupEditable(group) {
+  // Encapsulate both conditions: group must not be in progress AND must be editable
+  return !group.inProgress && !isGroupNonEditable(group);
+}
+
+export function matchingGroupsForSource(sortedGroups, sourceGroup) {
+  if (!sourceGroup || !sourceGroup.equipment) return [];
+  return sortedGroups.filter(
+    (g) =>
+      (g.completed || g.inProgress) &&
+      isGroupFromSource(g, sourceGroup.equipment) &&
+      Array.isArray(g.items) &&
+      g.items.length > 0,
+  );
 }
 
 export function clearEquipmentSelections() {

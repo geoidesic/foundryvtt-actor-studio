@@ -34,11 +34,11 @@ onMount(async () => {
     } : undefined
   }));
 
-  // window.GAS.log.d('EquipmentSelectorDetail mounted', { 
-  //   configurableSelections, 
-  //   equipmentByType,
-  //   allEquipmentItemsFromPacks: allEquipmentItemsFromPacks.filter(item => item.type === 'focus')
-  // });
+  window.GAS.log.d('EquipmentSelectorDetail mounted', { 
+    configurableSelections, 
+    equipmentByType,
+    allEquipmentItemsFromPacks: allEquipmentItemsFromPacks.filter(item => item.type === 'focus')
+  });
 });
 
 const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');

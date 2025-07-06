@@ -1,12 +1,9 @@
 <script>
-  import { getEquipmentIcon, getEquipmentItemClasses, getOptionClasses, handleSelection, isOptionDisabled } from "~/src/stores/equipmentSelections";
+  import { getEquipmentIcon, getEquipmentItemClasses, getOptionClasses, handleSelection, isOptionDisabled, isGroupFromSource, isGroupEditable, matchingGroupsForSource } from "~/src/stores/equipmentSelections";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
 
   export let equipmentBySource;
   export let sortedGroups;
-  export let matchingGroupsForSource;
-  export let isGroupFromSource;
-  export let isGroupNonEditable;
   export let handleEditGroup;
   export let disabled;
   export let selectedItems;
@@ -18,7 +15,7 @@ div
     +if("sourceGroup.equipment?.length")
       .equipment-source-section.ml-md
         h3.source-header.left {sourceGroup.label} Equipment
-        +if("!matchingGroupsForSource(sourceGroup).length") 
+        +if("!matchingGroupsForSource(sortedGroups, sourceGroup).length") 
           p.left None selected
         //- Process each group within this source
         +each("sortedGroups as group")
@@ -31,7 +28,7 @@ div
                       span.group-label Completed:
                       +else()
                         span.group-label Choose one...
-                +if("!group.inProgress && !isGroupNonEditable(group)")
+                +if("isGroupEditable(group)")
                   .flex0.right
                     IconButton.option(
                       on:click="{handleEditGroup(group.id)}"
@@ -49,7 +46,7 @@ div
                       +each("group.items[0].children as item")
                         .equipment-item.option(
                           class="{getEquipmentItemClasses(group, item, disabled)}"
-                          on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                          on:click!="{item.type !== 'linked' ? handleSelection(disabled, group.id, item) : null}"
                         )
                           .flexrow.justify-flexrow-vertical.no-wrap
                             .flex0.relative.icon
@@ -60,7 +57,7 @@ div
                         +each("group.items as item")
                           .equipment-item.option(
                             class="{getEquipmentItemClasses(group, item, disabled)}"
-                            on:click!="{item.type !== 'linked' ? handleSelection(group.id, item) : null}"
+                            on:click!="{item.type !== 'linked' ? handleSelection(disabled, group.id, item) : null}"
                           )
                             .flexrow.justify-flexrow-vertical.no-wrap
                               .flex0.relative.icon
@@ -76,7 +73,7 @@ div
                     +each("group.items as item")
                       button.option(
                         class="{getOptionClasses(disabled, group, item)}"
-                        on:click!="{handleSelection(group.id, item)}"
+                        on:click!="{handleSelection(disabled, group.id, item)}"
                         disabled="{isOptionDisabled(disabled,group, item)}"
                       )
                         .flexrow.justify-flexrow-vertical.no-wrap
