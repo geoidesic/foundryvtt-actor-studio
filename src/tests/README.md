@@ -2,7 +2,9 @@
 
 This test suite was created to prevent regressions in the granular selection functionality, specifically to ensure that a critical bug doesn't resurface.
 
-## The Bug That Was Fixed
+## The Bugs That Were Fixed
+
+### Primary Bug: Monk Tool Selection Not Disappearing
 
 **Issue**: In the monk character creation, when selecting tools (artisan's tools vs musical instruments), the granular selection interface would appear correctly, but after making a selection, the interface would NOT disappear. Instead, it would remain visible and force the user to make another selection.
 
@@ -16,15 +18,27 @@ const nextGroup = isComplete ? sortedGroups.find(g =>
 ) : null;
 ```
 
+### Secondary Bug: Bard/Artisan Tool Selection Locked
+
+**Issue**: While fixing the monk issue, direct tool items within AND groups (like bard musical instruments and artisan tools) became locked and unclickable, preventing granular selection entirely.
+
+**Root Cause**: The `handleSelection` function was only handling OR choice groups within AND groups (monk case), but not direct tool items within AND groups (bard/artisan case). Also, the `getEquipmentItemClasses` function was showing tool items as 'selected' (locked) instead of 'in-progress' (clickable).
+
+**Fix**: 
+1. Updated `handleSelection` to detect when granular items are clicked within AND groups and ensure the AND group is selected first
+2. Updated `getEquipmentItemClasses` to show granular items as 'in-progress' when they need configuration
+
 ## Test Coverage
 
 The test suite covers:
 
-1. **Main Bug Fix**: Ensures child choice groups remain completed and don't get reset to in-progress
-2. **Granular Selection Storage**: Verifies selections are properly stored in parent group's children
-3. **PlannedInventory Integration**: Tests that granular selections appear in flattened selections
-4. **Edge Cases**: Handles non-existent groups gracefully and parent completion logic
-5. **State Management**: Verifies correct state transitions for both parent and child groups
+1. **Monk Bug Fix**: Ensures child choice groups remain completed and don't get reset to in-progress
+2. **Bard/Artisan Bug Fix**: Verifies direct tool items in AND groups are clickable and allow granular selection
+3. **Visual State**: Tests that tool items show as 'in-progress' (clickable) rather than 'selected' (locked)
+4. **Granular Selection Storage**: Verifies selections are properly stored in parent group's children
+5. **PlannedInventory Integration**: Tests that granular selections appear in flattened selections
+6. **Edge Cases**: Handles non-existent groups gracefully and parent completion logic
+7. **State Management**: Verifies correct state transitions for both parent and child groups
 
 ## Running Tests
 

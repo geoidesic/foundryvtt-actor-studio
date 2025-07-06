@@ -32,14 +32,27 @@ export function getRequiredSelectionsCount(item) {
 export function getEquipmentItemClasses(group, item, disabled) {
   const classes = [];
   
-  // Add 'selected' class for linked items OR if the group is completed
-  if (item.type === 'linked' || group.completed) {
+  // Check if this item needs granular selection
+  const needsGranular = GRANULAR_TYPES.includes(item.type);
+  
+  // Add 'selected' class for:
+  // - linked items (always selected)
+  // - completed group items that don't need granular selection
+  // - granular items that have been configured (have granular selections)
+  if (item.type === 'linked' || 
+      (group.completed && !needsGranular) ||
+      (needsGranular && group.granularSelections?.children?.[item._id]?.selections?.length > 0)) {
     classes.push('selected');
+  }
+  
+  // Add 'in-progress' class for granular items that need configuration
+  if (needsGranular && group.selectedItem?.type === 'AND' && 
+      (!group.granularSelections?.children?.[item._id]?.selections?.length)) {
+    classes.push('in-progress');
   }
   
   if (item.type === 'focus') classes.push('focus');
   if (disabled) classes.push('disabled');
-  if (group.inProgress && item.type !== 'linked') classes.push('in-progress');
   
   return classes.join(' ');
 }
@@ -145,8 +158,30 @@ export function handleSelection(disabled, groupId, item) {
           label: c.label
         }))
       },
-      currentGranularSelections: group.granularSelections
+      currentGranularSelections: group.granularSelections,
+      clickedItem: item
     });
+    
+    // If a specific granular item (tool, weapon, armor, focus) was clicked, handle it directly
+    if (item && GRANULAR_TYPES.includes(item.type)) {
+      window.GAS.log.d('[StartingEquipment] Granular item clicked in AND group', {
+        itemType: item.type,
+        itemId: item._id,
+        itemLabel: item.label,
+        willSelectANDGroupFirst: true
+      });
+      
+      // First, ensure the AND group is selected
+      if (!group.selectedItemId) {
+        selectEquipment(groupId, group.items[0]._id);
+      }
+      
+      // Then handle the granular item selection
+      // This will be handled by the granular selection UI
+      return;
+    }
+    
+    // For non-granular items or general AND group selection
     selectEquipment(groupId, group.items[0]._id);
   }
   // For choice groups

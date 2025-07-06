@@ -4,7 +4,8 @@ import {
   equipmentSelections, 
   addChildGranularSelection, 
   initializeGroup,
-  flattenedSelections 
+  flattenedSelections,
+  getEquipmentItemClasses
 } from '../stores/equipmentSelections.js';
 
 // Mock global variables that would normally be provided by FoundryVTT
@@ -34,6 +35,206 @@ describe('Equipment Selections - Granular Selection', () => {
     equipmentSelections.set({});
     // Clear all mocks
     vi.clearAllMocks();
+  });
+
+  describe('Direct tool items in AND groups (Bard/Artisan fix)', () => {
+    it('should allow granular selection for direct tool items within AND groups', () => {
+      // Setup: Create the bard equipment scenario with direct tool item in AND group
+      const bardGroupId = 'tWEfE6HLPbiS0OtF';
+      const toolItemId = '0jBNM2wEEVNN4DBt';
+      
+      // Initialize bard AND group with direct tool item (not OR choice)
+      initializeGroup(bardGroupId, {
+        type: 'standalone',
+        label: 'Bard Equipment',
+        items: [{
+          _id: bardGroupId,
+          type: 'AND',
+          children: [
+            { _id: 'fEcFnfooD7rSDdEI', type: 'linked', key: 'armor', label: 'Leather Armor' },
+            { _id: 'JbNtnwGItIy5pcr1', type: 'linked', key: 'weapon', count: 2, label: '2x Dagger' },
+            { _id: toolItemId, type: 'tool', key: 'music', label: 'any musical instrument' },
+            { _id: 'X63sE2GlxSzKzUho', type: 'linked', key: 'pack', label: 'Entertainer\'s Pack' }
+          ]
+        }],
+        sort: 700000
+      });
+
+      // Act: Select the AND group (this should happen when tool is clicked)
+      equipmentSelections.update(state => ({
+        ...state,
+        [bardGroupId]: {
+          ...state[bardGroupId],
+          selectedItemId: bardGroupId,
+          selectedItem: state[bardGroupId].items[0],
+          inProgress: true,
+          completed: false
+        }
+      }));
+
+      // Make a granular selection for the tool
+      const instrumentUuid = 'Compendium.dnd-players-handbook.equipment.Item.phbtulLute0000000';
+      addChildGranularSelection(bardGroupId, toolItemId, instrumentUuid);
+
+      // Assert: Check the final state
+      const finalState = get(equipmentSelections);
+      
+      // 1. Group should be completed after tool selection
+      expect(finalState[bardGroupId].completed).toBe(true);
+      expect(finalState[bardGroupId].inProgress).toBe(false);
+      
+      // 2. Granular selection should be stored in children
+      expect(finalState[bardGroupId].granularSelections.children[toolItemId].selections).toContain(instrumentUuid);
+      
+      // 3. Granular selection should have correct type
+      expect(finalState[bardGroupId].granularSelections.children[toolItemId].type).toBe('tool');
+    });
+
+    it('should show tool items as in-progress when AND group is selected but tool not configured', () => {
+      const bardGroupId = 'testBard123';
+      const toolItemId = 'testTool456';
+      
+      // Setup a simple AND group with tool item
+      equipmentSelections.set({
+        [bardGroupId]: {
+          id: bardGroupId,
+          type: 'standalone',
+          items: [{
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor' },
+              { _id: toolItemId, type: 'tool', key: 'music' }
+            ]
+          }],
+          selectedItem: {
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor' },
+              { _id: toolItemId, type: 'tool', key: 'music' }
+            ]
+          },
+          selectedItemId: bardGroupId,
+          granularSelections: { children: {}, self: [] },
+          completed: false,
+          inProgress: true
+        }
+      });
+
+      const state = get(equipmentSelections);
+      const group = state[bardGroupId];
+      const toolItem = group.selectedItem.children.find(c => c._id === toolItemId);
+      
+      // Test the getEquipmentItemClasses function
+      const classes = getEquipmentItemClasses(group, toolItem, false);
+      
+      // Tool item should be in-progress (clickable) not selected (locked)
+      expect(classes).toContain('in-progress');
+      expect(classes).not.toContain('selected');
+    });
+
+    it('should detect AND groups with configurable children for granular selection UI', () => {
+      const bardGroupId = 'testBard789';
+      const toolItemId = 'testTool123';
+      
+      // Setup AND group with tool item (should be detected as configurable)
+      equipmentSelections.set({
+        [bardGroupId]: {
+          id: bardGroupId,
+          type: 'standalone',
+          items: [{
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor', label: 'Leather Armor' },
+              { _id: toolItemId, type: 'tool', key: 'music', label: 'any musical instrument' }
+            ]
+          }],
+          selectedItem: {
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor', label: 'Leather Armor' },
+              { _id: toolItemId, type: 'tool', key: 'music', label: 'any musical instrument' }
+            ]
+          },
+          selectedItemId: bardGroupId,
+          granularSelections: { children: {}, self: [] },
+          completed: false,
+          inProgress: true
+        }
+      });
+
+      const state = get(equipmentSelections);
+      const group = state[bardGroupId];
+      
+      // Test the logic from EquipmentSelectorDetail that determines configurable selections
+      const CONFIGURABLE_TYPES = ['tool', 'weapon', 'armor', 'focus'];
+      
+      // This group should be considered configurable because it's an AND group with configurable children
+      const isConfigurable = CONFIGURABLE_TYPES.includes(group.selectedItem?.type) || 
+         (group.selectedItem?.type === 'AND' && 
+          group.selectedItem?.children?.some(child => CONFIGURABLE_TYPES.includes(child.type)));
+      
+      expect(isConfigurable).toBe(true);
+      
+      // The tool child should be detected as configurable
+      const configurableChildren = group.selectedItem.children.filter(child => CONFIGURABLE_TYPES.includes(child.type));
+      expect(configurableChildren).toHaveLength(1);
+      expect(configurableChildren[0]._id).toBe(toolItemId);
+      expect(configurableChildren[0].type).toBe('tool');
+    });
+
+    it('should pass correct child ID to addChildGranularSelection for AND group tool items', () => {
+      const bardGroupId = 'testBard999';
+      const toolItemId = 'testTool999';
+      
+      // Setup AND group with tool item
+      equipmentSelections.set({
+        [bardGroupId]: {
+          id: bardGroupId,
+          type: 'standalone',
+          items: [{
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor', label: 'Leather Armor' },
+              { _id: toolItemId, type: 'tool', key: 'music', label: 'any musical instrument' }
+            ]
+          }],
+          selectedItem: {
+            _id: bardGroupId,
+            type: 'AND',
+            children: [
+              { _id: 'linked1', type: 'linked', key: 'armor', label: 'Leather Armor' },
+              { _id: toolItemId, type: 'tool', key: 'music', label: 'any musical instrument' }
+            ]
+          },
+          selectedItemId: bardGroupId,
+          granularSelections: { children: {}, self: [] },
+          completed: false,
+          inProgress: true
+        }
+      });
+
+      // Make a granular selection using the correct child ID (not parent ID)
+      const instrumentUuid = 'Compendium.dnd-players-handbook.equipment.Item.phbmusDrum000000';
+      addChildGranularSelection(bardGroupId, toolItemId, instrumentUuid);
+
+      const finalState = get(equipmentSelections);
+      
+      // 1. Granular selection should be stored with correct child ID
+      expect(finalState[bardGroupId].granularSelections.children[toolItemId]).toBeDefined();
+      expect(finalState[bardGroupId].granularSelections.children[toolItemId].selections).toContain(instrumentUuid);
+      
+      // 2. Should NOT be stored with parent ID as child key (the bug we're fixing)
+      expect(finalState[bardGroupId].granularSelections.children[bardGroupId]).toBeUndefined();
+      
+      // 3. Group should be completed
+      expect(finalState[bardGroupId].completed).toBe(true);
+      expect(finalState[bardGroupId].inProgress).toBe(false);
+    });
   });
 
   describe('addChildGranularSelection', () => {

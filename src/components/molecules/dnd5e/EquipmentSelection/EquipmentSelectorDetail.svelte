@@ -61,15 +61,21 @@ $: configurableSelections = Object.values($equipmentSelections).filter(group => 
   }
 
   // Debug logging for all groups being evaluated
-  if (group.selectedItem && CONFIGURABLE_TYPES.includes(group.selectedItem?.type)) {
+  if (group.selectedItem && (CONFIGURABLE_TYPES.includes(group.selectedItem?.type) || group.selectedItem?.type === 'AND')) {
     window.GAS.log.d('[EquipmentSelectorDetail] Configurable group found', {
       groupId: group.id,
       selectedItemType: group.selectedItem.type,
-      inProgress: group.inProgress
+      inProgress: group.inProgress,
+      isAND: group.selectedItem.type === 'AND',
+      hasConfigurableChildren: group.selectedItem?.type === 'AND' && 
+        group.selectedItem?.children?.some(child => CONFIGURABLE_TYPES.includes(child.type))
     });
   }
 
-  return CONFIGURABLE_TYPES.includes(group.selectedItem?.type);
+  // Include groups that are directly configurable OR are AND groups with configurable children
+  return CONFIGURABLE_TYPES.includes(group.selectedItem?.type) || 
+         (group.selectedItem?.type === 'AND' && 
+          group.selectedItem?.children?.some(child => CONFIGURABLE_TYPES.includes(child.type)));
 }).flatMap(group => {
   // Handle AND groups with configurable children
   if (group.selectedItem?.type === 'AND' && group.selectedItem?.children) {
@@ -240,7 +246,7 @@ section
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.parentGroup.granularSelections?.children?.[group.selectedItem._id]?.selections?.[0]}"
               placeHolder="Select {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.id, group.parentGroup)}"
+              handler="{createSelectionHandler(group.selectedItem._id, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
           +if("!group.parentGroup")
