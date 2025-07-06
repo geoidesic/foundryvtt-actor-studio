@@ -76,7 +76,7 @@ onMount(() => {
         +else()
           +each('plannedItems as item')
             tr
-              td
+              td(width="50")
                 +if('item && item.img')
                   img(src="{item.img}" width="32" height="32")
                   +else()
@@ -99,7 +99,6 @@ onMount(() => {
   width: 100%
   border-collapse: collapse
   margin-top: 0.5rem
-
   th, td
     text-align: left
     padding: 0 0.5rem
@@ -121,4 +120,10 @@ onMount(() => {
     text-align: center
     color: var(--color-text-dark-secondary)
     font-style: italic
+
+.inventory-table th:first-child,
+.inventory-table td:first-child
+  width: 50px
+  min-width: 50px
+  max-width: 50px
 </style>

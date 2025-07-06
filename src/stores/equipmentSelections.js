@@ -29,6 +29,95 @@ export function getRequiredSelectionsCount(item) {
   return item.count || 1;
 }
 
+export function getEquipmentItemClasses(group, item, disabled) {
+  const classes = [];
+  if (item.type === 'linked') classes.push('selected');
+  if (item.type === 'focus') classes.push('focus');
+  if (disabled) classes.push('disabled');
+  if (group.inProgress && item.type !== 'linked') classes.push('in-progress');
+  return classes.join(' ');
+}
+
+export function getOptionClasses(disabled, group, item) {
+  const classes = [];
+  if (group.selectedItemId === item._id) classes.push('selected');
+  if (isOptionDisabled(disabled, group, item)) classes.push('disabled');
+  if (group.completed) classes.push('completed');
+  if (group.inProgress && !isOptionDisabled(disabled, group, item)) classes.push('in-progress');
+  return classes.join(' ');
+}
+
+export function isOptionDisabled(disabled, group, item) {
+  return disabled || (group.inProgress && group.selectedItemId && group.selectedItemId !== item._id);
+}
+
+
+export function handleSelection(groupId, item) {
+  const selections = get(equipmentSelections);
+
+  window.GAS.log.d('[StartingEquipment] handleSelection ENTRY', {
+    groupId,
+    itemDetails: {
+      id: item?._id,
+      type: item?.type,
+      label: item?.label
+    },
+    groupState: {
+      type: selections[groupId]?.type,
+      inProgress: selections[groupId]?.inProgress,
+      completed: selections[groupId]?.completed,
+      selectedItem: selections[groupId]?.selectedItem,
+      items: selections[groupId]?.items?.map(i => ({
+        id: i._id,
+        type: i.type,
+        isAND: i.type === 'AND'
+      }))
+    }
+  });
+
+  if (disabled) return;
+
+  const group = selections[groupId];
+
+  window.GAS.log.d('[StartingEquipment] Group evaluation', {
+    isStandalone: group?.type === 'standalone',
+    hasItems: !!group?.items?.length,
+    firstItemType: group?.items?.[0]?.type,
+    isFirstItemAND: group?.items?.[0]?.type === 'AND',
+    isChoiceGroup: group?.type === 'choice'
+  });
+
+  // For standalone groups with AND items
+  if (group?.type === 'standalone' && group.items[0]?.type === 'AND') {
+    window.GAS.log.d('[StartingEquipment] Handling standalone AND group', {
+      andItemDetails: {
+        id: group.items[0]._id,
+        children: group.items[0].children?.map(c => ({
+          id: c._id,
+          type: c.type,
+          label: c.label
+        }))
+      },
+      currentGranularSelections: group.granularSelections
+    });
+    selectEquipment(groupId, group.items[0]._id);
+  }
+  // For choice groups
+  else if (group?.type === 'choice') {
+    window.GAS.log.d('[StartingEquipment] Handling choice group', {
+      groupId,
+      selectedItemId: item._id,
+      selectedItemType: item.type,
+      isSelectedItemAND: item.type === 'AND',
+      groupItems: group.items.map(i => ({
+        id: i._id,
+        type: i.type
+      }))
+    });
+    selectEquipment(groupId, item._id);
+  }
+}
+
 function needsGranularSelection(item) {
   return GRANULAR_TYPES.includes(item.type) || SUBGROUP_TYPES.includes(item.type);
 }
@@ -54,8 +143,8 @@ export function selectEquipment(groupId, itemId) {
     // Prevent additional selections if:
     // 1. The group is completed and not being edited
     // 2. The group has a selected item and is in progress (handling granular selection)
-    if ((group.completed && !group.inProgress) || 
-        (group.selectedItemId && group.inProgress)) {
+    if ((group.completed && !group.inProgress) ||
+      (group.selectedItemId && group.inProgress)) {
       return state;
     }
 
@@ -65,7 +154,7 @@ export function selectEquipment(groupId, itemId) {
     window.GAS.log.d('SELECT EQUIPMENT | Processing selection', {
       selectedItem,
       isAND: selectedItem.type === 'AND',
-      hasGranularChildren: selectedItem.type === 'AND' && 
+      hasGranularChildren: selectedItem.type === 'AND' &&
         selectedItem.children?.some(child => GRANULAR_TYPES.includes(child.type))
     });
 
@@ -93,13 +182,13 @@ export function selectEquipment(groupId, itemId) {
     // Find next group for progression
     const sortedGroups = Object.values(state)
       .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-    const nextGroup = sortedGroups.find(g => 
+    const nextGroup = sortedGroups.find(g =>
       !g.completed && g.id !== groupId
     );
 
     // For regular linked items or AND groups, use the original simple selection logic
     if (selectedItem.type === 'linked' || selectedItem.type === 'AND') {
-      const hasGranularChildren = selectedItem.type === 'AND' && 
+      const hasGranularChildren = selectedItem.type === 'AND' &&
         selectedItem.children?.some(child => GRANULAR_TYPES.includes(child.type));
 
       window.GAS.log.d('SELECT EQUIPMENT | AND/linked processing', {
@@ -168,7 +257,7 @@ export function selectEquipment(groupId, itemId) {
       // Subsequent selections
       const selections = [...(group.selections || [])];
       const existingSelection = selections.find(s => s.itemId === itemId);
-      
+
       if (existingSelection) {
         existingSelection.count++;
       } else {
@@ -261,7 +350,7 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
               itemId: item._id,
               children: item.children
             });
-            
+
             item.children.forEach(child => {
               if (child.type === 'linked') {
                 // For linked children, add them directly
@@ -373,7 +462,7 @@ export function addGranularSelection(groupId, uuid) {
     const group = selections[groupId];
     window.GAS.log.d('[EquipSelect STORE] addGranularSelection groupId', groupId);
     window.GAS.log.d('[EquipSelect STORE] addGranularSelection group', group);
-    
+
     if (!group?.selectedItem) return selections;
 
     // Initialize granularSelections if it doesn't exist
@@ -389,7 +478,7 @@ export function addGranularSelection(groupId, uuid) {
     // Find next group if complete
     const sortedGroups = Object.values(selections)
       .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-    const nextGroup = isComplete ? sortedGroups.find(g => 
+    const nextGroup = isComplete ? sortedGroups.find(g =>
       !g.completed && g.id !== groupId
     ) : null;
 
@@ -416,16 +505,16 @@ export function addGranularSelection(groupId, uuid) {
 
 // Add granular selection for subgroup children
 export function addChildGranularSelection(groupId, childId, uuid) {
-  window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection called:', { 
-    groupId, 
-    childId, 
+  window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection called:', {
+    groupId,
+    childId,
     uuid,
     currentStore: get(equipmentSelections)
   });
 
   equipmentSelections.update(selections => {
     const group = selections[groupId];
-    window.GAS.log.d('AND GROUP DEBUG | Current group state:', { 
+    window.GAS.log.d('AND GROUP DEBUG | Current group state:', {
       group,
       selectedItem: group?.selectedItem,
       children: group?.selectedItem?.children,
@@ -465,7 +554,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
         const needsSelection = GRANULAR_TYPES.includes(child.type);
         const childSelections = updatedSelections.children?.[child._id]?.selections || [];
         const hasEnoughSelections = childSelections.length >= getRequiredSelectionsCount(child);
-        
+
         window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection completion check for child', {
           childId: child._id,
           childType: child.type,
@@ -474,15 +563,15 @@ export function addChildGranularSelection(groupId, childId, uuid) {
           required: getRequiredSelectionsCount(child),
           hasEnough: hasEnoughSelections
         });
-        
+
         return !needsSelection || hasEnoughSelections;
       }) : false;
 
     const stillInProgress = group.selectedItem.type === 'AND' ?
-      group.selectedItem.children.some(child => 
-        GRANULAR_TYPES.includes(child.type) && 
-        (!updatedSelections.children?.[child._id]?.selections?.length || 
-         updatedSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
+      group.selectedItem.children.some(child =>
+        GRANULAR_TYPES.includes(child.type) &&
+        (!updatedSelections.children?.[child._id]?.selections?.length ||
+          updatedSelections.children[child._id].selections.length < getRequiredSelectionsCount(child))
       ) : false;
 
     window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection completion status', {
@@ -494,7 +583,7 @@ export function addChildGranularSelection(groupId, childId, uuid) {
     // Find next group if complete
     const sortedGroups = Object.values(selections)
       .sort((a, b) => (a.sort || 0) - (b.sort || 0));
-    const nextGroup = isComplete ? sortedGroups.find(g => 
+    const nextGroup = isComplete ? sortedGroups.find(g =>
       !g.completed && g.id !== groupId
     ) : null;
 
@@ -562,16 +651,16 @@ export function removeGranularSelection(groupId, uuid, childId = null) {
 export function initializeGroup(groupId, groupData) {
   equipmentSelections.update(selections => {
     // Only initialize if group doesn't exist or has different items
-    if (!selections[groupId] || 
-        JSON.stringify(selections[groupId].items) !== JSON.stringify(groupData.items)) {
-      
+    if (!selections[groupId] ||
+      JSON.stringify(selections[groupId].items) !== JSON.stringify(groupData.items)) {
+
       // Check if any existing group is in progress or incomplete
-      const hasGroupInProgress = Object.values(selections).some(group => 
+      const hasGroupInProgress = Object.values(selections).some(group =>
         !group.completed || group.inProgress
       );
 
       // For standalone groups, check if all items are fixed (linked)
-      const isAutoComplete = groupData.type === 'standalone' && 
+      const isAutoComplete = groupData.type === 'standalone' &&
         groupData.items.every(item => {
           if (item.type === 'linked') return true;
           if (item.type === 'AND') {
@@ -581,7 +670,7 @@ export function initializeGroup(groupId, groupData) {
         });
 
       // Find the next group if this one auto-completes
-      const nextGroup = isAutoComplete ? 
+      const nextGroup = isAutoComplete ?
         Object.values(selections)
           .sort((a, b) => (a.sort || 0) - (b.sort || 0))
           .find(g => !g.completed) : null;
@@ -659,7 +748,7 @@ export function clearEquipmentSelections() {
 
 // Add getEquipmentIcon function to the store
 export function getEquipmentIcon(type) {
-  switch(type) {
+  switch (type) {
     case 'armor':
       return 'icons/svg/shield.svg';
     case 'weapon':
