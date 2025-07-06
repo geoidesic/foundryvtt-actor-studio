@@ -661,9 +661,39 @@ export function addChildGranularSelection(groupId, childId, uuid) {
     const sortedGroups = Object.values(selections)
       .sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const nextGroup = isComplete ? sortedGroups.find(g =>
-      !g.completed && g.id !== groupId
+      !g.completed && g.id !== groupId && g.id !== childId
     ) : null;
 
+    // Check if the specific child is now complete
+    const childSelections = updatedSelections.children?.[childId]?.selections || [];
+    const childIsComplete = childSelections.length >= getRequiredSelectionsCount(childItem);
+
+    window.GAS.log.d('AND GROUP DEBUG | Child completion check', {
+      childId,
+      childSelections,
+      requiredCount: getRequiredSelectionsCount(childItem),
+      childIsComplete,
+      childGroupExists: !!selections[childId]
+    });
+
+    // Debug the child update logic
+    window.GAS.log.d('AND GROUP DEBUG | Child update logic', {
+      childId,
+      childIsComplete,
+      childGroupExists: !!selections[childId],
+      originalChild: selections[childId] ? {
+        id: selections[childId].id,
+        completed: selections[childId].completed,
+        inProgress: selections[childId].inProgress
+      } : null,
+      updateObject: selections[childId] ? {
+        ...selections[childId],
+        completed: childIsComplete,
+        inProgress: !childIsComplete
+      } : null
+    });
+
+    // Build the result object step by step to ensure proper updates
     const result = {
       ...selections,
       [groupId]: {
@@ -671,16 +701,73 @@ export function addChildGranularSelection(groupId, childId, uuid) {
         granularSelections: updatedSelections,
         completed: isComplete,
         inProgress: stillInProgress
-      },
-      ...(nextGroup ? {
-        [nextGroup.id]: {
-          ...nextGroup,
-          inProgress: true
-        }
-      } : {})
+      }
     };
 
+    // Update the child choice group state if it exists
+    if (selections[childId]) {
+      result[childId] = {
+        ...selections[childId],
+        completed: childIsComplete,
+        inProgress: !childIsComplete
+      };
+      window.GAS.log.d('AND GROUP DEBUG | Explicitly updating child group', {
+        childId,
+        beforeUpdate: {
+          completed: selections[childId].completed,
+          inProgress: selections[childId].inProgress
+        },
+        afterUpdate: {
+          completed: childIsComplete,
+          inProgress: !childIsComplete
+        },
+        childIsComplete,
+        notChildIsComplete: !childIsComplete
+      });
+      
+      window.GAS.log.d('AND GROUP DEBUG | Result after child update', {
+        childId,
+        resultChildGroup: result[childId],
+        resultChildCompleted: result[childId]?.completed,
+        resultChildInProgress: result[childId]?.inProgress
+      });
+    }
+
+    // Add next group if needed
+    if (nextGroup) {
+      window.GAS.log.d('AND GROUP DEBUG | Next group logic', {
+        nextGroupId: nextGroup.id,
+        childId,
+        isNextGroupSameAsChild: nextGroup.id === childId,
+        nextGroupDetails: {
+          id: nextGroup.id,
+          type: nextGroup.type,
+          completed: nextGroup.completed,
+          inProgress: nextGroup.inProgress
+        }
+      });
+      
+      result[nextGroup.id] = {
+        ...nextGroup,
+        inProgress: true
+      };
+      
+      window.GAS.log.d('AND GROUP DEBUG | After next group update', {
+        childId,
+        resultChildAfterNextGroup: result[childId],
+        resultChildCompleted: result[childId]?.completed,
+        resultChildInProgress: result[childId]?.inProgress
+      });
+    }
+
     window.GAS.log.d('AND GROUP DEBUG | addChildGranularSelection final state', result);
+    window.GAS.log.d('AND GROUP DEBUG | Child group final state', {
+      childId,
+      childGroupInResult: result[childId],
+      childCompleted: result[childId]?.completed,
+      childInProgress: result[childId]?.inProgress
+    });
+    window.GAS.log.d('AND GROUP DEBUG | Final result keys', Object.keys(result));
 
     return result;
   });
@@ -773,6 +860,12 @@ function flattenSingleChildORs(items) {
 }
 
 export function initializeGroup(groupId, groupData) {
+  window.GAS.log.d('AND GROUP DEBUG | initializeGroup called', {
+    groupId,
+    groupType: groupData.type,
+    existingGroup: equipmentSelections ? get(equipmentSelections)[groupId] : null
+  });
+  
   equipmentSelections.update(selections => {
     // Flatten single-child OR groups before processing
     const ENABLE_FLATTENING = true; // Enable to fix single-child OR display
@@ -828,12 +921,18 @@ export function initializeGroup(groupId, groupData) {
       } else if (flattenedGroupData.type === 'standalone') {
         shouldBeInProgress = true; // Standalone groups are always in progress (visible)
       } else if (flattenedGroupData.type === 'choice') {
-        // Choice groups with a parent should only be in progress if their parent is completed
-        if (flattenedGroupData.parentGroup) {
-          const parentGroup = selections[flattenedGroupData.parentGroup];
-          shouldBeInProgress = parentGroup && parentGroup.completed && !hasChoiceGroupInProgress;
+        // Check if the group is already completed - if so, don't reset it to in progress
+        const existingGroup = selections[groupId];
+        if (existingGroup && existingGroup.completed) {
+          shouldBeInProgress = false; // Don't reset completed choice groups
         } else {
-          shouldBeInProgress = !hasChoiceGroupInProgress; // Only one choice group in progress at a time
+          // Choice groups with a parent should only be in progress if their parent is completed
+          if (flattenedGroupData.parentGroup) {
+            const parentGroup = selections[flattenedGroupData.parentGroup];
+            shouldBeInProgress = parentGroup && parentGroup.completed && !hasChoiceGroupInProgress;
+          } else {
+            shouldBeInProgress = !hasChoiceGroupInProgress; // Only one choice group in progress at a time
+          }
         }
       } else {
         shouldBeInProgress = false; // Default fallback
@@ -842,17 +941,32 @@ export function initializeGroup(groupId, groupData) {
       // Return the updated selections object, initializing or updating this group
       // If auto-complete, set selectedItem and mark as completed
       // If auto-complete, also set the next group as inProgress
-      return {
-        ...selections,
-        [groupId]: {
-          id: groupId,
-          ...flattenedGroupData,
-          selectedItemId: isAutoComplete ? flattenedGroupData.items[0]._id : null,
-          selectedItem: isAutoComplete ? flattenedGroupData.items[0] : null,
-          completed: isAutoComplete,
-          inProgress: shouldBeInProgress,
-          granularSelections: null
-        },
+      
+              // Check if existing group is completed and preserve that state
+        const existingGroup = selections[groupId];
+        const shouldBeCompleted = isAutoComplete || (existingGroup && existingGroup.completed);
+        
+        window.GAS.log.d('AND GROUP DEBUG | initializeGroup update', {
+          groupId,
+          groupType: flattenedGroupData.type,
+          existingCompleted: existingGroup?.completed || false,
+          existingInProgress: existingGroup?.inProgress || false,
+          shouldBeCompleted,
+          shouldBeInProgress,
+          willOverrideExisting: !!existingGroup
+        });
+        
+        return {
+          ...selections,
+          [groupId]: {
+            id: groupId,
+            ...flattenedGroupData,
+            selectedItemId: isAutoComplete ? flattenedGroupData.items[0]._id : (existingGroup?.selectedItemId || null),
+            selectedItem: isAutoComplete ? flattenedGroupData.items[0] : (existingGroup?.selectedItem || null),
+            completed: shouldBeCompleted,
+            inProgress: shouldBeInProgress,
+            granularSelections: existingGroup?.granularSelections || null
+          },
         ...(nextGroup && isAutoComplete ? {
           [nextGroup.id]: {
             ...nextGroup,
