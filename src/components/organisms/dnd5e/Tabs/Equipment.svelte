@@ -71,7 +71,7 @@
   height: 100%
   
   .col-a
-      max-width: 325px
+      // max-width: 325px
 .content
   height: 100%
   overflow-y: auto

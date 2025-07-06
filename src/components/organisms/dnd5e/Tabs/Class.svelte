@@ -390,7 +390,7 @@
     @include staticOptions
 
     .col-a
-      max-width: 325px
+      // max-width: 325px
 
     .badge.inset
       @include badge()

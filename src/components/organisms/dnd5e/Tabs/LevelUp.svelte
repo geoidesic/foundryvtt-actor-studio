@@ -478,5 +478,5 @@ onDestroy(() => {
       white-space: nowrap
 
     .col-a
-      max-width: 325px
+      // max-width: 325px
 </style>

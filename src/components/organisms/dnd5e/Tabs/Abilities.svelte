@@ -120,7 +120,7 @@
   +mixins.staticOptions
 
   .col-a
-    max-width: 325px
+    // max-width: 325px
 
 :global(.icon-select)
   position: relative
