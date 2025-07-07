@@ -243,10 +243,41 @@ export async function handleAddEquipment({
       const item = await fromUuid(uuid)
       if (item) {
         // Create a copy of the item data and set the quantity
-        item.system.quantity = quantity;
         const data = game.items.fromCompendium(item);
         data.system.quantity = quantity;
-        await Item.create(data, { parent: $actorInGame })
+        const createdItem = await Item.create(data, { parent: $actorInGame });
+        
+        // Handle containers - contents may be a Promise that resolves to a Collection
+        if (item.type === 'container') {
+          try {
+            
+            // Access contents from system.contents, not item.contents
+            const contents = await item.system.contents;
+            
+            if (contents && contents.size > 0) {
+              
+              // Create each contained item separately with system.container pointing to the main item
+              for (const containedItem of contents) {
+                try {
+                  const containedData = game.items.fromCompendium(containedItem);
+                  if (containedData) {
+                    // Set the container property to point to the main container
+                    containedData.system.container = createdItem.id;
+                    const createdContainedItem = await Item.create(containedData, { parent: $actorInGame });
+                  }
+                } catch (error) {
+                  console.error('Error creating contained item:', containedItem.name, error);
+                }
+              }
+            } else {
+              window.GAS.log.d('[WORKFLOW] Container has no contents or contents is empty');
+            }
+          } catch (error) {
+            console.error('Error processing container contents for:', item.name, error);
+          }
+        }
+        
+        window.GAS.log.d('[WORKFLOW] Successfully created item:', item.name, 'with quantity:', quantity);
       }
     }
 
