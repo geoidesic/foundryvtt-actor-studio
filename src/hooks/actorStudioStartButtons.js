@@ -1,4 +1,3 @@
-
 import PCApplication from '~/src//app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
 import { userHasRightPermissions } from '~/src/helpers/Utility'
@@ -61,29 +60,41 @@ function getActorStudioButton(buttonId, text=false) {
   return gasButton;
 }
 
-export const activateDocumentDirectory = (app) => {
-  if(game.version > 13) {
-    if (!game.modules.get(MODULE_ID)?.active) return;
-    // Add Actor Studio button to the sidebar
-    if (app.constructor.name === "ActorDirectory") {
-      if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
-      if ($('#gas-sidebar-button').length) return;
-      const $gasButton = getActorStudioButton('gas-sidebar-button').addClass('v13');
-      $(app.element).find('header.directory-header .header-actions').after($gasButton);
-      $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-      $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-    }
+// Unified function to render sidebar button for both V12 and V13
+export const renderActorStudioSidebarButton = (app) => {
+  if (!game.modules.get(MODULE_ID)?.active) return;
+  if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+  if (app.constructor.name !== "ActorDirectory") return;
+  
+  // Get the appropriate element based on version
+  const element = game.version >= 13 ? app.element : app._element;
+  if (!element) return;
+  
+  // Check if button already exists in the DOM
+  if ($(element).find('#gas-sidebar-button').length > 0) return;
+  
+  // Create and add the button
+  const $gasButton = getActorStudioButton('gas-sidebar-button');
+  
+  if (game.version >= 13) {
+    $gasButton.addClass('v13');
+    $(element).find('header.directory-header .header-actions').after($gasButton);
+  } else {
+    $(element).find('header.directory-header').append($gasButton);
   }
+  
+  // Add event handlers
+  $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
+  $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
 }
 
-export const renderASButtonInCreateActorApplication = (app, html, data) => {
+
+export const renderASButtonInCreateActorApplication = (app, html) => {
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
-    window.GAS.log.i('Adding Create New Actor button');
-
     const select = $('select', html);
     const systemActorDocumentTypes = dnd5e.actorTypes
-
+    
     function updateButton() {
       const actorType = select.val();
       // window.GAS.log.d('actorType', actorType)
@@ -121,24 +132,10 @@ export const renderASButtonInCreateActorApplication = (app, html, data) => {
   }
 }
 
-export const renderActorDirectory = (app) => {
-  if(game.version < 13) {
-    if (!game.modules.get(MODULE_ID)?.active) return;
-    // Add Actor Studio button to the sidebar
-    if (app.constructor.name === "ActorDirectory") {
-      if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
-      if ($('#gas-sidebar-button').length) return;
-      const $gasButton = getActorStudioButton('gas-sidebar-button');
-      $(app._element).find('header.directory-header').append($gasButton);
-      $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-      $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-    }
-  }
-}
+
 
 export default {
   renderASButtonInCreateActorApplication,
-  activateDocumentDirectory,
-  renderActorDirectory,
+  renderActorStudioSidebarButton,
   openActorStudio
 }
