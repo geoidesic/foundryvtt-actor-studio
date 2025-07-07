@@ -1,7 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte";
   import { fade, scale }        from 'svelte/transition';
-  import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { localize } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
 

@@ -20,8 +20,8 @@
     subClassesForClass,
     readOnlyTabs,
   } from "~/src/stores/index";
-  import { localize as t} from "#runtime/svelte/helper";
-  import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { localize as t} from "@typhonjs-fvtt/runtime/util/i18n";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";

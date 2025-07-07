@@ -1,5 +1,5 @@
 <script>
-  import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
   import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs } from "~/src/stores/index"
   import Tabs from "~/src/components/molecules/Tabs.svelte";

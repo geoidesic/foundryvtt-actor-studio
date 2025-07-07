@@ -3,7 +3,7 @@
   import { extractMapIteratorObjectProperties, getPackFolders,getPacksFromSettings, log, getRules } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import Tabs from '~/src/components/molecules/Tabs.svelte';
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
   
   const actor = getContext("#doc");
   const ruleConfig = { journalId: 'QvPDSUsAiEn3hD8s', pageId: 'evx9TWix4wYU51a5' };

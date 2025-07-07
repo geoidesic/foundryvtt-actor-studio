@@ -1,7 +1,7 @@
 <script>
 
   import { goldRoll } from "~/src/stores/storeDefinitions";
-  import { localize as t } from "#runtime/svelte/helper";
+  import { localize as t } from "@typhonjs-fvtt/runtime/util/i18n";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";

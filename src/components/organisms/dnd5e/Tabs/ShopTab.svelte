@@ -4,7 +4,7 @@
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, tick } from 'svelte';
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
   import { get } from 'svelte/store';
 
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };

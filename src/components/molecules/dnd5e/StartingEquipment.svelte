@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
     equipmentSelections,

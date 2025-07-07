@@ -1,5 +1,5 @@
 <script>
-  import { localize as t } from "#runtime/svelte/helper";
+  import { localize as t } from "@typhonjs-fvtt/runtime/util/i18n";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";

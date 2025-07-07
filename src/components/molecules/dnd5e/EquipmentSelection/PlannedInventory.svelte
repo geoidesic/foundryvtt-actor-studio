@@ -1,7 +1,7 @@
 <script>
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, flattenedSelections } from "~/src/stores/equipmentSelections";
-import { localize } from "#runtime/svelte/helper";
+import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
 
 let plannedItems = [];
 

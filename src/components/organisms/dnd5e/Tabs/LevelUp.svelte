@@ -1,7 +1,7 @@
 <script>
 import { getContext, onMount, tick, onDestroy } from "svelte";
 import { MODULE_ID } from "~/src/helpers/constants";
-import { localize } from "#runtime/svelte/helper";
+import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
 
 import { 
   classUuidForLevelUp, 

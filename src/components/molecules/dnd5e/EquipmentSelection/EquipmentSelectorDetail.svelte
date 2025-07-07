@@ -2,7 +2,7 @@
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { readOnlyTabs } from "~/src/stores/index";
-import { localize } from "#runtime/svelte/helper";
+import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";

@@ -9,7 +9,7 @@
     illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
   import { race, subRace, readOnlyTabs } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
 

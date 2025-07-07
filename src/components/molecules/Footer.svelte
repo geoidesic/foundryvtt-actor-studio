@@ -48,7 +48,7 @@
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
   import { localize } from "~/src/helpers/Utility";
-  import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   

@@ -12,7 +12,7 @@
   import Roll from "~/src/components/molecules/dnd5e/AbilityEntry/Roll.svelte";
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "@typhonjs-fvtt/runtime/util/i18n";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
 
