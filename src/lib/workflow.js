@@ -11,6 +11,48 @@ import {
   isAdvancementsForLevelInItem,
   dropItemOnCharacter
 } from "~/src/helpers/Utility";
+import { goldRoll } from '../stores/storeDefinitions';
+import { totalGoldFromChoices } from '../stores/goldChoices';
+import { tabs, activeTab, readOnlyTabs } from '../stores/index.js';
+
+/**
+ * Handles creating container contents for a container item
+ * @param {Object} sourceItem - The original container item from UUID
+ * @param {Object} createdContainerItem - The created container item on the actor
+ * @param {Object} actor - The target actor
+ * @returns {Promise<void>}
+ */
+export async function handleContainerContents(sourceItem, createdContainerItem, actor) {
+  if (sourceItem.type !== 'container') return;
+  
+  try {
+    // Access contents from system.contents
+    const contents = await sourceItem.system.contents;
+    
+    if (contents && contents.size > 0) {
+      window.GAS.log.d('[CONTAINER] Processing container contents for:', sourceItem.name, 'Contents count:', contents.size);
+      
+      // Create each contained item separately with system.container pointing to the main item
+      for (const containedItem of contents) {
+        try {
+          const containedData = game.items.fromCompendium(containedItem);
+          if (containedData) {
+            // Set the container property to point to the main container
+            containedData.system.container = createdContainerItem.id;
+            await Item.create(containedData, { parent: actor });
+            window.GAS.log.d('[CONTAINER] Created contained item:', containedItem.name, 'in container:', createdContainerItem.id);
+          }
+        } catch (error) {
+          console.error('Error creating contained item:', containedItem.name, error);
+        }
+      }
+    } else {
+      window.GAS.log.d('[CONTAINER] Container has no contents or contents is empty');
+    }
+  } catch (error) {
+    console.error('Error processing container contents for:', sourceItem.name, error);
+  }
+}
 
 /**
  * Creates a new actor in the game world and embeds all selected items
@@ -248,34 +290,7 @@ export async function handleAddEquipment({
         const createdItem = await Item.create(data, { parent: $actorInGame });
         
         // Handle containers - contents may be a Promise that resolves to a Collection
-        if (item.type === 'container') {
-          try {
-            
-            // Access contents from system.contents, not item.contents
-            const contents = await item.system.contents;
-            
-            if (contents && contents.size > 0) {
-              
-              // Create each contained item separately with system.container pointing to the main item
-              for (const containedItem of contents) {
-                try {
-                  const containedData = game.items.fromCompendium(containedItem);
-                  if (containedData) {
-                    // Set the container property to point to the main container
-                    containedData.system.container = createdItem.id;
-                    const createdContainedItem = await Item.create(containedData, { parent: $actorInGame });
-                  }
-                } catch (error) {
-                  console.error('Error creating contained item:', containedItem.name, error);
-                }
-              }
-            } else {
-              window.GAS.log.d('[WORKFLOW] Container has no contents or contents is empty');
-            }
-          } catch (error) {
-            console.error('Error processing container contents for:', item.name, error);
-          }
-        }
+        await handleContainerContents(item, createdItem, $actorInGame);
         
         window.GAS.log.d('[WORKFLOW] Successfully created item:', item.name, 'with quantity:', quantity);
       }

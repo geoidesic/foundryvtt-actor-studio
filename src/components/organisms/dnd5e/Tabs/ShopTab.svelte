@@ -83,7 +83,8 @@
       const bundleQuantity = fullItemData.system?.quantity || 1;
       const newQuantity = currentQuantity + bundleQuantity;
       
-      updateCart(itemId, newQuantity, fullItemData);
+      // Store the UUID separately for container handling
+      updateCart(itemId, newQuantity, fullItemData, item.uuid);
       
     } catch(error) {
       console.error("Error adding item to cart:", error);

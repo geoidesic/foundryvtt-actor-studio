@@ -96,10 +96,10 @@ export function tidy5eSheetUI(app, element, data) {
 
 export function initLevelup() {
 
-
   Hooks.on("renderActorSheetV2", (app, html, data) => {
-    console.log(arguments);
-    // window.GAS.log.d(app.constructor.name)
+   
+    window.GAS.log.d(app.constructor.name)
+    window.GAS.log.d(data)
     if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
 
     if(app.constructor.name === "CharacterActorSheet") {
