@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 // Mock global variables that would normally be provided by FoundryVTT
 global.window = global.window || {};
 global.window.GAS = {
@@ -9,6 +11,9 @@ global.window.GAS = {
   }
 };
 global.GAS = global.window.GAS;
+
+// Make window globally available
+globalThis.window = global.window;
 
 // Mock game settings
 global.game = {

@@ -17,6 +17,7 @@
     isGroupNonEditable,
   } from "~/src/stores/equipmentSelections";
   import { MODULE_ID } from "~/src/helpers/constants";
+
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
   import ImageButton from "~/src/components/atoms/button/ImageButton.svelte";
   import StartingEquipmentGroups2024 from "~/src/components/atoms/dnd5e/2024/StartingEquipmentGroups.svelte";

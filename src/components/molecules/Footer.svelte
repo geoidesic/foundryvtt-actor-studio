@@ -30,7 +30,7 @@
     levelUpSubClassObject,
     levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected,
-    readOnlyTabs // Added missing import
+    readOnlyTabs
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -62,11 +62,19 @@
     handleCharacterUpdate as characterUpdateWorkflow
   } from "~/src/lib/workflow";
 
-  // Add a local store to track if equipment has been added
-  const equipmentAdded = writable(false);
-  
   // Add a flag to track if equipment has been added during this session
   let hasAddedEquipmentThisSession = false;
+  
+  // Debug logging for button visibility
+  $: {
+    if ($activeTab === 'equipment') {
+      window.GAS.log.d('[FOOTER] Equipment button visibility check:', {
+        isEquipmentComplete,
+        equipmentReadonly: $readOnlyTabs.includes('equipment'),
+        shouldShowButton: isEquipmentComplete && !$readOnlyTabs.includes('equipment')
+      });
+    }
+  }
 
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
@@ -203,8 +211,8 @@
       stores: storeRefs,
       actorInGame,
       onEquipmentAdded: () => {
-        equipmentAdded.set(true);
         hasAddedEquipmentThisSession = true;
+        window.GAS.log.d('[FOOTER] Equipment added to actor');
       }
     });
   };
@@ -220,40 +228,21 @@
       // window.GAS.log.d('[FOOTER] Button visibility check:', {
       //   isEquipmentComplete,
       //   hasInventoryItems: $hasInventoryItems,
-      //   equipmentAdded: $equipmentAdded,
-      //   shouldShowButton: isEquipmentComplete && !$equipmentAdded
+      //   equipmentCompleted: $completedTabs.equipment,
+      //   shouldShowButton: isEquipmentComplete && !$completedTabs.equipment
       // });
     }
   }
 
-  // Check actor inventory when actorInGame changes
+  // Check actor inventory when actorInGame changes and set completion state
   $: if ($actorInGame) {
     // If equipment has already been added this session, don't change the flag
     if (!hasAddedEquipmentThisSession) {
-      if (checkInventory($actorInGame)) {
-        equipmentAdded.set(true);
-      }
+              if (checkInventory($actorInGame)) {
+          // Actor already has inventory items
+          window.GAS.log.d('[FOOTER] Actor already has inventory items');
+        }
     }
-  }
-  
-  // Reset equipmentAdded when tab changes to equipment
-  $: if ($activeTab === 'equipment') {
-    // If equipment has been added this session, keep the button hidden
-    if (hasAddedEquipmentThisSession) {
-      equipmentAdded.set(true);
-    } 
-    // Otherwise, check if the actor has inventory items
-    else if (!$hasInventoryItems) {
-      equipmentAdded.set(false);
-    } else {
-      equipmentAdded.set(true);
-    }
-    
-    // window.GAS.log.d('[FOOTER] Tab changed to equipment:', {
-    //   hasAddedEquipmentThisSession,
-    //   hasInventoryItems: $hasInventoryItems,
-    //   equipmentAdded: $equipmentAdded
-    // });
   }
 
   // Handle finalizing purchases in the shop
@@ -409,7 +398,7 @@
         +if("$activeTab === 'equipment'")
           .progress-container
             ProgressBar(progress="{progress}")
-            +if("isEquipmentComplete && !$equipmentAdded")
+            +if("isEquipmentComplete && !$readOnlyTabs.includes('equipment')")
               .button-container
                 button.mt-xs(
                   type="button"

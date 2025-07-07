@@ -1,6 +1,7 @@
 <script>
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
+import { readOnlyTabs } from "~/src/stores/index";
 import { localize } from "#runtime/svelte/helper";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
@@ -8,6 +9,9 @@ import { MODULE_ID } from "~/src/helpers/constants";
 
 // Types that need additional configuration
 const CONFIGURABLE_TYPES = ['tool', 'weapon', 'armor', 'focus'];
+
+// Check if equipment tab is readonly
+$: isDisabled = $readOnlyTabs.includes("equipment");
 
 // Get equipment sources
 let packs = getPacksFromSettings("equipment");
@@ -225,7 +229,7 @@ function handleCancelSelection(group) {
 
 <template lang="pug">
 section
-  +if("configurableSelections.length > 0")
+  +if("configurableSelections.length > 0 && !isDisabled")
     +each("configurableSelections as group")
       .equipment-config-item
         .flexrow.justify-flexrow-vertical.no-wrap
@@ -236,9 +240,10 @@ section
             )
           .flex2.left.name.ml-sm
             span {group.selectedItem.label}
-          .flex0.right
-            button.cancel-button(on:click!="{handleCancelSelection(group)}")
-              i.fas.fa-times
+          +if("!isDisabled")
+            .flex0.right
+              button.cancel-button(on:click!="{handleCancelSelection(group)}")
+                i.fas.fa-times
         
         .equipment-select
           +if("group.parentGroup")
