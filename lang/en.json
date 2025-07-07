@@ -278,7 +278,7 @@
       },
       "EnableEquipmentPurchase": {
         "Name": "Enable Equipment Purchase",
-        "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums."
+        "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums. Note that if Equipment Selection is disabled, this setting is ignored."
       },
       "ExperimentalCharacterNameStyling": {
         "Name": "Experimental Character Name Styling",
