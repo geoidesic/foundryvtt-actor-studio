@@ -11,6 +11,7 @@ import {
   isAdvancementsForLevelInItem,
   dropItemOnCharacter
 } from "~/src/helpers/Utility";
+import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager";
 import { goldRoll } from '../stores/storeDefinitions';
 import { totalGoldFromChoices } from '../stores/goldChoices';
 import { tabs, activeTab, readOnlyTabs } from '../stores/index.js';
@@ -172,6 +173,13 @@ export async function createActorInGameAndEmbedItems({
   }
 
   await dropItemRegistry.advanceQueue(true);
+  
+  // If advancement is disabled, destroy any open advancement managers
+  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+    window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
+    destroyAdvancementManagers();
+  }
+  
   return createdActor;
 }
 
@@ -240,6 +248,12 @@ export async function updateActorAndEmbedItems({
 
   window.GAS.log.d('[WORKFLOW] updateActorAndEmbedItems advancing queue');
   dropItemRegistry.advanceQueue(true);
+  
+  // If advancement is disabled, destroy any open advancement managers
+  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+    window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
+    destroyAdvancementManagers();
+  }
 }
 
 /**
