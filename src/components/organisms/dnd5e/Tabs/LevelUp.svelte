@@ -13,6 +13,7 @@ import {
   resetLevelUpStores,
   isLevelUp,
   levelUpClassGetsSubclassThisLevel,
+  subclassLevelForLevelUp,
   isNewMultiClassSelected,
   isLevelUpAdvancementInProgress,
   activeRowClassKey,
@@ -163,6 +164,7 @@ const eventHandlers = {
     const isUnset = Boolean($selectedMultiClassUUID) && Boolean($newLevelValueForExistingClass);
     if(isUnset) return;
 
+    window.GAS.log.d('classKey', classKey)
     $levelUpClassObject = getters.getCharacterClass(classKey)
     window.GAS.log.d('classKey', classKey)
     window.GAS.log.d('$levelUpClassObject', $levelUpClassObject)
@@ -236,8 +238,9 @@ const eventHandlers = {
     $levelUpSubClassObject = null;
     subclassValue = null;
     richSubClassHTML = "";
-    
+    window.GAS.log.d('option', option)
     $levelUpClassObject = await fromUuid(option);
+    window.GAS.log.d('levelUpClassObject', $levelUpClassObject)
     $selectedMultiClassUUID = option;
     $classUuidForLevelUp = option;
     $activeRowClassKey = null;
@@ -253,7 +256,7 @@ const eventHandlers = {
 
     Hooks.call('gas.richhtmlReady', $levelUpRichHTML);
 
-    window.GAS.log.d('subClassesIndex', subClassesIndex)
+    // window.GAS.log.d('subClassesIndex', subClassesIndex)
   },
   /**
    * Handles the selection of a subclass
@@ -264,7 +267,7 @@ const eventHandlers = {
     $subClassUuidForLevelUp = option.value ?? option ?? null;
     $levelUpSubClassObject = await fromUuid($subClassUuidForLevelUp);
     subclassValue = $subClassUuidForLevelUp;
-    window.GAS.log.d('$subClassUuidForLevelUp', $subClassUuidForLevelUp)
+    // window.GAS.log.d('$subClassUuidForLevelUp', $subClassUuidForLevelUp)
     await tick();
     importers.importSubClassAdvancements();
     richSubClassHTML = await illuminatedDescription(
@@ -312,8 +315,8 @@ $: if($classUuidForLevelUp) {
  */
   $: existingCLassLevels = classKeys.map((classKey, index) => {
     const classObj = classes[classKey]
-    window.GAS.log.d('classObj_' + index, classObj)
-    window.GAS.log.d('classObj.system.levels', classObj.system.levels)
+    // window.GAS.log.d('classObj_' + index, classObj)
+    // window.GAS.log.d('classObj.system.levels', classObj.system.levels)
     return classObj.system.levels;
   });
 /**
@@ -335,11 +338,11 @@ $: if($classUuidForLevelUp) {
     classAdvancementArrayFiltered = [];
   }
 
-$: window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
+// $: window.GAS.log.d('$classUuidForLevelUp', $classUuidForLevelUp)
 
 onMount(async () => {
   // resetLevelUpStores();
-  window.GAS.log.d('$levelUpPreAdvancementSelections', $levelUpPreAdvancementSelections)
+  // window.GAS.log.d('$levelUpPreAdvancementSelections', $levelUpPreAdvancementSelections)
   if($levelUpPreAdvancementSelections.isMultiClass) {
     await eventHandlers.selectMultiClassHandler($levelUpPreAdvancementSelections.multiClass);
   } else {
@@ -362,19 +365,19 @@ onDestroy(() => {
     .flex2.pr-sm.col-a
 
       +if("window.GAS.debug")
-        pre classUuidForLevelUp {$classUuidForLevelUp}
-        pre selectedMultiClassUUID {$selectedMultiClassUUID}
-        pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
-        pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
-        pre levelUpClassObject {$levelUpClassObject}
-        pre classUuidForLevelUp {$classUuidForLevelUp}
-        pre levelUpSubClassObject {$levelUpSubClassObject}
-        pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
-        pre activeRowClassKey {$activeRowClassKey}
-        pre selectedMultiClassUUID {$selectedMultiClassUUID}
-        pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        pre subclasses {subclasses}
-        pre classKeys {classKeys}
+        //- pre classUuidForLevelUp {$classUuidForLevelUp}
+        //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
+        //- pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+        //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+        //- pre levelUpClassObject {$levelUpClassObject}
+        //- pre classUuidForLevelUp {$classUuidForLevelUp}
+        //- pre levelUpSubClassObject {$levelUpSubClassObject}
+        //- pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
+        //- pre activeRowClassKey {$activeRowClassKey}
+        //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
+        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+        //- pre subclasses {subclasses}
+        //- pre classKeys {classKeys}
 
         
       +if("!$selectedMultiClassUUID")
@@ -423,7 +426,14 @@ onDestroy(() => {
 
       +if("$classUuidForLevelUp")
         h2.flexrow.mt-md {localize('GAS.LevelUp.LevelAdvancements')}
-        +if("selectedMultiClassUUID")
+
+        //- pre subclasses {subclasses.length}
+        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+        //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
+        //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
+        //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
+        //- +if("selectedMultiClassUUID")
+
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         // Subclass selection section

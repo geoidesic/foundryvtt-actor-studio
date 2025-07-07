@@ -18,7 +18,7 @@ onMount(async () => {
 });
 </script>
 <template lang="pug">
-pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+//- pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
 .class-row(
   class="{cssClasses} {disabled ? 'disabled' : ''}" 
   role="button" 

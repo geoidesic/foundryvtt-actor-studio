@@ -179,6 +179,9 @@
   align-items: center
   justify-content: center
 
+:global(.gas-advancements .header-button.control.close)
+  display: none
+
 // Ability scores styling
 :global(.gas-advancements .step ul.ability-scores li)
   @include inset
@@ -225,8 +228,16 @@
   padding: 0
   margin: 0
 
+:global(.gas-advancements form[data-type="ItemGrant"] .item-name label)
+  padding: 0
+  margin: 6px 0 0 0
+
 :global(.gas-advancements form[data-type="ItemGrant"] .item-image)
-  background-size: cover
+  height: 40px
+  width: 40px
+  max-width: 40px
+  margin-right: 8px 
+  background-size: contain
   background-repeat: no-repeat
 
 :global(.gas-advancements form[data-type="ItemChoice"] .drop-target .item-name)

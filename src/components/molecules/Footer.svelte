@@ -376,6 +376,7 @@
                     type="text" 
                     value="{value}" 
                     on:input="{handleNameInput}"
+                    disabled="{$isActorCreated}"
                   )
       
       //- Progress and buttons section
@@ -494,6 +495,11 @@ button[disabled]
   &:focus
     outline: none
     box-shadow: none
+  
+  &:disabled
+    color: var(--color-text-dark-secondary)
+    cursor: not-allowed
+    opacity: 0.6
   
   // Experimental styling (when x-sign class is applied)
   &.x-sign
