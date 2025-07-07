@@ -52,7 +52,7 @@ function isActorTypeValid(actorTypes, type) {
 
 function getActorStudioButton(buttonId, text=false) {
   const gasButton = $(
-    `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start">
+    `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
       <img src="modules/${MODULE_ID}/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
       ${text ? `<span>${text}</span>` : ''}
     </button>`,
