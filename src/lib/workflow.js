@@ -335,6 +335,28 @@ export async function handleAddEquipment({
         return;
       }
     } else {
+      // Shop is disabled, add gold directly to actor
+      let goldValue;
+      
+      // Use the appropriate gold source based on DnD5e version
+      if (window.GAS.dnd5eVersion >= 4) {
+        goldValue = get(totalGoldFromChoices);
+        window.GAS.log.d('[WORKFLOW] Adding totalGoldFromChoices to actor for v4:', goldValue);
+      } else {
+        goldValue = get(goldRoll);
+        window.GAS.log.d('[WORKFLOW] Adding goldRoll to actor for v3:', goldValue);
+      }
+      
+      // Add gold to actor if there's any gold to add
+      if (goldValue > 0) {
+        try {
+          await $actorInGame.update({ "system.currency.gp": (($actorInGame.system.currency.gp || 0) + goldValue) });
+          window.GAS.log.d('[WORKFLOW] Successfully added', goldValue, 'gold to actor');
+        } catch (error) {
+          console.error('Error adding gold to actor:', error);
+        }
+      }
+      
       Hooks.call("gas.close");
     }
   }
