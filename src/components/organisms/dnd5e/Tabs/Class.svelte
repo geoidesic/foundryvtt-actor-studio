@@ -309,7 +309,7 @@
               .flex2.left
                 TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
           +if("classAdvancementArrayFiltered")
-            h3.left.mt-sm.flexrow
+            h4.left.mt-sm.flexrow
               .flex0(on:click="{toggleClassAdvancements}")
                 +if("classAdvancementExpanded")
                   span [-]

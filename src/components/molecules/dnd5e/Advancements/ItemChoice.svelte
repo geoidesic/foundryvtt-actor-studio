@@ -23,8 +23,8 @@
         .flex.left {getAdvancementValue(advancement, 'hint')}
       +else()
         .flexrow
-          h3.flex.left
-            span Choose 
+          h4.flex.left
+            span Choose&nbsp
             span {count}&nbsp
             span from: 
         ul.icon-list

@@ -180,7 +180,7 @@ div.content
           ol.properties-list
             +each("filteredMovement as movement")
               li.left {movement.label} : {movement.value} {units}
-        +if("filteredSenses")
+        +if("filteredSenses.length")
           h3.left {localize('GAS.Tabs.Races.Senses')}
           ol.properties-list
             +each("filteredSenses as senses")
