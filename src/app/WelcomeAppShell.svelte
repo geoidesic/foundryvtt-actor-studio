@@ -34,7 +34,7 @@
       .inset
         .flexrow.justify-flexrow-vertical
           .flex2
-            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
+            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
           .flex3
             p.thanks.right.mr-md {localize('Welcome.Thanks')}
         hr
