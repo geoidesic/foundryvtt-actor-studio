@@ -218,14 +218,19 @@
     border: none
 
   .header-control,
-  .application .header-control
-    margin: 5px -1px !important
-    &::before
-      font-size: 1.5rem
-      font-weight: 700
-      position: absolute
-      right: 10px
-      top: 5px
+    .application 
+      .header-control
+        margin: 5px -1px !important
+        &::before
+          font-size: 1.5rem
+          font-weight: 700
+          position: absolute
+          right: 10px
+          top: 5px
+      .application
+        table
+          margin: 0
+        // border-spacing: 0
 
   .gas-tooltip
     text-align: left !important
