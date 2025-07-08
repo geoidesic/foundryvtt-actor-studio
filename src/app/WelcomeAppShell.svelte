@@ -38,7 +38,6 @@
           .flex3
             p.thanks.right.mr-md {localize('Welcome.Thanks')}
         hr
-        h1 {localize("Welcome.IntroductionTitle")}
         p {localize("Welcome.Introduction")}
         a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {localize("Welcome.UsageTitle")}
         p.lighter
@@ -52,11 +51,9 @@
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
           | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
         hr
-        h3.flexrow
-          .flex0
-            i.fa-solid.fa-face-awesome.mr-sm
-          .flex1 
-            h3 New Final Fantasy Foundry system – 4th July!
+        h4.center.mt-none
+          i.fa-solid.fa-face-awesome.mr-sm
+          | New Final Fantasy Foundry system – 4th July!
         a.flexrow(href="https://www.youtube.com/live/BceTqsITzek")
           img(src="https://i.ytimg.com/vi/BceTqsITzek/maxresdefault.jpg")
         .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
@@ -77,7 +74,7 @@
 </template>
 
 <style lang="sass">
-  @import "../styles/Mixins.scss"
+  @import "../styles/Mixins.sass"
 
   main
     overflow-y: auto
@@ -85,6 +82,10 @@
       margin-right: 0.5em
     .inset
       @include inset
+    h1
+      margin-top: 0
+    h4
+      font-family: var(--dnd5e-font-modesto);
   .dont-show
     font-size: smaller
 
@@ -115,9 +116,5 @@
       &:hover
         color: #ccc
 
-  h3
-    color: purple
-    text-decoration: none
-    border: none
 
 </style>

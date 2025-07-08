@@ -247,7 +247,7 @@
 </div>
 
 <style lang="sass">
-  @import "../../../../../styles/features/equipment-purchase.scss"
+  @import "../../../../../styles/features/equipment-purchase.sass"
 
   .shop-tab-container 
     position: relative

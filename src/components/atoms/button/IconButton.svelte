@@ -10,7 +10,7 @@
 </button>
 
 <style lang="scss">
-  @import "../../../../styles/Mixins.scss";
+  @import "../../../../styles/Mixins.sass";
   button {
     @include icon-button;
     cursor: pointer;

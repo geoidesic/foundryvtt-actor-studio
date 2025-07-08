@@ -65,7 +65,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../styles/Mixins.scss";
+  @import "../../../styles/Mixins.sass";
 
   .tabs {
     @include flex-column;

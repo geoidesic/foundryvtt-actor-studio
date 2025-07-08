@@ -206,7 +206,7 @@ div.content
 </template>
 
 <style lang="sass">
-  @use "../../../../../styles/Mixins.scss" as mixins
+  @use "../../../../../styles/Mixins.sass" as mixins
   .content 
     +mixins.staticOptions
 

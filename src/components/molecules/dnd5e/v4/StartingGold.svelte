@@ -190,7 +190,7 @@ section.starting-gold
 </template>
 
 <style lang="sass">
-@import "../../../../../styles/Mixins.scss"
+@import "../../../../../styles/Mixins.sass"
 .badge
   +badge()
 .starting-gold

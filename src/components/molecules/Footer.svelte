@@ -482,15 +482,16 @@ button[disabled]
   background: rgba(1, 1, 1, 0.1)
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
 
-.character-name-input
-  border: none
-  background: none
-  height: auto
-  line-height: normal
-  padding: 0
-  margin: 0
-  color: inherit
-  font-family: inherit
+.footer-container .character-name-input-container input[type="text"].character-name-input
+  border: none !important
+  background: none !important
+  height: auto !important
+  line-height: normal !important
+  padding: 0 !important
+  margin: 0 !important
+  color: inherit !important
+  font-family: inherit !important
+  font-size: 2rem
   
   &:focus
     outline: none

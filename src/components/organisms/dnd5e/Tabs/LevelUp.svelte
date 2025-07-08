@@ -469,7 +469,7 @@ onDestroy(() => {
       | {@html $levelUpCombinedHtml}
 </template>
 <style lang="sass">
-  @use "../../../../../styles/Mixins.scss" as mixins
+  @use "../../../../../styles/Mixins.sass" as mixins
 
   :global(.icon-select)
     position: relative

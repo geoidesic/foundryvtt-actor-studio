@@ -105,7 +105,7 @@
 </template>
 
 <style lang="sass" scoped>
-@import "../../../../../styles/Mixins.scss"
+@import "../../../../../styles/Mixins.sass"
 .content 
   @include staticOptions
 

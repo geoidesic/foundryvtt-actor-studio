@@ -385,7 +385,7 @@
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.scss"
+  @import "../../../../../styles/Mixins.sass"
   .content 
     @include staticOptions
 

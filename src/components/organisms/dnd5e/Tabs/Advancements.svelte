@@ -50,7 +50,7 @@
 </template>
 
 <style lang="sass">
-@import "../../../../../styles/Mixins.scss"
+@import "../../../../../styles/Mixins.sass"
 .content
   padding: 1rem
 :global(#foundryvtt-actor-studio-pc-sheet .gas-advancements .window-header .window-title)

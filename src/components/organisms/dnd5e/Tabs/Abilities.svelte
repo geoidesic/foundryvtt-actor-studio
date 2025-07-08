@@ -115,7 +115,7 @@
 </template>
 
 <style lang="sass" scoped>
-@use "../../../../../styles/Mixins.scss" as mixins
+@use "../../../../../styles/Mixins.sass" as mixins
 .content 
   +mixins.staticOptions
 
