@@ -42,6 +42,10 @@
   color: var(--color-highlight)
 
 .GAS
+  color: var(--color-text-light-theme)
+
+  &.theme-dark
+    color: var(--color-text-dark-theme)
 
   // padding margins
   .py-md
@@ -369,7 +373,11 @@
 
     input
       color: var(--color-text-dark-theme)
-      
+    
+    .icon-list
+      .advancement
+        color: var(--color-text-dark-theme)
+
     
   
   .tab-content ul.icon-list 
@@ -384,7 +392,7 @@
     color: var(--color-text-light-theme)
     .advancement
       background-color: var(--tabs-content-background)
-      color: var(--color-text-dark-theme)
+
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
     .flex0
@@ -517,7 +525,7 @@ body.game #gas-settings-submenu.app.window-app
 
   a.button.active, button.active 
     outline: none
-    box-shadow: none
+    box-shadow: 0 -8px 16px -7px var(--color-shadow-primary)
     
   .black-link
     white-space: pre-wrap

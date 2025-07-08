@@ -453,6 +453,10 @@
       justify-content: center
       cursor: pointer
 
+      i.fas.fa-plus
+        margin-right: 0
+        margin-left: 0
+
       &:hover
         background: darken(#b59e54, 10%)
 
