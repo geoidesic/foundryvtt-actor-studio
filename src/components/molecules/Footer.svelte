@@ -424,7 +424,7 @@
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
             ProgressBar(progress="{progress}")
-            +if("$progress === 100")
+            +if("$progress === 100  && !$readOnlyTabs.includes($activeTab)")
               .button-container
                 +if("!$isActorCreated")
                   button.mt-xs(

@@ -31,7 +31,7 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot)
     main
-      .inset
+      .inset.bg-dark
         .flexrow.justify-flexrow-vertical
           .flex2
             img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
@@ -51,18 +51,13 @@
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
           | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
         hr
-        h4.center.mt-none
-          i.fa-solid.fa-face-awesome.mr-sm
-          | New Final Fantasy Foundry system – 4th July!
-        a.flexrow(href="https://www.youtube.com/live/BceTqsITzek")
-          img(src="https://i.ytimg.com/vi/BceTqsITzek/maxresdefault.jpg")
         .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
           .flex0 
             input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
           .flex.dont-show
             span {localize('Setting.DontShowWelcome.Name') }
     footer
-      div.right.bg-green
+      div.logo
         a(href="https://www.aardvark.games") 
           img.white(src="/modules/foundryvtt-actor-studio/assets/aardvark-logo.webp" alt="Aardvark Game Studios Logo" height="50" width="50" style="fill: white; border: none; width: auto;")
       div.left
@@ -82,6 +77,9 @@
       margin-right: 0.5em
     .inset
       @include inset
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
     h1
       margin-top: 0
     h4
@@ -110,6 +108,12 @@
     padding: 1em
     font-size: 0.8em
     z-index: 3
+    div.logo
+      a
+        display: flex
+        align-items: center
+        justify-content: end
+        gap: 0.5em
     a
       color: white
       text-decoration: underline
