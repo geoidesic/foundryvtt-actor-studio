@@ -59,6 +59,7 @@
     border-collapse: separate
   input.score
     min-width: 40px
+    color: var(--color-text-light-theme)
   th
     padding: 0.1rem 0.5rem
     text-align: left
