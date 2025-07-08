@@ -66,7 +66,6 @@
                   .flex0.relative.icon
                     i.fas.fa-coins
                   .flex2.left
-                    span.label Result: 
                     span.value {$goldRoll} gp
           .flex0.right.controls(class="{hasRolled || disabled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
             i.fas.fa-dice
@@ -82,7 +81,7 @@
     padding: 0.5rem
 
   .gold-section
-    padding: 0.5rem
+    padding: 0 0 0.5rem 0
     border-radius: var(--border-radius)
     &:not(.disabled)
       border: 1px solid var(--dnd5e-color-gold)
@@ -121,7 +120,7 @@
     &.final-gold-result
       padding: 0.5rem
       border-radius: var(--border-radius)
-      border: 1px solid var(--dnd5e-color-gold)
+      // border: 1px solid var(--dnd5e-color-gold)
       background: #000000
       color: var(--dnd5e-color-gold)
       margin-top: 0.5rem
