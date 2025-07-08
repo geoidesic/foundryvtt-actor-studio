@@ -96,9 +96,10 @@
 
 <template lang="pug">
   div.content
+    h1.center.mt-none.hide {localize('GAS.Tabs.Abilities.Title')}
     .flexrow
       .flex2.pr-sm.col-a
-        h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
+        h2.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         +if("options.length > 1")
           IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
           +else()

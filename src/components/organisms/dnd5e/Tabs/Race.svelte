@@ -161,6 +161,7 @@
 
 <template lang="pug">
 div.content
+  h1.center.mt-none.hide {localize('GAS.Tabs.Races.Title')}
   .flexrow
     .flex2.pr-sm.col-a
       .flexrow
@@ -176,17 +177,17 @@ div.content
             li {book} {page} {type.value ? ', ' + type.value : ''} 
 
         +if("filteredMovement")
-          h3.left {localize('GAS.Tabs.Races.Movement')}
+          h2.left {localize('GAS.Tabs.Races.Movement')}
           ol.properties-list
             +each("filteredMovement as movement")
               li.left {movement.label} : {movement.value} {units}
         +if("filteredSenses.length")
-          h3.left {localize('GAS.Tabs.Races.Senses')}
+          h2.left {localize('GAS.Tabs.Races.Senses')}
           ol.properties-list
             +each("filteredSenses as senses")
               li.left {senses.label} : {senses.value} {units}
         +if("advancementArray")
-          h3.left {localize('GAS.Advancements')}
+          h2.left {localize('GAS.Advancements')}
           ul.icon-list
             +each("advancementArray as advancement")
               //- @todo: this should be broken out into components for each advancement.type

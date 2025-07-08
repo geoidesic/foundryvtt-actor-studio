@@ -99,16 +99,17 @@
 </script>
 
 <template lang="pug">
-div.content
+.content
+  h1.center.mt-none.hide {localize('GAS.Tabs.Background.Title')}
   .flexrow
     .flex2.pr-sm.col-a
       .flexrow
         .flex0.required(class="{$background ? '' : 'active'}") *
         .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
      
       +if("advancementArray.length")
-        h3.left {localize('GAS.Advancements')}
+        h2.left {localize('GAS.Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")
             //- @todo: this should be broken out into components for each advancement.type

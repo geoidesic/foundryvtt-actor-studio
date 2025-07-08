@@ -51,17 +51,29 @@
     "SubClass": "Subclass",
     "Tabs": {
       "Abilities": {
+        "Title": "Abilities",
         "HowCalculated": "How are abilities calculated?"
       },
       "Races": {
+        "Title": "Races",
         "Movement": "Movement",
         "Senses": "Senses",
         "Type": "Type"
       },
       "Classes": {
+        "Title": "Classes",
         "Class": "Class",
         "SubClass": "Sublass",
         "FilterByLevel": "Explore Levels"
+      },
+      "Background": {
+        "Title": "Background"
+      },
+      "Equipment": {
+        "Title": "Equipment"
+      },
+      "Shop": {
+        "Title": "Shop"
       }
     },
     "Welcome": {

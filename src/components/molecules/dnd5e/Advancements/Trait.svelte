@@ -132,7 +132,7 @@
 
         +if("!fromAll(choice.pool)")
           .flexrow
-            h3.flex
+            h4.flex
               span Choose&nbsp;
               span &nbsp;{choice.count}&nbsp; 
               span of the following:
@@ -162,6 +162,8 @@
   
   <style lang="sass">
   @import "../../../../../styles/Mixins.sass"
+  .inset
+    @include inset
   .advancement
     @include inset
 

@@ -427,7 +427,7 @@
             +if("$progress === 100  && !$readOnlyTabs.includes($activeTab)")
               .button-container
                 +if("!$isActorCreated")
-                  button.mt-xs(
+                  button.mt-xs.wide(
                     type="button"
                     role="button"
                     on:mousedown="{clickCreateHandler}"

@@ -201,6 +201,7 @@
 
   .hide
     visibility: hidden
+    height: 0
 
   .relative
     position: relative
@@ -213,6 +214,9 @@
 
   .tight
     padding: 0
+
+  .wide
+    width: 100%
 
   img
     border: none
@@ -378,6 +382,7 @@
 
     input
       color: var(--color-text-dark-theme)
+      background-color: var(--li-background-color)
     
     .icon-list
       .advancement
@@ -428,25 +433,26 @@ body.game #gas-settings-submenu.app.window-app
     border: none
   p:has(a.content-link)
     line-height: 1.5rem
-  /* Option variables */
-  --tjs-select-option-background: #23221d
-  --tjs-select-option-color: #b5b3a4
+  
 
+  select
+    color: var(--tjs-select-option-color)
+    
   h2, h3, h4:not(.window-title), h5
     color: var(--color-highlight)
     text-shadow: none
 
   h1
-    font-size: 3rem
-  h2
     font-size: 2.5rem
-  h3
+  h2
     font-size: 2rem
+  h3
+    font-size: 1.5rem
   h4
     font-family: var(--dnd5e-font-modesto)
-    font-size: 1.5rem
+    font-size: 1.3rem
   h5
-    font-size: 1.2rem
+    font-size: 1.15rem
   .border-right
     border-right: 4px ridge var(--color-highlight)
 

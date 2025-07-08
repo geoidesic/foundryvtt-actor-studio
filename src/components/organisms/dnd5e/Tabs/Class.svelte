@@ -290,26 +290,28 @@
 
 <template lang="pug">
   .content
+    h1.center.mt-none.hide {t('GAS.Tabs.Classes.Title')}
     .flexrow
       .flex2.pr-sm.col-a
         .flexrow
           .flex0.required(class="{$characterClass ? '' : 'active'}") *
           .flex3 
             IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
+        
         +if("$characterClass")
           +if("subclasses.length && subClassLevel == 1")
-            h3.left.mt-md {t('GAS.SubClass')}
+            h2.left {t('GAS.SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
                 IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
           +if("!isDisabled")
-            h3.left.mt-sm {t('GAS.Tabs.Classes.FilterByLevel')}
+            h2.left {t('GAS.Tabs.Classes.FilterByLevel')}
             .flexrow
               .flex2.left
                 TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
           +if("classAdvancementArrayFiltered")
-            h4.left.mt-sm.flexrow
+            h3.left.mt-sm.flexrow
               .flex0(on:click="{toggleClassAdvancements}")
                 +if("classAdvancementExpanded")
                   span [-]
@@ -338,7 +340,7 @@
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           //- @deprecated in #159
           //- +if("$characterClass?.system?.startingEquipment?.length")
-          //-   h3.left.mt-sm.flexrow
+          //-   h2.left.mt-sm.flexrow
           //-     .flex0.pointer(on:click="{toggleEquipmentSelection}")
           //-       +if("equipmentSelectionExpanded")
           //-         span [-]
@@ -357,7 +359,7 @@
             //- h3.left.mt-sm Description
             //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
             +if("subClassAdvancementArrayFiltered.length")
-              h3.left.mt-sm.flexrow
+              h2.left.mt-sm.flexrow
                 .flex0.pointer(on:click="{toggleSubClassAdvancements}")
                   +if("subClassAdvancementExpanded")
                     span [-]
