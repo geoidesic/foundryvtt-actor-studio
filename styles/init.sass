@@ -212,7 +212,7 @@
 
   .header-control,
   .application .header-control
-    margin: 5px -2px !important
+    margin: 5px -1px !important
     &::before
       font-size: 1.5rem
       font-weight: 700
@@ -359,8 +359,8 @@
   &.theme-dark
     --button-background: #222
     
-    // Fix backdrop-filter causing gaps in theme-dark
-    .application .window-content
+    // Completely disable backdrop-filter in theme-dark to prevent tab positioning issues
+    .window-content
       backdrop-filter: none !important
       -webkit-backdrop-filter: none !important
 
@@ -417,7 +417,6 @@ body.game #gas-settings-submenu.app.window-app
   h3
     font-size: 2rem
   h4
-    display: none
     font-family: var(--dnd5e-font-modesto)
     font-size: 1.5rem
   h5
