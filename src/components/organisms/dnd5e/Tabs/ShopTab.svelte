@@ -249,6 +249,15 @@
 <style lang="sass">
   @import "../../../../../styles/features/equipment-purchase.sass"
 
+  :global(.GAS.theme-dark .cart-item .cart-item-price)
+    color: silver
+
+  :global(.GAS.theme-dark .item-row .item-actions .item-price)
+    color: silver
+  :global(.GAS.theme-dark .cart-item .quantity-display)
+    background: rgba(255, 255, 255, 0.1) !important
+    color: silver !important 
+
   .shop-tab-container 
     position: relative
     height: 100%
@@ -316,6 +325,7 @@
     display: flex
     flex-direction: column
     gap: 0.5rem
+
 
   .cart-item
     display: flex
@@ -385,9 +395,8 @@
     .remove-btn
       background: none
       border: none
-      color: #990000
       cursor: pointer
-      padding: 0.25rem
+      padding: 0.25rem 0 0.25rem 0.25rem
       border-radius: 3px
       line-height: 1
       

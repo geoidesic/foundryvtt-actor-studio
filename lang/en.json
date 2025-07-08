@@ -304,6 +304,7 @@
     "Equipment": {
       "Label": "Equipment",
       "Choice": "Choose one",
+      "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
       "SelectOne": "Select one of the following options:",

@@ -42,10 +42,10 @@
   color: var(--color-highlight)
 
 .GAS
-  color: var(--color-text-light-theme)
+  color: var(--gas-color-text)
 
   &.theme-dark
-    color: var(--color-text-dark-theme)
+    color: var(--gas-color-text)
 
   // padding margins
   .py-md
@@ -373,7 +373,6 @@
     left: 2px
     
   &.theme-dark
-    --button-background: #222
     
     // Completely disable backdrop-filter in theme-dark to prevent tab positioning issues
     .window-content
@@ -381,12 +380,12 @@
       -webkit-backdrop-filter: none !important
 
     input
-      color: var(--color-text-dark-theme)
-      background-color: var(--li-background-color)
+      color: var(--gas-color-text)
+      // background-color: var(--li-background-color) //- this interferes with welcome page checkbox
     
     .icon-list
       .advancement
-        color: var(--color-text-dark-theme)
+        color: var(--gas-color-text)
 
     
   
@@ -397,9 +396,9 @@
       ul.icon-list
         li
           background-color: #222
-          color: var(--color-text-dark-theme)
+          color: var(--gas-color-text)
   .icon-list
-    color: var(--color-text-light-theme)
+    color: var(--gas-color-text)
     .advancement
       background-color: var(--tabs-content-background)
 
@@ -428,15 +427,15 @@ body.game #gas-settings-submenu.app.window-app
 
   .content .properties-list > li
     padding: 4px
-    color: var(--color-text-light-theme)
+    color: var(--gas-color-text)
     background-color: var(--li-background-color)
     border: none
   p:has(a.content-link)
     line-height: 1.5rem
   
 
-  select
-    color: var(--tjs-select-option-color)
+  select.tjs-select
+    color: var(--tjs-select-option-color) //- this makes dark theme advancments unreadable
     
   h2, h3, h4:not(.window-title), h5
     color: var(--color-highlight)

@@ -1,4 +1,4 @@
-#foundryvtt-actor-studio-pc-sheet
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome
   --size-xxs: 0.1rem
   --size-xs: 0.2rem
   --size-ms: 0.3rem
@@ -38,16 +38,21 @@
   --color-shadow-primary: #416dbe
   --tabs-list-background: #dbd9cd
   --tabs-content-background: rgba(249, 249, 249, 0.8)
-  --color-text-light-theme: #000
-  --color-text-dark-theme: #fff
+  --gas-color-text: #000
   --color-border-dark: #426dbe
   --color-border-light: #ccc
   &.theme-dark
     --tabs-list-background: transparent
-    --tabs-content-background: #222
+    --tabs-content-background:rgba(24,24,24, 1)
     --li-background-color: #abaabc
+    --gas-color-text: #fff
+    --color-text-dark-secondary: #893030
+
+    --button-background: rgba(24,24,24, 1)
+
     button
-      --button-hover-background-color: var(--button-border-color)
+      --button-hover-background-color: #877755
+      --button-hover-border-color: #a18e66
 
   table
     --table-background-color: rgba(0, 0, 0, 0.05)

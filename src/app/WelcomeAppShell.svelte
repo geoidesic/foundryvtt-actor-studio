@@ -70,6 +70,10 @@
 
 <style lang="sass">
   @import "../styles/Mixins.sass"
+  .theme-dark
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
 
   main
     overflow-y: auto

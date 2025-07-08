@@ -51,7 +51,7 @@
         //- pre dnd5eRules { window.GAS.dnd5eRules}
         h3 {t('GAS.Equipment.StartingGold')}
         +if("isDisabled")
-          .info-message Equipment has been confirmed and is now read-only
+          .info-message {t('GAS.Equipment.EquipmentConfirmed')}
         
         +if("!isDisabled")
           section.equipment-flow

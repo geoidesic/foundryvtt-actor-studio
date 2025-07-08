@@ -54,9 +54,15 @@
     
     .flexcol.gold-section.gap-10(class="{disabled ? 'disabled' : ''}")
       +if("!hasRolled")
-        .flexrow.left.gap-4
-          .flex1 Formula: 
-          .flex1.badge.center {formula}
+        .roll-gold.flexcol.gap-10
+          .flexrow.left.gap-4
+            .flex1 Formula: 
+            .flex1.badge.center {formula}
+          .flexrow
+            .flex1
+            .flex0.right.controls(class="{hasRolled || disabled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
+              i.fas.fa-dice
+          
       +if("!disabled")
         .flexrow.left.justify-flexrow-vertical
           .flex3 
@@ -67,8 +73,6 @@
                     i.fas.fa-coins
                   .flex2.left
                     span.value {$goldRoll} gp
-          .flex0.right.controls(class="{hasRolled || disabled ? '' : 'active'}" alt="Roll" on:click!="{rollGold}")
-            i.fas.fa-dice
 </template>
 
 <style lang="sass">
@@ -81,8 +85,9 @@
     padding: 0.5rem
 
   .gold-section
-    padding: 0 0 0.5rem 0
     border-radius: var(--border-radius)
+    .roll-gold
+      padding: 0.5rem
     &:not(.disabled)
       border: 1px solid var(--dnd5e-color-gold)
       background: rgba(0, 0, 0, 0.2)
@@ -118,7 +123,7 @@
 
   .result
     &.final-gold-result
-      padding: 0.5rem
+      padding: 0 0.5rem 0.5rem 0.5rem
       border-radius: var(--border-radius)
       // border: 1px solid var(--dnd5e-color-gold)
       background: #000000
