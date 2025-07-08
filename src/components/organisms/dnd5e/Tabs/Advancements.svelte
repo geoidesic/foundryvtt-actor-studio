@@ -82,6 +82,9 @@
 :global(.gas-advancements .step ol.trait-slots li.trait-slot)
   margin: 2px 0
 
+:global(.theme-dark .gas-advancements .step ol.trait-slots )
+  border: 1px solid var(--dnd5e-color-gold)
+
 :global(.gas-advancements .step ol.trait-slots li.trait-slot label)
   display: flex
   align-items: center
@@ -89,12 +92,19 @@
   padding-left: 30px  /* Make room for the checkbox */
 
 :global(.gas-advancements .step ol.trait-slots li.trait-slot label::before)
-  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path d="M9 16.17l-3.5-3.5 1.17-1.17L9 13.83l6.33-6.33L16.5 8.5 9 16.17zM5 5v14h14V5H5z"/></svg>') /* SVG icon */
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" fill="currentColor" height="20" viewBox="0 0 24 24"><path d="M9 16.17l-3.5-3.5 1.17-1.17L9 13.83l6.33-6.33L16.5 8.5 9 16.17zM5 5v14h14V5H5z"/></svg>') /* SVG icon */
   position: absolute
   left: 0
   top: 50%
   transform: translateY(-35%) scale(1.5)
   margin-right: 5px
+
+// Dark theme override for checkbox visibility
+:global(.theme-dark .gas-advancements .step ol.trait-slots li.trait-slot label::before)
+  content: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" fill="%23ffffff" height="20" viewBox="0 0 24 24"><path d="M9 16.17l-3.5-3.5 1.17-1.17L9 13.83l6.33-6.33L16.5 8.5 9 16.17zM5 5v14h14V5H5z"/></svg>') /* White SVG for dark theme */
+
+:global(.theme-dark .GAS.application input[type="checkbox"]::before)
+  // color: var(--dnd5e-color-gold)
 
 :global(.gas-advancements .step ol.trait-slots li.trait-slot a)
   text-align: right
@@ -179,12 +189,23 @@
   align-items: center
   justify-content: center
 
+:global(.theme-dark .gas-advancements form[data-type="ItemChoice"] .drop-target .item-name)
+  background: black
+  border: 1px solid var(--dnd5e-color-gold)
+  margin-bottom: 0.3rem
+:global(.theme-dark .GAS .gas-advancements .item-name )
+  border: 1px solid var(--dnd5e-color-gold)
+  background: black
+:global(.theme-dark .GAS .gas-advancements .item-name h4 a)
+  color: var(--dnd5e-color-gold)
+
+
 :global(.gas-advancements .header-button.control.close)
   display: none
 
 // Ability scores styling
 :global(.gas-advancements .step ul.ability-scores li)
-  @include inset
+  @include inset(var(--color-border-light), 0.2rem)
   display: flex
   gap: 0.5rem
   align-items: center
@@ -239,6 +260,8 @@
   margin-right: 8px 
   background-size: contain
   background-repeat: no-repeat
+  flex: 0
+  min-width: 40px
 
 :global(.gas-advancements form[data-type="ItemChoice"] .drop-target .item-name)
   @include inset
@@ -253,6 +276,12 @@
   width: 40px
   background-size: contain
   background-repeat: no-repeat
+  flex: 0
+  min-width: 40px
+  
+:global(.gas-advancements form[data-type="ItemChoice"] .drop-target input[type="checkbox"])
+  text-align: right
+  margin-right: 0.5rem
 
 :global(.gas-advancements form[data-type="AbilityScoreImprovement"] .ability-scores li)
   display: grid

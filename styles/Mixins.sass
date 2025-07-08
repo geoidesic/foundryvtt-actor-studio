@@ -10,8 +10,8 @@
   background-clip: initial
   background: initial
 
-@mixin inset($color: var(--tjs-select-border))
-  padding: 0.5rem
+@mixin inset($color: var(--tjs-select-border), $padding: 0.5rem)
+  padding: $padding
   border: 1px solid $color
   border-radius: 0.4rem
   box-shadow: 0 0 5px rgba(165,42,42,0.3) inset
