@@ -26,9 +26,10 @@
     "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
-    "eslint": "^9.2.0",
-    "html2pug": "^4.0.0",
-    "prettier": "^3.2.5",
+            "eslint": "^9.2.0",
+        "html2pug": "^4.0.0",
+        "node-fetch": "^3.3.2",
+        "prettier": "^3.2.5",
     "pug": "^3.0.2",
     "pug-cli": "^1.0.0-alpha6",
     "svelte-preprocess": "^5.1.4",
@@ -42,6 +43,18 @@
   "scripts": {
     "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
     "build": "vite build",
-    "eslint": "eslint ."
+            "eslint": "eslint .",
+        "release": "node release.js patch",
+        "release:patch": "node release.js patch",
+        "release:minor": "node release.js minor",
+        "release:major": "node release.js major",
+        "release:draft": "node release.js patch draft",
+        "release:draft:patch": "node release.js patch draft",
+        "release:draft:minor": "node release.js minor draft",
+        "release:draft:major": "node release.js major draft",
+        "release:pre": "node release.js patch pre",
+        "release:pre:patch": "node release.js patch pre",
+        "release:pre:minor": "node release.js minor pre",
+        "release:pre:major": "node release.js major pre"
   }
 }
