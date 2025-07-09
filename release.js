@@ -134,7 +134,12 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
             : `git log --pretty=format:"%s" -n 50`;
         let logOutput = execSync(gitLogCommand).toString().trim();
         commitMessages = logOutput
-            ? logOutput.split('\n').filter(msg => msg && !msg.match(/^(Release|chore: build and bump version)/))
+            ? logOutput.split('\n').filter(msg => 
+                msg && 
+                !msg.match(/^(Release|chore: build and bump version)/) &&
+                !msg.match(/^\d+\.\d+\.\d+ manifest$/) &&
+                !msg.match(/^v\d+\.\d+\.\d+$/)
+            )
             : [];
 
         if (commitMessages.length === 0 && !range) {
@@ -142,7 +147,12 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
             gitLogCommand = `git log --pretty=format:"%s" -n 10`;
             logOutput = execSync(gitLogCommand).toString().trim();
             commitMessages = logOutput
-                ? logOutput.split('\n').filter(msg => msg && !msg.match(/^(Release|chore: build and bump version)/))
+                ? logOutput.split('\n').filter(msg => 
+                    msg && 
+                    !msg.match(/^(Release|chore: build and bump version)/) &&
+                    !msg.match(/^\d+\.\d+\.\d+ manifest$/) &&
+                    !msg.match(/^v\d+\.\d+\.\d+$/)
+                )
                 : [];
         }
 
