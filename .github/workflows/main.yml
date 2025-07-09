@@ -107,18 +107,24 @@ jobs:
         run: |
           git config --global user.name '${{github.actor}}'
           git config --global user.email '${{github.actor}}@users.noreply.github.com'
-          echo "Git congig completed."
+          echo "Git config completed."
           git status
           echo "git status completed."
-          git add module.json
-          echo "git add module.json completed."
-          git stash
-          echo "git stash completed."
+          
+          # Save the modified module.json to a temporary file
+          cp module.json /tmp/modified-module.json
+          echo "Saved modified module.json to temp file."
+          
           git clean -f
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
           git fetch origin "next"
           git switch -c "next" "origin/next"
-          git checkout stash module.json    
+          
+          # Restore the modified module.json
+          cp /tmp/modified-module.json module.json
+          echo "Restored modified module.json."
+          
+          git add module.json
           echo "Staged changes:"
           git status
           git diff --staged
