@@ -448,6 +448,9 @@
 </template>
 
 <style lang="sass">
+.button-container
+  button
+    width: 100%
 .gap-10
   gap: 10px
   justify-content: space-between

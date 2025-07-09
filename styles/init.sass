@@ -541,9 +541,14 @@ body.game #gas-settings-submenu.app.window-app
     white-space: pre-wrap
     
     a.content-link
-      color: #000000 !important
+      color: #000000
     &:not(a.content-link)
       padding-left: 4px
+
+  &.theme-dark
+    .black-link
+      a.content-link
+        color: var(--dnd5e-color-gold)
 
   .illuminated-description
     position: relative

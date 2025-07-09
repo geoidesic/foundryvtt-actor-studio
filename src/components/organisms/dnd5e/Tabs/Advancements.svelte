@@ -81,6 +81,7 @@
 
 :global(.gas-advancements .step ol.trait-slots li.trait-slot)
   margin: 2px 0
+  align-items: center
 
 :global(.theme-dark .gas-advancements .step ol.trait-slots )
   border: 1px solid var(--dnd5e-color-gold)
@@ -314,6 +315,15 @@
 
 :global(.gas-advancements .header-control)
   display: none
+
+:global(.gas-advancements .dnd5e.advancement select)
+  color: unset
+
+:global(.gas-advancements .window-header h2)
+  margin: 0.2rem 0
+
+:global(.theme-dark .gas-advancements .content-link)
+  color: var(--dnd5e-color-gold)
 
 .warnings
   margin-top: 1rem
