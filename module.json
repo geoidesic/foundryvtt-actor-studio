@@ -1,7 +1,7 @@
 {
     "title": "Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "1.10.12",
+    "version": "1.10.13",
     "styles": [
         "dist/style.css"
     ],
@@ -23,8 +23,8 @@
         }
     ],
     "url": "https://github.com/geoidesic/foundryvtt-actor-studio",
-    "manifest": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/1.10.12/module.json",
-    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/1.10.12/module.zip",
+    "manifest": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/1.10.13/module.json",
+    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/1.10.13/module.zip",
     "authors": [
         {
             "name": "Noel da Costa",
