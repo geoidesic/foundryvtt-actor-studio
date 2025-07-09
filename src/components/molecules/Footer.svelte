@@ -48,7 +48,7 @@
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
   import { localize } from "~/src/helpers/Utility";
-  import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   
@@ -424,10 +424,10 @@
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
             ProgressBar(progress="{progress}")
-            +if("$progress === 100")
+            +if("$progress === 100  && !$readOnlyTabs.includes($activeTab)")
               .button-container
                 +if("!$isActorCreated")
-                  button.mt-xs(
+                  button.mt-xs.wide(
                     type="button"
                     role="button"
                     on:mousedown="{clickCreateHandler}"
@@ -448,6 +448,9 @@
 </template>
 
 <style lang="sass">
+.button-container
+  button
+    width: 100%
 .gap-10
   gap: 10px
   justify-content: space-between
@@ -482,15 +485,16 @@ button[disabled]
   background: rgba(1, 1, 1, 0.1)
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
 
-.character-name-input
-  border: none
-  background: none
-  height: auto
-  line-height: normal
-  padding: 0
-  margin: 0
-  color: inherit
-  font-family: inherit
+.footer-container .character-name-input-container input[type="text"].character-name-input
+  border: none !important
+  background: none !important
+  height: auto !important
+  line-height: normal !important
+  padding: 0 !important
+  margin: 0 !important
+  color: inherit !important
+  font-family: inherit !important
+  font-size: 2rem
   
   &:focus
     outline: none

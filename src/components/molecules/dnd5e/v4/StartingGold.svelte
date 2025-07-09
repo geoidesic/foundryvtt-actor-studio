@@ -1,5 +1,5 @@
 <script>
-  import { localize as t } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
@@ -190,7 +190,7 @@ section.starting-gold
 </template>
 
 <style lang="sass">
-@import "../../../../../styles/Mixins.scss"
+@import "../../../../../styles/Mixins.sass"
 .badge
   +badge()
 .starting-gold

@@ -2,7 +2,7 @@
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { readOnlyTabs } from "~/src/stores/index";
-import { localize } from "#runtime/svelte/helper";
+import { localize } from "~/src/helpers/Utility";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -250,7 +250,7 @@ section
             IconSelect.mb-md.icon-select(
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.parentGroup.granularSelections?.children?.[group.id === group.parentGroup.id ? group.selectedItem._id : group.id]?.selections?.[0]}"
-              placeHolder="Select {group.selectedItem.type}"
+              placeHolder="{localize('GAS.Equipment.SelectType', {type: group.selectedItem.type})}"
               handler="{createSelectionHandler(group.id === group.parentGroup.id ? group.selectedItem._id : group.id, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
@@ -258,7 +258,7 @@ section
             IconSelect.mb-md.icon-select(
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.granularSelections?.self?.[0]}"
-              placeHolder="Select {group.selectedItem.type}"
+              placeHolder="{localize('GAS.Equipment.SelectType', {type: group.selectedItem.type})}"
               handler="{createSelectionHandler(group.id)}"
               id="equipment-select-{group.selectedItem._id}"
             )

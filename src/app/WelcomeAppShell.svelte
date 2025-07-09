@@ -1,7 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte";
   import { fade, scale }        from 'svelte/transition';
-  import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { localize } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
 
@@ -31,14 +31,13 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot)
     main
-      .inset
+      .inset.bg-dark
         .flexrow.justify-flexrow-vertical
           .flex2
-            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
+            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
           .flex3
             p.thanks.right.mr-md {localize('Welcome.Thanks')}
         hr
-        h1 {localize("Welcome.IntroductionTitle")}
         p {localize("Welcome.Introduction")}
         a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {localize("Welcome.UsageTitle")}
         p.lighter
@@ -52,20 +51,13 @@
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
           | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
         hr
-        h3.flexrow
-          .flex0
-            i.fa-solid.fa-face-awesome.mr-sm
-          .flex1 
-            h3 New Final Fantasy Foundry system – 4th July!
-        a.flexrow(href="https://www.youtube.com/live/BceTqsITzek")
-          img(src="https://i.ytimg.com/vi/BceTqsITzek/maxresdefault.jpg")
         .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
           .flex0 
             input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
           .flex.dont-show
             span {localize('Setting.DontShowWelcome.Name') }
     footer
-      div.right.bg-green
+      div.logo
         a(href="https://www.aardvark.games") 
           img.white(src="/modules/foundryvtt-actor-studio/assets/aardvark-logo.webp" alt="Aardvark Game Studios Logo" height="50" width="50" style="fill: white; border: none; width: auto;")
       div.left
@@ -77,7 +69,11 @@
 </template>
 
 <style lang="sass">
-  @import "../styles/Mixins.scss"
+  @import "../styles/Mixins.sass"
+  .theme-dark
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
 
   main
     overflow-y: auto
@@ -85,6 +81,13 @@
       margin-right: 0.5em
     .inset
       @include inset
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
+    h1
+      margin-top: 0
+    h4
+      font-family: var(--dnd5e-font-modesto);
   .dont-show
     font-size: smaller
 
@@ -109,15 +112,17 @@
     padding: 1em
     font-size: 0.8em
     z-index: 3
+    div.logo
+      a
+        display: flex
+        align-items: center
+        justify-content: end
+        gap: 0.5em
     a
       color: white
       text-decoration: underline
       &:hover
         color: #ccc
 
-  h3
-    color: purple
-    text-decoration: none
-    border: none
 
 </style>

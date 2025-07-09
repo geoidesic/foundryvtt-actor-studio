@@ -58,17 +58,10 @@ div
                         .flex2.left.name.black-link
                           span {@html item.label}
             +else()
-              .flex3.left
-                +if("group.completed")
-                  +if("group.items?.length > 0")
-                    span.group-label Pre-selected:
-                  +else()
-                    span.group-label None selected
               +each("group.items as item")
-                button.option(
+                .equipment-item.option(
                   class="{getOptionClasses(disabled, group, item)}"
                   on:click!="{handleSelection(disabled, group.id, item)}"
-                  disabled="{isOptionDisabled(disabled, group, item)}"
                 )
                   .flexrow.justify-flexrow-vertical.no-wrap
                     .flex0.relative.icon
@@ -78,7 +71,6 @@ div
                       +if("group.selectedItemId === item._id && $selectedItems[group.id]")
                         span.selected-name &nbsp;({$selectedItems[group.id].name})
 </template>
-
 
 <style lang="scss">
   @import '../../../../../styles/features/starting-equipment.sass';

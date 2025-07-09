@@ -20,8 +20,8 @@
     subClassesForClass,
     readOnlyTabs,
   } from "~/src/stores/index";
-  import { localize as t} from "#runtime/svelte/helper";
-  import { TJSSelect } from "@typhonjs-fvtt/svelte-standard/component";
+  import { localize as t} from "~/src/helpers/Utility";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
@@ -38,8 +38,8 @@
     subclassValue = null,
     subClassesIndex,
     subclasses,
-    classesPlaceholder = "Classes",
-    subclassesPlaceholder = "Subclasses",
+      classesPlaceholder = t('Tabs.Classes.Placeholder'),
+  subclassesPlaceholder = t('Tabs.Classes.SubclassPlaceholder'),
     packs = getPacksFromSettings("classes"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
@@ -76,7 +76,7 @@
 
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
-    levelOptions.push({ label: "Level " + i, value: i });
+    levelOptions.push({ label: t('Tabs.Classes.Level') + " " + i, value: i });
   }
 
   const selectStyles = {
@@ -237,7 +237,7 @@
   $: combinedHtml = $characterClass
     ? `
       ${richHTML}
-      ${richSubClassHTML ? `<h1>${t("GAS.SubClass")}</h1>${richSubClassHTML}` : ""}
+      ${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}
   `
     : "";
 
@@ -290,21 +290,23 @@
 
 <template lang="pug">
   .content
+    h1.center.mt-none.hide {t('Tabs.Classes.Title')}
     .flexrow
       .flex2.pr-sm.col-a
         .flexrow
           .flex0.required(class="{$characterClass ? '' : 'active'}") *
           .flex3 
             IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
+        
         +if("$characterClass")
           +if("subclasses.length && subClassLevel == 1")
-            h3.left.mt-md {t('GAS.SubClass')}
+            h2.left {t('SubClass')}
             .flexrow
               .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
               .flex3
                 IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
           +if("!isDisabled")
-            h3.left.mt-sm {t('GAS.Tabs.Classes.FilterByLevel')}
+            h2.left {t('Tabs.Classes.FilterByLevel')}
             .flexrow
               .flex2.left
                 TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
@@ -314,18 +316,18 @@
                 +if("classAdvancementExpanded")
                   span [-]
                 +if("!classAdvancementExpanded")
-                  spen [+]
-              .flex {t('GAS.Tabs.Classes.Class')} {t('GAS.Advancements')}
-              .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
+                  span [+]
+              .flex {t('Tabs.Classes.Class')} {t('Advancements')}
+              .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
             ul.icon-list
               +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
-                li.left {t('GAS.NoAdvancements')}
+                li.left {t('NoAdvancements')}
               +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
                 li.left 
                   .flexrow
                     .flex0.relative.image
-                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
-                    .flex2 {t('GAS.SubClass')}
+                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{t('AltText.Subclass')}")
+                    .flex2 {t('SubClass')}
               +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
@@ -338,7 +340,7 @@
                       svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
           //- @deprecated in #159
           //- +if("$characterClass?.system?.startingEquipment?.length")
-          //-   h3.left.mt-sm.flexrow
+          //-   h2.left.mt-sm.flexrow
           //-     .flex0.pointer(on:click="{toggleEquipmentSelection}")
           //-       +if("equipmentSelectionExpanded")
           //-         span [-]
@@ -357,17 +359,17 @@
             //- h3.left.mt-sm Description
             //- .left.sub-class(bind:innerHTML="{richSubClassHTML}" contenteditable)
             +if("subClassAdvancementArrayFiltered.length")
-              h3.left.mt-sm.flexrow
+              h2.left.mt-sm.flexrow
                 .flex0.pointer(on:click="{toggleSubClassAdvancements}")
                   +if("subClassAdvancementExpanded")
                     span [-]
                   +if("!subClassAdvancementExpanded")
-                    spen [+]
-                .flex {t('GAS.Tabs.Classes.SubClass')} {t('GAS.Advancements')}
-                .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
+                    span [+]
+                .flex {t('Tabs.Classes.SubClass')} {t('Advancements')}
+                .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
               ul.icon-list
                 +if("!subClassAdvancementArrayFiltered.length")
-                  li.left {t('GAS.NoAdvancements')}
+                  li.left {t('NoAdvancements')}
                 +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
                   +each("subClassAdvancementArrayFiltered as advancement")
                       //- @todo: this should be broken out into components for each advancement.type
@@ -385,7 +387,7 @@
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.scss"
+  @import "../../../../../styles/Mixins.sass"
   .content 
     @include staticOptions
 

@@ -1,7 +1,7 @@
 <script>
 
   import { goldRoll } from "~/src/stores/storeDefinitions";
-  import { localize as t } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
@@ -51,7 +51,7 @@
         //- pre dnd5eRules { window.GAS.dnd5eRules}
         h3 {t('GAS.Equipment.StartingGold')}
         +if("isDisabled")
-          .info-message Equipment has been confirmed and is now read-only
+          .info-message {t('GAS.Equipment.EquipmentConfirmed')}
         
         +if("!isDisabled")
           section.equipment-flow

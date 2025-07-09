@@ -3,8 +3,8 @@
   import { actorInGame, readOnlyTabs } from '../../../../stores/index';
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
-  import { onMount, tick } from 'svelte';
-  import { localize } from "#runtime/svelte/helper";
+  import { onMount, onDestroy, tick } from 'svelte';
+  import { localize } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';
 
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };
@@ -16,19 +16,6 @@
   let expandedCategories = {}; // Track which categories are expanded
 
   $: isDisabled = $readOnlyTabs.includes('shop');
-
-  // Fetch items when component mounts
-  onMount(async () => {
-    loading = true;
-    
-    // Initialize gold first to make sure it's available
-    initializeGold();
-    
-    // Then load shop items
-    await loadShopItems();
-    
-    loading = false;
-  });
 
   // Reactive updates for currency display
   $: availableCurrency = PurchaseHandler.formatCurrency($availableGold);
@@ -140,19 +127,62 @@
     expandedCategories[category] = !expandedCategories[category];
     expandedCategories = { ...expandedCategories }; // Trigger reactivity
   }
+
+  let scrolled = false;
+  let shopContainer;
+  let cleanup;
+
+  onMount(async () => {
+    loading = true;
+    
+    // Initialize gold first to make sure it's available
+    initializeGold();
+    
+    // Then load shop items
+    await loadShopItems();
+    
+    loading = false;
+
+    // Find the actual scrolling container (section.a from PCAppShell)
+    const scrollingContainer = document.querySelector('#foundryvtt-actor-studio-pc-sheet section.a');
+    if (scrollingContainer) {
+      const handleScroll = () => {
+        scrolled = scrollingContainer.scrollTop > 0;
+      };
+      scrollingContainer.addEventListener('scroll', handleScroll);
+      
+      // Cleanup on destroy
+      cleanup = () => {
+        scrollingContainer.removeEventListener('scroll', handleScroll);
+      };
+    }
+  });
+ 
+  onDestroy(() => {
+    if (cleanup) {
+      cleanup();
+    }
+  });
 </script>
 
 <div class="shop-tab-container" class:disabled={isDisabled}>
-  <div class="shop-tab">
-    <!-- Left Panel: Cart Items and Gold Info -->
-    <div class="left-panel">
-      <h3 class="left no-margin">{localize('GAS.Shop.AvailableGold')}</h3>
-      <div class:negative={$remainingGold < 0} class="remaining-currency">
-        <GoldDisplay {...remainingCurrency} />
-      </div>
-      <h3 class="left no-margin">{localize('GAS.Shop.SpentGold')}</h3>
-      <GoldDisplay {...cartCurrency} />
+  <!-- Sticky currency header -->
+  <div class="sticky-header" class:hidden={!scrolled}>
+    <GoldDisplay {...remainingCurrency} />
+  </div>
 
+  <div class="shop-tab">
+    <div class="left-panel" bind:this={shopContainer}>
+      <!-- Original header -->
+      <div class="panel-header" class:hidden={scrolled}>
+        <h3 class="left no-margin">{localize('GAS.Shop.AvailableGold')}</h3>
+        <div class:negative={$remainingGold < 0} class="remaining-currency">
+          <GoldDisplay {...remainingCurrency} />
+        </div>
+        <h3 class="left no-margin">{localize('GAS.Shop.SpentGold')}</h3>
+        <GoldDisplay {...cartCurrency} />
+      </div>
+ 
       <h3>{localize('GAS.Shop.CartItems')}</h3>
       <div class="cart-items">
         {#if cartItems.length === 0}
@@ -241,18 +271,29 @@
       {/if}
     </div>
   </div>
-  {#if isDisabled}
+{#if isDisabled}
     <div class="overlay"></div>
   {/if}
 </div>
 
 <style lang="sass">
-  @import "../../../../../styles/features/equipment-purchase.scss"
+  @import "../../../../../styles/features/equipment-purchase.sass"
+
+  :global(.GAS.theme-dark .cart-item .cart-item-price)
+    color: silver
+
+  :global(.GAS.theme-dark .item-row .item-actions .item-price)
+    color: silver
+  :global(.GAS.theme-dark .cart-item .quantity-display)
+    background: rgba(255, 255, 255, 0.1) !important
+    color: silver !important 
 
   .shop-tab-container 
     position: relative
     height: 100%
     width: 100%
+    display: flex
+    flex-direction: column
 
     &.disabled 
       pointer-events: none
@@ -271,10 +312,25 @@
     &:hover
       background-color: rgba(200, 200, 200, 0.4)
 
+  .sticky-header
+    position: sticky
+    top: 15px
+    left: 1rem
+    z-index: 5
+    background: black
+    padding: 0
+    margin: 0
+    max-width: 150px
+    &.hidden
+      display: none
+
+  .panel-header.hidden
+    display: none
+
   .shop-tab
     display: flex
     height: 100%
-    overflow: hidden
+    overflow: visible
 
   .left-panel
     flex: 1
@@ -316,6 +372,7 @@
     display: flex
     flex-direction: column
     gap: 0.5rem
+
 
   .cart-item
     display: flex
@@ -385,9 +442,8 @@
     .remove-btn
       background: none
       border: none
-      color: #990000
       cursor: pointer
-      padding: 0.25rem
+      padding: 0.25rem 0 0.25rem 0.25rem
       border-radius: 3px
       line-height: 1
       
@@ -453,6 +509,10 @@
       justify-content: center
       cursor: pointer
 
+      i.fas.fa-plus
+        margin-right: 0
+        margin-left: 0
+
       &:hover
         background: darken(#b59e54, 10%)
 
@@ -488,4 +548,12 @@
     margin-left: 0.5rem
     font-size: 0.8rem
     color: var(--color-text-dark-secondary)
+
+  .gold-header
+    position: sticky
+    top: 0          // Stick to top inside tab-content area
+    z-index: 5
+    background: var(--color-bg-primary)
+    padding: 0.5rem
+    border-bottom: 1px solid var(--color-border-light-tertiary)
 </style>

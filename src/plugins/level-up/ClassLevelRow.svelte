@@ -36,7 +36,7 @@ onMount(async () => {
   )
 </template>
 <style lang="sass">
-@use '../../../styles/Mixins.scss' as mixins
+@use '../../../styles/Mixins.sass' as mixins
 
 .gold-button-disabled
   +mixins.gold-button(null)

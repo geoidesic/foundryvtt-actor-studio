@@ -26,7 +26,7 @@
 </template>
 
 <style lang="sass">
-  @use '../../../styles/Mixins.scss' as mixins
+  @use '../../../styles/Mixins.sass' as mixins
   .lozenge
     background-color: var(--dnd5e-color-gold)
     color: #000

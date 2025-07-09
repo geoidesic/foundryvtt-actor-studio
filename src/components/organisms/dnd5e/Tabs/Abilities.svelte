@@ -12,7 +12,7 @@
   import Roll from "~/src/components/molecules/dnd5e/AbilityEntry/Roll.svelte";
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
 
@@ -47,7 +47,7 @@
   };
   
 
-  let rules = "", active, value, placeHolder = 'Ability Generation Method'
+  let rules = "", active, value, placeHolder = t('Tabs.Abilities.AbilityGenerationMethod')
 
   $: actorObject = $actor.toObject();
   $: advancementComponents = {};
@@ -55,25 +55,25 @@
   $: options = [
     {
       value: 1,
-      label: "Manual Entry",
+      label: t('Tabs.Abilities.ManualEntry'),
       type: "ManualEntry",
       setting: game.settings.get(MODULE_ID, "allowManualInput"),
     },
     {
       value: 2,
-      label: "Point Buy",
+      label: t('Tabs.Abilities.PointBuy'),
       type: "PointBuy",
       setting: game.settings.get(MODULE_ID, "allowPointBuy"),
     },
     {
       value: 3,
-      label: "Roll",
+      label: t('Tabs.Abilities.Roll'),
       type: "Roll",
       setting: game.settings.get(MODULE_ID, "allowRolling"),
     },
     {
       value: 4,
-      label: "Standard Array",
+      label: t('Tabs.Abilities.StandardArray'),
       type: "StandardArray",
       setting: game.settings.get(MODULE_ID, "allowStandardArray"),
     },
@@ -96,9 +96,10 @@
 
 <template lang="pug">
   div.content
+    h1.center.mt-none.hide {t('Tabs.Abilities.Title')}
     .flexrow
       .flex2.pr-sm.col-a
-        h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
+        h2.left {t('Tabs.Abilities.HowCalculated')}
         +if("options.length > 1")
           IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
           +else()
@@ -115,7 +116,7 @@
 </template>
 
 <style lang="sass" scoped>
-@use "../../../../../styles/Mixins.scss" as mixins
+@use "../../../../../styles/Mixins.sass" as mixins
 .content 
   +mixins.staticOptions
 
