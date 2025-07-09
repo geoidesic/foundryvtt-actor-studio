@@ -70,6 +70,10 @@
         "release:draft:patch": "node release.js patch draft",
         "release:draft:minor": "node release.js minor draft",
         "release:draft:major": "node release.js major draft",
+        "release:pre": "node release.js patch pre",
+        "release:pre:patch": "node release.js patch pre",
+        "release:pre:minor": "node release.js minor pre",
+        "release:pre:major": "node release.js major pre",
         "test": "vitest",
         "test:ui": "vitest --ui",
         "test:run": "vitest run"
