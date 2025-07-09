@@ -162,10 +162,10 @@
             .controls
               .up.chevron
                 +if("index != 0")
-                  i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[0], 1)}")
+                  i.fas.fa-chevron-up(alt="{localize('GAS.AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
               .down.chevron
                 +if("index != 5")
-                  i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[0], -1)}")
+                  i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")

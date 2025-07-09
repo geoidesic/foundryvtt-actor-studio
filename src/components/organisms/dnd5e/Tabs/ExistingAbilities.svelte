@@ -48,25 +48,25 @@
   $: options = [
     {
       value: 1,
-      label: "Manual Entry",
+      label: localize('GAS.Tabs.Abilities.ManualEntry'),
       type: "ManualEntry",
       setting: game.settings.get(MODULE_ID, "allowManualInput"),
     },
     {
       value: 2,
-      label: "Point Buy",
+      label: localize('GAS.Tabs.Abilities.PointBuy'),
       type: "PointBuy",
       setting: game.settings.get(MODULE_ID, "allowPointBuy"),
     },
     {
       value: 3,
-      label: "Roll",
+      label: localize('GAS.Tabs.Abilities.Roll'),
       type: "Roll",
       setting: game.settings.get(MODULE_ID, "allowRolling"),
     },
     {
       value: 4,
-      label: "Standard Array",
+      label: localize('GAS.Tabs.Abilities.StandardArray'),
       type: "StandardArray",
       setting: game.settings.get(MODULE_ID, "allowStandardArray"),
     },

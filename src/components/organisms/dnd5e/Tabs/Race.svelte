@@ -15,7 +15,7 @@
 
   let active = null,
     value = null,
-    placeHolder = "Races",
+    placeHolder = localize('GAS.Tabs.Races.Placeholder'),
     richHTML = "";
   let packs = getPacksFromSettings("races");
   let allRaceItems = extractItemsFromPacksSync(packs, [

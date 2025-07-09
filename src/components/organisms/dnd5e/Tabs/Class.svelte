@@ -38,8 +38,8 @@
     subclassValue = null,
     subClassesIndex,
     subclasses,
-    classesPlaceholder = "Classes",
-    subclassesPlaceholder = "Subclasses",
+    classesPlaceholder = localize('GAS.Tabs.Classes.Placeholder'),
+    subclassesPlaceholder = localize('GAS.Tabs.Classes.SubclassPlaceholder'),
     packs = getPacksFromSettings("classes"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
@@ -76,7 +76,7 @@
 
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
-    levelOptions.push({ label: "Level " + i, value: i });
+    levelOptions.push({ label: localize('GAS.Tabs.Classes.Level') + " " + i, value: i });
   }
 
   const selectStyles = {
@@ -316,7 +316,7 @@
                 +if("classAdvancementExpanded")
                   span [-]
                 +if("!classAdvancementExpanded")
-                  spen [+]
+                  span [+]
               .flex {t('GAS.Tabs.Classes.Class')} {t('GAS.Advancements')}
               .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
             ul.icon-list
@@ -326,7 +326,7 @@
                 li.left 
                   .flexrow
                     .flex0.relative.image
-                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="Subclass")
+                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{localize('GAS.AltText.Subclass')}")
                     .flex2 {t('GAS.SubClass')}
               +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
@@ -364,7 +364,7 @@
                   +if("subClassAdvancementExpanded")
                     span [-]
                   +if("!subClassAdvancementExpanded")
-                    spen [+]
+                    span [+]
                 .flex {t('GAS.Tabs.Classes.SubClass')} {t('GAS.Advancements')}
                 .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
               ul.icon-list

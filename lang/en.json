@@ -19,6 +19,7 @@
       "ExistingClassesDescription": "Click the class you want to level up, or select a class from the Multiclass dropdown to add a new one.",
       "NewClassTitle": "Add Multiclass",
       "SelectClass": "Select a class to add",
+      "SelectMulticlass": "Select Multiclass",
       "CancelDescription": "Click the class button below to cancel the level up selection and return to the start. Or click \"Update Character\" to apply the changes.",
       "Subclass": "Choose Subclass",
       "LevelAdvancements": "Level Advancements",
@@ -52,22 +53,34 @@
     "Tabs": {
       "Abilities": {
         "Title": "Abilities",
-        "HowCalculated": "How are abilities calculated?"
+        "HowCalculated": "How are abilities calculated?",
+        "AbilityGenerationMethod": "Ability Generation Method",
+        "ManualEntry": "Manual Entry",
+        "PointBuy": "Point Buy",
+        "Roll": "Roll",
+        "StandardArray": "Standard Array"
       },
       "Races": {
         "Title": "Races",
         "Movement": "Movement",
         "Senses": "Senses",
-        "Type": "Type"
+        "Type": "Type",
+        "Placeholder": "Races"
       },
       "Classes": {
         "Title": "Classes",
         "Class": "Class",
         "SubClass": "Sublass",
-        "FilterByLevel": "Explore Levels"
+        "FilterByLevel": "Explore Advancements by Level",
+        "Placeholder": "Classes",
+        "SubclassPlaceholder": "Subclasses",
+        "Level": "Level"
       },
       "Background": {
         "Title": "Background"
+      },
+      "Backgrounds": {
+        "Placeholder": "Backgrounds"
       },
       "Equipment": {
         "Title": "Equipment"
@@ -304,6 +317,7 @@
     "Equipment": {
       "Label": "Equipment",
       "Choice": "Choose one",
+      "ChooseOne": "Choose one...",
       "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
@@ -323,7 +337,8 @@
       "PlannedInventory": "Planned Inventory",
       "NoItemsSelected": "No items selected",
       "Weight": "Weight",
-      "Quantity": "Quantity"
+      "Quantity": "Quantity",
+      "SelectType": "Select {type}"
     },
     "Shop": {
       "AvailableGold": "Available",
@@ -340,6 +355,14 @@
       "ErrorRemoveFromCart": "Failed to remove item from cart",
       "FilterPlaceholder": "Search items in the shop by keyword",
       "NoMatchingEquipment": "No matching equipment was found."
+    },
+    "AltText": {
+      "MoveUp": "Move Up",
+      "MoveDown": "Move Down",
+      "Roll": "Roll",
+      "Increase": "Increase",
+      "Decrease": "Decrease",
+      "Subclass": "Subclass"
     }
   }
 }

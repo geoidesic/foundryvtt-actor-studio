@@ -14,7 +14,7 @@
 
   let active = null,
     value = null,
-    placeHolder = "Backgrounds";
+    placeHolder = localize('GAS.Tabs.Backgrounds.Placeholder');
   let packs = getPacksFromSettings("backgrounds");
   // let folders = getFoldersFromMultiplePacks(packs, 1);
   // let folderIds = folders.map((x) => x._id);

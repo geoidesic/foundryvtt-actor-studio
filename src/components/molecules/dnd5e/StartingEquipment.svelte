@@ -110,7 +110,7 @@
           // Normal OR group with multiple choices: initialize as a choice group
           initializeGroup(entry._id, {
             type: "choice",
-            label: "Choose one...",
+            label: localize('GAS.Equipment.ChooseOne'),
             items: children,
             sort: entry.sort,
           });
@@ -145,7 +145,7 @@
           // Create a separate choice group for this OR
           initializeGroup(orChild._id, {
             type: "choice",
-            label: orChild.label || "Choose one...",
+            label: orChild.label || localize('GAS.Equipment.ChooseOne'),
             items: orGrandchildren,
             sort: orChild.sort || entry.sort, // Use OR's sort or fallback to AND's sort
             parentGroup: entry._id // Track that this belongs to the AND group

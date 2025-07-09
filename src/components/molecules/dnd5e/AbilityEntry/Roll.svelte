@@ -105,10 +105,10 @@
               .controls
                 .up.chevron
                   +if("index != 0")
-                    i.fas.fa-chevron-up(alt="Move Up" on:click!="{swapAbilities(ability[0], 1)}")
+                    i.fas.fa-chevron-up(alt="{localize('GAS.AltText.MoveUp')}" on:click!="{swapAbilities(ability[0], 1)}")
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
-                    i.fas.fa-chevron-down(alt="Move Down" on:click!="{swapAbilities(ability[0], -1)}")
+                    i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
           td.center
             span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
@@ -116,7 +116,7 @@
               span +
             span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
           td.center
-            .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[0])}")
+            .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="{localize('GAS.AltText.Roll')}" on:click!="{roll(ability[0])}")
               i.fas.fa-dice
 
 </template>

@@ -42,13 +42,13 @@ let
   subClassesIndex = [],
   classAdvancementArrayFiltered = [],
   subClassAdvancementArrayFiltered = [],
-  classesPlaceholder = "Select Multiclass",
+  classesPlaceholder = localize('GAS.LevelUp.SelectMulticlass'),
   rowTooltip = "",
   richSubClassHTML = "",
   packs = getPacksFromSettings("classes"),
   subclasses,
   subClassesPacks = getPacksFromSettings("subclasses"),
-  subclassesPlaceholder = "Subclasses",
+  subclassesPlaceholder = localize('GAS.Tabs.Classes.SubclassPlaceholder'),
   mapKeys = ["name->label", "img", "type", "folder", "uuid->value", "_id"], //- keys to extract from the packs map
   mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys)
 ;
@@ -442,7 +442,7 @@ onDestroy(() => {
             li.left
               .flexrow
                 .flex0.relative.image
-                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="Subclass")
+                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{localize('GAS.AltText.Subclass')}")
                 .flex2 {localize('GAS.SubClass')}
         
         +if("($isLevelUpAdvancementInProgress || subclasses.length) && $levelUpClassGetsSubclassThisLevel")  
