@@ -128,8 +128,15 @@ jobs:
           echo "Staged changes:"
           git status
           git diff --staged
-          git commit -m "${{github.event.release.tag_name}} manifest"
-          git push -f
+          
+          # Only commit if there are actual changes
+          if git diff --staged --quiet; then
+            echo "No changes to commit - next branch is already up to date."
+          else
+            git commit -m "${{github.event.release.tag_name}} manifest"
+            git push -f
+            echo "Committed and pushed manifest update."
+          fi
       - name: Echo End Repository Preparation
         if: "github.event.release.prerelease"
         run: echo "Repository preparation completed."
