@@ -1,49 +1,49 @@
 {
-  "description": "Easily create Heroes, Villains and everything in between.",
-  "license": "MIT",
-  "private": false,
-  "version": "1.0.0",
-  "type": "module",
-  "authors": [
-    {
-      "name": "Noel da Costa",
-      "discord": "@geoidesic"
-    }
-  ],
-  "imports": {
-    "#runtime/*": "@typhonjs-fvtt/runtime/*",
-    "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
-  },
-  "dependencies": {
-    "@floating-ui/core": "^1.6.1",
-    "@typhonjs-fvtt/runtime": "^0.1.3",
-    "@typhonjs-fvtt/svelte-standard": "^0.1.0",
-    "svelte": "^4.2.16",
-    "svelte-floating-ui": "^1.5.8",
-    "svelte-select": "^5.8.3"
-  },
-  "devDependencies": {
-    "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
-    "@typescript-eslint/eslint-plugin": "^7.8.0",
-    "@typescript-eslint/parser": "^7.8.0",
-            "eslint": "^9.2.0",
+    "description": "Easily create Heroes, Villains and everything in between.",
+    "license": "MIT",
+    "private": false,
+    "version": "1.0.1",
+    "type": "module",
+    "authors": [
+        {
+            "name": "Noel da Costa",
+            "discord": "@geoidesic"
+        }
+    ],
+    "imports": {
+        "#runtime/*": "@typhonjs-fvtt/runtime/*",
+        "#standard/*": "@typhonjs-fvtt/svelte-standard/*"
+    },
+    "dependencies": {
+        "@floating-ui/core": "^1.6.1",
+        "@typhonjs-fvtt/runtime": "^0.1.3",
+        "@typhonjs-fvtt/svelte-standard": "^0.1.0",
+        "svelte": "^4.2.16",
+        "svelte-floating-ui": "^1.5.8",
+        "svelte-select": "^5.8.3"
+    },
+    "devDependencies": {
+        "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
+        "@typescript-eslint/eslint-plugin": "^7.8.0",
+        "@typescript-eslint/parser": "^7.8.0",
+        "eslint": "^9.2.0",
         "html2pug": "^4.0.0",
         "node-fetch": "^3.3.2",
         "prettier": "^3.2.5",
-    "pug": "^3.0.2",
-    "pug-cli": "^1.0.0-alpha6",
-    "svelte-preprocess": "^5.1.4",
-    "typescript": "^5.4.5",
-    "vite": "^5.2.11"
-  },
-  "browserslist": [
-    ">5%",
-    "not IE 11"
-  ],
-  "scripts": {
-    "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
-    "build": "vite build",
-            "eslint": "eslint .",
+        "pug": "^3.0.2",
+        "pug-cli": "^1.0.0-alpha6",
+        "svelte-preprocess": "^5.1.4",
+        "typescript": "^5.4.5",
+        "vite": "^5.2.11"
+    },
+    "browserslist": [
+        ">5%",
+        "not IE 11"
+    ],
+    "scripts": {
+        "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
+        "build": "vite build",
+        "eslint": "eslint .",
         "release": "node release.js patch",
         "release:patch": "node release.js patch",
         "release:minor": "node release.js minor",
@@ -56,5 +56,5 @@
         "release:pre:patch": "node release.js patch pre",
         "release:pre:minor": "node release.js minor pre",
         "release:pre:major": "node release.js major pre"
-  }
+    }
 }
