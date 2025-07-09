@@ -250,14 +250,18 @@ const newVersion = incrementVersion(currentVersion, versionType);
 const releaseTypeLabel = isDraft ? ' (DRAFT)' : isPreRelease ? ' (PRE-RELEASE)' : '';
 console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
 
-// Check if the new version tag already exists
-try {
-    execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
-    console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
-    process.exit(1);
-} catch (error) {
-    // Tag doesn't exist, which is what we want
-    console.log(`✅ Version ${newVersion} is available`);
+// Check if the new version tag already exists (only for non-draft releases)
+if (!isDraft) {
+    try {
+        execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
+        console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
+        process.exit(1);
+    } catch (error) {
+        // Tag doesn't exist, which is what we want
+        console.log(`✅ Version ${newVersion} is available`);
+    }
+} else {
+    console.log(`✅ Draft release - no tag check needed`);
 }
 
 packageJson.version = newVersion;
@@ -296,14 +300,23 @@ console.log('📝 Generating release notes...');
 const previousTag = getPreviousTag();
 const releaseNotes = await generateReleaseNotesWithFallback(previousTag);
 
-// Create tag
-console.log('🏷️  Creating tag...');
-execSync(`git tag ${newVersion}`);
+// Create tag (only for published releases, not drafts)
+if (!isDraft) {
+    console.log('🏷️  Creating tag...');
+    execSync(`git tag ${newVersion}`);
+} else {
+    console.log('🏷️  Skipping tag creation for draft release...');
+}
 
 // Push changes and tag
 console.log(`⬆️  Pushing to ${targetBranch} branch...`);
 execSync(`git push origin ${targetBranch}`);
-execSync(`git push origin ${newVersion}`);
+if (!isDraft) {
+    execSync(`git push origin ${newVersion}`);
+    console.log(`📌 Pushed tag ${newVersion}`);
+} else {
+    console.log('📌 No tag to push for draft release');
+}
 
 // Create a temporary file for release notes
 const releaseNotesPath = path.join(__dirname, 'release-notes.md');
@@ -342,7 +355,8 @@ console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-st
 if (isDraft) {
     console.log(`📝 Note: This is a DRAFT RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run to generate install files!`);
-    console.log(`🔒 Draft is private - publish when ready for public access.`);
+    console.log(`🔒 Draft is private - no git tag created.`);
+    console.log(`🔄 Publish the draft to create the git tag and make it public.`);
 } else if (isPreRelease) {
     console.log(`📝 Note: This is a PRE-RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run and update the next branch manifest!`);
