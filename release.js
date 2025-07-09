@@ -267,30 +267,37 @@ const getPreviousTag = () => {
 const targetBranch = isTestRelease ? 'next' : 'main';
 console.log(`🎯 Target branch: ${targetBranch}`);
 
-// Check current branch and switch if needed
+// --- Branch merging logic ---
 try {
     const currentBranch = execSync('git branch --show-current').toString().trim();
     console.log(`📍 Current branch: ${currentBranch}`);
-    
-    if (currentBranch !== targetBranch) {
-        console.log(`🔄 Switching to ${targetBranch} branch...`);
-        
-        // Check if target branch exists
-        try {
-            execSync(`git show-ref --verify --quiet refs/heads/${targetBranch}`);
-        } catch (error) {
-            // Branch doesn't exist, create it
-            console.log(`🌿 Creating ${targetBranch} branch...`);
-            execSync(`git checkout -b ${targetBranch}`);
+    if (isTestRelease) {
+        // For pre/draft releases: ensure next branch has latest main changes
+        if (currentBranch !== 'next') {
+            console.log('🔄 Switching to next branch...');
+            execSync('git checkout next');
         }
-        
-        // Switch to target branch
-        execSync(`git checkout ${targetBranch}`);
-        
-        // For test releases, make sure next branch is up to date with main
-        if (isTestRelease && targetBranch === 'next') {
-            console.log('📥 Merging latest main into next branch...');
+        console.log('📥 Merging latest main into next branch...');
+        try {
             execSync('git merge main');
+            console.log('✅ Successfully merged main into next');
+        } catch (error) {
+            console.error('❌ Merge conflict detected while merging main into next. Please resolve conflicts and re-run the release script.');
+            process.exit(1);
+        }
+    } else {
+        // For production releases: merge next into main
+        if (currentBranch !== 'main') {
+            console.log('🔄 Switching to main branch...');
+            execSync('git checkout main');
+        }
+        console.log('📥 Merging next branch into main...');
+        try {
+            execSync('git merge next');
+            console.log('✅ Successfully merged next into main');
+        } catch (error) {
+            console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
+            process.exit(1);
         }
     }
 } catch (error) {
