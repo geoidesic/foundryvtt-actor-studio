@@ -11,7 +11,7 @@
   <div class="front" style="clip-path: inset(0 0 0 {$progress}%); -webkit-clip-path: inset(0 0 0 {$progress}%);">{$progress}% Complete</div>
 </div>
 <style lang="sass">
-  @import '../../../styles/Mixins.scss'
+  @import '../../../styles/Mixins.sass'
 
   .progress
     position: relative

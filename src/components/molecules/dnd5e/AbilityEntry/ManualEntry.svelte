@@ -44,7 +44,7 @@
               span +
             span {abilityAdvancements?.[ability[0]] || 0}
           td.center
-            input.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[0], event)}")
+            input.score.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[0], event)}")
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
@@ -57,8 +57,9 @@
   table
     width: 100%
     border-collapse: separate
-    border-spacing: 0 0.5rem
-   
+  input.score
+    min-width: 40px
+    color: var(--gas-color-text)
   th
     padding: 0.1rem 0.5rem
     text-align: left

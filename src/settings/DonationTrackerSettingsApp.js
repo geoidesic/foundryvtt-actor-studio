@@ -24,7 +24,7 @@ export default class DonationTrackerSettingsApp extends SvelteApplication
          width: 600,
          height: 400,
          minWidth: 550,
-         headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
+         headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.png',
 
          svelte: {
             class: DonationTrackerSettingsAppShell,

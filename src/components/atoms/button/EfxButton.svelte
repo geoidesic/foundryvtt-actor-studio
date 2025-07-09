@@ -1,6 +1,6 @@
 <script>
   import preventDefault from "~/helpers/svelte-actions/PreventDefault.js";
-  import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
+  import { ripple } from "@typhonjs-fvtt/standard/action/animate/composable";
 
   export let efx = ripple();
   export let disabled = false;
@@ -12,7 +12,7 @@
 </button>
 
 <style lang="scss">
-  @import "../../../styles/Mixins.scss";
+  @import "../../../styles/Mixins.sass";
 
   // button {
   // @include button;

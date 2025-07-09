@@ -1,13 +1,13 @@
 /* Actor Studio */
 
 // Abstracts
-@import 'Variables'
-@import 'Fonts'
-@import 'Mixins'
-@import 'Animations'
+@import 'Variables.sass'
+@import 'Fonts.sass'
+@import 'Mixins.sass'
+@import 'Animations.sass'
 
 // Features
-@import 'features/equipment-purchase.scss'
+@import 'features/equipment-purchase.sass'
 
 // Base
 /**
@@ -42,6 +42,10 @@
   color: var(--color-highlight)
 
 .GAS
+  color: var(--gas-color-text)
+
+  &.theme-dark
+    color: var(--gas-color-text)
 
   // padding margins
   .py-md
@@ -129,7 +133,14 @@
     margin-bottom: var(--size-sm)
 
   .mt-none
-    margin-top: none
+    margin-top: 0
+
+  .ma-none
+    margin: 0
+
+  .my-none
+    margin-top: 0
+    margin-bottom: 0
 
   .mt-lg
     margin-top: var(--size-lg)
@@ -190,16 +201,41 @@
 
   .hide
     visibility: hidden
+    height: 0
 
   .relative
     position: relative
+
+  .flexrow
+    align-items: flex-start
 
   .justify-flexrow-vertical
     align-items: center
 
   .tight
     padding: 0
-    
+
+  .wide
+    width: 100%
+
+  img
+    border: none
+
+  
+  .header-control
+    margin: 5px -1px !important
+    &::before
+      font-size: 1.5rem
+      font-weight: 700
+      position: absolute
+      right: 10px
+      top: 5px
+      
+  &.application
+    table
+      margin: 0
+      // border-spacing: 0
+
   .gas-tooltip
     text-align: left !important
     // line-height: 1.3rem !important;
@@ -220,9 +256,9 @@
 
   // alter heading styles for Configure Settings
   #client-settings
-  h4
-    font-size: 1em
-    border-bottom: 1px solid var(--color-underline-header)
+    h4
+      font-size: 1em
+      border-bottom: 1px solid var(--color-underline-header)
 
   .gas-add-dt-folders
     background-color: #fff
@@ -239,7 +275,133 @@
 
   .justify-flexrow-vertical
     align-items: center
+
+
+  
+  .tabs-list
+    padding: 0.25rem 1.5rem !important
+    --color-border-highlight: #416dbe
+    transition: all 0.4s ease-in-out
     
+  .gas-tabs
+    position: relative 
+    padding-top: 1rem
+    .tabs-list 
+
+      background: var(--tabs-list-background) !important
+      position: fixed
+      top: 30px
+      left: 0
+      width: 100%
+      z-index: 1
+      height: 2.5rem !important
+      padding-top: 1rem !important
+      button
+        background-color: var(--button-background) !important
+
+
+  // .gas-tabs .tabs-list::after
+  //   content: ""
+  //   display: block
+  //   position: fixed
+  //   top: 71px
+  //   left: auto
+  //   width: 95%
+  //   height: 17px
+  //   background: black
+  //   background: linear-gradient(0deg, rgba(219, 217, 205, 0) 0%, #f9f9f9 100%)
+  //   z-index: 1 
+
+  .gas-tabs .tabs-list button:hover
+    box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important
+    transition: all 0.4s ease-in-out
+
+  .tab-content
+    --tjs-app-overflow: visible
+    padding: 15px 0px 15px 15px
+    border: 2px solid transparent
+    border-radius: 10px 
+    background-color: var(--tabs-content-background)
+    position: relative 
+    margin-top: -5px
+
+    position: relative
+    padding: 0
+
+  .tab-content .scroll
+    box-sizing: content-box
+    padding: 15px
+
+  .tab-content .col-a
+    padding: 1rem
+
+  .tab-content ul.icon-list .image
+    min-width: 24px
+    li
+      
+
+  .tab-content ul.icon-list
+    list-style-type: none !important
+    padding: 0
+    position: relative
+    margin: 0
+
+  .tab-content ul.icon-list li
+    margin: 3px 0
+    box-shadow: 0 0 0 1px var(--li-inset-color) inset
+    padding: 0.5rem 0.3rem
+    border-radius: var(--border-radius)
+    background: var(--li-background-color)
+
+  .tab-content ul.icon-list .image img.icon
+    position: absolute
+    top: -3px
+    left: 0
+    width: 24px
+    height: 24px
+    vertical-align: middle
+    border: 0
+
+  .tab-content ul.icon-list li.tight .flexcol
+    gap: 0
+    line-height: 11px
+    height: 19px
+    margin: 4px 0 5px 0
+
+  .tab-content ul.icon-list li.tight .image img.icon
+    top: 2px
+    left: 2px
+    
+  &.theme-dark
+    
+    // Completely disable backdrop-filter in theme-dark to prevent tab positioning issues
+    .window-content
+      backdrop-filter: none !important
+      -webkit-backdrop-filter: none !important
+
+    input
+      color: var(--gas-color-text)
+      // background-color: var(--li-background-color) //- this interferes with welcome page checkbox
+    
+    .icon-list
+      .advancement
+        color: var(--gas-color-text)
+
+    
+  
+  .tab-content ul.icon-list 
+    .image
+      min-width: 24px
+    li
+      ul.icon-list
+        li
+          background-color: #222
+          color: var(--gas-color-text)
+  .icon-list
+    color: var(--gas-color-text)
+    .advancement
+      background-color: var(--tabs-content-background)
+
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
     .flex0
@@ -259,38 +421,37 @@ body.game #gas-settings-submenu.app.window-app
   background-color: white
 
 #foundryvtt-actor-studio-pc-sheet
-  --tjs-select-appearance: none
-  --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
-  --tjs-select-background-size: 16px 16px
-  --tjs-select-border: 1px solid #ccc
-  --tjs-select-border-radius: 4px
-  --tjs-select-box-shadow-focus: 0 0 5px rgba(0, 0, 0, 0.2)
-  --tjs-select-box-shadow-focus-visible: 0 0 5px rgba(0, 0, 0, 0.5)
-  --tjs-select-cursor: pointer
-  --tjs-select-flex: 1
-  --tjs-select-height: 24px
-  --tjs-select-outline-focus-visible: none
-  --tjs-select-outline-offset: 2px
-  --tjs-select-overflow: hidden
-  --tjs-select-padding: 0 5px
-  --tjs-select-text-overflow: ellipsis
-  --tjs-select-transition-focus-visible: box-shadow 0.2s ease
-  --tjs-select-width: auto
-
-
   table.core-class-traits
     th, td
       vertical-align: top
 
+  .content .properties-list > li
+    padding: 4px
+    color: var(--gas-color-text)
+    background-color: var(--li-background-color)
+    border: none
   p:has(a.content-link)
     line-height: 1.5rem
-  /* Option variables */
-  --tjs-select-option-background: #23221d
-  --tjs-select-option-color: #b5b3a4
+  
 
-  h2, h3, [title]
+  select.tjs-select
+    color: var(--tjs-select-option-color) //- this makes dark theme advancments unreadable
+    
+  h2, h3, h4:not(.window-title), h5
     color: var(--color-highlight)
+    text-shadow: none
 
+  h1
+    font-size: 2.5rem
+  h2
+    font-size: 2rem
+  h3
+    font-size: 1.5rem
+  h4
+    font-family: var(--dnd5e-font-modesto)
+    font-size: 1.3rem
+  h5
+    font-size: 1.15rem
   .border-right
     border-right: 4px ridge var(--color-highlight)
 
@@ -374,15 +535,20 @@ body.game #gas-settings-submenu.app.window-app
 
   a.button.active, button.active 
     outline: none
-    box-shadow: none
+    box-shadow: 0 -8px 16px -7px var(--color-shadow-primary)
     
   .black-link
     white-space: pre-wrap
     
     a.content-link
-      color: #000000 !important
+      color: #000000
     &:not(a.content-link)
       padding-left: 4px
+
+  &.theme-dark
+    .black-link
+      a.content-link
+        color: var(--dnd5e-color-gold)
 
   .illuminated-description
     position: relative

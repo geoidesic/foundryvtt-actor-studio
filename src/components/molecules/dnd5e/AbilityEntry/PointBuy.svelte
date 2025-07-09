@@ -4,7 +4,7 @@
   import { abilities, race, pointBuyScoreTotal, pointBuyLimit, abilityRolls } from "~/src/stores/index"
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
   import { dnd5eModCalc } from "~/src/helpers/Utility"
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   
   export let document = false;
   
@@ -83,9 +83,9 @@
             input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}" name="{ability[0]}" id="{ability[0]}" )
             .controls
               .up.chevron(on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) + 1}})}")
-                i.fas.fa-chevron-up(alt="Decrease")
+                i.fas.fa-chevron-up(alt="{t('AltText.Increase')}")
               .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
-                i.fas.fa-chevron-down(alt="Increase")
+                                  i.fas.fa-chevron-down(alt="{t('AltText.Decrease')}")
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
@@ -98,7 +98,7 @@
             .flex1 Points total: 
             .flex
               +if("isNaN($pointBuyScoreTotal)")
-                span.red(data-tooltip="{localize('GAS.Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
+                span.red(data-tooltip="{t('Setting.AbilityEntry.AllowPointBuy.InvalidTotal')}") N/A
                 +else()
                   input.score.center.small( disabled class="{pointBuyClass}"  type="number" value="{$pointBuyScoreTotal}") 
             .flex0 / 
@@ -117,7 +117,7 @@
   table
     width: 100%
     border-collapse: separate
-    border-spacing: 0 0.5rem
+    
    
   th
     padding: 0.1rem 0.5rem

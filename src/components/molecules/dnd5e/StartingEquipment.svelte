@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
     equipmentSelections,
@@ -110,7 +110,7 @@
           // Normal OR group with multiple choices: initialize as a choice group
           initializeGroup(entry._id, {
             type: "choice",
-            label: "Choose one...",
+            label: t('Equipment.ChooseOne'),
             items: children,
             sort: entry.sort,
           });
@@ -145,7 +145,7 @@
           // Create a separate choice group for this OR
           initializeGroup(orChild._id, {
             type: "choice",
-            label: orChild.label || "Choose one...",
+                          label: orChild.label || t('Equipment.ChooseOne'),
             items: orGrandchildren,
             sort: orChild.sort || entry.sort, // Use OR's sort or fallback to AND's sort
             parentGroup: entry._id // Track that this belongs to the AND group
@@ -248,7 +248,7 @@
         +if("!disabled")
           .flex0.required(class="{equipmentSelectionEnabled ? 'active' : ''}") *
         .flex3
-          h2.left {localize('GAS.Equipment.Label')}
+          h2.left {t('Equipment.Label')}
       
       //- For 2024 rules, group by source
       +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024' && equipmentBySource.length > 1")

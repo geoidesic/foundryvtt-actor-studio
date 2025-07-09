@@ -47,39 +47,96 @@ if (isDraft && isPreRelease) {
     process.exit(1);
 }
 
-// Function to validate version format
-const isValidVersion = (version) => /^\d+\.\d+\.\d+$/.test(version);
+// Function to validate version format (including pre-release)
+const isValidVersion = (version) => /^\d+\.\d+\.\d+(-\w+\.\d+)?$/.test(version);
 
-// Function to increment version
-const incrementVersion = (version, type) => {
+// Function to increment version with clear pre-release logic
+const incrementVersion = (version, type, isPreRelease = false) => {
     if (!isValidVersion(version)) {
-        console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z`);
+        console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z or x.y.z-pre.n`);
         process.exit(1);
     }
-    const parts = version.split('.').map(Number);
-    console.log(`📋 Current version parts: [${parts.join(', ')}]`);
     
-    switch (type) {
-        case 'major':
-            parts[0]++;
-            parts[1] = 0;
-            parts[2] = 0;
-            break;
-        case 'minor':
-            parts[1]++;
-            parts[2] = 0;
-            break;
-        case 'patch':
-            parts[2]++;
-            break;
-        default:
-            throw new Error('Invalid version type. Use major, minor, or patch.');
+    // Check if current version is already a pre-release
+    const isCurrentlyPreRelease = /-beta\.(\d+)$/.test(version);
+    const baseVersion = version.replace(/-.*$/, '');
+    const currentBetaMatch = version.match(/-beta\.(\d+)$/);
+    const currentBetaNumber = currentBetaMatch ? parseInt(currentBetaMatch[1], 10) : 0;
+    
+    const parts = baseVersion.split('.').map(Number);
+    console.log(`📋 Current version: ${version}`);
+    console.log(`📋 Base version parts: [${parts.join(', ')}]`);
+    console.log(`📋 Is currently pre-release: ${isCurrentlyPreRelease}`);
+    
+    // Validate that all parts are valid numbers
+    if (parts.some(part => isNaN(part))) {
+        console.error(`❌ Version contains invalid numbers: "${version}". Resetting to 1.0.0`);
+        parts[0] = 1;
+        parts[1] = 0;
+        parts[2] = 0;
     }
     
-    const newVersion = parts.join('.');
-    console.log(`📋 New version parts: [${parts.join(', ')}] = ${newVersion}`);
+    let newVersion;
+    
+    if (isPreRelease) {
+        if (isCurrentlyPreRelease) {
+            // Current version is already a pre-release, just increment beta number
+            newVersion = `${baseVersion}-beta.${currentBetaNumber + 1}`;
+            console.log(`📋 Incrementing beta: ${version} → ${newVersion}`);
+        } else {
+            // Current version is a release, increment base version and add beta.1
+            switch (type) {
+                case 'major':
+                    parts[0]++;
+                    parts[1] = 0;
+                    parts[2] = 0;
+                    break;
+                case 'minor':
+                    parts[1]++;
+                    parts[2] = 0;
+                    break;
+                case 'patch':
+                    parts[2]++;
+                    break;
+                default:
+                    throw new Error('Invalid version type. Use major, minor, or patch.');
+            }
+            newVersion = `${parts.join('.')}-beta.1`;
+            console.log(`📋 Creating first pre-release: ${version} → ${newVersion}`);
+        }
+    } else {
+        if (isCurrentlyPreRelease) {
+            // Current version is a pre-release, final release drops beta suffix
+            newVersion = baseVersion;
+            console.log(`📋 Creating final release: ${version} → ${newVersion}`);
+        } else {
+            // Current version is a release, increment normally
+            switch (type) {
+                case 'major':
+                    parts[0]++;
+                    parts[1] = 0;
+                    parts[2] = 0;
+                    break;
+                case 'minor':
+                    parts[1]++;
+                    parts[2] = 0;
+                    break;
+                case 'patch':
+                    parts[2]++;
+                    break;
+                default:
+                    throw new Error('Invalid version type. Use major, minor, or patch.');
+            }
+            newVersion = parts.join('.');
+            console.log(`📋 Normal release increment: ${version} → ${newVersion}`);
+        }
+    }
+    
+    console.log(`📋 Final new version: ${newVersion}`);
     return newVersion;
 };
+
+
 
 // Function to check if Ollama is running
 const checkOllamaStatus = async () => {
@@ -264,7 +321,7 @@ if (isDraft) {
     newVersion = currentVersion; // Drafts use current version, no increment
     console.log(`🚀 Creating draft release with current version: ${currentVersion} (DRAFT - no version bump)`);
 } else {
-    newVersion = incrementVersion(currentVersion, versionType);
+    newVersion = incrementVersion(currentVersion, versionType, isPreRelease);
     const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : '';
     console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
 }

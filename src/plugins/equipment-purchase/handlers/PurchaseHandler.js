@@ -6,10 +6,23 @@ export class PurchaseHandler {
 
   // Format a copper value to display GP, SP, CP
   static formatCurrency(totalCopper) {
-    // Convert total copper value into GP, SP, CP object
-    const gp = Math.floor(totalCopper / 100);
-    const sp = Math.floor((totalCopper % 100) / 10);
-    const cp = totalCopper % 10;
+    // Handle negative values
+    const isNegative = totalCopper < 0;
+    const absCopper = Math.abs(totalCopper);
+    let gp = Math.floor(absCopper / 100);
+    let sp = Math.floor((absCopper % 100) / 10);
+    let cp = absCopper % 10;
+
+    // Apply the sign to the largest nonzero denomination
+    if (isNegative) {
+      if (gp > 0) {
+        gp = -gp;
+      } else if (sp > 0) {
+        sp = -sp;
+      } else {
+        cp = -cp;
+      }
+    }
     return { gp, sp, cp };
   }
 
