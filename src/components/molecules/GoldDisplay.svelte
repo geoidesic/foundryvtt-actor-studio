@@ -24,7 +24,6 @@
     border: 1px solid var(--color-border-light-primary)
     border-radius: 4px
     font-size: 1.2rem
-    margin-bottom: 1rem
 
     .gold
       color: var(--dnd5e-color-gold, #b59e54)
