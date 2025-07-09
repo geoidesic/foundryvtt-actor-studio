@@ -52,12 +52,24 @@ const isValidVersion = (version) => /^\d+\.\d+\.\d+(-\w+\.\d+)?$/.test(version);
 
 // Function to increment version
 const incrementVersion = (version, type, isPreRelease = false) => {
-    if (!isValidVersion(version)) {
-        console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z`);
+    // Strip pre-release suffix if present for base version calculation
+    const baseVersion = version.replace(/-.*$/, '');
+    
+    if (!isValidVersion(baseVersion) && !isValidVersion(version)) {
+        console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z or x.y.z-pre.n`);
         process.exit(1);
     }
-    const parts = version.split('.').map(Number);
-    console.log(`📋 Current version parts: [${parts.join(', ')}]`);
+    
+    const parts = baseVersion.split('.').map(Number);
+    console.log(`📋 Current base version parts: [${parts.join(', ')}]`);
+    
+    // Validate that all parts are valid numbers
+    if (parts.some(part => isNaN(part))) {
+        console.error(`❌ Version contains invalid numbers: "${version}". Resetting to 1.0.0`);
+        parts[0] = 1;
+        parts[1] = 0;
+        parts[2] = 0;
+    }
     
     switch (type) {
         case 'major':
