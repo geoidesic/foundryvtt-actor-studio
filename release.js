@@ -47,11 +47,11 @@ if (isDraft && isPreRelease) {
     process.exit(1);
 }
 
-// Function to validate version format
-const isValidVersion = (version) => /^\d+\.\d+\.\d+$/.test(version);
+// Function to validate version format (including pre-release)
+const isValidVersion = (version) => /^\d+\.\d+\.\d+(-\w+\.\d+)?$/.test(version);
 
 // Function to increment version
-const incrementVersion = (version, type) => {
+const incrementVersion = (version, type, isPreRelease = false) => {
     if (!isValidVersion(version)) {
         console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z`);
         process.exit(1);
@@ -76,9 +76,39 @@ const incrementVersion = (version, type) => {
             throw new Error('Invalid version type. Use major, minor, or patch.');
     }
     
-    const newVersion = parts.join('.');
-    console.log(`📋 New version parts: [${parts.join(', ')}] = ${newVersion}`);
+    let newVersion = parts.join('.');
+    
+    if (isPreRelease) {
+        // Check if there are existing pre-release tags for this version
+        const preReleaseNumber = getNextPreReleaseNumber(newVersion);
+        newVersion = `${newVersion}-beta.${preReleaseNumber}`;
+    }
+    
+    console.log(`📋 New version: ${newVersion}`);
     return newVersion;
+};
+
+// Function to get the next pre-release number for a given version
+const getNextPreReleaseNumber = (baseVersion) => {
+    try {
+        // Get all tags that match the pattern baseVersion-beta.x
+        const tags = execSync('git tag --list').toString().trim().split('\n');
+        const preReleaseTags = tags
+            .filter(tag => tag.startsWith(`${baseVersion}-beta.`))
+            .map(tag => {
+                const match = tag.match(/^.*-beta\.(\d+)$/);
+                return match ? parseInt(match[1]) : 0;
+            })
+            .filter(num => !isNaN(num));
+        
+        if (preReleaseTags.length === 0) {
+            return 1; // First pre-release
+        }
+        
+        return Math.max(...preReleaseTags) + 1; // Next pre-release number
+    } catch (error) {
+        return 1; // Default to 1 if git command fails
+    }
 };
 
 // Function to check if Ollama is running
@@ -264,7 +294,7 @@ if (isDraft) {
     newVersion = currentVersion; // Drafts use current version, no increment
     console.log(`🚀 Creating draft release with current version: ${currentVersion} (DRAFT - no version bump)`);
 } else {
-    newVersion = incrementVersion(currentVersion, versionType);
+    newVersion = incrementVersion(currentVersion, versionType, isPreRelease);
     const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : '';
     console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
 }
