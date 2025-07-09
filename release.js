@@ -242,15 +242,21 @@ try {
     process.exit(1);
 }
 
-// Update package.json
+// Update package.json (skip for drafts)
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const currentVersion = packageJson.version;
-const newVersion = incrementVersion(currentVersion, versionType);
 
-const releaseTypeLabel = isDraft ? ' (DRAFT)' : isPreRelease ? ' (PRE-RELEASE)' : '';
-console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
+let newVersion;
+if (isDraft) {
+    newVersion = currentVersion; // Drafts use current version, no increment
+    console.log(`🚀 Creating draft release with current version: ${currentVersion} (DRAFT - no version bump)`);
+} else {
+    newVersion = incrementVersion(currentVersion, versionType);
+    const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : '';
+    console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
+}
 
-// Check if the new version tag already exists (only for non-draft releases)
+// Check if the new version tag already exists (only for published releases)
 if (!isDraft) {
     try {
         execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
@@ -260,40 +266,41 @@ if (!isDraft) {
         // Tag doesn't exist, which is what we want
         console.log(`✅ Version ${newVersion} is available`);
     }
+    
+    // Update files and build for published releases only
+    packageJson.version = newVersion;
+    if (packageJson.debug !== undefined) {
+        packageJson.debug = false; // Set debug to false for releases
+    }
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
+
+    // Update module.json
+    const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+    moduleJson.version = newVersion;
+    if (moduleJson.manifest) {
+        moduleJson.manifest = moduleJson.manifest.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
+    }
+    if (moduleJson.download) {
+        moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
+    }
+    fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
+
+    // Build after version update so the new version is included in the build
+    console.log('🔨 Building project...');
+    try {
+        execSync('npm run build', { stdio: 'inherit' });
+    } catch (error) {
+        console.error('❌ Build failed:', error.message);
+        process.exit(1);
+    }
+
+    // Commit changes
+    console.log('💾 Committing changes...');
+    execSync('git add .');
+    execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
 } else {
-    console.log(`✅ Draft release - no tag check needed`);
+    console.log(`✅ Draft release - no file changes or build needed`);
 }
-
-packageJson.version = newVersion;
-if (packageJson.debug !== undefined) {
-    packageJson.debug = false; // Set debug to false for releases
-}
-fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
-
-// Update module.json
-const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
-moduleJson.version = newVersion;
-if (moduleJson.manifest) {
-    moduleJson.manifest = moduleJson.manifest.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-}
-if (moduleJson.download) {
-    moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-}
-fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
-
-// Build after version update so the new version is included in the build
-console.log('🔨 Building project...');
-try {
-    execSync('npm run build', { stdio: 'inherit' });
-} catch (error) {
-    console.error('❌ Build failed:', error.message);
-    process.exit(1);
-}
-
-// Commit changes
-console.log('💾 Committing changes...');
-execSync('git add .');
-execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
 
 // Generate release notes *before* creating the tag
 console.log('📝 Generating release notes...');
@@ -308,14 +315,14 @@ if (!isDraft) {
     console.log('🏷️  Skipping tag creation for draft release...');
 }
 
-// Push changes and tag
-console.log(`⬆️  Pushing to ${targetBranch} branch...`);
-execSync(`git push origin ${targetBranch}`);
+// Push changes and tag (only for published releases)
 if (!isDraft) {
+    console.log(`⬆️  Pushing to ${targetBranch} branch...`);
+    execSync(`git push origin ${targetBranch}`);
     execSync(`git push origin ${newVersion}`);
     console.log(`📌 Pushed tag ${newVersion}`);
 } else {
-    console.log('📌 No tag to push for draft release');
+    console.log('📌 No git changes to push for draft release');
 }
 
 // Create a temporary file for release notes
@@ -353,10 +360,10 @@ console.log(`📄 Release notes:\n${releaseNotes}`);
 console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
 
 if (isDraft) {
-    console.log(`📝 Note: This is a DRAFT RELEASE on the '${targetBranch}' branch.`);
-    console.log(`✅ GitHub Actions WILL run to generate install files!`);
-    console.log(`🔒 Draft is private - no git tag created.`);
-    console.log(`🔄 Publish the draft to create the git tag and make it public.`);
+    console.log(`📝 Note: This is a DRAFT RELEASE (tentative).`);
+    console.log(`❌ GitHub Actions will NOT run - no install files generated.`);
+    console.log(`🔒 No version bump, no commits, no tags - purely tentative.`);
+    console.log(`🔄 Publish the draft to trigger Actions and generate install files.`);
 } else if (isPreRelease) {
     console.log(`📝 Note: This is a PRE-RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run and update the next branch manifest!`);
