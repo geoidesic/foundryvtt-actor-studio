@@ -16,10 +16,16 @@ const __dirname = path.dirname(__filename);
 const packageJsonPath = path.join(__dirname, 'package.json');
 const moduleJsonPath = path.join(__dirname, 'module.json');
 
-const versionType = process.argv[2];
+const args = process.argv.slice(2);
+const versionType = args[0];
+const isDraft = args.includes('draft') || args.includes('--draft');
 
 if (!versionType) {
-    console.error('Please provide a version argument (major, minor, patch).');
+    console.error('Usage: node release.js <major|minor|patch> [draft]');
+    console.error('Examples:');
+    console.error('  node release.js patch        # Create a public patch release');
+    console.error('  node release.js minor draft  # Create a draft minor release');
+    console.error('  node release.js major --draft # Create a draft major release');
     process.exit(1);
 }
 
@@ -27,6 +33,7 @@ if (!versionType) {
 const validTypes = ['major', 'minor', 'patch'];
 if (!validTypes.includes(versionType)) {
     console.error(`Invalid version type: ${versionType}. Valid types are: ${validTypes.join(', ')}`);
+    console.error('Usage: node release.js <major|minor|patch> [draft]');
     process.exit(1);
 }
 
@@ -198,7 +205,7 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const currentVersion = packageJson.version;
 const newVersion = incrementVersion(currentVersion, versionType);
 
-console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}`);
+console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${isDraft ? ' (DRAFT)' : ''}`);
 
 // Check if the new version tag already exists
 try {
@@ -253,10 +260,11 @@ const releaseNotesPath = path.join(__dirname, 'release-notes.md');
 fs.writeFileSync(releaseNotesPath, releaseNotes);
 
 // Create GitHub release
-console.log('Creating GitHub release...');
+console.log(`Creating GitHub release${isDraft ? ' (draft)' : ''}...`);
 try {
-    execSync(`gh release create ${newVersion} --title "Version ${newVersion}" --notes-file ${releaseNotesPath}`);
-    console.log(`GitHub release created for ${newVersion}`);
+    const draftFlag = isDraft ? ' --draft' : '';
+    execSync(`gh release create ${newVersion} --title "Version ${newVersion}" --notes-file ${releaseNotesPath}${draftFlag}`);
+    console.log(`GitHub ${isDraft ? 'draft ' : ''}release created for ${newVersion}`);
 } catch (error) {
     console.error('Error creating GitHub release:', error.message);
     console.log('You may need to install GitHub CLI (gh) or authenticate it.');
@@ -271,6 +279,9 @@ try {
     console.error('Error removing temporary release notes file:', error);
 }
 
-console.log(`🎉 Successfully released version ${newVersion}`);
+console.log(`🎉 Successfully ${isDraft ? 'drafted' : 'released'} version ${newVersion}`);
 console.log(`📄 Release notes:\n${releaseNotes}`);
 console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
+if (isDraft) {
+    console.log(`📝 Note: This is a DRAFT release. Publish it manually on GitHub when ready.`);
+}
