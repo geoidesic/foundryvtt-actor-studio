@@ -1,0 +1,54 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "jBbYoNZtbWE8sFAK",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulCalligraph",
+      "requiresProficiency": false,
+      "_id": "SJ6L0ftgjWR0IHqf",
+      "group": "jBbYoNZtbWE8sFAK",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagBook0000000",
+      "requiresProficiency": false,
+      "_id": "JyGC1bsbScRwmhwo",
+      "group": "jBbYoNZtbWE8sFAK",
+      "sort": 300000
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "holy",
+      "requiresProficiency": false,
+      "_id": "n4KafmSssP8JAGah",
+      "group": "jBbYoNZtbWE8sFAK",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": 10,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagParchment00",
+      "requiresProficiency": false,
+      "_id": "Bf4nuZ0jUMTs5rso",
+      "group": "jBbYoNZtbWE8sFAK",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagRobe0000000",
+      "requiresProficiency": false,
+      "_id": "XjrKVdIBjZzoS9w2",
+      "group": "jBbYoNZtbWE8sFAK",
+      "sort": 600000
+  }
+]

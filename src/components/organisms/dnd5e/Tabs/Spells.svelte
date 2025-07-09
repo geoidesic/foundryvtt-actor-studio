@@ -1,6 +1,6 @@
 <script>
   import SvelteSelect from 'svelte-select';
-  import { extractMapIteratorObjectProperties, getPackFolders,getPacksFromSettings, addItemToCharacter, log, getRules } from "~/src/helpers/Utility";
+  import { extractMapIteratorObjectProperties, getPackFolders,getPacksFromSettings, log, getRules } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import Tabs from '~/src/components/molecules/Tabs.svelte';
   import { localize } from "#runtime/svelte/helper";

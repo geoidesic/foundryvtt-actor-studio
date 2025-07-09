@@ -7,31 +7,14 @@ export const enum PrivateSettingKeys {
   LAST_MIGRATION = 'lastMigration',
 }
 
-export const enum SourceType {
-  RACES = 'races',
-  RACIAL_FEATURES = 'racialFeatures',
-  CLASSES = 'classes',
-  CLASS_FEATURES = 'classFeatures',
-  SUBCLASSES = 'subclasses',
-  BACKGROUNDS = 'backgrounds',
-  SPELLS = 'spells',
-  FEATS = 'feats',
-  ITEMS = 'items',
-}
-
-export type Source = {
-  [key in SourceType]: any;
-};
-
-export function registerSettings(app): void {
-  console.info(`${LOG_PREFIX} | Building module settings`);
+export function registerSettings(app: Game): void {
+  window.GAS.log.d("Building module settings");
 
   Handlebars.registerHelper('checkedIf', function (condition) {
     return condition ? 'checked' : '';
   });
 
   /**  Disabled settings */
-  // defaultStartingGoldDice();
   // showRollsAsChatMessages();
   // individualPanelScrolls();
   // tokenDisplayNameMode();
@@ -46,21 +29,163 @@ export function registerSettings(app): void {
   // private settings
   // lastMigration();
   // abilityScoreMethods();
-
+  
+  
   /** World Settings */
   sourcesConfiguration();
+  donationTracker();
+  defaultStartingGoldDice();
   allowManualInput();
   allowStandardArray();
   allowPointBuy();
   pointBuyLimit();
   allowRolling(app);
   abilityRollFormula();
-  donationTracker();
+  allowAbilityRollScoresToBeMoved();
   showButtonInSideBar(app);
+  disableOtherActorCreationOptionsForPlayers();
+  nonGmsCanOnlyCreatePCs();
+  filterPackSourcesAppropriatelyByName();
+  showPackLabelInSelect();
+  illuminatedDescription();
+  illuminatedWidth();
+  illuminatedHeight();
+  enableEquipmentSelection();
+  enableEquipmentPurchase();
+  showPackLabelInSelect();
+  windowX();
+  windowY();
+  experimentalCharacterNameStyling();
+  enableLevelUp();
+  milestoneLeveling();
   forceDnd5eLevelUpAutomation();
-
+  debugSetting();
+  debugHooksSetting();
+  disableAdvancementCapture();
+  advancementCaptureTimerThreshold();
   /** User settings */
   dontShowWelcome();
+}
+
+function illuminatedHeight() {
+  game.settings.register(MODULE_ID, 'illuminatedHeight', {
+    name: game.i18n.localize('GAS.Setting.illuminatedHeight.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedHeight.Hint'),
+    scope: 'world',
+    config: true,
+    default: '100',
+    type: String,
+  });
+}
+function illuminatedWidth() {
+  game.settings.register(MODULE_ID, 'illuminatedWidth', {
+    name: game.i18n.localize('GAS.Setting.illuminatedWidth.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedWidth.Hint'),
+    scope: 'world',
+    config: true,
+    default: '100',
+    type: String,
+  });
+}
+
+export function filterPackSourcesAppropriatelyByName() {
+  game.settings.register(MODULE_ID, 'filterPackSourcesAppropriatelyByName', {
+    name: game.i18n.localize('GAS.Setting.FilterPackSourcesAppropriatelyByName.Name'),
+    hint: game.i18n.localize('GAS.Setting.FilterPackSourcesAppropriatelyByName.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+export function illuminatedDescription() {
+  game.settings.register(MODULE_ID, 'illuminatedDescription', {
+    name: game.i18n.localize('GAS.Setting.illuminatedDescription.Name'),
+    hint: game.i18n.localize('GAS.Setting.illuminatedDescription.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
+function allowAbilityRollScoresToBeMoved() {
+  game.settings.register(MODULE_ID, 'allowAbilityRollScoresToBeMoved', {
+    name: game.i18n.localize('GAS.Setting.AllowAbilityRollScoresToBeMoved.Name'),
+    hint: game.i18n.localize('GAS.Setting.AllowAbilityRollScoresToBeMoved.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
+function enableLevelUp() {
+  game.settings.register(MODULE_ID, 'enableLevelUp', {
+    name: game.i18n.localize('GAS.Setting.EnableLevelUp.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableLevelUp.Hint'),
+    scope: 'world',
+    config: true,
+    default: true,
+    type: Boolean,
+  });
+}
+
+function showPackLabelInSelect() {
+  game.settings.register(MODULE_ID, 'showPackLabelInSelect', {
+    name: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Name'),
+    hint: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+
+function nonGmsCanOnlyCreatePCs() {
+  game.settings.register(MODULE_ID, 'nonGmsCanOnlyCreatePCs', {
+    name: game.i18n.localize('GAS.Setting.NonGmsCanOnlyCreatePCs.Name'),
+    hint: game.i18n.localize('GAS.Setting.NonGmsCanOnlyCreatePCs.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: true
+  });
+}
+function disableOtherActorCreationOptionsForPlayers() {
+  game.settings.register(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers', {
+    name: game.i18n.localize('GAS.Setting.DisableOtherActorCreationOptionsForPlayers.Name'),
+    hint: game.i18n.localize('GAS.Setting.DisableOtherActorCreationOptionsForPlayers.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+}
+
+function disableAdvancementCapture() {
+  game.settings.register(MODULE_ID, 'disableAdvancementCapture', {
+    name: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Name'),
+    hint: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+}
+
+
+function advancementCaptureTimerThreshold() {
+  game.settings.register(MODULE_ID, 'advancementCaptureTimerThreshold', {
+    name: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Name'),
+    hint: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Hint'),
+    scope: 'world',
+    config: true,
+    default: 250,
+    type: Number,
+  });
 }
 
 function sourcesConfiguration() {
@@ -115,6 +240,17 @@ function trimSubclasses() {
   });
 }
 
+function milestoneLeveling() {
+  game.settings.register(MODULE_ID, 'milestoneLeveling', {
+    name: game.i18n.localize('GAS.Setting.milestoneLeveling.Name'),
+    hint: game.i18n.localize('GAS.Setting.milestoneLeveling.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
 function forceDnd5eLevelUpAutomation() {
   game.settings.register(MODULE_ID, 'forceDnd5eLevelUpAutomation', {
     name: game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name'),
@@ -139,8 +275,8 @@ function dontShowWelcome() {
 
 function defaultStartingGoldDice() {
   game.settings.register(MODULE_ID, 'defaultGoldDice', {
-    name: game.i18n.localize('GAS.Setting.DefaultGoldDice.Name'),
-    hint: game.i18n.localize('GAS.Setting.DefaultGoldDice.Hint'),
+    name: game.i18n.localize('GAS.Setting.defaultGoldDice.Name'),
+    hint: game.i18n.localize('GAS.Setting.defaultGoldDice.Hint'),
     scope: 'world',
     config: true,
     default: '5d4 * 10',
@@ -239,6 +375,26 @@ function pointBuyLimit() {
     type: Number,
   });
 }
+function windowX() {
+  game.settings.register(MODULE_ID, 'windowX', {
+    name: game.i18n.localize('GAS.Setting.WindowX.Name'),
+    hint: game.i18n.localize('GAS.Setting.WindowX.Hint'),
+    scope: 'world',
+    config: true,
+    default: 720,
+    type: Number,
+  });
+}
+function windowY() {
+  game.settings.register(MODULE_ID, 'windowY', {
+    name: game.i18n.localize('GAS.Setting.WindowY.Name'),
+    hint: game.i18n.localize('GAS.Setting.WindowY.Hint'),
+    scope: 'world',
+    config: true,
+    default: 800,
+    type: Number,
+  });
+}
 
 function abilityRollFormula() {
   game.settings.register(MODULE_ID, 'abiiltyRollFormula', {
@@ -252,7 +408,6 @@ function abilityRollFormula() {
     updateSetting: () => { console.log('updateSetting'); },
   });
 }
-
 
 
 function allowManualInput() {
@@ -313,11 +468,31 @@ function showButtonInSideBar(app) {
     type: Boolean,
   });
 }
+function debugSetting() {
+  game.settings.register(MODULE_ID, 'debug', {
+    name: game.i18n.localize('GAS.Setting.debug.Name'),
+    hint: game.i18n.localize('GAS.Setting.debug.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+function debugHooksSetting() {
+  game.settings.register(MODULE_ID, 'debug.hooks', {
+    name: game.i18n.localize('GAS.Setting.debugHooks.Name'),
+    hint: game.i18n.localize('GAS.Setting.debugHooks.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
 
 function donationTracker() {
   if (!game.modules.get('donation-tracker')?.active) return;
 
-  Hooks.on('mce-everywhere:open:settings', () => {
+  Hooks.on('actor-studio-donation-tracker:settings', () => {
     if (game.user.isGM) { DonationTrackerSettingsButton.showSettings(); }
   });
 
@@ -329,7 +504,7 @@ function donationTracker() {
     type: DonationTrackerSettingsButton,
     restricted: true,
     onChange: () => {
-      Hooks.call('mce-everywhere:open:settings');
+      Hooks.call('actor-studio-donation-tracker:settings');
     }
   });
 
@@ -343,5 +518,38 @@ function lastMigration() {
     config: false,
     default: 0,
     type: Number,
+  });
+}
+
+function enableEquipmentSelection() {
+  game.settings.register(MODULE_ID, 'enableEquipmentSelection', {
+    name: game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function enableEquipmentPurchase() {
+  game.settings.register(MODULE_ID, 'enableEquipmentPurchase', {
+    name: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function experimentalCharacterNameStyling() {
+  game.settings.register(MODULE_ID, 'experimentalCharacterNameStyling', {
+    name: game.i18n.localize('GAS.Setting.ExperimentalCharacterNameStyling.Name'),
+    hint: game.i18n.localize('GAS.Setting.ExperimentalCharacterNameStyling.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
   });
 }

@@ -1,16 +1,16 @@
 <script>
-  import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, } from "~/src/helpers/store"
+  import { abilities, race, abilityRolls } from "~/src/stores/index"
   import { MODULE_ID } from "~/src/helpers/constants"
+  import { dnd5eModCalc } from "~/src/helpers/Utility"
   
   export let document = false;
   
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
-  let formula;
+  let formula, allowMove;
 
   function updateValue(attr, event) {
     if(event.target.value < 8) return false;
@@ -20,10 +20,45 @@
     $doc = $doc
   }
 
+  async function swapAbilities(attr, direction) {
+    const abilities = Object.keys($doc.system.abilities);
+    const index = abilities.indexOf(attr);
+    
+    if (direction === 1 && index > 0) {
+      // Move up
+      const prevAbility = abilities[index - 1];
+      const options = {
+        system: {
+          abilities: {
+            [attr]: { value: $doc.system.abilities[prevAbility].value },
+            [prevAbility]: { value: $doc.system.abilities[attr].value },
+          },
+        },
+      };
+      await $doc.updateSource(options);
+      $doc = $doc;
+    } else if (direction === -1 && index < abilities.length - 1) {
+      // Move down
+      const nextAbility = abilities[index + 1];
+      const options = {
+        system: {
+          abilities: {
+            [attr]: { value: $doc.system.abilities[nextAbility].value },
+            [nextAbility]: { value: $doc.system.abilities[attr].value },
+          },
+        },
+      };
+      await $doc.updateSource(options);
+      $doc = $doc;
+    }
+  }
 
   async function roll(attr) {
     const roll = await new Roll(formula).evaluate();
     await roll.toMessage();
+
+    $abilityRolls = !$abilityRolls ? {} : $abilityRolls
+    $abilityRolls[attr] = roll.total
 
     // set the value of the ability to the result of the roll
     const options = {system: {abilities: { [attr]: {value: Number(roll.total)}}}};
@@ -36,57 +71,131 @@
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-
+  $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[0]] !== undefined);
+  $: scoreClass = allowMove && allRolled ? 'left' : 'center';
+  
   onMount(async () => {
     formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
+    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved")
   });
 </script>
 
 <template lang="pug">
 .attribute-entry.mt-sm
-  h5.flexrow.mb-sm
-    .flex2.left Ability
-    .flex1.center Race / Feat
-    .flex1.center Base Score
-    .flex1.center Score
-    .flex1.center Modifier
-  .indent
-    +each("systemAbilitiesArray as ability, index")
-      .flexrow.mb-sm
-        .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input
-          +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
-            span +
-          span {abilityAdvancements?.[ability[1].abbreviation] || 0}
-        .flex1.center.relative
-          input.center.small(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
-        .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
-            span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
-        .flex0.center.justify-flexrow-vertical.controls(alt="Roll" on:click!="{roll(ability[1].abbreviation)}")
-          i.fas.fa-dice
+  table
+    thead
+      tr
+        th.ability Ability
+        th.center Race / Feat
+        th.center Base Score
+        th.center Score
+        th.center Mod
+        th.center.roll-col
+    tbody
+      +each("systemAbilitiesArray as ability, index")
+        tr
+          td.ability {ability[1].label}
+          td.center
+            +if("abilityAdvancements?.[ability[0]] > 0")
+              span +
+            span {abilityAdvancements?.[ability[0]] || 0}
+          td.center.relative
+            input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}"  name="{ability[0]}" id="{ability[0]}")
+            +if("allowMove && allRolled")
+              .controls
+                .up.chevron
+                  +if("index != 0")
+                    i.fas.fa-chevron-up(alt="Move Up" on:click!="{swapAbilities(ability[0], 1)}")
+                .down.chevron
+                  +if("index != systemAbilitiesArray.length - 1")
+                    i.fas.fa-chevron-down(alt="Move Down" on:click!="{swapAbilities(ability[0], -1)}")
+          td.center
+            span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
+          td.center
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+              span +
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+          td.center
+            .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="Roll" on:click!="{roll(ability[0])}")
+              i.fas.fa-dice
 
 </template>
 
 <style lang="sass">
-  .align-text-with-input
-    margin-top: 0.3rem
+  table
+    width: 100%
+    border-collapse: separate
+    border-spacing: 0 0.5rem
+   
+  th
+    padding: 0.1rem 0.5rem
+    text-align: left
+    font-family: var(--dnd5e-font-modesto)
+    &.center
+      text-align: center
+    &.roll-col
+      width: 2rem
+   
+  td
+    text-align: left
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+ 
   .green
     color: green
   .red
     color: red
+  .relative
+    position: relative
+    background-color: rgba(0, 0, 0, 0.05)
+    border-radius: 3px
+    input
+      background: none
+      width: 3em
+      &:disabled
+        color: var(--color-text-dark-primary)
+      text-decoration: none
+      border: none
+      outline: none
+      box-shadow: none
+      -webkit-appearance: none
+      -moz-appearance: none
+      appearance: none
+  .mainscore
+    min-width: 40px
   .controls
+    .chevron
+      position: absolute
+      font-size: 0.75rem
+      right: 0
+      cursor: pointer
+      background-color: rgba(0, 0, 0, 0.1)
+      &.up
+        padding: 1px 3px 0px 3px
+        top: 0
+        &:hover
+          background-color: rgba(140, 90, 0, 0.2)
+      &.down
+        padding: 1px 3px 0px 3px
+        bottom: 0
+        &:hover
+          background-color: rgba(140, 90, 0, 0.2)
+  .buttons
     cursor: pointer
     min-width: 24px
     font-size: 1rem
     background-color: rgba(0, 0, 0, 0.1)
     padding: 2px 1px 0px 0px
-    border: 1px solid grey
+    border: 1px solid var(--color-positive)
     border-radius: 4px
+    color: var(--color-positive)
     &:hover
       cursor: pointer
       background-color: rgba(140, 90, 0, 0.2)
-    
+    &.active
+      border: 1px solid var(--color-negative)
+      color: var(--color-negative)
+      animation: pulse 1s infinite
 </style>

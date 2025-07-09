@@ -3,7 +3,7 @@
 import WelcomeAppShell from './WelcomeAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
-import { MODULE_ID } from "~/src/helpers/constants"
+import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import { version } from "../../module.json";
 
 export default class WelcomeApplication extends SvelteApplication
@@ -18,11 +18,11 @@ export default class WelcomeApplication extends SvelteApplication
    {
       return foundry.utils.mergeObject(super.defaultOptions, {
         id: 'foundryvtt-actor-studio-welcome',
-        classes: ['gas-actor-studio'],
+        classes: [MODULE_CODE],
          resizable: true,
          minimizable: true,
-         width: 220,
-         height: 400,
+         width: 500,
+         height: 770,
          headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
          title: game.i18n.localize('GAS.ActorStudio')+' v'+version,
          svelte: {

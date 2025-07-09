@@ -1,0 +1,45 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "tWEfE6HLPbiS0OtF",
+      "group": "",
+      "sort": 700000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmLeatherArm",
+      "requiresProficiency": false,
+      "_id": "fEcFnfooD7rSDdEI",
+      "group": "tWEfE6HLPbiS0OtF",
+      "sort": 225000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+      "requiresProficiency": false,
+      "_id": "JbNtnwGItIy5pcr1",
+      "group": "tWEfE6HLPbiS0OtF",
+      "sort": 231250
+  },
+  {
+      "type": "tool",
+      "count": null,
+      "key": "music",
+      "requiresProficiency": false,
+      "_id": "0jBNM2wEEVNN4DBt",
+      "group": "tWEfE6HLPbiS0OtF",
+      "sort": 237500
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagEntertainer",
+      "requiresProficiency": false,
+      "_id": "X63sE2GlxSzKzUho",
+      "group": "tWEfE6HLPbiS0OtF",
+      "sort": 475000
+  }
+]

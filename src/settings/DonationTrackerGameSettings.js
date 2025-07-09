@@ -8,11 +8,11 @@ class DonationTrackerGameSettings extends TJSGameSettings {
    }
 
    init() {
-      log.i('Registering Actor Studio Donation Tracker integration')
+      window.GAS.log.i('Registering Actor Studio Donation Tracker integration')
       const namespace = this.namespace;
       const allSettings = [];
 
-      this.register({
+      allSettings.push({
          namespace,
          key: "enable-donation-tracker",
          options: {
@@ -27,13 +27,28 @@ class DonationTrackerGameSettings extends TJSGameSettings {
          }
       });
 
+      allSettings.push({
+         namespace,
+         key: "enable-donation-tracker-unregistered-access",
+         options: {
+            name: game.i18n.localize('GAS.Setting.DonationTracker_UnregisteredAccess.Name'),
+            hint: game.i18n.localize('GAS.Setting.DonationTracker_UnregisteredAccess.Hint'),
+            scope: "world",
+            config: true,
+            type: Boolean,
+            default: false,
+            onchange: () => {
+            }
+         }
+      });
+
       const membershipRanks = game.membership?.RANKS || []
-      log.d('membershipRanks', membershipRanks)
+      // window.GAS.log.d('membershipRanks', membershipRanks)
 
       if ( Object.keys(membershipRanks).length > 0) {
-         log.d('Registering Donation Tracker Ranks')
+         // window.GAS.log.d('Registering Donation Tracker Ranks')
          for (const [rank, value] of Object.entries(membershipRanks)) {
-            log.d('rank', rank)
+            // window.GAS.log.d('rank', rank)
             if(value === -1) continue;
             allSettings.push({
                namespace,
@@ -51,7 +66,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
             });
          }
       }
-      log.d('allSettings', allSettings)
+      // window.GAS.log.d('allSettings', allSettings)
       this.registerAll(allSettings, !game.user.isGM);
    }
 }

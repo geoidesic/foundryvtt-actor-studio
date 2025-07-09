@@ -1,18 +1,16 @@
 <script>
-  import preventDefault from "~/helpers/svelte-actions/PreventDefault.js";
-  import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
+  import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
 
   export let icon = void 0;
-  export let efx = ripple();
   export let disabled = false;
 </script>
 
-<button on:click on:mousedown={preventDefault} use:efx {disabled}>
+<button on:click on:mousedown={preventDefault} {disabled}>
   <div><i class={icon} /></div>
 </button>
 
 <style lang="scss">
-  @import "../../../styles/Mixins.scss";
+  @import "../../../../styles/Mixins.scss";
   button {
     @include icon-button;
     cursor: pointer;

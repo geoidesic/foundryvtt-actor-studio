@@ -1,0 +1,54 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "FIqxCvfdb4YPaDyl",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+      "requiresProficiency": false,
+      "_id": "7B991PQwtEPst2lm",
+      "group": "FIqxCvfdb4YPaDyl",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulThievesToo",
+      "requiresProficiency": false,
+      "_id": "AlpgDfVKgcYd5rLC",
+      "group": "FIqxCvfdb4YPaDyl",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagCrowbar0000",
+      "requiresProficiency": false,
+      "_id": "8PuRM4pC5hnCsIxs",
+      "group": "FIqxCvfdb4YPaDyl",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": 2,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagPouch000000",
+      "requiresProficiency": false,
+      "_id": "mp0feeLVQbHaU276",
+      "group": "FIqxCvfdb4YPaDyl",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagClothesTrav",
+      "requiresProficiency": false,
+      "_id": "2txtXcXiPUM87Yb7",
+      "group": "FIqxCvfdb4YPaDyl",
+      "sort": 600000
+  }
+]

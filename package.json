@@ -4,6 +4,7 @@
     "private": false,
     "version": "1.10.14",
     "type": "module",
+    "debug": false,
     "authors": [
         {
             "name": "Noel da Costa",
@@ -24,17 +25,22 @@
     },
     "devDependencies": {
         "@league-of-foundry-developers/foundry-vtt-types": "^9.280.0",
+        "@sveltejs/vite-plugin-svelte": "^3.1.1",
+        "@testing-library/svelte": "^4.0.5",
         "@typescript-eslint/eslint-plugin": "^7.8.0",
         "@typescript-eslint/parser": "^7.8.0",
+        "@vitest/ui": "^1.6.0",
         "eslint": "^9.2.0",
         "html2pug": "^4.0.0",
+        "jsdom": "^24.1.0",
         "node-fetch": "^3.3.2",
         "prettier": "^3.2.5",
         "pug": "^3.0.2",
         "pug-cli": "^1.0.0-alpha6",
         "svelte-preprocess": "^5.1.4",
         "typescript": "^5.4.5",
-        "vite": "^5.2.11"
+        "vite": "^5.2.11",
+        "vitest": "^1.6.0"
     },
     "browserslist": [
         ">5%",
@@ -52,9 +58,20 @@
         "release:draft:patch": "node release.js patch draft",
         "release:draft:minor": "node release.js minor draft",
         "release:draft:major": "node release.js major draft",
-        "release:pre": "node release.js patch pre",
-        "release:pre:patch": "node release.js patch pre",
-        "release:pre:minor": "node release.js minor pre",
-        "release:pre:major": "node release.js major pre"
+        "test": "vitest",
+        "test:ui": "vitest --ui",
+        "test:run": "vitest run"
+    },
+    "svelte": {
+        "preprocess": "svelte-preprocess"
+    },
+    "preprocessConfig": {
+        "template": "pug",
+        "style": "sass",
+        "conventions": {
+            "template": "Use Pug syntax (+if, +each, attributes)",
+            "style": "Use SASS/SCSS syntax",
+            "script": "Standard JavaScript"
+        }
     }
 }

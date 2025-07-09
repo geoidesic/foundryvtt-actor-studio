@@ -1,0 +1,63 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "55QxZJqMqe2yhcIx",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmChainMail0",
+      "requiresProficiency": false,
+      "_id": "CMW1osn8yyeBlaFN",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmShield0000",
+      "requiresProficiency": false,
+      "_id": "DetedjFDDGEZPfHF",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepLongsword0",
+      "requiresProficiency": false,
+      "_id": "2bS7ztlTwaWy3vBR",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": 6,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepJavelin000",
+      "requiresProficiency": false,
+      "_id": "ah68oZH9CElaDWV7",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 500000
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "holy",
+      "requiresProficiency": false,
+      "_id": "RDI84jZHYTkZIB8k",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 600000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagPriestsPack",
+      "requiresProficiency": false,
+      "_id": "QtswKbw3wDtJyho7",
+      "group": "55QxZJqMqe2yhcIx",
+      "sort": 650000
+  }
+]

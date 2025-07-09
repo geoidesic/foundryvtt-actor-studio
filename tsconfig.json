@@ -11,6 +11,6 @@
     "sourceMap": true,
     "noUnusedLocals": true
   },
-  "include": ["src", "test", "__mocks__"],
+  "include": ["src", "test", "__mocks__", "release.js"],
   "exclude": ["node_modules", "**/*.test.ts", "jest.config.ts"]
 }

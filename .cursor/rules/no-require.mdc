@@ -1,0 +1,9 @@
+---
+description: 
+globs: *.js,*.ts
+alwaysApply: false
+---
+
+# Your rule content
+
+- This is an ESM project. Don't use require. Use import

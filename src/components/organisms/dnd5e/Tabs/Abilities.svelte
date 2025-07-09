@@ -3,8 +3,6 @@
   import {
     extractMapIteratorObjectProperties,
     getPackFolders,
-    addItemToCharacter,
-    log,
     getRules
   } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -16,15 +14,18 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { localize } from "#runtime/svelte/helper";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { abilityGenerationMethod } from "~/src/helpers/store";
+  import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
 
   const actor = getContext("#doc");
   const ruleConfig = {
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
+
+  $: isDisabled = $readOnlyTabs.includes("abilities");
+
   const importAdvancements = async () => {
-    log.d('options',options)
+    // window.GAS.log.d('options',options)
     for (const option of options) {
       try {
         const module = await import(`~/src/components/molecules/dnd5e/AbilityEntry/${option.type}.svelte`);
@@ -36,9 +37,13 @@
   };
 
   const selectHandler = async (option) => {
-    active = option.value;
-    $abilityGenerationMethod = option.value;
-    importAdvancements();
+    active = option.value ?? option ?? null;
+    await importAdvancements();
+    tick();
+    $abilityGenerationMethod = active;
+    // window.GAS.log.d('option', option)
+    // window.GAS.log.d('active', active)
+    // window.GAS.log.d('abilityGenerationMethod', $abilityGenerationMethod)
   };
   
 
@@ -95,22 +100,45 @@
       .flex2.pr-sm.col-a
         h3.left {localize('GAS.Tabs.Abilities.HowCalculated')}
         +if("options.length > 1")
-          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" )
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
           +else()
             ol.properties-list
               +each("options as option")
                 li {option.label}
         +if("$abilityGenerationMethod")
-          svelte:component(this="{abilityModule}")
+          .relative
+            svelte:component(this="{abilityModule}")
+            +if("isDisabled")
+              .overlay
       .flex0.border-right.right-border-gradient-mask 
       .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
 
 <style lang="sass" scoped>
-@import "../../../../../styles/Mixins.scss"
+@use "../../../../../styles/Mixins.scss" as mixins
 .content 
-  @include staticOptions
+  +mixins.staticOptions
 
-  :global(.icon-select)
-    position: relative
+  .col-a
+    // max-width: 325px
+
+:global(.icon-select)
+  position: relative
+
+.relative
+  position: relative
+
+.overlay
+  position: absolute
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background-color: rgba(200, 200, 200, 0.3)
+  pointer-events: all
+  cursor: not-allowed
+  z-index: 100
+  transition: background-color 0.2s ease
+  &:hover
+    background-color: rgba(200, 200, 200, 0.4)
 </style>

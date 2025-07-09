@@ -1,0 +1,54 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "hRVywVtYMIyj47LI",
+      "group": "",
+      "sort": 100000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmChainShirt",
+      "requiresProficiency": false,
+      "_id": "bGGpwQNPkEm90Aak",
+      "group": "hRVywVtYMIyj47LI",
+      "sort": 200000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbarmShield0000",
+      "requiresProficiency": false,
+      "_id": "XN2TO8Ned2z0tGU1",
+      "group": "hRVywVtYMIyj47LI",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepMace000000",
+      "requiresProficiency": false,
+      "_id": "2TqR6FTmfE5pF3uU",
+      "group": "hRVywVtYMIyj47LI",
+      "sort": 400000
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "holy",
+      "requiresProficiency": false,
+      "_id": "DJWicB3geFrbTgwZ",
+      "group": "hRVywVtYMIyj47LI",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagPriestsPack",
+      "requiresProficiency": false,
+      "_id": "svexQM2NoMbtszQz",
+      "group": "hRVywVtYMIyj47LI",
+      "sort": 600000
+  }
+]

@@ -1,0 +1,63 @@
+[
+  {
+      "type": "AND",
+      "requiresProficiency": false,
+      "_id": "TNHMxaGovu69ZlXO",
+      "group": "",
+      "sort": 300000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepSickle0000",
+      "requiresProficiency": false,
+      "_id": "WtB4dqK7lmgDdkos",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 400000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbtulCarpenters",
+      "requiresProficiency": false,
+      "_id": "Xm2fL6sOD6LmJKTe",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 500000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagHealersKit0",
+      "requiresProficiency": false,
+      "_id": "TVpmfrBKEQQ2pwpL",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 600000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.M8xM8BLK4tpUayEE",
+      "requiresProficiency": false,
+      "_id": "Entzi1HFNXfBnLTo",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 700000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd-players-handbook.equipment.Item.phbagShovel00000",
+      "requiresProficiency": false,
+      "_id": "inYuyNTuj4mhcay8",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 800000
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.SsAmWV6YBqeOFihT",
+      "requiresProficiency": false,
+      "_id": "JSIVSV8iTw6YeUVP",
+      "group": "TNHMxaGovu69ZlXO",
+      "sort": 900000
+  }
+]

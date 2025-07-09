@@ -26,6 +26,33 @@
   font-size: $size;
 }
 
+@mixin gold-button($cursor: pointer) {
+  position: relative;
+  border: 3px solid transparent;
+  border-radius: var(--border-radius);
+  background: var(--dnd5e-color-black);
+  color: var(--dnd5e-color-gold);
+  margin: 0 0 3px 0;
+  box-shadow: 0 0 6px var(--dnd5e-shadow-45);
+  font-size: var(--font-size-14);
+  line-height: normal;
+  overflow: hidden;
+  cursor: $cursor;
+  &.active .lozenge {
+    border: 3px solid var(-as-blue);
+    background: var(--as-blue);
+    color: #fff;
+  }
+
+  .content-link {
+    background-color: #eee;
+    color: var(--hyperlink-color);
+    i {
+      color: var(--hyperlink-color);
+    }
+  }
+}
+
 @mixin staticOptions {
   .flexrow {
     gap: 2px;

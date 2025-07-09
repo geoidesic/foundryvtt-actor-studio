@@ -1,0 +1,86 @@
+[
+  {
+      "type": "OR",
+      "_id": "OOp4DMf7SMJKd3rs",
+      "group": "",
+      "sort": 100000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "armor",
+      "count": null,
+      "key": "shield",
+      "_id": "3rIapbEkMzXtyKJD",
+      "group": "OOp4DMf7SMJKd3rs",
+      "sort": 400000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "sim",
+      "_id": "zj09FogwZleDvCML",
+      "group": "OOp4DMf7SMJKd3rs",
+      "sort": 500000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "OR",
+      "_id": "0bqEs61IPm3JBztI",
+      "group": "",
+      "sort": 200000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.fbC0Mg1a73wdFbqO",
+      "_id": "UI2Lx2W1JlLNMSwV",
+      "group": "0bqEs61IPm3JBztI",
+      "sort": 600000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "weapon",
+      "count": null,
+      "key": "simpleM",
+      "_id": "v8SAI2EG7iKUnhvs",
+      "group": "0bqEs61IPm3JBztI",
+      "sort": 700000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "AND",
+      "_id": "YHMTehP7FxRFVdes",
+      "group": "",
+      "sort": 300000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.WwdpHLXGX5r8uZu5",
+      "_id": "69ooSLGA7vQdC9hJ",
+      "group": "YHMTehP7FxRFVdes",
+      "sort": 800000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "linked",
+      "count": null,
+      "key": "Compendium.dnd5e.items.Item.8KWz5DJbWUpNWniP",
+      "_id": "vXLU3UpyunAMJ55c",
+      "group": "YHMTehP7FxRFVdes",
+      "sort": 900000,
+      "requiresProficiency": false
+  },
+  {
+      "type": "focus",
+      "count": null,
+      "key": "druidic",
+      "_id": "q6vmQoCI9DKVeZiS",
+      "group": "YHMTehP7FxRFVdes",
+      "sort": 1000000,
+      "requiresProficiency": false
+  }
+]

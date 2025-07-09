@@ -3,14 +3,14 @@
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import {
     getFoldersFromMultiplePacks,
-    extractItemsFromPacks,
-    addItemToCharacter,
+    extractItemsFromPacksSync,
     getPacksFromSettings,
-    log,
+    getAdvancementValue,
+    illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize } from "#runtime/svelte/helper";
-  import { background } from "~/src/helpers/store";
+  import { background, readOnlyTabs } from "~/src/stores/index";
 
   let active = null,
     value = null,
@@ -18,7 +18,7 @@
   let packs = getPacksFromSettings("backgrounds");
   // let folders = getFoldersFromMultiplePacks(packs, 1);
   // let folderIds = folders.map((x) => x._id);
-  let allItems = extractItemsFromPacks(packs, [
+  let allItems = extractItemsFromPacksSync(packs, [
     "name->label",
     "img",
     "type",
@@ -44,6 +44,8 @@
 
   let richHTML = "";
 
+  $: isDisabled = $readOnlyTabs.includes("background");
+
   const importAdvancements = async () => {
     for (const advancement of advancementArray) {
       try {
@@ -55,22 +57,42 @@
     }
   };
   
-  const selectHandler = async (option) => {
-    $background = await fromUuid(option);
-    log.d('background', $background)
+  const selectBackgroundHandler = async (option) => {
+    console.log('BACKGROUND SELECTION START:', {
+        option,
+        optionType: typeof option
+    });
+
+    const selectedBackground = await fromUuid(option);
+    console.log('BACKGROUND FROM UUID:', {
+        selectedBackground,
+        properties: Object.keys(selectedBackground || {}),
+        system: selectedBackground?.system,
+        advancement: selectedBackground?.advancement
+    });
+
+    $background = selectedBackground;
     active = option;
+    if(!value) {
+      value = option;
+    }
     await tick();
     await importAdvancements();
-    richHTML = await TextEditor.enrichHTML(html);
+    richHTML = await illuminatedDescription(html, $background);
+
+    Hooks.call('gas.richhtmlReady', richHTML);
   };
 
+
   onMount(async () => {
-    if ($background) {
-      log.d('background', background)
-      value = $background.uuid;
-      await tick();
-      await importAdvancements();
-      richHTML = await TextEditor.enrichHTML(html);
+    let backgroundUuid;
+    if (window.GAS.debug) {
+      backgroundUuid = window.GAS.background;
+    } else {
+      backgroundUuid = $background?.uuid;
+    }
+    if (backgroundUuid) {
+      await selectBackgroundHandler(backgroundUuid);
     }
   });
 
@@ -80,20 +102,23 @@
 div.content
   .flexrow
     .flex2.pr-sm.col-a
-      IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="background-select" bind:value )
+      .flexrow
+        .flex0.required(class="{$background ? '' : 'active'}") *
+        .flex3 
+          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
      
-
       +if("advancementArray.length")
         h3.left {localize('GAS.Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")
             //- @todo: this should be broken out into components for each advancement.type
             li.left
-              .flexrow(data-tooltip="{advancement.configuration?.hint || null}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+              .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                 .flex0.relative.image
                   img.icon(src="{advancement.icon}" alt="{advancement.title}")
                 .flex2 {advancement.title}
               .flexrow
+                //- pre advancement {advancement.type}
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
 
     .flex0.border-right.right-border-gradient-mask 
@@ -105,6 +130,9 @@ div.content
   @import "../../../../../styles/Mixins.scss"
   .content 
     @include staticOptions
+
+    .col-a
+      // max-width: 325px
 
   :global(.icon-select)
     position: relative

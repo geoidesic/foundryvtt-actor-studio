@@ -1,62 +1,86 @@
 <script>
-  import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, } from "~/src/helpers/store"
-  import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants"
-  
+  import {
+    createEventDispatcher,
+    getContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/stores/index";
+  import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
+  import { dnd5eModCalc } from "~/src/helpers/Utility";
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
 
-  async function updateValue (attr, value) {
+  async function updateValue(attr, value) {
     // move the value to the next ability according to the direction of the arrow
     const abilities = Object.keys(STANDARD_ARRAY);
     // get index of attr from abilities
     const index = abilities.indexOf(attr);
-    log.d('abilities', abilities)
-    log.d('index', index)
-    log.d('value', value)
-    log.d('attr', attr)
+    // window.GAS.log.d('abilities', abilities)
+    // window.GAS.log.d('index', index)
+    // window.GAS.log.d('value', value)
+    // window.GAS.log.d('attr', attr)
+    
     switch (value) {
       case -1:
         // move the value to the next ability according to the direction of the arrow
-        if(index < abilities.length - 1) {
+        if (index < abilities.length - 1) {
           const nextAbility = abilities[index + 1];
-          log.d('nextAbility', nextAbility)
-          const options = {system: {abilities: {[attr]: {value: $doc.system.abilities[nextAbility].value}, [nextAbility]: {value: $doc.system.abilities[attr].value}}}};
-          log.d('options', options)
-          await $doc.updateSource(options)
-          $doc = $doc
-
+          // window.GAS.log.d('nextAbility', nextAbility)
+          const options = {
+            system: {
+              abilities: {
+                [attr]: { value: $doc.system.abilities[nextAbility].value },
+                [nextAbility]: { value: $doc.system.abilities[attr].value },
+              },
+            },
+          };
+          // window.GAS.log.d('options', options)
+          await $doc.updateSource(options);
+          $doc = $doc;
         }
         break;
-    
+
       default:
         // move the value to the next ability according to the direction of the arrow
-        if(index > 0) {
+        if (index > 0) {
           const nextAbility = abilities[index - 1];
-          log.d('nextAbility', nextAbility)
-          const options = {system: {abilities: {[attr]: {value: $doc.system.abilities[nextAbility].value}, [nextAbility]: {value: $doc.system.abilities[attr].value}}}};
-          log.d('options', options)
-          await $doc.updateSource(options)
-          $doc = $doc
+          // window.GAS.log.d('nextAbility', nextAbility)
+          const options = {
+            system: {
+              abilities: {
+                [attr]: { value: $doc.system.abilities[nextAbility].value },
+                [nextAbility]: { value: $doc.system.abilities[attr].value },
+              },
+            },
+          };
+          // window.GAS.log.d('options', options)
+          await $doc.updateSource(options);
+          $doc = $doc;
         }
         break;
     }
 
-    log.d(abilities)
+    // window.GAS.log.d(abilities)
     // const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
     // $doc.updateSource(options)
     // $doc = $doc
   }
 
   function reset() {
-    const options = {system: {abilities: {}}};
-    systemAbilitiesArray.forEach(ability => {
-      options.system.abilities[ability[1].abbreviation] = {value: STANDARD_ARRAY[ability[1].abbreviation]};
+    $abilityRolls = {};
+
+    const options = { system: { abilities: {} } };
+    systemAbilitiesArray.forEach((ability) => {
+      options.system.abilities[ability[0]] = {
+        value: STANDARD_ARRAY[ability[0]],
+      };
     });
     $doc.updateSource(options);
     $doc = $doc;
@@ -71,18 +95,45 @@
     return sortedArray1.every((value, index) => value === sortedArray2[index]);
   }
 
-  $: systemAbilities = game.system.config.abilities
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: isStandardArrayValues = arraysMatch(Object.values(STANDARD_ARRAY), systemAbilitiesArray.map(ability => $doc.system.abilities[ability[1].abbreviation].value))
-
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
+  // $: isStandardArrayValues = arraysMatch(
+  //   Object.values(STANDARD_ARRAY),
+  //   systemAbilitiesArray.map(
+  //     (ability) => $doc.system.abilities[ability[0]].value,
+  //   ),
+  // );
+  $: $isStandardArrayValues = arraysMatch(
+    Object.values(STANDARD_ARRAY),
+    systemAbilitiesArray.map(
+      (ability) => $doc.system.abilities[ability[0]]?.value,
+    ),
+  );
+  // $: {
+  //   const currentAbilities = systemAbilitiesArray.map(
+  //     (ability) => {
+  //       window.GAS.log.d(ability) 
+  //       return $doc.system.abilities[ability[0]].value
+  //     }
+  //   );
+  //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
+  //   isStandardArrayValues.set(match);
+  // }
   onMount(async () => {
-    log.d($doc.system.abilities)
-    log.d(Object.keys($doc.system.abilities))
-    log.d(isStandardArrayValues)
+    // window.GAS.log.d($doc.system.abilities)
+    // window.GAS.log.d(Object.keys($doc.system.abilities))
+    // window.GAS.log.d(isStandardArrayValues)
     // if all the abilities are 10, set them to the standard array
-    if(systemAbilitiesArray.every(ability => $doc.system.abilities[ability[1].abbreviation].value === 10)) {
+    if (
+      systemAbilitiesArray.every(
+        (ability) =>
+          $doc.system.abilities[ability[0]]?.value === 10,
+      )
+    ) {
       reset();
     }
   });
@@ -90,43 +141,67 @@
 
 <template lang="pug">
 .attribute-entry.mt-sm
-  h5.flexrow.mb-sm
-    .flex2.left Ability
-    .flex1.center Race / Feat
-    .flex1.center Base Score
-    .flex1.center Score
-    .flex1.center Modifier
-  .indent
-    +each("systemAbilitiesArray as ability, index")
-      .flexrow.mb-sm
-        .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input
-          +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
-            span +
-          span {abilityAdvancements?.[ability[1].abbreviation] || 0}
-        .flex1.center.relative
-          input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}")
-          .controls
-            .up.chevron
-              +if("index != 0")
-                i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[1].abbreviation, 1)}")
-            .down.chevron
-              +if("index != 5")
-                i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[1].abbreviation, -1)}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
-        .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
-            span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
-    +if("!isStandardArrayValues")
-      hr
-      button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
+  table
+    thead
+      tr
+        th.ability Ability
+        th.center Race / Feat
+        th.center Base Score
+        th.center Score
+        th.center Modifier
+    tbody
+      +each("systemAbilitiesArray as ability, index")
+        tr
+          td.ability {ability[1].label}
+          td.center
+            +if("abilityAdvancements?.[ability[0]] > 0")
+              span +
+            span {abilityAdvancements?.[ability[0]] || 0}
+          td.center.relative
+            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
+            .controls
+              .up.chevron
+                +if("index != 0")
+                  i.fas.fa-chevron-up(alt="Decrease" on:click!="{updateDebounce(ability[0], 1)}")
+              .down.chevron
+                +if("index != 5")
+                  i.fas.fa-chevron-down(alt="Increase" on:click!="{updateDebounce(ability[0], -1)}")
+          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
+          td.center
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+              span +
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+          
+      +if("!$isStandardArrayValues")
+        tr
+          td(colspan="5")
+            hr
+            button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
 
 </template>
 
 <style lang="sass">
-  .align-text-with-input
-    margin-top: 0.3rem
+  table
+    width: 100%
+    border-collapse: separate
+    border-spacing: 0 0.5rem
+   
+  th
+    padding: 0.1rem 0.5rem
+    text-align: left
+    font-family: var(--dnd5e-font-modesto)
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+   
+  td
+    text-align: left
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+ 
   .green
     color: green
   .red
@@ -150,5 +225,5 @@
         bottom: 0
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
-    
+
 </style>

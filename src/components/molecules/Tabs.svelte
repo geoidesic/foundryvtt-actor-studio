@@ -2,7 +2,7 @@
   import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
   import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { log } from "~/src/helpers/Utility";
+  import { dropItemRegistry } from "~/src/stores/index";
 
   export let tabs = [];
   export let sheet;
@@ -31,6 +31,8 @@
     }
   });
   
+  // Subscribe to the currentProcess to know when advancements are active
+  $: isAdvancementTab = activeTab === 'advancements';
 </script>
 
 <!--List of tabs-->
@@ -40,7 +42,7 @@
     <!--For each tab-->
     {#each tabs as tab, idx}
       <button
-        class={activeTab === tab.id ? "active " : ""}
+        class="{activeTab === tab.id ? 'active ' : ''}"
         on:click={() => {
           activeTab = tab.id;
         }}
@@ -95,7 +97,7 @@
         height: 200%;
         margin: -10px 2px;
         font-weight: normal;
-        
+        font-size: larger;
         margin-bottom: -10px;
         padding: 10px 0;
         align-items: end;
@@ -124,7 +126,9 @@
             background: #f9f9f9;
             box-shadow: none;
           }
+          font-weight: bold;
           background: #f9f9f9;
+          color: var(--dnd5e-color-gold)
         }
       }
     }
@@ -135,5 +139,36 @@
     @include flex-column;
     flex: 2;
     width: 100%;
+    position: relative;
+  }
+
+  .readonly-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .overlay-message {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  }
+
+  button.readonly {
+    opacity: 0.7;
+    cursor: not-allowed;
+
+    &:hover {
+      box-shadow: none;
+      background: inherit;
+    }
   }
 </style>

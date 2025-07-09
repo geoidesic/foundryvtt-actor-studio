@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { log } from "~/src/helpers/Utility";
+  import { getAdvancementValue } from "~/src/helpers/Utility";
   
   export let advancement = null;
   
@@ -36,7 +36,7 @@
   )
 
   onMount(async () => {
-    // log.d('advancement', advancement)
+    // window.GAS.log.d('advancement', advancement)
   });
   
 </script>
@@ -47,7 +47,7 @@
     .flexrow
       .flex.left
         span.label {improvement.label}
-      .flex.right
+      .flex0.right
         +if("Number(improvement.value) > 0")
           span +
         span.value {improvement.value}

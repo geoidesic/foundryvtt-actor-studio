@@ -1,9 +1,27 @@
 // Class for general global variables.
 
 export const MODULE_ID = 'foundryvtt-actor-studio';
-export const LOG_PREFIX = 'ACTOR STUDIO |';
+export const MODULE_CODE = 'GAS';
+export const MODULE_TITLE = 'Actor Studio';
 export const MYSTERY_MAN = 'icons/svg/mystery-man.svg';
 export const NONE_ICON = 'icons/svg/cancel.svg';
+export const LOG_PREFIX = 'ACTOR STUDIO |';
+export const LOG_PREFIX_COLOR = `%c[${MODULE_CODE}] |`;
+
+export const LOG_STYLES = {
+  p: 'color: purple;',
+  g: 'color: green;',
+  r: 'color: red;',
+  o: 'color: orange;',
+  b: 'color: blue;',
+  y: 'color: yellow;',
+  c: 'color: cyan;',
+  m: 'color: magenta;',
+  gr: 'color: gray;',
+  br: 'color: brown;',
+  pi: 'color: pink;',
+  t: 'color: teal;'
+};
 
 export const enum DEFAULT_PACKS {
   RACES = 'dnd5e.races',
@@ -53,8 +71,8 @@ export const POINT_BUY_COSTS = {
   11: 3,
   12: 4,
   13: 5,
-  14: 6,
-  15: 7
+  14: 7,
+  15: 9
 }
 
 export const STANDARD_ARRAY = {
@@ -62,8 +80,9 @@ export const STANDARD_ARRAY = {
   dex: 14, 
   con: 13, 
   int: 12, 
-  wis: 11, 
-  cha: 10
+  wis: 10, 
+  cha: 8
 };
 
 export type CLASS_LEVEL = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+

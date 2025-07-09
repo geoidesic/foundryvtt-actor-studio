@@ -1,0 +1,61 @@
+[
+    {
+        "type": "AND",
+        "requiresProficiency": false,
+        "_id": "z3xcULs5Q70zNQ2D",
+        "group": "",
+        "sort": 100000
+    },
+    {
+        "type": "linked",
+        "count": null,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepSpear00000",
+        "requiresProficiency": false,
+        "_id": "O0MjTQnMYC8Xq3AM",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 200000
+    },
+    {
+        "type": "linked",
+        "count": 5,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbwepDagger0000",
+        "requiresProficiency": false,
+        "_id": "0ZcOXGUX7x39CPpk",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 300000
+    },
+    {
+        "type": "OR",
+        "requiresProficiency": false,
+        "_id": "ncjqhMc9uV04Fsot",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 400000
+    },
+    {
+        "type": "tool",
+        "count": null,
+        "key": "art",
+        "requiresProficiency": false,
+        "_id": "OXoYOVMKJDenBZFc",
+        "group": "ncjqhMc9uV04Fsot",
+        "sort": 500000
+    },
+    {
+        "type": "tool",
+        "count": null,
+        "key": "music",
+        "requiresProficiency": false,
+        "_id": "RF2oOqFXh93aM6dA",
+        "group": "ncjqhMc9uV04Fsot",
+        "sort": 600000
+    },
+    {
+        "type": "linked",
+        "count": null,
+        "key": "Compendium.dnd-players-handbook.equipment.Item.phbagExplorersPa",
+        "requiresProficiency": false,
+        "_id": "YZ87ItdbDaRpBDQ2",
+        "group": "z3xcULs5Q70zNQ2D",
+        "sort": 700000
+    }
+]

@@ -128,7 +128,8 @@ const callOllama = async (commitMessages) => {
 const generateReleaseNotesWithFallback = async (previousTag) => {
     let commitMessages = [];
     try {
-        let range = previousTag ? `${previousTag}..HEAD^` : '';
+        // Fetch commits since the previous tag
+        let range = previousTag ? `${previousTag}..HEAD^` : ''; // Use HEAD^ to exclude the release commit
         let gitLogCommand = range
             ? `git log ${range} --pretty=format:"%s"`
             : `git log --pretty=format:"%s" -n 50`;
@@ -142,6 +143,7 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
             )
             : [];
 
+        // If no commits found in the range, fall back to the last 10 commits
         if (commitMessages.length === 0 && !range) {
             console.log('No commits found in range, falling back to last 10 commits.');
             gitLogCommand = `git log --pretty=format:"%s" -n 10`;
@@ -163,6 +165,7 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
             return '## Release Notes\n\nNo significant changes in this release.';
         }
 
+        // Check if Ollama is running before calling it
         const ollamaRunning = await checkOllamaStatus();
         if (!ollamaRunning) {
             console.warn('Ollama server is not running or unreachable. Falling back to raw commit list.');
@@ -317,7 +320,7 @@ console.log('📝 Generating release notes...');
 const previousTag = getPreviousTag();
 const releaseNotes = await generateReleaseNotesWithFallback(previousTag);
 
-// Create tag (only for published releases, not drafts)
+// Create tag (skip for drafts)
 if (!isDraft) {
     console.log('🏷️  Creating tag...');
     execSync(`git tag ${newVersion}`);
@@ -343,25 +346,29 @@ fs.writeFileSync(releaseNotesPath, releaseNotes);
 const releaseTypeText = isDraft ? ' (draft)' : isPreRelease ? ' (pre-release)' : '';
 console.log(`📦 Creating GitHub release${releaseTypeText}...`);
 try {
-    const draftFlag = isDraft ? ' --draft' : '';
-    const preReleaseFlag = isPreRelease ? ' --prerelease' : '';
-    const titlePrefix = isDraft ? 'Draft ' : isPreRelease ? 'Pre-release ' : '';
-    execSync(`gh release create ${newVersion} --title "${titlePrefix}Version ${newVersion}" --notes-file ${releaseNotesPath}${draftFlag}${preReleaseFlag} --target ${targetBranch}`);
+    let ghCommand = `gh release create ${newVersion} --title "Version ${newVersion}" --notes-file ${releaseNotesPath}`;
+    if (isDraft) {
+        ghCommand += ' --draft';
+    }
+    if (isPreRelease) {
+        ghCommand += ' --prerelease';
+    }
+    execSync(ghCommand);
     
-    const releaseType = isDraft ? 'draft' : isPreRelease ? 'pre-release' : 'release';
-    console.log(`✅ GitHub ${releaseType} created for ${newVersion}`);
+    const releaseTypeMsg = isDraft ? 'draft' : isPreRelease ? 'pre-release' : 'release';
+    console.log(`✅ GitHub ${releaseTypeMsg} created for ${newVersion}`);
 } catch (error) {
     console.error('❌ Error creating GitHub release:', error.message);
     console.log('You may need to install GitHub CLI (gh) or authenticate it.');
     console.log('To install: https://cli.github.com/');
-    console.log('To authenticate: gh auth login');
+    process.exit(1);
 }
 
 // Clean up
 try {
     fs.unlinkSync(releaseNotesPath);
 } catch (error) {
-    console.error('Error removing temporary release notes file:', error);
+    console.error('❌ Error removing temporary release notes file:', error);
 }
 
 const actionText = isDraft ? 'drafted' : isPreRelease ? 'pre-released' : 'released';
@@ -380,4 +387,4 @@ if (isDraft) {
     console.log(`🔄 When ready, merge '${targetBranch}' to 'main' and create a full release.`);
 } else {
     console.log(`🚀 Production release created on 'main' branch. GitHub Actions will run!`);
-} 
+}

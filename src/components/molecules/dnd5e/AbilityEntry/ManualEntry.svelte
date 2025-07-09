@@ -1,8 +1,7 @@
 <script>
-  import { log } from "~/src/helpers/Utility";
   import { Timing } from "@typhonjs-fvtt/runtime/util";
   import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race } from "~/src/helpers/store"
+  import { abilities, race } from "~/src/stores/index"
   
   export let document = false;
   
@@ -21,37 +20,58 @@
   $: raceFeatScore = 0;
   $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
 
+  $: console.log(systemAbilitiesArray)
   onMount(async () => {
   });
 </script>
 
 <template lang="pug">
 .attribute-entry.mt-sm
-  h5.flexrow.mb-sm
-    .flex2.left Ability
-    .flex1.center Race / Feat
-    .flex1.center Base Score
-    .flex1.center Score
-    .flex1.center Modifier
-  .indent
-    +each("systemAbilitiesArray as ability, index")
-      .flexrow.mb-sm
-        .flex2.left {ability[1].label}
-        .flex1.center.align-text-with-input
-          +if("abilityAdvancements?.[ability[1].abbreviation] > 0")
-            span +
-          span {abilityAdvancements?.[ability[1].abbreviation] || 0}
-        .flex1.center
-          input.center.small(type="number" value="{$doc.system.abilities[ability[1].abbreviation].value}" on:input!="{updateDebounce(ability[1].abbreviation, event)}")
-        .flex1.center.align-text-with-input {(Number(abilityAdvancements?.[ability[1].abbreviation]) || 0) + Number($doc.system.abilities[ability[1].abbreviation].value)}
-        .flex1.center.align-text-with-input 
-          +if("$doc.system.abilities[ability[1].abbreviation].mod > 0")
-            span +
-          span {$doc.system.abilities[ability[1].abbreviation].mod}
+  table
+    thead
+      tr
+        th.ability Ability
+        th.center Race / Feat
+        th.center Base Score
+        th.center Score
+        th.center Modifier
+    tbody
+      +each("systemAbilitiesArray as ability, index")
+        tr
+          td.ability {ability[1].label}
+          td.center
+            +if("abilityAdvancements?.[ability[0]] > 0")
+              span +
+            span {abilityAdvancements?.[ability[0]] || 0}
+          td.center
+            input.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[0], event)}")
+          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
+          td.center
+            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
+              span +
+            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+          
 </template>
 
 <style lang="sass">
-  .align-text-with-input
-    text-align: center
-    margin-top: 0.3rem
+  table
+    width: 100%
+    border-collapse: separate
+    border-spacing: 0 0.5rem
+   
+  th
+    padding: 0.1rem 0.5rem
+    text-align: left
+    font-family: var(--dnd5e-font-modesto)
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
+   
+  td
+    text-align: left
+    &.center
+      text-align: center
+    &.ability
+      width: 25%
 </style>

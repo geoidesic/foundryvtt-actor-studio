@@ -1,0 +1,199 @@
+{
+  "GAS": {
+    "Error": {
+      "ItemNotFoundInCompendium": "Item未在資料庫中找到",
+      "PackIndexNotFound": "在此世界中，並未找到從中導入的角色職業資料包"
+    },
+    "ActorStudio": "ActorStudio角色工作室",
+    "AbilityScores": "屬性",
+    "Advancements": "升級獎勵",
+    "Level": "等級",
+    "LevelUp": {
+      "Button": "升級",
+      "ClassLevelUp": "升級此職業"
+    },
+    "NoAdvancements": "此等級沒有升級獎勵",
+    "PCTitle": "玩家角色",
+    "Source": "來源",
+    "Permissions": {
+      "NeedCreateActorError": "用戶需要 '新增角色' 的權限。請詢問你的DM將此權限新增到你的角色中",
+      "NeedCreateItemWarn": "用戶沒有 '新增物品' 的權限。你將無法新增自定義特性",
+      "NeedFileUploadWarn": "用戶沒有 '上傳新文件' 的權限。選擇圖片時可能會遇到問題",
+      "NeedFileBrowseWarn": "用戶沒有 '瀏覽文件' 權限。選擇圖片時可能會遇到問題"
+    },
+    "SubClass": "子職業",
+    "Tabs": {
+      "Abilities": {
+        "HowCalculated": "屬性是如何計算的？"
+      },
+      "Races": {
+        "Movement": "移動",
+        "Senses": "感知",
+        "Type": "類型"
+      },
+      "Classes": {
+        "Class": "職業",
+        "SubClass": "子職業",
+        "FilterByLevel": "按等級篩選"
+      }
+    },
+    "Setting": {
+      "World": "世界設定",
+      "User": "用戶設定",
+      "AbilityScoreEntryOptions": "屬性輸入選項",
+      "AbilityEntry": {
+        "AllowManualInput": {
+          "Name": "允許手動輸入",
+          "Hint": "允許用戶手動輸入屬性"
+        },
+        "AllowStandardArray": {
+          "Name": "允許標準陣列",
+          "Hint": "允許用戶使用標準陣列[[15, 14, 13, 12, 10, 8]"
+        },
+        "AllowPointBuy": {
+          "Name": "允許點數購買",
+          "Hint": "允許用戶使用購點制",
+          "InvalidTotal": "總點數無效"
+        },
+        "AllowRolling": {
+          "Name": "允許擲骰",
+          "Hint": "允許用戶擲骰來產生屬性"
+        },
+        "PointBuyLimit": {
+          "Name": "點數購買上限",
+          "Hint": "設定購點制的最大點數。超過此門檻的值將顯示為紅色。"
+        },
+        "AbilityRollFormula": {
+          "Name": "擲骰統計用的公式（每項）",
+          "Hint": "例如：4d6kh3"
+        }
+      },
+      "debug": {
+        "Name": "啟用調試模式",
+        "Hint": "提供額外的日誌以供調試使用"
+      },
+      "debugHooks": {
+        "Name": "啟用擴展調試模式",
+        "Hint": "提供所有Foundry Hooks的額外日誌"
+      },
+      "DefaultGoldDice": {
+        "Name": "預設起始金幣擲骰",
+        "Hint": "在此自定義起始金幣的擲骰"
+      },
+      "DonationTrackerEnabled": {
+        "Name": "啟用捐贈追踪器",
+        "Hint": "啟用捐贈追踪器以顯示當前捐贈金額和目標"
+      },
+      "DonationTrackerRank": {
+        "Name": "等級",
+        "Hint": "輸入等級的文件夾名稱"
+      },
+      "DonationTracker_UnregisteredAccess": {
+        "Name": "未註冊訪問",
+        "Hint": "如果勾選，未註冊用戶將可訪問 DT 連結彙編中 DT 資料夾外的所有內容"
+      },
+      "DonationTrackerAction": {
+        "Name": "新增捐贈追踪器文件夾",
+        "Hint": "將捐贈追踪器會員級別文件夾新增到此資料庫"
+      },
+      "DonationTracker": {
+        "Name": "捐贈追踪器設定",
+        "Label": "編輯",
+        "Hint": "啟用/禁用集成，每個捐贈追踪器會員級別都有一個文件夾名稱。你可以在這裡編輯它們。"
+      },
+      "DontShowWelcome": {
+        "Name": "不再顯示此消息",
+        "Hint": "當Foundry首次加載時不再顯示歡迎應用程序（你可以通過配置設定隨時撤消此操作）。"
+      },
+      "EnableLevelUp": {
+        "Name": "啟用升級",
+        "Hint": "勾選此框以在角色表上包括升級按鈕，通過角色工作室升級"
+      },
+      "forceDnd5eLevelUpAutomation": {
+        "Name": "強制D&D5e升級自動化",
+        "Hint": "如果沒有這項，角色工作室幾乎無法使用，除了預覽選項，因為無法將更改應用於角色"
+      },
+      "milestoneLeveling": {
+        "Name": "里程碑升級",
+        "Hint": "如果未勾選，只有當角色擁有足夠的經驗值升級時，升級按鈕才會顯示。如果勾選，按鈕將始終顯示，並且用戶可以在沒有足夠經驗值的情況下進行升級。"
+      },
+      "ShowRolls": {
+        "Name": "在聊天中顯示擲骰",
+        "Hint": "將屬性、每級生命值和起始金幣的擲骰顯示為聊天消息"
+      },
+      "showButtonInSideBar": {
+        "Name": "在側邊欄中顯示按鈕",
+        "Hint": "在側邊欄中顯示角色工作室按鈕（需要刷新瀏覽器以生效）"
+      },
+      "IndividualPanelScroll": {
+        "Name": "獨立面板捲動",
+        "Hint": "在具有左右面板的選項卡中，使每一側具有獨立的捲動條"
+      },
+      "AllowAbilityRolling": {
+        "Name": "允許屬性擲骰"
+      },
+      "AllowAbilityStandardArray": {
+        "Name": "允許屬性標準陣列"
+      },
+      "AllowAbilityPointBuy": {
+        "Name": "允許購點制"
+      },
+      "AllowAbilityInput": {
+        "Name": "允許手動輸入屬性"
+      },
+      "UseTokenizer": {
+        "Name": "如果可用，使用Token生成器",
+        "Hint": "該工具將嘗試使用Token生成器模組（如果找到）作為生成頭像和Token圖片的默認方式"
+      },
+      "TokenNameMode": {
+        "Name": "Token名稱顯示模式"
+      },
+      "TokenBarMode": {
+        "Name": "TokenBar顯示模式"
+      },
+      "EquipmentBlacklist": {
+        "Name": "裝備黑名單",
+        "Hint": "不顯示可購買的物品（裝備），按名稱（大小寫敏感，分號分隔，空格可用）。僅顯示'普通'稀有度物品，但此列表排除少數魔法/不合理的普通物品。預設 - '攀爬藥水; 治療藥水; 1級法術卷軸; 咒語卷軸; 無武裝攻擊'"
+      },
+      "SubraceNameBlacklist": {
+        "Name": "子種族名稱黑名單",
+        "Hint": "按名稱排除的項目（大小寫敏感，分號分隔，空格可用）。默認用於排除像Gnome Cunning特性不被計入Gnome子職業。預設 - 'Gnome Cunning; 半身人靈巧'"
+      },
+      "ButtonOnDialogInsteadOfActorsDirectory": {
+        "Name": "角色新增對話框按鈕",
+        "Hint": "如果按鈕干擾其他模組，或者你更喜歡有一個單一的'新增角色'按鈕以不混淆你的玩家"
+      },
+      "WindowX": {
+        "Name": "角色工作室應用視窗寬度",
+        "Hint": "在這裡設定視窗的初始寬度"
+      },
+      "WindowY": {
+        "Name": "角色工作室應用視窗高度",
+        "Hint": "在這裡設定視窗的初始高度"
+      },
+      "Sources": {
+        "Name": "資料庫來源",
+        "Hint": "選擇將作為新增角色時的數據來源資料庫",
+        "Label": "選擇來源",
+        "Save": "保存",
+        "RaceCompendia": "種族資料庫",
+        "RacialFeatureCompendia": "種族特性資料庫",
+        "ClassCompendia": "職業列表資料庫",
+        "SubclassCompendia": "子職業列表資料庫",
+        "ClassFeatureCompendia": "職業特性資料庫",
+        "BackgroundCompendia": "背景列表資料庫",
+        "SpellCompendia": "法術資料庫",
+        "FeatCompendia": "專長資料庫",
+        "EquipmentCompendia": "裝備資料庫"
+      },
+      "TrimSubclasses": {
+        "Name": "裁減子職業名稱",
+        "Hint": "顯示子職業名稱時去掉括號中的最後部分，主要用於DDB導入的子職業，如'刺客（盜賊）'僅顯示'刺客'（不修改新增到角色的項目，只在工具中顯示）"
+      },
+      "ExperimentalCharacterNameStyling": {
+        "Name": "實驗性角色名稱樣式",
+        "Hint": "啟用具有隨機顏色和字體的實驗性動畫角色名稱樣式。這是一個為角色名稱輸入添加視覺效果的實驗性功能。"
+      }
+    }
+  }
+}

@@ -9,13 +9,12 @@
 
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
-    import { log } from "../../../helpers/Utility";
+    import { MODULE_ID } from "~/src/helpers/constants";
 
     export let options = []; //- {value, label, icon || img}
-    export let value = ""; //
+    export let value = ""; //- the currently selected uuid
     export let disabled = false;
     export let handler = void 0;
-    export let active = void 0;
     export let shrinkIfNoIcon = true;
     export let placeHolder = false;
     export let id = void 0;
@@ -23,7 +22,6 @@
     export let truncateWidth = 20;
 
     let isOpen = false;
-
     export let handleSelect = (option) => {
       if (handler) {
         if (handler(option.value)) {
@@ -35,7 +33,20 @@
       toggleDropdown();
     };
 
+    const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+
+    function getLabel(option) {
+      if (showPackLabelInSelect && option.packLabel) {
+        return `[${option.packLabel}] ${option.label}`;
+      }
+      return option.label;
+    }
+
     function toggleDropdown() {
+      if (disabled) {
+        isOpen = false;
+        return;
+      }
       isOpen = !isOpen;
     }
 
@@ -85,7 +96,7 @@
 
 <template lang="pug">
 div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0")
-  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}")
+  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
     +each("options as option, index")
@@ -104,97 +115,93 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       +each("options as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option" aria-selected="{active === option.value}" class="{active === option.value ? 'active' : ''}" on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(role="option"  on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
                   i(class="{option.icon}")
                   +else
                     img(src="{option.img}" alt="{option.label}")
-            div.option-label {option.label}
+            div.option-label {getLabel(option)}
 </template>
 
-<style lang="scss">
-  .custom-select {
-    position: relative;
-    display: inline-block;
-  }
+<style lang="sass">
+.custom-select
+  position: relative
+  display: inline-block
 
-  .selected-option {
-    display: flex;
-    align-items: left;
-    padding: 0.35rem 1.75rem 0.35rem 0.15rem;
-    font-size: 0.875rem;
-    font-weight: 400;
-    color: #212529;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    position: relative;
-  }
+.selected-option
+  display: flex
+  align-items: left
+  padding: 0.35rem 1.75rem 0.35rem 0.15rem
+  font-size: 0.875rem
+  font-weight: 400
+  color: #212529
+  background-color: #fff
+  border: 1px solid #ced4da
+  border-radius: 0.25rem
+  cursor: pointer
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+  position: relative
 
-  img {
-    position: absolute;
-    top: -3px;
-    left: 0;
-    width: 24px;
-    height: 24px;
-    vertical-align: middle;
-  }
+img
+  position: absolute
+  top: -3px
+  left: 0
+  width: 24px
+  height: 24px
+  vertical-align: middle
 
-  .selected-option:selected {
-    border-color: #80bdff;
-  }
+.selected-option
+  &.disabled
+    cursor: not-allowed
+    opacity: 0.6
+    .chevron-icon
+      i
+        color: var(--color-text-disabled)
+        
+  &:selected
+    display: none
+    border-color: #80bdff
+  
+        
+.option-icon
+  position: relative
+  min-width: 24px
+  margin-right: 8px
 
-  .option-icon {
-    position: relative;
-    min-width: 24px;
-    margin-right: 8px;
-  }
+.option-label
+  flex-grow: 1
+  text-align: left
 
-  .option-label {
-    flex-grow: 1;
-    text-align: left;
-  }
+.chevron-icon
+  position: absolute
+  right: 0.5rem
 
-  .chevron-icon {
-    position: absolute;
-    right: 0.5rem;
-  }
+.options-dropdown
+  position: absolute
+  top: calc(100% + 4px)
+  left: 0
+  width: 100%
+  background-color: #fff
+  border: 1px solid #ced4da
+  border-radius: 0.25rem
+  overflow: hidden
+  z-index: 999
 
-  .options-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    width: 100%;
-    background-color: #fff;
-    border: 1px solid #ced4da;
-    border-radius: 0.25rem;
-    overflow: hidden;
-    z-index: 999;
-  }
+.option
+  display: flex
+  align-items: left
+  padding: 4px
+  font-size: 0.875rem
+  font-weight: 400
+  line-height: 1.5
+  color: #212529
+  cursor: pointer
 
-  .option {
-    display: flex;
-    align-items: left;
-    padding: 4px;
-    font-size: 0.875rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #212529;
-    cursor: pointer;
-    &.active {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
 
-    &:hover {
-      background-color: var(--select-option-highlight-color);
-    }
-    
-  }
-
+  &:hover
+    background-color: var(--select-option-highlight-color)
 </style>
