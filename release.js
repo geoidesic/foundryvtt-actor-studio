@@ -23,16 +23,25 @@ if (!versionType) {
     process.exit(1);
 }
 
+// Validate version type
+const validTypes = ['major', 'minor', 'patch'];
+if (!validTypes.includes(versionType)) {
+    console.error(`Invalid version type: ${versionType}. Valid types are: ${validTypes.join(', ')}`);
+    process.exit(1);
+}
+
 // Function to validate version format
 const isValidVersion = (version) => /^\d+\.\d+\.\d+$/.test(version);
 
 // Function to increment version
 const incrementVersion = (version, type) => {
     if (!isValidVersion(version)) {
-        console.log(`Invalid version format: "${version}". Using default version 0.1.0 as base.`);
-        version = '0.1.0';
+        console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z`);
+        process.exit(1);
     }
     const parts = version.split('.').map(Number);
+    console.log(`📋 Current version parts: [${parts.join(', ')}]`);
+    
     switch (type) {
         case 'major':
             parts[0]++;
@@ -49,7 +58,10 @@ const incrementVersion = (version, type) => {
         default:
             throw new Error('Invalid version type. Use major, minor, or patch.');
     }
-    return parts.join('.');
+    
+    const newVersion = parts.join('.');
+    console.log(`📋 New version parts: [${parts.join(', ')}] = ${newVersion}`);
+    return newVersion;
 };
 
 // Function to check if Ollama is running
@@ -167,9 +179,37 @@ const getPreviousTag = () => {
     }
 };
 
+// Check for uncommitted changes
+try {
+    const gitStatus = execSync('git status --porcelain').toString().trim();
+    if (gitStatus) {
+        console.error('❌ There are uncommitted changes in your working directory:');
+        console.error(gitStatus);
+        console.error('Please commit or stash your changes before running a release.');
+        process.exit(1);
+    }
+} catch (error) {
+    console.error('❌ Error checking git status:', error.message);
+    process.exit(1);
+}
+
 // Update package.json
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const newVersion = incrementVersion(packageJson.version, versionType);
+const currentVersion = packageJson.version;
+const newVersion = incrementVersion(currentVersion, versionType);
+
+console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}`);
+
+// Check if the new version tag already exists
+try {
+    execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
+    console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
+    process.exit(1);
+} catch (error) {
+    // Tag doesn't exist, which is what we want
+    console.log(`✅ Version ${newVersion} is available`);
+}
+
 packageJson.version = newVersion;
 packageJson.debug = false; // Set debug to false for releases
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
@@ -231,5 +271,6 @@ try {
     console.error('Error removing temporary release notes file:', error);
 }
 
-console.log(`Successfully released version ${newVersion}`);
-console.log(`Release notes:\n${releaseNotes}`);
+console.log(`🎉 Successfully released version ${newVersion}`);
+console.log(`📄 Release notes:\n${releaseNotes}`);
+console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
