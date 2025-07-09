@@ -2,7 +2,7 @@
     "description": "Easily create Heroes, Villains and everything in between.",
     "license": "MIT",
     "private": false,
-    "version": "1.10.9",
+    "version": "1.10.11",
     "type": "module",
     "debug": false,
     "authors": [
