@@ -3,6 +3,7 @@
  * Contains non-reactive logic that can be shared across components
  */
 
+
 import { get } from "svelte/store";
 import { MODULE_ID } from "~/src/helpers/constants";
 import {
@@ -570,4 +571,184 @@ export async function handleCharacterUpdate({
 
   // Start processing the queue once all items are added
   dropItemRegistry.advanceQueue(true);
+}
+
+/**
+ * Checks if an actor is a spellcaster by examining their classes and spellcasting capabilities
+ * @param {Object} actor - The actor document to check
+ * @returns {boolean} True if the actor is a spellcaster, false otherwise
+ */
+function checkIfSpellcaster(actor) {
+  window.GAS.log.t('[WORKFLOW] Checking if actor is a spellcaster:', actor?.id);
+  if (!actor) {
+    window.GAS.log.w('[WORKFLOW] No actor found');
+    return false;
+  }
+  
+  const actorData = actor.system || actor.data?.data;
+  if (!actorData) {
+    window.GAS.log.w('[WORKFLOW] No actor data found');
+    return false;
+  }
+  
+  window.GAS.log.t('[WORKFLOW] Actor data found:', actorData);
+  
+  // Method 1: Check if the actor has spell slots in their system data
+  if (actorData.spells && Object.keys(actorData.spells).length > 0) {
+    window.GAS.log.t('[WORKFLOW] Actor has spell slots in system.spells');
+    return true;
+  }
+  
+  // Method 2: Check if actor has spellcasting progression
+  if (actorData.spellcasting && Object.keys(actorData.spellcasting).length > 0) {
+    window.GAS.log.t('[WORKFLOW] Actor has spellcasting progression');
+    return true;
+  }
+  
+  // Method 3: Check class items for spellcasting advancement
+  if (actor.items) {
+    const classItems = actor.items.filter(item => item.type === 'class');
+    window.GAS.log.t('[WORKFLOW] Found class items:', classItems.length);
+    
+    for (const classItem of classItems) {
+      const classData = classItem.system || classItem.data?.data;
+      if (!classData) continue;
+      
+      // Check if class has spellcasting advancement
+      if (classData.advancement) {
+        const hasSpellcasting = classData.advancement.some(advancement => 
+          advancement.type === 'Spellcasting' || 
+          advancement.type === 'SpellSlots'
+        );
+        
+        if (hasSpellcasting) {
+          window.GAS.log.t(`[WORKFLOW] Class ${classItem.name} has spellcasting advancement`);
+          return true;
+        }
+      }
+      
+      // Check for spell progression in class data
+      if (classData.spellcasting && classData.spellcasting.progression !== 'none') {
+        window.GAS.log.t(`[WORKFLOW] Class ${classItem.name} has spellcasting progression:`, classData.spellcasting.progression);
+        return true;
+      }
+    }
+  }
+  
+  // Method 4: Check if actor has any spell items
+  if (actor.items) {
+    const spellItems = actor.items.filter(item => item.type === 'spell');
+    if (spellItems.length > 0) {
+      window.GAS.log.t('[WORKFLOW] Actor has spell items:', spellItems.length);
+      return true;
+    }
+  }
+  
+  // Method 5: Check known spellcasting classes by name
+  const knownSpellcasters = [
+    'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
+    'artificer', 'eldritch knight', 'arcane trickster'
+  ];
+  
+  if (actorData.classes && Object.keys(actorData.classes).length > 0) {
+    for (const [classId, classData] of Object.entries(actorData.classes)) {
+      const className = classId.toLowerCase();
+      if (knownSpellcasters.some(spellcaster => className.includes(spellcaster))) {
+        window.GAS.log.t(`[WORKFLOW] Recognized spellcasting class: ${classId}`);
+        return true;
+      }
+    }
+  }
+  
+  window.GAS.log.t('[WORKFLOW] No spellcasting detected for actor');
+  return false;
+}
+
+/**
+ * Handles finalizing spell selection
+ * @param {Object} params - Parameters object
+ * @param {Object} params.stores - Store references
+ * @param {Function} params.setProcessing - Function to set processing state
+ * @returns {Promise<void>}
+ */
+export async function handleFinalizeSpells({
+  stores,
+  setProcessing
+}) {
+  const {
+    actorInGame,
+    tabs,
+    activeTab
+  } = stores;
+
+  const $actorInGame = get(actorInGame);
+
+  // Prevent multiple clicks
+  if (setProcessing) {
+    setProcessing(true);
+  }
+
+  if (!$actorInGame) {
+    ui.notifications.error("No active character found");
+    if (setProcessing) setProcessing(false);
+    return;
+  }
+
+  try {
+    // Get the spell selection store
+    if (window.GAS.finalizeSpellSelection) {
+      const success = await window.GAS.finalizeSpellSelection($actorInGame);
+      
+      if (success) {
+        ui.notifications.info("Spells added successfully");
+        
+        // Check if character is also using equipment purchase (has shop enabled)
+        const enableEquipmentPurchase = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+        
+        if (enableEquipmentPurchase && !get(tabs).find(x => x.id === "shop")) {
+          // Add Shop tab after spells are finalized
+          window.GAS.log.t('[WORKFLOW] Adding shop tab after spell selection');
+          tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
+          
+          // Switch to the Shop tab
+          activeTab.set("shop");
+          
+          // Set available gold in shop store based on DnD5e version
+          const { totalGoldFromChoices, goldRoll } = stores;
+          let goldValue;
+          
+          if (window.GAS.dnd5eVersion >= 4) {
+            goldValue = get(totalGoldFromChoices);
+          } else {
+            goldValue = get(goldRoll);
+          }
+          
+          // Convert gold to copper (1 gp = 100 cp)
+          const goldValueInCopper = goldValue * 100;
+          
+          if (window.GAS.availableGold) {
+            window.GAS.availableGold.set(goldValueInCopper);
+          }
+          
+          if (setProcessing) setProcessing(false);
+          return;
+        } else {
+          // No shop, close the application
+          setTimeout(() => {
+            // Hooks.call("gas.close");
+          }, 1500);
+        }
+      } else {
+        ui.notifications.error("Failed to add spells");
+        if (setProcessing) setProcessing(false);
+      }
+    } else {
+      ui.notifications.error("Spell selection system not available");
+      if (setProcessing) setProcessing(false);
+    }
+  } catch (error) {
+    console.error("Error during spell finalization:", error);
+    ui.notifications.error("An error occurred while adding spells");
+    if (setProcessing) setProcessing(false);
+  }
 }

@@ -132,35 +132,6 @@
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
 
-  // Derived store to check if actor has items in inventory
-  const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
-    if (!$actorInGame) return false;
-    
-    // Check if the actor has any items
-    // In Foundry VTT, items is a Collection that has methods like filter and size
-    const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
-    
-    // First check if items collection exists and has any items
-    if (!$actorInGame.items || $actorInGame.items.size === 0) {
-      // window.GAS.log.d('[FOOTER] No items found on actor');
-      return false;
-    }
-    
-    // Use the Foundry Collection's filter method
-    const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
-    const hasItems = inventoryItems.size > 0;
-    
-    // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
-    //   actorId: $actorInGame.id,
-    //   totalItems: $actorInGame.items.size,
-    //   inventoryItems: inventoryItems,
-    //   inventoryItemCount: inventoryItems.size,
-    //   hasItems: hasItems
-    // });
-    
-    return hasItems;
-  });
-
   const handleNameInput = (e) => {
     if ($isLevelUp) {
       //- @why: for existing actors, we need to update the actor object in the database
@@ -222,7 +193,6 @@
   };
 
   $: window.GAS.log.q('[FOOTER] isEquipmentComplete:', isEquipmentComplete);
-  $: window.GAS.log.q('[FOOTER] equipmentAdded:', $equipmentAdded);
   $: window.GAS.log.q('[FOOTER] areGoldChoicesComplete:', $areGoldChoicesComplete);
   $: window.GAS.log.q('[FOOTER] progress:', $progress);
   $: window.GAS.log.q('[FOOTER] goldRoll:', $goldRoll);
@@ -369,15 +339,11 @@
       //   })
       // })
 
-<<<<<<< HEAD
     window.GAS.log.q('[FOOTER] hello moegoe');
     window.GAS.log.q('[FOOTER] isEquipmentComplete', isEquipmentComplete);
 
     randomize(); // Call randomize on mount
-=======
-      randomize(); // Call randomize on mount
     }
->>>>>>> 32a6e28a09c5256dad30646650cf188baffdc725
   });
 </script>
 

@@ -1,15 +1,16 @@
 <script>
-  import { availableSpells, selectedSpells, characterLevel, maxSpellLevel, initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell } from '../../../../stores/spellSelection';
+  import { localize as t, 
+    extractMapIteratorObjectProperties, getPackFolders, getPacksFromSettings, 
+    log, getRules } from "~/src/helpers/Utility";
+  import { availableSpells, selectedSpells, characterLevel, maxSpellLevel, 
+    initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell 
+  } from '../../../../stores/spellSelection';
   import { readOnlyTabs } from '../../../../stores/index';
-  import { onMount, getContext } from 'svelte';
-  import { localize } from "#runtime/svelte/helper";
+  import { onMount, getContext, onDestroy, tick } from 'svelte';
   import { get } from 'svelte/store';
 
   import SvelteSelect from 'svelte-select';
-  import { extractMapIteratorObjectProperties, getPackFolders,getPacksFromSettings, log, getRules } from "~/src/helpers/Utility";
-  import { getContext, onDestroy, onMount, tick } from "svelte";
   import Tabs from '~/src/components/molecules/Tabs.svelte';
-  import { localize } from "~/src/helpers/Utility";
   
   const actor = getContext("#doc");
   
@@ -103,14 +104,14 @@
   <div class="spells-tab">
     <!-- Left Panel: Selected Spells -->
     <div class="left-panel">
-      <h3 class="left no-margin">{localize('GAS.Spells.CharacterLevel')}: {$characterLevel}</h3>
-      <h3 class="left no-margin">{localize('GAS.Spells.MaxSpellLevel')}: {$maxSpellLevel}</h3>
+      <h3 class="left no-margin">{t('GAS.Spells.CharacterLevel')}: {$characterLevel}</h3>
+      <h3 class="left no-margin">{t('GAS.Spells.MaxSpellLevel')}: {$maxSpellLevel}</h3>
       
-      <h3>{localize('GAS.Spells.SelectedSpells')}</h3>
+      <h3>{t('GAS.Spells.SelectedSpells')}</h3>
       <div class="selected-spells">
         {#if selectedSpellsList.length === 0}
           <div class="empty-selection">
-            <p>{localize('GAS.Spells.NoSpellsSelected')}</p>
+            <p>{t('GAS.Spells.NoSpellsSelected')}</p>
           </div>
         {:else}
           {#each selectedSpellsList as selectedSpell}
@@ -138,24 +139,24 @@
 
     <!-- Right Panel: Available Spells -->
     <div class="right-panel spell-list">
-      <h3>{localize('GAS.Spells.AvailableSpells')}</h3>
+      <h3>{t('GAS.Spells.AvailableSpells')}</h3>
       
       <!-- Keyword Filter Input -->
       <div class="filter-container mb-sm">
         <input 
           type="text" 
           bind:value={keywordFilter} 
-          placeholder={localize('GAS.Spells.FilterPlaceholder')} 
+          placeholder={t('GAS.Spells.FilterPlaceholder')} 
           class="keyword-filter"
           disabled={isDisabled}
         />
       </div>
 
       {#if loading}
-        <div class="loading">{localize('GAS.Spells.Loading')}</div>
+        <div class="loading">{t('GAS.Spells.Loading')}</div>
       {:else if filteredSpells.length === 0}
         <div class="empty-state">
-          <p>{keywordFilter ? localize('GAS.Spells.NoMatchingSpells') : localize('GAS.Spells.NoSpells')}</p>
+          <p>{keywordFilter ? t('GAS.Spells.NoMatchingSpells') : t('GAS.Spells.NoSpells')}</p>
         </div>
       {:else}
         {#each spellLevels as spellLevel}
@@ -199,7 +200,7 @@
 </div>
 
 <style lang="sass">
-  @import "../../../../../styles/features/equipment-purchase.scss"
+  @import "../../../../../styles/features/equipment-purchase.sass"
 
   .spells-tab-container
     position: relative
