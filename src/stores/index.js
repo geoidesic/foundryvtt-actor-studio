@@ -71,35 +71,39 @@ export const isNewMultiClass = derived(
 export const subclassLevelForLevelUp = derived([storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject], ([$classUuidForLevelUp, $levelUpClassObject]) => {
   if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
   const result = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false;
-  window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
-  window.GAS.log.d('[subclassLevel] levelUpClassObject', $levelUpClassObject)
-  window.GAS.log.d('[subclassLevel] getSubclassLevel($levelUpClassObject, MODULE_ID)', getSubclassLevel($levelUpClassObject, MODULE_ID))
-  window.GAS.log.d('[subclassLevel] result', result)
+  // window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
+  // window.GAS.log.d('[subclassLevel] levelUpClassObject', $levelUpClassObject)
+  // window.GAS.log.d('[subclassLevel] getSubclassLevel($levelUpClassObject, MODULE_ID)', getSubclassLevel($levelUpClassObject, MODULE_ID))
+  // window.GAS.log.d('[subclassLevel] result', result)
   return result;
 });
-
-// Derived store to check if the class gets a subclass at the current level up level
-export const levelUpClassGetsSubclassThisLevel = derived(
-  [storeDefinitions.classUuidForLevelUp, subclassLevelForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject], 
-  ([$classUuidForLevelUp, $subclassLevelForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject]) => {
-    window.GAS.log.d('[classGetsSubclassThisLevel] classUuidForLevelUp', $classUuidForLevelUp)
-    window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
-    window.GAS.log.d('[classGetsSubclassThisLevel] levelUpClassObject', $levelUpClassObject)
-    if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
-    
-    window.GAS.log.d('[classGetsSubclassThisLevel] subclassLevelForLevelUp', $subclassLevelForLevelUp)
-    window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
-    const result = $subclassLevelForLevelUp && $subclassLevelForLevelUp === $newLevelValueForExistingClass;
-    window.GAS.log.d('[classGetsSubclassThisLevel] result', result)
-    return result;
-  }
-);
 
 // Derived store to determine if a new multiclass is selected
 export const isNewMultiClassSelected = derived(
   [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.selectedMultiClassUUID], 
   ([$classUuidForLevelUp, $newLevelValueForExistingClass, $selectedMultiClassUUID]) => {
     return $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID;
+  }
+);
+
+// Derived store to check if the class gets a subclass at the current level up level
+export const levelUpClassGetsSubclassThisLevel = derived(
+  [storeDefinitions.classUuidForLevelUp, subclassLevelForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject, isNewMultiClassSelected], 
+  ([$classUuidForLevelUp, $subclassLevelForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject, $isNewMultiClassSelected]) => {
+    // window.GAS.log.d('[classGetsSubclassThisLevel] classUuidForLevelUp', $classUuidForLevelUp)
+    // window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
+    // window.GAS.log.d('[classGetsSubclassThisLevel] levelUpClassObject', $levelUpClassObject)
+    // window.GAS.log.d('[classGetsSubclassThisLevel] isNewMultiClassSelected', $isNewMultiClassSelected)
+    if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
+    
+    // Determine the current level: 1 for new multiclass, existing level + 1 for existing class
+    const currentLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
+    
+    // window.GAS.log.d('[classGetsSubclassThisLevel] subclassLevelForLevelUp', $subclassLevelForLevelUp)
+    // window.GAS.log.d('[classGetsSubclassThisLevel] currentLevel', currentLevel)
+    const result = $subclassLevelForLevelUp && $subclassLevelForLevelUp === currentLevel;
+    // window.GAS.log.d('[classGetsSubclassThisLevel] result', result)
+    return result;
   }
 );
 
@@ -131,14 +135,14 @@ export const hasCharacterCreationChanges = derived(
 export const isAdvancementInProgress = derived(
   [storeDefinitions.tabs],
   ([$tabs]) => {
-    window.GAS.log.d('[isAdvancementInProgress] tabs', $tabs)
+    // window.GAS.log.d('[isAdvancementInProgress] tabs', $tabs)
     return $tabs.find(tab => tab.id === 'advancements') ? true : false;
   }
 );
 export const isLevelUpAdvancementInProgress = derived(
   [storeDefinitions.levelUpTabs],
   ([$levelUpTabs]) => {
-    window.GAS.log.d('[isLevelUpAdvancementInProgress] tabs', $levelUpTabs)
+    // window.GAS.log.d('[isLevelUpAdvancementInProgress] tabs', $levelUpTabs)
     return $levelUpTabs.find(tab => tab.id === 'advancements') ? true : false;
   }
 );

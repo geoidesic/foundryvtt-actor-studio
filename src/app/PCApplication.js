@@ -4,6 +4,7 @@ import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
+import { version } from "../../module.json";
 
 export default class PCApplication extends SvelteApplication {
   /**
@@ -46,11 +47,11 @@ export default class PCApplication extends SvelteApplication {
     const title = this.title;
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'foundryvtt-actor-studio-pc-sheet',
-      title: game.i18n.localize('GAS.ActorStudio') + ' - ' + game.i18n.localize('GAS.PCTitle'),
+      title: game.i18n.localize('GAS.ActorStudio')+' v'+version,
       classes: [MODULE_CODE],
       width: game.settings.get(MODULE_ID, 'windowX') || 700,
       height: game.settings.get(MODULE_ID, 'windowX') || 800,
-      headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.svg',
+      headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png',
       minWidth: 500,
       padding: 0,
       resizable: true,

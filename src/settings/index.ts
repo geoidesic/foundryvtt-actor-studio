@@ -55,6 +55,7 @@ export function registerSettings(app: Game): void {
   showPackLabelInSelect();
   windowX();
   windowY();
+  experimentalCharacterNameStyling();
   enableLevelUp();
   milestoneLeveling();
   forceDnd5eLevelUpAutomation();
@@ -535,6 +536,17 @@ function enableEquipmentPurchase() {
   game.settings.register(MODULE_ID, 'enableEquipmentPurchase', {
     name: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name'),
     hint: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function experimentalCharacterNameStyling() {
+  game.settings.register(MODULE_ID, 'experimentalCharacterNameStyling', {
+    name: game.i18n.localize('GAS.Setting.ExperimentalCharacterNameStyling.Name'),
+    hint: game.i18n.localize('GAS.Setting.ExperimentalCharacterNameStyling.Hint'),
     scope: 'world',
     config: true,
     default: false,

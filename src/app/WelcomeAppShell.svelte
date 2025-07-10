@@ -1,7 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte";
   import { fade, scale }        from 'svelte/transition';
-  import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { localize } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
 
@@ -31,13 +31,13 @@
 <template lang="pug">
   ApplicationShell(bind:elementRoot)
     main
-      .inset
+      .inset.bg-dark
         .flexrow.justify-flexrow-vertical
           .flex2
-            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.svg" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
+            img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
           .flex3
-            p.thanks Thank you for using Actor Studio!
-        h1 {localize("Welcome.IntroductionTitle")}
+            p.thanks.right.mr-md {localize('Welcome.Thanks')}
+        hr
         p {localize("Welcome.Introduction")}
         a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {localize("Welcome.UsageTitle")}
         p.lighter
@@ -47,17 +47,18 @@
           i.fa-solid.fa-heart.mr-sm(style="color: #660000;")
           | {localize('Welcome.Support')} <a href='https://github.com/sponsors/geoidesic'> {localize('Welcome.SponsorLinkText')} </a> or <a href='https://https://paypal.me/geoidesic'>PayPal</a>
         
-        p 
+        p
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
           | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
-      .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
-        .flex0 
-          input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
-        .flex.dont-show
-          span {localize('Setting.DontShowWelcome.Name') }
+        hr
+        .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
+          .flex0 
+            input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
+          .flex.dont-show
+            span {localize('Setting.DontShowWelcome.Name') }
     footer
-      div.right.bg-green
-        a(href="https://www.aardvark.games")
+      div.logo
+        a(href="https://www.aardvark.games") 
           img.white(src="/modules/foundryvtt-actor-studio/assets/aardvark-logo.webp" alt="Aardvark Game Studios Logo" height="50" width="50" style="fill: white; border: none; width: auto;")
       div.left
         div {localize("Title")} {localize("Welcome.CreatedBy")} 
@@ -68,7 +69,11 @@
 </template>
 
 <style lang="sass">
-  @import "../styles/Mixins.scss"
+  @import "../styles/Mixins.sass"
+  .theme-dark
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
 
   main
     overflow-y: auto
@@ -76,12 +81,20 @@
       margin-right: 0.5em
     .inset
       @include inset
+    .bg-dark
+      background-color: rgba(0, 0, 0, 0.1)
+      padding: 1rem 1rem 0.5rem 1rem
+    h1
+      margin-top: 0
+    h4
+      font-family: var(--dnd5e-font-modesto);
   .dont-show
     font-size: smaller
 
   p.thanks
     font-size: 1.2em
     font-weight: bold
+    color: #416dbe
 
   footer
     border-top: 8px ridge var(--border-shadow)
@@ -99,11 +112,17 @@
     padding: 1em
     font-size: 0.8em
     z-index: 3
+    div.logo
+      a
+        display: flex
+        align-items: center
+        justify-content: end
+        gap: 0.5em
     a
       color: white
       text-decoration: underline
       &:hover
         color: #ccc
 
-  
+
 </style>

@@ -1,4 +1,4 @@
-import '../styles/Variables.scss'; // Import any styles as this includes them in the build.
+import '../styles/Variables.sass'; // Import any styles as this includes them in the build.
 import '../styles/init.sass'; // Import any styles as this includes them in the build.
 
 import { MODULE_ID } from '~/src/helpers/constants';
@@ -11,7 +11,7 @@ import { init, ready } from './hooks/init.js';
 import { captureAdvancement } from './hooks/captureAdvancement.js';
 import { renderAdvancementManager } from './hooks/advancementManager.js';
 import { renderCompendium } from './hooks/renderCompendium.js';
-import { renderASButtonInCreateActorApplication, activateDocumentDirectory, renderActorDirectory } from './hooks/actorStudioStartButtons.js';
+import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 Hooks.once("init", (app, html, data) => {
@@ -78,6 +78,9 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 })
 
 
+/** 
+ * Handle rendering the Actor Studio button in the Create New Actor dialog
+ */
 //- game.version < 13
 Hooks.on('renderApplication', (app, html, data) => {
   Hooks.call('gas.renderASButtonInCreateActorApplication', app, html, data);
@@ -93,13 +96,16 @@ Hooks.on('gas.renderASButtonInCreateActorApplication', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
 })
 
+/** 
+ * Handle rendering the Actor Studio button in the Sidebar Actor Directory
+ */
 //- Add Actor Studio button to the Actor Directory in game.version >= 13
-Hooks.on('activateDocumentDirectory', async (app) => {
-  activateDocumentDirectory(app);
+Hooks.on('activateActorDirectory', async (app) => {
+  renderActorStudioSidebarButton(app);
 })
 //- Add Actor Studio button to the Actor Directory in game.version < 13
-Hooks.on('renderActorDirectory', async (app) => {
-  renderActorDirectory(app);
+Hooks.on('renderActorDirectory', async (app, html) => {
+  renderActorStudioSidebarButton(app, html);
 })
 
 Hooks.on('gas.openActorStudio', (actorName, folderName, actorType) => {

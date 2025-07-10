@@ -1,6 +1,6 @@
 <script>
   import { onMount, tick } from "svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize } from "~/src/helpers/Utility";
   import { getAdvancementValue } from "~/src/helpers/Utility.js";
   
   export let classAdvancementArrayFiltered = [];

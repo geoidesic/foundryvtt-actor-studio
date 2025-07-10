@@ -1,0 +1,9 @@
+---
+description: no build
+globs:
+alwaysApply: true
+---
+
+- Never use 'yarn run build' because I'm using HMR
+- Never use 'bun run build' because I'm using HMR
+- Never use 'npm run build' because I'm using HMR

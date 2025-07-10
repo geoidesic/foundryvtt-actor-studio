@@ -6,10 +6,10 @@
 </script>
 
 <div class="currency-display">
-  {#if gp > 0}
+  {#if gp !== 0}
     <span class="gold">{gp} <i class="fas fa-coins gold-coin"></i></span>
   {/if}
-  {#if sp > 0 || gp > 0}
+  {#if sp !== 0 || gp !== 0}
     <span class="silver">{sp} <i class="fas fa-coins silver-coin"></i></span>
   {/if}
   <span class="copper">{cp} <i class="fas fa-coins copper-coin"></i></span>
@@ -24,7 +24,6 @@
     border: 1px solid var(--color-border-light-primary)
     border-radius: 4px
     font-size: 1.2rem
-    margin-bottom: 1rem
 
     .gold
       color: var(--dnd5e-color-gold, #b59e54)

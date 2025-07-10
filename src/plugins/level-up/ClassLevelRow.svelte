@@ -18,7 +18,7 @@ onMount(async () => {
 });
 </script>
 <template lang="pug">
-pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+//- pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
 .class-row(
   class="{cssClasses} {disabled ? 'disabled' : ''}" 
   role="button" 
@@ -36,7 +36,7 @@ pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
   )
 </template>
 <style lang="sass">
-@use '../../../styles/Mixins.scss' as mixins
+@use '../../../styles/Mixins.sass' as mixins
 
 .gold-button-disabled
   +mixins.gold-button(null)

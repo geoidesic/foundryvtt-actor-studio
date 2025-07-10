@@ -9,13 +9,13 @@
     illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { race, subRace, readOnlyTabs } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   let active = null,
     value = null,
-    placeHolder = "Races",
+    placeHolder = t('Tabs.Races.Placeholder'),
     richHTML = "";
   let packs = getPacksFromSettings("races");
   let allRaceItems = extractItemsFromPacksSync(packs, [
@@ -161,6 +161,7 @@
 
 <template lang="pug">
 div.content
+  h1.center.mt-none.hide {t('Tabs.Races.Title')}
   .flexrow
     .flex2.pr-sm.col-a
       .flexrow
@@ -176,17 +177,17 @@ div.content
             li {book} {page} {type.value ? ', ' + type.value : ''} 
 
         +if("filteredMovement")
-          h3.left {localize('GAS.Tabs.Races.Movement')}
+          h2.left {t('Tabs.Races.Movement')}
           ol.properties-list
             +each("filteredMovement as movement")
               li.left {movement.label} : {movement.value} {units}
-        +if("filteredSenses")
-          h3.left {localize('GAS.Tabs.Races.Senses')}
+        +if("filteredSenses.length")
+          h2.left {t('Tabs.Races.Senses')}
           ol.properties-list
             +each("filteredSenses as senses")
               li.left {senses.label} : {senses.value} {units}
         +if("advancementArray")
-          h3.left {localize('GAS.Advancements')}
+          h2.left {t('Advancements')}
           ul.icon-list
             +each("advancementArray as advancement")
               //- @todo: this should be broken out into components for each advancement.type
@@ -206,12 +207,12 @@ div.content
 </template>
 
 <style lang="sass">
-  @use "../../../../../styles/Mixins.scss" as mixins
+  @use "../../../../../styles/Mixins.sass" as mixins
   .content 
     +mixins.staticOptions
 
     .col-a
-      max-width: 325px
+      // max-width: 325px
 
   :global(.icon-select)
     position: relative

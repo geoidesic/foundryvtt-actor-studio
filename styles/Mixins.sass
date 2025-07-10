@@ -1,0 +1,383 @@
+@mixin background-normal
+  background: url(../ui/parchment.jpg) repeat
+  background-image: url(../ui/parchment.jpg)
+  background-position-x: initial
+  background-position-y: initial
+  background-size: initial
+  background-repeat: repeat
+  background-attachment: initial
+  background-origin: initial
+  background-clip: initial
+  background: initial
+
+@mixin inset($color: var(--tjs-select-border), $padding: 0.5rem)
+  padding: $padding
+  border: 1px solid $color
+  border-radius: 0.4rem
+  box-shadow: 0 0 5px rgba(165,42,42,0.3) inset
+
+@mixin badge($background: var(--color-highlight), $size: 0.75rem)
+  padding: 2px 4px !important
+  border-radius: var(--border-radius)
+  background: $background
+  color: #fff
+  font-size: $size
+
+@mixin gold-button($cursor: pointer)
+  position: relative
+  border: 3px solid transparent
+  border-radius: var(--border-radius)
+  background: var(--dnd5e-color-black)
+  color: var(--dnd5e-color-gold)
+  margin: 0 0 3px 0
+  box-shadow: 0 0 6px var(--dnd5e-shadow-45)
+  font-size: var(--font-size-14)
+  line-height: normal
+  overflow: hidden
+  cursor: $cursor
+  &.active .lozenge
+    border: 3px solid var(-as-blue)
+    background: var(--as-blue)
+    color: #fff
+
+  .content-link
+    background-color: #eee
+    color: var(--hyperlink-color)
+    i
+      color: var(--hyperlink-color)
+
+@mixin staticOptions
+  .flexrow
+    gap: 2px
+  .flexcol
+    gap: 2px
+  label
+    margin: 0
+    padding: 0
+  .box
+    background: silver
+    border: 1px
+  .properties-list
+    list-style: none
+    margin: 0
+    padding: 0
+    :global(>li)
+      margin: 3px 0
+      padding: 0 2px
+      background: rgba(0, 0, 0, 0.05)
+      border: 2px groove #eeede0
+      text-align: center
+      font-size: 12px
+      line-height: 18px
+
+@mixin spinner
+  .spinner
+    text-align: center
+    color: #fff
+
+  .spinner > div
+    width: 20px
+    height: 20px
+    background-color: #fff
+    border-radius: 100%
+    display: inline-block
+    -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both
+    animation: sk-bouncedelay 1.4s infinite ease-in-out both
+
+  .spinner .bounce1
+    -webkit-animation-delay: -0.32s
+    animation-delay: -0.32s
+
+  .spinner .bounce2
+    -webkit-animation-delay: -0.16s
+    animation-delay: -0.16s
+
+  @-webkit-keyframes sk-bouncedelay
+    0%, 80%, 100%
+      -webkit-transform: scale(0)
+    40%
+      -webkit-transform: scale(1.0)
+
+  @keyframes sk-bouncedelay
+    0%, 80%, 100%
+      -webkit-transform: scale(0)
+      transform: scale(0)
+    40%
+      -webkit-transform: scale(1.0)
+      transform: scale(1.0)
+
+@mixin buttons
+  .rowimg
+    position: absolute
+    top: calc(50% - 15.5px)
+    left: -2px
+    width: 30px
+    height: 30px
+    padding: 0
+    object-fit: cover
+    img
+      width: 30px
+      height: 30px
+    &.button
+      cursor: pointer
+      border: 1px solid grey
+      border-radius: 3px
+      background-color: rgba(0, 0, 0, 0.1)
+
+  .rowimgbutton
+    position: absolute
+    top: -1px
+    left: 0
+    width: 30px
+    height: 30px
+    padding: 0
+    object-fit: cover
+    border: 1px solid grey
+    border-radius: 3px
+    background-color: rgba(0, 0, 0, 0.1)
+    cursor: pointer
+    img
+      width: 30px
+      height: 30px
+
+  .rowbutton
+    display: inline-block
+    padding: 3px 5px
+    border: 1px solid grey
+    border-radius: 3px
+    background-color: rgba(0, 0, 0, 0.1)
+    cursor: pointer
+    i
+      padding: 0
+      margin: 0
+
+  .rowimgbezelbutton
+    border-style: solid
+    border-width: 1px
+    text-shadow: 0 1px 0 #eee
+    background: #ccc
+    color: #333
+    font-family: "Lucida Grande"
+    font-size: 12px
+    font-weight: bold
+    cursor: pointer
+    text-decoration: none
+    -webkit-border-radius: 3px
+    -webkit-box-shadow: inset 0 1px 1px #fff, inset 0 -1px 1px #aaa, 0 2px 4px -3px #666
+    &.lock-open
+      background-color: #19762d
+      color: white
+    &.lock
+      background-color: #9c0f0f
+      color: white
+  .rowimgbezelbutton:active
+    -webkit-box-shadow: inset 0 1px 1px #aaa, inset 0 -1px 1px #aaa
+    border-color: #888 #aaa #eee
+
+  .embossButton
+    border: 1px solid transparent
+    border-radius: 3px
+    background-color: rgba(255, 255, 255, 0.5)
+    cursor: pointer
+
+@mixin button
+  box-sizing: border-box
+  display: flex
+  flex-direction: row
+  align-items: center
+  justify-content: center
+  text-align: center
+  border-style: var(--button-border-style)
+  border-radius: var(--button-border-radius)
+  border-width: var(--button-border-width)
+  border-color: var(--button-border-color)
+  background: var(--button-background)
+  font-size: var(--button-font-size)
+  font-weight: var(--button-font-weight)
+  padding: var(--button-padding)
+  color: var(--button-color)
+  line-height: var(--button-line-height)
+  margin: 0
+  background-color: transparent
+
+  &:disabled
+    cursor: default
+    background: var(--button-background-disabled)
+
+  &:hover
+    &:not(:disabled)
+      background: radial-gradient(var(--sheet-color), transparent)
+
+@mixin icon-button
+  box-sizing: border-box
+  display: flex
+  flex-direction: row
+  align-items: center
+  justify-content: center
+  text-align: center
+  border-style: var(--icon-button-border-style)
+  border-radius: var(--icon-button-border-radius)
+  border-width: var(--icon-button-border-width)
+  border-color: var(--border-color-icon-button)
+  font-size: var(--icon-button-font-size)
+  background: var(--icon-button-background)
+  padding: var(--icon-button-padding)
+  line-height: var(--icon-button-line-height)
+  width: var(--icon-button-radius)
+  height: var(--icon-button-radius)
+  color: var(--icon-button-color)
+
+@mixin flex-row
+  display: flex
+  flex-direction: row
+
+@mixin flex-column
+  display: flex
+  flex-direction: column
+
+@mixin flex-group-center
+  align-items: center
+  justify-content: center
+  text-align: center
+
+@mixin flex-group-left
+  align-items: center
+  justify-content: flex-start
+  text-align: left
+
+@mixin flex-group-right
+  align-items: center
+  justify-content: flex-end
+  text-align: right
+
+@mixin flex-group-top
+  align-items: center
+  justify-content: flex-start
+  text-align: center
+
+@mixin flex-group-top-right
+  align-items: flex-end
+  justify-content: flex-start
+  text-align: right
+
+@mixin flex-group-top-left
+  align-items: flex-start
+  justify-content: flex-start
+  text-align: left
+
+@mixin flex-space-between
+  align-items: center
+  justify-content: space-between
+  text-align: center
+
+@mixin flex-space-evenly
+  align-items: center
+  justify-content: space-evenly
+  text-align: center
+
+@mixin grid($column-count)
+  display: grid
+  margin: 0
+  padding: 0
+  grid-column: span $column-count / span $column-count
+  grid-template-columns: repeat($column-count, minmax(0, 1fr))
+
+@mixin grid-rows($row-count)
+  display: grid
+  grid-template-rows: repeat($row-count, 1fr)
+  grid-auto-flow: column
+
+@mixin grid-start($column-count)
+  grid-column-start: $column-count
+
+@mixin grid-span($column-count)
+  grid-column-end: span $column-count
+
+@mixin label
+  background: var(--label-background)
+  color: var(--label-color)
+  --border-color: var(--label-color)
+
+@mixin editor
+  --tjs-editor-background: var(--editor-background)
+  --tjs-editor-border: var(--editor-border)
+  --tjs-editor-border-radius: var(--editor-border-radius)
+
+@mixin tag-margin
+  margin: 0.5rem 0.25rem 0 0.25rem
+
+@mixin tag-margin-small
+  margin: 0.25rem 0.125rem 0 0.125rem
+
+@mixin font-size-normal
+  font-size: var(--font-size-normal)
+
+@mixin font-size-small
+  font-size: var(--font-size-small)
+
+@mixin font-size-large
+  font-size: var(--font-size-large)
+
+@mixin font-size-extra-large
+  font-size: var(--font-size-extra-large)
+
+@mixin static-value
+  background-color: var(--static-value-background)
+
+@mixin panel-1
+  background: var(--panel-1-background)
+  color: var(--panel-1-color)
+  --border-color: var(--panel-1-color)
+
+@mixin panel-2
+  background: var(--panel-2-background)
+  color: var(--panel-2-color)
+  --border-color: var(--panel-2-color)
+
+@mixin panel-3
+  background: var(--panel-3-background)
+  color: var(--panel-3-color)
+  --border-color: var(--panel-3-color)
+
+@mixin border
+  border-style: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--player-color)
+
+@mixin border-top
+  border-top: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-top-bottom
+  border-top: var(--border-style)
+  border-bottom: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-bottom
+  border-bottom: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-bottom-sides
+  border-right: var(--border-style)
+  border-left: var(--border-style)
+  border-bottom: var(--border-style)
+  border-bottom-right-radius: var(--border-radius)
+  border-bottom-left-radius: var(--border-radius)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-left
+  border-left: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-right
+  border-right: var(--border-style)
+  border-width: var(--border-width)
+  border-color: var(--border-color)
+
+@mixin border-color-button
+  border-color: var(--button-border-color) 

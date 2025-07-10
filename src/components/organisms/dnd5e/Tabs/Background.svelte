@@ -9,12 +9,12 @@
     illuminatedDescription
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { localize } from "#runtime/svelte/helper";
+  import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs } from "~/src/stores/index";
 
   let active = null,
     value = null,
-    placeHolder = "Backgrounds";
+    placeHolder = t('Tabs.Backgrounds.Placeholder');
   let packs = getPacksFromSettings("backgrounds");
   // let folders = getFoldersFromMultiplePacks(packs, 1);
   // let folderIds = folders.map((x) => x._id);
@@ -99,16 +99,17 @@
 </script>
 
 <template lang="pug">
-div.content
+.content
+  h1.center.mt-none.hide {t('Tabs.Background.Title')}
   .flexrow
     .flex2.pr-sm.col-a
       .flexrow
         .flex0.required(class="{$background ? '' : 'active'}") *
         .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
      
       +if("advancementArray.length")
-        h3.left {localize('GAS.Advancements')}
+        h2.left {t('Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")
             //- @todo: this should be broken out into components for each advancement.type
@@ -127,12 +128,12 @@ div.content
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.scss"
+  @import "../../../../../styles/Mixins.sass"
   .content 
     @include staticOptions
 
     .col-a
-      max-width: 325px
+      // max-width: 325px
 
   :global(.icon-select)
     position: relative

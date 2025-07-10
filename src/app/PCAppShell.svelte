@@ -1,5 +1,5 @@
 <script>
-  import { ApplicationShell }   from '#runtime/svelte/component/core';
+  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
   import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs } from "~/src/stores/index"
   import Tabs from "~/src/components/molecules/Tabs.svelte";
@@ -152,90 +152,5 @@
   .section-bottom
     // Add any additional styling for the bottom section
 
-  :global(.tabs-list) 
-    padding: 0.25rem 1.5rem !important
-
-  :global(.gas-tabs)
-    position: relative 
-    padding-top: 1rem
-
-  :global(.gas-tabs .tabs-list) 
-    background: #dbd9cd !important
-    position: fixed
-    top: 30px
-    left: 0
-    width: 100%
-    z-index: 1
-    height: 2.5rem !important
-    padding-top: 1rem !important
-
-  :global(.gas-tabs .tabs-list::after)
-    content: ""
-    display: block
-    position: fixed
-    top: 71px
-    left: auto
-    width: 95%
-    height: 17px
-    background: black
-    background: linear-gradient(0deg, rgba(219, 217, 205, 0) 0%, #f9f9f9 100%)
-    z-index: 1 
-
-  :global(.gas-tabs .tabs-list button:hover)
-    box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important
-
-  :global(.tab-content)
-    --tjs-app-overflow: visible
-    padding: 15px 0px 15px 15px
-    border: 2px solid transparent
-    border-radius: 10px 
-    background-color: #f9f9f9
-    position: relative 
-    margin-top: 5px
-
-    position: relative
-    padding: 0
-
-  :global(.tab-content .scroll)
-    box-sizing: content-box
-    padding: 15px
-
-  :global(.tab-content .col-a)
-    padding: 1rem
-
-  :global(.tab-content ul.icon-list .image)
-    min-width: 24px
-
-  :global(.tab-content ul.icon-list)
-    list-style-type: none !important
-    padding: 0
-    position: relative
-    margin: 0
-
-  :global(.tab-content ul.icon-list li)
-    margin: 3px 0
-    box-shadow: 0 0 0 1px var(--li-inset-color) inset
-    padding: 0.5rem 0.3rem
-    border-radius: var(--border-radius)
-    background: var(--li-background-color)
-
-  :global(.tab-content ul.icon-list .image img.icon)
-    position: absolute
-    top: -3px
-    left: 0
-    width: 24px
-    height: 24px
-    vertical-align: middle
-    border: 0
-
-  :global(.tab-content ul.icon-list li.tight .flexcol)
-    gap: 0
-    line-height: 11px
-    height: 19px
-    margin: 4px 0 5px 0
-
-  :global(.tab-content ul.icon-list li.tight .image img.icon)
-    top: 2px
-    left: 2px
   
 </style>

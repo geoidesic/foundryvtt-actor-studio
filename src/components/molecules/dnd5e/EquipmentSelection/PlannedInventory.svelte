@@ -1,14 +1,15 @@
 <script>
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, flattenedSelections } from "~/src/stores/equipmentSelections";
-import { localize } from "#runtime/svelte/helper";
+import { localize as t } from "~/src/helpers/Utility";
+import { readOnlyTabs } from "~/src/stores/index";
 
 let plannedItems = [];
 
 // Track the raw selections
 $: rawSelections = $flattenedSelections || [];
 
-$: window.GAS.log.d('PLANNED INVENTORY | flattenedSelections', $flattenedSelections);
+// $: window.GAS.log.d('PLANNED INVENTORY | flattenedSelections', $flattenedSelections);
 
 // Handle async updates when selections change and group identical items
 $: {
@@ -46,13 +47,17 @@ $: {
 }
 
 function getItemName(item) {
-  window.GAS.log.d('PLANNED INVENTORY | getItemName', item);
+  // window.GAS.log.d('PLANNED INVENTORY | getItemName', item);
   return `@UUID[${item?.uuid}]{${item?.name}}`
 }
 
 // $: window.GAS.log.d('[PlannedInventory] flattenedSelections', $flattenedSelections);
 // $: window.GAS.log.d('[PlannedInventory] plannedItems', plannedItems);
 let unsubscribe;
+
+
+// Check if equipment tab is readonly
+$: isDisabled = $readOnlyTabs.includes("equipment");
 
 onMount(() => {
 
@@ -61,31 +66,34 @@ onMount(() => {
 
 <template lang="pug">
 .planned-inventory
-  h3 {localize('GAS.Equipment.PlannedInventory')}
-  table.inventory-table
-    thead
-      tr
-        th 
-        th.white {localize('GAS.Item')}
-        th.white {localize('GAS.Equipment.Weight')}
-        th.white {localize('GAS.Equipment.Quantity')}
-    tbody
-      +if('plannedItems.length === 0')
+  h3 {t('GAS.Equipment.PlannedInventory')}
+  +if('!isDisabled')
+    table.inventory-table
+      thead
         tr
-          td(colspan="4").empty-message {localize('GAS.Equipment.NoItemsSelected')}
-        +else()
-          +each('plannedItems as item')
-            tr
-              td
-                +if('item && item.img')
-                  img(src="{item.img}" width="32" height="32")
-                  +else()
-                    img(src="icons/svg/item-bag.svg" width="32" height="32")
-              +await("TextEditor.enrichHTML(getItemName(item) || '')")
-                +then("Html")
-                  td= "{@html Html || '--'}"
-              td.weight= "{item?.system?.weight?.value || 0}"
-              td.quantity= "{item?.system?.quantity || 1}"
+          th 
+          th.white {t('GAS.Item')}
+          th.white {t('GAS.Equipment.Weight')}
+          th.white {t('GAS.Equipment.Quantity')}
+      tbody
+        +if('plannedItems.length === 0')
+          tr
+            td(colspan="4").empty-message {t('GAS.Equipment.NoItemsSelected')}
+          +else()
+            +each('plannedItems as item')
+              tr
+                td(width="50")
+                  +if('item && item.img')
+                    img(src="{item.img}" width="32" height="32")
+                    +else()
+                      img(src="icons/svg/item-bag.svg" width="32" height="32")
+                +await("TextEditor.enrichHTML(getItemName(item) || '')")
+                  +then("Html")
+                    td= "{@html Html || '--'}"
+                td.weight= "{item?.system?.weight?.value || 0}"
+                td.quantity= "{item?.system?.quantity || 1}"
+  +if('isDisabled')
+    .info-message {t('GAS.Equipment.EquipmentConfirmed')}
 </template>
 
 <style lang="sass">
@@ -99,7 +107,6 @@ onMount(() => {
   width: 100%
   border-collapse: collapse
   margin-top: 0.5rem
-
   th, td
     text-align: left
     padding: 0 0.5rem
@@ -121,4 +128,10 @@ onMount(() => {
     text-align: center
     color: var(--color-text-dark-secondary)
     font-style: italic
+
+.inventory-table th:first-child,
+.inventory-table td:first-child
+  width: 50px
+  min-width: 50px
+  max-width: 50px
 </style>

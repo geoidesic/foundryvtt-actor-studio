@@ -1,6 +1,6 @@
 <script>
   import preventDefault from "~/src/helpers/svelte-actions/PreventDefault.js";
-  import { ripple } from "@typhonjs-fvtt/runtime/svelte/action/animate";
+  import { ripple } from "@typhonjs-fvtt/standard/action/animate/composable";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { dropItemRegistry } from "~/src/stores/index";
 
@@ -65,7 +65,7 @@
 </div>
 
 <style lang="scss">
-  @import "../../../styles/Mixins.scss";
+  @import "../../../styles/Mixins.sass";
 
   .tabs {
     @include flex-column;

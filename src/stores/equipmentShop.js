@@ -1,10 +1,14 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 // Import extractItemsFromPacksAsync instead of Sync
-import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility'; 
+import { getPacksFromSettings, extractItemsFromPacksAsync } from '../helpers/Utility.js';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { totalGoldFromChoices } from '~/src/stores/goldChoices';
-import { readOnlyTabs } from '~/src/stores/index';
+import { readOnlyTabs } from './index.js';
+import { handleContainerContents } from '../lib/workflow.js';
+
+// Import fromUuid for container handling
+const { fromUuid } = foundry.utils;
 
 // Store for managing the state of the equipment shop
 
@@ -100,10 +104,9 @@ export async function loadShopItems() {
     // This will fetch nonIndexKeys if they aren't in the default index
     let lightweightItems = await extractItemsFromPacksAsync(packs, indexKeys, nonIndexKeys);
     
-    // Filter for relevant types and items with a price
+    // Filter for items with a price (any item type is allowed if it has a price)
     lightweightItems = lightweightItems.filter(item => 
-      ["weapon", "equipment", "tool", "consumable", "backpack"].includes(item.type) &&
-      item.system?.price?.value // Now this data should be available
+      item.system?.price?.value // Only require that the item has a price
     );
 
     // Handle duplicates - keep only the first instance of each item name
@@ -164,15 +167,15 @@ function getItemCostInCopper(itemData, quantity) {
 
 // Function to update cart and totals
 // Now accepts fullItemData to store in the cart map
-export function updateCart(itemId, quantity, fullItemData) {
+export function updateCart(itemId, quantity, fullItemData, uuid = null) {
   shopCart.update(cart => {
     const newCart = new Map(cart);
     
     if (quantity <= 0) {
       newCart.delete(itemId);
     } else {
-      // Store quantity and the full item data
-      newCart.set(itemId, { quantity: quantity, itemData: fullItemData }); 
+      // Store quantity, the full item data, and UUID for container handling
+      newCart.set(itemId, { quantity: quantity, itemData: fullItemData, uuid: uuid }); 
     }
     
     return newCart;
@@ -203,6 +206,8 @@ function updateTotals() {
 
 // Function to finalize the purchase and add items to the actor
 export async function finalizePurchase(actor) {
+  window.GAS.log.d('[SHOP] finalizePurchase called with actor:', actor?.name);
+  
   if (!actor) {
     ui.notifications.error("No active character");
     return false;
@@ -238,20 +243,27 @@ export async function finalizePurchase(actor) {
     // Create a batch of items to add to character
     const itemsToCreate = [];
     const itemsToUpdate = []; // Track updates separately
+    const newItemsInfo = []; // Track info about new items for container handling
+
+    window.GAS.log.d('[SHOP] Processing cart with', currentCart.size, 'items');
 
     // Add items to character using itemData from the cart
-    for (const [itemId, { quantity, itemData }] of currentCart.entries()) {
+    for (const [itemId, { quantity, itemData, uuid }] of currentCart.entries()) {
       if (itemData) {
+        window.GAS.log.d('[SHOP] Processing cart item:', itemData.name, 'Type:', itemData.type, 'Quantity:', quantity, 'UUID:', uuid);
+        
         // Check if actor already has this item by name
         const existingItem = actor.items.find(i => i.name === itemData.name); 
         
         if (existingItem) {
+          window.GAS.log.d('[SHOP] Found existing item, will update quantity');
           // Prepare update for existing item
           itemsToUpdate.push({
             _id: existingItem._id,
             "system.quantity": (existingItem.system.quantity || 0) + quantity
           });
         } else {
+          window.GAS.log.d('[SHOP] New item, will create');
           // Prepare to create new item from the full itemData
           const newItemObject = typeof itemData.toObject === 'function' 
               ? itemData.toObject() 
@@ -261,9 +273,18 @@ export async function finalizePurchase(actor) {
           newItemObject.system.quantity = quantity; 
           
           itemsToCreate.push(newItemObject);
+          
+          // Track info for container handling
+          newItemsInfo.push({
+            itemData: itemData,
+            uuid: uuid,
+            cartItemId: itemId
+          });
         }
       }
     }
+    
+    window.GAS.log.d('[SHOP] Items to create:', itemsToCreate.length, 'Items to update:', itemsToUpdate.length);
     
     // Update existing items in a single batch
     if (itemsToUpdate.length > 0) {
@@ -272,7 +293,35 @@ export async function finalizePurchase(actor) {
 
     // Create all new items in a single batch for better performance
     if (itemsToCreate.length > 0) {
-      await actor.createEmbeddedDocuments("Item", itemsToCreate);
+      window.GAS.log.d('[SHOP] Creating', itemsToCreate.length, 'new items');
+      const createdItems = await actor.createEmbeddedDocuments("Item", itemsToCreate);
+      window.GAS.log.d('[SHOP] Created items:', createdItems.length);
+      
+      // Handle container contents for each newly created item
+      for (let i = 0; i < createdItems.length; i++) {
+        const createdItem = createdItems[i];
+        const newItemInfo = newItemsInfo[i];
+        
+        if (newItemInfo) {
+          window.GAS.log.d('[SHOP] Processing item for container contents:', newItemInfo.itemData.name, 'Type:', newItemInfo.itemData.type, 'UUID:', newItemInfo.uuid);
+          
+          // Use the stored UUID to fetch the source item for container handling
+          if (newItemInfo.uuid) {
+            try {
+              const sourceItem = await fromUuid(newItemInfo.uuid);
+              if (sourceItem) {
+                await handleContainerContents(sourceItem, createdItem, actor);
+              } else {
+                window.GAS.log.d('[SHOP] Could not fetch source item from UUID:', newItemInfo.uuid);
+              }
+            } catch (error) {
+              console.error('Error handling container contents for shop item:', newItemInfo.itemData.name, error);
+            }
+          } else {
+            window.GAS.log.d('[SHOP] No UUID stored for item, skipping container handling');
+          }
+        }
+      }
     }
     
     // Clear the cart
