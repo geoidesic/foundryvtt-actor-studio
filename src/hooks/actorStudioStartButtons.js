@@ -3,6 +3,9 @@ import dnd5e from "~/config/systems/dnd5e.json";
 import { userHasRightPermissions } from '~/src/helpers/Utility'
 import { MODULE_ID } from '~/src/helpers/constants';
 
+// Store references to event handlers for cleanup
+const eventHandlers = new Map();
+
 const handleActorStudioStartButtonClick = function (e, app, html) {
   // window.GAS.log.d('handleActorStudioStartButtonClick', e, app, html)
   if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
@@ -30,6 +33,26 @@ const handleActorStudioStartButtonClick = function (e, app, html) {
   }
 }
 
+// Clean up event handlers for a specific element
+export function cleanupEventHandlers(elementId) {
+  const handlers = eventHandlers.get(elementId);
+  if (handlers) {
+    handlers.forEach(handler => {
+      if (handler.element && handler.element.length) {
+        handler.element.off(handler.event, handler.handler);
+      }
+    });
+    eventHandlers.delete(elementId);
+  }
+}
+
+// Store event handler for later cleanup
+function storeEventHandler(elementId, element, event, handler) {
+  if (!eventHandlers.has(elementId)) {
+    eventHandlers.set(elementId, []);
+  }
+  eventHandlers.get(elementId).push({ element, event, handler });
+}
 
 export function openActorStudio(actorName, folderName = '', actorType = 'character') {
   if (userHasRightPermissions()) {
@@ -70,6 +93,11 @@ export const renderActorStudioSidebarButton = (app) => {
   const element = game.version >= 13 ? app.element : app._element;
   if (!element) return;
   
+  const elementId = `sidebar-${app.id || 'default'}`;
+  
+  // Clean up existing event handlers before re-rendering
+  cleanupEventHandlers(elementId);
+  
   // Check if button already exists in the DOM
   if ($(element).find('#gas-sidebar-button').length > 0) return;
   
@@ -83,17 +111,27 @@ export const renderActorStudioSidebarButton = (app) => {
     $(element).find('header.directory-header').append($gasButton);
   }
   
-  // Add event handlers
-  $gasButton.on('mousedown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
-  $gasButton.on('keydown', (e) => Hooks.call('gas.openActorStudio', game.user.name));
+  // Add event handlers and store them for cleanup
+  const mousedownHandler = (e) => Hooks.call('gas.openActorStudio', game.user.name);
+  const keydownHandler = (e) => Hooks.call('gas.openActorStudio', game.user.name);
+  
+  $gasButton.on('mousedown', mousedownHandler);
+  $gasButton.on('keydown', keydownHandler);
+  
+  // Store handlers for cleanup
+  storeEventHandler(elementId, $gasButton, 'mousedown', mousedownHandler);
+  storeEventHandler(elementId, $gasButton, 'keydown', keydownHandler);
 }
-
 
 export const renderASButtonInCreateActorApplication = (app, html) => {
   const createNewActorLocalized = game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') });
   if (app.title === createNewActorLocalized) {
     const select = $('select', html);
-    const systemActorDocumentTypes = dnd5e.actorTypes
+    const systemActorDocumentTypes = dnd5e.actorTypes;
+    
+    // Clean up existing event handlers for this dialog
+    const dialogId = `dialog-${app.id || 'create-actor'}`;
+    cleanupEventHandlers(dialogId);
     
     function updateButton() {
       const actorType = select.val();
@@ -113,10 +151,16 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           // window.GAS.log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
+          // Create event handlers
+          const mousedownHandler = (e) => handleActorStudioStartButtonClick(e, app, html);
+          const keydownHandler = (e) => handleActorStudioStartButtonClick(e, app, html);
 
-          $gasButton.on('mousedown', (e) => handleActorStudioStartButtonClick(e, app, html));
-          $gasButton.on('keydown', (e) => handleActorStudioStartButtonClick(e, app, html));
-
+          $gasButton.on('mousedown', mousedownHandler);
+          $gasButton.on('keydown', keydownHandler);
+          
+          // Store handlers for cleanup
+          storeEventHandler(dialogId, $gasButton, 'mousedown', mousedownHandler);
+          storeEventHandler(dialogId, $gasButton, 'keydown', keydownHandler);
         }
         
       } else {
@@ -128,14 +172,22 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
     updateButton();
 
     // Update button when the select value changes
-    select.on('change', updateButton);
+    const changeHandler = updateButton;
+    select.on('change', changeHandler);
+    storeEventHandler(dialogId, select, 'change', changeHandler);
   }
 }
 
-
+// Cleanup function to be called when the module is disabled or when dialogs are closed
+export const cleanupAllEventHandlers = () => {
+  for (const [elementId] of eventHandlers) {
+    cleanupEventHandlers(elementId);
+  }
+}
 
 export default {
   renderASButtonInCreateActorApplication,
   renderActorStudioSidebarButton,
-  openActorStudio
+  openActorStudio,
+  cleanupAllEventHandlers
 }

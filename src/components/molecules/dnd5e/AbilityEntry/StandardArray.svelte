@@ -1,6 +1,5 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { refresh } from "@typhonjs-fvtt/runtime/svelte/store";
   import {
     createEventDispatcher,
     getContext,
@@ -10,28 +9,30 @@
   } from "svelte";
   import { abilities, race, isStandardArrayValues, abilityRolls } from "~/src/stores/index";
   import { MODULE_ID, STANDARD_ARRAY } from "~/src/helpers/constants";
-  import { dnd5eModCalc, localize as t } from "~/src/helpers/Utility";
+  import { dnd5eModCalc, localize } from "~/src/helpers/Utility";
 
   export let document = false;
 
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
-  let rerender = 0;
-
-  let abilitiesValues = [];
-
-  $: abilitiesValues = Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value);
 
   async function updateValue(attr, value) {
+    // move the value to the next ability according to the direction of the arrow
     const abilities = Object.keys(STANDARD_ARRAY);
+    // get index of attr from abilities
     const index = abilities.indexOf(attr);
-
-    let didSwap = false;
+    window.GAS.log.d('abilities', abilities)
+    window.GAS.log.d('index', index)
+    window.GAS.log.d('value', value)
+    window.GAS.log.d('attr', attr)
+    
     switch (value) {
       case -1:
+        // move the value to the next ability according to the direction of the arrow
         if (index < abilities.length - 1) {
           const nextAbility = abilities[index + 1];
+          // window.GAS.log.d('nextAbility', nextAbility)
           const options = {
             system: {
               abilities: {
@@ -40,15 +41,17 @@
               },
             },
           };
+          // window.GAS.log.d('options', options)
           await $doc.updateSource(options);
-          await tick();
-          abilitiesValues = Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value);
-          didSwap = true;
+          $doc = $doc;
         }
         break;
+
       default:
+        // move the value to the next ability according to the direction of the arrow
         if (index > 0) {
           const nextAbility = abilities[index - 1];
+          // window.GAS.log.d('nextAbility', nextAbility)
           const options = {
             system: {
               abilities: {
@@ -57,16 +60,22 @@
               },
             },
           };
+          // window.GAS.log.d('options', options)
           await $doc.updateSource(options);
-          await tick();
-          abilitiesValues = Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value);
-          didSwap = true;
+          $doc = $doc;
         }
         break;
     }
+
+    // window.GAS.log.d(abilities)
+    // const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
+    // $doc.updateSource(options)
+    // $doc = $doc
   }
 
   async function reset() {
+    window.GAS.log.d('reset standard array - BEFORE update');
+    window.GAS.log.d('Current abilities before reset:', $doc.system.abilities);
     $abilityRolls = {};
 
     const options = { system: { abilities: {} } };
@@ -75,9 +84,15 @@
         value: STANDARD_ARRAY[key],
       };
     });
+    window.GAS.log.d('StandardArray reset options', options);
+    window.GAS.log.d('STANDARD_ARRAY values:', STANDARD_ARRAY);
+    
     await $doc.updateSource(options);
     await tick();
-    abilitiesValues = Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value);
+    $doc = $doc;
+    
+    window.GAS.log.d('reset standard array - AFTER update');
+    window.GAS.log.d('Current abilities after reset:', $doc.system.abilities);
   }
 
   function arraysMatch(array1, array2) {
@@ -95,30 +110,44 @@
   $: abilityAdvancements =
     $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
       ?.fixed;
-  // $: isStandardArrayValues = arraysMatch(
-  //   Object.values(STANDARD_ARRAY),
-  //   systemAbilitiesArray.map(
-  //     (ability) => $doc.system.abilities[ability[0]].value,
-  //   ),
-  // );
-  $: $isStandardArrayValues = arraysMatch(
+  // Compute if current abilities match the standard array (order-insensitive)
+  $: isStandardArrayCurrent = arraysMatch(
     Object.values(STANDARD_ARRAY),
-    Object.keys(STANDARD_ARRAY).map(
-      (key) => $doc.system.abilities[key]?.value
-    )
+    Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value)
   );
-  // $: {
-  //   const currentAbilities = systemAbilitiesArray.map(
-  //     (ability) => {
-  //       window.GAS.log.d(ability) 
-  //       return $doc.system.abilities[ability[0]].value
-  //     }
-  //   );
-  //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
-  //   isStandardArrayValues.set(match);
-  // }
+
+  // Update the isStandardArrayValues store for progress tracking
+  $: isStandardArrayValues.set(isStandardArrayCurrent);
+
   // Track last reset document to ensure reset runs only once per actor/document
   let lastResetDocName = null;
+
+  // Add logging to understand what's happening
+  $: {
+    window.GAS.log.d('StandardArray reactive check:', {
+      hasDoc: !!$doc,
+      hasAbilities: !!$doc?.system?.abilities,
+      docId: $doc?._id,
+      docName: $doc?.name,
+      lastResetDocName,
+      allKeysExist: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key]) : false,
+      allAre10: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key]?.value === 10) : false,
+      currentValues: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value) : [],
+      standardArrayValues: Object.values(STANDARD_ARRAY),
+      arraysMatch: $doc?.system?.abilities ? arraysMatch(
+        Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value),
+        Object.values(STANDARD_ARRAY)
+      ) : false,
+      currentAbilityValues: $doc?.system?.abilities ? {
+        str: $doc.system.abilities.str?.value,
+        dex: $doc.system.abilities.dex?.value,
+        con: $doc.system.abilities.con?.value,
+        int: $doc.system.abilities.int?.value,
+        wis: $doc.system.abilities.wis?.value,
+        cha: $doc.system.abilities.cha?.value
+      } : null
+    });
+  }
 
   $: if (
     $doc?.system?.abilities &&
@@ -134,12 +163,10 @@
     lastResetDocName = $doc.name;
     reset();
   }
-
-  $: showTab = $doc?.system?.abilities && Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key])
 </script>
 
 <template lang="pug">
-+if("showTab")
++if("$doc?.system?.abilities && Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key])")
   .attribute-entry.mt-sm
     table
       thead
@@ -158,20 +185,20 @@
                 span +
               span {abilityAdvancements?.[ability[0]] || 0}
             td.center.relative
-              input.left.small.mainscore(disabled type="number" value="{abilitiesValues[index]}")
+              input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
               .controls
                 .up.chevron
                   +if("index != 0")
-                    i.fas.fa-chevron-up(alt="{t('GAS.AltText.MoveUp')}" on:click!="{() => updateDebounce(ability[0], 1)}")
+                    i.fas.fa-chevron-up(alt="{localize('GAS.AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
                 .down.chevron
                   +if("index != 5")
-                    i.fas.fa-chevron-down(alt="{t('GAS.AltText.MoveDown')}" on:click!="{() => updateDebounce(ability[0], -1)}")
-            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number(abilitiesValues[index] || 0)}
+                    i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
+            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
             td.center
-              +if("dnd5eModCalc(Number(abilitiesValues[index]) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+              +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
                 span +
               span {dnd5eModCalc(Number(abilitiesValues[index]) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
-        +if("!$isStandardArrayValues")
+        +if("!isStandardArrayCurrent")
           tr
             td(colspan="5")
               hr

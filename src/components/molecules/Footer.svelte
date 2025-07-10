@@ -58,7 +58,6 @@
     updateActorAndEmbedItems as updateActorWorkflow,
     handleAddEquipment as addEquipmentWorkflow,
     handleFinalizePurchase as finalizePurchaseWorkflow,
-    handleFinalizeSpells as finalizeSpellsWorkflow,
     checkActorInventory as checkInventory,
     handleCharacterUpdate as characterUpdateWorkflow
   } from "~/src/lib/workflow";
@@ -79,9 +78,6 @@
 
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
-
-  // Add state for processing spells
-  const isProcessingSpells = writable(false);
 
   // Store references for workflow functions
   const storeRefs = {
@@ -116,7 +112,7 @@
     [classUuidForLevelUp, levelUpClassGetsSubclassThisLevel, subClassUuidForLevelUp],
     ([$classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp]) => {
 
-      window.GAS.log.p('levelUpProgress', $classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp);
+      window.GAS.log.d('levelUpProgress', $classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp);
       // If a new multiclass is selected, show 100% progress
       if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && !$subClassUuidForLevelUp) return 50;
       if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && $subClassUuidForLevelUp) return 100;
@@ -131,6 +127,35 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
+
+  // Derived store to check if actor has items in inventory
+  const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
+    if (!$actorInGame) return false;
+    
+    // Check if the actor has any items
+    // In Foundry VTT, items is a Collection that has methods like filter and size
+    const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
+    
+    // First check if items collection exists and has any items
+    if (!$actorInGame.items || $actorInGame.items.size === 0) {
+      // window.GAS.log.d('[FOOTER] No items found on actor');
+      return false;
+    }
+    
+    // Use the Foundry Collection's filter method
+    const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
+    const hasItems = inventoryItems.size > 0;
+    
+    // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
+    //   actorId: $actorInGame.id,
+    //   totalItems: $actorInGame.items.size,
+    //   inventoryItems: inventoryItems,
+    //   inventoryItemCount: inventoryItems.size,
+    //   hasItems: hasItems
+    // });
+    
+    return hasItems;
+  });
 
   const handleNameInput = (e) => {
     if ($isLevelUp) {
@@ -156,7 +181,7 @@
   };
 
   const clickUpdateLevelUpHandler = async () => {
-    window.GAS.log.p('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
+    window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
     
     await updateActorWorkflow({
       actor,
@@ -177,7 +202,7 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop'];
   const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
 
   // Handle adding equipment to the actor
@@ -191,12 +216,6 @@
       }
     });
   };
-
-  $: window.GAS.log.q('[FOOTER] isEquipmentComplete:', isEquipmentComplete);
-  $: window.GAS.log.q('[FOOTER] areGoldChoicesComplete:', $areGoldChoicesComplete);
-  $: window.GAS.log.q('[FOOTER] progress:', $progress);
-  $: window.GAS.log.q('[FOOTER] goldRoll:', $goldRoll);
-  $: window.GAS.log.q('[FOOTER] window.GAS.dnd5eVersion:', window.GAS.dnd5eVersion);
 
   // Derive whether equipment section is complete
   $: isEquipmentComplete = window.GAS.dnd5eVersion >= 4 
@@ -234,17 +253,6 @@
     await finalizePurchaseWorkflow({
       stores: storeRefs,
       setProcessing: (value) => isProcessingPurchase.set(value)
-    });
-  }
-
-  // Handle finalizing spell selection
-  async function handleFinalizeSpells() {
-    // Prevent multiple clicks
-    if (get(isProcessingSpells)) return;
-    
-    await finalizeSpellsWorkflow({
-      stores: storeRefs,
-      setProcessing: (value) => isProcessingSpells.set(value)
     });
   }
 
@@ -326,11 +334,15 @@
         el.style.setProperty('--interval', `${ms}ms`)
       }
 
+      // Store handler references for cleanup
+      const signHandlers = [];
       signs.forEach(el => {
         mixupInterval(el, 2000, 3000)
-        el.addEventListener('webkitAnimationIteration', () => {
+        const handler = () => {
           mixupInterval(el, 2000, 3000)
-        })
+        };
+        el.addEventListener('webkitAnimationIteration', handler);
+        signHandlers.push({ el, handler });
       })
       // backgrounds.forEach(el => {
       //   mixupInterval(el, 10000, 10001)
@@ -339,10 +351,14 @@
       //   })
       // })
 
-    window.GAS.log.q('[FOOTER] hello moegoe');
-    window.GAS.log.q('[FOOTER] isEquipmentComplete', isEquipmentComplete);
+      randomize(); // Call randomize on mount
 
-    randomize(); // Call randomize on mount
+      // Cleanup listeners on destroy
+      onDestroy(() => {
+        signHandlers.forEach(({ el, handler }) => {
+          el.removeEventListener('webkitAnimationIteration', handler);
+        });
+      });
     }
   });
 </script>
@@ -414,18 +430,6 @@
                 disabled="{$isProcessingPurchase || $readOnlyTabs.includes('shop')}" 
               )
                 span {localize('Footer.FinalizePurchase')}
-                i.right.ml-md(class="fas fa-chevron-right")
-
-        +if("$activeTab === 'spells'")
-          .progress-container
-            .button-container
-              button.mt-xs(
-                type="button"
-                role="button"
-                on:mousedown="{handleFinalizeSpells}"
-                disabled="{$isProcessingSpells || $readOnlyTabs.includes('spells')}" 
-              )
-                span {localize('Footer.FinalizeSpells')}
                 i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")

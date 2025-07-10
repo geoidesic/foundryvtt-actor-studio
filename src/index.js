@@ -11,7 +11,7 @@ import { init, ready } from './hooks/init.js';
 import { captureAdvancement } from './hooks/captureAdvancement.js';
 import { renderAdvancementManager } from './hooks/advancementManager.js';
 import { renderCompendium } from './hooks/renderCompendium.js';
-import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton } from './hooks/actorStudioStartButtons.js';
+import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 Hooks.once("init", (app, html, data) => {
@@ -20,6 +20,20 @@ Hooks.once("init", (app, html, data) => {
 
 Hooks.once("ready", (app, html, data) => {
   ready(app, html, data);
+});
+
+// Clean up event handlers when module is disabled
+Hooks.once("disableModule", (module) => {
+  if (module.id === MODULE_ID) {
+    cleanupAllEventHandlers();
+  }
+});
+
+// Clean up event handlers when module is unloaded
+Hooks.once("unloadModule", (module) => {
+  if (module.id === MODULE_ID) {
+    cleanupAllEventHandlers();
+  }
 });
 
 Hooks.on('gas.captureAdvancement', (initial = false) => {
@@ -95,6 +109,14 @@ Hooks.on('renderApplicationV2', (app, html, data) => {
 Hooks.on('gas.renderASButtonInCreateActorApplication', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
 })
+
+// Clean up event handlers when dialogs are closed
+Hooks.on('closeApplication', (app) => {
+  if (app.title === game.i18n.format('DOCUMENT.Create', { type: game.i18n.localize('DOCUMENT.Actor') })) {
+    const dialogId = `dialog-${app.id || 'create-actor'}`;
+    cleanupEventHandlers(dialogId);
+  }
+});
 
 /** 
  * Handle rendering the Actor Studio button in the Sidebar Actor Directory
