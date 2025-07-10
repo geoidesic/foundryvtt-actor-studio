@@ -334,11 +334,15 @@
         el.style.setProperty('--interval', `${ms}ms`)
       }
 
+      // Store handler references for cleanup
+      const signHandlers = [];
       signs.forEach(el => {
         mixupInterval(el, 2000, 3000)
-        el.addEventListener('webkitAnimationIteration', () => {
+        const handler = () => {
           mixupInterval(el, 2000, 3000)
-        })
+        };
+        el.addEventListener('webkitAnimationIteration', handler);
+        signHandlers.push({ el, handler });
       })
       // backgrounds.forEach(el => {
       //   mixupInterval(el, 10000, 10001)
@@ -348,6 +352,13 @@
       // })
 
       randomize(); // Call randomize on mount
+
+      // Cleanup listeners on destroy
+      onDestroy(() => {
+        signHandlers.forEach(({ el, handler }) => {
+          el.removeEventListener('webkitAnimationIteration', handler);
+        });
+      });
     }
   });
 </script>
