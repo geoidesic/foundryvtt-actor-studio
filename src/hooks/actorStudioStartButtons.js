@@ -4,7 +4,7 @@ import { userHasRightPermissions } from '~/src/helpers/Utility'
 import { MODULE_ID } from '~/src/helpers/constants';
 
 const handleActorStudioStartButtonClick = function (e, app, html) {
-  window.GAS.log.d('handleActorStudioStartButtonClick', e, app, html)
+  // window.GAS.log.d('handleActorStudioStartButtonClick', e, app, html)
   if (e.type === 'mousedown' || e.type === 'keydown' && (e.key === 'Enter' || e.key === ' ')) {
     
         let actorName = '';
@@ -12,15 +12,15 @@ const handleActorStudioStartButtonClick = function (e, app, html) {
         let actorType = 'character';
         if (html) {
           actorName = $('input', html).val();
-          window.GAS.log.d('renderASButtonInCreateActorApplication actorName', actorName)
+          // window.GAS.log.d('renderASButtonInCreateActorApplication actorName', actorName)
           folderName = $('select[name="folder"]', html).val();
-          window.GAS.log.d('renderASButtonInCreateActorApplication folderName', folderName)
+          // window.GAS.log.d('renderASButtonInCreateActorApplication folderName', folderName)
           const select = $('select', html);
           actorType = select.val();
         }
-        window.GAS.log.d('handleActorStudioStartButtonClick actorName', actorName)
-        window.GAS.log.d('handleActorStudioStartButtonClick folderName', folderName)
-        window.GAS.log.d('handleActorStudioStartButtonClick actorType', actorType)
+        // window.GAS.log.d('handleActorStudioStartButtonClick actorName', actorName)
+        // window.GAS.log.d('handleActorStudioStartButtonClick folderName', folderName)
+        // window.GAS.log.d('handleActorStudioStartButtonClick actorType', actorType)
 
         Hooks.call('gas.openActorStudio', actorName, folderName, actorType);
         e.preventDefault();
@@ -110,7 +110,7 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
         }
         if (!$('#gas-dialog-button', html).length) {
           const $gasButton = getActorStudioButton('gas-dialog-button');
-          window.GAS.log.d('html', html)
+          // window.GAS.log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
 
