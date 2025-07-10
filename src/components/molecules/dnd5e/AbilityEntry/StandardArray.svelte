@@ -22,10 +22,10 @@
     const abilities = Object.keys(STANDARD_ARRAY);
     // get index of attr from abilities
     const index = abilities.indexOf(attr);
-    // window.GAS.log.d('abilities', abilities)
-    // window.GAS.log.d('index', index)
-    // window.GAS.log.d('value', value)
-    // window.GAS.log.d('attr', attr)
+    window.GAS.log.d('abilities', abilities)
+    window.GAS.log.d('index', index)
+    window.GAS.log.d('value', value)
+    window.GAS.log.d('attr', attr)
     
     switch (value) {
       case -1:
@@ -74,6 +74,8 @@
   }
 
   async function reset() {
+    window.GAS.log.d('reset standard array - BEFORE update');
+    window.GAS.log.d('Current abilities before reset:', $doc.system.abilities);
     $abilityRolls = {};
 
     const options = { system: { abilities: {} } };
@@ -82,8 +84,15 @@
         value: STANDARD_ARRAY[key],
       };
     });
+    window.GAS.log.d('StandardArray reset options', options);
+    window.GAS.log.d('STANDARD_ARRAY values:', STANDARD_ARRAY);
+    
     await $doc.updateSource(options);
+    await tick();
     $doc = $doc;
+    
+    window.GAS.log.d('reset standard array - AFTER update');
+    window.GAS.log.d('Current abilities after reset:', $doc.system.abilities);
   }
 
   function arraysMatch(array1, array2) {
@@ -123,61 +132,90 @@
   //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
   //   isStandardArrayValues.set(match);
   // }
-  onMount(async () => {
-    // window.GAS.log.d($doc.system.abilities)
-    // window.GAS.log.d(Object.keys($doc.system.abilities))
-    // window.GAS.log.d(isStandardArrayValues)
-    // if all the abilities are 10, set them to the standard array
-    if (
-      systemAbilitiesArray.every(
-        (ability) =>
-          $doc.system.abilities[ability[0]]?.value === 10,
-      )
-    ) {
-      reset();
-    }
-  });
+  // Track last reset document to ensure reset runs only once per actor/document
+  let lastResetDocName = null;
+
+  // Add logging to understand what's happening
+  $: {
+    window.GAS.log.d('StandardArray reactive check:', {
+      hasDoc: !!$doc,
+      hasAbilities: !!$doc?.system?.abilities,
+      docId: $doc?._id,
+      docName: $doc?.name,
+      lastResetDocName,
+      allKeysExist: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key]) : false,
+      allAre10: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key]?.value === 10) : false,
+      currentValues: $doc?.system?.abilities ? Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value) : [],
+      standardArrayValues: Object.values(STANDARD_ARRAY),
+      arraysMatch: $doc?.system?.abilities ? arraysMatch(
+        Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value),
+        Object.values(STANDARD_ARRAY)
+      ) : false,
+      currentAbilityValues: $doc?.system?.abilities ? {
+        str: $doc.system.abilities.str?.value,
+        dex: $doc.system.abilities.dex?.value,
+        con: $doc.system.abilities.con?.value,
+        int: $doc.system.abilities.int?.value,
+        wis: $doc.system.abilities.wis?.value,
+        cha: $doc.system.abilities.cha?.value
+      } : null
+    });
+  }
+
+  $: if (
+    $doc?.system?.abilities &&
+    $doc?.name &&
+    lastResetDocName !== $doc.name &&
+    Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key]?.value === 10) &&
+    !arraysMatch(
+      Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value),
+      Object.values(STANDARD_ARRAY)
+    )
+  ) {
+    window.GAS.log.d('StandardArray: Triggering reset for doc name:', $doc.name);
+    lastResetDocName = $doc.name;
+    reset();
+  }
 </script>
 
 <template lang="pug">
-.attribute-entry.mt-sm
-  table
-    thead
-      tr
-        th.ability Ability
-        th.center Race / Feat
-        th.center Base Score
-        th.center Score
-        th.center Modifier
-    tbody
-      +each("systemAbilitiesArray as ability, index")
++if("$doc?.system?.abilities && Object.keys(STANDARD_ARRAY).every(key => $doc.system.abilities[key])")
+  .attribute-entry.mt-sm
+    table
+      thead
         tr
-          td.ability {ability[1].label}
-          td.center
-            +if("abilityAdvancements?.[ability[0]] > 0")
-              span +
-            span {abilityAdvancements?.[ability[0]] || 0}
-          td.center.relative
-            input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
-            .controls
-              .up.chevron
-                +if("index != 0")
-                  i.fas.fa-chevron-up(alt="{localize('GAS.AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
-              .down.chevron
-                +if("index != 5")
-                  i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
-          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
-          td.center
-            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
-              span +
-            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
-          
-      +if("!$isStandardArrayValues")
-        tr
-          td(colspan="5")
-            hr
-            button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
-
+          th.ability Ability
+          th.center Race / Feat
+          th.center Base Score
+          th.center Score
+          th.center Modifier
+      tbody
+        +each("systemAbilitiesArray as ability, index")
+          tr
+            td.ability {ability[1].label}
+            td.center
+              +if("abilityAdvancements?.[ability[0]] > 0")
+                span +
+              span {abilityAdvancements?.[ability[0]] || 0}
+            td.center.relative
+              input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
+              .controls
+                .up.chevron
+                  +if("index != 0")
+                    i.fas.fa-chevron-up(alt="{localize('GAS.AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
+                .down.chevron
+                  +if("index != 5")
+                    i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
+            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
+            td.center
+              +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+                span +
+              span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+        +if("!$isStandardArrayValues")
+          tr
+            td(colspan="5")
+              hr
+              button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
 </template>
 
 <style lang="sass">
