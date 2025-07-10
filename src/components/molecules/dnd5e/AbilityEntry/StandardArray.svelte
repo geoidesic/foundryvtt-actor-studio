@@ -122,6 +122,9 @@
   // Track last reset document to ensure reset runs only once per actor/document
   let lastResetDocName = null;
 
+  // Compute abilitiesValues for use in the template
+  $: abilitiesValues = Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value);
+
   // Add logging to understand what's happening
   $: {
     window.GAS.log.d('StandardArray reactive check:', {
@@ -185,7 +188,7 @@
                 span +
               span {abilityAdvancements?.[ability[0]] || 0}
             td.center.relative
-              input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}")
+              input.left.small.mainscore(disabled type="number" value="{abilitiesValues[index] ?? ''}")
               .controls
                 .up.chevron
                   +if("index != 0")
@@ -193,11 +196,11 @@
                 .down.chevron
                   +if("index != 5")
                     i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
-            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
+            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number(abilitiesValues[index] || 0)}
             td.center
-              +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+              +if("dnd5eModCalc(Number(abilitiesValues[index] || 0) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
                 span +
-              span {dnd5eModCalc(Number(abilitiesValues[index]) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+              span {dnd5eModCalc(Number(abilitiesValues[index] || 0) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
         +if("!isStandardArrayCurrent")
           tr
             td(colspan="5")
