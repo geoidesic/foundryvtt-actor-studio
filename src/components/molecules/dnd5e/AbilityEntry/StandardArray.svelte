@@ -73,16 +73,16 @@
     // $doc = $doc
   }
 
-  function reset() {
+  async function reset() {
     $abilityRolls = {};
 
     const options = { system: { abilities: {} } };
-    systemAbilitiesArray.forEach((ability) => {
-      options.system.abilities[ability[0]] = {
-        value: STANDARD_ARRAY[ability[0]],
+    Object.keys(STANDARD_ARRAY).forEach((key) => {
+      options.system.abilities[key] = {
+        value: STANDARD_ARRAY[key],
       };
     });
-    $doc.updateSource(options);
+    await $doc.updateSource(options);
     $doc = $doc;
   }
 
@@ -109,9 +109,9 @@
   // );
   $: $isStandardArrayValues = arraysMatch(
     Object.values(STANDARD_ARRAY),
-    systemAbilitiesArray.map(
-      (ability) => $doc.system.abilities[ability[0]]?.value,
-    ),
+    Object.keys(STANDARD_ARRAY).map(
+      (key) => $doc.system.abilities[key]?.value
+    )
   );
   // $: {
   //   const currentAbilities = systemAbilitiesArray.map(
@@ -216,12 +216,12 @@
       background-color: rgba(0, 0, 0, 0.1)
       &.up
         padding: 1px 3px 0px 3px
-        top: 0
+        top: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
       &.down
         padding: 1px 3px 0px 3px
-        bottom: 0
+        bottom: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
 
