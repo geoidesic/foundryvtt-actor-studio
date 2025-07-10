@@ -110,28 +110,15 @@
   $: abilityAdvancements =
     $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
       ?.fixed;
-  // $: isStandardArrayValues = arraysMatch(
-  //   Object.values(STANDARD_ARRAY),
-  //   systemAbilitiesArray.map(
-  //     (ability) => $doc.system.abilities[ability[0]].value,
-  //   ),
-  // );
-  $: $isStandardArrayValues = arraysMatch(
+  // Compute if current abilities match the standard array (order-insensitive)
+  $: isStandardArrayCurrent = arraysMatch(
     Object.values(STANDARD_ARRAY),
-    Object.keys(STANDARD_ARRAY).map(
-      (key) => $doc.system.abilities[key]?.value
-    )
+    Object.keys(STANDARD_ARRAY).map(key => $doc.system.abilities[key]?.value)
   );
-  // $: {
-  //   const currentAbilities = systemAbilitiesArray.map(
-  //     (ability) => {
-  //       window.GAS.log.d(ability) 
-  //       return $doc.system.abilities[ability[0]].value
-  //     }
-  //   );
-  //   const match = arraysMatch(STANDARD_ARRAY, currentAbilities);
-  //   isStandardArrayValues.set(match);
-  // }
+
+  // Update the isStandardArrayValues store for progress tracking
+  $: isStandardArrayValues.set(isStandardArrayCurrent);
+
   // Track last reset document to ensure reset runs only once per actor/document
   let lastResetDocName = null;
 
@@ -210,8 +197,8 @@
             td.center
               +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
                 span +
-              span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
-        +if("!$isStandardArrayValues")
+              span {dnd5eModCalc(Number(abilitiesValues[index]) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+        +if("!isStandardArrayCurrent")
           tr
             td(colspan="5")
               hr
