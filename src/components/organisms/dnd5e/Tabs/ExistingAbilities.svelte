@@ -48,25 +48,41 @@
   $: options = [
     {
       value: 1,
+<<<<<<< Updated upstream
       label: t('Tabs.Abilities.ManualEntry'),
+=======
+      label: localize('GAS.Tabs.Abilities.ManualEntry'),
+>>>>>>> Stashed changes
       type: "ManualEntry",
       setting: game.settings.get(MODULE_ID, "allowManualInput"),
     },
     {
       value: 2,
+<<<<<<< Updated upstream
       label: t('Tabs.Abilities.PointBuy'),
+=======
+      label: localize('GAS.Tabs.Abilities.PointBuy'),
+>>>>>>> Stashed changes
       type: "PointBuy",
       setting: game.settings.get(MODULE_ID, "allowPointBuy"),
     },
     {
       value: 3,
+<<<<<<< Updated upstream
       label: t('Tabs.Abilities.Roll'),
+=======
+      label: localize('GAS.Tabs.Abilities.Roll'),
+>>>>>>> Stashed changes
       type: "Roll",
       setting: game.settings.get(MODULE_ID, "allowRolling"),
     },
     {
       value: 4,
+<<<<<<< Updated upstream
       label: t('Tabs.Abilities.StandardArray'),
+=======
+      label: localize('GAS.Tabs.Abilities.StandardArray'),
+>>>>>>> Stashed changes
       type: "StandardArray",
       setting: game.settings.get(MODULE_ID, "allowStandardArray"),
     },
