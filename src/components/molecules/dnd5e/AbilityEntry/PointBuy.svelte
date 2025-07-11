@@ -110,7 +110,6 @@
             input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}" name="{ability[0]}" id="{ability[0]}" )
             .controls
               .up.chevron(on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) + 1}})}")
-<<<<<<< Updated upstream
                 i.fas.fa-chevron-up(alt="{t('AltText.Increase')}")
               .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
                                   i.fas.fa-chevron-down(alt="{t('AltText.Decrease')}")
@@ -120,12 +119,9 @@
               +if("abilityAdvancements?.[ability[0]] > 0")
                 span +
               span {abilityAdvancements?.[ability[0]] || 0}
-          
-=======
                 i.fas.fa-chevron-up(alt="{localize('GAS.AltText.Increase')}")
               .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
                 i.fas.fa-chevron-down(alt="{localize('GAS.AltText.Decrease')}")
->>>>>>> Stashed changes
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")

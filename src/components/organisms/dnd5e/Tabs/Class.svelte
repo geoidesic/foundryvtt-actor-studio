@@ -38,13 +38,8 @@
     subclassValue = null,
     subClassesIndex,
     subclasses,
-<<<<<<< Updated upstream
-      classesPlaceholder = t('Tabs.Classes.Placeholder'),
-  subclassesPlaceholder = t('Tabs.Classes.SubclassPlaceholder'),
-=======
-    classesPlaceholder = localize('GAS.Tabs.Classes.Placeholder'),
-    subclassesPlaceholder = localize('GAS.Tabs.Classes.SubclassPlaceholder'),
->>>>>>> Stashed changes
+    classesPlaceholder = t('Tabs.Classes.Placeholder'),
+    subclassesPlaceholder = t('Tabs.Classes.SubclassPlaceholder'),
     packs = getPacksFromSettings("classes"),
     subClassesPacks = getPacksFromSettings("subclasses"),
     classAdvancementArrayFiltered = [],
@@ -81,11 +76,7 @@
 
   const levelOptions = [];
   for (let i = 1; i <= 20; i++) {
-<<<<<<< Updated upstream
     levelOptions.push({ label: t('Tabs.Classes.Level') + " " + i, value: i });
-=======
-    levelOptions.push({ label: localize('GAS.Tabs.Classes.Level') + " " + i, value: i });
->>>>>>> Stashed changes
   }
 
   const selectStyles = {
@@ -326,13 +317,8 @@
                   span [-]
                 +if("!classAdvancementExpanded")
                   span [+]
-<<<<<<< Updated upstream
               .flex {t('Tabs.Classes.Class')} {t('Advancements')}
               .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
-=======
-              .flex {t('GAS.Tabs.Classes.Class')} {t('GAS.Advancements')}
-              .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
->>>>>>> Stashed changes
             ul.icon-list
               +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
                 li.left {t('NoAdvancements')}
@@ -340,13 +326,8 @@
                 li.left 
                   .flexrow
                     .flex0.relative.image
-<<<<<<< Updated upstream
                       img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{t('AltText.Subclass')}")
                     .flex2 {t('SubClass')}
-=======
-                      img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{localize('GAS.AltText.Subclass')}")
-                    .flex2 {t('GAS.SubClass')}
->>>>>>> Stashed changes
               +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
                 +each("classAdvancementArrayFiltered as advancement")
                   //- @todo: this should be broken out into components for each advancement.type
@@ -384,13 +365,8 @@
                     span [-]
                   +if("!subClassAdvancementExpanded")
                     span [+]
-<<<<<<< Updated upstream
                 .flex {t('Tabs.Classes.SubClass')} {t('Advancements')}
                 .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
-=======
-                .flex {t('GAS.Tabs.Classes.SubClass')} {t('GAS.Advancements')}
-                .flex0.div.badge.right.inset.ml-sm.mb-xs {t('GAS.Level')} {$level}
->>>>>>> Stashed changes
               ul.icon-list
                 +if("!subClassAdvancementArrayFiltered.length")
                   li.left {t('NoAdvancements')}
