@@ -1,29 +1,48 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, setContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, pointBuyScoreTotal, pointBuyLimit, abilityRolls } from "~/src/stores/index"
-  import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants"
-  import { dnd5eModCalc } from "~/src/helpers/Utility"
+  import {
+    createEventDispatcher,
+    getContext,
+    setContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import {
+    abilities,
+    race,
+    pointBuyScoreTotal,
+    pointBuyLimit,
+    abilityRolls,
+  } from "~/src/stores/index";
+  import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants";
+  import { dnd5eModCalc } from "~/src/helpers/Utility";
   import { localize as t } from "~/src/helpers/Utility";
-  
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
 
-  function updateValue(attr, event) {
-    if(event.target.value < 8) return false;
-    if(event.target.value > 15) return false;
-    const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    $doc.updateSource(options);
-    $doc = $doc;
-    
+  async function updateValue(attr, event) {
+    if (event.target.value < 8) return false;
+    if (event.target.value > 15) return false;
+    const options = {
+      system: { abilities: { [attr]: { value: Number(event.target.value) } } },
+    };
+    await $doc.updateSource(options);
+    if ($doc.render) {
+      $doc.render();
+    }
     // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
-    $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
-      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 
-      0
-    ) || 12;
+    $pointBuyScoreTotal =
+      systemAbilitiesArray?.reduce(
+        (acc, ability) =>
+          acc +
+          POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)],
+        0,
+      ) || 12;
   }
 
   // Function to calculate pointBuyLimit
@@ -31,34 +50,45 @@
     return game.settings.get(MODULE_ID, "pointBuyLimit");
   }
 
-  function reset() {
+  async function reset() {
     $abilityRolls = {};
-    const options = {system: {abilities: {}}};
-    systemAbilitiesArray.forEach(ability => {
-      options.system.abilities[ability[0]] = {value: 10};
+    const options = { system: { abilities: {} } };
+    systemAbilitiesArray.forEach((ability) => {
+      options.system.abilities[ability[0]] = { value: 10 };
     });
-    $doc.updateSource(options);
-    $doc = $doc;
-    
+    await $doc.updateSource(options);
+    if ($doc.render) {
+      $doc.render();
+    }
     // Explicitly recalculate the pointBuyScoreTotal to ensure reactivity
-    $pointBuyScoreTotal = systemAbilitiesArray?.reduce(
-      (acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 
-      0
-    ) || 12;
+    $pointBuyScoreTotal =
+      systemAbilitiesArray?.reduce(
+        (acc, ability) =>
+          acc +
+          POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)],
+        0,
+      ) || 12;
   }
-  
 
-  $: systemAbilities = game.system.config.abilities
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: $pointBuyScoreTotal = systemAbilitiesArray?.reduce((acc, ability) => acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)], 0) || 12;
-  $: activeCSSClass = $pointBuyScoreTotal !== $pointBuyLimit ? ' active' : '';
-  $: pointBuyClass = $pointBuyScoreTotal > $pointBuyLimit ? 'red'+activeCSSClass: 'green'+activeCSSClass
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
+  $: $pointBuyScoreTotal =
+    systemAbilitiesArray?.reduce(
+      (acc, ability) =>
+        acc + POINT_BUY_COSTS[Number($doc.system.abilities[ability[0]]?.value)],
+      0,
+    ) || 12;
+  $: activeCSSClass = $pointBuyScoreTotal !== $pointBuyLimit ? " active" : "";
+  $: pointBuyClass =
+    $pointBuyScoreTotal > $pointBuyLimit
+      ? "red" + activeCSSClass
+      : "green" + activeCSSClass;
 
-
-  onMount(async () => {
-  });
+  onMount(async () => {});
 </script>
 
 <template lang="pug">
@@ -153,13 +183,13 @@
       background-color: rgba(0, 0, 0, 0.1)
       &.up
         padding: 1px 3px 0px 3px
-        top: 0
+        top: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
       &.down
         padding: 1px 3px 0px 3px
-        bottom: 0
+        bottom: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
-    
+
 </style>

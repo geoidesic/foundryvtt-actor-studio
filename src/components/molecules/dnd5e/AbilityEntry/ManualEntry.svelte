@@ -1,28 +1,40 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race } from "~/src/stores/index"
-  
+  import {
+    createEventDispatcher,
+    getContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import { abilities, race } from "~/src/stores/index";
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 300);
 
-  function updateValue(attr, event) {
-    const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
+  async function updateValue(attr, event) {
+    const options = {
+      system: { abilities: { [attr]: { value: Number(event.target.value) } } },
+    };
+    await $doc.updateSource(options);
+
+    if ($doc.render) {
+      $doc.render();
+    }
   }
 
-  $: systemAbilities = game.system.config.abilities
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
 
-  $: console.log(systemAbilitiesArray)
-  onMount(async () => {
-  });
+  $: console.log(systemAbilitiesArray);
+  onMount(async () => {});
 </script>
 
 <template lang="pug">
@@ -50,7 +62,7 @@
             +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
               span +
             span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
-          
+
 </template>
 
 <style lang="sass">

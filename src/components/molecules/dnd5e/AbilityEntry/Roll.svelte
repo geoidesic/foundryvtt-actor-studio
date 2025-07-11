@@ -1,29 +1,40 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, abilityRolls } from "~/src/stores/index"
-  import { MODULE_ID } from "~/src/helpers/constants"
-  import { dnd5eModCalc, localize } from "~/src/helpers/Utility"
-  
+  import {
+    createEventDispatcher,
+    getContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import { abilities, race, abilityRolls } from "~/src/stores/index";
+  import { MODULE_ID } from "~/src/helpers/constants";
+  import { dnd5eModCalc, localize } from "~/src/helpers/Utility";
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
   let formula, allowMove;
 
-  function updateValue(attr, event) {
-    if(event.target.value < 8) return false;
-    if(event.target.value > 15) return false;
-    const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
+  async function updateValue(attr, event) {
+    if (event.target.value < 8) return false;
+    if (event.target.value > 15) return false;
+    const options = {
+      system: { abilities: { [attr]: { value: Number(event.target.value) } } },
+    };
+    await $doc.updateSource(options);
+
+    if ($doc.render) {
+      $doc.render();
+    }
   }
 
   async function swapAbilities(attr, direction) {
     const abilities = Object.keys($doc.system.abilities);
     const index = abilities.indexOf(attr);
-    
+
     if (direction === 1 && index > 0) {
       // Move up
       const prevAbility = abilities[index - 1];
@@ -36,7 +47,10 @@
         },
       };
       await $doc.updateSource(options);
-      $doc = $doc;
+
+      if ($doc.render) {
+        $doc.render();
+      }
     } else if (direction === -1 && index < abilities.length - 1) {
       // Move down
       const nextAbility = abilities[index + 1];
@@ -49,7 +63,10 @@
         },
       };
       await $doc.updateSource(options);
-      $doc = $doc;
+
+      if ($doc.render) {
+        $doc.render();
+      }
     }
   }
 
@@ -57,26 +74,34 @@
     const roll = await new Roll(formula).evaluate();
     await roll.toMessage();
 
-    $abilityRolls = !$abilityRolls ? {} : $abilityRolls
-    $abilityRolls[attr] = roll.total
+    $abilityRolls = !$abilityRolls ? {} : $abilityRolls;
+    $abilityRolls[attr] = roll.total;
 
     // set the value of the ability to the result of the roll
-    const options = {system: {abilities: { [attr]: {value: Number(roll.total)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
-  }
-  
+    const options = {
+      system: { abilities: { [attr]: { value: Number(roll.total) } } },
+    };
+    await $doc.updateSource(options);
 
-  $: systemAbilities = game.system.config.abilities
+    if ($doc.render) {
+      $doc.render();
+    }
+  }
+
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[0]] !== undefined);
-  $: scoreClass = allowMove && allRolled ? 'left' : 'center';
-  
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
+  $: allRolled = systemAbilitiesArray.every(
+    (ability) => $abilityRolls[ability[0]] !== undefined,
+  );
+  $: scoreClass = allowMove && allRolled ? "left" : "center";
+
   onMount(async () => {
-    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
-    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved")
+    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula");
+    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved");
   });
 </script>
 
@@ -141,6 +166,7 @@
       text-align: center
     &.ability
       width: 25%
+
  
   .green
     color: green
