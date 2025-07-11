@@ -5,6 +5,7 @@ import { delay, prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Ut
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections } from '~/src/stores/index';
+import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
 
 /**
  * Class responsible for monitoring and managing the advancement process
@@ -75,48 +76,21 @@ export class AdvancementManager {
     return queue;
   }
 
-  isEquipmentSelectionViable() {
-    // Get the pre-advancement selection data
-    const preSelections = get(preAdvancementSelections);
-    
-    // Basic checks for required data
-    if (Object.keys(preSelections).length === 0 || 
-        !preSelections.class || 
-        !preSelections.class.system || 
-        !preSelections.class.system.startingEquipment || 
-        preSelections.class.system.startingEquipment.length === 0 || 
-        preSelections.class.system.wealth === undefined) {
-      window.GAS.log.d('[ADVANCEMENT MANAGER] Equipment not viable - missing required data');
-      return false;
-    }
-    
-    // Check for compatible equipment options
-    const compatibleEquipment = get(compatibleStartingEquipment);
-    const viable = compatibleEquipment.length > 0;
-    
-    window.GAS.log.d('[ADVANCEMENT MANAGER] isEquipmentSelectionViable result:', viable);
-    return viable;
-  }
-
   /**
    * Opens equipment tab if enabled, otherwise closes the advancement manager
    * @param {Actor} currentActor - The current actor being processed
    */
   closeOrEquip(currentActor) {
-    const enableEquipmentSelection = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
-    window.GAS.log.d('[ADVANCEMENT MANAGER] enableEquipmentSelection', enableEquipmentSelection);
-    if (enableEquipmentSelection) {
-      window.GAS.log.d('[ADVANCEMENT MANAGER] opening equipment tab for ', currentActor);
-      if (this.isEquipmentSelectionViable()) {
-        Hooks.call("gas.equipmentSelection", currentActor);
-        return;
-      } else {
-        // Show a simple localized notification
-        ui.notifications.warn(game.i18n.localize('GAS.Error.EquipmentSelectionNotViable'));
-        window.GAS.log.d('[ADVANCEMENT MANAGER] Equipment selection skipped - not viable');
-      }
-    }
-    // Hooks.call("gas.close");
+    // Use the state machine to determine next workflow step
+    window.GAS.log.d('[ADVANCEMENT MANAGER] closeOrEquip called with actor:', currentActor);
+    window.GAS.log.d('[ADVANCEMENT MANAGER] About to call workflowStateMachine.transition with ADVANCEMENTS_COMPLETE');
+    window.GAS.log.d('[ADVANCEMENT MANAGER] Actor classes:', currentActor?.classes);
+    
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
+      actor: currentActor
+    });
+    
+    window.GAS.log.d('[ADVANCEMENT MANAGER] Called workflowStateMachine.transition');
   }
 
   /**

@@ -2,10 +2,9 @@
  * Character creation and management workflows
  * Contains non-reactive logic that can be shared across components
  */
-
-
 import { get } from "svelte/store";
 import { MODULE_ID } from "~/src/helpers/constants";
+import { workflowStateMachine, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
 import {
   getLevelByDropType,
   itemHasAdvancementChoices,
@@ -77,10 +76,15 @@ export async function createActorInGameAndEmbedItems({
     characterSubClass,
     isLevelUp,
     preAdvancementSelections,
-    actorInGame
+    actorInGame,
+    tabs,
+    activeTab
   } = stores;
 
-  // Create the actor first
+  // Initialize the workflow state machine for character creation
+  workflowStateMachine.transition(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+
+  // Create Actor
   const createdActor = await Actor.create(get(actor).toObject());
   actorInGame.set(createdActor);
 
@@ -181,6 +185,16 @@ export async function createActorInGameAndEmbedItems({
     destroyAdvancementManagers();
   }
   
+  // Initialize the workflow state machine for character creation
+  window.GAS.log.d('[WORKFLOW] About to call workflowStateMachine.transition with CHARACTER_CREATED');
+  window.GAS.log.d('[WORKFLOW] Created actor:', createdActor);
+  window.GAS.log.d('[WORKFLOW] Created actor classes:', createdActor.classes);
+  
+  workflowStateMachine.transition(WORKFLOW_EVENTS.CHARACTER_CREATED, {
+    actor: createdActor
+  });
+  
+  window.GAS.log.d('[WORKFLOW] Called workflowStateMachine.transition - returning created actor');
   return createdActor;
 }
 
@@ -272,9 +286,6 @@ export async function handleAddEquipment({
 }) {
   const {
     flattenedSelections,
-    tabs,
-    activeTab,
-    readOnlyTabs,
     totalGoldFromChoices,
     goldRoll
   } = stores;
@@ -313,43 +324,7 @@ export async function handleAddEquipment({
 
     // Check if equipment purchase is enabled
     const enableEquipmentPurchase = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
-    if (enableEquipmentPurchase) {
-      // Add Shop tab after equipment is added
-      if (!get(tabs).find(x => x.id === "shop")) {
-        window.GAS.log.d('[WORKFLOW] Adding shop tab');
-        tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
-        
-        // Switch to the Shop tab
-        activeTab.set("shop");
-        
-        // Make the Equipment tab readonly
-        readOnlyTabs.update(current => [...current, "equipment"]);
-        
-        // Set available gold in shop store based on DnD5e version
-        let goldValue;
-        
-        // Use the appropriate gold source based on DnD5e version
-        if (window.GAS.dnd5eVersion >= 4) {
-          goldValue = get(totalGoldFromChoices);
-          window.GAS.log.d('[WORKFLOW] Using totalGoldFromChoices for v4:', goldValue);
-        } else {
-          goldValue = get(goldRoll);
-          window.GAS.log.d('[WORKFLOW] Using goldRoll for v3:', goldValue);
-        }
-        
-        // Convert gold to copper (1 gp = 100 cp)
-        const goldValueInCopper = goldValue * 100;
-        window.GAS.log.d('[WORKFLOW] Setting available gold for shop', goldValueInCopper);
-        
-        // Ensure we're updating both the local store and the global reference
-        if (window.GAS.availableGold) {
-          window.GAS.availableGold.set(goldValueInCopper);
-        }
-        
-        // Don't close the application yet, let the user shop first
-        return;
-      }
-    } else {
+    if (!enableEquipmentPurchase) {
       // Shop is disabled, add gold directly to actor
       let goldValue;
       
@@ -371,10 +346,13 @@ export async function handleAddEquipment({
           console.error('Error adding gold to actor:', error);
         }
       }
-      
-      Hooks.call("gas.close");
     }
   }
+  
+  // Use state machine to transition to next step
+  workflowStateMachine.transition(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, {
+    actor: $actorInGame
+  });
   
   // Call the callback to mark equipment as added
   if (onEquipmentAdded) {
@@ -409,9 +387,11 @@ export async function handleFinalizePurchase({
     setProcessing(true);
   }
 
-
   if (!$actorInGame) {
     ui.notifications.error("No active character found");
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+      error: "No active character found"
+    });
     if (setProcessing) setProcessing(false);
     return;
   }
@@ -442,29 +422,36 @@ export async function handleFinalizePurchase({
     var success = await finalizePurchase($actorInGame);
     window.GAS.log.d('[WORKFLOW] Purchase finalized successfully:', success);
   } catch (error) {
-    setProcessing(true);
-    console.trace();
     console.error("Error during finalize purchase:", error);
     ui.notifications.error("An error occurred during purchase.");
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+      error: error.message
+    });
+    if (setProcessing) setProcessing(false);
+    return;
   }
     
   try {
     if (success) {
       ui.notifications.info("Purchase completed successfully");
-      // Close the Actor Studio window after successful purchase
-      setTimeout(() => {
-        Hooks.call("gas.close");
-      }, 1500);
+      workflowStateMachine.transition(WORKFLOW_EVENTS.SHOPPING_COMPLETE, {
+        actor: $actorInGame
+      });
     } else {
       ui.notifications.error("Failed to complete purchase");
-      if (setProcessing) setProcessing(false);
+      workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+        error: "Failed to complete purchase"
+      });
     }
   } catch (error) {
-    setProcessing(true);
-    console.trace();
     console.error("Error handling finalize purchase result:", error);
     ui.notifications.error("An error occurred while processing the purchase result.");
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+      error: error.message
+    });
   }
+  
+  if (setProcessing) setProcessing(false);
 }
 
 /**
@@ -578,90 +565,28 @@ export async function handleCharacterUpdate({
  * @param {Object} actor - The actor document to check
  * @returns {boolean} True if the actor is a spellcaster, false otherwise
  */
-function checkIfSpellcaster(actor) {
-  window.GAS.log.t('[WORKFLOW] Checking if actor is a spellcaster:', actor?.id);
+export function checkIfSpellcaster(actor) {
+  window.GAS.log.d('[WORKFLOW] Checking if actor is a spellcaster:', actor?.id);
   if (!actor) {
     window.GAS.log.w('[WORKFLOW] No actor found');
     return false;
   }
   
-  const actorData = actor.system || actor.data?.data;
-  if (!actorData) {
-    window.GAS.log.w('[WORKFLOW] No actor data found');
+  const classes = actor.classes || {};
+  if (!Object.keys(classes).length) {
+    window.GAS.log.w('[WORKFLOW] No classes found on actor');
     return false;
   }
   
-  window.GAS.log.t('[WORKFLOW] Actor data found:', actorData);
-  
-  // Method 1: Check if the actor has spell slots in their system data
-  if (actorData.spells && Object.keys(actorData.spells).length > 0) {
-    window.GAS.log.t('[WORKFLOW] Actor has spell slots in system.spells');
-    return true;
-  }
-  
-  // Method 2: Check if actor has spellcasting progression
-  if (actorData.spellcasting && Object.keys(actorData.spellcasting).length > 0) {
-    window.GAS.log.t('[WORKFLOW] Actor has spellcasting progression');
-    return true;
-  }
-  
-  // Method 3: Check class items for spellcasting advancement
-  if (actor.items) {
-    const classItems = actor.items.filter(item => item.type === 'class');
-    window.GAS.log.t('[WORKFLOW] Found class items:', classItems.length);
-    
-    for (const classItem of classItems) {
-      const classData = classItem.system || classItem.data?.data;
-      if (!classData) continue;
-      
-      // Check if class has spellcasting advancement
-      if (classData.advancement) {
-        const hasSpellcasting = classData.advancement.some(advancement => 
-          advancement.type === 'Spellcasting' || 
-          advancement.type === 'SpellSlots'
-        );
-        
-        if (hasSpellcasting) {
-          window.GAS.log.t(`[WORKFLOW] Class ${classItem.name} has spellcasting advancement`);
-          return true;
-        }
-      }
-      
-      // Check for spell progression in class data
-      if (classData.spellcasting && classData.spellcasting.progression !== 'none') {
-        window.GAS.log.t(`[WORKFLOW] Class ${classItem.name} has spellcasting progression:`, classData.spellcasting.progression);
-        return true;
-      }
-    }
-  }
-  
-  // Method 4: Check if actor has any spell items
-  if (actor.items) {
-    const spellItems = actor.items.filter(item => item.type === 'spell');
-    if (spellItems.length > 0) {
-      window.GAS.log.t('[WORKFLOW] Actor has spell items:', spellItems.length);
-      return true;
-    }
-  }
-  
-  // Method 5: Check known spellcasting classes by name
-  const knownSpellcasters = [
-    'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-    'artificer', 'eldritch knight', 'arcane trickster'
-  ];
-  
-  if (actorData.classes && Object.keys(actorData.classes).length > 0) {
-    for (const [classId, classData] of Object.entries(actorData.classes)) {
-      const className = classId.toLowerCase();
-      if (knownSpellcasters.some(spellcaster => className.includes(spellcaster))) {
-        window.GAS.log.t(`[WORKFLOW] Recognized spellcasting class: ${classId}`);
-        return true;
-      }
-    }
-  }
-  
-  window.GAS.log.t('[WORKFLOW] No spellcasting detected for actor');
-  return false;
+  // Iterate through each class and check if any have spellcasting progression !== "none"
+  const isSpellcaster = Object.values(classes).some(cls => {
+    const progression = cls.system?.spellcasting?.progression;
+    window.GAS.log.d('[WORKFLOW] Checking class:', cls.name, 'progression:', progression);
+    return progression && progression !== "none";
+  });
+
+  window.GAS.log.d('[WORKFLOW] Actor is spellcaster:', isSpellcaster);
+  return isSpellcaster;
 }
 
 /**
@@ -676,9 +601,7 @@ export async function handleFinalizeSpells({
   setProcessing
 }) {
   const {
-    actorInGame,
-    tabs,
-    activeTab
+    actorInGame
   } = stores;
 
   const $actorInGame = get(actorInGame);
@@ -702,53 +625,29 @@ export async function handleFinalizeSpells({
       if (success) {
         ui.notifications.info("Spells added successfully");
         
-        // Check if character is also using equipment purchase (has shop enabled)
-        const enableEquipmentPurchase = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
-        
-        if (enableEquipmentPurchase && !get(tabs).find(x => x.id === "shop")) {
-          // Add Shop tab after spells are finalized
-          window.GAS.log.t('[WORKFLOW] Adding shop tab after spell selection');
-          tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
-          
-          // Switch to the Shop tab
-          activeTab.set("shop");
-          
-          // Set available gold in shop store based on DnD5e version
-          const { totalGoldFromChoices, goldRoll } = stores;
-          let goldValue;
-          
-          if (window.GAS.dnd5eVersion >= 4) {
-            goldValue = get(totalGoldFromChoices);
-          } else {
-            goldValue = get(goldRoll);
-          }
-          
-          // Convert gold to copper (1 gp = 100 cp)
-          const goldValueInCopper = goldValue * 100;
-          
-          if (window.GAS.availableGold) {
-            window.GAS.availableGold.set(goldValueInCopper);
-          }
-          
-          if (setProcessing) setProcessing(false);
-          return;
-        } else {
-          // No shop, close the application
-          setTimeout(() => {
-            // Hooks.call("gas.close");
-          }, 1500);
-        }
+        // Use state machine to transition to next step
+        workflowStateMachine.transition(WORKFLOW_EVENTS.SPELLS_COMPLETE, {
+          actor: $actorInGame
+        });
       } else {
         ui.notifications.error("Failed to add spells");
-        if (setProcessing) setProcessing(false);
+        workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+          error: "Failed to add spells"
+        });
       }
     } else {
       ui.notifications.error("Spell selection system not available");
-      if (setProcessing) setProcessing(false);
+      workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+        error: "Spell selection system not available"
+      });
     }
   } catch (error) {
     console.error("Error during spell finalization:", error);
     ui.notifications.error("An error occurred while adding spells");
-    if (setProcessing) setProcessing(false);
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+      error: error.message
+    });
   }
+  
+  if (setProcessing) setProcessing(false);
 }
