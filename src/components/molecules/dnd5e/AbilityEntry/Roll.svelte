@@ -111,8 +111,9 @@
     thead
       tr
         th.ability Ability
-        th.center Race / Feat
-        th.center Base Score
+        th.center Base
+        +if("window.GAS.dnd5eRules == '2014'")
+          th.center Origin
         th.center Score
         th.center Mod
         th.center.roll-col
@@ -120,10 +121,6 @@
       +each("systemAbilitiesArray as ability, index")
         tr
           td.ability {ability[1].label}
-          td.center
-            +if("abilityAdvancements?.[ability[0]] > 0")
-              span +
-            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
             input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}"  name="{ability[0]}" id="{ability[0]}")
             +if("allowMove && allRolled")
@@ -134,6 +131,11 @@
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
                     i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
+          +if("window.GAS.dnd5eRules == '2014'")
+            td.center
+              +if("abilityAdvancements?.[ability[0]] > 0")
+                span +
+              span {abilityAdvancements?.[ability[0]] || 0}
           td.center
             span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
@@ -176,20 +178,9 @@
     position: relative
     background-color: rgba(0, 0, 0, 0.05)
     border-radius: 3px
-    input
-      background: none
-      width: 3em
-      &:disabled
-        color: var(--color-text-dark-primary)
-      text-decoration: none
-      border: none
-      outline: none
-      box-shadow: none
-      -webkit-appearance: none
-      -moz-appearance: none
-      appearance: none
   .mainscore
-    min-width: 40px
+    min-width: 33px
+    max-width: 33px
   .controls
     .chevron
       position: absolute
@@ -199,12 +190,12 @@
       background-color: rgba(0, 0, 0, 0.1)
       &.up
         padding: 1px 3px 0px 3px
-        top: 0
+        top: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
       &.down
         padding: 1px 3px 0px 3px
-        bottom: 0
+        bottom: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
   .buttons
@@ -213,11 +204,11 @@
     font-size: 1rem
     background-color: rgba(0, 0, 0, 0.1)
     padding: 2px 1px 0px 0px
+    top: 8px
     border: 1px solid var(--color-positive)
     border-radius: 4px
     color: var(--color-positive)
     &:hover
-      cursor: pointer
       background-color: rgba(140, 90, 0, 0.2)
     &.active
       border: 1px solid var(--color-negative)

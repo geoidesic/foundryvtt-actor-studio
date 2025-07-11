@@ -164,6 +164,11 @@
                 .down.chevron
                   +if("index != 5")
                     i.fas.fa-chevron-down(alt="{t('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
+            +if("window.GAS.dnd5eRules == '2014'")
+              td.center
+                +if("abilityAdvancements?.[ability[0]] > 0")
+                  span +
+                span {abilityAdvancements?.[ability[0]] || 0}
             td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
             td.center
               +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
@@ -211,16 +216,14 @@
       left: 70%
       cursor: pointer
       background-color: rgba(0, 0, 0, 0.1)
+      &:hover
+        background-color: rgba(140, 90, 0, 0.2)
       &.up
         padding: 1px 3px 0px 3px
         top: 8px
-        &:hover
-          background-color: rgba(140, 90, 0, 0.2)
       &.down
         padding: 1px 3px 0px 3px
         bottom: 8px
-        &:hover
-          background-color: rgba(140, 90, 0, 0.2)
 
 
 </style>

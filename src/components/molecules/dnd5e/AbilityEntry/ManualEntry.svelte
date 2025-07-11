@@ -43,8 +43,9 @@
     thead
       tr
         th.ability Ability
-        th.center Race / Feat
-        th.center Base Score
+        th.center Base
+        +if("window.GAS.dnd5eRules == '2014'")
+          th.center Origin
         th.center Score
         th.center Modifier
     tbody
@@ -52,11 +53,14 @@
         tr
           td.ability {ability[1].label}
           td.center
-            +if("abilityAdvancements?.[ability[0]] > 0")
-              span +
-            span {abilityAdvancements?.[ability[0]] || 0}
-          td.center
             input.score.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[0], event)}")
+          
+          +if("window.GAS.dnd5eRules == '2014'")
+            td.center
+              +if("abilityAdvancements?.[ability[0]] > 0")
+                span +
+              span {abilityAdvancements?.[ability[0]] || 0}
+          
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")

@@ -97,18 +97,15 @@
     thead
       tr
         th.ability Ability
-        th.center Race / Feat
-        th.center Base Score
+        th.center Base
+        +if("window.GAS.dnd5eRules == '2014'")
+          th.center Origin
         th.center Score
         th.center Modifier
     tbody
       +each("systemAbilitiesArray as ability, index")
         tr
           td.ability {ability[1].label}
-          td.center
-            +if("abilityAdvancements?.[ability[0]] > 0")
-              span +
-            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
             input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}" name="{ability[0]}" id="{ability[0]}" )
             .controls
@@ -116,6 +113,13 @@
                 i.fas.fa-chevron-up(alt="{t('AltText.Increase')}")
               .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
                                   i.fas.fa-chevron-down(alt="{t('AltText.Decrease')}")
+          
+          +if("window.GAS.dnd5eRules == '2014'")
+            td.center
+              +if("abilityAdvancements?.[ability[0]] > 0")
+                span +
+              span {abilityAdvancements?.[ability[0]] || 0}
+          
           td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
             +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
@@ -170,7 +174,8 @@
   .red
     color: red
   .mainscore
-    min-width: 40px
+    min-width: 33px
+    max-width: 33px
   .score
     &.active
       animation: pulse 0.5s infinite
