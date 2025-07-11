@@ -131,11 +131,14 @@
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
                     i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
+<<<<<<< Updated upstream
           +if("window.GAS.dnd5eRules == '2014'")
             td.center
               +if("abilityAdvancements?.[ability[0]] > 0")
                 span +
               span {abilityAdvancements?.[ability[0]] || 0}
+=======
+>>>>>>> Stashed changes
           td.center
             span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
