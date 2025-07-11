@@ -14,11 +14,7 @@
 
   let active = null,
     value = null,
-<<<<<<< Updated upstream
-    placeHolder = t('Tabs.Backgrounds.Placeholder');
-=======
-    placeHolder = localize('GAS.Tabs.Backgrounds.Placeholder');
->>>>>>> Stashed changes
+    placeHolder = t('Tabs.Background.Placeholder');
   let packs = getPacksFromSettings("backgrounds");
   // let folders = getFoldersFromMultiplePacks(packs, 1);
   // let folderIds = folders.map((x) => x._id);

@@ -42,21 +42,13 @@ let
   subClassesIndex = [],
   classAdvancementArrayFiltered = [],
   subClassAdvancementArrayFiltered = [],
-<<<<<<< Updated upstream
   classesPlaceholder = t('LevelUp.SelectMulticlass'),
-=======
-  classesPlaceholder = localize('GAS.LevelUp.SelectMulticlass'),
->>>>>>> Stashed changes
   rowTooltip = "",
   richSubClassHTML = "",
   packs = getPacksFromSettings("classes"),
   subclasses,
   subClassesPacks = getPacksFromSettings("subclasses"),
-<<<<<<< Updated upstream
   subclassesPlaceholder = t('Tabs.Classes.SubclassPlaceholder'),
-=======
-  subclassesPlaceholder = localize('GAS.Tabs.Classes.SubclassPlaceholder'),
->>>>>>> Stashed changes
   mapKeys = ["name->label", "img", "type", "folder", "uuid->value", "_id"], //- keys to extract from the packs map
   mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys)
 ;
@@ -450,13 +442,8 @@ onDestroy(() => {
             li.left
               .flexrow
                 .flex0.relative.image
-<<<<<<< Updated upstream
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
                 .flex2 {t('SubClass')}
-=======
-                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{localize('GAS.AltText.Subclass')}")
-                .flex2 {localize('GAS.SubClass')}
->>>>>>> Stashed changes
         
         +if("($isLevelUpAdvancementInProgress || subclasses.length) && $levelUpClassGetsSubclassThisLevel")  
           h3.left.mt-md {t('LevelUp.Subclass')}

@@ -53,10 +53,7 @@
     "SubClass": "Subclass",
     "Tabs": {
       "Abilities": {
-<<<<<<< Updated upstream
         "Title": "Abilities",
-=======
->>>>>>> Stashed changes
         "HowCalculated": "How are abilities calculated?",
         "AbilityGenerationMethod": "Ability Generation Method",
         "ManualEntry": "Manual Entry",
@@ -80,11 +77,8 @@
         "SubclassPlaceholder": "Subclasses",
         "Level": "Level"
       },
-<<<<<<< Updated upstream
       "Background": {
-        "Title": "Background"
-      },
-      "Backgrounds": {
+        "Title": "Background",
         "Placeholder": "Backgrounds"
       },
       "Equipment": {
@@ -92,10 +86,6 @@
       },
       "Shop": {
         "Title": "Shop"
-=======
-      "Backgrounds": {
-        "Placeholder": "Backgrounds"
->>>>>>> Stashed changes
       }
     },
     "Welcome": {
@@ -327,10 +317,7 @@
       "Label": "Equipment",
       "Choice": "Choose one",
       "ChooseOne": "Choose one...",
-<<<<<<< Updated upstream
       "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
-=======
->>>>>>> Stashed changes
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
       "SelectOne": "Select one of the following options:",
