@@ -1,29 +1,40 @@
 <script>
   import { Timing } from "@typhonjs-fvtt/runtime/util";
-  import { createEventDispatcher, getContext, onDestroy, onMount, tick  } from "svelte";
-  import { abilities, race, abilityRolls } from "~/src/stores/index"
-  import { MODULE_ID } from "~/src/helpers/constants"
-  import { dnd5eModCalc, localize } from "~/src/helpers/Utility"
-  
+  import {
+    createEventDispatcher,
+    getContext,
+    onDestroy,
+    onMount,
+    tick,
+  } from "svelte";
+  import { abilities, race, abilityRolls } from "~/src/stores/index";
+  import { MODULE_ID } from "~/src/helpers/constants";
+  import { dnd5eModCalc, localize } from "~/src/helpers/Utility";
+
   export let document = false;
-  
+
   const dispatch = createEventDispatcher();
   const doc = document || getContext("#doc");
   const updateDebounce = Timing.debounce(updateValue, 100);
   let formula, allowMove;
 
-  function updateValue(attr, event) {
-    if(event.target.value < 8) return false;
-    if(event.target.value > 15) return false;
-    const options = {system: {abilities: { [attr]: {value: Number(event.target.value)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
+  async function updateValue(attr, event) {
+    if (event.target.value < 8) return false;
+    if (event.target.value > 15) return false;
+    const options = {
+      system: { abilities: { [attr]: { value: Number(event.target.value) } } },
+    };
+    await $doc.updateSource(options);
+
+    if ($doc.render) {
+      $doc.render();
+    }
   }
 
   async function swapAbilities(attr, direction) {
     const abilities = Object.keys($doc.system.abilities);
     const index = abilities.indexOf(attr);
-    
+
     if (direction === 1 && index > 0) {
       // Move up
       const prevAbility = abilities[index - 1];
@@ -36,7 +47,10 @@
         },
       };
       await $doc.updateSource(options);
-      $doc = $doc;
+
+      if ($doc.render) {
+        $doc.render();
+      }
     } else if (direction === -1 && index < abilities.length - 1) {
       // Move down
       const nextAbility = abilities[index + 1];
@@ -49,7 +63,10 @@
         },
       };
       await $doc.updateSource(options);
-      $doc = $doc;
+
+      if ($doc.render) {
+        $doc.render();
+      }
     }
   }
 
@@ -57,26 +74,34 @@
     const roll = await new Roll(formula).evaluate();
     await roll.toMessage();
 
-    $abilityRolls = !$abilityRolls ? {} : $abilityRolls
-    $abilityRolls[attr] = roll.total
+    $abilityRolls = !$abilityRolls ? {} : $abilityRolls;
+    $abilityRolls[attr] = roll.total;
 
     // set the value of the ability to the result of the roll
-    const options = {system: {abilities: { [attr]: {value: Number(roll.total)}}}};
-    $doc.updateSource(options)
-    $doc = $doc
-  }
-  
+    const options = {
+      system: { abilities: { [attr]: { value: Number(roll.total) } } },
+    };
+    await $doc.updateSource(options);
 
-  $: systemAbilities = game.system.config.abilities
+    if ($doc.render) {
+      $doc.render();
+    }
+  }
+
+  $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
   $: raceFeatScore = 0;
-  $: abilityAdvancements = $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration?.fixed
-  $: allRolled = systemAbilitiesArray.every(ability => $abilityRolls[ability[0]] !== undefined);
-  $: scoreClass = allowMove && allRolled ? 'left' : 'center';
-  
+  $: abilityAdvancements =
+    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
+      ?.fixed;
+  $: allRolled = systemAbilitiesArray.every(
+    (ability) => $abilityRolls[ability[0]] !== undefined,
+  );
+  $: scoreClass = allowMove && allRolled ? "left" : "center";
+
   onMount(async () => {
-    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula")
-    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved")
+    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula");
+    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved");
   });
 </script>
 
@@ -86,8 +111,9 @@
     thead
       tr
         th.ability Ability
-        th.center Race / Feat
-        th.center Base Score
+        th.center Base
+        +if("window.GAS.dnd5eRules == '2014'")
+          th.center Origin
         th.center Score
         th.center Mod
         th.center.roll-col
@@ -95,10 +121,6 @@
       +each("systemAbilitiesArray as ability, index")
         tr
           td.ability {ability[1].label}
-          td.center
-            +if("abilityAdvancements?.[ability[0]] > 0")
-              span +
-            span {abilityAdvancements?.[ability[0]] || 0}
           td.center.relative
             input.small.mainscore(class="{scoreClass}" disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}"  name="{ability[0]}" id="{ability[0]}")
             +if("allowMove && allRolled")
@@ -109,6 +131,11 @@
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
                     i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
+          +if("window.GAS.dnd5eRules == '2014'")
+            td.center
+              +if("abilityAdvancements?.[ability[0]] > 0")
+                span +
+              span {abilityAdvancements?.[ability[0]] || 0}
           td.center
             span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
@@ -141,6 +168,7 @@
       text-align: center
     &.ability
       width: 25%
+
  
   .green
     color: green
@@ -150,20 +178,9 @@
     position: relative
     background-color: rgba(0, 0, 0, 0.05)
     border-radius: 3px
-    input
-      background: none
-      width: 3em
-      &:disabled
-        color: var(--color-text-dark-primary)
-      text-decoration: none
-      border: none
-      outline: none
-      box-shadow: none
-      -webkit-appearance: none
-      -moz-appearance: none
-      appearance: none
   .mainscore
-    min-width: 40px
+    min-width: 33px
+    max-width: 33px
   .controls
     .chevron
       position: absolute
@@ -173,12 +190,12 @@
       background-color: rgba(0, 0, 0, 0.1)
       &.up
         padding: 1px 3px 0px 3px
-        top: 0
+        top: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
       &.down
         padding: 1px 3px 0px 3px
-        bottom: 0
+        bottom: 8px
         &:hover
           background-color: rgba(140, 90, 0, 0.2)
   .buttons
@@ -187,11 +204,11 @@
     font-size: 1rem
     background-color: rgba(0, 0, 0, 0.1)
     padding: 2px 1px 0px 0px
+    top: 8px
     border: 1px solid var(--color-positive)
     border-radius: 4px
     color: var(--color-positive)
     &:hover
-      cursor: pointer
       background-color: rgba(140, 90, 0, 0.2)
     &.active
       border: 1px solid var(--color-negative)
