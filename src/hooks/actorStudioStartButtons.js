@@ -183,7 +183,8 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           $('#document-create .form-fields select', html).prop('disabled', true);
         }
         if (!$('#gas-dialog-button', html).length) {
-          const $gasButton = getActorStudioButton('gas-dialog-button');
+          const gasButton = getActorStudioButton('gas-dialog-button');
+          const $gasButton = $(gasButton);
           // window.GAS.log.d('html', html)
           $('button', html).last().after($gasButton); // Ensure button is added after the Create New Actor confirm button
 
@@ -195,8 +196,8 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           $gasButton.on('keydown', keydownHandler);
           
           // Store handlers for cleanup
-          storeEventHandler(dialogId, $gasButton, 'mousedown', mousedownHandler);
-          storeEventHandler(dialogId, $gasButton, 'keydown', keydownHandler);
+          storeEventHandler(dialogId, gasButton, 'mousedown', mousedownHandler);
+          storeEventHandler(dialogId, gasButton, 'keydown', keydownHandler);
         }
         
       } else {

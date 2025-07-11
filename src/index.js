@@ -97,18 +97,13 @@ Hooks.on('renderCompendium', async (app, html, data) => {
  */
 //- game.version < 13
 Hooks.on('renderApplication', (app, html, data) => {
-  Hooks.call('gas.renderASButtonInCreateActorApplication', app, html, data);
+  renderASButtonInCreateActorApplication(app, html, data);
 });
 
 //- game.version >= 13
 Hooks.on('renderApplicationV2', (app, html, data) => {
-  Hooks.call('gas.renderASButtonInCreateActorApplication', app, html, data);
-});
-
-//- Add Actor Studio button to the Create New Actor dialog
-Hooks.on('gas.renderASButtonInCreateActorApplication', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
-})
+});
 
 // Clean up event handlers when dialogs are closed
 Hooks.on('closeApplication', (app) => {
