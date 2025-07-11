@@ -73,13 +73,46 @@ function isActorTypeValid(actorTypes, type) {
   return actorTypes.hasOwnProperty(type) && actorTypes[type] === true;
 }
 
-function getActorStudioButton(buttonId, text=false) {
-  const gasButton = $(
-    `<button id="${buttonId}" type="button" class='dialog-button default bright' data-gas_start style="display: flex; align-items: center; justify-content: center; background-color: white; padding: 0; margin: 0; height: 40px;">
-      <img src="modules/${MODULE_ID}/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 30px; border: none; width: auto;">
-      ${text ? `<span>${text}</span>` : ''}
-    </button>`,
-  );
+function getActorStudioButton(buttonId, text = false) {
+  const gasButton = document.createElement('button');
+  gasButton.id = buttonId;
+  gasButton.type = 'button';
+  gasButton.className = 'dialog-button default bright';
+  gasButton.setAttribute('data-gas_start', '');
+  gasButton.setAttribute('tabindex', '0');
+  gasButton.style.display = 'flex';
+  gasButton.style.alignItems = 'center';
+  gasButton.style.justifyContent = 'center';
+  gasButton.style.backgroundColor = 'white';
+  gasButton.style.padding = '0';
+  gasButton.style.margin = '0';
+  gasButton.style.height = '40px';
+  gasButton.style.pointerEvents = 'all';
+  gasButton.style.zIndex = '9999';
+  gasButton.onclick = () => console.log('GAS native onclick');
+
+  const img = document.createElement('img');
+  img.src = `modules/${MODULE_ID}/assets/actor-studio-blue.png`;
+  img.alt = 'Actor Studio';
+  img.style.height = '100%';
+  img.style.maxHeight = '30px';
+  img.style.border = 'none';
+  img.style.width = 'auto';
+  gasButton.appendChild(img);
+
+  if (text) {
+    const span = document.createElement('span');
+    span.textContent = text;
+    gasButton.appendChild(span);
+  }
+
+  setTimeout(() => {
+    const btn = document.getElementById(buttonId);
+    if (btn) {
+      console.log('GAS: computed style', window.getComputedStyle(btn));
+      console.log('GAS: button parent', btn.parentElement);
+    }
+  }, 500);
   return gasButton;
 }
 
@@ -88,39 +121,42 @@ export const renderActorStudioSidebarButton = (app) => {
   if (!game.modules.get(MODULE_ID)?.active) return;
   if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
   if (app.constructor.name !== "ActorDirectory") return;
-  
-  // Get the appropriate element based on version
+
   const element = game.version >= 13 ? app.element : app._element;
   if (!element) return;
-  
+
   const elementId = `sidebar-${app.id || 'default'}`;
-  
-  // Clean up existing event handlers before re-rendering
   cleanupEventHandlers(elementId);
-  
-  // Check if button already exists in the DOM
-  if ($(element).find('#gas-sidebar-button').length > 0) return;
-  
-  // Create and add the button
-  const $gasButton = getActorStudioButton('gas-sidebar-button');
-  
+
+  if (element.querySelector('#gas-sidebar-button')) return;
+
+  const gasButton = getActorStudioButton('gas-sidebar-button');
   if (game.version >= 13) {
-    $gasButton.addClass('v13');
-    $(element).find('header.directory-header .header-actions').after($gasButton);
+    gasButton.classList.add('v13');
+    const headerActions = element.querySelector('header.directory-header .header-actions');
+    console.log('GAS: headerActions found:', headerActions ? 1 : 0);
+    if (headerActions && headerActions.parentNode) {
+      headerActions.parentNode.insertBefore(gasButton, headerActions.nextSibling);
+    }
   } else {
-    $(element).find('header.directory-header').append($gasButton);
+    const header = element.querySelector('header.directory-header');
+    console.log('GAS: header found:', header ? 1 : 0);
+    if (header) header.appendChild(gasButton);
   }
-  
-  // Add event handlers and store them for cleanup
-  const mousedownHandler = (e) => Hooks.call('gas.openActorStudio', game.user.name);
-  const keydownHandler = (e) => Hooks.call('gas.openActorStudio', game.user.name);
-  
-  $gasButton.on('mousedown', mousedownHandler);
-  $gasButton.on('keydown', keydownHandler);
-  
-  // Store handlers for cleanup
-  storeEventHandler(elementId, $gasButton, 'mousedown', mousedownHandler);
-  storeEventHandler(elementId, $gasButton, 'keydown', keydownHandler);
+  console.log('GAS: sidebar button added?', element.querySelector('#gas-sidebar-button') ? 1 : 0);
+
+  const mousedownHandler = (e) => {
+    console.log('GAS sidebar button mousedown', e);
+    Hooks.call('gas.openActorStudio', game.user.name, '', 'character');
+  };
+  const keydownHandler = (e) => {
+    console.log('GAS sidebar button keydown', e);
+    Hooks.call('gas.openActorStudio', game.user.name, '', 'character');
+  };
+  gasButton.addEventListener('mousedown', mousedownHandler);
+  gasButton.addEventListener('keydown', keydownHandler);
+  storeEventHandler(elementId, gasButton, 'mousedown', mousedownHandler);
+  storeEventHandler(elementId, gasButton, 'keydown', keydownHandler);
 }
 
 export const renderASButtonInCreateActorApplication = (app, html) => {
