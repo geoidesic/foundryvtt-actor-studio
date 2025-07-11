@@ -52,6 +52,7 @@ export function registerSettings(app: Game): void {
   illuminatedHeight();
   enableEquipmentSelection();
   enableEquipmentPurchase();
+  enableSpellSelection();
   showPackLabelInSelect();
   windowX();
   windowY();
@@ -536,6 +537,17 @@ function enableEquipmentPurchase() {
   game.settings.register(MODULE_ID, 'enableEquipmentPurchase', {
     name: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name'),
     hint: game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+
+function enableSpellSelection() {
+  game.settings.register(MODULE_ID, 'enableSpellSelection', {
+    name: game.i18n.localize('GAS.Setting.EnableSpellSelection.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableSpellSelection.Hint'),
     scope: 'world',
     config: true,
     default: false,

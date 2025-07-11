@@ -311,6 +311,10 @@
       "AllowAbilityRollScoresToBeMoved": {
         "Name": "Allow rolled ability scores to be moved",
         "Hint": "If enabled, rolled abilities can be moved; similar to how Standard Array works."
+      },
+      "EnableSpellSelection": {
+        "Name": "Enable Spell Selection",
+        "Hint": "Allows players to select their spells during character creation. If disabled, spells will need to be added manually after creation."
       }
     },
     "Equipment": {
