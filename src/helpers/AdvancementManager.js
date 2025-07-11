@@ -140,6 +140,8 @@ export class AdvancementManager {
     const currentActor = get(this.inProcessStore)?.actor;
     // window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
     // window.GAS.log.d('[ADVANCEMENT MANAGER] currentActor', currentActor);
+    
+    //- Drop Item on Actor
     const result = await dropItemOnCharacter(currentActor, item);
     return result;
   }

@@ -52,6 +52,7 @@
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   
+
   // Import workflow functions
   import {
     createActorInGameAndEmbedItems as createActorWorkflow,
@@ -66,15 +67,15 @@
   let hasAddedEquipmentThisSession = false;
   
   // Debug logging for button visibility
-  $: {
-    if ($activeTab === 'equipment') {
-      window.GAS.log.d('[FOOTER] Equipment button visibility check:', {
-        isEquipmentComplete,
-        equipmentReadonly: $readOnlyTabs.includes('equipment'),
-        shouldShowButton: isEquipmentComplete && !$readOnlyTabs.includes('equipment')
-      });
-    }
-  }
+  // $: {
+  //   if ($activeTab === 'equipment') {
+  //     window.GAS.log.d('[FOOTER] Equipment button visibility check:', {
+  //       isEquipmentComplete,
+  //       equipmentReadonly: $readOnlyTabs.includes('equipment'),
+  //       shouldShowButton: isEquipmentComplete && !$readOnlyTabs.includes('equipment')
+  //     });
+  //   }
+  // }
 
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
@@ -170,7 +171,7 @@
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
   };
-
+  //- Create Actor
   const clickCreateHandler = async () => {
     await createActorWorkflow({
       actor,

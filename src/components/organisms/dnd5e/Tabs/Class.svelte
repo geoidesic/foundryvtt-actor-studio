@@ -132,6 +132,7 @@
     goldRoll.set(0);
 
     const selectedClass = await fromUuid(option);
+    window.GAS.log.d('handleSelectClass', selectedClass);
 
 
 
