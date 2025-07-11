@@ -1,5 +1,4 @@
-
-  <script>
+<script>
 
   /**
    * @author: Noel da Costa
@@ -62,21 +61,50 @@
     }
 
     function isClickOutsideContainer(event, containerElement) {
-      const targetElement = event.target;
+      try {
+        const targetElement = event.target;
 
-      // Check if the target element is the container itself
-      if (targetElement === containerElement) {
-        return false;
+        // Check if the target element is the container itself
+        if (targetElement === containerElement) {
+          return false;
+        }
+
+        // Guard: if containerElement is null, treat as click outside
+        if (!containerElement) {
+          console.warn('[IconSelect] containerElement is null, treating as click outside');
+          return true;
+        }
+
+        // Guard: if targetElement is null, treat as click outside
+        if (!targetElement) {
+          console.warn('[IconSelect] targetElement is null, treating as click outside');
+          return true;
+        }
+
+        // Check if the target element is inside the container
+        return !containerElement.contains(targetElement);
+      } catch (error) {
+        console.error('[IconSelect] Error in isClickOutsideContainer:', error);
+        return true; // Treat as click outside on error
       }
-
-      // Check if the target element is inside the container
-      return !containerElement.contains(targetElement);
     }
 
     function handleClickOutside(event) {
-      const isClickOutside = isClickOutsideContainer(event, document.getElementById(id));
-      if(isClickOutside) {
-        isOpen = false;
+      try {
+        const containerElement = document.getElementById(id);
+        if (!containerElement) {
+          console.warn('[IconSelect] Element with id', id, 'not found, treating as click outside');
+          // Element not found, treat as click outside and close
+          isOpen = false;
+          return;
+        }
+        const isClickOutside = isClickOutsideContainer(event, containerElement);
+        if(isClickOutside) {
+          isOpen = false;
+        }
+      } catch (error) {
+        console.error('[IconSelect] Error in handleClickOutside:', error);
+        isOpen = false; // Close on error
       }
     }
 

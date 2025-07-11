@@ -222,7 +222,11 @@ describe('Equipment Selections - Granular Selection', () => {
           id: parentGroupId,
           type: 'standalone',
           items: [{ _id: parentGroupId, type: 'AND' }],
-          selectedItem: { _id: parentGroupId, type: 'AND' },
+          selectedItem: { 
+            _id: parentGroupId, 
+            type: 'AND',
+            children: [{ _id: childGroupId, type: 'tool', key: 'artisan', label: 'artisan tools' }]
+          },
           inProgress: false,
           completed: true,
           granularSelections: null
@@ -266,6 +270,12 @@ describe('Equipment Selections - Granular Selection', () => {
         [parentGroupId]: {
           id: parentGroupId,
           type: 'standalone',
+          items: [], // Required for flattenedSelections
+          selectedItem: {
+            _id: parentGroupId,
+            type: 'AND',
+            children: [{ _id: childId, type: 'tool', key: 'artisan', label: 'artisan tools' }]
+          },
           completed: true,
           granularSelections: null
         }
@@ -287,6 +297,16 @@ describe('Equipment Selections - Granular Selection', () => {
         [parentGroupId]: {
           id: parentGroupId,
           type: 'standalone',
+          items: [{
+            _id: parentGroupId,
+            type: 'AND',
+            children: [{ _id: childId, type: 'tool', key: 'artisan', label: 'artisan tools' }]
+          }],
+          selectedItem: {
+            _id: parentGroupId,
+            type: 'AND',
+            children: [{ _id: childId, type: 'tool', key: 'artisan', label: 'artisan tools' }]
+          },
           completed: true,
           granularSelections: null
         }
@@ -301,8 +321,12 @@ describe('Equipment Selections - Granular Selection', () => {
         currentFlattened = value;
       });
 
-      // Check that the selection appears in flattened selections
-      expect(currentFlattened).toContain(testUuid);
+      // Check that the selection appears in flattened selections as an object with type and key
+      const expectedSelection = {
+        type: 'tool',
+        key: testUuid
+      };
+      expect(currentFlattened).toContainEqual(expectedSelection);
 
       unsubscribe();
     });
@@ -318,6 +342,12 @@ describe('Equipment Selections - Granular Selection', () => {
         [parentGroupId]: {
           id: parentGroupId,
           type: 'standalone',
+          items: [], // Required for flattenedSelections
+          selectedItem: {
+            _id: parentGroupId,
+            type: 'AND',
+            children: [] // Empty children - nonExistentChildId won't be found
+          },
           completed: true
         }
       });
@@ -326,9 +356,9 @@ describe('Equipment Selections - Granular Selection', () => {
         addChildGranularSelection(parentGroupId, nonExistentChildId, testUuid);
       }).not.toThrow();
 
-      // Should still store the selection in parent
+      // Should NOT store the selection since child doesn't exist
       const parentGroup = get(equipmentSelections)[parentGroupId];
-      expect(parentGroup.granularSelections?.children?.[nonExistentChildId]?.selections).toContain(testUuid);
+      expect(parentGroup.granularSelections?.children?.[nonExistentChildId]).toBeUndefined();
     });
 
     it('should not set child as next group when parent is not complete', () => {
@@ -340,12 +370,19 @@ describe('Equipment Selections - Granular Selection', () => {
         [parentGroupId]: {
           id: parentGroupId,
           type: 'standalone',
+          items: [], // Required for flattenedSelections
+          selectedItem: {
+            _id: parentGroupId,
+            type: 'AND',
+            children: [{ _id: childId, type: 'tool', key: 'artisan', label: 'artisan tools' }]
+          },
           completed: false,
           inProgress: true
         },
         [childId]: {
           id: childId,
           type: 'choice',
+          items: [], // Required for flattenedSelections
           parentGroup: parentGroupId,
           completed: false,
           inProgress: true

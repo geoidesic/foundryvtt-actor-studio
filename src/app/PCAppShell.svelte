@@ -9,6 +9,7 @@
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { workflowStateMachine } from '~/src/helpers/WorkflowStateMachine';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -16,8 +17,10 @@
   export let levelUp = false;
 
   //- register hooks
+  console.log('[PCAPP] Registering gas.close hook (once)');
   Hooks.once("gas.close", gasClose);
-  Hooks.once("gas.equipmentSelection", handleEquipmentSelection);
+  console.log('[PCAPP] Registering gas.equipmentSelection hook (persistent)');
+  Hooks.on("gas.equipmentSelection", handleEquipmentSelection);
   
 
   setContext("#doc", documentStore);
@@ -26,6 +29,12 @@
   
   // set initial active tab
   $activeTab = levelUp ? $levelUpTabs[0].id : $tabs[0].id
+
+  $: {
+    console.log('[PCAPP] Reactive filteredTabs changed:', filteredTabs);
+    console.log('[PCAPP] Current activeTab:', $activeTab);
+    console.log('[PCAPP] Tab with id "equipment" exists:', filteredTabs.find(t => t.id === 'equipment'));
+  }
 
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
 
@@ -63,21 +72,42 @@
   });
 
   onDestroy(() => {
-    resetStores();
+    console.log('[PCAPP] onDestroy called - cleaning up');
+    // Don't reset stores here - let gasClose handle it
+    console.log('[PCAPP] Unregistering gas.close hook');
     Hooks.off("gas.close", gasClose);
+    console.log('[PCAPP] Unregistering gas.equipmentSelection hook');
     Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
+    console.log('[PCAPP] onDestroy complete');
   });
 
   function gasClose() {
+    console.log('[PCAPP] ====== gasClose CALLED ======');
     window.GAS.log.d('gas.close')
     window.GAS.log.d($actorInGame);
-    window.GAS.log.d($actorInGame.sheet);
-    window.GAS.log.d($isLevelUp)
-    if(!$isLevelUp) {
-      $actorInGame.sheet.render(true);
+    
+    // Only try to access actor sheet if actor exists
+    if ($actorInGame) {
+      window.GAS.log.d($actorInGame.sheet);
+      window.GAS.log.d($isLevelUp);
+      if(!$isLevelUp) {
+        $actorInGame.sheet.render(true);
+      }
+    } else {
+      console.log('[PCAPP] No actor in game - skipping sheet render');
     }
+    
+    console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
+    workflowStateMachine.reset(); // Reset workflow state machine to idle
+    console.log('[PCAPP] Workflow state after reset:', workflowStateMachine.getState());
+    
+    // Set flag to indicate we're closing from the gas hook
+    if (application.setClosingFromGasHook) {
+      application.setClosingFromGasHook(true);
+    }
     application.close();
+    console.log('[PCAPP] ====== gasClose COMPLETE ======');
   }
 
   /**
@@ -86,21 +116,42 @@
    * @todo: logic for those proficiency dependencies are not yet implemented
    */
   function handleEquipmentSelection() {
-    window.GAS.log.d('[PCAPP] handleEquipmentSelection')
+    console.log('[PCAPP] ====== handleEquipmentSelection CALLED ======');
+    window.GAS.log.d('[PCAPP] handleEquipmentSelection called');
+    window.GAS.log.d('[PCAPP] Current tabs before update:', $tabs);
+    
     // Add Equipment tab
     if(!$tabs.find(x => x.id === "equipment")) {
+      console.log('[PCAPP] Adding equipment tab - tab does not exist');
       window.GAS.log.d('[PCAPP] adding equipment tab')
-      tabs.update(t => [...t, { label: "Equipment", id: "equipment", component: "Equipment" }]);
+      tabs.update(t => {
+        const newTabs = [...t, { label: "Equipment", id: "equipment", component: "Equipment" }];
+        console.log('[PCAPP] New tabs after adding equipment:', newTabs);
+        return newTabs;
+      });
+    } else {
+      console.log('[PCAPP] Equipment tab already exists');
     }
 
     // Remove Advancements tab as it will be empty
-    tabs.update(t => t.filter(x => x.id !== "advancements"));
+    console.log('[PCAPP] Removing advancements tab');
+    tabs.update(t => {
+      const filteredTabs = t.filter(x => x.id !== "advancements");
+      console.log('[PCAPP] Tabs after removing advancements:', filteredTabs);
+      return filteredTabs;
+    });
 
     // Set active tab to equipment
+    console.log('[PCAPP] Setting active tab to equipment');
     activeTab.set("equipment");
+    console.log('[PCAPP] Active tab set to:', $activeTab);
 
     // Set read-only state for other tabs
+    console.log('[PCAPP] Setting read-only tabs');
     readOnlyTabs.set(["race", "background", "abilities", "class"]);
+    console.log('[PCAPP] Read-only tabs set to:', $readOnlyTabs);
+    
+    console.log('[PCAPP] ====== handleEquipmentSelection COMPLETE ======');
   }
 
 

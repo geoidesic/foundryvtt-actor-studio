@@ -6,6 +6,8 @@ export * from './storeDefinitions';
 
 import { advancementQueueStore } from "~/src/stores/advancements";
 import { clearGoldChoices } from "~/src/stores/goldChoices";
+import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
+import { clearStartingEquipment } from "~/src/stores/startingEquipment";
 // Import spell selection store to ensure it gets loaded
 import "~/src/stores/spellSelection";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -211,4 +213,6 @@ export function resetStores() {
   levelUpPreAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void
+  clearEquipmentSelections(); //- void
+  clearStartingEquipment(); //- void
 }

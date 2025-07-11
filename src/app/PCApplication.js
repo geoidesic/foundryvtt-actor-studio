@@ -124,13 +124,30 @@ export default class PCApplication extends SvelteApplication {
 
   }
 
+  #isClosingFromGasHook = false;
+  
+  setClosingFromGasHook(value) {
+    this.#isClosingFromGasHook = value;
+  }
+
   async close(options = {}) {
+    // Only trigger gas.close hook if we're not already being closed by the gas.close hook
+    if (!this.#isClosingFromGasHook) {
+      console.log('[PCApplication] User closed Actor Studio - triggering gas.close hook for cleanup');
+      Hooks.call("gas.close");
+      return; // gasClose will call this.close() again with the flag set
+    }
+    
+    console.log('[PCApplication] Closing application (called from gasClose)');
     await super.close(options);
 
     if (this.#storeUnsubscribe) {
       this.#storeUnsubscribe();
       this.#storeUnsubscribe = void 0;
     }
+    
+    // Reset the flag for next time
+    this.#isClosingFromGasHook = false;
   }
 
   /**

@@ -190,9 +190,19 @@ export async function createActorInGameAndEmbedItems({
   window.GAS.log.d('[WORKFLOW] Created actor:', createdActor);
   window.GAS.log.d('[WORKFLOW] Created actor classes:', createdActor.classes);
   
-  workflowStateMachine.transition(WORKFLOW_EVENTS.CHARACTER_CREATED, {
-    actor: createdActor
-  });
+  // Check current state - only call CHARACTER_CREATED if we're still in creating_character state
+  // The AdvancementManager may have already moved the workflow forward
+  const currentState = workflowStateMachine.getState();
+  window.GAS.log.d('[WORKFLOW] Current workflow state before CHARACTER_CREATED:', currentState);
+  
+  if (currentState === 'creating_character') {
+    window.GAS.log.d('[WORKFLOW] Calling CHARACTER_CREATED transition');
+    workflowStateMachine.transition(WORKFLOW_EVENTS.CHARACTER_CREATED, {
+      actor: createdActor
+    });
+  } else {
+    window.GAS.log.d('[WORKFLOW] Skipping CHARACTER_CREATED transition - workflow already advanced to:', currentState);
+  }
   
   window.GAS.log.d('[WORKFLOW] Called workflowStateMachine.transition - returning created actor');
   return createdActor;

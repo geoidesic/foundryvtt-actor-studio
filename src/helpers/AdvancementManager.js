@@ -86,11 +86,42 @@ export class AdvancementManager {
     window.GAS.log.d('[ADVANCEMENT MANAGER] About to call workflowStateMachine.transition with ADVANCEMENTS_COMPLETE');
     window.GAS.log.d('[ADVANCEMENT MANAGER] Actor classes:', currentActor?.classes);
     
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
-      actor: currentActor
-    });
+    // Check current workflow state - only call ADVANCEMENTS_COMPLETE if we're in processing_advancements
+    const currentState = workflowStateMachine.getState();
+    window.GAS.log.d('[ADVANCEMENT MANAGER] Current workflow state before ADVANCEMENTS_COMPLETE:', currentState);
     
-    window.GAS.log.d('[ADVANCEMENT MANAGER] Called workflowStateMachine.transition');
+    if (currentState === 'processing_advancements') {
+      window.GAS.log.d('[ADVANCEMENT MANAGER] Calling ADVANCEMENTS_COMPLETE transition');
+      workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
+        actor: currentActor
+      });
+    } else {
+      window.GAS.log.d('[ADVANCEMENT MANAGER] Workflow not in processing_advancements state yet. Setting up listener...');
+      
+      // Set up a one-time listener for when the workflow reaches processing_advancements
+      const checkStateAndAdvance = () => {
+        const state = workflowStateMachine.getState();
+        window.GAS.log.d('[ADVANCEMENT MANAGER] State changed to:', state);
+        
+        if (state === 'processing_advancements') {
+          window.GAS.log.d('[ADVANCEMENT MANAGER] Now in processing_advancements, calling ADVANCEMENTS_COMPLETE');
+          workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
+            actor: currentActor
+          });
+        }
+      };
+      
+      // Subscribe to state changes
+      const unsubscribe = workflowStateMachine.currentState.subscribe(checkStateAndAdvance);
+      
+      // Clean up subscription after a reasonable timeout
+      setTimeout(() => {
+        unsubscribe();
+        window.GAS.log.d('[ADVANCEMENT MANAGER] State listener timeout - cleaning up');
+      }, 5000);
+    }
+    
+    window.GAS.log.d('[ADVANCEMENT MANAGER] closeOrEquip completed');
   }
 
   /**

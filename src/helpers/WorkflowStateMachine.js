@@ -293,10 +293,14 @@ export class WorkflowStateMachine {
 
   async _onEnterSelectingEquipment(context) {
     this.isProcessing.set(false);
+    console.log('[WORKFLOW] ====== ENTERING SELECTING_EQUIPMENT STATE ======');
     window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
+    console.log('[WORKFLOW] About to call gas.equipmentSelection hook with actor:', context.actor);
     
     // Trigger the equipment selection hook
     Hooks.call("gas.equipmentSelection", context.actor);
+    console.log('[WORKFLOW] gas.equipmentSelection hook called');
+    console.log('[WORKFLOW] ====== SELECTING_EQUIPMENT STATE ENTRY COMPLETE ======');
   }
 
   async _onEnterSelectingSpells(context) {

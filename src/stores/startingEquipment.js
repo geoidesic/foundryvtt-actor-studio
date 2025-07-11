@@ -60,10 +60,8 @@ const compatibleStartingEquipment = derived([classStartingEquipment, backgroundS
 
 // Reset function
 const clearStartingEquipment = () => {
-  startingEquipment.set({
-    fromClass: [],
-    fromBackground: []
-  });
+  // startingEquipment is a derived store, so it will automatically reset
+  // when characterClass and background are reset. No action needed here.
 };
 
 export {
