@@ -66,19 +66,19 @@ onMount(() => {
 
 <template lang="pug">
 .planned-inventory
-  h3 {t('GAS.Equipment.PlannedInventory')}
+  h3 {t('Equipment.PlannedInventory')}
   +if('!isDisabled')
     table.inventory-table
       thead
         tr
           th 
-          th.white {t('GAS.Item')}
-          th.white {t('GAS.Equipment.Weight')}
-          th.white {t('GAS.Equipment.Quantity')}
+          th.white {t('Item')}
+          th.white {t('Equipment.Weight')}
+          th.white {t('Equipment.Quantity')}
       tbody
         +if('plannedItems.length === 0')
           tr
-            td(colspan="4").empty-message {t('GAS.Equipment.NoItemsSelected')}
+            td(colspan="4").empty-message {t('Equipment.NoItemsSelected')}
           +else()
             +each('plannedItems as item')
               tr
@@ -93,7 +93,7 @@ onMount(() => {
                 td.weight= "{item?.system?.weight?.value || 0}"
                 td.quantity= "{item?.system?.quantity || 1}"
   +if('isDisabled')
-    .info-message {t('GAS.Equipment.EquipmentConfirmed')}
+    .info-message {t('Equipment.EquipmentConfirmed')}
 </template>
 
 <style lang="sass">

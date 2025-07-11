@@ -49,9 +49,9 @@
       .flex2.pr-sm.col-a
         //- pre dnd5eVersion { window.GAS.dnd5eVersion}
         //- pre dnd5eRules { window.GAS.dnd5eRules}
-        h3 {t('GAS.Equipment.StartingGold')}
+        h3 {t('Equipment.StartingGold')}
         +if("isDisabled")
-          .info-message {t('GAS.Equipment.EquipmentConfirmed')}
+          .info-message {t('Equipment.EquipmentConfirmed')}
         
         +if("!isDisabled")
           section.equipment-flow

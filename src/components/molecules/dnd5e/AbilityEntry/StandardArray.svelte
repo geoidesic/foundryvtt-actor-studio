@@ -160,10 +160,10 @@
               .controls.ml-lg
                 .up.chevron
                   +if("index != 0")
-                    i.fas.fa-chevron-up(alt="{t('GAS.AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
+                    i.fas.fa-chevron-up(alt="{t('AltText.MoveUp')}" on:click!="{updateDebounce(ability[0], 1)}")
                 .down.chevron
                   +if("index != 5")
-                    i.fas.fa-chevron-down(alt="{t('GAS.AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
+                    i.fas.fa-chevron-down(alt="{t('AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
             +if("window.GAS.dnd5eRules == '2014'")
               td.center
                 +if("abilityAdvancements?.[ability[0]] > 0")

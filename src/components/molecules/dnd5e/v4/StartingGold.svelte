@@ -115,7 +115,7 @@ section.starting-gold
         span *
     .flex3
       h2.left
-        span {t('GAS.Equipment.Gold')}
+        span {t('Equipment.Gold')}
     +if("showEditButton")
       .flex0.right
         IconButton.option(
@@ -139,7 +139,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span {t('GAS.Equipment.Label')} + {backgroundGoldWithEquipment} gp
+                span {t('Equipment.Label')} + {backgroundGoldWithEquipment} gp
           button.option(
             class!="{backgroundChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
@@ -165,7 +165,7 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span {t('GAS.Equipment.Label')} + {classGoldWithEquipment} gp
+                span {t('Equipment.Label')} + {classGoldWithEquipment} gp
           button.option(
             class!="{classChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
