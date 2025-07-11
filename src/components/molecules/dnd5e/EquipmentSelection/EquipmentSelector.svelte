@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "~/src/helpers/Utility";
+  import { localize as t } from "~/src/helpers/Utility";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import { equipmentSelections, selectEquipment } from "~/src/stores/equipmentSelections";
 

@@ -131,7 +131,6 @@
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
                     i.fas.fa-chevron-down(alt="{localize('GAS.AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
-
           +if("window.GAS.dnd5eRules == '2014'")
             td.center
               +if("abilityAdvancements?.[ability[0]] > 0")

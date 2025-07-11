@@ -4,7 +4,7 @@
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
-  import { localize } from "~/src/helpers/Utility";
+  import { localize as t } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';
 
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };
@@ -54,14 +54,14 @@
       
       if (!itemId) {
         console.error("Item has no id:", item);
-        ui.notifications?.warn(localize('GAS.Shop.ErrorItemNoId'));
+        ui.notifications?.warn(t('Shop.ErrorItemNoId'));
         return;
       }
 
       const fullItemData = await fromUuid(item.uuid);
       if (!fullItemData) {
         console.error("Could not load full item data for UUID:", item.uuid);
-        ui.notifications?.warn(localize('GAS.Shop.ErrorLoadingItem'));
+        ui.notifications?.warn(t('Shop.ErrorLoadingItem'));
         return;
       }
       
@@ -75,7 +75,7 @@
       
     } catch(error) {
       console.error("Error adding item to cart:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorAddToCart'));
+      ui.notifications?.warn(t('Shop.ErrorAddToCart'));
     }
   }
   
@@ -91,7 +91,7 @@
       updateCart(itemId, quantity, itemData);
     } catch(error) {
       console.error("Error updating item quantity:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorUpdateQuantity'));
+      ui.notifications?.warn(t('Shop.ErrorUpdateQuantity'));
     }
   }
   
@@ -101,7 +101,7 @@
       updateCart(itemId, 0, null);
     } catch(error) {
       console.error("Error removing item from cart:", error);
-      ui.notifications?.warn(localize('GAS.Shop.ErrorRemoveFromCart'));
+      ui.notifications?.warn(t('Shop.ErrorRemoveFromCart'));
     }
   }
 
@@ -175,19 +175,19 @@
     <div class="left-panel" bind:this={shopContainer}>
       <!-- Original header -->
       <div class="panel-header" class:hidden={scrolled}>
-        <h3 class="left no-margin">{localize('GAS.Shop.AvailableGold')}</h3>
+        <h3 class="left no-margin">{t('Shop.AvailableGold')}</h3>
         <div class:negative={$remainingGold < 0} class="remaining-currency">
           <GoldDisplay {...remainingCurrency} />
         </div>
-        <h3 class="left no-margin">{localize('GAS.Shop.SpentGold')}</h3>
+        <h3 class="left no-margin">{t('Shop.SpentGold')}</h3>
         <GoldDisplay {...cartCurrency} />
       </div>
  
-      <h3>{localize('GAS.Shop.CartItems')}</h3>
+      <h3>{t('Shop.CartItems')}</h3>
       <div class="cart-items">
         {#if cartItems.length === 0}
           <div class="empty-cart">
-            <p>{localize('GAS.Shop.CartEmpty')}</p>
+            <p>{t('Shop.CartEmpty')}</p>
           </div>
         {:else}
           {#each cartItems as cartItem}
@@ -215,24 +215,24 @@
 
     <!-- Right Panel: Available Equipment -->
     <div class="right-panel item-list">
-      <h3>{localize('GAS.Shop.AvailableEquipment')}</h3>
+      <h3>{t('Shop.AvailableEquipment')}</h3>
       
       <!-- Add Keyword Filter Input -->
       <div class="filter-container mb-sm">
         <input 
           type="text" 
           bind:value={keywordFilter} 
-          placeholder={localize('GAS.Shop.FilterPlaceholder')} 
+          placeholder={t('Shop.FilterPlaceholder')} 
           class="keyword-filter"
           disabled={isDisabled}
         />
       </div>
 
       {#if loading}
-        <div class="loading">{localize('GAS.Shop.Loading')}</div>
+        <div class="loading">{t('Shop.Loading')}</div>
       {:else if filteredItems.length === 0} <!-- Check filteredItems length -->
         <div class="empty-state">
-          <p>{keywordFilter ? localize('GAS.Shop.NoMatchingEquipment') : localize('GAS.Shop.NoEquipment')}</p> <!-- Adjust message based on filter -->
+          <p>{keywordFilter ? t('Shop.NoMatchingEquipment') : t('Shop.NoEquipment')}</p> <!-- Adjust message based on filter -->
         </div>
       {:else}
         {#each categories as category}

@@ -1,5 +1,5 @@
 <script>
-  import { localize } from "~/src/helpers/Utility";
+  import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { MODULE_ID } from "~/src/helpers/constants";
@@ -50,7 +50,7 @@
       +if("!disabled")
         .flex0.required(class="{!hasRolled ? 'active' : ''}") *
       .flex3
-        h2.left {localize('GAS.Equipment.Gold')}
+        h2.left {t('Equipment.Gold')}
     
     .flexcol.gold-section.gap-10(class="{disabled ? 'disabled' : ''}")
       +if("!hasRolled")

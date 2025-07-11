@@ -47,7 +47,7 @@
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { localize } from "~/src/helpers/Utility";
+  import { localize as t } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
