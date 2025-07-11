@@ -30,7 +30,7 @@
 
 <template lang="pug">
 section.focus-selector
-  h3 {localize('GAS.Equipment.Focus')}
+  h3 {t('Equipment.Focus')}
   IconSelect.icon-select(
     active="{selectedValue}"
     options="{filteredItems}"

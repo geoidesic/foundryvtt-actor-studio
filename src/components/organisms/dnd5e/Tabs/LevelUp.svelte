@@ -287,7 +287,7 @@ $: classProp = $selectedMultiClassUUID;
 $: classes = window.GAS.dnd5eVersion >= 5 ? $actor.classes : $actor._classes;
 $: classKeys = Object.keys(classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
-// $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${localize('GAS.SubClass')}</h1>` + richSubClassHTML : '') : '';
+// $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${t('SubClass')}</h1>` + richSubClassHTML : '') : '';
 $: newLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
 $: if($classUuidForLevelUp) {
   $levelUpCombinedHtml = $levelUpRichHTML + (richSubClassHTML ? `<h1>${t('SubClass')}</h1>` + richSubClassHTML : '')

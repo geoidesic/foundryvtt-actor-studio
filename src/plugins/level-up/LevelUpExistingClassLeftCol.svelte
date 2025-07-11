@@ -33,7 +33,7 @@
     +if("classAdvancementArrayFiltered")
       ul.icon-list
         +if("!classAdvancementArrayFiltered.length")
-          li.left {localize('GAS.NoAdvancements')}
+          li.left {t('NoAdvancements')}
           +else()
             +each("classAdvancementArrayFiltered as advancement")
               //- pre advancement {advancement.type}

@@ -36,32 +36,32 @@
           .flex2
             img(src="modules/foundryvtt-actor-studio/assets/actor-studio-blue.png" alt="Actor Studio" style="height: 100%; max-height: 50px; border: none; width: auto;")
           .flex3
-            p.thanks.right.mr-md {localize('Welcome.Thanks')}
+            p.thanks.right.mr-md {t('Welcome.Thanks')}
         hr
-        p {localize("Welcome.Introduction")}
-        a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {localize("Welcome.UsageTitle")}
+        p {t("Welcome.Introduction")}
+        a(href="https://github.com/geoidesic/foundryvtt-actor-studio?tab=readme-ov-file#usage-instructions") {t("Welcome.UsageTitle")}
         p.lighter
           i.fa-solid.fa-bug.mr-sm
-          | {localize('Welcome.Issues')} <a href="https://github.com/geoidesic/foundryvtt-actor-studio/issues"> {localize('Welcome.IssuesLinkText')} </a>
+          | {t('Welcome.Issues')} <a href="https://github.com/geoidesic/foundryvtt-actor-studio/issues"> {t('Welcome.IssuesLinkText')} </a>
         p 
           i.fa-solid.fa-heart.mr-sm(style="color: #660000;")
-          | {localize('Welcome.Support')} <a href='https://github.com/sponsors/geoidesic'> {localize('Welcome.SponsorLinkText')} </a> or <a href='https://https://paypal.me/geoidesic'>PayPal</a>
+          | {t('Welcome.Support')} <a href='https://github.com/sponsors/geoidesic'> {t('Welcome.SponsorLinkText')} </a> or <a href='https://https://paypal.me/geoidesic'>PayPal</a>
         
         p
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
-          | {localize('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {localize('Welcome.DiscordLinkText')} </a>
+          | {t('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {t('Welcome.DiscordLinkText')} </a>
         hr
-        .flexrow.justify-flexrow-vertical(data-tooltip="{localize('Setting.DontShowWelcome.Hint')}")
+        .flexrow.justify-flexrow-vertical(data-tooltip="{t('Setting.DontShowWelcome.Hint')}")
           .flex0 
-            input(type="checkbox" on:change="{handleChange}" label="{localize('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
+            input(type="checkbox" on:change="{handleChange}" label="{t('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
           .flex.dont-show
-            span {localize('Setting.DontShowWelcome.Name') }
+            span {t('Setting.DontShowWelcome.Name') }
     footer
       div.logo
         a(href="https://www.aardvark.games") 
           img.white(src="/modules/foundryvtt-actor-studio/assets/aardvark-logo.webp" alt="Aardvark Game Studios Logo" height="50" width="50" style="fill: white; border: none; width: auto;")
       div.left
-        div {localize("Title")} {localize("Welcome.CreatedBy")} 
+        div {t("Title")} {t("Welcome.CreatedBy")} 
         //- a(href="https://www.round-table.games") Round Table Games
         a(href="https://www.aardvark.games") Aardvark Game Studios
     

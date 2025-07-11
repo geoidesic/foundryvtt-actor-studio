@@ -172,7 +172,7 @@ div.content
             .info-message This tab is read-only during advancement selection
       +if("value")
         +if("source")
-          //- h3.left {localize('GAS.Source')}
+          //- h3.left {t('Source')}
           ol.properties-list
             li {book} {page} {type.value ? ', ' + type.value : ''} 
 

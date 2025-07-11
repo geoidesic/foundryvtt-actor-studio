@@ -376,7 +376,7 @@
                 label.character-name-label(
                   on:click="{randomize}" 
                   class:experimental-label="{experimentalStylingEnabled}"
-                ) {localize('Footer.CharacterName')}
+                ) {t('Footer.CharacterName')}
               .flex2
                 .character-name-input-container(
                   class:x-background="{experimentalStylingEnabled}"
@@ -404,7 +404,7 @@
                   on:mousedown="{clickUpdateLevelUpHandler}"
                   data-tooltip="{$classUuidForLevelUp ? '' : 'First select a class to level up, or a multi-class to add'}"
                 )
-                  span {localize('Footer.AddLevel')}
+                  span {t('Footer.AddLevel')}
                   i.right.ml-md(class="fas fa-chevron-right")
         
         +if("$activeTab === 'equipment'")
@@ -417,7 +417,7 @@
                   role="button"
                   on:mousedown="{handleAddEquipment}"
                 )
-                  span {localize('Footer.AddEquipment')}
+                  span {t('Footer.AddEquipment')}
                   i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'shop'")
@@ -429,7 +429,7 @@
                 on:mousedown="{handleFinalizePurchase}"
                 disabled="{$isProcessingPurchase || $readOnlyTabs.includes('shop')}" 
               )
-                span {localize('Footer.FinalizePurchase')}
+                span {t('Footer.FinalizePurchase')}
                 i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
@@ -443,7 +443,7 @@
                     role="button"
                     on:mousedown="{clickCreateHandler}"
                   )
-                    span {localize('Footer.CreateCharacter')}
+                    span {t('Footer.CreateCharacter')}
                     i.right.ml-md(class="fas fa-chevron-right")
 
                   +else
@@ -453,7 +453,7 @@
                         role="button"
                         on:mousedown="{clickUpdateHandler}"
                       )
-                        span {localize('Footer.UpdateCharacter')}
+                        span {t('Footer.UpdateCharacter')}
                         i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
