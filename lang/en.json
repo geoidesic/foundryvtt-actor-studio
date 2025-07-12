@@ -8,6 +8,10 @@
     "ActorStudio": "Actor Studio",
     "CreateActor": "Create Actor",
     "Cancel": "Cancel",
+    "Dialog": {
+      "ReloadRequiredTitle": "Reload Required",
+      "ReloadRequiredContent": "This settings change requires Foundry to reload. Would you like to reload now?"
+    },
     "Disabled": "Disabled",
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",
