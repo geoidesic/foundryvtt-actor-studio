@@ -49,7 +49,7 @@
   async function getEnrichedName(item) {
     const key = item.uuid || item._id || item.id;
     if (!enrichedNames[key]) {
-      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(item.name || "", { async: true });
+      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(item.enrichedName || item.name || "", { async: true });
     }
     return enrichedNames[key];
   }
