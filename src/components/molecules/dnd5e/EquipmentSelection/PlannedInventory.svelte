@@ -87,7 +87,7 @@ onMount(() => {
                     img(src="{item.img}" width="32" height="32")
                     +else()
                       img(src="icons/svg/item-bag.svg" width="32" height="32")
-                +await("TextEditor.enrichHTML(getItemName(item) || '')")
+                +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(getItemName(item) || '')")
                   +then("Html")
                     td= "{@html Html || '--'}"
                 td.weight= "{item?.system?.weight?.value || 0}"

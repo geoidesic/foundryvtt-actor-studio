@@ -36,14 +36,14 @@
     ul.icon-list
       +each("items as item")
         li.left
-          +await("TextEditor.enrichHTML(item?.system?.description?.value || '')")
+          +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(item?.system?.description?.value || '')")
             +then("Html")
               .flexrow.gap-4
                 //- (data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                 .flex0.relative.image
                   img.icon(src="{item?.img}" alt="{item?.name}")
                 +if("item?.link")
-                  +await("TextEditor.enrichHTML(item.link || '')")
+                  +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(item.link || '')")
                     +then("Html")
                       .flex2 {@html Html}
                   +else()
