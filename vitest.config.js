@@ -17,7 +17,7 @@ export default mergeConfig(
 			},
 		},
 		test: {
-			environment: 'jsdom',
+			environment: 'node',
 			globals: true,
 			setupFiles: ['./src/tests/setup.js'],
 			env: {

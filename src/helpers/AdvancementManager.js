@@ -59,13 +59,20 @@ export class AdvancementManager {
    * Waits for the advancement panel to become empty
    * @returns {Promise} A promise that resolves when the panel is empty
    */
-  async waitForEmptyTab(tabName = 'advancements') {
-    if (this.monitoringPromise) return this.monitoringPromise;
+  waitForEmptyTab(tabName = 'advancements') {
+    // Return existing promise if already monitoring
+    if (this.monitoringPromise) {
+      return this.monitoringPromise;
+    }
 
+    // Create new monitoring promise
     this.monitoringPromise = new Promise(resolve => {
       this.checkTabContent(() => {
-        this.monitoringPromise = null; // Reset after completion
         resolve();
+        // Reset promise after a brief delay to ensure all concurrent calls complete
+        setTimeout(() => {
+          this.monitoringPromise = null;
+        }, 10);
       }, tabName);
     });
 
@@ -181,8 +188,13 @@ export const destroyAdvancementManagers = () => {
 
 // Patch for test: always use injected getPanel if present, else fallback to global.$
 // This ensures test mocks are always respected
-export function createTestAdvancementManager(store, inProcessStore, panelHtml = '') {
-  // Mock panel object
+export function createTestAdvancementManager(store, inProcessStore, panelHtml = '', customGetPanel = null) {
+  if (customGetPanel) {
+    // Use the custom getPanel function directly
+    return new AdvancementManager(store, inProcessStore, customGetPanel);
+  }
+  
+  // Mock panel object with static content
   const mockPanel = { html: () => panelHtml };
   // Return AdvancementManager with injected getPanel
   return new AdvancementManager(store, inProcessStore, () => mockPanel);
