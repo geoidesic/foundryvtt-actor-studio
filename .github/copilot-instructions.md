@@ -9,4 +9,4 @@
 
 
 # Tests
-- when running a test always ensure that you run it without watching, so that it doesn't hang
+- when running a test always ensure that you run it without watching, by using the `run` command

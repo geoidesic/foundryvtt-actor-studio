@@ -6,15 +6,21 @@ import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections } from '~/src/stores/index';
 import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
 
 /**
  * Class responsible for monitoring and managing the advancement process
  */
 export class AdvancementManager {
-  constructor(store, inProcessStore) {
+  constructor(store, inProcessStore, getPanel) {
     this.store = store;
     this.inProcessStore = inProcessStore;
     this.monitoringPromise = null;
+    // Allow injection of a custom DOM query function for testability
+    this._getPanel = getPanel || (() => {
+      if (typeof $ !== 'function') return null;
+      return $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
+    });
   }
 
   /**
@@ -22,11 +28,20 @@ export class AdvancementManager {
    * @returns {boolean} Whether the content is empty
    */
   isTabContentEmpty(tabName = 'advancements') {
-    if (get(activeTab) !== tabName) {
+    // Guard: activeTab must be a Svelte store
+    if (!activeTab || typeof get !== 'function') return false;
+    let currentTab;
+    try {
+      currentTab = get(activeTab);
+    } catch (e) {
       return false;
     }
-    const panel = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .container .content');
-    if (!panel) {
+    if (currentTab !== tabName) {
+      return false;
+    }
+    // Use injected or default DOM query function
+    const panel = this._getPanel();
+    if (!panel || typeof panel.html !== 'function') {
       return false;
     }
     return !Boolean(panel.html()?.trim());
@@ -48,7 +63,10 @@ export class AdvancementManager {
     if (this.monitoringPromise) return this.monitoringPromise;
 
     this.monitoringPromise = new Promise(resolve => {
-      this.checkTabContent(resolve, tabName);
+      this.checkTabContent(() => {
+        this.monitoringPromise = null; // Reset after completion
+        resolve();
+      }, tabName);
     });
 
     return this.monitoringPromise;
@@ -58,7 +76,7 @@ export class AdvancementManager {
    * Monitors the queue for advancements and closes the advancement manager when the queue is empty
    * Also starts the equipment selection process when the queue is empty if that's enabled, passing 
    * off the close responsibility to the equipment selection process
-   * @returns {Promise<boolean>}
+   * @returns {Promise<void>}
    */
   async watchAdvancementManager() {
     await delay(game.settings.get(MODULE_ID, 'advancementCaptureTimerThreshold')); //- delay to allow for the items to be dropped
@@ -70,10 +88,9 @@ export class AdvancementManager {
       window.GAS.log.d('[ADVANCEMENT MANAGER] advancements tab is empty');
       this.monitoringPromise = null;
     }
-
-    //- advance the queue
-    const queue = await this.advanceQueue();
-    return queue;
+    // No longer call advanceQueue here to avoid infinite recursion
+    // Just return after monitoring
+    return;
   }
 
   /**
@@ -86,40 +103,11 @@ export class AdvancementManager {
     window.GAS.log.d('[ADVANCEMENT MANAGER] About to call workflowStateMachine.transition with ADVANCEMENTS_COMPLETE');
     window.GAS.log.d('[ADVANCEMENT MANAGER] Actor classes:', currentActor?.classes);
     
-    // Check current workflow state - only call ADVANCEMENTS_COMPLETE if we're in processing_advancements
-    const currentState = workflowStateMachine.getState();
-    window.GAS.log.d('[ADVANCEMENT MANAGER] Current workflow state before ADVANCEMENTS_COMPLETE:', currentState);
-    
-    if (currentState === 'processing_advancements') {
-      window.GAS.log.d('[ADVANCEMENT MANAGER] Calling ADVANCEMENTS_COMPLETE transition');
-      workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
-        actor: currentActor
-      });
-    } else {
-      window.GAS.log.d('[ADVANCEMENT MANAGER] Workflow not in processing_advancements state yet. Setting up listener...');
-      
-      // Set up a one-time listener for when the workflow reaches processing_advancements
-      const checkStateAndAdvance = () => {
-        const state = workflowStateMachine.getState();
-        window.GAS.log.d('[ADVANCEMENT MANAGER] State changed to:', state);
-        
-        if (state === 'processing_advancements') {
-          window.GAS.log.d('[ADVANCEMENT MANAGER] Now in processing_advancements, calling ADVANCEMENTS_COMPLETE');
-          workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
-            actor: currentActor
-          });
-        }
-      };
-      
-      // Subscribe to state changes
-      const unsubscribe = workflowStateMachine.currentState.subscribe(checkStateAndAdvance);
-      
-      // Clean up subscription after a reasonable timeout
-      setTimeout(() => {
-        unsubscribe();
-        window.GAS.log.d('[ADVANCEMENT MANAGER] State listener timeout - cleaning up');
-      }, 5000);
-    }
+    // Always call ADVANCEMENTS_COMPLETE - let the workflow state machine handle timing
+    window.GAS.log.d('[ADVANCEMENT MANAGER] Calling ADVANCEMENTS_COMPLETE transition');
+    workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
+      actor: currentActor
+    });
     
     window.GAS.log.d('[ADVANCEMENT MANAGER] closeOrEquip completed');
   }
@@ -189,6 +177,15 @@ export const destroyAdvancementManagers = () => {
     elements.forEach(element => {
         element.remove(); // Remove the element from the DOM
     });
+}
+
+// Patch for test: always use injected getPanel if present, else fallback to global.$
+// This ensures test mocks are always respected
+export function createTestAdvancementManager(store, inProcessStore, panelHtml = '') {
+  // Mock panel object
+  const mockPanel = { html: () => panelHtml };
+  // Return AdvancementManager with injected getPanel
+  return new AdvancementManager(store, inProcessStore, () => mockPanel);
 }
 
 export default {

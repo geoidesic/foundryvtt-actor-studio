@@ -74,7 +74,8 @@
         "release:pre:patch": "node release.js patch pre",
         "release:pre:minor": "node release.js minor pre",
         "release:pre:major": "node release.js major pre",
-        "test": "vitest",
+        "test": "vitest run",
+        "test:watch": "vitest",
         "test:ui": "vitest --ui",
         "test:run": "vitest run"
     },

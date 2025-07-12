@@ -81,6 +81,45 @@
     console.log('[PCAPP] onDestroy complete');
   });
 
+  /**
+   * Handle workflow state changes and update tabs accordingly
+   */
+  function handleWorkflowStateChange(state) {
+    console.log('[PCAPP] ====== handleWorkflowStateChange CALLED ======');
+    console.log('[PCAPP] New workflow state:', state);
+    console.log('[PCAPP] Current tabs:', $tabs);
+    console.log('[PCAPP] Current active tab:', $activeTab);
+
+    // Remove Advancements tab when workflow moves past processing_advancements
+    if (state !== 'processing_advancements' && state !== 'creating_character') {
+      const hasAdvancementsTab = $tabs.find(x => x.id === "advancements");
+      
+      if (hasAdvancementsTab) {
+        console.log('[PCAPP] Removing advancements tab - workflow has moved past processing_advancements');
+        tabs.update(t => {
+          const filteredTabs = t.filter(x => x.id !== "advancements");
+          console.log('[PCAPP] Tabs after removing advancements:', filteredTabs);
+          return filteredTabs;
+        });
+
+        // If the active tab was advancements, switch to the first available tab
+        if ($activeTab === "advancements") {
+          const remainingTabs = $tabs.filter(x => x.id !== "advancements");
+          if (remainingTabs.length > 0) {
+            console.log('[PCAPP] Setting active tab to:', remainingTabs[0].id);
+            activeTab.set(remainingTabs[0].id);
+          }
+        }
+      }
+    }
+
+    // Don't add tabs here - let the workflow state machine handle it
+    // The workflow state machine has its own logic for adding spells/equipment/shop tabs
+    // We only handle the removal of advancements tab here
+
+    console.log('[PCAPP] ====== handleWorkflowStateChange COMPLETE ======');
+  }
+
   function gasClose() {
     console.log('[PCAPP] ====== gasClose CALLED ======');
     window.GAS.log.d('gas.close')
@@ -133,13 +172,8 @@
       console.log('[PCAPP] Equipment tab already exists');
     }
 
-    // Remove Advancements tab as it will be empty
-    console.log('[PCAPP] Removing advancements tab');
-    tabs.update(t => {
-      const filteredTabs = t.filter(x => x.id !== "advancements");
-      console.log('[PCAPP] Tabs after removing advancements:', filteredTabs);
-      return filteredTabs;
-    });
+    // Note: Advancements tab removal is handled by handleWorkflowStateChange
+    // Don't remove it here to avoid conflicts
 
     // Set active tab to equipment
     console.log('[PCAPP] Setting active tab to equipment');
@@ -153,7 +187,6 @@
     
     console.log('[PCAPP] ====== handleEquipmentSelection COMPLETE ======');
   }
-
 
 </script>
 
@@ -177,18 +210,18 @@
 
 
 <style lang="sass">
-  main 
-    text-align: center
-    display: flex
-    flex-direction: column
-    height: 100%
+main 
+  text-align: center
+  display: flex
+  flex-direction: column
+  height: 100%
 
-  section 
-    padding: 0.5rem 0.2rem
+section 
+  padding: 0.5rem 0.2rem
 
-  .a
-    flex: 1
-    overflow-y: scroll
+.a
+  flex: 1
+  overflow-y: scroll
     min-width: 200px
 
   .b 
