@@ -1,29 +1,29 @@
 import { writable, get, derived } from 'svelte/store';
 // Import all store definitions
-import * as storeDefinitions from './storeDefinitions';
+import * as storeDefinitions from './storeDefinitions.js';
 // Re-export all store definitions
-export * from './storeDefinitions';
+export * from './storeDefinitions.js';
 
-import { advancementQueueStore } from "~/src/stores/advancements";
-import { clearGoldChoices } from "~/src/stores/goldChoices";
-import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
-import { clearStartingEquipment } from "~/src/stores/startingEquipment";
+import { advancementQueueStore } from '~/src/stores/advancements';
+import { clearGoldChoices } from '~/src/stores/goldChoices';
+import { clearEquipmentSelections } from '~/src/stores/equipmentSelections';
+import { clearStartingEquipment } from '~/src/stores/startingEquipment';
 // Import spell selection store to ensure it gets loaded
-import "~/src/stores/spellSelection";
-import { MODULE_ID } from "~/src/helpers/constants";
+import '~/src/stores/spellSelection';
+import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
 const initialTabs = [
-  { label: "Abilities", id: "abilities", component: "Abilities" },
-  { label: "Race", id: "race", component: "Race" },
-  { label: "Background", id: "background", component: "Background" },
-  { label: "Class", id: "class", component: "Class" },
-]
+  { label: 'Abilities', id: 'abilities', component: 'Abilities' },
+  { label: 'Race', id: 'race', component: 'Race' },
+  { label: 'Background', id: 'background', component: 'Background' },
+  { label: 'Class', id: 'class', component: 'Class' },
+];
 
 // Tabs for level up
 const upTabs = [
-  { label: "Level Up", id: "level-up", component: "LevelUp" }
-]
+  { label: 'Level Up', id: 'level-up', component: 'LevelUp' },
+];
 
 // Set initial values for tabs
 storeDefinitions.tabs.set(initialTabs);
@@ -31,58 +31,61 @@ storeDefinitions.levelUpTabs.set(upTabs);
 storeDefinitions.pointBuyLimit.set(27);
 
 // Set names for debugging
-storeDefinitions.race.name = "race";
-storeDefinitions.subRace.name = "subRace";
-storeDefinitions.characterClass.name = "characterClass";
-storeDefinitions.characterSubClass.name = "characterSubClass";
-storeDefinitions.background.name = "background";
-storeDefinitions.abilities.name = "abilities";
-storeDefinitions.spells.name = "spells";
-storeDefinitions.isLevelUp.name = "isLevelUp";
-storeDefinitions.pointBuyScoreTotal.name = "pointBuyScoreTotal";
-storeDefinitions.pointBuyLimit.name = "pointBuyLimit";
-storeDefinitions.abilityRolls.name = "abilityRolls";
-storeDefinitions.isStandardArrayValues.name = "isStandardArrayValues";
-storeDefinitions.newLevelValueForExistingClass.name = "newLevelValueForExistingClass";
-storeDefinitions.classUuidForLevelUp.name = "classUuidForLevelUp";
-storeDefinitions.level.name = "level";
-storeDefinitions.activeTab.name = "activeTab";
-storeDefinitions.selectedMultiClassUUID.name = "selectedMultiClassUUID";
-storeDefinitions.isActorCreated.name = "isActorCreated";
-storeDefinitions.tabs.name = "tabs";
-storeDefinitions.levelUpTabs.name = "levelUpTabs";
-storeDefinitions.actorInGame.name = "actorInGame";
-storeDefinitions.abilityGenerationMethod.name = "abilityGenerationMethod";
-storeDefinitions.subClassesForClass.name = "subClassesForClass";
-storeDefinitions.levelUpClassObject.name = "levelUpClassObject";
-storeDefinitions.activeRowClassKey.name = "activeRowClassKey";
-storeDefinitions.levelUpSubClassObject.name = "levelUpSubClassObject";
-storeDefinitions.levelUpCombinedHtml.name = "levelUpCombinedHtml";
+storeDefinitions.race.name = 'race';
+storeDefinitions.subRace.name = 'subRace';
+storeDefinitions.characterClass.name = 'characterClass';
+storeDefinitions.characterSubClass.name = 'characterSubClass';
+storeDefinitions.background.name = 'background';
+storeDefinitions.abilities.name = 'abilities';
+storeDefinitions.spells.name = 'spells';
+storeDefinitions.isLevelUp.name = 'isLevelUp';
+storeDefinitions.pointBuyScoreTotal.name = 'pointBuyScoreTotal';
+storeDefinitions.pointBuyLimit.name = 'pointBuyLimit';
+storeDefinitions.abilityRolls.name = 'abilityRolls';
+storeDefinitions.isStandardArrayValues.name = 'isStandardArrayValues';
+storeDefinitions.newLevelValueForExistingClass.name = 'newLevelValueForExistingClass';
+storeDefinitions.classUuidForLevelUp.name = 'classUuidForLevelUp';
+storeDefinitions.level.name = 'level';
+storeDefinitions.activeTab.name = 'activeTab';
+storeDefinitions.selectedMultiClassUUID.name = 'selectedMultiClassUUID';
+storeDefinitions.isActorCreated.name = 'isActorCreated';
+storeDefinitions.tabs.name = 'tabs';
+storeDefinitions.levelUpTabs.name = 'levelUpTabs';
+storeDefinitions.actorInGame.name = 'actorInGame';
+storeDefinitions.abilityGenerationMethod.name = 'abilityGenerationMethod';
+storeDefinitions.subClassesForClass.name = 'subClassesForClass';
+storeDefinitions.levelUpClassObject.name = 'levelUpClassObject';
+storeDefinitions.activeRowClassKey.name = 'activeRowClassKey';
+storeDefinitions.levelUpSubClassObject.name = 'levelUpSubClassObject';
+storeDefinitions.levelUpCombinedHtml.name = 'levelUpCombinedHtml';
 // Export the advancement queue store
-export const dropItemRegistry = advancementQueueStore(); 
-dropItemRegistry.name = "dropItemRegistry";
+export const dropItemRegistry = advancementQueueStore();
+dropItemRegistry.name = 'dropItemRegistry';
 
 export const isNewMultiClass = derived(
-  [storeDefinitions.characterClass,  storeDefinitions.newLevelValueForExistingClass], 
+  [storeDefinitions.characterClass, storeDefinitions.newLevelValueForExistingClass],
   ([$characterClass, $newLevelValueForExistingClass]) => {
     if ($newLevelValueForExistingClass) return false;
     if ($characterClass && !$newLevelValueForExistingClass) return true;
   }
 );
 
-export const subclassLevelForLevelUp = derived([storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject], ([$classUuidForLevelUp, $levelUpClassObject]) => {
-  if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
-  const result = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false;
-  // window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
-  // window.GAS.log.d('[subclassLevel] levelUpClassObject', $levelUpClassObject)
-  // window.GAS.log.d('[subclassLevel] getSubclassLevel($levelUpClassObject, MODULE_ID)', getSubclassLevel($levelUpClassObject, MODULE_ID))
-  // window.GAS.log.d('[subclassLevel] result', result)
-  return result;
-});
+export const subclassLevelForLevelUp = derived(
+  [storeDefinitions.classUuidForLevelUp, storeDefinitions.levelUpClassObject],
+  ([$classUuidForLevelUp, $levelUpClassObject]) => {
+    if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
+    const result = $classUuidForLevelUp ? getSubclassLevel($levelUpClassObject, MODULE_ID) : false;
+    // window.GAS.log.d('[subclassLevel] classUuidForLevelUp', $classUuidForLevelUp)
+    // window.GAS.log.d('[subclassLevel] levelUpClassObject', $levelUpClassObject)
+    // window.GAS.log.d('[subclassLevel] getSubclassLevel($levelUpClassObject, MODULE_ID)', getSubclassLevel($levelUpClassObject, MODULE_ID))
+    // window.GAS.log.d('[subclassLevel] result', result)
+    return result;
+  }
+);
 
 // Derived store to determine if a new multiclass is selected
 export const isNewMultiClassSelected = derived(
-  [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.selectedMultiClassUUID], 
+  [storeDefinitions.classUuidForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.selectedMultiClassUUID],
   ([$classUuidForLevelUp, $newLevelValueForExistingClass, $selectedMultiClassUUID]) => {
     return $classUuidForLevelUp && !$newLevelValueForExistingClass && $selectedMultiClassUUID;
   }
@@ -90,17 +93,17 @@ export const isNewMultiClassSelected = derived(
 
 // Derived store to check if the class gets a subclass at the current level up level
 export const levelUpClassGetsSubclassThisLevel = derived(
-  [storeDefinitions.classUuidForLevelUp, subclassLevelForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject, isNewMultiClassSelected], 
+  [storeDefinitions.classUuidForLevelUp, subclassLevelForLevelUp, storeDefinitions.newLevelValueForExistingClass, storeDefinitions.levelUpClassObject, isNewMultiClassSelected],
   ([$classUuidForLevelUp, $subclassLevelForLevelUp, $newLevelValueForExistingClass, $levelUpClassObject, $isNewMultiClassSelected]) => {
     // window.GAS.log.d('[classGetsSubclassThisLevel] classUuidForLevelUp', $classUuidForLevelUp)
     // window.GAS.log.d('[classGetsSubclassThisLevel] newLevelValueForExistingClass', $newLevelValueForExistingClass)
     // window.GAS.log.d('[classGetsSubclassThisLevel] levelUpClassObject', $levelUpClassObject)
     // window.GAS.log.d('[classGetsSubclassThisLevel] isNewMultiClassSelected', $isNewMultiClassSelected)
     if (!$classUuidForLevelUp || !$levelUpClassObject) return false;
-    
+
     // Determine the current level: 1 for new multiclass, existing level + 1 for existing class
     const currentLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
-    
+
     // window.GAS.log.d('[classGetsSubclassThisLevel] subclassLevelForLevelUp', $subclassLevelForLevelUp)
     // window.GAS.log.d('[classGetsSubclassThisLevel] currentLevel', currentLevel)
     const result = $subclassLevelForLevelUp && $subclassLevelForLevelUp === currentLevel;
@@ -111,11 +114,11 @@ export const levelUpClassGetsSubclassThisLevel = derived(
 
 // Cache store for initial character selection state
 export const preAdvancementSelections = writable({});
-preAdvancementSelections.name = "preAdvancementSelections";
+preAdvancementSelections.name = 'preAdvancementSelections';
 
 // Cache store for initial character selection state
 export const levelUpPreAdvancementSelections = writable({});
-levelUpPreAdvancementSelections.name = "levelUpPreAdvancementSelections";
+levelUpPreAdvancementSelections.name = 'levelUpPreAdvancementSelections';
 
 // Derived store to track changes from initial state
 export const hasCharacterCreationChanges = derived(
@@ -123,7 +126,7 @@ export const hasCharacterCreationChanges = derived(
   ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
     // window.GAS.log.d("hasCharacterCreationChanges preAdvancementSelections", $preAdvancementSelections);
     if (Object.keys($preAdvancementSelections).length === 0) return false;
-    
+
     return (
       $race?.id !== $preAdvancementSelections.race?.id ||
       $background?.id !== $preAdvancementSelections.background?.id ||
@@ -138,23 +141,23 @@ export const isAdvancementInProgress = derived(
   [storeDefinitions.tabs],
   ([$tabs]) => {
     // window.GAS.log.d('[isAdvancementInProgress] tabs', $tabs)
-    return $tabs.find(tab => tab.id === 'advancements') ? true : false;
+    return $tabs.find((tab) => tab.id === 'advancements') ? true : false;
   }
 );
 export const isLevelUpAdvancementInProgress = derived(
   [storeDefinitions.levelUpTabs],
   ([$levelUpTabs]) => {
     // window.GAS.log.d('[isLevelUpAdvancementInProgress] tabs', $levelUpTabs)
-    return $levelUpTabs.find(tab => tab.id === 'advancements') ? true : false;
+    return $levelUpTabs.find((tab) => tab.id === 'advancements') ? true : false;
   }
 );
 
 //- Derived store to get the changed items
 export const changedCharacterCreationItems = derived(
-  [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections], 
+  [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections],
   ([$race, $background, $characterClass, $characterSubClass, $preAdvancementSelections]) => {
     if (Object.keys($preAdvancementSelections).length === 0) return [];
-    
+
     const changes = [];
     if ($race?.id !== $preAdvancementSelections.race?.id) {
       changes.push({ type: 'race', item: $preAdvancementSelections.race });

@@ -126,6 +126,15 @@ export async function loadShopItems() {
     // Sort items by name
     uniqueLightweightItems.sort((a, b) => a.name.localeCompare(b.name));
     
+    // Add enrichedName property for Foundry enrichers
+    for (const item of uniqueLightweightItems) {
+      if (item.uuid && item.name) {
+        item.enrichedName = `@UUID[${item.uuid}]{${item.name}}`;
+      } else {
+        item.enrichedName = item.name;
+      }
+    }
+
     // Update the store with lightweight items
     shopItems.set(uniqueLightweightItems);
     window.GAS.log.d('[SHOP] Loaded lightweight items:', uniqueLightweightItems.length);

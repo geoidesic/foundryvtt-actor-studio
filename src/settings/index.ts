@@ -130,6 +130,35 @@ function enableLevelUp() {
     config: true,
     default: true,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
+  });
+}
+
+function milestoneLeveling() {
+  game.settings.register(MODULE_ID, 'milestoneLeveling', {
+    name: game.i18n.localize('GAS.Setting.milestoneLeveling.Name'),
+    hint: game.i18n.localize('GAS.Setting.milestoneLeveling.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 
@@ -195,6 +224,15 @@ function sourcesConfiguration() {
     config: false,
     type: Object,
     default: DEFAULT_SOURCES,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
   // Define a settings submenu which handles advanced configuration needs
   game.settings.registerMenu(MODULE_ID, 'compendiumSources', {
@@ -237,17 +275,6 @@ function trimSubclasses() {
     scope: 'world',
     config: true,
     default: true,
-    type: Boolean,
-  });
-}
-
-function milestoneLeveling() {
-  game.settings.register(MODULE_ID, 'milestoneLeveling', {
-    name: game.i18n.localize('GAS.Setting.milestoneLeveling.Name'),
-    hint: game.i18n.localize('GAS.Setting.milestoneLeveling.Hint'),
-    scope: 'world',
-    config: true,
-    default: false,
     type: Boolean,
   });
 }
@@ -477,6 +504,15 @@ function debugSetting() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 function debugHooksSetting() {
@@ -487,6 +523,15 @@ function debugHooksSetting() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 
@@ -530,6 +575,15 @@ function enableEquipmentSelection() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 
@@ -541,6 +595,15 @@ function enableEquipmentPurchase() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 
@@ -552,6 +615,15 @@ function enableSpellSelection() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 

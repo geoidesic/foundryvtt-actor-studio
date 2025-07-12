@@ -42,6 +42,18 @@
     }
   }
 
+  // Cache for enriched item names
+  let enrichedNames = {};
+
+  // Helper to get enriched HTML for item name
+  async function getEnrichedName(item) {
+    const key = item.uuid || item._id || item.id;
+    if (!enrichedNames[key]) {
+      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(item.enrichedName || item.name || "", { async: true });
+    }
+    return enrichedNames[key];
+  }
+
   // Helper function to get item display name with quantity
   function getItemDisplayName(item) {
     return item.name;
@@ -196,7 +208,13 @@
                 <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
               </div>
               <div class="cart-item-col2 left">
-                <div class="cart-item-name">{getItemDisplayName(cartItem.item)}</div>
+                <div class="cart-item-name">
+                  {#await getEnrichedName(cartItem.item)}
+                    {cartItem.item.name}
+                  {:then Html}
+                    {@html Html}
+                  {/await}
+                </div>
                 <div class="cart-item-subdetails">
                   <span class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</span>
                   <span class="quantity-display">×{cartItem.quantity}</span>
@@ -253,7 +271,13 @@
                 <div class="item-row">
                   <div class="item-details">
                     <img src={item.img} alt={item.name} class="item-icon" />
-                    <span class="item-name">{getItemDisplayName(item)}</span>
+                    <span class="item-name">
+                      {#await getEnrichedName(item)}
+                        {item.name}
+                      {:then Html}
+                        {@html Html}
+                      {/await}
+                    </span>
                   </div>
                   <div class="item-actions">
                     <span class="item-price">
