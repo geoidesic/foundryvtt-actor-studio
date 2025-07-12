@@ -31,8 +31,8 @@ export const init = (app, html, data) => {
     window.GAS.debug = true;
     window.GAS.race = "Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000"
     window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000"
-    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0"
-    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000"
+    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0"
+    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000"
     // window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000"
 

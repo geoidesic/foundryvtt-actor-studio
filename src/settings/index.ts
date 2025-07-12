@@ -504,6 +504,15 @@ function debugSetting() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 function debugHooksSetting() {
@@ -514,6 +523,15 @@ function debugHooksSetting() {
     config: true,
     default: false,
     type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
   });
 }
 
