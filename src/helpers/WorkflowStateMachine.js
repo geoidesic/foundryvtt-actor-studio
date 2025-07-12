@@ -104,7 +104,7 @@ export class WorkflowStateMachine {
     console.log(`🔄 [WORKFLOW] ========== TRANSITION ATTEMPT ==========`);
     console.log(`🔄 [WORKFLOW] Event: '${event}'`);
     console.log(`🔄 [WORKFLOW] Current State: '${currentState}'`);
-    console.log(`🔄 [WORKFLOW] Context Data:`, JSON.stringify(contextData, null, 2));
+    // console.log(`🔄 [WORKFLOW] Context Data:`, JSON.stringify(contextData, null, 2));
     console.log(`🔄 [WORKFLOW] Actor in context:`, contextData?.actor);
     console.log(`🔄 [WORKFLOW] Actor classes:`, contextData?.actor?.classes);
     window.GAS?.log?.d?.(`[WORKFLOW] Attempting transition: event='${event}' from state='${currentState}' with context:`, contextData);
@@ -143,7 +143,8 @@ export class WorkflowStateMachine {
       return updated;
     });
     const fullContext = get(this.context);
-    console.log(`🔄 [WORKFLOW] Full context after update:`, JSON.stringify(fullContext, null, 2));
+    // console.log(`🔄 [WORKFLOW] Full context after update:`, JSON.stringify(fullContex, null, 2));
+    console.log(`🔄 [WORKFLOW] spellcasting progression:`, JSON.stringify(fullContext.system?.spellcasting?.progression, null, 2));
 
     let nextState = transitions[event];
     

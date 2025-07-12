@@ -6,7 +6,6 @@ import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections } from '~/src/stores/index';
 import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
-import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
 
 /**
  * Class responsible for monitoring and managing the advancement process
@@ -95,8 +94,7 @@ export class AdvancementManager {
       window.GAS.log.d('[ADVANCEMENT MANAGER] advancements tab is empty');
       this.monitoringPromise = null;
     }
-    // No longer call advanceQueue here to avoid infinite recursion
-    // Just return after monitoring
+    // Just return after monitoring - the advanceQueue loop will handle the next item
     return;
   }
 
@@ -147,30 +145,35 @@ export class AdvancementManager {
   }
 
   /**
-   * Advances the queue to the next item
+   * Advances the queue to process all items
    * Will open the Advancements tab if it's required and not already open
    * @returns {Promise<boolean>}
    */
   async advanceQueue() {
     window.GAS.log.d('[ADVANCEMENT MANAGER] advancing queue of length', get(this.store).length);
-    //- get current state
-    const currentStore = get(this.store);
-    const next = currentStore[0] || false;
+    
+    // Process all items in the queue
+    while (get(this.store).length > 0) {
+      const currentStore = get(this.store);
+      const next = currentStore[0];
+      
+      if (!next) {
+        break;
+      }
 
-    //- handle empty queue
-    if (!next) {
-      window.GAS.log.d('[ADVANCEMENT MANAGER] queue is empty, handling empty queue');
-      this.handleEmptyQueue();
-      return false;
+      //- handle next item
+      window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
+      const result = await this.handleNextItem(next);
+
+      //- set the advancement manager watcher for this item
+      window.GAS.log.d('[ADVANCEMENT MANAGER] setting advancement manager watcher');
+      await this.watchAdvancementManager();
     }
 
-    //- handle next item
-    window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
-    const result = await this.handleNextItem(next);
-
-    //- set the advancement manager watcher
-    window.GAS.log.d('[ADVANCEMENT MANAGER] setting advancement manager watcher');
-    return await this.watchAdvancementManager();
+    //- handle empty queue after processing all items
+    window.GAS.log.d('[ADVANCEMENT MANAGER] queue is empty, handling empty queue');
+    this.handleEmptyQueue();
+    return false;
   }
 } 
 

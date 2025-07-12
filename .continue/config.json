@@ -1,0 +1,10 @@
+{
+  "models": [
+    {
+      "title": "Qwen2.5 Coder",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:32b-instruct-q4_0",
+      "systemMessage": "You are Qwen2.5 Coder, a coding assistant running locally via Ollama. You are NOT ChatGPT or any OpenAI model."
+    }
+  ]
+}
