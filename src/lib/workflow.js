@@ -620,49 +620,53 @@ export async function handleFinalizeSpells({
 
 /**
  * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
- * Decides whether to close Actor Studio, open actor sheet, or transition to next state
+ * Decides which workflow state to transition to next, based on settings and actor
  * @param {object} context - Finity workflow context (should include actor)
+ * @returns {string} The next state name for the FSM
  */
-export function handleAdvancementCompletion(context) {
-  alert('o');
+export async function handleAdvancementCompletion(context) {
   const { actor } = context;
-  // Example settings logic (customize as needed)
-  const autoClose = game.settings.get(MODULE_ID, 'autoCloseOnAdvancementsComplete');
-  const openSheet = game.settings.get(MODULE_ID, 'openSheetOnAdvancementsComplete');
-  // If auto-close is enabled, close Actor Studio
-  if (autoClose) {
-    window.GAS.log.d('[WORKFLOW] Advancements complete: auto-closing Actor Studio');
-    Hooks.call('gas.close');
-    return;
+  const enableEquipment = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
+  const enableShop = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+  const enableSpells = game.settings.get(MODULE_ID, 'enableSpellSelection');
+
+  // Helper to check if actor is a spellcaster
+  function isSpellcaster(actor) {
+    if (!actor) return false;
+    const classes = actor.classes || {};
+    return Object.values(classes).some(cls => {
+      const progression = cls.system?.spellcasting?.progression;
+      return progression && progression !== 'none';
+    });
   }
-  // If openSheet is enabled, open the actor sheet
-  if (openSheet && actor) {
-    window.GAS.log.d('[WORKFLOW] Advancements complete: opening actor sheet');
-    actor.sheet.render(true);
-    // Optionally close Actor Studio after a delay
-    setTimeout(() => Hooks.call('gas.close'), 1500);
-    return;
+
+  const spellcaster = isSpellcaster(actor);
+  console.log('[GAS][handleAdvancementCompletion] enableEquipment:', enableEquipment, 'enableShop:', enableShop, 'enableSpells:', enableSpells, 'isSpellcaster:', spellcaster, 'actor:', actor?.name, actor);
+
+  if (!enableEquipment && !enableShop && !enableSpells) {
+    console.log('[GAS][handleAdvancementCompletion] All features disabled, returning completed');
+    return 'completed';
   }
-  // Otherwise, decide next workflow state based on actor/system
-  // (You can add more logic here as needed)
-  // If equipment selection is enabled, transition to equipment
-  if (context._shouldShowEquipmentSelection(context)) {
-    getWorkflowFSM().handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, context);
-    return;
+  if (enableEquipment) {
+    console.log('[GAS][handleAdvancementCompletion] Equipment enabled, returning selecting_equipment');
+    return 'selecting_equipment';
   }
-  // If spell selection is enabled, transition to spells
-  if (context._shouldShowSpellSelection(actor, context)) {
-    getWorkflowFSM().handle(WORKFLOW_EVENTS.SPELLS_COMPLETE, context);
-    return;
+  if (enableShop) {
+    console.log('[GAS][handleAdvancementCompletion] Shop enabled, returning shopping');
+    return 'shopping';
   }
-  // Otherwise, mark workflow as completed
-  getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET, context);
+  if (enableSpells && spellcaster) {
+    console.log('[GAS][handleAdvancementCompletion] Spells enabled and actor is spellcaster, returning selecting_spells');
+    return 'selecting_spells';
+  }
+  console.log('[GAS][handleAdvancementCompletion] Fallback, returning completed');
+  return 'completed';
 }
 
 /**
  * Handles post-queue processing logic after item queue is completed
  * @param {Object} params
- * @param {Object} params.actor - The created actor
+ * * @param {Object} params.actor - The created actor
  * @returns {void}
  */
 export function postQueueProcessing({ actor }) {

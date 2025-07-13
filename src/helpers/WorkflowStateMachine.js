@@ -1,3 +1,6 @@
+// IMPORTANT: Do not overwrite window.GAS. Always extend it using window.GAS = window.GAS || {};
+// This ensures global state is preserved and debuggable across modules.
+
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
@@ -99,6 +102,7 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered IDLE state');
     })
     .state('creating_character')
     .on('character_created').transitionTo('processing_advancements')
@@ -106,17 +110,21 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(true);
-      window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
     })
     .state('processing_advancements')
-    .on('advancements_complete').transitionTo(async (context) => {
-      return await handleAdvancementCompletion(context);
+    .on('advancements_complete').transitionTo((context) => {
+      // Synchronous transition: nextState must be set in context by onEnter
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Advancements complete, next state:', context.nextState, 'actor:', context.actor?.name);
+      return context.nextState;
     })
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter(async (context) => {
-      // Start processing the queue and trigger the event when done
       await dropItemRegistry.advanceQueue(true);
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, running handleAdvancementCompletion');
+      const nextState = await handleAdvancementCompletion(context);
+      context.nextState = nextState;
       workflowFSM.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, context);
     })
     .state('selecting_equipment')
@@ -129,7 +137,7 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
       Hooks.call('gas.equipmentSelection', context.actor);
     })
     .state('shopping')
@@ -141,7 +149,7 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SHOPPING state');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SHOPPING state');
       // Add shop tab and switch to it
       const currentTabs = get(tabs);
       if (!currentTabs.find(t => t.id === "shop")) {
@@ -171,7 +179,7 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
       const currentTabs = get(tabs);
       if (!currentTabs.find(t => t.id === "spells")) {
         tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
@@ -182,14 +190,14 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
       const { actor } = context;
       if (actor) {
-        window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
         actor.sheet.render(true);
       }
       setTimeout(() => {
-        window.GAS.log.d('[WORKFLOW] Closing Actor Studio');
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Closing Actor Studio');
         Hooks.call("gas.close");
       }, 1500);
     })
@@ -197,7 +205,7 @@ export function createWorkflowStateMachine() {
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context.isProcessing) context.isProcessing.set(false);
-      window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
+      if (window.GAS?.log?.e) window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
       if (context.error) ui.notifications.error(context.error);
     })
     .start();
@@ -211,7 +219,6 @@ export const workflowFSM = createWorkflowStateMachine();
 if (typeof window !== 'undefined') {
   window.GAS = window.GAS || {};
   window.GAS.workflowFSM = workflowFSM;
-  console.log('window.GAS.workflowFSM assigned (module load):', window.GAS.workflowFSM);
 }
 
 // Provide a getter for the singleton FSM instance
@@ -219,7 +226,6 @@ export function getWorkflowFSM() {
   if (typeof window !== 'undefined') {
     window.GAS = window.GAS || {};
     window.GAS.workflowFSM = workflowFSM;
-    console.log('window.GAS.workflowFSM assigned (getWorkflowFSM):', window.GAS.workflowFSM);
   }
   return workflowFSM;
 }
