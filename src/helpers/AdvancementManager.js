@@ -169,7 +169,7 @@ export class AdvancementManager {
 export const destroyAdvancementManagers = () => {
     // Select all elements with the class 'application dnd5e2 advancement manager'
     const elements = document.querySelectorAll('.application.dnd5e2.advancement.manager');
-    console.log('advancement managers', elements);
+    console.log('destroyAdvancementManagers advancement managers', elements);
     // Iterate over the NodeList and remove each element
     elements.forEach(element => {
         element.remove(); // Remove the element from the DOM

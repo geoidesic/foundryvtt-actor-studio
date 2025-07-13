@@ -1,11 +1,12 @@
 <script>
-
+  import { onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
   import { goldChoices } from "../../../../stores/goldChoices";
   import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
+  import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager";
 
   import { compatibleStartingEquipment, classStartingEquipment, backgroundStartingEquipment } from "~/src/stores/startingEquipment";
   import { characterClass, characterSubClass, background, readOnlyTabs } from "~/src/stores/index";
@@ -38,7 +39,12 @@
     readOnlyTabs: $readOnlyTabs
   });
 
-
+  onMount(() => {
+    if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+      window.GAS.log.d('[EQUIPMENT] Advancement capture disabled - destroying advancement managers');
+      destroyAdvancementManagers();
+    }
+  });
 
 </script>
 

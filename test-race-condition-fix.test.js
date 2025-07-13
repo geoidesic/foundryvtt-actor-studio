@@ -27,14 +27,24 @@ vi.mock('~/src/helpers/constants', () => ({
 }));
 
 // Mock stores
-const mockWritable = (value) => ({
-  _value: value,
-  set: vi.fn((newValue) => { this._value = newValue; }),
-  update: vi.fn((updater) => { this._value = updater(this._value); }),
-  subscribe: vi.fn()
-});
+const mockWritable = (value) => {
+  const store = {
+    _value: value,
+    set: vi.fn((newValue) => {
+      store._value = newValue;
+    }),
+    update: vi.fn((updater) => {
+      store._value = updater(store._value);
+    }),
+    subscribe: vi.fn()
+  };
+  return store;
+};
 
-const mockGet = vi.fn((store) => store._value);
+const mockGet = vi.fn((store) => {
+  if (store && store._value !== undefined) return store._value;
+  return null;
+});
 
 vi.mock('svelte/store', () => ({
   writable: mockWritable,
@@ -43,7 +53,12 @@ vi.mock('svelte/store', () => ({
 
 vi.mock('~/src/stores/index', () => ({
   activeTab: mockWritable('overview'),
-  tabs: mockWritable([]),
+  tabs: mockWritable([
+    { id: 'abilities', label: 'Abilities' },
+    { id: 'race', label: 'Race' },
+    { id: 'background', label: 'Background' },
+    { id: 'class', label: 'Class' }
+  ]),
   readOnlyTabs: mockWritable([]),
   preAdvancementSelections: mockWritable({}),
   dropItemRegistry: {
@@ -79,65 +94,84 @@ vi.mock('~/src/lib/workflow.js', () => ({
   })
 }));
 
-// Mock Finity - simplified version that captures the real behavior
+// Mock Finity with the same structure as working tests
 let currentState = 'idle';
 let isProcessingAdvancements = false;
+const eventHandlers = new Map();
+const stateHandlers = new Map();
 
-const mockFSM = {
+const mockFsm = {
   handle: vi.fn((event) => {
-    console.log(`[RACE TEST] FSM handling event: ${event} from state: ${currentState}`);
-    
-    if (event === 'start_character_creation' && currentState === 'idle') {
-      currentState = 'creating_character';
-    } else if (event === 'character_created' && currentState === 'creating_character') {
-      currentState = 'processing_advancements';
-      
-      // Simulate the onEnter handler for processing_advancements
-      // This is where the race condition would occur
-      setTimeout(async () => {
-        if (isProcessingAdvancements) {
-          console.log('[RACE TEST] Already processing advancements, skipping (race condition prevented)');
-          return;
+    console.log(`[RACE TEST] Handling event: ${event} from state: ${currentState}`);
+    const handler = eventHandlers.get(`${currentState}:${event}`);
+    if (handler) {
+      const nextState = handler();
+      if (nextState) {
+        console.log(`[RACE TEST] Transitioning from ${currentState} to ${nextState}`);
+        currentState = nextState;
+        const stateHandler = stateHandlers.get(currentState);
+        if (stateHandler) {
+          stateHandler();
         }
-        isProcessingAdvancements = true;
-        
-        try {
-          const { handleAdvancementCompletion } = await import('~/src/lib/workflow.js');
-          const nextState = await handleAdvancementCompletion({
-            actor: { name: 'Test Wizard', classes: { wizard: { system: { spellcasting: { progression: 'full' } } } } }
-          });
-          
-          console.log(`[RACE TEST] Advancement completion returned: ${nextState}`);
-          
-          // Trigger the advancement complete event
-          setTimeout(() => {
-            isProcessingAdvancements = false;
-            mockFSM.handle('advancements_complete');
-          }, 10);
-        } catch (error) {
-          console.error('[RACE TEST] Error in processing:', error);
-          isProcessingAdvancements = false;
-        }
-      }, 50);
-      
-    } else if (event === 'advancements_complete' && currentState === 'processing_advancements') {
-      currentState = 'selecting_spells';
+      }
     }
   }),
-  getCurrentState: () => currentState
+  getCurrentState: vi.fn(() => currentState),
+  start: vi.fn()
+};
+
+let currentBuilder = null;
+const mockFinity = {
+  configure: vi.fn(() => mockFinity),
+  initialState: vi.fn((state) => {
+    currentState = state;
+    return mockFinity;
+  }),
+  state: vi.fn((stateName) => {
+    currentBuilder = { stateName, events: [] };
+    return mockFinity;
+  }),
+  on: vi.fn((event) => {
+    if (currentBuilder) {
+      currentBuilder.currentEvent = event;
+    }
+    return mockFinity;
+  }),
+  transitionTo: vi.fn((target) => {
+    if (currentBuilder && currentBuilder.currentEvent) {
+      const event = currentBuilder.currentEvent;
+      const state = currentBuilder.stateName;
+      
+      if (typeof target === 'function') {
+        eventHandlers.set(`${state}:${event}`, target);
+      } else {
+        eventHandlers.set(`${state}:${event}`, () => target);
+      }
+    }
+    return mockFinity;
+  }),
+  onEnter: vi.fn((handler) => {
+    if (currentBuilder) {
+      stateHandlers.set(currentBuilder.stateName, handler);
+    }
+    return mockFinity;
+  }),
+  start: vi.fn(() => {
+    // Set up basic transitions for the test
+    eventHandlers.set('idle:start_character_creation', () => 'creating_character');
+    eventHandlers.set('creating_character:character_created', () => 'processing_advancements');
+    eventHandlers.set('processing_advancements:advancements_complete', () => 'selecting_spells');
+    
+    const idleHandler = stateHandlers.get('idle');
+    if (idleHandler) {
+      idleHandler();
+    }
+    return mockFsm;
+  })
 };
 
 vi.mock('finity', () => ({
-  default: {
-    configure: () => ({
-      initialState: () => mockFSM,
-      state: () => ({
-        on: () => ({ transitionTo: () => mockFSM }),
-        onEnter: () => mockFSM
-      }),
-      start: () => mockFSM
-    })
-  }
+  default: mockFinity
 }));
 
 describe('Race Condition Bug Fix', () => {
@@ -147,6 +181,8 @@ describe('Race Condition Bug Fix', () => {
     isProcessingAdvancements = false;
     completionCallCount = 0;
     completionCalls.length = 0;
+    eventHandlers.clear();
+    stateHandlers.clear();
     
     global.window.GAS = {
       log: { d: vi.fn(), e: vi.fn() }
@@ -155,7 +191,23 @@ describe('Race Condition Bug Fix', () => {
 
   it('should prevent race condition in processing_advancements state', async () => {
     // Import the WorkflowStateMachine after mocks are set up
-    const { createWorkflowStateMachine, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Set up a spellcaster actor context to trigger the selecting_spells transition
+    const mockActor = {
+      name: 'Test Wizard',
+      classes: {
+        wizard: {
+          system: {
+            spellcasting: {
+              progression: 'full'
+            }
+          }
+        }
+      }
+    };
+    
+    workflowFSMContext.actor = mockActor;
     
     const fsm = createWorkflowStateMachine();
     
@@ -179,7 +231,23 @@ describe('Race Condition Bug Fix', () => {
   });
 
   it('should handle multiple rapid transitions without corruption', async () => {
-    const { createWorkflowStateMachine, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Set up a spellcaster actor context
+    const mockActor = {
+      name: 'Test Wizard',
+      classes: {
+        wizard: {
+          system: {
+            spellcasting: {
+              progression: 'full'
+            }
+          }
+        }
+      }
+    };
+    
+    workflowFSMContext.actor = mockActor;
     
     const fsm = createWorkflowStateMachine();
     

@@ -293,14 +293,31 @@ describe('Workflow Spell Tab Transition Bug', () => {
     expect(currentState).toBe('selecting_spells');
   });
 
-  it('should add spells tab when entering selecting_spells state', async () => {
+  it('should add spells tab and remove advancements tab when entering selecting_spells state', async () => {
     const { createWorkflowStateMachine, WORKFLOW_EVENTS } = 
       await import('~/src/helpers/WorkflowStateMachine.js');
     
     const fsm = createWorkflowStateMachine();
     
-    // Clear any previous calls
-    mockStores.tabs.update.mockClear();
+    // Set up initial tabs including an advancements tab
+    const initialTabs = [
+      { id: 'abilities', label: 'Abilities' },
+      { id: 'race', label: 'Race' },
+      { id: 'background', label: 'Background' },
+      { id: 'class', label: 'Class' },
+      { id: 'advancements', label: 'Advancements' }
+    ];
+    mockStores.tabs.set(initialTabs);
+    
+    // Clear any previous calls and track tab changes
+    let tabUpdateCalls = [];
+    mockStores.tabs.update = vi.fn((updater) => {
+      const currentTabs = mockStores.tabs._value;
+      const newTabs = updater(currentTabs);
+      mockStores.tabs._value = newTabs;
+      tabUpdateCalls.push(newTabs);
+      return newTabs;
+    });
     mockStores.activeTab.set.mockClear();
     
     // Force transition to selecting_spells state and manually call the state handler
@@ -311,9 +328,20 @@ describe('Workflow Spell Tab Transition Bug', () => {
       spellsStateHandler({});
     }
     
-    // The console logs show the spells tab functionality is working correctly
-    // We can verify the state transition worked even if our mock doesn't capture all calls
+    // Verify that:
     expect(currentState).toBe('selecting_spells');
+    expect(mockStores.activeTab.set).toHaveBeenCalledWith('spells');
+    
+    // Check that tabs.update was called to remove advancements and add spells
+    expect(mockStores.tabs.update).toHaveBeenCalled();
+    
+    // Verify final state: should have spells tab but not advancements tab
+    const finalTabs = mockStores.tabs._value;
+    expect(finalTabs.find(t => t.id === 'spells')).toBeDefined();
+    expect(finalTabs.find(t => t.id === 'advancements')).toBeUndefined();
+    
+    // Should have 5 tabs total (original 4 + spells - advancements)
+    expect(finalTabs.length).toBe(5);
   });
 
   it('should handle the complete workflow from start to selecting_spells', async () => {

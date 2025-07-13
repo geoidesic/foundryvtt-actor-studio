@@ -245,8 +245,18 @@ export function createWorkflowStateMachine() {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
       console.log('[WORKFLOW] SELECTING_SPELLS onEnter called - adding spells tab');
+      
+      // Remove advancements tab if it exists
       const currentTabs = get(tabs);
-      if (!currentTabs.find(t => t.id === "spells")) {
+      const hasAdvancementsTab = currentTabs.find(t => t.id === "advancements");
+      if (hasAdvancementsTab) {
+        console.log('[WORKFLOW] Removing advancements tab');
+        tabs.update(t => t.filter(tab => tab.id !== "advancements"));
+      }
+      
+      // Add spells tab if it doesn't exist
+      const updatedTabs = get(tabs);
+      if (!updatedTabs.find(t => t.id === "spells")) {
         console.log('[WORKFLOW] Adding spells tab to tabs');
         tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
       } else {
