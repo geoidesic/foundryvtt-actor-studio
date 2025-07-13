@@ -6,7 +6,6 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
-import { handleAdvancementCompletion, postQueueProcessing } from '~/src/lib/workflow.js';
 import Finity from 'finity';
 
 /**
@@ -91,6 +90,51 @@ export const workflowFSMContext = {
 };
 
 /**
+ * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
+ * Decides which workflow state to transition to next, based on settings and actor
+ * @param {object} context - Finity workflow context (should include actor)
+ * @returns {string} The next state name for the FSM
+ */
+function handleAdvancementCompletion(context) {
+  const { actor } = context;
+  const enableEquipment = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
+  const enableShop = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+  const enableSpells = game.settings.get(MODULE_ID, 'enableSpellSelection');
+
+  // Helper to check if actor is a spellcaster
+  function isSpellcaster(actor) {
+    if (!actor) return false;
+    const classes = actor.classes || {};
+    return Object.values(classes).some(cls => {
+      const progression = cls.system?.spellcasting?.progression;
+      return progression && progression !== 'none';
+    });
+  }
+
+  const spellcaster = isSpellcaster(actor);
+  console.log('[GAS][handleAdvancementCompletion] enableEquipment:', enableEquipment, 'enableShop:', enableShop, 'enableSpells:', enableSpells, 'isSpellcaster:', spellcaster, 'actor:', actor?.name, actor);
+
+  if (!enableEquipment && !enableShop && !enableSpells) {
+    console.log('[GAS][handleAdvancementCompletion] All features disabled, returning completed');
+    return 'completed';
+  }
+  if (enableEquipment) {
+    console.log('[GAS][handleAdvancementCompletion] Equipment enabled, returning selecting_equipment');
+    return 'selecting_equipment';
+  }
+  if (enableShop) {
+    console.log('[GAS][handleAdvancementCompletion] Shop enabled, returning shopping');
+    return 'shopping';
+  }
+  if (enableSpells && spellcaster) {
+    console.log('[GAS][handleAdvancementCompletion] Spells enabled and actor is spellcaster, returning selecting_spells');
+    return 'selecting_spells';
+  }
+  console.log('[GAS][handleAdvancementCompletion] Fallback, returning completed');
+  return 'completed';
+}
+
+/**
  * Finity-based state machine for character creation workflow
  */
 export function createWorkflowStateMachine() {
@@ -114,18 +158,17 @@ export function createWorkflowStateMachine() {
     })
     .state('processing_advancements')
     .on('advancements_complete').transitionTo((context) => {
-      // Synchronous transition: nextState must be set in context by onEnter
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Advancements complete, next state:', context.nextState, 'actor:', context.actor?.name);
       return context.nextState;
     })
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
-    .onEnter(async (context) => {
+    .onEnter(async function (context) {
       await dropItemRegistry.advanceQueue(true);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, running handleAdvancementCompletion');
       const nextState = await handleAdvancementCompletion(context);
       context.nextState = nextState;
-      workflowFSM.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, context);
+      setTimeout(() => fsm.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE), 0);
     })
     .state('selecting_equipment')
     .on(['equipment_complete', 'skip_equipment']).transitionTo((context) => {
@@ -213,19 +256,14 @@ export function createWorkflowStateMachine() {
 }
 
 // Create and export a singleton FSM instance for the workflow
-export const workflowFSM = createWorkflowStateMachine();
-
-// Always expose the workflowFSM globally for debugging in the browser inspector
-if (typeof window !== 'undefined') {
-  window.GAS = window.GAS || {};
-  window.GAS.workflowFSM = workflowFSM;
-}
-
-// Provide a getter for the singleton FSM instance
+let workflowFSM;
 export function getWorkflowFSM() {
-  if (typeof window !== 'undefined') {
-    window.GAS = window.GAS || {};
-    window.GAS.workflowFSM = workflowFSM;
+  if (!workflowFSM) {
+    workflowFSM = createWorkflowStateMachine();
+    if (typeof window !== 'undefined') {
+      window.GAS = window.GAS || {};
+      window.GAS.workflowFSM = workflowFSM;
+    }
   }
   return workflowFSM;
 }

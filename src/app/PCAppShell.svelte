@@ -136,7 +136,7 @@
     
     console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
-    getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET, workflowFSMContext); // Reset workflow state machine to idle
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET); // Reset workflow state machine to idle
     console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
     
     // Set flag to indicate we're closing from the gas hook
