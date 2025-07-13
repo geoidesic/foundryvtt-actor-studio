@@ -28,6 +28,7 @@
         "@typhonjs-fvtt/standard": "0.2.0",
         "autoprefixer": "^10.4.21",
         "cssnano": "^7.0.7",
+        "finity": "^0.5.4",
         "postcss": "^8.5.6",
         "postcss-preset-env": "^10.2.4",
         "sass": "^1.89.2",
