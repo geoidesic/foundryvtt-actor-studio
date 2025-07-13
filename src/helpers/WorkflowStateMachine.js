@@ -29,6 +29,9 @@ export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
+  EQUIPMENT_NEEDED: 'equipment_needed',
+  SHOPPING_NEEDED: 'shopping_needed',
+  WORKFLOW_COMPLETE: 'workflow_complete',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
   SHOPPING_COMPLETE: 'shopping_complete',
@@ -96,6 +99,7 @@ export const workflowFSMContext = {
 export function createWorkflowStateMachine() {
   // Store the next state in a closure variable accessible to both onEnter and transitionTo
   let advancementNextState = 'completed';
+  let isProcessingAdvancements = false;
   
   const fsm = Finity
     .configure()
@@ -116,44 +120,76 @@ export function createWorkflowStateMachine() {
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
     })
     .state('processing_advancements')
-    .on('advancements_complete').transitionTo(() => {
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Transition handler called for advancements_complete, next state:', advancementNextState);
-      const state = advancementNextState;
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Returning state:', state);
-      return state;
-    })
+    .on('advancements_complete').transitionTo('selecting_spells')  // Default transition, will be overridden by dynamic handler
+    .on('equipment_needed').transitionTo('selecting_equipment')
+    .on('shopping_needed').transitionTo('shopping') 
+    .on('workflow_complete').transitionTo('completed')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter(async function (context) {
-      // The context parameter is sometimes a string in Finity, so we need to ensure it's an object
-      if (typeof context === 'string') {
-        context = { ...workflowFSMContext };
-      } else {
-        Object.assign(context, workflowFSMContext);
+      // Prevent re-entry if already processing
+      if (isProcessingAdvancements) {
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Already processing advancements, skipping');
+        return;
       }
+      isProcessingAdvancements = true;
       
-      await dropItemRegistry.advanceQueue(true);
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, determining next state');
-      
-      // Import workflow function dynamically to avoid circular dependency
-      const { handleAdvancementCompletion } = await import('~/src/lib/workflow.js');
-      const nextState = await handleAdvancementCompletion(context);
-      
-      // Store the nextState in the closure variable
-      advancementNextState = nextState;
-      
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] About to trigger advancements_complete with nextState:', advancementNextState);
-      
-      // Use setTimeout to ensure FSM is ready for the transition
-      setTimeout(() => {
-        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Triggering advancements_complete event, current state:', fsm.getCurrentState());
-        try {
-          fsm.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE);
-          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Event handled, new state:', fsm.getCurrentState());
-        } catch (error) {
-          console.error('[WORKFLOW] Error handling advancements_complete event:', error);
+      try {
+        // The context parameter is sometimes a string in Finity, so we need to ensure it's an object
+        if (typeof context === 'string' || !context) {
+          context = { ...workflowFSMContext };
+        } else {
+          Object.assign(context, workflowFSMContext);
         }
-      }, 100); // Increase delay to 100ms to ensure FSM state is stable
+        
+        await dropItemRegistry.advanceQueue(true);
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, determining next state');
+        
+        // Import workflow function dynamically to avoid circular dependency
+        const { handleAdvancementCompletion } = await import('~/src/lib/workflow.js');
+        const nextState = await handleAdvancementCompletion(context);
+        
+        // Store the nextState in the closure variable
+        advancementNextState = nextState;
+        
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] About to trigger advancements_complete with nextState:', advancementNextState);
+        
+        // Use setTimeout to ensure FSM is ready for the transition
+        setTimeout(() => {
+          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Triggering event for nextState:', advancementNextState, 'current state:', fsm.getCurrentState());
+          try {
+            // Trigger the appropriate event based on the next state
+            let eventToTrigger;
+            switch (advancementNextState) {
+              case 'selecting_equipment':
+                eventToTrigger = WORKFLOW_EVENTS.EQUIPMENT_NEEDED;
+                break;
+              case 'shopping':
+                eventToTrigger = WORKFLOW_EVENTS.SHOPPING_NEEDED;
+                break;
+              case 'completed':
+                eventToTrigger = WORKFLOW_EVENTS.WORKFLOW_COMPLETE;
+                break;
+              case 'selecting_spells':
+              default:
+                eventToTrigger = WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE;
+                break;
+            }
+            
+            if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Triggering event:', eventToTrigger);
+            fsm.handle(eventToTrigger);
+            if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Event handled, new state:', fsm.getCurrentState());
+          } catch (error) {
+            console.error('[WORKFLOW] Error handling advancement completion event:', error);
+          } finally {
+            isProcessingAdvancements = false;
+          }
+        }, 100); // Increase delay to 100ms to ensure FSM state is stable
+      } catch (error) {
+        console.error('[WORKFLOW] Error in processing_advancements onEnter:', error);
+        isProcessingAdvancements = false;
+        fsm.handle(WORKFLOW_EVENTS.ERROR);
+      }
     })
     .state('selecting_equipment')
     .on(['equipment_complete', 'skip_equipment']).transitionTo((context) => {
@@ -225,7 +261,7 @@ export function createWorkflowStateMachine() {
     .onEnter((context) => {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
-      const { actor } = context;
+      const actor = context?.actor;
       if (actor) {
         if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
         actor.sheet.render(true);
