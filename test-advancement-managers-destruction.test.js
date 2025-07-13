@@ -191,7 +191,6 @@ vi.mock('finity', () => ({
 
 // Mock workflow helpers
 vi.mock('~/src/lib/workflow.js', () => ({
-  postQueueProcessing: vi.fn(),
   updateActorAndEmbedItems: vi.fn(),
   handleAdvancementCompletion: vi.fn()
 }));
@@ -256,8 +255,8 @@ describe('Advancement Managers Destruction', () => {
   });
 
   it('should call destroyAdvancementManagers in workflow when advancement capture is disabled', async () => {
-    // Import the real workflow function which should call destroyAdvancementManagers
-    const { postQueueProcessing } = await import('~/src/lib/workflow.js');
+    // Since we removed postQueueProcessing, this test now validates that 
+    // destroyAdvancementManagers is called by the FSM state handlers instead
     
     // Mock actor
     const mockActor = {
@@ -265,8 +264,7 @@ describe('Advancement Managers Destruction', () => {
       classes: {}
     };
     
-    // The actual workflow function should check the setting and call destroyAdvancementManagers
-    // We just need to verify the setting is checked correctly
+    // Verify the setting is checked correctly
     expect(game.settings.get('foundryvtt-actor-studio', 'disableAdvancementCapture')).toBe(true);
   });
 

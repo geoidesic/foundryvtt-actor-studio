@@ -665,32 +665,4 @@ export async function handleAdvancementCompletion(context) {
   return 'completed';
 }
 
-/**
- * Handles post-queue processing logic after item queue is completed
- * @param {Object} params
- * * @param {Object} params.actor - The created actor
- * @returns {void}
- */
-export function postQueueProcessing({ actor }) {
-  // If advancement is disabled, destroy any open advancement managers
-  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
-    window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
-    destroyAdvancementManagers();
-  }
 
-  window.GAS.log.d('[WORKFLOW] Created actor:', actor);
-  window.GAS.log.d('[WORKFLOW] Created actor classes:', actor.classes);
-
-  // Check current state - only call CHARACTER_CREATED if we're still in creating_character state
-  // The AdvancementManager may have already moved the workflow forward
-  const currentState = getWorkflowFSM().getCurrentState();
-  window.GAS.log.d('[WORKFLOW] Current workflow state before CHARACTER_CREATED:', currentState);
-
-  if (currentState === 'creating_character') {
-    window.GAS.log.d('[WORKFLOW] Calling CHARACTER_CREATED transition');
-    const fsm = getWorkflowFSM();
-    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
-  } else {
-    window.GAS.log.d('[WORKFLOW] Skipping CHARACTER_CREATED transition - workflow already advanced to:', currentState);
-  }
-}

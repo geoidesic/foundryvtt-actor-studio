@@ -12,3 +12,6 @@
 
 # Tests
 - when running a test always ensure that you run it without watching, by using the `run` command
+
+# Finity state-machine
+- Only `.do()` supports async functions

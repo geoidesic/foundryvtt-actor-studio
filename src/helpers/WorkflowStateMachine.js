@@ -6,6 +6,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
+import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager.js';
 import Finity from 'finity';
 
 /**
@@ -110,6 +111,16 @@ export function createWorkflowStateMachine() {
     .onEnter((context) => {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered IDLE state');
+      
+      // Destroy any open advancement managers when returning to idle
+      setTimeout(() => {
+        try {
+          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Destroying advancement managers on idle');
+          destroyAdvancementManagers();
+        } catch (error) {
+          if (window.GAS?.log?.e) window.GAS.log.e('[WORKFLOW] Error destroying advancement managers on idle:', error);
+        }
+      }, 50);
     })
     .state('creating_character')
     .on('character_created').transitionTo('processing_advancements')
@@ -202,7 +213,44 @@ export function createWorkflowStateMachine() {
     .onEnter((context) => {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
+      
+      // Remove advancements tab if advancement capture is disabled
+      if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+        const currentTabs = get(tabs);
+        const hasAdvancementsTab = currentTabs.find(t => t.id === "advancements");
+        if (hasAdvancementsTab) {
+          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Removing advancements tab (advancement capture disabled)');
+          tabs.update(t => t.filter(tab => tab.id !== "advancements"));
+        }
+      }
+      
+      // Add equipment tab if it doesn't exist
+      const updatedTabs = get(tabs);
+      if (!updatedTabs.find(t => t.id === "equipment")) {
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Adding equipment tab to tabs');
+        tabs.update(t => [...t, { label: "Equipment", id: "equipment", component: "Equipment" }]);
+      } else {
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Equipment tab already exists');
+      }
+      
+      // Set equipment tab as active
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Setting active tab to equipment');
+      activeTab.set("equipment");
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Active tab set to equipment, current tabs:', get(tabs));
+      
       if (context && context.actor) Hooks.call('gas.equipmentSelection', context.actor);
+      
+      // Handle async operations like destroying advancement managers
+      if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+        setTimeout(() => {
+          try {
+            if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Destroying advancement managers (advancement capture disabled)');
+            destroyAdvancementManagers();
+          } catch (error) {
+            console.error('[WORKFLOW] Error destroying advancement managers:', error);
+          }
+        }, 100);
+      }
     })
     .state('shopping')
     .on(['shopping_complete', 'skip_shopping']).transitionTo((context) => {
@@ -265,12 +313,35 @@ export function createWorkflowStateMachine() {
       console.log('[WORKFLOW] Setting active tab to spells');
       activeTab.set("spells");
       console.log('[WORKFLOW] Active tab set to spells, current tabs:', get(tabs));
+      
+      // Handle async operations like destroying advancement managers (if we had advancement tab)
+      if (hasAdvancementsTab) {
+        setTimeout(() => {
+          try {
+            if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Destroying advancement managers when transitioning to spells');
+            destroyAdvancementManagers();
+          } catch (error) {
+            console.error('[WORKFLOW] Error destroying advancement managers:', error);
+          }
+        }, 100);
+      }
     })
     .state('completed')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
+      
+      // Destroy any open advancement managers when workflow completes
+      setTimeout(() => {
+        try {
+          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Destroying advancement managers on completion');
+          destroyAdvancementManagers();
+        } catch (error) {
+          if (window.GAS?.log?.e) window.GAS.log.e('[WORKFLOW] Error destroying advancement managers:', error);
+        }
+      }, 50);
+      
       const actor = context?.actor;
       if (actor) {
         if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
