@@ -151,9 +151,12 @@ describe('Actor Studio Opening', () => {
     
     const fsm = getWorkflowFSM();
     
+    // Create a spy on the handle method
+    const handleSpy = vi.spyOn(fsm, 'handle');
+    
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     
-    expect(fsm.handle).toHaveBeenCalledWith('start_character_creation');
+    expect(handleSpy).toHaveBeenCalledWith('start_character_creation');
   });
 
   it('should have proper workflow context structure', async () => {

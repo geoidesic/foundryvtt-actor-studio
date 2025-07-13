@@ -437,4 +437,435 @@ describe('Equipment Selection with Advancement Capture Disabled', () => {
     // The test validates that the readonly tabs behavior is consistent
     // Whether they're cleared on reset or preserved depends on the desired UX
   });
+
+  it('should transition to shopping when equipment is completed and shopping is enabled', async () => {
+    // Change the setting to enable shopping
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': false,
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context with the proper functions - they should already exist in workflowFSMContext
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { name: 'Test Fighter', classes: {} }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate equipment completion - use the helper to get the correct event
+    const completionEvent = getEquipmentCompletionEvent(testContext);
+    console.log('[TEST] Using completion event:', completionEvent);
+    fsm.handle(completionEvent, testContext);
+    
+    // Should transition to shopping since shopping is enabled
+    expect(fsm.getCurrentState()).toBe('shopping');
+  });
+
+  it('should transition to completed when equipment is completed and no other features are enabled', async () => {
+    // All features disabled except equipment
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': false,   // Shopping disabled
+        'enableSpellSelection': false,      // Spells disabled
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up mock context with proper functions
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { name: 'Test Fighter', classes: {} }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate equipment completion using the helper
+    const completionEvent = getEquipmentCompletionEvent(testContext);
+    console.log('[TEST] Using completion event:', completionEvent);
+    fsm.handle(completionEvent, testContext);
+    
+    // Should transition to completed since no other features are enabled
+    expect(fsm.getCurrentState()).toBe('completed');
+  });
+
+  it('should transition to selecting_spells when equipment is completed and spells are enabled for spellcaster', async () => {
+    // Enable spells, disable shopping
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': false,   // Shopping disabled
+        'enableSpellSelection': true,       // Spells enabled
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up test context with spellcaster actor
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Wizard', 
+        classes: { 
+          wizard: { 
+            system: { 
+              spellcasting: { progression: 'full' } 
+            } 
+          } 
+        } 
+      }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate equipment completion using the helper
+    const completionEvent = getEquipmentCompletionEvent(testContext);
+    console.log('[TEST] Using completion event:', completionEvent);
+    fsm.handle(completionEvent, testContext);
+    
+    // Should transition to selecting_spells since character is a spellcaster
+    expect(fsm.getCurrentState()).toBe('selecting_spells');
+  });
+
+  it('should handle real workflow transitions when shopping is enabled', async () => {
+    // Enable shopping, disable spells 
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': false,      // Spells disabled
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up test context with a non-spellcaster actor
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Fighter', 
+        classes: { 
+          fighter: { 
+            system: { 
+              spellcasting: { progression: 'none' } 
+            } 
+          } 
+        } 
+      }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate equipment completion with shopping enabled using the helper
+    const completionEvent = getEquipmentCompletionEvent(testContext);
+    console.log('[TEST] Using completion event:', completionEvent);
+    fsm.handle(completionEvent, testContext);
+    
+    // Should transition to shopping since shopping is enabled and character is not a spellcaster
+    expect(fsm.getCurrentState()).toBe('shopping');
+  });
+
+  it('should handle workflow transitions with shopping enabled and spellcaster', async () => {
+    // Enable both shopping and spells
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': true,       // Spells enabled
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up test context with a spellcaster actor
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Wizard', 
+        classes: { 
+          wizard: { 
+            system: { 
+              spellcasting: { progression: 'full' } 
+            } 
+          } 
+        } 
+      }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate equipment completion with shopping enabled and spellcaster using the helper
+    const completionEvent = getEquipmentCompletionEvent(testContext);
+    console.log('[TEST] Using completion event:', completionEvent);
+    fsm.handle(completionEvent, testContext);
+    
+    // Should transition to shopping first since shopping is enabled
+    // (shopping takes priority over spells)
+    expect(fsm.getCurrentState()).toBe('shopping');
+  });
+  
+  it('should reproduce the real bug: equipment_complete event should transition to shopping not completed', async () => {
+    // This test reproduces the exact issue from the logs
+    // The real app is using equipment_complete event instead of the helper
+    
+    // Enable shopping
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled - should go to shopping
+        'enableSpellSelection': false,
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context like the real app
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { name: 'Test Fighter', classes: {} }
+    };
+    
+    // Navigate to selecting_equipment state (like real app)
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // This is the bug: real app calls equipment_complete directly instead of using helper
+    // From the logs: "Captured context for event: equipment_complete" -> "Entered COMPLETED state"
+    fsm.handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, testContext);
+    
+    // BUG: This currently goes to 'completed' but should go to 'shopping' when shopping is enabled
+    // The test should FAIL initially to demonstrate the bug
+    console.log('[BUG TEST] Current state after equipment_complete:', fsm.getCurrentState());
+    console.log('[BUG TEST] Should be shopping but is:', fsm.getCurrentState());
+    
+    // This assertion should FAIL initially, proving the bug exists
+    expect(fsm.getCurrentState()).toBe('shopping'); // Will fail - currently goes to 'completed'
+  });
+  
+  it('should fail when using the old equipment_complete event directly (reproduces real bug)', async () => {
+    // Enable shopping to show the bug - shopping should be next but won't be
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': false,
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { name: 'Test Fighter', classes: {} }
+    };
+    
+    // Get to equipment selection state
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // This is the bug: using the old event directly bypasses the helper function
+    // The FSM should NOT have this transition anymore, but if it does, this test will catch it
+    fsm.handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, testContext);
+    
+    // BUG: This goes to 'completed' instead of 'shopping' even though shopping is enabled
+    // This test should FAIL initially, showing the bug exists
+    expect(fsm.getCurrentState()).toBe('shopping'); // This will fail if bug exists
+  });
+
+  // NEW TDD TEST: This test simulates the real bug where shopping tab is not opening
+  it('should reproduce the real-world bug: shopping tab not opening when it should (TDD test)', async () => {
+    // Configure settings to match what would cause shopping to be enabled in the real app
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping should be enabled
+        'enableSpellSelection': false,      // Spells disabled to prioritize shopping
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up test context with a regular Fighter (non-spellcaster) - this matches the real logs
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Fighter', 
+        classes: { 
+          fighter: { 
+            system: { 
+              spellcasting: { progression: 'none' } 
+            } 
+          } 
+        } 
+      }
+    };
+    
+    // Set up to handle equipment completion - start from the beginning of the workflow
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for automatic transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Now simulate what the real workflow.js does - call the helper function to get the event
+    const completionEvent = getEquipmentCompletionEvent(testContext, false);
+    console.log('[TDD TEST] Real workflow would use event:', completionEvent);
+    console.log('[TDD TEST] Settings check - shopping enabled:', global.game.settings.get('foundryvtt-actor-studio', 'enableEquipmentPurchase'));
+    console.log('[TDD TEST] Settings check - spells enabled:', global.game.settings.get('foundryvtt-actor-studio', 'enableSpellSelection'));
+    
+    // Handle the completion event - this should transition to shopping, not completed
+    fsm.handle(completionEvent, testContext);
+    
+    // The bug would be if this transitions to 'completed' instead of 'shopping'
+    const currentState = fsm.getCurrentState();
+    console.log('[TDD TEST] Current state after equipment completion:', currentState);
+    
+    // This should pass if the bug is fixed
+    expect(currentState).toBe('shopping');
+    expect(currentState).not.toBe('completed');
+  });
+
+  // This test confirms the old behavior would have failed 
+  it('should demonstrate the OLD bug: using equipment_complete directly would go to completed instead of shopping', async () => {
+    // Configure settings to enable shopping
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': false,
+        'disableAdvancementCapture': true
+      };
+      return settings[setting] || false;
+    });
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Fighter', 
+        classes: { 
+          fighter: { 
+            system: { 
+              spellcasting: { progression: 'none' } 
+            } 
+          } 
+        } 
+      }
+    };
+    
+    // Set up to handle equipment completion
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for transition to selecting_equipment
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // The OLD bug: using the raw equipment_complete event should now be rejected by the FSM
+    // This demonstrates that the bug is fixed because the FSM no longer accepts this event
+    expect(() => {
+      fsm.handle('equipment_complete', testContext);  // The old way that caused the bug
+    }).toThrow('Unhandled event \'equipment_complete\' in state \'selecting_equipment\'');
+    
+    // FSM should still be in selecting_equipment state since the event was rejected
+    expect(fsm.getCurrentState()).toBe('selecting_equipment');
+  });
 });

@@ -345,7 +345,18 @@ export async function handleAddEquipment({
   
   // Use state machine to transition to next step
   const fsm = getWorkflowFSM();
-  fsm.handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE);
+  
+  // Ensure the context has the current actor
+  const contextWithActor = {
+    ...workflowFSMContext,
+    actor: $actorInGame
+  };
+  
+  // Use the helper function to determine the correct equipment completion event
+  const { getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+  const completionEvent = getEquipmentCompletionEvent(contextWithActor, false);
+  
+  fsm.handle(completionEvent, contextWithActor);
   
   // Call the callback to mark equipment as added
   if (onEquipmentAdded) {

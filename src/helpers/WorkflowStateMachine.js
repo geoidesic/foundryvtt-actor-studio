@@ -9,6 +9,9 @@ import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager.js';
 import Finity from 'finity';
 
+// Store the last context for use in onEnter callbacks
+let lastHandleContext = null;
+
 /**
  * Character creation workflow states
  */
@@ -207,11 +210,13 @@ export function createWorkflowStateMachine() {
       }
     })
     .state('selecting_equipment')
-    .on(['equipment_complete', 'skip_equipment']).transitionTo((context) => {
-      if (context._shouldShowShopping()) return 'shopping';
-      if (context._shouldShowSpellSelection(context.actor, context)) return 'selecting_spells';
-      return 'completed';
-    })
+    .on('equipment_complete_to_shopping').transitionTo('shopping')
+    .on('equipment_complete_to_spells').transitionTo('selecting_spells')
+    .on('equipment_complete_to_completed').transitionTo('completed')
+    // Note: removed old 'equipment_complete' event - use helper function getEquipmentCompletionEvent() instead
+    .on('skip_equipment').transitionTo('completed')  // Default transition
+    .on('skip_equipment_to_shopping').transitionTo('shopping')
+    .on('skip_equipment_to_spells').transitionTo('selecting_spells')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
@@ -262,10 +267,7 @@ export function createWorkflowStateMachine() {
       }
     })
     .state('shopping')
-    .on(['shopping_complete', 'skip_shopping']).transitionTo((context) => {
-      if (context._shouldShowSpellSelection(context.actor, context)) return 'selecting_spells';
-      return 'completed';
-    })
+    .on(['shopping_complete', 'skip_shopping']).transitionTo('shopping_completed')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
@@ -294,6 +296,31 @@ export function createWorkflowStateMachine() {
         window.GAS.availableGold.set(goldValueInCopper);
       }
     })
+    .state('shopping_completed')
+    .onEnter((context) => {
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Shopping completed, determining next transition...');
+      
+      // Determine the next state based on context
+      let nextState = 'completed'; // default
+      
+      if (context && context._shouldShowSpellSelection && context.actor && context._shouldShowSpellSelection(context.actor, context)) {
+        nextState = 'selecting_spells';
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Transitioning to selecting_spells');
+      } else {
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Transitioning to completed');
+      }
+      
+      // Use a timeout to ensure FSM is ready for the next transition
+      setTimeout(() => {
+        if (nextState === 'selecting_spells') {
+          fsm.handle('transition_to_spells_from_shopping', context);
+        } else {
+          fsm.handle('transition_to_completed_from_shopping', context);
+        }
+      }, 10);
+    })
+    .on('transition_to_spells_from_shopping').transitionTo('selecting_spells')
+    .on('transition_to_completed_from_shopping').transitionTo('completed')
     .state('selecting_spells')
     .on(['spells_complete', 'skip_spells']).transitionTo('completed')
     .on('error').transitionTo('error')
@@ -374,6 +401,17 @@ export function createWorkflowStateMachine() {
       if (context && context.error) ui.notifications.error(context.error);
     })
     .start();
+  
+  // Wrap the handle method to capture context
+  const originalHandle = fsm.handle.bind(fsm);
+  fsm.handle = function(event, context) {
+    if (context) {
+      lastHandleContext = context;
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Captured context for event:', event, context);
+    }
+    return originalHandle(event, context);
+  };
+  
   return fsm;
 }
 
@@ -408,3 +446,39 @@ export default {
 // workflowFSM.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, { ...workflowFSMContext, actor: currentActor });
 //
 // This ensures all state actions have access to the required context and stores.
+
+/**
+ * Helper function to determine the correct equipment completion event
+ * This replaces the dynamic transition logic that was previously in onEnter
+ * Note: This function never returns the raw 'equipment_complete' event - it always 
+ * returns a specific transition event to prevent FSM transition bugs.
+ */
+export function getEquipmentCompletionEvent(context, isSkipping = false) {
+  const actualContext = context || workflowFSMContext;
+  
+  if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Determining equipment completion event, context:', actualContext);
+  
+  // Handle skip equipment case
+  if (isSkipping) {
+    if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Equipment skipped, returning skip_equipment event');
+    return 'skip_equipment';
+  }
+  
+  // Check if shopping should be shown first (higher priority)
+  if (actualContext._shouldShowShopping && actualContext._shouldShowShopping()) {
+    if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Should show shopping, returning shopping event');
+    return 'equipment_complete_to_shopping';
+  }
+  
+  // Check if spell selection should be shown
+  if (actualContext._shouldShowSpellSelection && actualContext.actor && 
+      actualContext._shouldShowSpellSelection(actualContext.actor, actualContext)) {
+    if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Should show spell selection, returning spells event');
+    return 'equipment_complete_to_spells';
+  }
+  
+  // Default case: no more steps needed, go directly to completed
+  // Note: We need a specific event for this transition since raw 'equipment_complete' was removed
+  if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] No additional steps needed, returning equipment_complete_to_completed event');
+  return 'equipment_complete_to_completed';
+}
