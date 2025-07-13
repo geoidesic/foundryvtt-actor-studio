@@ -91,6 +91,9 @@ export async function createActorInGameAndEmbedItems({
   // Create Actor
   const createdActor = await Actor.create(get(actor).toObject());
   actorInGame.set(createdActor);
+  
+  // Set the actor in the workflow FSM context
+  workflowFSMContext.actor = createdActor;
 
   const $race = get(race);
   const $subRace = get(subRace);
@@ -213,6 +216,9 @@ export async function updateActorAndEmbedItems({
 
   await get(actor).update({ name: actorName });
   actorInGame.set(get(actor));
+  
+  // Set the actor in the workflow FSM context
+  workflowFSMContext.actor = get(actor);
   
   const $classUuidForLevelUp = get(classUuidForLevelUp);
   const $subClassUuidForLevelUp = get(subClassUuidForLevelUp);
@@ -612,6 +618,51 @@ export async function handleFinalizeSpells({
   }
   
   if (setProcessing) setProcessing(false);
+}
+
+/**
+ * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
+ * Decides which workflow state to transition to next, based on settings and actor
+ * @param {object} context - Finity workflow context (should include actor)
+ * @returns {string} The next state name for the FSM
+ */
+export async function handleAdvancementCompletion(context) {
+  const { actor } = context;
+  const enableEquipment = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
+  const enableShop = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+  const enableSpells = game.settings.get(MODULE_ID, 'enableSpellSelection');
+
+  // Helper to check if actor is a spellcaster
+  function isSpellcaster(actor) {
+    if (!actor) return false;
+    const classes = actor.classes || {};
+    return Object.values(classes).some(cls => {
+      const progression = cls.system?.spellcasting?.progression;
+      return progression && progression !== 'none';
+    });
+  }
+
+  const spellcaster = isSpellcaster(actor);
+  console.log('[GAS][handleAdvancementCompletion] enableEquipment:', enableEquipment, 'enableShop:', enableShop, 'enableSpells:', enableSpells, 'isSpellcaster:', spellcaster, 'actor:', actor?.name, actor);
+
+  if (!enableEquipment && !enableShop && !enableSpells) {
+    console.log('[GAS][handleAdvancementCompletion] All features disabled, returning completed');
+    return 'completed';
+  }
+  if (enableEquipment) {
+    console.log('[GAS][handleAdvancementCompletion] Equipment enabled, returning selecting_equipment');
+    return 'selecting_equipment';
+  }
+  if (enableShop) {
+    console.log('[GAS][handleAdvancementCompletion] Shop enabled, returning shopping');
+    return 'shopping';
+  }
+  if (enableSpells && spellcaster) {
+    console.log('[GAS][handleAdvancementCompletion] Spells enabled and actor is spellcaster, returning selecting_spells');
+    return 'selecting_spells';
+  }
+  console.log('[GAS][handleAdvancementCompletion] Fallback, returning completed');
+  return 'completed';
 }
 
 /**

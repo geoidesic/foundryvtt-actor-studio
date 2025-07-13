@@ -45,6 +45,8 @@ export const WORKFLOW_EVENTS = {
  */
 export const workflowFSMContext = {
   isProcessing: writable(false),
+  actor: undefined,
+  nextState: undefined,
   _shouldShowEquipmentSelection: function (context) {
     const enableEquipmentSelection = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
     if (!enableEquipmentSelection) return false;
@@ -85,59 +87,16 @@ export const workflowFSMContext = {
   _shouldShowShopping: function () {
     const enableShopping = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
     return enableShopping;
-  },
-  actor: undefined,
+  }
 };
-
-/**
- * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
- * Decides which workflow state to transition to next, based on settings and actor
- * @param {object} context - Finity workflow context (should include actor)
- * @returns {string} The next state name for the FSM
- */
-function handleAdvancementCompletion(context) {
-  const { actor } = context;
-  const enableEquipment = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
-  const enableShop = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
-  const enableSpells = game.settings.get(MODULE_ID, 'enableSpellSelection');
-
-  // Helper to check if actor is a spellcaster
-  function isSpellcaster(actor) {
-    if (!actor) return false;
-    const classes = actor.classes || {};
-    return Object.values(classes).some(cls => {
-      const progression = cls.system?.spellcasting?.progression;
-      return progression && progression !== 'none';
-    });
-  }
-
-  const spellcaster = isSpellcaster(actor);
-  console.log('[GAS][handleAdvancementCompletion] enableEquipment:', enableEquipment, 'enableShop:', enableShop, 'enableSpells:', enableSpells, 'isSpellcaster:', spellcaster, 'actor:', actor?.name, actor);
-
-  if (!enableEquipment && !enableShop && !enableSpells) {
-    console.log('[GAS][handleAdvancementCompletion] All features disabled, returning completed');
-    return 'completed';
-  }
-  if (enableEquipment) {
-    console.log('[GAS][handleAdvancementCompletion] Equipment enabled, returning selecting_equipment');
-    return 'selecting_equipment';
-  }
-  if (enableShop) {
-    console.log('[GAS][handleAdvancementCompletion] Shop enabled, returning shopping');
-    return 'shopping';
-  }
-  if (enableSpells && spellcaster) {
-    console.log('[GAS][handleAdvancementCompletion] Spells enabled and actor is spellcaster, returning selecting_spells');
-    return 'selecting_spells';
-  }
-  console.log('[GAS][handleAdvancementCompletion] Fallback, returning completed');
-  return 'completed';
-}
 
 /**
  * Finity-based state machine for character creation workflow
  */
 export function createWorkflowStateMachine() {
+  // Store the next state in a closure variable accessible to both onEnter and transitionTo
+  let advancementNextState = 'completed';
+  
   const fsm = Finity
     .configure()
     .initialState('idle')
@@ -145,7 +104,7 @@ export function createWorkflowStateMachine() {
     .on('start_character_creation').transitionTo('creating_character')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
+      if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered IDLE state');
     })
     .state('creating_character')
@@ -153,22 +112,48 @@ export function createWorkflowStateMachine() {
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(true);
+      if (context && context.isProcessing) context.isProcessing.set(true);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
     })
     .state('processing_advancements')
-    .on('advancements_complete').transitionTo((context) => {
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Advancements complete, next state:', context.nextState, 'actor:', context.actor?.name);
-      return context.nextState;
+    .on('advancements_complete').transitionTo(() => {
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Transition handler called for advancements_complete, next state:', advancementNextState);
+      const state = advancementNextState;
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Returning state:', state);
+      return state;
     })
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter(async function (context) {
+      // The context parameter is sometimes a string in Finity, so we need to ensure it's an object
+      if (typeof context === 'string') {
+        context = { ...workflowFSMContext };
+      } else {
+        Object.assign(context, workflowFSMContext);
+      }
+      
       await dropItemRegistry.advanceQueue(true);
-      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, running handleAdvancementCompletion');
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Queue processed, determining next state');
+      
+      // Import workflow function dynamically to avoid circular dependency
+      const { handleAdvancementCompletion } = await import('~/src/lib/workflow.js');
       const nextState = await handleAdvancementCompletion(context);
-      context.nextState = nextState;
-      setTimeout(() => fsm.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE), 0);
+      
+      // Store the nextState in the closure variable
+      advancementNextState = nextState;
+      
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] About to trigger advancements_complete with nextState:', advancementNextState);
+      
+      // Use setTimeout to ensure FSM is ready for the transition
+      setTimeout(() => {
+        if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Triggering advancements_complete event, current state:', fsm.getCurrentState());
+        try {
+          fsm.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE);
+          if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Event handled, new state:', fsm.getCurrentState());
+        } catch (error) {
+          console.error('[WORKFLOW] Error handling advancements_complete event:', error);
+        }
+      }, 100); // Increase delay to 100ms to ensure FSM state is stable
     })
     .state('selecting_equipment')
     .on(['equipment_complete', 'skip_equipment']).transitionTo((context) => {
@@ -179,9 +164,9 @@ export function createWorkflowStateMachine() {
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
+      if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
-      Hooks.call('gas.equipmentSelection', context.actor);
+      if (context && context.actor) Hooks.call('gas.equipmentSelection', context.actor);
     })
     .state('shopping')
     .on(['shopping_complete', 'skip_shopping']).transitionTo((context) => {
@@ -191,7 +176,7 @@ export function createWorkflowStateMachine() {
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
+      if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SHOPPING state');
       // Add shop tab and switch to it
       const currentTabs = get(tabs);
@@ -221,18 +206,24 @@ export function createWorkflowStateMachine() {
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
+      if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
+      console.log('[WORKFLOW] SELECTING_SPELLS onEnter called - adding spells tab');
       const currentTabs = get(tabs);
       if (!currentTabs.find(t => t.id === "spells")) {
+        console.log('[WORKFLOW] Adding spells tab to tabs');
         tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
+      } else {
+        console.log('[WORKFLOW] Spells tab already exists');
       }
+      console.log('[WORKFLOW] Setting active tab to spells');
       activeTab.set("spells");
+      console.log('[WORKFLOW] Active tab set to spells, current tabs:', get(tabs));
     })
     .state('completed')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
+      if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
       const { actor } = context;
       if (actor) {
@@ -247,9 +238,9 @@ export function createWorkflowStateMachine() {
     .state('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
-      if (context.isProcessing) context.isProcessing.set(false);
-      if (window.GAS?.log?.e) window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
-      if (context.error) ui.notifications.error(context.error);
+      if (context && context.isProcessing) context.isProcessing.set(false);
+      if (window.GAS?.log?.e) window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context?.error);
+      if (context && context.error) ui.notifications.error(context.error);
     })
     .start();
   return fsm;

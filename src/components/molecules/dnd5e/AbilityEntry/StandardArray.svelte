@@ -100,7 +100,7 @@
     (x) => x[1].value,
   );
   $: allTens = actorAbilityValues.reduce((acc, curr) => {
-    window.GAS.log.p("curr", curr);
+    // window.GAS.log.p("curr", curr);
     if (curr == 10) {
       acc = true;
     }
@@ -128,7 +128,7 @@
       Object.values(STANDARD_ARRAY)
     )
   ) {
-    window.GAS.log.d('StandardArray: Triggering reset for doc name:', $doc.name);
+    // window.GAS.log.d('StandardArray: Triggering reset for doc name:', $doc.name);
     lastResetDocName = $doc.name;
     reset();
   }
