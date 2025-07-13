@@ -112,6 +112,10 @@ export function createWorkflowStateMachine() {
       if (context && context.isProcessing) context.isProcessing.set(false);
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Entered IDLE state');
       
+      // Clear readonly tabs when returning to idle (reset state)
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Clearing readonly tabs on idle');
+      readOnlyTabs.set([]);
+      
       // Destroy any open advancement managers when returning to idle
       setTimeout(() => {
         try {
@@ -238,6 +242,11 @@ export function createWorkflowStateMachine() {
       activeTab.set("equipment");
       if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Active tab set to equipment, current tabs:', get(tabs));
       
+      // Set the first four tabs as readonly after character creation
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Setting first four tabs as readonly');
+      readOnlyTabs.set(["race", "background", "abilities", "class"]);
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Read-only tabs set to:', get(readOnlyTabs));
+      
       if (context && context.actor) Hooks.call('gas.equipmentSelection', context.actor);
       
       // Handle async operations like destroying advancement managers
@@ -313,6 +322,11 @@ export function createWorkflowStateMachine() {
       console.log('[WORKFLOW] Setting active tab to spells');
       activeTab.set("spells");
       console.log('[WORKFLOW] Active tab set to spells, current tabs:', get(tabs));
+      
+      // Set the first four tabs as readonly after character creation
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Setting first four tabs as readonly');
+      readOnlyTabs.set(["race", "background", "abilities", "class"]);
+      if (window.GAS?.log?.d) window.GAS.log.d('[WORKFLOW] Read-only tabs set to:', get(readOnlyTabs));
       
       // Handle async operations like destroying advancement managers (if we had advancement tab)
       if (hasAdvancementsTab) {
