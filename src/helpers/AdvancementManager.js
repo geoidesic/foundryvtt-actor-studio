@@ -4,8 +4,8 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { delay, prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Utility';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
-import { preAdvancementSelections } from '~/src/stores/index';
-import { workflowStateMachine, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+import { preAdvancementSelections, actorInGame } from '~/src/stores/index';
+import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
 
 /**
  * Class responsible for monitoring and managing the advancement process
@@ -98,32 +98,15 @@ export class AdvancementManager {
     return;
   }
 
-  /**
-   * Opens equipment tab if enabled, otherwise closes the advancement manager
-   * @param {Actor} currentActor - The current actor being processed
-   */
-  closeOrEquip(currentActor) {
-    // Use the state machine to determine next workflow step
-    window.GAS.log.d('[ADVANCEMENT MANAGER] closeOrEquip called with actor:', currentActor);
-    window.GAS.log.d('[ADVANCEMENT MANAGER] About to call workflowStateMachine.transition with ADVANCEMENTS_COMPLETE');
-    window.GAS.log.d('[ADVANCEMENT MANAGER] Actor classes:', currentActor?.classes);
-    
-    // Always call ADVANCEMENTS_COMPLETE - let the workflow state machine handle timing
-    window.GAS.log.d('[ADVANCEMENT MANAGER] Calling ADVANCEMENTS_COMPLETE transition');
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, {
-      actor: currentActor
-    });
-    
-    window.GAS.log.d('[ADVANCEMENT MANAGER] closeOrEquip completed');
-  }
 
   /**
    * Handles the case when the queue is empty
    */
   handleEmptyQueue() {
-    const currentActor = get(this.inProcessStore)?.actor;
+    window.GAS.log.d('[ADVANCEMENT MANAGER] handleEmptyQueue')
+    const inGameActor = get(actorInGame);
+    const currentActor = inGameActor ? inGameActor : get(this.inProcessStore)?.actor;
     this.inProcessStore.set(false);
-    this.closeOrEquip(currentActor);
   }
 
   /**
@@ -151,29 +134,33 @@ export class AdvancementManager {
    */
   async advanceQueue() {
     window.GAS.log.d('[ADVANCEMENT MANAGER] advancing queue of length', get(this.store).length);
-    
-    // Process all items in the queue
-    while (get(this.store).length > 0) {
-      const currentStore = get(this.store);
-      const next = currentStore[0];
+    try {
       
-      if (!next) {
-        break;
+      // Process all items in the queue
+      while (get(this.store).length > 0) {
+        const currentStore = get(this.store);
+        const next = currentStore[0];
+        
+        if (!next) {
+          break;
+        }
+  
+        //- handle next item
+        window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
+        const result = await this.handleNextItem(next);
+  
+        //- set the advancement manager watcher for this item
+        window.GAS.log.d('[ADVANCEMENT MANAGER] setting advancement manager watcher');
+        await this.watchAdvancementManager();
       }
-
-      //- handle next item
-      window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
-      const result = await this.handleNextItem(next);
-
-      //- set the advancement manager watcher for this item
-      window.GAS.log.d('[ADVANCEMENT MANAGER] setting advancement manager watcher');
-      await this.watchAdvancementManager();
+  
+      //- handle empty queue after processing all items
+      window.GAS.log.d('[ADVANCEMENT MANAGER] queue is empty, handling empty queue');
+      this.handleEmptyQueue();
+      return true;
+    } catch (error) {
+      return false
     }
-
-    //- handle empty queue after processing all items
-    window.GAS.log.d('[ADVANCEMENT MANAGER] queue is empty, handling empty queue');
-    this.handleEmptyQueue();
-    return false;
   }
 } 
 

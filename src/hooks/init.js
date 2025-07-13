@@ -9,7 +9,7 @@ import packageJson from '../../package.json';
 import manifestJson from '../../module.json';
 
 
-window.GAS = {};
+window.GAS = window.GAS || {};
 
 export const init = (app, html, data) => {
 

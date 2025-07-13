@@ -4,7 +4,7 @@
  */
 import { get } from "svelte/store";
 import { MODULE_ID } from "~/src/helpers/constants";
-import { workflowStateMachine, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
 import {
   getLevelByDropType,
   itemHasAdvancementChoices,
@@ -55,6 +55,9 @@ export async function handleContainerContents(sourceItem, createdContainerItem, 
   }
 }
 
+// Instantiate the Finity-based workflow FSM
+// const workflowFSM = createWorkflowStateMachine();
+
 /**
  * Creates a new actor in the game world and embeds all selected items
  * @param {Object} params - Parameters object
@@ -82,7 +85,7 @@ export async function createActorInGameAndEmbedItems({
   } = stores;
 
   // Initialize the workflow state machine for character creation
-  workflowStateMachine.transition(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION, workflowFSMContext);
 
   // Create Actor
   const createdActor = await Actor.create(get(actor).toObject());
@@ -177,35 +180,7 @@ export async function createActorInGameAndEmbedItems({
     preAdvancementSelections.update(prev => ({ ...prev, subclass: $characterSubClass }));
   }
 
-  await dropItemRegistry.advanceQueue(true);
-  
-  // If advancement is disabled, destroy any open advancement managers
-  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
-    window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
-    destroyAdvancementManagers();
-  }
-  
-  // Initialize the workflow state machine for character creation
-  window.GAS.log.d('[WORKFLOW] About to call workflowStateMachine.transition with CHARACTER_CREATED');
-  window.GAS.log.d('[WORKFLOW] Created actor:', createdActor);
-  window.GAS.log.d('[WORKFLOW] Created actor classes:', createdActor.classes);
-  
-  // Check current state - only call CHARACTER_CREATED if we're still in creating_character state
-  // The AdvancementManager may have already moved the workflow forward
-  const currentState = workflowStateMachine.getState();
-  window.GAS.log.d('[WORKFLOW] Current workflow state before CHARACTER_CREATED:', currentState);
-  
-  if (currentState === 'creating_character') {
-    window.GAS.log.d('[WORKFLOW] Calling CHARACTER_CREATED transition');
-    workflowStateMachine.transition(WORKFLOW_EVENTS.CHARACTER_CREATED, {
-      actor: createdActor
-    });
-  } else {
-    window.GAS.log.d('[WORKFLOW] Skipping CHARACTER_CREATED transition - workflow already advanced to:', currentState);
-  }
-  
-  window.GAS.log.d('[WORKFLOW] Called workflowStateMachine.transition - returning created actor');
-  return createdActor;
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.CHARACTER_CREATED, workflowFSMContext);
 }
 
 /**
@@ -272,8 +247,9 @@ export async function updateActorAndEmbedItems({
   }
 
   window.GAS.log.d('[WORKFLOW] updateActorAndEmbedItems advancing queue');
-  dropItemRegistry.advanceQueue(true);
-  
+  await dropItemRegistry.advanceQueue(true);
+  // After the queue is advanced, trigger the state machine event for post-queue processing
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.QUEUE_PROCESSED, { ...workflowFSMContext, actor: get(actor) });
   // If advancement is disabled, destroy any open advancement managers
   if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
     window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
@@ -360,9 +336,7 @@ export async function handleAddEquipment({
   }
   
   // Use state machine to transition to next step
-  workflowStateMachine.transition(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, {
-    actor: $actorInGame
-  });
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, { ...workflowFSMContext, actor: $actorInGame });
   
   // Call the callback to mark equipment as added
   if (onEquipmentAdded) {
@@ -370,13 +344,6 @@ export async function handleAddEquipment({
   }
 }
 
-/**
- * Handles finalizing purchases in the shop
- * @param {Object} params - Parameters object
- * @param {Object} params.stores - Store references
- * @param {Function} params.setProcessing - Function to set processing state
- * @returns {Promise<void>}
- */
 export async function handleFinalizePurchase({
   stores,
   setProcessing
@@ -399,9 +366,7 @@ export async function handleFinalizePurchase({
 
   if (!$actorInGame) {
     ui.notifications.error("No active character found");
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
-      error: "No active character found"
-    });
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, { ...workflowFSMContext, error: "No active character found" });
     if (setProcessing) setProcessing(false);
     return;
   }
@@ -434,34 +399,23 @@ export async function handleFinalizePurchase({
   } catch (error) {
     console.error("Error during finalize purchase:", error);
     ui.notifications.error("An error occurred during purchase.");
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
-      error: error.message
-    });
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, { ...workflowFSMContext, error: error.message });
     if (setProcessing) setProcessing(false);
     return;
   }
-    
   try {
     if (success) {
       ui.notifications.info("Purchase completed successfully");
-      workflowStateMachine.transition(WORKFLOW_EVENTS.SHOPPING_COMPLETE, {
-        actor: $actorInGame
-      });
+      getWorkflowFSM().handle(WORKFLOW_EVENTS.SHOPPING_COMPLETE, { ...workflowFSMContext, actor: $actorInGame });
     } else {
       ui.notifications.error("Failed to complete purchase");
-      workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
-        error: "Failed to complete purchase"
-      });
+      getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, { ...workflowFSMContext, error: "Failed to complete purchase" });
     }
   } catch (error) {
     console.error("Error handling finalize purchase result:", error);
     ui.notifications.error("An error occurred while processing the purchase result.");
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
-      error: error.message
-    });
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, { ...workflowFSMContext, error: error.message });
   }
-  
-  if (setProcessing) setProcessing(false);
 }
 
 /**
@@ -567,7 +521,9 @@ export async function handleCharacterUpdate({
   }
 
   // Start processing the queue once all items are added
-  dropItemRegistry.advanceQueue(true);
+  await dropItemRegistry.advanceQueue(true);
+  // After the queue is advanced, trigger the state machine event for post-queue processing
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.QUEUE_PROCESSED, { ...workflowFSMContext, actor: $actorInGame });
 }
 
 /**
@@ -636,28 +592,98 @@ export async function handleFinalizeSpells({
         ui.notifications.info("Spells added successfully");
         
         // Use state machine to transition to next step
-        workflowStateMachine.transition(WORKFLOW_EVENTS.SPELLS_COMPLETE, {
+        getWorkflowFSM().handle(WORKFLOW_EVENTS.SPELLS_COMPLETE, {
           actor: $actorInGame
         });
       } else {
         ui.notifications.error("Failed to add spells");
-        workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+        getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, {
           error: "Failed to add spells"
         });
       }
     } else {
       ui.notifications.error("Spell selection system not available");
-      workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+      getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, {
         error: "Spell selection system not available"
       });
     }
   } catch (error) {
     console.error("Error during spell finalization:", error);
     ui.notifications.error("An error occurred while adding spells");
-    workflowStateMachine.transition(WORKFLOW_EVENTS.ERROR, {
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR, {
       error: error.message
     });
   }
   
   if (setProcessing) setProcessing(false);
+}
+
+/**
+ * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
+ * Decides whether to close Actor Studio, open actor sheet, or transition to next state
+ * @param {object} context - Finity workflow context (should include actor)
+ */
+export function handleAdvancementCompletion(context) {
+  alert('o');
+  const { actor } = context;
+  // Example settings logic (customize as needed)
+  const autoClose = game.settings.get(MODULE_ID, 'autoCloseOnAdvancementsComplete');
+  const openSheet = game.settings.get(MODULE_ID, 'openSheetOnAdvancementsComplete');
+  // If auto-close is enabled, close Actor Studio
+  if (autoClose) {
+    window.GAS.log.d('[WORKFLOW] Advancements complete: auto-closing Actor Studio');
+    Hooks.call('gas.close');
+    return;
+  }
+  // If openSheet is enabled, open the actor sheet
+  if (openSheet && actor) {
+    window.GAS.log.d('[WORKFLOW] Advancements complete: opening actor sheet');
+    actor.sheet.render(true);
+    // Optionally close Actor Studio after a delay
+    setTimeout(() => Hooks.call('gas.close'), 1500);
+    return;
+  }
+  // Otherwise, decide next workflow state based on actor/system
+  // (You can add more logic here as needed)
+  // If equipment selection is enabled, transition to equipment
+  if (context._shouldShowEquipmentSelection(context)) {
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.EQUIPMENT_COMPLETE, context);
+    return;
+  }
+  // If spell selection is enabled, transition to spells
+  if (context._shouldShowSpellSelection(actor, context)) {
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.SPELLS_COMPLETE, context);
+    return;
+  }
+  // Otherwise, mark workflow as completed
+  getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET, context);
+}
+
+/**
+ * Handles post-queue processing logic after item queue is completed
+ * @param {Object} params
+ * @param {Object} params.actor - The created actor
+ * @returns {void}
+ */
+export function postQueueProcessing({ actor }) {
+  // If advancement is disabled, destroy any open advancement managers
+  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+    window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
+    destroyAdvancementManagers();
+  }
+
+  window.GAS.log.d('[WORKFLOW] Created actor:', actor);
+  window.GAS.log.d('[WORKFLOW] Created actor classes:', actor.classes);
+
+  // Check current state - only call CHARACTER_CREATED if we're still in creating_character state
+  // The AdvancementManager may have already moved the workflow forward
+  const currentState = getWorkflowFSM().getCurrentState();
+  window.GAS.log.d('[WORKFLOW] Current workflow state before CHARACTER_CREATED:', currentState);
+
+  if (currentState === 'creating_character') {
+    window.GAS.log.d('[WORKFLOW] Calling CHARACTER_CREATED transition');
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.CHARACTER_CREATED, { ...workflowFSMContext, actor });
+  } else {
+    window.GAS.log.d('[WORKFLOW] Skipping CHARACTER_CREATED transition - workflow already advanced to:', currentState);
+  }
 }

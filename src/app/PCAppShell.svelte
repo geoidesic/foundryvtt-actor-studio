@@ -9,7 +9,7 @@
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { workflowStateMachine } from '~/src/helpers/WorkflowStateMachine';
+  import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -48,7 +48,8 @@
     '--illuminated-initial-width': illuminatedWidth
   };
 
-  onMount( async () => {
+  onMount(async () => {
+    getWorkflowFSM()
     if(levelUp) {
       $actorInGame = $documentStore
       // Initialize characterClass from the actor's class data if in level-up mode
@@ -58,9 +59,6 @@
         if (classItem) {
           // Set the characterClass store with the class item
           characterClass.set(classItem);
-          window.GAS.log.d('[PCAppShell] Initialized characterClass for level-up:', classItem);
-        } else {
-          window.GAS.log.d('[PCAppShell] No class found on actor for level-up');
         }
       }
     }
@@ -138,12 +136,19 @@
     
     console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
-    workflowStateMachine.reset(); // Reset workflow state machine to idle
-    console.log('[PCAPP] Workflow state after reset:', workflowStateMachine.getState());
+    getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET, workflowFSMContext); // Reset workflow state machine to idle
+    console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
     
     // Set flag to indicate we're closing from the gas hook
-    if (application.setClosingFromGasHook) {
+    if (application && typeof application.setClosingFromGasHook === 'function') {
       application.setClosingFromGasHook(true);
+      console.log('[PCAPP] setClosingFromGasHook called on application instance');
+    } else {
+      console.warn('[PCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
+      // Fallback: try to close directly if possible
+      if (application && typeof application.close === 'function') {
+        application.close();
+      }
     }
     application.close();
     console.log('[PCAPP] ====== gasClose COMPLETE ======');
