@@ -80,15 +80,6 @@ function getActorStudioButton(buttonId, text = false) {
   gasButton.className = 'dialog-button default bright';
   gasButton.setAttribute('data-gas_start', '');
   gasButton.setAttribute('tabindex', '0');
-  gasButton.style.display = 'flex';
-  gasButton.style.alignItems = 'center';
-  gasButton.style.justifyContent = 'center';
-  gasButton.style.backgroundColor = 'white';
-  gasButton.style.padding = '0';
-  gasButton.style.margin = '0';
-  gasButton.style.height = '40px';
-  gasButton.style.pointerEvents = 'all';
-  gasButton.style.zIndex = '9999';
   gasButton.onclick = () => console.log('GAS native onclick');
 
   const img = document.createElement('img');
