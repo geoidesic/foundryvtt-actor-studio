@@ -99,6 +99,7 @@ describe('destroyAdvancementManagers on Completion', () => {
         { id: 'background', label: 'Background' },
         { id: 'class', label: 'Class' }
       ]),
+      readOnlyTabs: mockWritable([]),
       actorInGame: mockWritable(null),
       preAdvancementSelections: mockWritable({}),
       dropItemRegistry: {

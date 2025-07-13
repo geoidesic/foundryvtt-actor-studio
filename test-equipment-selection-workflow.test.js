@@ -354,6 +354,9 @@ describe('Equipment Selection with Advancement Capture Disabled', () => {
   });
   
   it('should set the first four tabs as readonly when transitioning to selecting_equipment', async () => {
+    // Clear all previous module cache to ensure fresh imports
+    vi.resetModules();
+    
     const { createWorkflowStateMachine, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
     
     // Create FSM
