@@ -100,7 +100,7 @@ function getActorStudioButton(buttonId, text = false) {
   setTimeout(() => {
     const btn = document.getElementById(buttonId);
     if (btn) {
-      console.log('GAS: computed style', window.getComputedStyle(btn));
+      // console.log('GAS: computed style', window.getComputedStyle(btn));
       console.log('GAS: button parent', btn.parentElement);
     }
   }, 500);

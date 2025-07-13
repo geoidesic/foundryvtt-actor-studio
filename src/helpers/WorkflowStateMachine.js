@@ -110,15 +110,14 @@ export function createWorkflowStateMachine() {
     })
     .state('processing_advancements')
     .on('advancements_complete').transitionTo(async (context) => {
-      // handleAdvancementCompletion should return the next state as a string
       return await handleAdvancementCompletion(context);
     })
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter(async (context) => {
-      // You can do any setup or queue processing here if needed
-      // For example, if you want to start the queue automatically:
-      // await dropItemRegistry.advanceQueue(true);
+      // Start processing the queue and trigger the event when done
+      await dropItemRegistry.advanceQueue(true);
+      workflowFSM.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, context);
     })
     .state('selecting_equipment')
     .on(['equipment_complete', 'skip_equipment']).transitionTo((context) => {
