@@ -50,16 +50,10 @@ const mockWritable = (value) => ({
   subscribe: vi.fn()
 });
 
-const mockGet = vi.fn((store) => {
-  if (store === mockStores.tabs) return [
-    { id: 'abilities', label: 'Abilities' },
-    { id: 'race', label: 'Race' },
-    { id: 'background', label: 'Background' },
-    { id: 'class', label: 'Class' }
-  ];
-  if (store === mockStores.activeTab) return 'abilities';
-  if (store === mockStores.readOnlyTabs) return [];
-  return null;
+const mockDerived = (stores, fn) => ({
+  set: vi.fn(),
+  update: vi.fn(),
+  subscribe: vi.fn()
 });
 
 const mockStores = {
@@ -72,14 +66,45 @@ const mockStores = {
   }
 };
 
+const mockGet = vi.fn((store) => {
+  if (store === mockStores.tabs) return [
+    { id: 'abilities', label: 'Abilities' },
+    { id: 'race', label: 'Race' },
+    { id: 'background', label: 'Background' },
+    { id: 'class', label: 'Class' }
+  ];
+  if (store === mockStores.activeTab) return 'abilities';
+  if (store === mockStores.readOnlyTabs) return [];
+  return null;
+});
+
 vi.mock('svelte/store', () => ({
   writable: mockWritable,
+  derived: mockDerived,
   get: mockGet
 }));
 
 vi.mock('~/src/stores/index', () => mockStores);
 vi.mock('~/src/stores/startingEquipment', () => ({
   compatibleStartingEquipment: mockWritable([])
+}));
+vi.mock('~/src/stores/goldChoices', () => ({
+  totalGoldFromChoices: mockWritable(0)
+}));
+vi.mock('~/src/stores/storeDefinitions', () => ({
+  goldRoll: mockWritable(0)
+}));
+vi.mock('~/src/lib/workflow.js', () => ({
+  handleAdvancementCompletion: vi.fn()
+}));
+vi.mock('~/src/helpers/AdvancementManager', () => ({
+  destroyAdvancementManagers: vi.fn()
+}));
+vi.mock('~/src/helpers/Utility', () => ({
+  getLevelByDropType: vi.fn(),
+  itemHasAdvancementChoices: vi.fn(),
+  isAdvancementsForLevelInItem: vi.fn(),
+  dropItemOnCharacter: vi.fn()
 }));
 
 vi.mock('finity', () => {
@@ -95,7 +120,11 @@ vi.mock('finity', () => {
     state: vi.fn(() => mockFinity),
     on: vi.fn(() => mockFinity),
     transitionTo: vi.fn(() => mockFinity),
+    withCondition: vi.fn(() => mockFinity),
     onEnter: vi.fn(() => mockFinity),
+    do: vi.fn(() => mockFinity),
+    onSuccess: vi.fn(() => mockFinity),
+    onFailure: vi.fn(() => mockFinity),
     start: vi.fn(() => mockFsm)
   };
   

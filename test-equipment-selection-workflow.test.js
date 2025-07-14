@@ -757,85 +757,28 @@ describe('Equipment Selection with Advancement Capture Disabled', () => {
     expect(fsm.getCurrentState()).toBe('shopping'); // This will fail if bug exists
   });
 
-  // NEW TDD TEST: This test simulates the real bug where shopping tab is not opening
-  it('should reproduce the real-world bug: shopping tab not opening when it should (TDD test)', async () => {
-    // Configure settings to match what would cause shopping to be enabled in the real app
-    global.game.settings.get.mockImplementation((moduleId, setting) => {
-      const settings = {
-        'enableEquipmentSelection': true,
-        'enableEquipmentPurchase': true,    // Shopping should be enabled
-        'enableSpellSelection': false,      // Spells disabled to prioritize shopping
-        'disableAdvancementCapture': true
-      };
-      return settings[setting] || false;
-    });
-    
-    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext, getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
-    
-    // Create FSM
-    const fsm = createWorkflowStateMachine();
-    
-    // Set up test context with a regular Fighter (non-spellcaster) - this matches the real logs
-    const testContext = {
-      ...workflowFSMContext,
-      actor: { 
-        name: 'Test Fighter', 
-        classes: { 
-          fighter: { 
-            system: { 
-              spellcasting: { progression: 'none' } 
-            } 
-          } 
-        } 
-      }
-    };
-    
-    // Set up to handle equipment completion - start from the beginning of the workflow
-    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
-    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
-    
-    // Wait for automatic transition to selecting_equipment
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    expect(fsm.getCurrentState()).toBe('selecting_equipment');
-    
-    // Now simulate what the real workflow.js does - call the helper function to get the event
-    const completionEvent = getEquipmentCompletionEvent(testContext, false);
-    console.log('[TDD TEST] Real workflow would use event:', completionEvent);
-    console.log('[TDD TEST] Settings check - shopping enabled:', global.game.settings.get('foundryvtt-actor-studio', 'enableEquipmentPurchase'));
-    console.log('[TDD TEST] Settings check - spells enabled:', global.game.settings.get('foundryvtt-actor-studio', 'enableSpellSelection'));
-    
-    // Handle the completion event - this should transition to shopping, not completed
-    fsm.handle(completionEvent, testContext);
-    
-    // The bug would be if this transitions to 'completed' instead of 'shopping'
-    const currentState = fsm.getCurrentState();
-    console.log('[TDD TEST] Current state after equipment completion:', currentState);
-    
-    // This should pass if the bug is fixed
-    expect(currentState).toBe('shopping');
-    expect(currentState).not.toBe('completed');
-  });
-
-  // This test confirms the old behavior would have failed 
-  it('should demonstrate the OLD bug: using equipment_complete directly would go to completed instead of shopping', async () => {
-    // Configure settings to enable shopping
+  // NEW TDD TESTS for spell selection guard scenarios after shopping
+  it('should call gas.close after shopping when spells are disabled (TDD test)', async () => {
+    // Configure: shopping enabled, spells disabled
     global.game.settings.get.mockImplementation((moduleId, setting) => {
       const settings = {
         'enableEquipmentSelection': true,
         'enableEquipmentPurchase': true,    // Shopping enabled
-        'enableSpellSelection': false,
-        'disableAdvancementCapture': true
+        'enableSpellSelection': false,      // Spells disabled - should close after shopping
+        'disableAdvancementCapture': false
       };
       return settings[setting] || false;
     });
+    
+    // Mock Hooks.call to track gas.close calls
+    global.Hooks.call.mockClear();
     
     const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
     
     // Create FSM
     const fsm = createWorkflowStateMachine();
     
-    // Set up context
+    // Set up context with a fighter (has classes but spells disabled)
     const testContext = {
       ...workflowFSMContext,
       actor: { 
@@ -850,22 +793,130 @@ describe('Equipment Selection with Advancement Capture Disabled', () => {
       }
     };
     
-    // Set up to handle equipment completion
+    // Navigate through workflow to shopping
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
     
     // Wait for transition to selecting_equipment
     await new Promise(resolve => setTimeout(resolve, 300));
-    
     expect(fsm.getCurrentState()).toBe('selecting_equipment');
     
-    // The OLD bug: using the raw equipment_complete event should now be rejected by the FSM
-    // This demonstrates that the bug is fixed because the FSM no longer accepts this event
-    expect(() => {
-      fsm.handle('equipment_complete', testContext);  // The old way that caused the bug
-    }).toThrow('Unhandled event \'equipment_complete\' in state \'selecting_equipment\'');
+    // Complete equipment to go to shopping (use correct event)
+    fsm.handle('equipment_complete_to_shopping', testContext);
+    expect(fsm.getCurrentState()).toBe('shopping');
     
-    // FSM should still be in selecting_equipment state since the event was rejected
+    // Complete shopping - should transition to completed since spells are disabled
+    fsm.handle(WORKFLOW_EVENTS.SHOPPING_COMPLETE, testContext);
+    expect(fsm.getCurrentState()).toBe('completed');
+    
+    // Wait for the delayed close (1.5s) in completed state
+    await new Promise(resolve => setTimeout(resolve, 1600));
+    
+    // Verify that gas.close hook was called
+    expect(global.Hooks.call).toHaveBeenCalledWith('gas.close');
+  });
+
+  it('should call gas.close after shopping when spells are enabled but actor has no classes due to advancement capture being disabled (TDD test)', async () => {
+    // Configure: shopping enabled, spells enabled, but advancement capture disabled
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': true,
+        'enableEquipmentPurchase': true,    // Shopping enabled
+        'enableSpellSelection': true,       // Spells enabled BUT...
+        'disableAdvancementCapture': true   // ...advancement capture disabled = no classes = can't detect spellcaster
+      };
+      return settings[setting] || false;
+    });
+    
+    // Mock Hooks.call to track gas.close calls
+    global.Hooks.call.mockClear();
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context with NO classes (this is the key - advancement capture disabled means no classes)
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Character', 
+        classes: {}  // No classes due to advancement capture being disabled
+      }
+    };
+    
+    // Navigate through workflow to shopping
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for transition to selecting_equipment  
+    await new Promise(resolve => setTimeout(resolve, 300));
     expect(fsm.getCurrentState()).toBe('selecting_equipment');
+    
+    // Complete equipment to go to shopping (use correct event)
+    fsm.handle('equipment_complete_to_shopping', testContext);
+    expect(fsm.getCurrentState()).toBe('shopping');
+    
+    // Complete shopping - should transition to completed because:
+    // 1. Spells are enabled BUT
+    // 2. Actor has no classes (advancement capture disabled)
+    // 3. So spell selection guard should block and go to completed instead
+    fsm.handle(WORKFLOW_EVENTS.SHOPPING_COMPLETE, testContext);
+    expect(fsm.getCurrentState()).toBe('completed');
+    
+    // Wait for the delayed close (1.5s) in completed state
+    await new Promise(resolve => setTimeout(resolve, 1600));
+    
+    // Verify that gas.close hook was called
+    expect(global.Hooks.call).toHaveBeenCalledWith('gas.close');
+  });
+
+  it('should call gas.close if spells are enabled but actor has no classes due to advancement capture being disabled (direct scenario)', async () => {
+    // Configure: spells enabled but advancement capture disabled  
+    global.game.settings.get.mockImplementation((moduleId, setting) => {
+      const settings = {
+        'enableEquipmentSelection': false,   // Skip equipment
+        'enableEquipmentPurchase': false,    // Skip shopping
+        'enableSpellSelection': true,        // Spells enabled BUT...
+        'disableAdvancementCapture': true    // ...advancement capture disabled = no classes
+      };
+      return settings[setting] || false;
+    });
+    
+    // Mock Hooks.call to track gas.close calls
+    global.Hooks.call.mockClear();
+    
+    const { createWorkflowStateMachine, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Create FSM
+    const fsm = createWorkflowStateMachine();
+    
+    // Set up context with NO classes (advancement capture disabled)
+    const testContext = {
+      ...workflowFSMContext,
+      actor: { 
+        name: 'Test Character', 
+        classes: {}  // No classes = cannot be detected as spellcaster
+      }
+    };
+    
+    // Navigate through workflow - should skip equipment/shopping and try spells
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Wait for transition - should go directly to completed because spell selection is guarded
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Should transition to completed because:
+    // 1. Equipment/shopping disabled
+    // 2. Spells enabled but no classes = spell selection guard blocks
+    // 3. So workflow goes to completed
+    expect(fsm.getCurrentState()).toBe('completed');
+    
+    // Wait for the delayed close (1.5s) in completed state
+    await new Promise(resolve => setTimeout(resolve, 1600));
+    
+    // Verify that gas.close hook was called
+    expect(global.Hooks.call).toHaveBeenCalledWith('gas.close');
   });
 });
