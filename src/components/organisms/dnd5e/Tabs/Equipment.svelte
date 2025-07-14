@@ -57,24 +57,23 @@
         //- pre dnd5eRules { window.GAS.dnd5eRules}
         h3 {t('Equipment.StartingGold')}
         +if("isDisabled")
-          .info-message {t('Equipment.EquipmentConfirmed')}
+          .info-message {t('Equipment.EquipmentReadOnly')}
         
-        +if("!isDisabled")
-          section.equipment-flow
-            +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
-              StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
-              +else()
-                StartingGold(characterClass="{$characterClass}")
-            +if("isGoldComplete")
-              StartingEquipment(
-                startingEquipment="{$compatibleStartingEquipment}" 
-                classEquipment="{$classStartingEquipment}"
-                backgroundEquipment="{$backgroundStartingEquipment}"
-                characterClass="{$characterClass}"
-                background="{$background}"
-                proficiencies="{proficiencies}"
-                disabled="{isDisabled}"
-              )
+        section.equipment-flow(class="{isDisabled ? 'readonly' : ''}")
+          +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
+            StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
+            +else()
+              StartingGold(characterClass="{$characterClass}")
+          +if("isGoldComplete || isDisabled")
+            StartingEquipment(
+              startingEquipment="{$compatibleStartingEquipment}" 
+              classEquipment="{$classStartingEquipment}"
+              backgroundEquipment="{$backgroundStartingEquipment}"
+              characterClass="{$characterClass}"
+              background="{$background}"
+              proficiencies="{proficiencies}"
+              disabled="{isDisabled}"
+            )
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b
         PlannedInventory
@@ -122,4 +121,11 @@ section
   padding: 1rem
   background: rgba(0, 0, 0, 0.05)
   border-radius: var(--border-radius)
+
+.equipment-flow.readonly
+  opacity: 0.7
+  pointer-events: none
+  
+  :global(*)
+    cursor: default !important
 </style> 

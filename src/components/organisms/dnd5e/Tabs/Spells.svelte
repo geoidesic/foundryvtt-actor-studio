@@ -195,7 +195,7 @@
     </div>
   </div>
   {#if isDisabled}
-    <div class="overlay"></div>
+    <div class="info-message">{t('Spells.SpellsReadOnly')}</div>
   {/if}
 </div>
 
@@ -209,16 +209,20 @@
     height: 100%
     
     &.disabled
+      opacity: 0.7
       pointer-events: none
       
-    .overlay
-      position: absolute
-      top: 0
-      left: 0
-      right: 0
-      bottom: 0
-      background: rgba(0, 0, 0, 0.1)
-      z-index: 1000
+      :global(*)
+        cursor: default !important
+      
+    .info-message
+      font-size: 0.8rem
+      color: #666
+      font-style: italic
+      margin: 1rem
+      padding: 1rem
+      background: rgba(0, 0, 0, 0.05)
+      border-radius: var(--border-radius)
 
   .spells-tab
     display: flex

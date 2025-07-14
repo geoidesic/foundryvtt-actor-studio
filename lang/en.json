@@ -326,6 +326,7 @@
       "Choice": "Choose one",
       "ChooseOne": "Choose one...",
       "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
+      "EquipmentReadOnly": "Equipment selections have been completed and are now read-only during advancement selection",
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
       "SelectOne": "Select one of the following options:",
@@ -352,6 +353,8 @@
       "SpentGold": "Spent",
       "CartItems": "Cart Items",
       "CartEmpty": "Your cart is empty",
+      "PurchaseCompleted": "Equipment purchases have been completed and finalized",
+      "ShopReadOnly": "Shop selections have been completed and are now read-only",
       "AvailableEquipment": "Available Equipment",
       "Loading": "Loading items...",
       "NoEquipment": "No equipment available. Please check your compendium sources in the module settings.",
@@ -380,7 +383,8 @@
       "FilterPlaceholder": "Search spells by keyword",
       "Loading": "Loading spells...",
       "NoSpells": "No spells available. Please check your compendium sources in the module settings.",
-      "NoMatchingSpells": "No matching spells found."
+      "NoMatchingSpells": "No matching spells found.",
+      "SpellsReadOnly": "Spell selections have been completed and are now read-only"
     }
   }
 }

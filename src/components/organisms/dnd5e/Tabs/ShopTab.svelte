@@ -177,7 +177,11 @@
   });
 </script>
 
-<div class="shop-tab-container" class:disabled={isDisabled}>
+<div class="shop-tab-container" class:readonly={isDisabled}>
+  {#if isDisabled}
+    <div class="info-message">{t('Shop.ShopReadOnly')}</div>
+  {/if}
+
   <!-- Sticky currency header -->
   <div class="sticky-header" class:hidden={!scrolled}>
     <GoldDisplay {...remainingCurrency} />
@@ -295,9 +299,6 @@
       {/if}
     </div>
   </div>
-{#if isDisabled}
-    <div class="overlay"></div>
-  {/if}
 </div>
 
 <style lang="sass">
@@ -319,22 +320,21 @@
     display: flex
     flex-direction: column
 
-    &.disabled 
+    &.readonly
+      opacity: 0.7
       pointer-events: none
+      
+      :global(*)
+        cursor: default !important
     
-  .overlay
-    position: absolute
-    top: 0
-    left: 0
-    right: 0
-    bottom: 0
-    background-color: rgba(200, 200, 200, 0.3)
-    pointer-events: all
-    cursor: not-allowed
-    z-index: 100
-    transition: background-color 0.2s ease
-    &:hover
-      background-color: rgba(200, 200, 200, 0.4)
+  .info-message
+    font-size: 0.8rem
+    color: #666
+    font-style: italic
+    margin: 1rem
+    padding: 1rem
+    background: rgba(0, 0, 0, 0.05)
+    border-radius: var(--border-radius)
 
   .sticky-header
     position: sticky

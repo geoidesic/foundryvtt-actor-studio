@@ -59,6 +59,7 @@
     updateActorAndEmbedItems as updateActorWorkflow,
     handleAddEquipment as addEquipmentWorkflow,
     handleFinalizePurchase as finalizePurchaseWorkflow,
+    handleFinalizeSpells as finalizeSpellsWorkflow,
     checkActorInventory as checkInventory,
     handleCharacterUpdate as characterUpdateWorkflow
   } from "~/src/lib/workflow";
@@ -79,6 +80,9 @@
 
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
+
+  // Add state for processing spells
+  const isProcessingSpells = writable(false);
 
   // Store references for workflow functions
   const storeRefs = {
@@ -203,7 +207,7 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells'];
   const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
 
   // Handle adding equipment to the actor
@@ -254,6 +258,17 @@
     await finalizePurchaseWorkflow({
       stores: storeRefs,
       setProcessing: (value) => isProcessingPurchase.set(value)
+    });
+  }
+
+  // Handle finalizing spell selection
+  async function handleFinalizeSpells() {
+    // Prevent multiple clicks
+    if (get(isProcessingSpells)) return;
+    
+    await finalizeSpellsWorkflow({
+      stores: storeRefs,
+      setProcessing: (value) => isProcessingSpells.set(value)
     });
   }
 
@@ -410,52 +425,75 @@
         
         +if("$activeTab === 'equipment'")
           .progress-container
-            ProgressBar(progress="{progress}")
-            +if("isEquipmentComplete && !$readOnlyTabs.includes('equipment')")
-              .button-container
-                button.mt-xs(
-                  type="button"
-                  role="button"
-                  on:mousedown="{handleAddEquipment}"
-                )
-                  span {t('Footer.AddEquipment')}
-                  i.right.ml-md(class="fas fa-chevron-right")
+            +if("$readOnlyTabs.includes('equipment')")
+              ProgressBar(progress="{100}")
+              +else()
+                ProgressBar(progress="{progress}")
+                +if("isEquipmentComplete")
+                  .button-container
+                    button.mt-xs(
+                      type="button"
+                      role="button"
+                      on:mousedown="{handleAddEquipment}"
+                    )
+                      span {t('Footer.AddEquipment')}
+                      i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'shop'")
           .progress-container
-            .button-container
-              button.mt-xs(
-                type="button"
-                role="button"
-                on:mousedown="{handleFinalizePurchase}"
-                disabled="{$isProcessingPurchase || $readOnlyTabs.includes('shop')}" 
-              )
-                span {t('Footer.FinalizePurchase')}
-                i.right.ml-md(class="fas fa-chevron-right")
+            +if("$readOnlyTabs.includes('shop')")
+              ProgressBar(progress="{100}")
+              +else()
+                .button-container
+                  button.mt-xs(
+                    type="button"
+                    role="button"
+                    on:mousedown="{handleFinalizePurchase}"
+                    disabled="{$isProcessingPurchase}" 
+                  )
+                    span {t('Footer.FinalizePurchase')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'spells'")
+          .progress-container
+            +if("$readOnlyTabs.includes('spells')")
+              ProgressBar(progress="{100}")
+              +else()
+                .button-container
+                  button.mt-xs(
+                    type="button"
+                    role="button"
+                    on:mousedown="{handleFinalizeSpells}"
+                    disabled="{$isProcessingSpells}" 
+                  )
+                    span {t('Footer.FinalizeSpells')}
+                    i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
-            ProgressBar(progress="{progress}")
-            +if("$progress === 100  && !$readOnlyTabs.includes($activeTab)")
-              .button-container
-                +if("!$isActorCreated")
-                  button.mt-xs.wide(
-                    type="button"
-                    role="button"
-                    on:mousedown="{clickCreateHandler}"
-                  )
-                    span {t('Footer.CreateCharacter')}
-                    i.right.ml-md(class="fas fa-chevron-right")
-
-                  +else
-                    +if("$hasCharacterCreationChanges")
-                      button(
+            +if("$readOnlyTabs.includes($activeTab)")
+              ProgressBar(progress="{100}")
+              +else()
+                ProgressBar(progress="{progress}")
+                +if("$progress === 100")
+                  .button-container
+                    +if("!$isActorCreated")
+                      button.mt-xs.wide(
                         type="button"
                         role="button"
-                        on:mousedown="{clickUpdateHandler}"
+                        on:mousedown="{clickCreateHandler}"
                       )
-                        span {t('Footer.UpdateCharacter')}
+                        span {t('Footer.CreateCharacter')}
                         i.right.ml-md(class="fas fa-chevron-right")
+                      +else()
+                        +if("$hasCharacterCreationChanges")
+                          button(
+                            type="button"
+                            role="button"
+                            on:mousedown="{clickUpdateHandler}"
+                          )
+                            span {t('Footer.UpdateCharacter')}
+                            i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
 
