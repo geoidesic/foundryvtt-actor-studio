@@ -36,6 +36,7 @@ global.window = global;
 global.Actor = {
   create: vi.fn()
 };
+global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 
 // Mock the module constants
 vi.mock('~/src/helpers/constants', () => ({
@@ -78,9 +79,22 @@ const mockStores = {
   }
 };
 
+const mockDerived = (stores, fn) => ({ set: vi.fn(), update: vi.fn(), subscribe: vi.fn() });
+
 vi.mock('svelte/store', () => ({
   writable: mockWritable,
+  derived: mockDerived,
   get: mockGet
+}));
+
+// Mock required modules for WorkflowStateMachine dependency chain
+vi.mock('~/src/stores/goldChoices', () => ({ totalGoldFromChoices: mockWritable(0) }));
+vi.mock('~/src/stores/storeDefinitions', () => ({ goldRoll: mockWritable(0) }));
+vi.mock('~/src/helpers/AdvancementManager', () => ({ destroyAdvancementManagers: vi.fn() }));
+vi.mock('~/src/helpers/Utility', () => ({ 
+  getActorFromUuid: vi.fn(),
+  isSpellcaster: vi.fn(() => false),
+  getEquipmentCompletionEvent: vi.fn(() => 'equipment_complete')
 }));
 
 vi.mock('~/src/stores/index', () => mockStores);
@@ -198,6 +212,14 @@ const mockFinity = {
     }
     return mockFinity;
   }),
+  do: vi.fn(() => mockFinity),
+  onSuccess: vi.fn(() => mockFinity),
+  onFailure: vi.fn(() => mockFinity),
+  withCondition: vi.fn(() => mockFinity),
+  global: vi.fn(() => mockFinity),
+  onStateEnter: vi.fn(() => mockFinity),
+  onStateExit: vi.fn(() => mockFinity),
+  onTransition: vi.fn(() => mockFinity),
   start: vi.fn(() => {
     // Set up basic transitions for the test
     eventHandlers.set('idle:start_character_creation', () => 'creating_character');

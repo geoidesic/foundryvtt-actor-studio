@@ -1,5 +1,5 @@
 /**
- * Test for character creation button functionality
+ * Test for character created to processing advancements transition
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
@@ -104,9 +104,25 @@ const mockStores = {
   }
 };
 
+const mockDerived = (stores, fn) => ({ set: vi.fn(), update: vi.fn(), subscribe: vi.fn() });
+
 vi.mock('svelte/store', () => ({
   writable: mockWritable,
+  derived: mockDerived,
   get: mockGet
+}));
+
+// Mock FoundryVTT globals
+global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
+
+// Mock required modules for WorkflowStateMachine dependency chain
+vi.mock('~/src/stores/goldChoices', () => ({ totalGoldFromChoices: mockWritable(0) }));
+vi.mock('~/src/stores/storeDefinitions', () => ({ goldRoll: mockWritable(0) }));
+vi.mock('~/src/helpers/AdvancementManager', () => ({ destroyAdvancementManagers: vi.fn() }));
+vi.mock('~/src/helpers/Utility', () => ({ 
+  getActorFromUuid: vi.fn(),
+  isSpellcaster: vi.fn(() => true),
+  getEquipmentCompletionEvent: vi.fn(() => 'equipment_complete')
 }));
 
 vi.mock('~/src/stores/index', () => mockStores);
@@ -178,6 +194,14 @@ const mockFinity = {
     }
     return mockFinity;
   }),
+  do: vi.fn(() => mockFinity),
+  onSuccess: vi.fn(() => mockFinity),
+  onFailure: vi.fn(() => mockFinity),
+  withCondition: vi.fn(() => mockFinity),
+  global: vi.fn(() => mockFinity),
+  onStateEnter: vi.fn(() => mockFinity),
+  onStateExit: vi.fn(() => mockFinity),
+  onTransition: vi.fn(() => mockFinity),
   start: vi.fn(() => {
     // Manually set up the basic transitions for testing
     eventHandlers.set('idle:start_character_creation', () => 'creating_character');
@@ -204,16 +228,35 @@ eventHandlers.set('processing_advancements:advancements_complete', () => 'comple
 // Mock the workflow module
 vi.mock('~/src/lib/workflow.js', () => ({
   handleAdvancementCompletion: vi.fn(async (context) => {
-    return 'completed'; // Simple mock for this test
+    console.log('[MOCK] handleAdvancementCompletion called with context:', context);
+    // Simulate the logic that determines next state based on character configuration
+    if (context._shouldShowSpellSelection && typeof context._shouldShowSpellSelection === 'function') {
+      const shouldShowSpells = context._shouldShowSpellSelection(context.actor, context);
+      if (shouldShowSpells) return 'selecting_spells';
+    }
+    if (context._shouldShowEquipmentSelection && typeof context._shouldShowEquipmentSelection === 'function') {
+      const shouldShowEquipment = context._shouldShowEquipmentSelection(context);
+      if (shouldShowEquipment) return 'selecting_equipment';
+    }
+    if (context._shouldShowShopping && typeof context._shouldShowShopping === 'function') {
+      const shouldShowShopping = context._shouldShowShopping();
+      if (shouldShowShopping) return 'shopping';
+    }
+    return 'completed'; // Default fallback
   })
 }));
 
-describe('Character Creation Button Functionality', () => {
+describe('Character Created Transition', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     currentState = 'idle';
     eventHandlers.clear();
     stateHandlers.clear();
+    
+    // Re-set up the basic transitions
+    eventHandlers.set('idle:start_character_creation', () => 'creating_character');
+    eventHandlers.set('creating_character:character_created', () => 'processing_advancements');
+    eventHandlers.set('processing_advancements:advancements_complete', () => 'completed');
     
     // Initialize window.GAS
     global.window.GAS = {
@@ -232,84 +275,27 @@ describe('Character Creation Button Functionality', () => {
     mockStores.isActorCreated._value = false;
   });
 
-  it('should start in idle state', async () => {
-    const { getWorkflowFSM } = await import('~/src/helpers/WorkflowStateMachine.js');
-    
-    const fsm = getWorkflowFSM();
-    
-    expect(currentState).toBe('idle');
-    expect(fsm.getCurrentState()).toBe('idle');
-  });
-
-  it('should transition to creating_character when start_character_creation event is triggered', async () => {
-    // Set up the handlers before importing the module
-    eventHandlers.set('idle:start_character_creation', () => 'creating_character');
-    
+  it('should transition from creating_character to processing_advancements when character_created event is triggered', async () => {
     const { getWorkflowFSM, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
     
     const fsm = getWorkflowFSM();
     
-    // Verify initial state
+    // Start in idle and move to creating_character
     expect(currentState).toBe('idle');
-    
-    // Debug: Check if handler exists
-    console.log('Available handlers:', Array.from(eventHandlers.keys()));
-    
-    // Trigger character creation
-    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
-    
-    // Should transition to creating_character
-    expect(currentState).toBe('creating_character');
-  });
-
-  it('should simulate complete character setup and successful transition', async () => {
-    // Set up the handlers before importing the module
-    eventHandlers.set('idle:start_character_creation', () => 'creating_character');
-    
-    const { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } = 
-      await import('~/src/helpers/WorkflowStateMachine.js');
-    
-    // Set up complete character data (simulating 100% progress on all tabs)
-    mockStores.race.set({ name: 'Human', uuid: 'Compendium.dnd5e.races.Item.human' });
-    mockStores.background.set({ name: 'Acolyte', uuid: 'Compendium.dnd5e.backgrounds.Item.acolyte' });
-    mockStores.characterClass.set({ name: 'Bard', uuid: 'Compendium.dnd5e.classes.Item.bard' });
-    mockStores.abilities.set({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
-    
-    const fsm = getWorkflowFSM();
-    
-    // Start the workflow (simulating button click)
-    expect(currentState).toBe('idle');
-    
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     expect(currentState).toBe('creating_character');
     
-    // Verify that the creating_character state sets isProcessing to true
-    expect(mockStores.isActorCreated.set).not.toHaveBeenCalledWith(true);
+    // Trigger character_created event (this happens after the actor is created in the system)
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    // Should transition to processing_advancements
+    expect(currentState).toBe('processing_advancements');
   });
 
-  it('should validate that character data is complete before allowing creation', async () => {
-    const { workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
-    
-    // Test with incomplete data
-    mockStores.race.set(null);
-    mockStores.background.set({ name: 'Acolyte' });
-    mockStores.characterClass.set({ name: 'Bard' });
-    mockStores.abilities.set({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
-    
-    // In a real scenario, the create button should be disabled when data is incomplete
-    // This test verifies the context structure is available for such validation
-    expect(workflowFSMContext).toHaveProperty('isProcessing');
-    expect(workflowFSMContext).toHaveProperty('actor');
-  });
-
-  it('should handle complete workflow from button click to character creation', async () => {
-    // Set up the handlers before importing the module
-    eventHandlers.set('idle:start_character_creation', () => 'creating_character');
-    eventHandlers.set('creating_character:character_created', () => 'processing_advancements');
-    
+  it('should handle the complete workflow including character creation and advancement processing', async () => {
     const { getWorkflowFSM, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
     
-    // Set up complete character (100% progress simulation)
+    // Set up complete character data
     mockStores.race.set({ name: 'Human', uuid: 'Compendium.dnd5e.races.Item.human' });
     mockStores.background.set({ name: 'Acolyte', uuid: 'Compendium.dnd5e.backgrounds.Item.acolyte' });
     mockStores.characterClass.set({ name: 'Bard', uuid: 'Compendium.dnd5e.classes.Item.bard' });
@@ -320,43 +306,115 @@ describe('Character Creation Button Functionality', () => {
     // Complete workflow simulation
     expect(currentState).toBe('idle');
     
-    // 1. User clicks "Create Character" button (when 100% complete)
+    // 1. User clicks "Create Character" button
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     expect(currentState).toBe('creating_character');
     
-    // 2. Character creation process completes
+    // 2. Character is created in the Foundry system
     fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
     expect(currentState).toBe('processing_advancements');
     
-    // The processing_advancements state should handle the async operations
-    // and transition to the appropriate next state
+    // 3. Advancements are processed and workflow determines next step
+    fsm.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE);
+    expect(currentState).toBe('completed');
   });
 
-  it('should verify character creation button is only available when progress is 100%', () => {
-    // This test validates the concept - in the real application,
-    // the button should only be enabled when all required data is present
+  it('should verify that the processing_advancements state handles async operations', async () => {
+    const { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
     
-    // Complete data scenario
-    const completeData = {
-      race: { name: 'Human', uuid: 'Compendium.dnd5e.races.Item.human' },
-      background: { name: 'Acolyte', uuid: 'Compendium.dnd5e.backgrounds.Item.acolyte' },
-      characterClass: { name: 'Bard', uuid: 'Compendium.dnd5e.classes.Item.bard' },
-      abilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 }
+    // Set up a mock actor to test context handling
+    const mockActor = {
+      name: 'Test Character',
+      classes: {
+        bard: {
+          system: {
+            spellcasting: {
+              progression: 'full'
+            }
+          }
+        }
+      }
     };
     
-    // Simulate progress calculation
-    const isComplete = Object.values(completeData).every(value => value !== null && value !== undefined);
-    expect(isComplete).toBe(true);
+    // Set context with the created actor
+    workflowFSMContext.actor = mockActor;
     
-    // Incomplete data scenario
-    const incompleteData = {
-      race: null,
-      background: { name: 'Acolyte' },
-      characterClass: { name: 'Bard' },
-      abilities: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 }
-    };
+    const fsm = getWorkflowFSM();
     
-    const isIncomplete = Object.values(incompleteData).every(value => value !== null && value !== undefined);
-    expect(isIncomplete).toBe(false);
+    // Start workflow
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    expect(currentState).toBe('creating_character');
+    
+    // Character created - this should trigger async advancement processing
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    expect(currentState).toBe('processing_advancements');
+    
+    // Note: In the real FSM implementation, the onEnter handler for processing_advancements
+    // would call dropItemRegistry.advanceQueue(true), but our mock doesn't execute onEnter handlers.
+    // The important thing is that we reach the processing_advancements state correctly.
+    expect(currentState).toBe('processing_advancements');
+    
+    // Verify the context has the proper structure for async operations
+    expect(workflowFSMContext.actor).toBe(mockActor);
+    expect(typeof workflowFSMContext._shouldShowSpellSelection).toBe('function');
+  });
+
+  it('should validate that character_created event is only valid from creating_character state', async () => {
+    const { getWorkflowFSM, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    const fsm = getWorkflowFSM();
+    
+    // Try to trigger character_created from idle state (should not work)
+    expect(currentState).toBe('idle');
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    expect(currentState).toBe('idle'); // Should remain in idle
+    
+    // Now do the proper flow
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    expect(currentState).toBe('creating_character');
+    
+    // Now character_created should work
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    expect(currentState).toBe('processing_advancements');
+  });
+
+  it('should ensure the FSM context is properly maintained through character creation', async () => {
+    const { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    // Verify context structure
+    expect(workflowFSMContext).toHaveProperty('isProcessing');
+    expect(workflowFSMContext).toHaveProperty('actor');
+    expect(workflowFSMContext).toHaveProperty('_shouldShowEquipmentSelection');
+    expect(workflowFSMContext).toHaveProperty('_shouldShowSpellSelection');
+    expect(workflowFSMContext).toHaveProperty('_shouldShowShopping');
+    
+    const fsm = getWorkflowFSM();
+    
+    // Flow through character creation
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    
+    expect(currentState).toBe('processing_advancements');
+    
+    // Context should remain available for decision making
+    expect(typeof workflowFSMContext._shouldShowSpellSelection).toBe('function');
+  });
+
+  it('should handle error transitions during character creation workflow', async () => {
+    // Set up error handler
+    eventHandlers.set('creating_character:error', () => 'error');
+    eventHandlers.set('processing_advancements:error', () => 'error');
+    
+    const { getWorkflowFSM, WORKFLOW_EVENTS } = await import('~/src/helpers/WorkflowStateMachine.js');
+    
+    const fsm = getWorkflowFSM();
+    
+    // Start workflow
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    expect(currentState).toBe('creating_character');
+    
+    // Trigger error during character creation
+    fsm.handle(WORKFLOW_EVENTS.ERROR);
+    expect(currentState).toBe('error');
   });
 });

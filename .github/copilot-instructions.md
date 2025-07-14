@@ -36,6 +36,7 @@
 ## Essential Workflows
 
 **Testing**: 
+- tests should be stored in the `src/tests` folder
 ```bash
 npx vitest run    # Run all tests without watch
 ```
