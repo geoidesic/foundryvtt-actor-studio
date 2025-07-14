@@ -11,6 +11,7 @@
 - **FoundryVTT Hooks Integration**: Module uses hooks extensively for FoundryVTT lifecycle and D&D 5e advancement system integration
 
 ## Critical Development Patterns
+- NB: ensure you run the tests before claiming success
 
 **Frontend Stack**:
 - Pug templates with Svelte preprocessing (NOT standard Pug - see `.cursor/rules/`)

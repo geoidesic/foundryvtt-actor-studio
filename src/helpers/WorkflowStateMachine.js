@@ -57,14 +57,18 @@ export const workflowFSMContext = {
     const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
     if (!enableSpellSelection) return false;
     
-    // Prioritize the passed inGameActor parameter for more reliable actor data
-    // Only use context actors as fallback when inGameActor is not available
+    // Always prioritize the passed inGameActor parameter if it's provided and valid
     let actorForDecision = inGameActor;
-    if (!actorForDecision && this?.preCreationActor) {
-      actorForDecision = this.preCreationActor;
-    }
-    if (!actorForDecision && this?.postCreationActor) {
-      actorForDecision = this.postCreationActor;
+    
+    // Only use context actors as fallback when inGameActor is not provided or is empty
+    if (!actorForDecision || (typeof actorForDecision === 'object' && Object.keys(actorForDecision).length === 0)) {
+      if (this?.preCreationActor) {
+        actorForDecision = this.preCreationActor;
+      } else if (this?.postCreationActor) {
+        actorForDecision = this.postCreationActor;
+      } else if (this?.actor) {
+        actorForDecision = this.actor;
+      }
     }
     
     if (!actorForDecision) return false;
@@ -180,7 +184,9 @@ export function createWorkflowStateMachine() {
       .transitionTo('selecting_spells').withCondition((context) => {
         // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
         const currentActor = get(actorInGame);
-        const shouldShow = workflowFSMContext._shouldShowSpellSelection(currentActor);
+        // Fallback to context actor if store is empty (useful for tests and edge cases)
+        const actorToCheck = currentActor || workflowFSMContext.actor;
+        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
         window.GAS.log.d('[FSM] shopping_complete -> selecting_spells condition (using actorInGame):', shouldShow);
         return shouldShow;
       })
@@ -188,7 +194,9 @@ export function createWorkflowStateMachine() {
     .on('skip_shopping')
       .transitionTo('selecting_spells').withCondition((context) => {
         const currentActor = get(actorInGame);
-        const shouldShow = workflowFSMContext._shouldShowSpellSelection(currentActor);
+        // Fallback to context actor if store is empty (useful for tests and edge cases)
+        const actorToCheck = currentActor || workflowFSMContext.actor;
+        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
         window.GAS.log.d('[FSM] skip_shopping -> selecting_spells condition (using actorInGame):', shouldShow);
         return shouldShow;
       })

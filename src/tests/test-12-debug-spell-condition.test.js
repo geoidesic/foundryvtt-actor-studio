@@ -39,12 +39,7 @@ describe('Debug Shopping Spell Selection Condition', () => {
 
     // Mock get function to return our actor from actorInGame store
     mockGet = vi.fn((store) => {
-      console.log('mockGet called with store:', store);
-      if (store.toString && store.toString().includes('actorInGame')) {
-        console.log('Returning mockActor for actorInGame:', mockActor);
-        return mockActor;
-      }
-      return {};
+      return mockActor;
     });
 
     const mockWritable = (value) => ({ 
