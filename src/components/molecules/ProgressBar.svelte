@@ -3,12 +3,27 @@
 
   export let progress;
   
-  $: cssClass = $progress == 0 ? "center" : "";
+  // Handle both store and plain values for progress
+  let progressValue = 0;
+  
+  $: {
+    if (typeof progress === 'object' && progress?.subscribe) {
+      // It's a store - subscribe to get the value
+      progress.subscribe(value => {
+        progressValue = value;
+      });
+    } else {
+      // It's a plain value - use directly
+      progressValue = progress;
+    }
+  }
+  
+  $: cssClass = progressValue == 0 ? "center" : "";
   
 </script>
 <div class="progress">
-  <div class="back">{$progress}% Complete</div>
-  <div class="front" style="clip-path: inset(0 0 0 {$progress}%); -webkit-clip-path: inset(0 0 0 {$progress}%);">{$progress}% Complete</div>
+  <div class="back">{progressValue}% Complete</div>
+  <div class="front" style="clip-path: inset(0 0 0 {progressValue}%); -webkit-clip-path: inset(0 0 0 {progressValue}%);">{progressValue}% Complete</div>
 </div>
 <style lang="sass">
   @import '../../../styles/Mixins.sass'

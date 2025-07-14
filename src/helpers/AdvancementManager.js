@@ -50,9 +50,63 @@ export class AdvancementManager {
     if (this.isTabContentEmpty(tabName)) {
       resolve();
     } else {
+      // Automated advancement clicking in debug mode
+      if (window.GAS?.debug) {
+        this.autoAdvanceSteps();
+      }
       setTimeout(() => this.checkTabContent(resolve, tabName, timeout), timeout);
     }
   };
+
+  /**
+   * Automatically advance through advancement dialog steps when in debug mode
+   * Finds and clicks "next" buttons, then "complete" buttons to speed up debug iteration
+   */
+  autoAdvanceSteps() {
+    try {
+      const panel = this._getPanel();
+      if (!panel || !panel.length) return;
+
+      // Look for advancement dialogs within the captured area
+      const advancementDialogs = panel.find('.gas-advancements');
+      
+      advancementDialogs.each((index, dialog) => {
+        const $dialog = $(dialog);
+        
+        // First, try to find and click "next" buttons
+        const nextButton = $dialog.find('[data-action="next"]').first();
+        if (nextButton.length && !nextButton.prop('disabled')) {
+          window.GAS.log.d('[AUTO-ADVANCE] Clicking next button in dialog', index);
+          nextButton.click();
+          return; // Exit early after clicking next
+        }
+        
+        // If no next button, look for "complete" button
+        const completeButton = $dialog.find('[data-action="complete"]').first();
+        if (completeButton.length && !completeButton.prop('disabled')) {
+          window.GAS.log.d('[AUTO-ADVANCE] Clicking complete button in dialog', index);
+          completeButton.click();
+          return; // Exit early after clicking complete
+        }
+        
+        // If no data-action buttons found, try common button text patterns
+        const buttons = $dialog.find('button').filter(function() {
+          const text = $(this).text().toLowerCase().trim();
+          return text.includes('next') || text.includes('continue') || text.includes('complete') || text.includes('finish');
+        });
+        
+        if (buttons.length) {
+          const enabledButton = buttons.filter(':not(:disabled)').first();
+          if (enabledButton.length) {
+            window.GAS.log.d('[AUTO-ADVANCE] Clicking text-based button:', enabledButton.text().trim());
+            enabledButton.click();
+          }
+        }
+      });
+    } catch (error) {
+      window.GAS.log.e('[AUTO-ADVANCE] Error in autoAdvanceSteps:', error);
+    }
+  }
 
   /**
    * Waits for the advancement panel to become empty
