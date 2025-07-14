@@ -67,6 +67,7 @@ global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 ```
 
 **Required Store Mocks**:
+- Do not import svelte stores into tests, mock them instead
 ```javascript
 const mockWritable = (value) => ({ set: vi.fn(), update: vi.fn(), subscribe: vi.fn() });
 const mockDerived = (stores, fn) => ({ set: vi.fn(), update: vi.fn(), subscribe: vi.fn() });

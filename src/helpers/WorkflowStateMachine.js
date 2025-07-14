@@ -3,6 +3,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
+import { actorInGame } from '~/src/stores/storeDefinitions';
 import { handleAdvancementCompletion } from '~/src/lib/workflow.js';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import Finity from 'finity';
@@ -55,12 +56,22 @@ export const workflowFSMContext = {
   _shouldShowSpellSelection: function (inGameActor) {
     const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
     if (!enableSpellSelection) return false;
+    
+    // Prioritize the passed inGameActor parameter for more reliable actor data
+    // Only use context actors as fallback when inGameActor is not available
     let actorForDecision = inGameActor;
-    if (this?.preCreationActor) actorForDecision = this.preCreationActor;
+    if (!actorForDecision && this?.preCreationActor) {
+      actorForDecision = this.preCreationActor;
+    }
+    if (!actorForDecision && this?.postCreationActor) {
+      actorForDecision = this.postCreationActor;
+    }
+    
     if (!actorForDecision) return false;
     const classes = actorForDecision.classes || {};
     const classKeys = Object.keys(classes);
     if (!classKeys.length) {
+      // Only fallback to preCreationActor if we have no classes and we're using postCreationActor
       if (actorForDecision === this?.postCreationActor && this?.preCreationActor) {
         return workflowFSMContext._shouldShowSpellSelection(this.preCreationActor);
       }
@@ -165,9 +176,23 @@ export function createWorkflowStateMachine() {
       Hooks.call('gas.equipmentSelection', workflowFSMContext.actor);
     })
     .state('shopping')
-    .on(['shopping_complete', 'skip_shopping'])
-      .transitionTo('selecting_spells').withCondition((context) => workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
-      .transitionTo('completed') // Default fallback
+    .on('shopping_complete')
+      .transitionTo('selecting_spells').withCondition((context) => {
+        // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
+        const currentActor = get(actorInGame);
+        const shouldShow = workflowFSMContext._shouldShowSpellSelection(currentActor);
+        window.GAS.log.d('[FSM] shopping_complete -> selecting_spells condition (using actorInGame):', shouldShow);
+        return shouldShow;
+      })
+      .transitionTo('completed') // Default fallback when spell selection is not needed
+    .on('skip_shopping')
+      .transitionTo('selecting_spells').withCondition((context) => {
+        const currentActor = get(actorInGame);
+        const shouldShow = workflowFSMContext._shouldShowSpellSelection(currentActor);
+        window.GAS.log.d('[FSM] skip_shopping -> selecting_spells condition (using actorInGame):', shouldShow);
+        return shouldShow;
+      })
+      .transitionTo('completed') // Default fallback when spell selection is not needed
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
