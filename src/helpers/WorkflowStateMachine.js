@@ -130,7 +130,19 @@ export function createWorkflowStateMachine() {
           .transitionTo('completed') // Default fallback - no other features enabled
         .onFailure().transitionTo('error')
     .state('selecting_equipment')
-    .on(['equipment_complete', 'skip_equipment'])
+    .on('equipment_complete')
+      .transitionTo('shopping').withCondition((context) => {
+        const shouldShow = workflowFSMContext._shouldShowShopping();
+        window.GAS.log.d('[FSM] equipment_complete -> shopping condition:', shouldShow);
+        return shouldShow;
+      })
+      .transitionTo('selecting_spells').withCondition((context) => {
+        const shouldShow = !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor);
+        window.GAS.log.d('[FSM] equipment_complete -> selecting_spells condition:', shouldShow);
+        return shouldShow;
+      })
+      .transitionTo('completed') // Default fallback
+    .on('skip_equipment')
       .transitionTo('shopping').withCondition((context) => workflowFSMContext._shouldShowShopping())
       .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
       .transitionTo('completed') // Default fallback
@@ -252,7 +264,8 @@ export default {
   getWorkflowFSM,
   workflowFSMContext,
   WORKFLOW_STATES,
-  WORKFLOW_EVENTS
+  WORKFLOW_EVENTS,
+  getEquipmentCompletionEvent
 };
 
 // In AdvancementManager.js or wherever you use the FSM:
@@ -264,3 +277,16 @@ export default {
 // workflowFSM.handle(WORKFLOW_EVENTS.ADVANCEMENTS_COMPLETE, { ...workflowFSMContext, actor: currentActor });
 //
 // This ensures all state actions have access to the required context and stores.
+
+/**
+ * Determines the appropriate completion event for equipment selection
+ * Based on the state machine logic in selecting_equipment state
+ * @param {Object} context - The workflow context containing actor and other data
+ * @param {boolean} skipCondition - Whether to skip equipment (not used currently)
+ * @returns {string} The event name to trigger ('equipment_complete' or 'skip_equipment')
+ */
+export function getEquipmentCompletionEvent(context, skipCondition = false) {
+  // For now, always return 'equipment_complete' since we're completing equipment selection
+  // The state machine will handle the conditional transitions based on settings
+  return skipCondition ? 'skip_equipment' : 'equipment_complete';
+}

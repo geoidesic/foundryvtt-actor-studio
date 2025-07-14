@@ -5,6 +5,7 @@ import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase';
 import { log, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
+import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
 import packageJson from '../../package.json';
 import manifestJson from '../../module.json';
 
@@ -48,6 +49,14 @@ export const init = (app, html, data) => {
   initLevelup();
   registerSettings(app);
   initEquipmentPurchase(); // Initialize the new feature
+  
+  // Initialize workflow FSM to ensure it's available on window.GAS for debugging
+  try {
+    window.GAS.workflowFSM = getWorkflowFSM();
+    window.GAS.log.d('Workflow FSM initialized and available on window.GAS');
+  } catch (error) {
+    window.GAS.log.w('Failed to initialize workflow FSM:', error);
+  }
  
  
   if(game.settings.get(MODULE_ID, 'debug')) {

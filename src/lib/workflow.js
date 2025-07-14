@@ -346,6 +346,8 @@ export async function handleAddEquipment({
   // Use state machine to transition to next step
   const fsm = getWorkflowFSM();
   
+  window.GAS.log.d('[WORKFLOW] handleAddEquipment - Current FSM state:', fsm.getCurrentState());
+  
   // Ensure the context has the current actor
   const contextWithActor = {
     ...workflowFSMContext,
@@ -355,6 +357,8 @@ export async function handleAddEquipment({
   // Use the helper function to determine the correct equipment completion event
   const { getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
   const completionEvent = getEquipmentCompletionEvent(contextWithActor, false);
+  
+  window.GAS.log.d('[WORKFLOW] handleAddEquipment - Triggering event:', completionEvent, 'with context:', contextWithActor);
   
   fsm.handle(completionEvent, contextWithActor);
   
