@@ -1,5 +1,5 @@
 import { get } from 'svelte/store';
-import { activeTab } from '~/src/stores/index';
+import { activeTab, tabs } from '~/src/stores/index';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { delay, prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Utility';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
@@ -92,10 +92,43 @@ export class AdvancementManager {
       window.GAS.log.d('[ADVANCEMENT MANAGER] waiting for advancements tab to be empty');
       await this.waitForEmptyTab('advancements');
       window.GAS.log.d('[ADVANCEMENT MANAGER] advancements tab is empty');
+      
+      // Remove the advancement tab after it becomes empty
+      this.removeAdvancementTab();
+      
       this.monitoringPromise = null;
     }
     // Just return after monitoring - the advanceQueue loop will handle the next item
     return;
+  }
+
+  /**
+   * Removes the advancement tab from the UI after advancement processing is complete
+   */
+  removeAdvancementTab() {
+    try {
+      const currentTabs = get(tabs);
+      const advancementTabIndex = currentTabs.findIndex(tab => tab.id === 'advancements');
+      
+      if (advancementTabIndex !== -1) {
+        window.GAS.log.d('[ADVANCEMENT MANAGER] removing advancement tab');
+        
+        // Remove the advancement tab
+        tabs.update(tabArray => tabArray.filter(tab => tab.id !== 'advancements'));
+        
+        // If advancement tab was active, switch to the first available tab
+        const currentActiveTab = get(activeTab);
+        if (currentActiveTab === 'advancements') {
+          const updatedTabs = get(tabs);
+          if (updatedTabs.length > 0) {
+            activeTab.set(updatedTabs[0].id);
+            window.GAS.log.d('[ADVANCEMENT MANAGER] switched active tab to', updatedTabs[0].id);
+          }
+        }
+      }
+    } catch (error) {
+      window.GAS.log.e('[ADVANCEMENT MANAGER] error removing advancement tab:', error);
+    }
   }
 
 
