@@ -15,6 +15,7 @@ import {
 import { goldRoll } from './storeDefinitions';
 import { equipmentSelections } from './equipmentSelections';
 import { areGoldChoicesComplete } from './goldChoices';
+import { spellProgress } from './spellSelection';
 import { getDnd5eVersion, getSubclassLevel } from '~/src/helpers/Utility';
 import { MODULE_ID } from '~/src/helpers/constants';
 
@@ -179,6 +180,16 @@ const progressCalculators = {
     // Force 100% if all groups are completed and gold is rolled
     if (goldRoll > 0 && completedGroups === groups.length + 1) return 100;
     return goldRoll > 0 ? equipmentProgress : Math.min(equipmentProgress, 99);
+  },
+
+  spells: ({ spellProgress }) => {
+    if (!spellProgress) return 0;
+    
+    // If no spells are required (non-spellcasting class), show 100%
+    if (spellProgress.totalRequired === 0) return 100;
+    
+    // Return the calculated percentage from spellProgress
+    return Math.min(100, spellProgress.progressPercentage);
   }
 };
 
@@ -227,7 +238,8 @@ export const progress = derived(
     abilityRolls,
     pointBuyScoreTotal,
     pointBuyLimit,
-    isStandardArrayValues
+    isStandardArrayValues,
+    spellProgress
   ],
   ([
     $race,
@@ -243,7 +255,8 @@ export const progress = derived(
     $abilityRolls,
     $pointBuyScoreTotal,
     $pointBuyLimit,
-    $isStandardArrayValues
+    $isStandardArrayValues,
+    $spellProgress
   ]) => {
     // window.GAS.log.d('[PROGRESS] progress store update triggered', {
     //   activeTab: $activeTab,
@@ -254,9 +267,14 @@ export const progress = derived(
     // });
 
     // Select the appropriate calculator based on the active tab
-    const calculator = $activeTab === 'equipment' 
-      ? progressCalculators.equipment 
-      : progressCalculators.characterCreation;
+    let calculator;
+    if ($activeTab === 'equipment') {
+      calculator = progressCalculators.equipment;
+    } else if ($activeTab === 'spells') {
+      calculator = progressCalculators.spells;
+    } else {
+      calculator = progressCalculators.characterCreation;
+    }
 
     // Pass relevant data to the calculator
     const result = calculator({
@@ -272,7 +290,8 @@ export const progress = derived(
       pointBuyScoreTotal: $pointBuyScoreTotal,
       pointBuyLimit: $pointBuyLimit,
       abilityRolls: $abilityRolls,
-      isStandardArrayValues: $isStandardArrayValues
+      isStandardArrayValues: $isStandardArrayValues,
+      spellProgress: $spellProgress
     });
 
     // window.GAS.log.d('[PROGRESS] progress store result', result);

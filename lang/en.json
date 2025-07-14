@@ -384,7 +384,12 @@
       "Loading": "Loading spells...",
       "NoSpells": "No spells available. Please check your compendium sources in the module settings.",
       "NoMatchingSpells": "No matching spells found.",
-      "SpellsReadOnly": "Spell selections have been completed and are now read-only"
+      "SpellsReadOnly": "Spell selections have been completed and are now read-only",
+      "CantripLimitReached": "You have reached the maximum number of cantrips for your level and class.",
+      "SpellLimitReached": "You have reached the maximum number of spells for your level and class.",
+      "MaxLvl": "Max Spell Lvl.",
+      "Spells": "Spells",
+      "Cantrips": "Cantrips"
     }
   }
 }

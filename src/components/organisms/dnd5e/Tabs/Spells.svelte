@@ -1,11 +1,12 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs } from '../../../../stores/index';
+  import { readOnlyTabs, level as characterLevel } from '../../../../stores/index';
   import { characterClass } from '../../../../stores/storeDefinitions';
   import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { availableSpells, selectedSpells, characterLevel, maxSpellLevel, 
-    initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell 
+  import { availableSpells, selectedSpells, maxSpellLevel, 
+    initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
+    spellLimits, currentSpellCounts, spellProgress
   } from '../../../../stores/spellSelection';
   import spellsKnownData from '../../../../stores/spellsKnown.json';
   
@@ -25,9 +26,6 @@
   // Get character class name for spell filtering and limits
   $: characterClassName = $characterClass?.name || 'Bard'; // Default to Bard for testing
   
-  // Get spell limits for current character level and class
-  $: spellLimits = getSpellLimitsForLevel($characterLevel, characterClassName);
-  
   // Calculate max spell level based on character class and level (override store calculation)
   $: calculatedMaxSpellLevel = getMaxSpellLevelForClass($characterLevel, characterClassName);
   
@@ -43,16 +41,8 @@
       storeMaxSpellLevel: $maxSpellLevel,
       calculatedMaxSpellLevel,
       effectiveMaxSpellLevel,
-      spellLimits,
-      progress: {
-        currentCantrips,
-        currentSpells,
-        totalRequired,
-        totalSelected,
-        progressPercentage,
-        isComplete,
-        canFinalize
-      }
+      spellLimits: $spellLimits,
+      progress: $spellProgress
     });
   }
   
@@ -66,20 +56,6 @@
       enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(spell.enrichedName || spell.name || "", { async: true });
     }
     return enrichedNames[key];
-  }
-
-  // Get spell limits from spellsKnown.json
-  function getSpellLimitsForLevel(level, className) {
-    const levelData = spellsKnownData.levels.find(l => l.level === level);
-    if (!levelData || !levelData[className]) {
-      return { cantrips: 0, spells: 0 };
-    }
-    
-    const [cantrips, spells] = levelData[className].split(' / ');
-    return {
-      cantrips: parseInt(cantrips) || 0,
-      spells: spells === 'All' ? 999 : parseInt(spells) || 0
-    };
   }
 
   // Calculate max spell level based on class and character level
@@ -251,15 +227,12 @@
     const spellLevel = spell.system?.level || 0;
     const isCantrip = spellLevel === 0;
     
-    const currentCantrips = selectedSpellsList.filter(s => (s.spell.system?.level || 0) === 0).length;
-    const currentSpells = selectedSpellsList.filter(s => (s.spell.system?.level || 0) > 0).length;
-    
-    if (isCantrip && currentCantrips >= spellLimits.cantrips) {
+    if (isCantrip && $currentSpellCounts.cantrips >= $spellLimits.cantrips) {
       ui.notifications?.warn(t('Spells.CantripLimitReached'));
       return;
     }
     
-    if (!isCantrip && currentSpells >= spellLimits.spells) {
+    if (!isCantrip && $currentSpellCounts.spells >= $spellLimits.spells) {
       ui.notifications?.warn(t('Spells.SpellLimitReached'));
       return;
     }
@@ -273,14 +246,18 @@
   }
 
   // Get spell school display name
-  function getSchoolName(spell) {
-    return spell.system?.school || 'Unknown';
+  function getSchoolName(spell, forList = false) {
+    const school = spell.system?.school;
+    if (!school || school === 'Unknown') {
+      return forList ? '' : '—';
+    }
+    return school;
   }
 
   // Get spell level display
   function getSpellLevelDisplay(spell) {
     const level = spell.system?.level || 0;
-    return level === 0 ? 'Cantrip' : `Level ${level}`;
+    return level === 0 ? t('Spells.Cantrip') : `${t('Spells.Level')} ${level}`;
   }
 
   // Get casting time display
@@ -290,31 +267,20 @@
       : 'Unknown';
   }
 
-  // Get current spell counts
-  $: currentCantrips = selectedSpellsList.filter(s => (s.spell.system?.level || 0) === 0).length;
-  $: currentSpells = selectedSpellsList.filter(s => (s.spell.system?.level || 0) > 0).length;
-
-  // Calculate progress tracking
-  $: totalRequired = spellLimits.cantrips + (spellLimits.spells === 999 ? 0 : spellLimits.spells);
-  $: totalSelected = currentCantrips + currentSpells;
-  $: progressPercentage = totalRequired > 0 ? Math.round((totalSelected / totalRequired) * 100) : 0;
-  $: isComplete = totalRequired > 0 && totalSelected === totalRequired;
-  $: canFinalize = isComplete;
-
   // Finalize spell selection
   function finalizeSpells() {
-    if (!canFinalize) return;
+    if (!$spellProgress.isComplete) return;
     
     console.log('[SPELLS] Finalizing spell selection:', {
-      cantrips: currentCantrips,
-      spells: currentSpells,
-      total: totalSelected,
+      cantrips: $currentSpellCounts.cantrips,
+      spells: $currentSpellCounts.spells,
+      total: $spellProgress.totalSelected,
       selectedSpells: selectedSpellsList.map(s => s.spell.name)
     });
     
     // TODO: Integrate with workflow state machine
     // This should trigger the next step in the character creation process
-    ui.notifications?.info(`Spells finalized: ${totalSelected} spells selected`);
+    ui.notifications?.info(`Spells finalized: ${$spellProgress.totalSelected} spells selected`);
   }
 </script>
 
@@ -327,42 +293,27 @@
   <div class="sticky-header" class:hidden={!scrolled}>
     <div class="spell-limits">
       <span class="limit-display">
-        Cantrips: {currentCantrips}/{spellLimits.cantrips}
+        Cantrips: {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
       </span>
       <span class="limit-display">
-        Spells: {currentSpells}/{spellLimits.spells === 999 ? 'All' : spellLimits.spells}
+        Spells: {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
       </span>
     </div>
   </div>
 
   <div class="spells-tab">
     <div class="left-panel" bind:this={spellContainer}>
-      <!-- Original header -->
-      <div class="panel-header" class:hidden={scrolled}>
-        <h3 class="left no-margin">{t('Spells.CharacterLevel')}: {$characterLevel}</h3>
-        <h3 class="left no-margin">{t('Spells.MaxSpellLevel')}: {effectiveMaxSpellLevel}</h3>
-        <div class="spell-limits">
-          <div class="limit-display" class:at-limit={currentCantrips >= spellLimits.cantrips}>
-            Cantrips: {currentCantrips}/{spellLimits.cantrips}
-          </div>
-          <div class="limit-display" class:at-limit={currentSpells >= spellLimits.spells}>
-            Spells: {currentSpells}/{spellLimits.spells === 999 ? 'All' : spellLimits.spells}
-          </div>
-        </div>
-
-        <!-- Progress tracking -->
-        {#if totalRequired > 0}
-          <div class="progress-section">
-            <div class="progress-header">
-              <span class="progress-text">Selection Progress: {totalSelected}/{totalRequired}</span>
-              <span class="progress-percentage">{progressPercentage}%</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: {progressPercentage}%"></div>
-            </div>
-          </div>
-        {/if}
-      </div>
+  <!-- Improved grid header -->
+  <div class="panel-header-grid" class:hidden={scrolled}>
+    <div class="grid-item label">{characterClassName}:</div>
+    <div class="grid-item value">{$characterLevel}</div>
+    <div class="grid-item label">{t('Spells.MaxLvl')}:</div>
+    <div class="grid-item value">{effectiveMaxSpellLevel}</div>
+    <div class="grid-item label">{t('Spells.Cantrips')}:</div>
+    <div class="grid-item value" class:at-limit={$currentSpellCounts.cantrips >= $spellLimits.cantrips}>{$currentSpellCounts.cantrips}/{$spellLimits.cantrips}</div>
+    <div class="grid-item label">{t('Spells.Spells')}:</div>
+    <div class="grid-item value" class:at-limit={$currentSpellCounts.spells >= $spellLimits.spells}>{$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}</div>
+  </div>
  
       <h3>{t('Spells.SelectedSpells')}</h3>
       <div class="selected-spells">
@@ -438,7 +389,7 @@
               {#each spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)}
                 <div class="spell-row">
                   <div class="spell-details">
-                    <img src={spell.img} alt={spell.name} class="spell-icon" />
+                    <img src={spell.img} alt={spell.name} class="spell-icon cover" />
                     <div class="spell-info">
                       <span class="spell-name">
                         {#await getEnrichedName(spell)}
@@ -448,7 +399,7 @@
                         {/await}
                       </span>
                       <div class="spell-meta">
-                        <span class="spell-school">{getSchoolName(spell)}</span>
+                        {#if getSchoolName(spell, true)}<span class="spell-school">{getSchoolName(spell, true)}</span>{/if}
                         <span class="casting-time">{getCastingTimeDisplay(spell)}</span>
                       </div>
                     </div>
@@ -467,16 +418,7 @@
     </div>
   </div>
 
-  <!-- Finalize button -->
-  {#if canFinalize}
-    <div class="finalize-section">
-      <button class="finalize-btn" on:click={finalizeSpells} disabled={isDisabled}>
-        <i class="fas fa-check"></i>
-        Finalize Spells
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </div>
-  {/if}
+
 </div>
 
 <style lang="sass">
@@ -809,4 +751,34 @@
         cursor: not-allowed
         transform: none
         box-shadow: none
+
+  .spell-icon.cover
+    width: 48px
+    height: 48px
+    object-fit: cover
+    border-radius: 4px
+    border: 1px solid var(--color-border-light-tertiary)
+
+  .panel-header-grid
+    display: grid
+    grid-template-columns: 1fr 0.4fr 1fr 0.4fr
+    grid-template-rows: repeat(2, auto)
+    padding: 0.3rem 0.1rem
+    gap: 4px
+    margin-bottom: 1.5rem
+    align-items: center
+    background-color: var(--li-background-color)
+    border-radius: var(--border-radius)
+    border-collapse: none
+    .label
+      font-size: 0.95em
+      color: var(--dnd5e-color-gold)
+      text-align: right
+      font-weight: 600
+    .value
+      font-size: 1.1em
+      font-weight: bold
+      text-align: left
+      &.at-limit
+        color: #cc0000
 </style>

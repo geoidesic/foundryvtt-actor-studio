@@ -1,7 +1,10 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility'; 
-import { readOnlyTabs } from '~/src/stores/index';
+import { readOnlyTabs, characterClass, level as characterLevel } from '~/src/stores/index';
+
+// Import spellsKnown data for determining spell limits
+import spellsKnownData from './spellsKnown.json';
 
 // Store for managing the state of spell selection
 
@@ -10,9 +13,6 @@ export const availableSpells = writable([]);
 
 // Spells currently selected (Map<spellId, { itemData }>)
 export const selectedSpells = writable(new Map());
-
-// Character level for filtering appropriate spells
-export const characterLevel = writable(1);
 
 // Current character for spellcasting detection
 export const currentCharacter = writable(null);
@@ -57,6 +57,66 @@ export const maxSpellLevel = derived(
   }
 );
 
+// Derived store for spell limits based on character class and level
+export const spellLimits = derived(
+  [characterClass, characterLevel],
+  ([$characterClass, $characterLevel]) => {
+    if (!$characterClass || !$characterLevel) {
+      return { cantrips: 0, spells: 0 };
+    }
+    
+    const className = $characterClass.name || $characterClass.label || $characterClass;
+    const level = $characterLevel;
+    
+    const levelData = spellsKnownData.levels.find(l => l.level === level);
+    if (!levelData || !levelData[className]) {
+      return { cantrips: 0, spells: 0 };
+    }
+    
+    const [cantrips, spells] = levelData[className].split(' / ');
+    return {
+      cantrips: parseInt(cantrips) || 0,
+      spells: spells === 'All' ? 999 : parseInt(spells) || 0
+    };
+  }
+);
+
+// Derived store for current spell counts
+export const currentSpellCounts = derived(
+  [selectedSpells],
+  ([$selectedSpells]) => {
+    const selectedSpellsList = Array.from($selectedSpells.values());
+    const currentCantrips = selectedSpellsList.filter(s => (s.itemData.system?.level || 0) === 0).length;
+    const currentSpells = selectedSpellsList.filter(s => (s.itemData.system?.level || 0) > 0).length;
+    
+    return {
+      cantrips: currentCantrips,
+      spells: currentSpells,
+      total: currentCantrips + currentSpells
+    };
+  }
+);
+
+// Derived store for spell selection progress
+export const spellProgress = derived(
+  [spellLimits, currentSpellCounts],
+  ([$spellLimits, $currentSpellCounts]) => {
+    const totalRequired = $spellLimits.cantrips + ($spellLimits.spells === 999 ? 0 : $spellLimits.spells);
+    const totalSelected = $currentSpellCounts.total;
+    const progressPercentage = totalRequired > 0 ? Math.round((totalSelected / totalRequired) * 100) : 0;
+    const isComplete = totalRequired > 0 && totalSelected >= totalRequired;
+    
+    return {
+      totalRequired,
+      totalSelected,
+      progressPercentage,
+      isComplete,
+      limits: $spellLimits,
+      counts: $currentSpellCounts
+    };
+  }
+);
+
 // Function to initialize character data for spell selection
 export function initializeSpellSelection(actor) {
   try {
@@ -74,8 +134,6 @@ export function initializeSpellSelection(actor) {
         return total + (cls.levels || cls.system?.levels || 0);
       }, 0);
     }
-    
-    characterLevel.set(Math.max(1, level));
     
     window.GAS.log.d('[SPELLS] Initialized spell selection for level:', level);
     return level;
@@ -232,6 +290,9 @@ if (window.GAS) {
   window.GAS.characterLevel = characterLevel;
   window.GAS.isSpellcaster = isSpellcaster;
   window.GAS.maxSpellLevel = maxSpellLevel;
+  window.GAS.spellLimits = spellLimits;
+  window.GAS.currentSpellCounts = currentSpellCounts;
+  window.GAS.spellProgress = spellProgress;
   window.GAS.initializeSpellSelection = initializeSpellSelection;
   window.GAS.loadAvailableSpells = loadAvailableSpells;
   window.GAS.addSpell = addSpell;

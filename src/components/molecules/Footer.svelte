@@ -459,15 +459,17 @@
             +if("$readOnlyTabs.includes('spells')")
               ProgressBar(progress="{100}")
               +else()
-                .button-container
-                  button.mt-xs(
-                    type="button"
-                    role="button"
-                    on:mousedown="{handleFinalizeSpells}"
-                    disabled="{$isProcessingSpells}" 
-                  )
-                    span {t('Footer.FinalizeSpells')}
-                    i.right.ml-md(class="fas fa-chevron-right")
+                ProgressBar(progress="{progress}")
+                +if("$progress === 100")
+                  .button-container
+                    button.mt-xs(
+                      type="button"
+                      role="button"
+                      on:mousedown="{handleFinalizeSpells}"
+                      disabled="{$isProcessingSpells}" 
+                    )
+                      span {t('Footer.FinalizeSpells')}
+                      i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
