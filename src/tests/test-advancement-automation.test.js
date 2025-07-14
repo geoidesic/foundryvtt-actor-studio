@@ -180,6 +180,32 @@ describe('Advancement Automation in Debug Mode', () => {
   it('should automatically click complete buttons when no next button is available', () => {
     const completeButtonClickSpy = vi.fn();
     
+    // Mock $ global function to return our mock elements
+    const dialog = { mockDialog: true };
+    global.$ = vi.fn((selector) => {
+      if (selector === dialog) {
+        return {
+          find: (subSelector) => {
+            if (subSelector === '[data-action="next"]') {
+              return { length: 0, first: () => ({ length: 0 }) };
+            }
+            if (subSelector === '[data-action="complete"]') {
+              return {
+                length: 1,
+                first: () => ({
+                  length: 1,
+                  prop: (prop) => prop === 'disabled' ? false : undefined,
+                  click: completeButtonClickSpy
+                })
+              };
+            }
+            return { length: 0, first: () => ({ length: 0 }) };
+          }
+        };
+      }
+      return { length: 0 };
+    });
+    
     const mockPanel = {
       length: 1,
       find: (selector) => {
@@ -187,25 +213,7 @@ describe('Advancement Automation in Debug Mode', () => {
           return {
             length: 1,
             each: (callback) => {
-              const mockDialog = {
-                find: (subSelector) => {
-                  if (subSelector === '[data-action="next"]') {
-                    return { length: 0, first: () => ({ length: 0 }) };
-                  }
-                  if (subSelector === '[data-action="complete"]') {
-                    return {
-                      length: 1,
-                      first: () => ({
-                        length: 1,
-                        prop: (prop) => prop === 'disabled' ? false : undefined,
-                        click: completeButtonClickSpy
-                      })
-                    };
-                  }
-                  return { length: 0, first: () => ({ length: 0 }) };
-                }
-              };
-              callback(0, mockDialog);
+              callback(0, dialog);
             }
           };
         }
@@ -234,6 +242,51 @@ describe('Advancement Automation in Debug Mode', () => {
   it('should fall back to text-based button detection when no data-action buttons found', () => {
     const textButtonClickSpy = vi.fn();
     
+    // Mock $ global function to return our mock elements
+    const dialog = { mockDialog: true };
+    global.$ = vi.fn((selector) => {
+      if (selector === dialog) {
+        return {
+          find: (subSelector) => {
+            if (subSelector === '[data-action="next"]' || subSelector === '[data-action="complete"]') {
+              return { length: 0, first: () => ({ length: 0 }) };
+            }
+            if (subSelector === 'button') {
+              return {
+                length: 1,
+                filter: (filterFn) => {
+                  // Simulate a button that matches the text filter
+                  const mockButton = {
+                    text: () => 'Continue'
+                  };
+                  // Test if the filter function returns true for this button
+                  const text = mockButton.text().toLowerCase().trim();
+                  const matches = text.includes('next') || text.includes('continue') || text.includes('complete') || text.includes('finish');
+                  
+                  if (matches) {
+                    return {
+                      length: 1,
+                      filter: () => ({
+                        length: 1,
+                        first: () => ({
+                          length: 1,
+                          text: () => 'Continue',
+                          click: textButtonClickSpy
+                        })
+                      })
+                    };
+                  }
+                  return { length: 0 };
+                }
+              };
+            }
+            return { length: 0, first: () => ({ length: 0 }) };
+          }
+        };
+      }
+      return { length: 0 };
+    });
+    
     const mockPanel = {
       length: 1,
       find: (selector) => {
@@ -241,44 +294,7 @@ describe('Advancement Automation in Debug Mode', () => {
           return {
             length: 1,
             each: (callback) => {
-              const mockDialog = {
-                find: (subSelector) => {
-                  if (subSelector === '[data-action="next"]' || subSelector === '[data-action="complete"]') {
-                    return { length: 0, first: () => ({ length: 0 }) };
-                  }
-                  if (subSelector === 'button') {
-                    return {
-                      length: 1,
-                      filter: (filterFn) => {
-                        // Simulate a button that matches the text filter
-                        const mockButton = {
-                          text: () => 'Continue'
-                        };
-                        // Test if the filter function returns true for this button
-                        const text = mockButton.text().toLowerCase().trim();
-                        const matches = text.includes('next') || text.includes('continue') || text.includes('complete') || text.includes('finish');
-                        
-                        if (matches) {
-                          return {
-                            length: 1,
-                            filter: () => ({
-                              length: 1,
-                              first: () => ({
-                                length: 1,
-                                text: () => 'Continue',
-                                click: textButtonClickSpy
-                              })
-                            })
-                          };
-                        }
-                        return { length: 0 };
-                      }
-                    };
-                  }
-                  return { length: 0, first: () => ({ length: 0 }) };
-                }
-              };
-              callback(0, mockDialog);
+              callback(0, dialog);
             }
           };
         }

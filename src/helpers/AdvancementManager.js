@@ -63,6 +63,11 @@ export class AdvancementManager {
    * Finds and clicks "next" buttons, then "complete" buttons to speed up debug iteration
    */
   autoAdvanceSteps() {
+    // Only run automation in debug mode
+    if (!window.GAS || !window.GAS.debug) {
+      return;
+    }
+    
     try {
       const panel = this._getPanel();
       if (!panel || !panel.length) return;
