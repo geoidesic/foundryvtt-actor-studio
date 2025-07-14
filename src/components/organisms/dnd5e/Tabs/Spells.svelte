@@ -53,7 +53,14 @@
   async function getEnrichedName(spell) {
     const key = spell.uuid || spell._id || spell.id;
     if (!enrichedNames[key]) {
-      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(spell.enrichedName || spell.name || "", { async: true });
+      // Create a UUID link if we have a UUID, otherwise fall back to plain name
+      let content;
+      if (spell.uuid) {
+        content = `@UUID[${spell.uuid}]{${spell.name}}`;
+      } else {
+        content = spell.name || "";
+      }
+      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(content, { async: true });
     }
     return enrichedNames[key];
   }
@@ -222,21 +229,23 @@
   }
 
   // Add spell to selection
+
   async function addToSelection(spell) {
-    // Check spell limits before adding
+    // Always get the latest store values to avoid stale cap checks
+    await tick();
     const spellLevel = spell.system?.level || 0;
     const isCantrip = spellLevel === 0;
-    
-    if (isCantrip && $currentSpellCounts.cantrips >= $spellLimits.cantrips) {
+    const counts = get(currentSpellCounts);
+    const limits = get(spellLimits);
+
+    if (isCantrip && counts.cantrips >= limits.cantrips) {
       ui.notifications?.warn(t('Spells.CantripLimitReached'));
       return;
     }
-    
-    if (!isCantrip && $currentSpellCounts.spells >= $spellLimits.spells) {
+    if (!isCantrip && counts.spells >= limits.spells) {
       ui.notifications?.warn(t('Spells.SpellLimitReached'));
       return;
     }
-    
     await addSpell(spell);
   }
 
@@ -262,8 +271,10 @@
 
   // Get casting time display
   function getCastingTimeDisplay(spell) {
+    window.GAS.log.q(spell)
     return spell.system?.activation?.value && spell.system?.activation?.type 
       ? `${spell.system.activation.value} ${spell.system.activation.type}`
+        : spell.system?.activation?.type ? spell.system?.activation?.type
       : 'Unknown';
   }
 
@@ -282,148 +293,125 @@
     // This should trigger the next step in the character creation process
     ui.notifications?.info(`Spells finalized: ${$spellProgress.totalSelected} spells selected`);
   }
+
+  const containerClasses = {readonly: isDisabled};
+  const headerClasses = {hidden: !scrolled}
+  const gridClasses = {hidden: scrolled}
+  const spellCountCss = {"at-limit": $currentSpellCounts.cantrips >= $spellLimits.cantrips}
+  const spellLimitsCss = {"at-limit": $currentSpellCounts.spells >= $spellLimits.spells}
 </script>
 
-<div class="spells-tab-container" class:readonly={isDisabled}>
-  {#if isDisabled}
-    <div class="info-message">{t('Spells.SpellsReadOnly')}</div>
-  {/if}
-
-  <!-- Sticky spell limits header -->
-  <div class="sticky-header" class:hidden={!scrolled}>
-    <div class="spell-limits">
-      <span class="limit-display">
-        Cantrips: {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-      </span>
-      <span class="limit-display">
-        Spells: {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
-      </span>
-    </div>
-  </div>
-
-  <div class="spells-tab">
-    <div class="left-panel" bind:this={spellContainer}>
-  <!-- Improved grid header -->
-  <div class="panel-header-grid" class:hidden={scrolled}>
-    <div class="grid-item label">{characterClassName}:</div>
-    <div class="grid-item value">{$characterLevel}</div>
-    <div class="grid-item label">{t('Spells.MaxLvl')}:</div>
-    <div class="grid-item value">{effectiveMaxSpellLevel}</div>
-    <div class="grid-item label">{t('Spells.Cantrips')}:</div>
-    <div class="grid-item value" class:at-limit={$currentSpellCounts.cantrips >= $spellLimits.cantrips}>{$currentSpellCounts.cantrips}/{$spellLimits.cantrips}</div>
-    <div class="grid-item label">{t('Spells.Spells')}:</div>
-    <div class="grid-item value" class:at-limit={$currentSpellCounts.spells >= $spellLimits.spells}>{$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}</div>
-  </div>
+<template lang="pug">
+spells-tab-container(class="{containerClasses}")
  
-      <h3>{t('Spells.SelectedSpells')}</h3>
-      <div class="selected-spells">
-        {#if selectedSpellsList.length === 0}
-          <div class="empty-selection">
-            <p>{t('Spells.NoSpellsSelected')}</p>
-          </div>
-        {:else}
-          {#each selectedSpellsList as selectedSpell}
-            <div class="selected-spell">
-              <div class="spell-col1">
-                <img src={selectedSpell.spell.img} alt={selectedSpell.spell.name} class="spell-icon" />
-              </div>
-              <div class="spell-col2 left">
-                <div class="spell-name">
-                  {#await getEnrichedName(selectedSpell.spell)}
-                    {selectedSpell.spell.name}
-                  {:then Html}
-                    {@html Html}
-                  {/await}
-                </div>
-                <div class="spell-subdetails">
-                  <span class="spell-level">{getSpellLevelDisplay(selectedSpell.spell)}</span>
-                  <span class="spell-school">{getSchoolName(selectedSpell.spell)}</span>
-                </div>
-              </div>
-              <div class="spell-col3">
-                <button class="remove-btn" on:click={() => removeFromSelection(selectedSpell.id)} disabled={isDisabled}>
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </div>
-          {/each}
-        {/if}
-      </div>
-    </div>
+  +if("isDisabled")
+    .info-message {t('Spells.SpellsReadOnly')}
+  .sticky-header(class="{headerClasses}")
+    .spell-limits
+      span.limit-display Cantrips: {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+      span.limit-display Spells: {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+  .spells-tab
+    .left-panel(bind:this="{spellContainer}")
+      .panel-header-grid(class="{gridClasses}")
+        .grid-item.label {characterClassName}:
+        .grid-item.value {$characterLevel}
+        .grid-item.label {t('Spells.MaxLvl')}:
+        .grid-item.value {effectiveMaxSpellLevel}
+        .grid-item.label {t('Spells.Cantrips')}:
+        .grid-item.value(class="{spellCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+        .grid-item.label {t('Spells.Spells')}:
+        .grid-item.value(class="{spellLimitsCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+      h3 {t('Spells.SelectedSpells')}
 
-    <!-- Right Panel: Available Spells -->
-    <div class="right-panel spell-list">
-      <h3>{t('Spells.AvailableSpells')}</h3>
-      
-      <!-- Keyword Filter Input -->
-      <div class="filter-container mb-sm">
-        <input 
-          type="text" 
-          bind:value={keywordFilter} 
-          placeholder={t('Spells.FilterPlaceholder')} 
-          class="keyword-filter"
-          disabled={isDisabled}
-        />
-      </div>
+      .selected-spells
+        +if("selectedSpellsList.length === 0")
+          .empty-selection
+            p {t('Spells.NoSpellsSelected')}      
 
-      {#if loading}
-        <div class="loading">{t('Spells.Loading')}</div>
-      {:else if filteredSpells.length === 0}
-        <div class="empty-state">
-          <p>{keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}</p>
-        </div>
-      {:else}
-        {#each spellLevels as spellLevel}
-          <div class="spell-level-group">
-            <h4 class="left mt-sm flexrow spell-level-header pointer" on:click={() => toggleSpellLevel(spellLevel)}>
-              <div class="flex0 mr-xs">
-                {#if expandedLevels[spellLevel]}
-                  <span>[-]</span>
-                {:else}
-                  <span>[+]</span>
-                {/if}
-              </div>
-              <div class="flex">{spellLevel} ({spellsByLevel[spellLevel].length})</div>
-            </h4>
-            {#if expandedLevels[spellLevel]}
-              {#each spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)}
-                <div class="spell-row">
-                  <div class="spell-details">
-                    <img src={spell.img} alt={spell.name} class="spell-icon cover" />
-                    <div class="spell-info">
-                      <span class="spell-name">
-                        {#await getEnrichedName(spell)}
-                          {spell.name}
-                        {:then Html}
-                          {@html Html}
-                        {/await}
-                      </span>
-                      <div class="spell-meta">
-                        {#if getSchoolName(spell, true)}<span class="spell-school">{getSchoolName(spell, true)}</span>{/if}
-                        <span class="casting-time">{getCastingTimeDisplay(spell)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="spell-actions">
-                    <button class="add-btn" on:click|preventDefault={() => addToSelection(spell)} disabled={isDisabled}>
-                      <i class="fas fa-plus"></i>
-                    </button>
-                  </div>
-                </div>
-              {/each}
-            {/if}
-          </div>
-        {/each}
-      {/if}
-    </div>
-  </div>
+          +else()
+            +each("selectedSpellsList as selectedSpell")
+              .selected-spell
+                .spell-col1
+                  img.spell-icon( alt="{selectedSpell.spell.name}" src="{selectedSpell.spell.img}")
+                .spell-col2.left            
+                  .spell-name
+                    +await("getEnrichedName(selectedSpell.spell)")
+                      span {selectedSpell.spell.name}
+                      +then("Html")
+                        span {@html Html}
+                      +catch("error")
+                        span {selectedSpell.spell.name}
 
 
-</div>
+                  .spell-subdetails
+                    span.spell-level {getSpellLevelDisplay(selectedSpell.spell)}
+                    span.spell-school {getSchoolName(selectedSpell.spell)}
+
+                .spell-col3
+                  button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id) }" disabled="{isDisabled}")
+                    i.fas.fa-trash
+
+    .right-panel.spell-list
+      h3 {t('Spells.AvailableSpells')}
+      .filter-container.mb-sm
+        input.keyword-filter(type="text" bind:value="{keywordFilter}" placeholder="{t('Spells.FilterPlaceholder')}" disabled="{isDisabled}")
+      +if("loading")
+        .loading {t('Spells.Loading')}
+        +elseif("filteredSpells.length === 0")
+          .empty-state
+            p {keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}
+          +else()
+            +each("spellLevels as spellLevel")
+
+              .spell-level-group
+                h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
+                  .flex0.mr-xs
+                    +if("expandedLevels[spellLevel]")
+                      span [-]
+                      +else()
+                        span [+]
+                  .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+
+                +if("expandedLevels[spellLevel]")
+                  ul.blank
+                    +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
+                      li.flexrow.spell-row.justify-flexrow-vertical
+                        .flex0.spell-details
+                          img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
+
+                        .flex1.spell-info
+                          .flexrow
+                            .flex1.left.spell-name.gold
+                              +await("getEnrichedName(spell)")
+                                span {spell.name}
+                                +then("Html")
+                                  span {@html Html}
+                                +catch("error")
+                                  span {spell.name}
+                          .flexrow.smalltext
+
+                            .flex1.left.spell-meta
+                              +if("getSchoolName(spell, true)")
+                                .flexrow.gap-10
+                                  .flex2.flexrow
+                                    div School:
+                                    .badge {getSchoolName(spell, true)}
+                                  .flex2.flexrow 
+                                    div Activation
+                                    .badge {getCastingTimeDisplay(spell)}
+
+                        .spell-actions.mx-sm
+                          button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
+                            i.fas.fa-plus
+</template>
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.sass"
 
+  .badge
+    +badge(var(--color-cool-3), 0.5rem)
+    margin-top: -2px
+    margin-left: -8px
   :global(.GAS.theme-dark .selected-spell .spell-level)
     color: silver
 
@@ -433,7 +421,6 @@
     color: silver !important
 
   .spells-tab-container 
-    position: relative
     height: 100%
     width: 100%
     display: flex
@@ -446,6 +433,8 @@
       :global(*)
         cursor: default !important
     
+  ul.blank
+     padding: 0 
   .info-message
     font-size: 0.8rem
     color: #666
@@ -476,7 +465,6 @@
 
   .left-panel
     flex: 1
-    min-width: 300px
     max-width: 40%
     border-right: 1px solid var(--color-border-light-tertiary)
     padding: 1rem
@@ -625,6 +613,7 @@
       
     .spell-level-group
       margin-bottom: 1rem
+      position: relative
       
     .spell-level-header
       background: var(--color-bg-btn)
@@ -638,36 +627,42 @@
         background: var(--color-bg-btn-hover)
         
     .spell-row
-      display: flex
-      align-items: center
-      justify-content: space-between
-      padding: 0.5rem
+      position: relative
+     
       border: 1px solid var(--color-border-light-tertiary)
       margin-bottom: 0.25rem
       border-radius: 4px
       background: var(--color-bg)
+      min-height: 40px
       
       &:hover
         background: var(--color-bg-btn)
         
       .spell-details
-        display: flex
-        align-items: center
-        flex: 1
-        gap: 0.5rem
+        min-width: 50px
         
         .spell-icon
-          width: 24px
-          height: 24px
+          width: 40px
+          height: 40px
           border-radius: 4px
-          border: 1px solid var(--color-border-light-tertiary)
           flex-shrink: 0
+          object-fit: cover
+          position: absolute
+          border-top: 1px solid var(--dnd5e-color-gold)
+          border-left: 1px solid var(--dnd5e-color-gold)
+          border-bottom: 1px solid var(--dnd5e-color-gold)
+          border-right: none
+          border-top-right-radius: 0
+          border-bottom-right-radius: 0
+          left: -1px
+          top: 0px
+          margin-top: -1px
+
+          img
+            border: none
+
           
         .spell-info
-          display: flex
-          flex-direction: column
-          min-width: 0
-          flex: 1
           
           .spell-name
             font-weight: bold

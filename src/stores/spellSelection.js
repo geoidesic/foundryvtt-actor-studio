@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility'; 
+import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
 import { readOnlyTabs, characterClass, level as characterLevel } from '~/src/stores/index';
 
 // Import spellsKnown data for determining spell limits
@@ -22,10 +22,10 @@ export const isSpellcaster = derived(
   [currentCharacter],
   ([$currentCharacter]) => {
     if (!$currentCharacter) return false;
-    
+
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
     if (!actorData) return false;
-    
+
     // Check for spellcasting in the actor system
     return actorData.spellcasting && Object.keys(actorData.spellcasting).length > 0;
   }
@@ -36,10 +36,10 @@ export const maxSpellLevel = derived(
   [currentCharacter, characterLevel],
   ([$currentCharacter, $characterLevel]) => {
     if (!$currentCharacter) return 0;
-    
+
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
     if (!actorData?.spellcasting) return 0;
-    
+
     // Find the highest spell level available based on spellcasting progression
     let maxLevel = 0;
     Object.values(actorData.spellcasting).forEach(spellcastingData => {
@@ -52,7 +52,7 @@ export const maxSpellLevel = derived(
         });
       }
     });
-    
+
     return maxLevel;
   }
 );
@@ -64,15 +64,15 @@ export const spellLimits = derived(
     if (!$characterClass || !$characterLevel) {
       return { cantrips: 0, spells: 0 };
     }
-    
+
     const className = $characterClass.name || $characterClass.label || $characterClass;
     const level = $characterLevel;
-    
+
     const levelData = spellsKnownData.levels.find(l => l.level === level);
     if (!levelData || !levelData[className]) {
       return { cantrips: 0, spells: 0 };
     }
-    
+
     const [cantrips, spells] = levelData[className].split(' / ');
     return {
       cantrips: parseInt(cantrips) || 0,
@@ -88,7 +88,7 @@ export const currentSpellCounts = derived(
     const selectedSpellsList = Array.from($selectedSpells.values());
     const currentCantrips = selectedSpellsList.filter(s => (s.itemData.system?.level || 0) === 0).length;
     const currentSpells = selectedSpellsList.filter(s => (s.itemData.system?.level || 0) > 0).length;
-    
+
     return {
       cantrips: currentCantrips,
       spells: currentSpells,
@@ -105,7 +105,7 @@ export const spellProgress = derived(
     const totalSelected = $currentSpellCounts.total;
     const progressPercentage = totalRequired > 0 ? Math.round((totalSelected / totalRequired) * 100) : 0;
     const isComplete = totalRequired > 0 && totalSelected >= totalRequired;
-    
+
     return {
       totalRequired,
       totalSelected,
@@ -121,11 +121,11 @@ export const spellProgress = derived(
 export function initializeSpellSelection(actor) {
   try {
     currentCharacter.set(actor);
-    
+
     // Determine character level - check classes or use a default
     const actorData = actor.system || actor.data?.data;
     let level = 1;
-    
+
     if (actorData.details?.level) {
       level = actorData.details.level;
     } else if (actorData.classes) {
@@ -134,7 +134,7 @@ export function initializeSpellSelection(actor) {
         return total + (cls.levels || cls.system?.levels || 0);
       }, 0);
     }
-    
+
     window.GAS.log.d('[SPELLS] Initialized spell selection for level:', level);
     return level;
   } catch (error) {
@@ -148,7 +148,7 @@ export async function loadAvailableSpells() {
   try {
     // Get spell compendium sources from settings
     const packs = getPacksFromSettings("spells");
-    
+
     if (!packs || packs.length === 0) {
       availableSpells.set([]);
       console.warn("No spell compendiums configured");
@@ -163,19 +163,20 @@ export async function loadAvailableSpells() {
       "type",
       "uuid"
     ];
-    
+
     // Define keys that are likely NOT in the index and need async loading
     const nonIndexKeys = [
       "system.level",
       "system.school",
       "system.preparation",
       "system.components",
-      "system.description"
+      "system.description",
+      "system.activation"
     ];
 
     // Extract spell data using extractItemsFromPacksAsync
     let spells = await extractItemsFromPacksAsync(packs, indexKeys, nonIndexKeys);
-    
+
     // Filter for spells only
     spells = spells.filter(item => item.type === "spell");
 
@@ -201,11 +202,11 @@ export async function loadAvailableSpells() {
       }
       return a.name.localeCompare(b.name);
     });
-    
+
     // Update the store with spells
     availableSpells.set(uniqueSpells);
     window.GAS.log.d('[SPELLS] Loaded spells:', uniqueSpells.length);
-    
+
   } catch (error) {
     console.error("Error loading available spells:", error);
     availableSpells.set([]);
@@ -216,7 +217,7 @@ export async function loadAvailableSpells() {
 export async function addSpell(spell) {
   try {
     const spellId = spell.id || spell._id;
-    
+
     if (!spellId) {
       console.error("Spell has no id:", spell);
       ui.notifications?.warn("Spell has no ID");
@@ -229,14 +230,14 @@ export async function addSpell(spell) {
       ui.notifications?.warn("Error loading spell data");
       return;
     }
-    
+
     selectedSpells.update(spells => {
       const newSpells = new Map(spells);
       newSpells.set(spellId, { itemData: fullSpellData });
       return newSpells;
     });
-    
-  } catch(error) {
+
+  } catch (error) {
     console.error("Error adding spell:", error);
     ui.notifications?.warn("Error adding spell");
   }
@@ -250,7 +251,7 @@ export function removeSpell(spellId) {
       newSpells.delete(spellId);
       return newSpells;
     });
-  } catch(error) {
+  } catch (error) {
     console.error("Error removing spell:", error);
     ui.notifications?.warn("Error removing spell");
   }
@@ -261,22 +262,22 @@ export async function finalizeSpellSelection() {
   try {
     const spells = get(selectedSpells);
     const character = get(currentCharacter);
-    
+
     if (!character || spells.size === 0) {
       return;
     }
 
     // Convert selected spells to items that can be added to the character
     const spellItems = Array.from(spells.values()).map(({ itemData }) => itemData.toObject());
-    
+
     // Add spells to the character
     await character.createEmbeddedDocuments("Item", spellItems);
-    
+
     // Clear the selection
     selectedSpells.set(new Map());
-    
+
     ui.notifications?.info(`Added ${spellItems.length} spells to character`);
-    
+
   } catch (error) {
     console.error("Error finalizing spell selection:", error);
     ui.notifications?.error("Error adding spells to character");

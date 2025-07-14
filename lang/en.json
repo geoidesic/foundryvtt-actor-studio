@@ -389,7 +389,8 @@
       "SpellLimitReached": "You have reached the maximum number of spells for your level and class.",
       "MaxLvl": "Max Spell Lvl.",
       "Spells": "Spells",
-      "Cantrips": "Cantrips"
+      "Cantrip": "Cantrips",
+      "Level": "Lvl"
     }
   }
 }
