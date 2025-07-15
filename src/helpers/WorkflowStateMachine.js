@@ -230,7 +230,8 @@ export function createWorkflowStateMachine() {
       }
     })
     .state('selecting_spells')
-    .on(['spells_complete', 'skip_spells']).transitionTo('completed')
+    .on('spells_complete').transitionTo('completed')
+    .on('skip_spells').transitionTo('completed')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {

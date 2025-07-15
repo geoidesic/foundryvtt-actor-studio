@@ -15,6 +15,7 @@ import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager";
 import { goldRoll } from '../stores/storeDefinitions';
 import { totalGoldFromChoices } from '../stores/goldChoices';
 import { tabs, activeTab, readOnlyTabs } from '../stores/index.js';
+import { finalizeSpellSelection } from '../stores/spellSelection.js';
 
 /**
  * Handles creating container contents for a container item
@@ -609,27 +610,32 @@ export async function handleFinalizeSpells({
   }
 
   try {
-    // Get the spell selection store
-    if (window.GAS.finalizeSpellSelection) {
-      const success = await window.GAS.finalizeSpellSelection($actorInGame);
+    // Use the imported spell finalization function
+    const success = await finalizeSpellSelection($actorInGame);
+    
+    if (success) {
+      ui.notifications.info("Spells added successfully");
       
-      if (success) {
-        ui.notifications.info("Spells added successfully");
-        
-        // Use state machine to transition to next step
-        getWorkflowFSM().handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
-      } else {
-        ui.notifications.error("Failed to add spells");
-        getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
-      }
+      // Debug: Log current state and event before transitioning
+      const fsm = getWorkflowFSM();
+      const currentState = fsm.getCurrentState();
+      window.GAS.log.d('[WORKFLOW] Current state before spells_complete:', currentState);
+      window.GAS.log.d('[WORKFLOW] Event to handle:', WORKFLOW_EVENTS.SPELLS_COMPLETE);
+      
+      // Use state machine to transition to next step
+      fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
     } else {
-      ui.notifications.error("Spell selection system not available");
+      ui.notifications.error("Failed to add spells");
       getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
     }
   } catch (error) {
     console.error("Error during spell finalization:", error);
     ui.notifications.error("An error occurred while adding spells");
-    getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+    // Only trigger error event if not already in error state
+    const currentState = getWorkflowFSM().getCurrentState();
+    if (currentState !== 'error') {
+      getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+    }
   }
   
   if (setProcessing) setProcessing(false);

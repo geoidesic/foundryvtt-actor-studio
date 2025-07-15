@@ -258,34 +258,75 @@ export function removeSpell(spellId) {
 }
 
 // Function to finalize spell selection and add them to the character
-export async function finalizeSpellSelection() {
+export async function finalizeSpellSelection(actor) {
+  window.GAS.log.d('[SPELLS] finalizeSpellSelection called with actor:', actor?.name);
+  
+  if (!actor) {
+    ui.notifications.error("No active character");
+    return false;
+  }
+
   try {
     const spells = get(selectedSpells);
-    const character = get(currentCharacter);
 
-    if (!character || spells.size === 0) {
-      return;
+    if (spells.size === 0) {
+      ui.notifications.warn("No spells selected");
+      return false;
     }
 
     // Convert selected spells to items that can be added to the character
-    const spellItems = Array.from(spells.values()).map(({ itemData }) => itemData.toObject());
+    const spellItems = Array.from(spells.values()).map(({ itemData }) => {
+      const spellObject = typeof itemData.toObject === 'function' 
+        ? itemData.toObject() 
+        : foundry.utils.deepClone(itemData);
+      return spellObject;
+    });
 
-    // Add spells to the character
-    await character.createEmbeddedDocuments("Item", spellItems);
+    window.GAS.log.d('[SPELLS] Creating', spellItems.length, 'spell items');
+
+    // Check for existing spells and handle duplicates similar to shop
+    const itemsToCreate = [];
+    const itemsToUpdate = [];
+
+    for (const spellItem of spellItems) {
+      // Check if actor already has this spell by name
+      const existingSpell = actor.items.find(i => i.name === spellItem.name && i.type === "spell");
+      
+      if (existingSpell) {
+        window.GAS.log.d('[SPELLS] Found existing spell, skipping:', spellItem.name);
+        // For spells, we typically don't update quantities, just skip duplicates
+        continue;
+      } else {
+        window.GAS.log.d('[SPELLS] New spell, will create:', spellItem.name);
+        itemsToCreate.push(spellItem);
+      }
+    }
+
+    // Create new spells in a single batch
+    if (itemsToCreate.length > 0) {
+      const createdSpells = await actor.createEmbeddedDocuments("Item", itemsToCreate);
+      window.GAS.log.d('[SPELLS] Created spells:', createdSpells.length);
+    }
 
     // Clear the selection
     selectedSpells.set(new Map());
 
-    ui.notifications?.info(`Added ${spellItems.length} spells to character`);
+    // Make the spells tab readonly
+    readOnlyTabs.update(tabs => [...tabs, 'spells']);
+
+    ui.notifications?.info(`Added ${itemsToCreate.length} spells to character`);
+    return true;
 
   } catch (error) {
     console.error("Error finalizing spell selection:", error);
-    ui.notifications?.error("Error adding spells to character");
+    ui.notifications?.error("Error adding spells to character: " + error.message);
+    return false;
   }
 }
 
 // Make the stores globally available for other components to access
-if (window.GAS) {
+if (typeof window !== 'undefined') {
+  if (!window.GAS) window.GAS = {};
   window.GAS.availableSpells = availableSpells;
   window.GAS.selectedSpells = selectedSpells;
   window.GAS.characterLevel = characterLevel;

@@ -278,22 +278,6 @@
       : 'Unknown';
   }
 
-  // Finalize spell selection
-  function finalizeSpells() {
-    if (!$spellProgress.isComplete) return;
-    
-    console.log('[SPELLS] Finalizing spell selection:', {
-      cantrips: $currentSpellCounts.cantrips,
-      spells: $currentSpellCounts.spells,
-      total: $spellProgress.totalSelected,
-      selectedSpells: selectedSpellsList.map(s => s.spell.name)
-    });
-    
-    // TODO: Integrate with workflow state machine
-    // This should trigger the next step in the character creation process
-    ui.notifications?.info(`Spells finalized: ${$spellProgress.totalSelected} spells selected`);
-  }
-
   const containerClasses = {readonly: isDisabled};
   const gridClasses = {hidden: scrolled}
   const spellCountCss = {"at-limit": $currentSpellCounts.cantrips >= $spellLimits.cantrips}
