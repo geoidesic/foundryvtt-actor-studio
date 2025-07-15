@@ -254,6 +254,8 @@ section.starting-gold
   grid-template-columns: repeat(1, 1fr)
   gap: 0.2rem
 
+button.option
+  color: white
 .option
   display: flex
   padding: 0.3rem 0.5rem

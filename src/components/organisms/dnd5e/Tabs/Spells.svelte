@@ -295,7 +295,6 @@
   }
 
   const containerClasses = {readonly: isDisabled};
-  const headerClasses = {hidden: !scrolled}
   const gridClasses = {hidden: scrolled}
   const spellCountCss = {"at-limit": $currentSpellCounts.cantrips >= $spellLimits.cantrips}
   const spellLimitsCss = {"at-limit": $currentSpellCounts.spells >= $spellLimits.spells}
@@ -306,17 +305,15 @@ spells-tab-container(class="{containerClasses}")
  
   +if("isDisabled")
     .info-message {t('Spells.SpellsReadOnly')}
-  .sticky-header(class="{headerClasses}")
-    .spell-limits
-      span.limit-display Cantrips: {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-      span.limit-display Spells: {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+  .sticky-header(class:hidden="{!scrolled}")
+    .panel-header-grid
+      .grid-item.label {t('Spells.Cantrips')}:
+      .grid-item.value(class="{spellCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+      .grid-item.label {t('Spells.Spells')}:
+      .grid-item.value(class="{spellLimitsCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
   .spells-tab
     .left-panel(bind:this="{spellContainer}")
-      .panel-header-grid(class="{gridClasses}")
-        .grid-item.label {characterClassName}:
-        .grid-item.value {$characterLevel}
-        .grid-item.label {t('Spells.MaxLvl')}:
-        .grid-item.value {effectiveMaxSpellLevel}
+      .panel-header-grid(class:hidden="{scrolled}")
         .grid-item.label {t('Spells.Cantrips')}:
         .grid-item.value(class="{spellCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
         .grid-item.label {t('Spells.Spells')}:
@@ -446,14 +443,10 @@ spells-tab-container(class="{containerClasses}")
 
   .sticky-header
     position: sticky
-    top: 15px
-    left: 1rem
+    top: 27px
+    left: 20px
     z-index: 5
-    background: black
-    padding: 0.5rem
-    margin: 0
     max-width: 200px
-    border-radius: 4px
     &.hidden
       display: none
 
@@ -466,6 +459,7 @@ spells-tab-container(class="{containerClasses}")
   .left-panel
     flex: 1
     max-width: 40%
+    min-width: 250px
     border-right: 1px solid var(--color-border-light-tertiary)
     padding: 1rem
     overflow-y: auto
