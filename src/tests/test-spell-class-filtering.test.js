@@ -1,33 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 describe('Spell Class Filtering', () => {
-  it('should correctly filter spells by character class using spell.labels.classes array', () => {
-    // Mock spell data with different class restrictions
+  it('should correctly filter spells by character class using spell.labels.classes string', () => {
+    // Mock spell data with different class restrictions (STRING format, not array)
     const mockSpells = [
       {
         name: 'Fireball',
         system: { level: 3 },
-        labels: { classes: ['Wizard', 'Sorcerer'] }
+        labels: { classes: 'Sorcerer, Wizard' }  // STRING format
       },
       {
         name: 'Cure Wounds',
         system: { level: 1 },
-        labels: { classes: ['Cleric', 'Bard', 'Druid'] }
+        labels: { classes: 'Bard, Cleric, Druid' }  // STRING format
       },
       {
         name: 'Magic Missile',
         system: { level: 1 },
-        labels: { classes: ['Wizard', 'Sorcerer'] }
+        labels: { classes: 'Sorcerer, Wizard' }  // STRING format
       },
       {
         name: 'Sacred Flame',
         system: { level: 0 },
-        labels: { classes: ['Cleric'] }
+        labels: { classes: 'Cleric' }  // STRING format
       },
       {
         name: 'Guidance',
         system: { level: 0 },
-        labels: { classes: [] } // No class restrictions - should be available to all
+        labels: { classes: '' } // No class restrictions - should be available to all
       }
     ];
 
@@ -41,13 +41,13 @@ describe('Spell Class Filtering', () => {
       const spellLevel = spell.system?.level || 0;
       const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
       
-      // Filter by character class - check spell.labels.classes array
-      const spellClasses = spell.labels?.classes || [];
+      // Filter by character class - check spell.labels.classes STRING
+      const spellClasses = spell.labels?.classes || '';
       
-      // Check if the character class is in the spell's class array
-      const availableToClass = Array.isArray(spellClasses) 
+      // Check if the character class is in the spell's class string
+      const availableToClass = typeof spellClasses === 'string' 
         ? spellClasses.includes(characterClassName) || 
-          spellClasses.includes(characterClassName.toLowerCase()) ||
+          spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
           // Fallback: if no class restrictions, allow all spells
           spellClasses.length === 0
         : false;
@@ -65,10 +65,10 @@ describe('Spell Class Filtering', () => {
       const spellLevel = spell.system?.level || 0;
       const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
       
-      const spellClasses = spell.labels?.classes || [];
-      const availableToClass = Array.isArray(spellClasses) 
+      const spellClasses = spell.labels?.classes || '';
+      const availableToClass = typeof spellClasses === 'string' 
         ? spellClasses.includes('Cleric') || 
-          spellClasses.includes('cleric') ||
+          spellClasses.toLowerCase().includes('cleric') ||
           spellClasses.length === 0
         : false;
       
@@ -103,15 +103,15 @@ describe('Spell Class Filtering', () => {
       {
         name: 'Spell with valid classes',
         system: { level: 1 },
-        labels: { classes: ['Bard'] }
+        labels: { classes: 'Bard' }  // STRING format
       }
     ];
 
     const filteredSpells = mockSpells.filter(spell => {
-      const spellClasses = spell.labels?.classes || [];
-      const availableToClass = Array.isArray(spellClasses) 
+      const spellClasses = spell.labels?.classes || '';
+      const availableToClass = typeof spellClasses === 'string' 
         ? spellClasses.includes('Bard') || 
-          spellClasses.includes('bard') ||
+          spellClasses.toLowerCase().includes('bard') ||
           spellClasses.length === 0
         : false;
       

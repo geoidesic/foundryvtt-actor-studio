@@ -106,8 +106,8 @@
     // Initialize spell selection with current actor
     initializeSpellSelection($actor);
     
-    // Load available spells
-    await loadAvailableSpells();
+    // Load available spells with character class filtering
+    await loadAvailableSpells(characterClassName);
     
     // Debug logging
     console.log(`[SPELLS DEBUG] Loaded spells:`, {
@@ -164,15 +164,15 @@
     const spellLevel = spell.system?.level || 0;
     const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
     
-    // Filter by character class - check spell.labels.classes array
-    const spellClasses = spell.labels?.classes || [];
+    // Filter by character class - check spell.labels.classes (it's a STRING, not array)
+    const spellClasses = spell.labels?.classes || '';
     
-    // Check if the character class is in the spell's class array
-    const availableToClass = Array.isArray(spellClasses) 
-      ? spellClasses.includes(characterClassName) || 
-        spellClasses.includes(characterClassName.toLowerCase()) ||
-        // Fallback: if no class restrictions, allow all spells
-        spellClasses.length === 0
+    // Check if the character class is in the spell's class string
+    // labels.classes is a STRING like "Bard, Wizard" not an array
+    const availableToClass = typeof spellClasses === 'string'
+      ? spellClasses.includes(characterClassName) ||
+        spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
+        spellClasses.trim().length === 0 // No restrictions (empty string)
       : false;
     
     // Debug logging for spell filtering

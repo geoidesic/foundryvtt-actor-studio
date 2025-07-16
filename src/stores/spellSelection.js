@@ -143,48 +143,117 @@ export function initializeSpellSelection(actor) {
   }
 }
 
-// Function to fetch spells from compendiums
-export async function loadAvailableSpells() {
+// Function to fetch spells from compendiums with hybrid approach for class filtering
+export async function loadAvailableSpells(characterClassName = null) {
   try {
     // Get spell compendium sources from settings
     const packs = getPacksFromSettings("spells");
 
+    console.log('[SPELLS DEBUG] loadAvailableSpells called:', {
+      characterClassName,
+      packsFound: packs?.length || 0,
+      packs: packs?.map(p => p.collection) || 'No packs'
+    });
+
     if (!packs || packs.length === 0) {
       availableSpells.set([]);
-      console.warn("No spell compendiums configured");
+      console.warn("[SPELLS] No spell compendiums configured in settings");
+      window.GAS.log.d("[SPELLS] No spell compendiums configured");
       return;
     }
 
-    // Define the basic keys available in the default index
-    const indexKeys = [
-      "_id",
-      "name",
-      "img",
-      "type",
-      "uuid"
-    ];
+    window.GAS.log.d('[SPELLS] Loading spells, character class:', characterClassName);
 
-    // Define keys that are likely NOT in the index and need async loading
-    const nonIndexKeys = [
-      "system.level",
-      "system.school",
-      "system.preparation",
-      "system.components",
-      "system.description",
-      "system.activation",
-      "labels.classes"
-    ];
+    let allSpells = [];
 
-    // Extract spell data using extractItemsFromPacksAsync
-    let spells = await extractItemsFromPacksAsync(packs, indexKeys, nonIndexKeys);
-
-    // Filter for spells only
-    spells = spells.filter(item => item.type === "spell");
+    for (const pack of packs) {
+      console.log('[SPELLS DEBUG] Processing pack:', pack.collection);
+      
+      if (characterClassName) {
+        // SIMPLIFIED APPROACH: Load all documents from the pack (like working WelcomeAppShell)
+        window.GAS.log.d('[SPELLS] Using simplified approach for class filtering');
+        
+        // Load all documents from the pack
+        const allDocs = await pack.getDocuments();
+        window.GAS.log.d(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from pack`);
+        console.log(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from ${pack.collection}`);
+        
+        const filteredSpells = [];
+        
+        // Filter by class and convert to our format
+        for (const doc of allDocs) {
+          if (doc.type === "spell" && doc.labels && doc.labels.classes) {
+            const spellClasses = doc.labels.classes;
+            
+            // Check if the character class is in the spell's class string
+            // labels.classes is a STRING like "Bard, Wizard" not an array
+            const availableToClass = typeof spellClasses === 'string'
+              ? spellClasses.includes(characterClassName) ||
+                spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
+                spellClasses.trim().length === 0 // No restrictions (empty string)
+              : false;
+            
+            if (availableToClass) {
+              // Create spell object with enhanced data
+              const spellObj = {
+                _id: doc.id,
+                name: doc.name,
+                img: doc.img,
+                type: doc.type,
+                uuid: doc.uuid,
+                system: {
+                  level: doc.system.level,
+                  school: doc.system.school,
+                  preparation: doc.system.preparation,
+                  components: doc.system.components,
+                  description: doc.system.description,
+                  activation: doc.system.activation
+                },
+                labels: doc.labels
+              };
+              filteredSpells.push(spellObj);
+            }
+          }
+        }
+        
+        allSpells.push(...filteredSpells);
+        window.GAS.log.d(`[SPELLS] Loaded ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
+        console.log(`[SPELLS DEBUG] Filtered ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
+        
+      } else {
+        // NO CLASS FILTERING: Use index data only (much faster)
+        window.GAS.log.d('[SPELLS] Using index-only approach (no class filtering)');
+        
+        // Get basic index with system properties (these ARE indexable)
+        const index = await pack.getIndex({fields: ['system.level', 'system.school']});
+        
+        // Convert index to array for processing
+        const indexEntries = Array.from(index.values());
+        
+        const spells = indexEntries
+          .filter(entry => entry.type === "spell")
+          .map(entry => ({
+            _id: entry._id,
+            name: entry.name,
+            img: entry.img,
+            type: entry.type,
+            uuid: entry.uuid,
+            system: {
+              level: entry.system?.level || 0,
+              school: entry.system?.school || 'unknown'
+            }
+          }));
+          
+        allSpells.push(...spells);
+        window.GAS.log.d(`[SPELLS] Loaded ${spells.length} spells (index only) from ${pack.collection}`);
+        console.log(`[SPELLS DEBUG] Loaded ${spells.length} spells (index only) from ${pack.collection}`);
+      }
+    }
 
     // Handle duplicates - keep only the first instance of each spell name
     const seenSpells = new Map();
     const uniqueSpells = [];
-    for (const spell of spells) {
+    for (const spell of allSpells) {
       const uniqueKey = spell.name.toLowerCase();
       if (!seenSpells.has(uniqueKey)) {
         uniqueSpells.push(spell);
@@ -206,7 +275,8 @@ export async function loadAvailableSpells() {
 
     // Update the store with spells
     availableSpells.set(uniqueSpells);
-    window.GAS.log.d('[SPELLS] Loaded spells:', uniqueSpells.length);
+    window.GAS.log.d('[SPELLS] Final loaded spells:', uniqueSpells.length);
+    console.log('[SPELLS DEBUG] FINAL RESULT: Set availableSpells store with', uniqueSpells.length, 'spells');
 
   } catch (error) {
     console.error("Error loading available spells:", error);

@@ -1,32 +1,31 @@
+<svelte:options accessors={true} />
+
 <script>
   import { onMount, getContext } from "svelte";
-  import { fade, scale }        from 'svelte/transition';
-  import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
+  import { fade, scale } from "svelte/transition";
+  import { ApplicationShell } from "@typhonjs-fvtt/runtime/svelte/component/application";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   export let elementRoot = void 0;
   export let version = void 0;
 
-  const application = getContext('#external').application;
+  const application = getContext("#external").application;
 
   const handleChange = (event) => {
-    game.settings.set(MODULE_ID, 'dontShowWelcome', event.target.checked);
-  }
-
+    game.settings.set(MODULE_ID, "dontShowWelcome", event.target.checked);
+  };
 
   let draggable = application.reactive.draggable;
-  draggable = true
+  draggable = true;
 
   $: application.reactive.draggable = draggable;
-  $: dontShowWelcome = game.settings.get(MODULE_ID, 'dontShowWelcome');
+  $: dontShowWelcome = game.settings.get(MODULE_ID, "dontShowWelcome");
 
   onMount(async () => {
+    // Module initialization complete
   });
-  
 </script>
-
-<svelte:options accessors={true}/>
 
 <template lang="pug">
   ApplicationShell(bind:elementRoot)
