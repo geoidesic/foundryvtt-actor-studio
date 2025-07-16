@@ -7,8 +7,8 @@ import { totalGoldFromChoices } from '~/src/stores/goldChoices';
 import { readOnlyTabs } from './index.js';
 import { handleContainerContents } from '../lib/workflow.js';
 
-// Import fromUuid for container handling
-const { fromUuid } = foundry.utils;
+// Import fromUuid for container handling - compatibility check for v12 vs v13+
+const fromUuid = foundry.utils?.fromUuid || globalThis.fromUuid;
 
 // Store for managing the state of the equipment shop
 
@@ -18,8 +18,18 @@ export const shopItems = writable([]);
 // Items currently selected/added to the virtual cart (Map<itemId, { quantity, itemData }>)
 export const shopCart = writable(new Map());
 
-// Available gold using the working totalGoldFromChoices derived store (in copper)
-export const availableGold = derived(totalGoldFromChoices, $totalGoldFromChoices => ($totalGoldFromChoices || 0) * 100);
+// Available gold - use appropriate store based on D&D rules version (in copper)
+export const availableGold = derived(
+  [totalGoldFromChoices, goldRoll],
+  ([$totalGoldFromChoices, $goldRoll]) => {
+    // Check both version AND rules - only use new system for D&D 2024 rules
+    if (window.GAS?.dnd5eVersion >= 4 && window.GAS?.dnd5eRules === "2024") {
+      return ($totalGoldFromChoices || 0) * 100;
+    } else {
+      return ($goldRoll || 0) * 100;
+    }
+  }
+);
 
 // Total cost of items in the cart (in copper)
 export const cartTotalCost = writable(0);
@@ -44,7 +54,9 @@ export function initializeGold() {
 }
 
 // Make the store globally available for other components to access
-if (window.GAS) {
+// Always ensure window.GAS exists and stores are attached
+if (typeof window !== 'undefined') {
+  window.GAS = window.GAS || {};
   window.GAS.availableGold = availableGold;
   window.GAS.shopItems = shopItems;
   window.GAS.shopCart = shopCart;

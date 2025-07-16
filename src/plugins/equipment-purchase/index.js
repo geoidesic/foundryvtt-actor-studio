@@ -1,6 +1,9 @@
 // Initialize the Equipment Purchase feature
 import { MODULE_ID } from '~/src/helpers/constants';
 
+// Import and initialize the equipment shop stores early
+import '~/src/stores/equipmentShop.js';
+
 export const initEquipmentPurchase = () => {
   // Register the equipmentPurchase feature in the global window.GAS object
   if (!window.GAS) window.GAS = {};

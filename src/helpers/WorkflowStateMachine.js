@@ -230,13 +230,16 @@ export function createWorkflowStateMachine() {
       const totalGoldFromChoices = window.GAS?.totalGoldFromChoices;
       const goldRoll = window.GAS?.goldRoll;
       let goldValue;
-      if (window.GAS.dnd5eVersion >= 4) {
+      // Check both version AND rules - only use new system for D&D 2024 rules
+      if (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024") {
         goldValue = totalGoldFromChoices ? get(totalGoldFromChoices) : 0;
+        window.GAS.log.d('[WORKFLOW] Using D&D 2024 rules - totalGoldFromChoices:', goldValue);
       } else {
         goldValue = goldRoll ? get(goldRoll) : 0;
+        window.GAS.log.d('[WORKFLOW] Using D&D 2014 rules - goldRoll:', goldValue);
       }
       const goldValueInCopper = goldValue * 100;
-      if (window.GAS.availableGold) {
+      if (window.GAS && window.GAS.availableGold && typeof window.GAS.availableGold.set === 'function') {
         window.GAS.availableGold.set(goldValueInCopper);
       }
     })

@@ -419,6 +419,7 @@ export async function handleAddEquipment({
     // Process each unique item with its total quantity
     for (const [uuid, quantity] of itemCounts.entries()) {
       // Use fromDropData to create a properly formatted item for dropping
+      const fromUuid = foundry.utils?.fromUuid || globalThis.fromUuid;
       const item = await fromUuid(uuid)
       if (item) {
         // Create a copy of the item data and set the quantity

@@ -205,7 +205,9 @@ export async function loadAvailableSpells(characterClassName = null) {
     console.log('[SPELLS DEBUG] loadAvailableSpells called:', {
       characterClassName,
       packsFound: packs?.length || 0,
-      packs: packs?.map(p => p.collection) || 'No packs'
+      packs: packs?.map(p => p.collection) || 'No packs',
+      dnd5eVersion: window.GAS?.dnd5eVersion,
+      willUseClassFiltering: window.GAS?.dnd5eVersion >= 4 && characterClassName
     });
 
     if (!packs || packs.length === 0) {
@@ -223,56 +225,108 @@ export async function loadAvailableSpells(characterClassName = null) {
       console.log('[SPELLS DEBUG] Processing pack:', pack.collection);
       
       if (characterClassName) {
-        // SIMPLIFIED APPROACH: Load all documents from the pack (like working WelcomeAppShell)
-        window.GAS.log.d('[SPELLS] Using simplified approach for class filtering');
-        
-        // Load all documents from the pack
-        const allDocs = await pack.getDocuments();
-        window.GAS.log.d(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from pack`);
-        console.log(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from ${pack.collection}`);
-        
-        const filteredSpells = [];
-        
-        // Filter by class and convert to our format
-        for (const doc of allDocs) {
-          if (doc.type === "spell" && doc.labels && doc.labels.classes) {
-            const spellClasses = doc.labels.classes;
-            
-            // Check if the character class is in the spell's class string
-            // labels.classes is a STRING like "Bard, Wizard" not an array
-            const availableToClass = typeof spellClasses === 'string'
-              ? spellClasses.includes(characterClassName) ||
-                spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
-                spellClasses.trim().length === 0 // No restrictions (empty string)
-              : false;
-            
-            if (availableToClass) {
-              // Create spell object with enhanced data
-              const spellObj = {
-                _id: doc.id,
-                name: doc.name,
-                img: doc.img,
-                type: doc.type,
-                uuid: doc.uuid,
-                system: {
-                  level: doc.system.level,
-                  school: doc.system.school,
-                  preparation: doc.system.preparation,
-                  components: doc.system.components,
-                  description: doc.system.description,
-                  activation: doc.system.activation
-                },
-                labels: doc.labels
-              };
-              filteredSpells.push(spellObj);
+        // VERSION-BASED APPROACH: D&D 5e v4+ has class data, v3.x does not
+        if (window.GAS?.dnd5eVersion >= 4) {
+          // D&D 5e v4+ - USE CLASS FILTERING (class data exists on spells)
+          window.GAS.log.d('[SPELLS] Using class filtering for D&D 5e v4+ (class data available)');
+          console.log(`[SPELLS DEBUG] Processing pack with class filtering: ${pack.collection}`);
+          
+          // Load all documents from the pack
+          const allDocs = await pack.getDocuments();
+          window.GAS.log.d(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from pack`);
+          console.log(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from ${pack.collection}`);
+          
+          const filteredSpells = [];
+          
+          // Filter by class and convert to our format
+          for (const doc of allDocs) {
+            if (doc.type === "spell") {
+              // Check multiple possible locations for class information
+              let spellClasses = null;
+              let availableToClass = false;
+              
+              // Check doc.labels.classes (2024 style)
+              if (doc.labels?.classes) {
+                spellClasses = doc.labels.classes;
+                availableToClass = typeof spellClasses === 'string'
+                  ? spellClasses.includes(characterClassName) ||
+                    spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
+                    spellClasses.trim().length === 0
+                  : false;
+              }
+              
+              // Check doc.system.classes (potential 2014 style)
+              if (!availableToClass && doc.system?.classes) {
+                const systemClasses = doc.system.classes;
+                if (typeof systemClasses === 'object' && systemClasses.value) {
+                  spellClasses = systemClasses.value;
+                  availableToClass = typeof spellClasses === 'string'
+                    ? spellClasses.includes(characterClassName) ||
+                      spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
+                      spellClasses.trim().length === 0
+                    : false;
+                }
+              }
+              
+              if (availableToClass) {
+                // Create spell object with enhanced data
+                const spellObj = {
+                  _id: doc.id,
+                  name: doc.name,
+                  img: doc.img,
+                  type: doc.type,
+                  uuid: doc.uuid,
+                  system: {
+                    level: doc.system.level,
+                    school: doc.system.school,
+                    preparation: doc.system.preparation,
+                    components: doc.system.components,
+                    description: doc.system.description,
+                    activation: doc.system.activation
+                  },
+                  labels: doc.labels
+                };
+                filteredSpells.push(spellObj);
+              }
             }
           }
+          
+          allSpells.push(...filteredSpells);
+          window.GAS.log.d(`[SPELLS] Loaded ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
+          console.log(`[SPELLS DEBUG] Filtered ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
+          
+        } else {
+          // D&D 5e v3.x - NO CLASS FILTERING (class data doesn't exist on spells)
+          window.GAS.log.d('[SPELLS] Skipping class filtering for D&D 5e v3.x (class data not available on spells)');
+          console.log(`[SPELLS DEBUG] Processing pack without class filtering: ${pack.collection}`);
+          
+          // Use index approach for better performance
+          const index = await pack.getIndex({fields: ['system.level', 'system.school']});
+          const indexEntries = Array.from(index.values());
+          
+          const spells = indexEntries
+            .filter(entry => entry.type === "spell")
+            .map(entry => ({
+              _id: entry._id,
+              name: entry.name,
+              img: entry.img,
+              type: entry.type,
+              uuid: entry.uuid,
+              system: {
+                level: entry.system?.level || 0,
+                school: entry.system?.school || 'unknown',
+                preparation: { mode: 'prepared' }, // Default for compatibility
+                components: {},
+                description: { value: '' },
+                activation: {}
+              },
+              labels: {} // Empty labels for v3.x compatibility
+            }));
+            
+          allSpells.push(...spells);
+          window.GAS.log.d(`[SPELLS] Loaded ${spells.length} spells (no class filtering) from ${pack.collection}`);
+          console.log(`[SPELLS DEBUG] Added ${spells.length} spells (no class filtering) from ${pack.collection}`);
         }
-        
-        allSpells.push(...filteredSpells);
-        window.GAS.log.d(`[SPELLS] Loaded ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
-        console.log(`[SPELLS DEBUG] Filtered ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
-        
       } else {
         // NO CLASS FILTERING: Use index data only (much faster)
         window.GAS.log.d('[SPELLS] Using index-only approach (no class filtering)');
@@ -348,6 +402,7 @@ export async function addSpell(spell) {
       return;
     }
 
+    const fromUuid = foundry.utils?.fromUuid || globalThis.fromUuid;
     const fullSpellData = await fromUuid(spell.uuid);
     if (!fullSpellData) {
       console.error("Could not load full spell data for UUID:", spell.uuid);

@@ -134,3 +134,10 @@ export {
   setBackgroundGoldChoice,
   clearGoldChoices
 }; 
+
+// Make the stores globally available for the WorkflowStateMachine and other components
+if (typeof window !== 'undefined') {
+  window.GAS = window.GAS || {};
+  window.GAS.totalGoldFromChoices = totalGoldFromChoices;
+  window.GAS.goldRoll = goldRoll;
+}
