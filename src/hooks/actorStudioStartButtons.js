@@ -114,12 +114,18 @@ export const renderActorStudioSidebarButton = (app) => {
   if (app.constructor.name !== "ActorDirectory") return;
 
   const element = game.version >= 13 ? app.element : app._element;
+  console.log('GAS: element', element);
   if (!element) return;
 
   const elementId = `sidebar-${app.id || 'default'}`;
   cleanupEventHandlers(elementId);
 
-  if (element.querySelector('#gas-sidebar-button')) return;
+  // Handle both V12 (jQuery) and V13 (DOM element) cases
+  const hasButton = game.version >= 13 
+    ? element.querySelector('#gas-sidebar-button')
+    : element.find('#gas-sidebar-button').length > 0;
+  
+  if (hasButton) return;
 
   const gasButton = getActorStudioButton('gas-sidebar-button');
   if (game.version >= 13) {
@@ -130,11 +136,16 @@ export const renderActorStudioSidebarButton = (app) => {
       headerActions.parentNode.insertBefore(gasButton, headerActions.nextSibling);
     }
   } else {
-    const header = element.querySelector('header.directory-header');
+    const header = element.find('header.directory-header')[0];
     console.log('GAS: header found:', header ? 1 : 0);
     if (header) header.appendChild(gasButton);
   }
-  console.log('GAS: sidebar button added?', element.querySelector('#gas-sidebar-button') ? 1 : 0);
+  
+  // Check if button was added successfully
+  const buttonAdded = game.version >= 13 
+    ? element.querySelector('#gas-sidebar-button')
+    : element.find('#gas-sidebar-button').length > 0;
+  console.log('GAS: sidebar button added?', buttonAdded ? 1 : 0);
 
   const mousedownHandler = (e) => {
     console.log('GAS sidebar button mousedown', e);
