@@ -37,7 +37,6 @@
   import { flattenedStartingEquipment } from "~/src/stores/startingEquipment";
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
-  import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   
   import {
     getLevelByDropType,
@@ -275,13 +274,6 @@
     });
   }
 
-  // Handle skipping spells in level-up mode
-  async function handleSkipSpells() {
-    await handleSkipSpellsLevelUp({
-      stores: storeRefs
-    });
-  }
-
   // Function to generate a random color
   function getRandomColor() {
     const letters = '0123456789ABCDEF';
@@ -418,7 +410,7 @@
       
       //- Progress and buttons section
       .flex1
-        +if("$isLevelUp && $activeTab === 'level-up'")
+        +if("$isLevelUp")
           .progress-container
             ProgressBar(progress="{levelUpProgress}")
             +if("$levelUpProgress === 100")
@@ -468,29 +460,30 @@
           .progress-container
             +if("$readOnlyTabs.includes('spells')")
               ProgressBar(progress="{100}")
+            +else()
+              ProgressBar(progress="{progress}")
+              +if("$progress === 100")
+                .button-container
+                  button.mt-xs(
+                    type="button"
+                    role="button"
+                    on:mousedown="{handleFinalizeSpells}"
+                    disabled="{$isProcessingSpells}" 
+                  )
+                    span {t('Footer.FinalizeSpells')}
+                    i.right.ml-md(class="fas fa-chevron-right")
               +else()
-                ProgressBar(progress="{$spellProgress.progressPercentage}")
-                +if("$spellProgress.progressPercentage === 100")
+                // Show skip button when spells are not complete in level-up mode
+                +if("$isLevelUp")
                   .button-container
-                    button.mt-xs(
+                    button.mt-xs.secondary(
                       type="button"
                       role="button"
-                      on:mousedown="{handleFinalizeSpells}"
-                      disabled="{$isProcessingSpells}" 
+                      on:mousedown="{handleSkipSpells}"
+                      data-tooltip="{t('Footer.SkipSpells')}"
                     )
-                      span {t('Footer.FinalizeSpells')}
+                      span {t('Footer.SkipSpells')}
                       i.right.ml-md(class="fas fa-chevron-right")
-                  +elseif("$isLevelUp")
-                    // Show skip button when spells are not complete in level-up mode
-                    .button-container
-                      button.mt-xs.secondary(
-                        type="button"
-                        role="button"
-                        on:mousedown="{handleSkipSpells}"
-                        data-tooltip="{t('Footer.SkipSpells')}"
-                      )
-                        span {t('Footer.SkipSpells')}
-                        i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
@@ -508,14 +501,15 @@
                       )
                         span {t('Footer.CreateCharacter')}
                         i.right.ml-md(class="fas fa-chevron-right")
-                      +elseif("$hasCharacterCreationChanges")
-                        button(
-                          type="button"
-                          role="button"
-                          on:mousedown="{clickUpdateHandler}"
-                        )
-                          span {t('Footer.UpdateCharacter')}
-                          i.right.ml-md(class="fas fa-chevron-right")
+                      +else()
+                        +if("$hasCharacterCreationChanges")
+                          button(
+                            type="button"
+                            role="button"
+                            on:mousedown="{clickUpdateHandler}"
+                          )
+                            span {t('Footer.UpdateCharacter')}
+                            i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
 

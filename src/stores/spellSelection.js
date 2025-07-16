@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
-import { readOnlyTabs, characterClass, level as characterLevel } from '~/src/stores/index';
+import { readOnlyTabs, characterClass, level as characterLevel, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
 
 // Import spellsKnown data for determining spell limits
 import spellsKnownData from './spellsKnown.json';
@@ -59,25 +59,68 @@ export const maxSpellLevel = derived(
 
 // Derived store for spell limits based on character class and level
 export const spellLimits = derived(
-  [characterClass, characterLevel],
-  ([$characterClass, $characterLevel]) => {
+  [characterClass, characterLevel, isLevelUp, newLevelValueForExistingClass],
+  ([$characterClass, $characterLevel, $isLevelUp, $newLevelValueForExistingClass]) => {
     if (!$characterClass || !$characterLevel) {
       return { cantrips: 0, spells: 0 };
     }
 
     const className = $characterClass.name || $characterClass.label || $characterClass;
-    const level = $characterLevel;
+    
+    // For level-up scenarios, calculate the difference between old and new levels
+    if ($isLevelUp && $newLevelValueForExistingClass) {
+      const oldLevel = $newLevelValueForExistingClass - 1; // Current level is new level - 1
+      const newLevel = $newLevelValueForExistingClass;
+      
+      // Get spell data for both levels
+      const oldLevelData = spellsKnownData.levels.find(l => l.level === oldLevel);
+      const newLevelData = spellsKnownData.levels.find(l => l.level === newLevel);
+      
+      if (!oldLevelData || !newLevelData || !oldLevelData[className] || !newLevelData[className]) {
+        return { cantrips: 0, spells: 0 };
+      }
+      
+      // Parse old level limits
+      const [oldCantrips, oldSpells] = oldLevelData[className].split(' / ');
+      const oldCantripCount = parseInt(oldCantrips) || 0;
+      const oldSpellCount = oldSpells === 'All' ? 999 : parseInt(oldSpells) || 0;
+      
+      // Parse new level limits
+      const [newCantrips, newSpells] = newLevelData[className].split(' / ');
+      const newCantripCount = parseInt(newCantrips) || 0;
+      const newSpellCount = newSpells === 'All' ? 999 : parseInt(newSpells) || 0;
+      
+      // Calculate the difference (new spells gained on level up)
+      const cantripDifference = Math.max(0, newCantripCount - oldCantripCount);
+      const spellDifference = oldSpellCount === 999 || newSpellCount === 999 ? 999 : Math.max(0, newSpellCount - oldSpellCount);
+      
+      window.GAS.log.d('[SPELLS] Level-up spell calculation:', {
+        className,
+        oldLevel,
+        newLevel,
+        oldLimits: { cantrips: oldCantripCount, spells: oldSpellCount },
+        newLimits: { cantrips: newCantripCount, spells: newSpellCount },
+        difference: { cantrips: cantripDifference, spells: spellDifference }
+      });
+      
+      return {
+        cantrips: cantripDifference,
+        spells: spellDifference
+      };
+    } else {
+      // Character creation scenario - use total spells for current level
+      const level = $characterLevel;
+      const levelData = spellsKnownData.levels.find(l => l.level === level);
+      if (!levelData || !levelData[className]) {
+        return { cantrips: 0, spells: 0 };
+      }
 
-    const levelData = spellsKnownData.levels.find(l => l.level === level);
-    if (!levelData || !levelData[className]) {
-      return { cantrips: 0, spells: 0 };
+      const [cantrips, spells] = levelData[className].split(' / ');
+      return {
+        cantrips: parseInt(cantrips) || 0,
+        spells: spells === 'All' ? 999 : parseInt(spells) || 0
+      };
     }
-
-    const [cantrips, spells] = levelData[className].split(' / ');
-    return {
-      cantrips: parseInt(cantrips) || 0,
-      spells: spells === 'All' ? 999 : parseInt(spells) || 0
-    };
   }
 );
 
@@ -99,12 +142,22 @@ export const currentSpellCounts = derived(
 
 // Derived store for spell selection progress
 export const spellProgress = derived(
-  [spellLimits, currentSpellCounts],
-  ([$spellLimits, $currentSpellCounts]) => {
+  [spellLimits, currentSpellCounts, isLevelUp],
+  ([$spellLimits, $currentSpellCounts, $isLevelUp]) => {
     const totalRequired = $spellLimits.cantrips + ($spellLimits.spells === 999 ? 0 : $spellLimits.spells);
     const totalSelected = $currentSpellCounts.total;
-    const progressPercentage = totalRequired > 0 ? Math.round((totalSelected / totalRequired) * 100) : 0;
-    const isComplete = totalRequired > 0 && totalSelected >= totalRequired;
+    
+    // In level-up mode, spell selection is optional (can be skipped), so always show 100%
+    // In character creation mode, show actual progress
+    let progressPercentage = 100;
+    let isComplete = true;
+    
+    if (!$isLevelUp && totalRequired > 0) {
+      // Character creation: require actual spell selection
+      progressPercentage = Math.round((totalSelected / totalRequired) * 100);
+      isComplete = totalSelected >= totalRequired;
+    }
+    // Level-up mode: always 100% since spells can be skipped
 
     return {
       totalRequired,
@@ -384,6 +437,15 @@ export async function finalizeSpellSelection(actor) {
 
     // Make the spells tab readonly
     readOnlyTabs.update(tabs => [...tabs, 'spells']);
+
+    // Check if we're in level-up mode and handle workflow accordingly
+    const isLevelUpMode = get(isLevelUp);
+    if (isLevelUpMode) {
+      window.GAS.log.d('[SPELLS] Level-up mode detected, triggering LevelUp workflow completion');
+      // Import and trigger the LevelUp workflow completion
+      const { handleSpellsCompleteLevelUp } = await import('~/src/lib/workflow');
+      await handleSpellsCompleteLevelUp();
+    }
 
     ui.notifications?.info(`Added ${itemsToCreate.length} spells to character`);
     return true;

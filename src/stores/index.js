@@ -234,3 +234,40 @@ export function resetStores() {
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
 }
+
+// Auto-update levelUpTabs with level progression information
+const levelUpTabUpdater = derived(
+  [storeDefinitions.newLevelValueForExistingClass, isNewMultiClassSelected],
+  ([$newLevelValueForExistingClass, $isNewMultiClassSelected]) => {
+    let label = 'Level Up';
+    
+    if ($isNewMultiClassSelected) {
+      // New multiclass: show "Level Up (MC)" for multiclass
+      label = 'Level Up (MC)';
+    } else if ($newLevelValueForExistingClass) {
+      // Existing class level up: show progression like "Level Up (3 → 4)"
+      const currentLevel = $newLevelValueForExistingClass - 1;
+      const newLevel = $newLevelValueForExistingClass;
+      label = `Level Up (${currentLevel} → ${newLevel})`;
+    }
+    
+    // Update the levelUpTabs store with the new label
+    storeDefinitions.levelUpTabs.update(tabs => 
+      tabs.map(tab => 
+        tab.id === 'level-up' 
+          ? { ...tab, label } 
+          : tab
+      )
+    );
+    
+    return label;
+  }
+);
+
+// Auto-subscribe to activate the level progression updates (safely)
+try {
+  levelUpTabUpdater.subscribe(() => {});
+} catch (error) {
+  // Ignore initialization errors - the subscription will work when stores are ready
+  console.debug('Level up tab updater subscription deferred');
+}

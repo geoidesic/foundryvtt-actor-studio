@@ -10,6 +10,7 @@
   import { log } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+  import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -49,9 +50,11 @@
   };
 
   onMount(async () => {
-    getWorkflowFSM()
     if(levelUp) {
+      // Initialize LevelUp workflow
       $actorInGame = $documentStore
+      levelUpFSMContext.actor = $documentStore;
+      
       // Initialize characterClass from the actor's class data if in level-up mode
       if ($actorInGame) {
         // Find the first class item in the actor's items
@@ -61,7 +64,16 @@
           characterClass.set(classItem);
         }
       }
+      
+      // Start the LevelUp state machine
+      const levelUpFSM = getLevelUpFSM();
+      levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
+      window.GAS.log.d('[PCAPP] Started LevelUp workflow');
+    } else {
+      // Character creation workflow
+      getWorkflowFSM()
     }
+    
     isLevelUp.set(levelUp);
 
     window.GAS.log.d(stylesApp)

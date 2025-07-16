@@ -5,6 +5,7 @@
 import { get } from "svelte/store";
 import { MODULE_ID } from "~/src/helpers/constants";
 import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
 import {
   getLevelByDropType,
   itemHasAdvancementChoices,
@@ -197,6 +198,10 @@ export async function createActorInGameAndEmbedItems({
  * @param {Object} params.dropItemRegistry - Drop item registry for queuing items
  * @returns {Promise<void>}
  */
+/**
+ * Legacy function for updating actors (DEPRECATED for LevelUp - use updateActorLevelUpWorkflow instead)
+ * This function is kept for backward compatibility but should not be used for level-up scenarios
+ */
 export async function updateActorAndEmbedItems({
   actor,
   actorName,
@@ -213,7 +218,8 @@ export async function updateActorAndEmbedItems({
     actorInGame
   } = stores;
 
-  window.GAS.log.d('[WORKFLOW] updateActorAndEmbedItems', get(classUuidForLevelUp));
+  window.GAS.log.d('[WORKFLOW] updateActorAndEmbedItems (LEGACY)', get(classUuidForLevelUp));
+  window.GAS.log.w('[WORKFLOW] WARNING: updateActorAndEmbedItems is deprecated for level-up. Use updateActorLevelUpWorkflow instead.');
 
   await get(actor).update({ name: actorName });
   actorInGame.set(get(actor));
@@ -256,13 +262,123 @@ export async function updateActorAndEmbedItems({
 
   window.GAS.log.d('[WORKFLOW] updateActorAndEmbedItems advancing queue');
   await dropItemRegistry.advanceQueue(true);
-  // After the queue is advanced, trigger the state machine event for post-queue processing
-  const fsm = getWorkflowFSM();
-  fsm.handle(WORKFLOW_EVENTS.QUEUE_PROCESSED);
+  
+  // REMOVED: Don't fire QUEUE_PROCESSED event here as it conflicts with LevelUp workflow
+  // The character creation workflow should handle its own state transitions
+  
   // If advancement is disabled, destroy any open advancement managers
   if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
     window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
     destroyAdvancementManagers();
+  }
+}
+
+/**
+ * LevelUp workflow function that uses the dedicated LevelUp state machine
+ * This replaces the old updateActorAndEmbedItems function for level-up scenarios
+ */
+export async function updateActorLevelUpWorkflow({
+  actor,
+  actorName,
+  stores,
+  dropItemRegistry
+}) {
+  const {
+    classUuidForLevelUp,
+    levelUpClassObject,
+    subClassUuidForLevelUp,
+    levelUpSubClassObject,
+    isLevelUp,
+    isNewMultiClass,
+    actorInGame
+  } = stores;
+
+  window.GAS.log.d('[LEVELUP WORKFLOW] Starting level-up workflow', get(classUuidForLevelUp));
+
+  try {
+    // Update actor name
+    await get(actor).update({ name: actorName });
+    actorInGame.set(get(actor));
+    
+    // Set the actor in the LevelUp FSM context
+    levelUpFSMContext.actor = get(actor);
+    
+    const $classUuidForLevelUp = get(classUuidForLevelUp);
+    const $subClassUuidForLevelUp = get(subClassUuidForLevelUp);
+    const $levelUpClassObject = get(levelUpClassObject);
+    const $levelUpSubClassObject = get(levelUpSubClassObject);
+    const $isLevelUp = get(isLevelUp);
+    const $isNewMultiClass = get(isNewMultiClass);
+    
+    // Add the class level update to the queue
+    if ($classUuidForLevelUp) {
+      dropItemRegistry.add({
+        actor: get(actor),
+        id: "characterClass",
+        itemData: $levelUpClassObject,
+        isLevelUp: $isLevelUp,
+        isNewMultiClass: $isNewMultiClass,
+        hasAdvancementChoices: itemHasAdvancementChoices($levelUpClassObject),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(
+          getLevelByDropType(get(actor), "class"),
+          $levelUpClassObject,
+        ),
+      });
+    }
+    
+    // Add the subclass to the queue if it exists
+    if ($subClassUuidForLevelUp) {
+      dropItemRegistry.add({
+        actor: get(actor),
+        id: "characterSubClass",
+        itemData: $levelUpSubClassObject,
+        isLevelUp: $isLevelUp,
+        hasAdvancementChoices: itemHasAdvancementChoices($levelUpSubClassObject),
+        hasAdvancementsForLevel: isAdvancementsForLevelInItem(
+          getLevelByDropType(get(actor), "subclass"),
+          $levelUpSubClassObject,
+        ),
+      });
+    }
+
+    // Start the LevelUp state machine workflow
+    // First ensure we're in the correct state - reset if needed
+    const levelUpFSM = getLevelUpFSM();
+    const currentState = levelUpFSM.getCurrentState();
+    window.GAS.log.d('[LEVELUP WORKFLOW] Current FSM state before starting:', currentState);
+    
+    // Reset FSM to idle if it's in a terminal state (completed or error)
+    if (currentState === 'completed' || currentState === 'error') {
+      window.GAS.log.d('[LEVELUP WORKFLOW] Resetting FSM from terminal state:', currentState);
+      levelUpFSM.handle(LEVELUP_EVENTS.RESET);
+    }
+    
+    // Start the level-up workflow: idle -> selecting_class_level -> processing_advancements
+    const finalState = levelUpFSM.getCurrentState();
+    if (finalState === 'idle') {
+      window.GAS.log.d('[LEVELUP WORKFLOW] Starting level-up from idle state');
+      levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
+      levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+    } else {
+      window.GAS.log.w('[LEVELUP WORKFLOW] FSM not in idle state after reset:', finalState);
+      // Fallback: try to send class_level_selected anyway
+      levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+    }
+    
+    window.GAS.log.d('[LEVELUP WORKFLOW] LevelUp workflow initiated');
+    
+  } catch (error) {
+    window.GAS.log.e('[LEVELUP WORKFLOW] Error in level-up workflow:', error);
+    const levelUpFSM = getLevelUpFSM();
+    const currentState = levelUpFSM.getCurrentState();
+    
+    // Only send error event if not already in terminal state
+    if (currentState !== 'error' && currentState !== 'completed') {
+      levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    } else {
+      window.GAS.log.d('[LEVELUP WORKFLOW] FSM in terminal state, skipping error event');
+    }
+    throw error;
   }
 }
 
@@ -593,10 +709,12 @@ export async function handleFinalizeSpells({
   setProcessing
 }) {
   const {
-    actorInGame
+    actorInGame,
+    isLevelUp
   } = stores;
 
   const $actorInGame = get(actorInGame);
+  const $isLevelUp = get(isLevelUp);
 
   // Prevent multiple clicks
   if (setProcessing) {
@@ -616,29 +734,105 @@ export async function handleFinalizeSpells({
     if (success) {
       ui.notifications.info("Spells added successfully");
       
-      // Debug: Log current state and event before transitioning
-      const fsm = getWorkflowFSM();
-      const currentState = fsm.getCurrentState();
-      window.GAS.log.d('[WORKFLOW] Current state before spells_complete:', currentState);
-      window.GAS.log.d('[WORKFLOW] Event to handle:', WORKFLOW_EVENTS.SPELLS_COMPLETE);
-      
-      // Use state machine to transition to next step
-      fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
+      // Use the correct FSM based on level-up mode
+      if ($isLevelUp) {
+        // Level-up mode: use LevelUp FSM
+        const levelUpFSM = getLevelUpFSM();
+        const currentState = levelUpFSM.getCurrentState();
+        window.GAS.log.d('[LEVELUP WORKFLOW] Current state before spells_complete:', currentState);
+        window.GAS.log.d('[LEVELUP WORKFLOW] Event to handle:', LEVELUP_EVENTS.SPELLS_COMPLETE);
+        
+        // Only send the event if we're not already in completed state
+        if (currentState !== 'completed') {
+          levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+        } else {
+          window.GAS.log.d('[LEVELUP WORKFLOW] FSM already in completed state, skipping spells_complete event');
+        }
+      } else {
+        // Character creation mode: use main workflow FSM
+        const fsm = getWorkflowFSM();
+        const currentState = fsm.getCurrentState();
+        window.GAS.log.d('[WORKFLOW] Current state before spells_complete:', currentState);
+        window.GAS.log.d('[WORKFLOW] Event to handle:', WORKFLOW_EVENTS.SPELLS_COMPLETE);
+        
+        fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
+      }
     } else {
       ui.notifications.error("Failed to add spells");
-      getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+      if ($isLevelUp) {
+        const levelUpFSM = getLevelUpFSM();
+        const currentState = levelUpFSM.getCurrentState();
+        if (currentState !== 'error' && currentState !== 'completed') {
+          levelUpFSM.handle(LEVELUP_EVENTS.ERROR);
+        }
+      } else {
+        getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+      }
     }
   } catch (error) {
     console.error("Error during spell finalization:", error);
     ui.notifications.error("An error occurred while adding spells");
-    // Only trigger error event if not already in error state
-    const currentState = getWorkflowFSM().getCurrentState();
-    if (currentState !== 'error') {
-      getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+    
+    // Use the correct FSM for error handling
+    if ($isLevelUp) {
+      const levelUpFSM = getLevelUpFSM();
+      const currentState = levelUpFSM.getCurrentState();
+      if (currentState !== 'error' && currentState !== 'completed') {
+        levelUpFSM.handle(LEVELUP_EVENTS.ERROR);
+      } else {
+        window.GAS.log.d('[LEVELUP WORKFLOW] FSM in terminal state, skipping error event');
+      }
+    } else {
+      const currentState = getWorkflowFSM().getCurrentState();
+      if (currentState !== 'error') {
+        getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
+      }
     }
   }
   
   if (setProcessing) setProcessing(false);
+}
+
+/**
+ * Handles spell selection completion in LevelUp workflow
+ */
+export async function handleSpellsCompleteLevelUp() {
+  window.GAS.log.d('[LEVELUP WORKFLOW] Handling spells completion');
+  
+  try {
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+    
+    window.GAS.log.d('[LEVELUP WORKFLOW] Spells completion handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[LEVELUP WORKFLOW] Error handling spells completion:', error);
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Handles skipping spell selection in LevelUp workflow
+ */
+export async function handleSkipSpellsLevelUp() {
+  window.GAS.log.d('[LEVELUP WORKFLOW] Handling skip spells');
+  
+  try {
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.SKIP_SPELLS);
+    
+    window.GAS.log.d('[LEVELUP WORKFLOW] Skip spells handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[LEVELUP WORKFLOW] Error handling skip spells:', error);
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
 }
 
 /**

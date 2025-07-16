@@ -30,7 +30,9 @@ vi.mock('~/src/stores/index', () => ({
   preAdvancementSelections: mockWritable({}),
   dropItemRegistry: { advanceQueue: vi.fn() },
   characterClass: mockWritable({}),
-  level: mockWritable(1)
+  level: mockWritable(1),
+  isLevelUp: mockWritable(false),
+  newLevelValueForExistingClass: mockWritable(false)
 }));
 
 vi.mock('~/src/stores/startingEquipment', () => ({
@@ -43,7 +45,8 @@ vi.mock('~/src/stores/storeDefinitions', () => ({
 
 vi.mock('~/src/lib/workflow.js', () => ({
   handleAdvancementCompletion: vi.fn(),
-  handleFinalizeSpells: vi.fn()
+  handleFinalizeSpells: vi.fn(),
+  handleSpellsCompleteLevelUp: vi.fn()
 }));
 
 vi.mock('~/src/helpers/AdvancementManager', () => ({
@@ -147,10 +150,11 @@ describe('Spell Finalization Workflow', () => {
 
     // Test with spells in the store - we need to mock the get function to return spells
     const { get } = await import('svelte/store');
-    get.mockReturnValueOnce(new Map([
+    const mockMap = new Map([
       ['spell1', { itemData: mockSpellData1 }],
       ['spell2', { itemData: mockSpellData2 }]
-    ]));
+    ]);
+    get.mockReturnValueOnce(mockMap);
 
     const resultWithSpells = await finalizeSpellSelection(mockActor);
 
@@ -198,10 +202,11 @@ describe('Spell Finalization Workflow', () => {
     const { finalizeSpellSelection } = await import('~/src/stores/spellSelection.js');
     const { get } = await import('svelte/store');
     
-    get.mockReturnValueOnce(new Map([
+    const mockMap = new Map([
       ['spell1', { itemData: mockSpellData1 }],
       ['spell2', { itemData: mockSpellData2 }]
-    ]));
+    ]);
+    get.mockReturnValueOnce(mockMap);
 
     const result = await finalizeSpellSelection(mockActor);
 

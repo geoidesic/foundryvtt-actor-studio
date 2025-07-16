@@ -35,6 +35,7 @@
       "AddEquipment": "Confirm",
       "FinalizePurchase": "Finalize Purchase",
       "FinalizeSpells": "Finalize Spells",
+      "SkipSpells": "Skip Spells",
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
       "UpdateCharacter": "Update Character"

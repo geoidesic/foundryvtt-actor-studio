@@ -1,6 +1,6 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs, level as characterLevel } from '../../../../stores/index';
+  import { readOnlyTabs, level as characterLevel, isLevelUp, newLevelValueForExistingClass } from '../../../../stores/index';
   import { characterClass, characterSubClass } from '../../../../stores/storeDefinitions';
   import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -29,8 +29,13 @@
   // Calculate max spell level based on character class and level (override store calculation)
   $: calculatedMaxSpellLevel = getMaxSpellLevelForClass($characterLevel, characterClassName);
   
+  // For level-up scenarios, use the new level for spell level calculations
+  $: levelUpAwareMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
+    ? getMaxSpellLevelForClass($newLevelValueForExistingClass, characterClassName)
+    : calculatedMaxSpellLevel;
+  
   // Use our calculated max spell level if the store returns 0 (during character creation)
-  $: effectiveMaxSpellLevel = $maxSpellLevel > 0 ? $maxSpellLevel : calculatedMaxSpellLevel;
+  $: effectiveMaxSpellLevel = $maxSpellLevel > 0 ? $maxSpellLevel : levelUpAwareMaxSpellLevel;
   
   // Debug logging for character data
   $: {
@@ -38,8 +43,11 @@
       characterClass: $characterClass,
       characterClassName,
       characterLevel: $characterLevel,
+      newLevelValueForExistingClass: $newLevelValueForExistingClass,
+      isLevelUp: $isLevelUp,
       storeMaxSpellLevel: $maxSpellLevel,
       calculatedMaxSpellLevel,
+      levelUpAwareMaxSpellLevel,
       effectiveMaxSpellLevel,
       spellLimits: $spellLimits,
       progress: $spellProgress

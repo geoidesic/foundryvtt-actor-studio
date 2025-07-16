@@ -47,7 +47,9 @@ beforeEach(() => {
     level: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
     characterLevel: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
     characterClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
-    currentCharacter: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+    currentCharacter: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    isLevelUp: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    newLevelValueForExistingClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
   }));
   vi.doMock('~/src/helpers/AdvancementManager', () => ({ destroyAdvancementManagers: vi.fn() }));
   vi.doMock('~/src/helpers/Utility', () => ({
