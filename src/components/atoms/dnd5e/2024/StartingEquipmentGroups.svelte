@@ -7,6 +7,44 @@
   export let handleEditGroup;
   export let disabled;
   export let selectedItems;
+  export let handleVariableGoldChoice;
+  export let parsedEquipmentGold;
+
+  // Helper function to get gold amount for a specific item within an equipment group
+  function getGoldAmountForItem(group, sourceGroup, item) {
+    if (!parsedEquipmentGold || !sourceGroup.source || group.type !== 'choice') return null;
+    
+    const goldData = sourceGroup.source === 'class' ? parsedEquipmentGold.fromClass : parsedEquipmentGold.fromBackground;
+    if (!goldData?.hasVariableGold || !goldData.goldOptions?.length) return null;
+    
+    // Check if this group belongs to the source
+    if (!isGroupFromSource(group, sourceGroup.equipment)) return null;
+    
+    // Find the index of this item within the group's items
+    const itemIndex = group.items.findIndex(groupItem => groupItem._id === item._id);
+    if (itemIndex === -1) return null;
+    
+    // Map item index to gold choice (A=0, B=1, C=2, etc.)
+    if (itemIndex < goldData.goldOptions.length) {
+      const choiceLetter = String.fromCharCode(65 + itemIndex); // A=65, B=66, C=67
+      const goldOption = goldData.goldOptions.find(opt => opt.choice === choiceLetter);
+      return goldOption?.goldAmount || null;
+    }
+    
+    return null;
+  }
+
+  // Handle variable gold choice for equipment selection
+  function handleEquipmentSelection(group, sourceGroup, item) {
+    const goldAmount = getGoldAmountForItem(group, sourceGroup, item);
+    handleSelection(disabled, group.id, item);
+    
+    if (goldAmount && handleVariableGoldChoice) {
+      const source = sourceGroup.source === 'class' ? 'fromClass' : 'fromBackground';
+      const choice = String.fromCharCode(65 + group.items.findIndex(groupItem => groupItem._id === item._id));
+      handleVariableGoldChoice(source, choice, goldAmount);
+    }
+  }
 </script>
 
 <template lang="pug">
@@ -68,7 +106,7 @@ div
                     +each("group.items as item")
                       .equipment-item.option(
                         class="{getOptionClasses(disabled, group, item)}"
-                        on:click!="{handleSelection(disabled, group.id, item)}"
+                        on:click!="{() => handleEquipmentSelection(group, sourceGroup, item)}"
                       )
                         .flexrow.justify-flexrow-vertical.no-wrap
                           .flex0.relative.icon
@@ -77,6 +115,9 @@ div
                             span {@html item.label}
                             +if("group.selectedItemId === item._id && $selectedItems[group.id]")
                               span.selected-name &nbsp;({$selectedItems[group.id].name})
+                            //- Add gold amount for variable gold choice items
+                            +if("getGoldAmountForItem(group, sourceGroup, item)")
+                              span.gold-amount(style="color: var(--dnd5e-color-gold); font-weight: bold; margin-left: 10px;") + {getGoldAmountForItem(group, sourceGroup, item)} GP
 </template>
 
 <style lang="scss">

@@ -2,7 +2,8 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
-  import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices } from "~/src/stores/goldChoices";
+  import { goldChoices, setClassGoldChoice, setBackgroundGoldChoice, clearGoldChoices, totalGoldFromChoices } from "~/src/stores/goldChoices";
+  import { parsedEquipmentGold, equipmentGoldOptions, setEquipmentGoldChoice, clearEquipmentGoldChoices } from "~/src/stores/equipmentGold";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
@@ -58,28 +59,89 @@
     if (characterClass) {
       // Gold only amount comes from system.wealth
       classGoldOnly = characterClass.system.wealth || 0;
-      // With equipment amount comes from description
-      classGoldWithEquipment = scrape2024SecondaryGoldAward(characterClass)?.min || 0
+      // With equipment amount: use parsed equipment gold if available, otherwise fall back to scraping
+      const classGold = $parsedEquipmentGold.fromClass;
+      if (classGold.goldOptions.length > 0 && !classGold.hasVariableGold) {
+        classGoldWithEquipment = classGold.goldOptions[0].goldAmount;
+      } else {
+        classGoldWithEquipment = scrape2024SecondaryGoldAward(characterClass)?.min || 0;
+      }
     }
     
     if (background) {
       // Gold only amount comes from system.wealth
       backgroundGoldOnly = background.system.wealth || 0;
-      // With equipment amount comes from description
-      backgroundGoldWithEquipment = scrapeGoldFromBackground(background)?.min || 0;
+      // With equipment amount: use parsed equipment gold if available, otherwise fall back to scraping
+      const backgroundGold = $parsedEquipmentGold.fromBackground;
+      if (backgroundGold.goldOptions.length > 0 && !backgroundGold.hasVariableGold) {
+        backgroundGoldWithEquipment = backgroundGold.goldOptions[0].goldAmount;
+      } else if (backgroundGold.hasVariableGold) {
+        // For variable gold, use 0 as placeholder since user will select specific amount
+        backgroundGoldWithEquipment = 0;
+      } else {
+        // Fall back to scraping only if parsing found nothing
+        backgroundGoldWithEquipment = scrapeGoldFromBackground(background)?.min || 0;
+      }
     }
   }
 
   function handleClassChoice(choice) {
-    if (showEditButton) return;
-    const goldValue = choice === 'equipment' ? classGoldWithEquipment : classGoldOnly;
-    setClassGoldChoice(choice, goldValue);
+    // Check if this class has variable gold options
+    const classGold = $parsedEquipmentGold.fromClass;
+    
+    if (choice === 'equipment' && classGold.hasVariableGold) {
+      // For variable gold, set base gold to 0 since amount comes from equipment selection
+      const goldValue = 0;
+      setClassGoldChoice(choice, goldValue);
+    } else {
+      // Standard behavior for fixed gold amounts
+      const goldValue = choice === 'equipment' ? classGoldWithEquipment : classGoldOnly;
+      setClassGoldChoice(choice, goldValue);
+      
+      // For equipment choice, set the equipment gold amount from parsed data
+      if (choice === 'equipment') {
+        const equipmentGoldAmount = classGold.standardEquipmentGold || classGoldWithEquipment || 0;
+        setEquipmentGoldChoice('fromClass', 'default', equipmentGoldAmount);
+      } else if (choice === 'gold') {
+        // Clear equipment gold when choosing gold only
+        setEquipmentGoldChoice('fromClass', null, 0);
+      }
+    }
   }
 
   function handleBackgroundChoice(choice) {
+    console.log('🔧 handleBackgroundChoice called:', { choice, showEditButton });
+    
+    // Check if this background has variable gold options
+    const backgroundGold = $parsedEquipmentGold.fromBackground;
+    console.log('🔧 backgroundGold:', backgroundGold);
+    
+    if (choice === 'equipment' && backgroundGold.hasVariableGold) {
+      // For variable gold, set base gold to 0 since amount comes from equipment selection
+      const goldValue = 0;
+      console.log('🔧 Variable gold path - setting goldValue:', goldValue);
+      setBackgroundGoldChoice(choice, goldValue);
+    } else {
+      // Standard behavior for fixed gold amounts
+      const goldValue = choice === 'equipment' ? backgroundGoldWithEquipment : backgroundGoldOnly;
+      console.log('🔧 Standard path - goldValue:', goldValue, 'backgroundGoldWithEquipment:', backgroundGoldWithEquipment);
+      setBackgroundGoldChoice(choice, goldValue);
+      
+      // For equipment choice, set the equipment gold amount from parsed data
+      if (choice === 'equipment') {
+        const equipmentGoldAmount = backgroundGold.standardEquipmentGold || backgroundGoldWithEquipment || 0;
+        console.log('🔧 Setting equipment gold amount:', equipmentGoldAmount);
+        setEquipmentGoldChoice('fromBackground', 'default', equipmentGoldAmount);
+      } else if (choice === 'gold') {
+        // Clear equipment gold when choosing gold only
+        setEquipmentGoldChoice('fromBackground', null, 0);
+      }
+    }
+  }
+
+  function handleEquipmentGoldChoice(source, choice, goldAmount) {
     if (showEditButton) return;
-    const goldValue = choice === 'equipment' ? backgroundGoldWithEquipment : backgroundGoldOnly;
-    setBackgroundGoldChoice(choice, goldValue);
+    setEquipmentGoldChoice(source, choice, goldAmount);
   }
 
   function makeClassChoiceHandler(choice) {
@@ -97,14 +159,33 @@
   function handleEdit() {
     clearGoldChoices();
     clearEquipmentSelections();
+    clearEquipmentGoldChoices();
   }
 
   $: classChoice = $goldChoices.fromClass.choice;
   $: backgroundChoice = $goldChoices.fromBackground.choice;
-  $: totalGold = parseInt($goldChoices.fromClass.goldValue) + parseInt($goldChoices.fromBackground.goldValue);
+  
+  // Debug the gold calculation components
+  $: {
+    console.log('🔧 GOLD CALCULATION DEBUG:', {
+      classGoldValue: $goldChoices.fromClass.goldValue,
+      backgroundGoldValue: $goldChoices.fromBackground.goldValue, 
+      classEquipmentGold: $equipmentGoldOptions.fromClass.currentGoldAmount,
+      backgroundEquipmentGold: $equipmentGoldOptions.fromBackground.currentGoldAmount,
+      goldChoices: $goldChoices,
+      equipmentGoldOptions: $equipmentGoldOptions
+    });
+  }
+  
+  // Use the centralized totalGoldFromChoices derived store that includes variable equipment gold
+  $: totalGold = $totalGoldFromChoices;
   $: hasChoices = characterClass || background;
   $: isComplete = classChoice && backgroundChoice;
-  $: showEditButton = classChoice && backgroundChoice;
+  $: showEditButton = hasChoices && classChoice && backgroundChoice;
+  
+  // Enhanced checks for gold completion - selecting equipment choice is sufficient, even for variable gold
+  $: classGoldComplete = classChoice === 'gold' || classChoice === 'equipment';
+  $: backgroundGoldComplete = backgroundChoice === 'gold' || backgroundChoice === 'equipment';
 </script>
 
 <template lang="pug">
@@ -139,7 +220,10 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span {t('Equipment.Label')} + {backgroundGoldWithEquipment} gp
+                +if("$parsedEquipmentGold.fromBackground.hasVariableGold")
+                  span {t('Equipment.Label')} + variable gp
+                  +else()
+                    span {t('Equipment.Label')} + {backgroundGoldWithEquipment} gp
           button.option(
             class!="{backgroundChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeBackgroundChoiceHandler('gold')}"
@@ -165,7 +249,10 @@ section.starting-gold
               .flex0.relative.icon
                 i.fas.fa-sack-dollar
               .flex2.left.name
-                span {t('Equipment.Label')} + {classGoldWithEquipment} gp
+                +if("$parsedEquipmentGold.fromClass.hasVariableGold")
+                  span {t('Equipment.Label')} + variable gp
+                  +else()
+                    span {t('Equipment.Label')} + {classGoldWithEquipment} gp
           button.option(
             class!="{classChoice === 'gold' ? 'selected' : ''} {showEditButton ? 'disabled' : ''}"
             on:mousedown!="{makeClassChoiceHandler('gold')}"
@@ -177,7 +264,9 @@ section.starting-gold
               .flex2.left.name
                 span {classGoldOnly} gp
     
-    +if("classChoice && backgroundChoice")
+
+    
+    +if("classGoldComplete && backgroundGoldComplete")
       .equipment-group.final-gold
         .flexrow.left.result
           .flex0.relative.icon
@@ -240,6 +329,14 @@ section.starting-gold
     
     .value
       color: var(--dnd5e-color-gold)
+      font-weight: bold
+
+  &.variable-gold
+    border: 1px solid var(--color-text-highlight)
+    background: rgba(0, 0, 0, 0.3)
+    
+    .group-label
+      color: var(--color-text-highlight)
       font-weight: bold
 
 .group-label
@@ -315,6 +412,16 @@ button.option
 .name
   font-size: smaller
   line-height: 2rem
+
+.description
+  font-size: 0.8em
+  color: rgba(255, 255, 255, 0.7)
+  font-style: italic
+  text-align: right
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+  max-width: 200px
 
 .mt-sm
   margin-top: 0.5rem

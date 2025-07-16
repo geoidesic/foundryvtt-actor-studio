@@ -8,6 +8,20 @@ import { advancementQueueStore } from '~/src/stores/advancements';
 import { clearGoldChoices } from '~/src/stores/goldChoices';
 import { clearEquipmentSelections } from '~/src/stores/equipmentSelections';
 import { clearStartingEquipment } from '~/src/stores/startingEquipment';
+// Import and re-export equipment gold stores
+import { 
+  equipmentGoldOptions, 
+  parsedEquipmentGold, 
+  totalEquipmentGold, 
+  areEquipmentGoldChoicesComplete,
+  clearEquipmentGoldChoices 
+} from '~/src/stores/equipmentGold';
+export { 
+  equipmentGoldOptions, 
+  parsedEquipmentGold, 
+  totalEquipmentGold, 
+  areEquipmentGoldChoicesComplete 
+} from '~/src/stores/equipmentGold';
 // Import spell selection store to ensure it gets loaded
 import '~/src/stores/spellSelection';
 import { MODULE_ID } from '~/src/helpers/constants';
@@ -218,4 +232,5 @@ export function resetStores() {
   clearGoldChoices(); //- void
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
+  clearEquipmentGoldChoices(); //- void
 }

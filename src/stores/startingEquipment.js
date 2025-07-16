@@ -42,19 +42,35 @@ const flattenedStartingEquipment = derived(startingEquipment, ($startingEquipmen
 });
 
 const compatibleStartingEquipment = derived([classStartingEquipment, backgroundStartingEquipment, goldChoices], ([$classStartingEquipment, $backgroundStartingEquipment, $goldChoices]) => {
-  window.GAS.log.d('[StartingEquipment] classStartingEquipment', $classStartingEquipment);
+  window.GAS.log.d('[StartingEquipment] compatibleStartingEquipment inputs', {
+    classStartingEquipment: $classStartingEquipment,
+    goldChoices: $goldChoices
+  });
+  
   if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules === "2014") {
     return $classStartingEquipment;
   } 
-  if ($goldChoices.fromClass.choice !== 'gold' && $goldChoices.fromBackground.choice !== 'gold') {
+  
+  // Check for equipment vs gold choices
+  const classChoseGold = $goldChoices.fromClass.choice === 'gold';
+  const backgroundChoseGold = $goldChoices.fromBackground.choice === 'gold';
+  
+  // If both chose equipment, return both
+  if (!classChoseGold && !backgroundChoseGold) {
     return [...$classStartingEquipment, ...$backgroundStartingEquipment];
   } 
-  if ($goldChoices.fromClass.choice !== 'gold') {
+  
+  // If only class chose equipment, return class equipment
+  if (!classChoseGold && backgroundChoseGold) {
     return $classStartingEquipment;
   } 
-  if ($goldChoices.fromBackground.choice !== 'gold') {
+  
+  // If only background chose equipment, return background equipment
+  if (classChoseGold && !backgroundChoseGold) {
     return $backgroundStartingEquipment;
   }   
+  
+  // Both chose gold, return empty
   return [];
 });
 

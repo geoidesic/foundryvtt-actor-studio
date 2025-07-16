@@ -136,8 +136,31 @@
     
     console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
-    getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET); // Reset workflow state machine to idle
-    console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
+    
+    // Reset workflow state machine to idle, with error handling
+    try {
+      const currentState = getWorkflowFSM().getCurrentState();
+      console.log('[PCAPP] Current workflow state before reset:', currentState);
+      
+      // Only send reset if not in a state that can't handle it
+      if (currentState !== 'processing_advancements') {
+        getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET);
+        console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
+      } else {
+        // For processing_advancements, we'll let it complete naturally or force stop
+        console.log('[PCAPP] Skipping reset for processing_advancements state - will be handled naturally');
+        // Force the processing flag to false to allow cleanup
+        if (workflowFSMContext?.isProcessing) {
+          workflowFSMContext.isProcessing.set(false);
+        }
+      }
+    } catch (error) {
+      console.warn('[PCAPP] Error during workflow reset:', error);
+      // Force cleanup even if reset fails
+      if (workflowFSMContext?.isProcessing) {
+        workflowFSMContext.isProcessing.set(false);
+      }
+    }
     
     // Set flag to indicate we're closing from the gas hook
     if (application && typeof application.setClosingFromGasHook === 'function') {

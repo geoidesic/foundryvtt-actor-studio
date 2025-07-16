@@ -1,5 +1,5 @@
 <script>
-  import { getEquipmentIcon, getEquipmentItemClasses, getOptionClasses, handleSelection, isOptionDisabled, isGroupFromSource, isGroupEditable } from "~/src/stores/equipmentSelections";
+  import { getEquipmentIcon, getEquipmentItemClasses, getOptionClasses, handleSelection, isOptionDisabled, isGroupEditable } from "~/src/stores/equipmentSelections";
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
 
   export let equipmentBySource;

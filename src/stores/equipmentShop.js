@@ -18,8 +18,8 @@ export const shopItems = writable([]);
 // Items currently selected/added to the virtual cart (Map<itemId, { quantity, itemData }>)
 export const shopCart = writable(new Map());
 
-// Character's available gold (in copper)
-export const availableGold = writable(0);
+// Available gold using the working totalGoldFromChoices derived store (in copper)
+export const availableGold = derived(totalGoldFromChoices, $totalGoldFromChoices => ($totalGoldFromChoices || 0) * 100);
 
 // Total cost of items in the cart (in copper)
 export const cartTotalCost = writable(0);
@@ -34,32 +34,13 @@ export const remainingGold = derived(
 
 // Initialize gold amount based on character's gold choices or roll
 export function initializeGold() {
-  try {
-    // Use the appropriate gold source based on DnD5e version
-    let goldValue = 0;
-    
-    if (window.GAS.dnd5eVersion >= 4) {
-      // For 5e v4, get gold from gold choices
-      goldValue = get(totalGoldFromChoices);
-      window.GAS.log.d('[SHOP] Using totalGoldFromChoices for v4:', goldValue);
-    } else {
-      // For 5e v3, use goldRoll
-      goldValue = get(goldRoll);
-      window.GAS.log.d('[SHOP] Using goldRoll for v3:', goldValue);
-    }
-    
-    // Convert gold to copper (1 gp = 100 cp)
-    const goldValueInCopper = goldValue * 100;
-    window.GAS.log.d('[SHOP] Setting available gold:', goldValueInCopper);
-    
-    // Update the store
-    availableGold.set(goldValueInCopper);
-    
-    return goldValueInCopper;
-  } catch (error) {
-    console.error('[SHOP] Error initializing gold:', error);
-    return 0;
+  if (window.GAS.dnd5eVersion < 4) {
+    // For 5e v3, use goldRoll (legacy)
+    const goldValue = get(goldRoll);
+    return goldValue * 100;
   }
+  // For v4+, availableGold is derived from totalGoldFromChoices and always up to date
+  return get(availableGold);
 }
 
 // Make the store globally available for other components to access

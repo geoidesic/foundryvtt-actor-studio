@@ -43,7 +43,11 @@ beforeEach(() => {
   vi.doMock('~/src/stores/index.js', () => ({ 
     tabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
     activeTab: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
-    readOnlyTabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+    readOnlyTabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    level: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    characterLevel: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    characterClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    currentCharacter: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
   }));
   vi.doMock('~/src/helpers/AdvancementManager', () => ({ destroyAdvancementManagers: vi.fn() }));
   vi.doMock('~/src/helpers/Utility', () => ({
@@ -56,30 +60,53 @@ beforeEach(() => {
 
 describe('Workflow Spell Import', () => {
   it('should successfully import and use finalizeSpellSelection in workflow', async () => {
-    // Mock actor
+    // Mock actor with proper items structure
     const mockActor = {
       id: 'actor-123',
       name: 'Test Wizard',
-      items: { find: vi.fn(() => null) },
+      items: {
+        find: vi.fn(() => null), // No existing spells
+        filter: vi.fn(() => []),
+        contents: []
+      },
       createEmbeddedDocuments: vi.fn(() => Promise.resolve([{ id: 'spell1', name: 'Fireball' }]))
     };
 
-    // Import workflow
+    // Import the workflow and stores
     const { handleFinalizeSpells } = await import('~/src/lib/workflow.js');
     const { get } = await import('svelte/store');
 
     // Mock stores
-    const stores = { actorInGame: { get: () => mockActor } };
+    const stores = { 
+      actorInGame: { 
+        subscribe: vi.fn(),
+        set: vi.fn(),
+        update: vi.fn() 
+      } 
+    };
     const setProcessing = vi.fn();
 
-    // Mock spell selection
-    get.mockReturnValue(new Map([
-      ['fireball', { 
-        itemData: { 
-          toObject: () => ({ id: 'fireball', name: 'Fireball', type: 'spell' }) 
-        } 
-      }]
-    ]));
+    // Mock spell selection with proper structure
+    const mockSpellItem = {
+      toObject: () => ({ 
+        id: 'fireball', 
+        name: 'Fireball', 
+        type: 'spell',
+        system: { level: 3 }
+      })
+    };
+
+    get.mockImplementation((store) => {
+      if (store === stores.actorInGame) {
+        return mockActor;
+      }
+      // Mock spell selection store
+      return new Map([
+        ['fireball', { 
+          itemData: mockSpellItem
+        }]
+      ]);
+    });
 
     // Test handleFinalizeSpells
     await handleFinalizeSpells({ stores, setProcessing });

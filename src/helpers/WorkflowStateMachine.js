@@ -157,6 +157,17 @@ export function createWorkflowStateMachine() {
         return shouldShow;
       })
       .transitionTo('completed') // Default fallback
+    .on('shopping_complete')
+      .transitionTo('selecting_spells').withCondition((context) => {
+        // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
+        const currentActor = get(actorInGame);
+        // Fallback to context actor if store is empty (useful for tests and edge cases)
+        const actorToCheck = currentActor || workflowFSMContext.actor;
+        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
+        window.GAS.log.d('[FSM] shopping_complete (from selecting_equipment) -> selecting_spells condition:', shouldShow);
+        return shouldShow;
+      })
+      .transitionTo('completed') // Default fallback when spell selection is not needed
     .on('skip_equipment')
       .transitionTo('shopping').withCondition((context) => workflowFSMContext._shouldShowShopping())
       .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))

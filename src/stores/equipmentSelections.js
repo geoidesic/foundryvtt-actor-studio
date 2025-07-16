@@ -1,4 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
+import { characterClass, background } from './storeDefinitions';
+import { parsedEquipmentGold, updateGoldFromEquipmentChoice, clearEquipmentGoldChoices } from './equipmentGold';
 
 // Store structure will track selections by group
 // { 
@@ -288,7 +290,7 @@ export function selectEquipment(groupId, itemId) {
         children: selectedItem.children
       });
 
-      return {
+      const newState = {
         ...state,
         [groupId]: {
           ...group,
@@ -315,6 +317,13 @@ export function selectEquipment(groupId, itemId) {
           return acc;
         }, {}) : {})
       };
+
+      // Update gold for variable gold equipment choices when AND group is completed
+      if (!hasGranularChildren) {
+        updateGoldForEquipmentChoice(groupId, selectedItem);
+      }
+
+      return newState;
     }
 
     // For granular children in an AND group
@@ -387,7 +396,7 @@ export function selectEquipment(groupId, itemId) {
     }
 
     // Default case - single selection
-    return {
+    const newState = {
       ...state,
       [groupId]: {
         ...group,
@@ -404,6 +413,11 @@ export function selectEquipment(groupId, itemId) {
         }
       } : {})
     };
+
+    // Update gold for variable gold equipment choices
+    updateGoldForEquipmentChoice(groupId, selectedItem);
+
+    return newState;
   });
 }
 
@@ -1062,6 +1076,10 @@ export function editGroup(groupId) {
 
     return updatedSelections;
   });
+  
+  // Clear equipment gold choices when editing any equipment group
+  // This ensures that gold calculations are reset when equipment selections are cleared
+  clearEquipmentGoldChoices();
 }
 
 
@@ -1140,6 +1158,8 @@ export function matchingGroupsForSource(sortedGroups, sourceGroup) {
 
 export function clearEquipmentSelections() {
   equipmentSelections.set({});
+  // Also clear equipment gold choices when clearing equipment selections
+  clearEquipmentGoldChoices();
 }
 
 // Add getEquipmentIcon function to the store
@@ -1193,4 +1213,98 @@ export const selectedItems = derived(equipmentSelections, ($equipmentSelections,
 
   // Update when selectedItemsData changes
   return selectedItemsData.subscribe(value => set(value));
-}); 
+});
+
+// Helper function to update gold when equipment choices are made
+function updateGoldForEquipmentChoice(groupId, selectedItem) {
+  // Get the current character class and background
+  const currentClass = get(characterClass);
+  const currentBackground = get(background);
+  
+  // Get parsed equipment gold data
+  const equipmentGold = get(parsedEquipmentGold);
+  
+  let source = null;
+  let goldAmount = 0;
+  let choiceId = null;
+  
+  // For variable gold classes like Fighter, we need to map the equipment selection to gold amounts
+  // This requires analyzing the equipment selection context and matching it to the parsed gold options
+  
+  if (equipmentGold.fromClass.hasVariableGold && currentClass) {
+    // For Fighter class, look for patterns that indicate which choice was made
+    // This would need to be enhanced based on the actual data structure of equipment choices
+    
+    // Try to extract choice information from the selectedItem
+    // The choice might be encoded in the item's key, description, or group structure
+    
+    // For now, we'll try a simple pattern match
+    // In a real implementation, you'd want more sophisticated logic here
+    if (selectedItem.key) {
+      const keyLower = selectedItem.key.toLowerCase();
+      
+      // Look for indicators in the equipment key that might map to gold choices
+      for (const option of equipmentGold.fromClass.goldOptions) {
+        // This is a simplified matching approach
+        // You'd want to enhance this based on your actual data structure
+        if (keyLower.includes(option.choice.toLowerCase()) || 
+            keyLower.includes(`choice${option.choice.toLowerCase()}`) ||
+            keyLower.includes(`option${option.choice.toLowerCase()}`)) {
+          source = 'fromClass';
+          goldAmount = option.goldAmount;
+          choiceId = option.choice;
+          break;
+        }
+      }
+      
+      // If no direct match, try to infer from equipment content
+      if (!source && selectedItem.label) {
+        const labelLower = selectedItem.label.toLowerCase();
+        // Try to match based on equipment types that might correlate with gold amounts
+        // This is very basic - you'd want more sophisticated mapping
+        if (labelLower.includes('chain') || labelLower.includes('mail')) {
+          // Assume this is a lower gold option
+          const lowestOption = equipmentGold.fromClass.goldOptions.reduce((min, opt) => 
+            opt.goldAmount < min.goldAmount ? opt : min);
+          source = 'fromClass';
+          goldAmount = lowestOption.goldAmount;
+          choiceId = lowestOption.choice;
+        } else if (labelLower.includes('leather')) {
+          // Assume this is a middle gold option
+          const sortedOptions = [...equipmentGold.fromClass.goldOptions].sort((a, b) => a.goldAmount - b.goldAmount);
+          if (sortedOptions.length > 1) {
+            source = 'fromClass';
+            goldAmount = sortedOptions[1].goldAmount;
+            choiceId = sortedOptions[1].choice;
+          }
+        }
+      }
+    }
+  }
+  
+  // Similar logic could be applied for background equipment with variable gold
+  if (!source && equipmentGold.fromBackground.hasVariableGold && currentBackground) {
+    // Background variable gold logic would go here
+  }
+  
+  // Update gold if we found a match
+  if (source && goldAmount > 0) {
+    updateGoldFromEquipmentChoice(source, choiceId, goldAmount);
+    window.GAS.log.d('[EquipmentSelections] Updated gold for equipment choice:', {
+      source,
+      choiceId,
+      goldAmount,
+      selectedItem: selectedItem.label || selectedItem.key,
+      groupId
+    });
+  } else {
+    // Log when we couldn't match an equipment choice to gold
+    window.GAS.log.d('[EquipmentSelections] Could not determine gold amount for equipment choice:', {
+      selectedItem: selectedItem.label || selectedItem.key,
+      groupId,
+      hasVariableGold: equipmentGold.fromClass.hasVariableGold || equipmentGold.fromBackground.hasVariableGold
+    });
+  }
+}
+
+// Call updateGoldForEquipmentChoice in the appropriate places

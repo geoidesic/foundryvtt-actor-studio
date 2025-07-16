@@ -16,6 +16,7 @@
     isGroupFromSource,
     isGroupNonEditable,
   } from "~/src/stores/equipmentSelections";
+  import { setEquipmentGoldChoice } from "~/src/stores/equipmentGold";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
@@ -31,6 +32,8 @@
   export let background = null;
   export let disabled = false;
   export let allEquipmentItems = [];
+  export let parsedEquipmentGold = null;
+  export let equipmentGoldOptions = null;
 
   // Check if equipment selection is enabled in settings
   const equipmentSelectionEnabled = game.settings.get(
@@ -60,20 +63,36 @@
 
     // Add class equipment if available
     if (classEquipment?.length > 0) {
-      groups.push({
+      const classGroup = {
         source: "class",
         label: characterClass?.name || "Class",
         equipment: classEquipment,
-      });
+      };
+      
+      // Add variable gold options for class if available
+      if (parsedEquipmentGold?.fromClass?.hasVariableGold && parsedEquipmentGold.fromClass.goldOptions?.length > 0) {
+        classGroup.variableGoldOptions = parsedEquipmentGold.fromClass.goldOptions;
+        classGroup.selectedVariableGold = equipmentGoldOptions?.fromClass?.selectedChoice;
+      }
+      
+      groups.push(classGroup);
     }
 
     // Add background equipment if available
     if (backgroundEquipment?.length > 0) {
-      groups.push({
+      const backgroundGroup = {
         source: "background",
         label: background?.name || "Background",
         equipment: backgroundEquipment,
-      });
+      };
+      
+      // Add variable gold options for background if available (though unlikely)
+      if (parsedEquipmentGold?.fromBackground?.hasVariableGold && parsedEquipmentGold.fromBackground.goldOptions?.length > 0) {
+        backgroundGroup.variableGoldOptions = parsedEquipmentGold.fromBackground.goldOptions;
+        backgroundGroup.selectedVariableGold = equipmentGoldOptions?.fromBackground?.selectedChoice;
+      }
+      
+      groups.push(backgroundGroup);
     }
 
     return groups;
@@ -235,6 +254,11 @@
     editGroup(groupId);
   }
 
+  function handleVariableGoldChoice(source, choice, goldAmount) {
+    if (disabled) return;
+    setEquipmentGoldChoice(source, choice, goldAmount);
+  }
+
   onMount(async () => {
     // window.GAS.log.d("StartingEquipment", startingEquipment);
   });
@@ -258,6 +282,8 @@
           handleEditGroup="{handleEditGroup}"
           disabled="{disabled}"
           selectedItems="{selectedItems}"
+          handleVariableGoldChoice="{handleVariableGoldChoice}"
+          parsedEquipmentGold="{parsedEquipmentGold}"
         )
         +else()
           //- Fallback for single source or non-2024 rules

@@ -1,7 +1,7 @@
 <script>
   import { get } from 'svelte/store';
   import { readOnlyTabs, level as characterLevel } from '../../../../stores/index';
-  import { characterClass } from '../../../../stores/storeDefinitions';
+  import { characterClass, characterSubClass } from '../../../../stores/storeDefinitions';
   import { localize as t } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
@@ -121,7 +121,7 @@
       sampleSpells: $availableSpells.slice(0, 5).map(s => ({
         name: s.name,
         level: s.system?.level,
-        classes: s.classes || s.labels?.classes || s.system?.classes
+        classes: s.labels?.classes || []
       }))
     });
     
@@ -164,16 +164,21 @@
     const spellLevel = spell.system?.level || 0;
     const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
     
-    // Filter by character class - check multiple possible locations for class data
-    const spellClasses = spell.classes || spell.labels?.classes || spell.system?.classes || [];
-    const availableToClass = spellClasses.includes(characterClassName) || 
-                            spellClasses.includes(characterClassName.toLowerCase()) ||
-                            // Fallback: if no class restrictions, allow all spells
-                            spellClasses.length === 0;
+    // Filter by character class - check spell.labels.classes array
+    const spellClasses = spell.labels?.classes || [];
+    
+    // Check if the character class is in the spell's class array
+    const availableToClass = Array.isArray(spellClasses) 
+      ? spellClasses.includes(characterClassName) || 
+        spellClasses.includes(characterClassName.toLowerCase()) ||
+        // Fallback: if no class restrictions, allow all spells
+        spellClasses.length === 0
+      : false;
     
     // Debug logging for spell filtering
     if (spell.name === "Acid Splash" || spell.name === "Cure Wounds" || spellLevel === 1) {
       console.log(`[SPELLS DEBUG] ${spell.name}:`, {
+        spell,
         spellLevel,
         storeMaxSpellLevel: $maxSpellLevel,
         effectiveMaxSpellLevel,
@@ -333,7 +338,7 @@ spells-tab-container(class="{containerClasses}")
                     i.fas.fa-trash
 
     .right-panel.spell-list
-      h3 {t('Spells.AvailableSpells')}
+      h3 {t('Spells.AvailableSpells')} | {characterClassName}
       .filter-container.mb-sm
         input.keyword-filter(type="text" bind:value="{keywordFilter}" placeholder="{t('Spells.FilterPlaceholder')}" disabled="{isDisabled}")
       +if("loading")

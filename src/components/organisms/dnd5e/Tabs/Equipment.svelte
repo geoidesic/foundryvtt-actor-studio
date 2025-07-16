@@ -4,8 +4,8 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
-  import { goldChoices } from "../../../../stores/goldChoices";
-  import { areGoldChoicesComplete } from "~/src/stores/goldChoices";
+  import { goldChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
+  import { parsedEquipmentGold, areEquipmentGoldChoicesComplete, equipmentGoldOptions } from "~/src/stores/equipmentGold";
   import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager";
 
   import { compatibleStartingEquipment, classStartingEquipment, backgroundStartingEquipment } from "~/src/stores/startingEquipment";
@@ -23,6 +23,20 @@
 
   // Track if gold has been rolled/selected based on version
   $: isGoldComplete = window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024" ? $areGoldChoicesComplete : $goldRoll > 0;
+  
+  // For 2024 rules, check if user chose equipment (vs gold only) for class/background
+  $: userChoseEquipment = window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024" ? 
+    ($goldChoices.fromClass.choice === 'equipment' || $goldChoices.fromBackground.choice === 'equipment') : true;
+  
+  // Check if we have variable gold that still needs equipment selection to complete
+  $: hasVariableGoldNeedingSelection = $parsedEquipmentGold && 
+    (($parsedEquipmentGold.fromClass.hasVariableGold && $goldChoices.fromClass.choice === 'equipment') ||
+     ($parsedEquipmentGold.fromBackground.hasVariableGold && $goldChoices.fromBackground.choice === 'equipment'));
+  
+  // Equipment should show when user chose equipment AND (choices complete OR variable gold needs selection)
+  $: shouldShowEquipment = window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024" ? 
+    (userChoseEquipment && (isGoldComplete || hasVariableGoldNeedingSelection)) :
+    ($goldRoll > 0);
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
@@ -64,7 +78,7 @@
             StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
             +else()
               StartingGold(characterClass="{$characterClass}")
-          +if("isGoldComplete || isDisabled")
+          +if("shouldShowEquipment || isDisabled")
             StartingEquipment(
               startingEquipment="{$compatibleStartingEquipment}" 
               classEquipment="{$classStartingEquipment}"
@@ -73,6 +87,8 @@
               background="{$background}"
               proficiencies="{proficiencies}"
               disabled="{isDisabled}"
+              parsedEquipmentGold="{$parsedEquipmentGold}"
+              equipmentGoldOptions="{$equipmentGoldOptions}"
             )
       .flex0.border-right.right-border-gradient-mask
       .flex3.left.scroll.col-b

@@ -267,14 +267,14 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
-    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    // window.GAS.log.d('extractItemsFromPacks pack', pack);
-    // window.GAS.log.d('extractItemsFromPacks packindex', index);
+    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    window.GAS.log.d('extractItemsFromPacks pack', pack);
+    window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    // window.GAS.log.d('extractItemsFromPacks entries', entries);
+    window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
     packItems = packItems.map(item => ({

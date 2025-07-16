@@ -171,7 +171,8 @@ export async function loadAvailableSpells() {
       "system.preparation",
       "system.components",
       "system.description",
-      "system.activation"
+      "system.activation",
+      "labels.classes"
     ];
 
     // Extract spell data using extractItemsFromPacksAsync
