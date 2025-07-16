@@ -2,7 +2,7 @@
   import { get } from 'svelte/store';
   import { readOnlyTabs, level as characterLevel, isLevelUp, newLevelValueForExistingClass } from '../../../../stores/index';
   import { characterClass, characterSubClass } from '../../../../stores/storeDefinitions';
-  import { localize as t } from "~/src/helpers/Utility";
+  import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
     initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
@@ -68,7 +68,7 @@
       } else {
         content = spell.name || "";
       }
-      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(content, { async: true });
+      enrichedNames[key] = await enrichHTML(content, { async: true });
     }
     return enrichedNames[key];
   }

@@ -177,6 +177,7 @@ div.content
             li {book} {page} {type.value ? ', ' + type.value : ''} 
 
         +if("filteredMovement")
+          pre value {value}
           h2.left {t('Tabs.Races.Movement')}
           ol.properties-list
             +each("filteredMovement as movement")

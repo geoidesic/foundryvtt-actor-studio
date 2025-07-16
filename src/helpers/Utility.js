@@ -5,7 +5,7 @@ import { get } from "svelte/store";
 
 
 export async function illuminatedDescription(html, store) {
-  const enriched = await TextEditor.enrichHTML(html);
+  const enriched = await enrichHTML(html);
   if(!game.settings.get(MODULE_ID, 'illuminatedDescription')) {
     return enriched;
   }
@@ -641,4 +641,29 @@ export function getSubclassLevel(characterClass, MODULE_ID) {
 
   // window.GAS.log.d('[getSubclassLevel] subclassLevel from advancement', subclassLevel)
   return subclassLevel || false;
+}
+
+/**
+ * Gets the appropriate TextEditor API for the current Foundry version
+ * @returns {Object} The TextEditor API object
+ */
+export function getTextEditorAPI() {
+  if (game.version >= 13) {
+    // V13+ uses the new applications.ux.TextEditor.implementation path
+    return foundry.applications.ux.TextEditor.implementation;
+  } else {
+    // V12 uses the global TextEditor
+    return TextEditor;
+  }
+}
+
+/**
+ * Enriches HTML content using the appropriate TextEditor API for the current Foundry version
+ * @param {string} content - The HTML content to enrich
+ * @param {Object} options - Options for enrichment
+ * @returns {Promise<string>} The enriched HTML content
+ */
+export async function enrichHTML(content, options = {}) {
+  const textEditor = getTextEditorAPI();
+  return await textEditor.enrichHTML(content, options);
 }

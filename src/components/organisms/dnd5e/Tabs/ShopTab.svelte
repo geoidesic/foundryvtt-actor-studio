@@ -4,7 +4,7 @@
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
-  import { localize as t } from "~/src/helpers/Utility";
+  import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';
 
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };
@@ -49,7 +49,7 @@
   async function getEnrichedName(item) {
     const key = item.uuid || item._id || item.id;
     if (!enrichedNames[key]) {
-      enrichedNames[key] = foundry.applications.ux.TextEditor.implementation.enrichHTML(item.enrichedName || item.name || "", { async: true });
+      enrichedNames[key] = await enrichHTML(item.enrichedName || item.name || "", { async: true });
     }
     return enrichedNames[key];
   }

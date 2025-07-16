@@ -1,7 +1,7 @@
 <script>
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, flattenedSelections } from "~/src/stores/equipmentSelections";
-import { localize as t } from "~/src/helpers/Utility";
+import { localize as t, enrichHTML } from "~/src/helpers/Utility";
 import { readOnlyTabs } from "~/src/stores/index";
 
 let plannedItems = [];
@@ -87,7 +87,7 @@ onMount(() => {
                     img(src="{item.img}" width="32" height="32")
                     +else()
                       img(src="icons/svg/item-bag.svg" width="32" height="32")
-                +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(getItemName(item) || '')")
+                +await("enrichHTML(getItemName(item) || '')")
                   +then("Html")
                     td= "{@html Html || '--'}"
                 td.weight= "{item?.system?.weight?.value || 0}"

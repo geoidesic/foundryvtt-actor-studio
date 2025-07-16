@@ -1,5 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { enrichHTML } from "~/src/helpers/Utility.js";
   
   export let advancement = null;
 
@@ -36,14 +37,14 @@
     ul.icon-list
       +each("items as item")
         li.left
-          +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(item?.system?.description?.value || '')")
+          +await("enrichHTML(item?.system?.description?.value || '')")
             +then("Html")
               .flexrow.gap-4
                 //- (data-tooltip="{Html || null}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                 .flex0.relative.image
                   img.icon(src="{item?.img}" alt="{item?.name}")
                 +if("item?.link")
-                  +await("foundry.applications.ux.TextEditor.implementation.enrichHTML(item.link || '')")
+                  +await("enrichHTML(item.link || '')")
                     +then("Html")
                       .flex2 {@html Html}
                   +else()
