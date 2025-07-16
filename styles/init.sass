@@ -573,3 +573,25 @@ body.game #gas-settings-submenu.app.window-app
   background-color: var(--color-level-warning-bg)
   color: #fff
   border-color: var(--color-level-warning)
+
+// Defensive styling for IconSelect component to ensure compatibility across Foundry versions
+.GAS
+  .custom-select
+    min-height: var(--tjs-select-height, 32px)
+    
+    .selected-option
+      min-height: var(--tjs-select-height, 32px)
+      height: auto
+      line-height: 1.5
+      box-sizing: border-box
+      
+      // Fix for older Foundry versions where height might collapse
+      &:empty::before
+        content: "\00a0" // non-breaking space
+        
+  // Additional fallback for very old versions
+  .icon-select
+    min-height: var(--tjs-select-height, 32px)
+    
+    .selected-option
+      min-height: 24px

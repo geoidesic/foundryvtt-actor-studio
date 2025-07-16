@@ -157,6 +157,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
 .custom-select
   position: relative
   display: inline-block
+  min-height: var(--tjs-select-height, 32px)
 
 .selected-option
   display: flex
