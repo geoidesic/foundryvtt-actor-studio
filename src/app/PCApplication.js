@@ -45,9 +45,13 @@ export default class PCApplication extends SvelteApplication {
    */
   static get defaultOptions() {
     const title = this.title;
+    // Get dnd5e version, foundry version, and dnd5e rule set from window.GAS (set in init.js)
+    const dnd5eVersion = window.GAS?.dnd5eVersion || '';
+    const foundryVersion = game.version || '';
+    const dnd5eRules = window.GAS?.dnd5eRules || '';
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'foundryvtt-actor-studio-pc-sheet',
-      title: game.i18n.localize('GAS.ActorStudio')+' v'+version,
+      title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eVersion} | Rules: ${dnd5eRules}`,
       classes: [MODULE_CODE],
       width: game.settings.get(MODULE_ID, 'windowX') || 700,
       height: game.settings.get(MODULE_ID, 'windowX') || 800,
