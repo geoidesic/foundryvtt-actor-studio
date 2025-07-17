@@ -6,7 +6,7 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
     initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
-    spellLimits, currentSpellCounts, spellProgress
+    spellLimits, currentSpellCounts, spellProgress, autoPopulateAllSpells
   } from '../../../../stores/spellSelection';
   import spellsKnownData from '../../../../stores/spellsKnown.json';
   
@@ -26,6 +26,9 @@
   // Get character class name for spell filtering and limits
   $: characterClassName = $characterClass?.name || 'Bard'; // Default to Bard for testing
   
+  // Check if character class gets access to all spells
+  $: hasAllSpellsAccess = $spellLimits.hasAllSpells;
+  
   // Calculate max spell level based on character class and level (override store calculation)
   $: calculatedMaxSpellLevel = getMaxSpellLevelForClass($characterLevel, characterClassName);
   
@@ -36,6 +39,20 @@
   
   // Use our calculated max spell level if the store returns 0 (during character creation)
   $: effectiveMaxSpellLevel = $maxSpellLevel > 0 ? $maxSpellLevel : levelUpAwareMaxSpellLevel;
+  
+  // Calculate old max spell level for level-up scenarios
+  $: oldMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
+    ? getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, characterClassName)
+    : 0;
+  
+  // Determine if auto-populate should be offered
+  $: shouldOfferAutoPopulate = hasAllSpellsAccess && (
+    !$isLevelUp || // Always offer during character creation
+    (effectiveMaxSpellLevel > oldMaxSpellLevel) // Only offer during level-up if max spell level increased
+  );
+  
+  // Check if this is a level-up with no new spell access
+  $: isLevelUpWithNoSpellUpdates = $isLevelUp && hasAllSpellsAccess && effectiveMaxSpellLevel <= oldMaxSpellLevel;
   
   // Debug logging for character data
   $: {
@@ -242,7 +259,6 @@
   }
 
   // Add spell to selection
-
   async function addToSelection(spell) {
     // Always get the latest store values to avoid stale cap checks
     await tick();
@@ -251,6 +267,7 @@
     const counts = get(currentSpellCounts);
     const limits = get(spellLimits);
 
+    // Strict enforcement: check if adding this spell would exceed limits
     if (isCantrip && counts.cantrips >= limits.cantrips) {
       ui.notifications?.warn(t('Spells.CantripLimitReached'));
       return;
@@ -259,12 +276,46 @@
       ui.notifications?.warn(t('Spells.SpellLimitReached'));
       return;
     }
+    
+    // Double-check that we're not adding duplicates
+    const spellId = spell.id || spell._id;
+    const currentSelections = get(selectedSpells);
+    if (currentSelections.has(spellId)) {
+      ui.notifications?.warn('Spell already selected');
+      return;
+    }
+    
     await addSpell(spell);
   }
 
   // Remove spell from selection
   function removeFromSelection(spellId) {
     removeSpell(spellId);
+  }
+
+  // Auto-populate all spells for classes that get all spells
+  async function autoPopulateSpells() {
+    if (!hasAllSpellsAccess) {
+      ui.notifications?.warn('This class does not have access to all spells');
+      return;
+    }
+    
+    try {
+      const success = await autoPopulateAllSpells(
+        characterClassName, 
+        effectiveMaxSpellLevel, 
+        $actor, 
+        $isLevelUp, 
+        oldMaxSpellLevel
+      );
+      if (success) {
+        // Refresh the selected spells list
+        await tick();
+      }
+    } catch (error) {
+      console.error('Error auto-populating spells:', error);
+      ui.notifications?.error('Failed to auto-populate spells');
+    }
   }
 
   // Get spell school display name
@@ -302,6 +353,31 @@ spells-tab-container(class="{containerClasses}")
  
   +if("isDisabled")
     .info-message {t('Spells.SpellsReadOnly')}
+    +elseif("isLevelUpWithNoSpellUpdates")
+      .info-message.no-updates-notice
+        p 
+          strong No spell updates needed for this level-up
+        p 
+          | {characterClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
+        p 
+          em Your spell selection is complete - no changes needed.
+    +elseif("shouldOfferAutoPopulate")
+      .info-message.all-spells-notice
+        p 
+          strong {characterClassName}s 
+          | have access to all spells of appropriate level. You only need to select the cantrips you want to know - all other spells can be prepared during gameplay.
+        p 
+          em Note: You still need to select your cantrips as they cannot be changed later.
+        .auto-populate-section
+          button.auto-populate-btn(
+            on:click!="{ () => autoPopulateSpells() }" 
+            disabled="{isDisabled || loading}"
+          )
+            i.fas.fa-magic
+            +if("$isLevelUp && effectiveMaxSpellLevel > oldMaxSpellLevel")
+              span Auto-populate New Level {effectiveMaxSpellLevel} Spells
+              +else()
+                span Auto-populate All Spells (Levels 1-{effectiveMaxSpellLevel})
   .sticky-header(class:hidden="{!scrolled}")
     .panel-header-grid
       .grid-item.label {t('Spells.Cantrips')}:
@@ -437,6 +513,71 @@ spells-tab-container(class="{containerClasses}")
     padding: 1rem
     background: rgba(0, 0, 0, 0.05)
     border-radius: var(--border-radius)
+    
+    &.all-spells-notice
+      background: rgba(0, 128, 0, 0.1)
+      border: 1px solid rgba(0, 128, 0, 0.2)
+      color: var(--gas-color-text)
+      font-style: normal
+      
+      strong
+        color: var(--dnd5e-color-gold, #b59e54)
+        
+      em
+        font-size: 0.9em
+        color: var(--gas-color-text)
+        opacity: 0.8
+    
+    &.no-updates-notice
+      background: rgba(66, 109, 190, 0.1)
+      border: 1px solid rgba(66, 109, 190, 0.3)
+      color: var(--gas-color-text)
+      font-style: normal
+      text-align: center
+      
+      strong
+        color: var(--as-blue)
+        font-size: 1.1em
+        
+      em
+        font-size: 0.9em
+        color: var(--gas-color-text)
+        opacity: 0.8
+        
+      .auto-populate-section
+        margin-top: 1rem
+        
+        .auto-populate-btn
+          background: linear-gradient(135deg, #28a745, #20c997)
+          color: white
+          border: none
+          padding: 0.75rem 1.5rem
+          border-radius: 6px
+          font-size: 0.95rem
+          font-weight: 600
+          cursor: pointer
+          display: flex
+          align-items: center
+          gap: 0.5rem
+          transition: all 0.3s ease
+          box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3)
+          
+          &:hover:not(:disabled)
+            background: linear-gradient(135deg, #218838, #1ba085)
+            transform: translateY(-2px)
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4)
+            
+          &:active
+            transform: translateY(0)
+            
+          &:disabled
+            opacity: 0.6
+            cursor: not-allowed
+            transform: none
+            box-shadow: none
+            
+          i.fas.fa-magic
+            font-size: 1.1em
 
   .sticky-header
     position: sticky

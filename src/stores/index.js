@@ -233,6 +233,19 @@ export function resetStores() {
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
+  
+  // Clear spell selection stores
+  try {
+    // Import and clear spell selection stores
+    import('~/src/stores/spellSelection').then(({ selectedSpells }) => {
+      selectedSpells.set(new Map());
+      window.GAS.log.d('[resetStores] Cleared selectedSpells store');
+    }).catch(error => {
+      window.GAS.log.w('[resetStores] Failed to clear spell selection stores:', error);
+    });
+  } catch (error) {
+    window.GAS.log.w('[resetStores] Error importing spell selection module:', error);
+  }
 }
 
 // Auto-update levelUpTabs with level progression information
