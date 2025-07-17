@@ -417,64 +417,64 @@
     .loading-state
       i.fas.fa-spinner.fa-spin
       span {t('FeatSpells.Loading')}
-  +elseif("error")
-    .error-state
-      i.fas.fa-exclamation-triangle
-      span {t('FeatSpells.Error', { error })}
-      button.retry-btn(on:click="{loadFeatSpellRequirements}") {t('Retry')}
-  +elseif("featRequirements.length === 0")
-    .no-requirements
-      i.fas.fa-info-circle
-      span {t('FeatSpells.NoRequirements')}
-  +else()
-    .feat-spells-tab
-      .left-panel
-        h3 {t('FeatSpells.SelectedSpells')}
+    +elseif("error")
+      .error-state
+        i.fas.fa-exclamation-triangle
+        span {t('FeatSpells.Error', { error })}
+        button.retry-btn(on:click="{loadFeatSpellRequirements}") {t('Retry')}
+      +elseif("featRequirements.length === 0")
+        .no-requirements
+          i.fas.fa-info-circle
+          span {t('FeatSpells.NoRequirements')}
+        +else()
+          .feat-spells-tab
+          .left-panel
+            h3 {t('FeatSpells.SelectedSpells')}
         
-        // Class selection areas for feats that require it
-        +each("featRequirements as requirement")
-          +if("requirement.requiresClassSelection")
-            .class-selection-section
-              h4 {requirement.featName}
-              .class-selection
-                label.filter-label(for="class-select-{requirement.featId}") Choose Spell Class:
-                select.filter-select(
-                  id="class-select-{requirement.featId}"
-                  value="{selectedClasses.get(requirement.featId) || ''}"
-                  on:change="{(e) => onClassSelected(requirement.featId, e.target.value)}"
-                )
-                  option(value="") Select a class...
-                  +each("requirement.availableClasses as className")
-                    option(value="{className}") {className.charAt(0).toUpperCase() + className.slice(1)}
+            //- Class selection areas for feats that require it
+            +each("featRequirements as requirement")
+              +if("requirement.requiresClassSelection")
+                .class-selection-section
+                  h4 {requirement.featName}
+                  .class-selection
+                    label.filter-label(for="class-select-{requirement.featId}") Choose Spell Class:
+                    select.filter-select(
+                      id="class-select-{requirement.featId}"
+                      value="{selectedClasses.get(requirement.featId) || ''}"
+                      on:change!="{(e) => onClassSelected(requirement.featId, e.target.value)}"
+                    )
+                      option(value="") Select a class...
+                      +each("requirement.availableClasses as className")
+                        option(value="{className}") {className.charAt(0).toUpperCase() + className.slice(1)}
         
-        // Selected spells display
+        //- Selected spells display
         .selected-spells
           +if("allSelectedSpells.length === 0")
             .empty-selection
               p {t('FeatSpells.NoSpellsSelected')}
-          +else()
-            +each("allSelectedSpells as selectedItem")
-              .selected-spell
-                .spell-col1
-                  img.spell-icon(alt="{selectedItem.spell.name}" src="{selectedItem.spell.img}")
-                .spell-col2.left
-                  .spell-name
-                    +await("getEnrichedName(selectedItem.spell)")
-                      span {selectedItem.spell.name}
-                      +then("Html")
-                        span {@html Html}
-                      +catch("error")
+            +else()
+              +each("allSelectedSpells as selectedItem")
+                .selected-spell
+                  .spell-col1
+                    img.spell-icon(alt="{selectedItem.spell.name}" src="{selectedItem.spell.img}")
+                  .spell-col2.left
+                    .spell-name
+                      +await("getEnrichedName(selectedItem.spell)")
                         span {selectedItem.spell.name}
-                  .spell-subdetails
-                    span.spell-level {getSpellLevelDisplay(selectedItem.spell)}
-                    span.spell-school {getSchoolName(selectedItem.spell)}
-                .spell-col3
-                  button.remove-btn(
-                    on:click="{() => removeFromSelection(selectedItem.featId, selectedItem.spell._id)}"
-                  )
-                    i.fas.fa-trash
+                        +then("Html")
+                          span {@html Html}
+                        +catch("error")
+                          span {selectedItem.spell.name}
+                    .spell-subdetails
+                      span.spell-level {getSpellLevelDisplay(selectedItem.spell)}
+                      span.spell-school {getSchoolName(selectedItem.spell)}
+                  .spell-col3
+                    button.remove-btn(
+                      on:click!="{() => removeFromSelection(selectedItem.featId, selectedItem.spell._id)}"
+                    )
+                      i.fas.fa-trash
         
-        // Fixed spells display
+        //- Fixed spells display
         +each("featRequirements as requirement")
           +if("requirement.fixedSpells && requirement.fixedSpells.length > 0")
             .fixed-spells-section
@@ -497,58 +497,58 @@
         +if("allAvailableSpells.length === 0")
           .empty-state
             p No spells available for selection
-        +elseif("filteredSpells.length === 0")
-          .empty-state
-            p {keywordFilter ? t('Spells.NoMatchingSpells') : 'No spells match your filter'}
-        +else()
-          +each("spellLevels as spellLevel")
-            .spell-level-group
-              h4.left.mt-sm.flexrow.spell-level-header.pointer(
-                on:click="{() => toggleSpellLevel(spellLevel)}"
-              )
-                .flex0.mr-xs
-                  +if("expandedLevels[spellLevel]")
-                    span [-]
-                  +else()
-                    span [+]
-                .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+          +elseif("filteredSpells.length === 0")
+            .empty-state
+              p {keywordFilter ? t('Spells.NoMatchingSpells') : 'No spells match your filter'}
+            +else()
+              +each("spellLevels as spellLevel")
+              .spell-level-group
+                h4.left.mt-sm.flexrow.spell-level-header.pointer(
+                  on:click!="{() => toggleSpellLevel(spellLevel)}"
+                )
+                  .flex0.mr-xs
+                    +if("expandedLevels[spellLevel]")
+                      span [-]
+                      +else()
+                        span [+]
+                  .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
 
-              +if("expandedLevels[spellLevel]")
-                ul.blank
-                  +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
-                    li.flexrow.spell-row.justify-flexrow-vertical
-                      .flex0.spell-details
-                        img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
+                +if("expandedLevels[spellLevel]")
+                  ul.blank
+                    +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
+                      li.flexrow.spell-row.justify-flexrow-vertical
+                        .flex0.spell-details
+                          img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
 
-                      .flex1.spell-info
-                        .flexrow
-                          .flex1.left.spell-name.gold
-                            +await("getEnrichedName(spell)")
-                              span {spell.name}
-                              +then("Html")
-                                span {@html Html}
-                              +catch("error")
+                        .flex1.spell-info
+                          .flexrow
+                            .flex1.left.spell-name.gold
+                              +await("getEnrichedName(spell)")
                                 span {spell.name}
-                        .flexrow.smalltext
-                          .flex1.left.spell-meta
-                            +if("getSchoolName(spell, true)")
-                              .flexrow.gap-10
-                                .flex2.flexrow
-                                  div School:
-                                  .badge {getSchoolName(spell, true)}
-                                .flex2.flexrow 
-                                  div Activation:
-                                  .badge {getCastingTimeDisplay(spell)}
+                                +then("Html")
+                                  span {@html Html}
+                                +catch("error")
+                                  span {spell.name}
+                          .flexrow.smalltext
+                            .flex1.left.spell-meta
+                              +if("getSchoolName(spell, true)")
+                                .flexrow.gap-10
+                                  .flex2.flexrow
+                                    div School:
+                                    .badge {getSchoolName(spell, true)}
+                                  .flex2.flexrow 
+                                    div Activation:
+                                    .badge {getCastingTimeDisplay(spell)}
 
-                      .spell-actions.mx-sm
-                        +if("isSpellSelected(spell)")
-                          .spell-selected
-                            i.fas.fa-check
-                        +else()
-                          button.add-btn(
-                            on:click|preventDefault="{() => addToSelection(spell)}"
-                          )
-                            i.fas.fa-plus
+                        .spell-actions.mx-sm
+                          +if("isSpellSelected(spell)")
+                            .spell-selected
+                              i.fas.fa-check
+                            +else()
+                              button.add-btn(
+                                on:click|preventDefault!="{() => addToSelection(spell)}"
+                              )
+                                i.fas.fa-plus
 
     .feat-spells-actions
       button.skip-btn(on:click="{handleSkip}") {t('Skip')}
