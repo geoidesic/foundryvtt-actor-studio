@@ -88,18 +88,16 @@ function parseEquipmentGoldOptions(item) {
       };
     });
     
-    // Check if this looks like Fighter-style variable gold (very different amounts like 4, 11, 155)
-    const goldAmounts = goldOptions.map(opt => opt.goldAmount);
-    const maxAmount = Math.max(...goldAmounts);
-    const minAmount = Math.min(...goldAmounts);
-    const hasLargeVariation = maxAmount > minAmount * 10; // 155 is much larger than 4 or 11
+    // Correct logic: 3+ choices = variable gold, 2 choices = equipment vs wealth
+    const hasVariableGold = choiceMatches.length >= 3;
     
-    if (hasLargeVariation) {
-      // This is true variable gold (like Fighter: 4, 11, 155)
+    if (hasVariableGold) {
+      // This is true variable gold (like Fighter: A, B, C with different equipment options)
       return { hasVariableGold: true, goldOptions, standardEquipmentGold: 0 };
     } else {
-      // This is standard equipment with multiple fixed options (like Artisan: 32, 50)
-      // Use the first option as the standard amount for calculation purposes
+      // This is standard equipment vs wealth choice (like Wizard: A = Equipment + 5gp, B = Starting wealth)
+      // Use the first option (equipment) as the standard amount for calculation purposes
+      const goldAmounts = goldOptions.map(opt => opt.goldAmount);
       return { hasVariableGold: false, goldOptions, standardEquipmentGold: goldAmounts[0] };
     }
   } else if (choiceMatches.length === 1) {
