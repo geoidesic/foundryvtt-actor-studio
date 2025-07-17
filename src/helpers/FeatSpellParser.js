@@ -123,7 +123,8 @@ function parseFeatDescription(featName, description, feat) {
         spellCount: 3, // 2 cantrips + 1 level 1 spell
         spellSources: [spellClass], // Specific class spell list
         levelRestriction: 1, // Cantrips and 1st level
-        cantrips: 2,
+        cantrips: 2, // MUST select 2 cantrips
+        spells: 1, // MUST select 1 level 1 spell
         choiceCount: 3, // Choose 2 cantrips + 1 level 1 spell
         description: `Choose two cantrips and one level 1 spell from the ${spellClass} spell list.`
       };
@@ -139,7 +140,8 @@ function parseFeatDescription(featName, description, feat) {
         spellCount: 3, // 2 cantrips + 1 level 1 spell
         spellSources: [], // Will be set after class selection
         levelRestriction: 1, // Cantrips and 1st level
-        cantrips: 2,
+        cantrips: 2, // MUST select 2 cantrips
+        spells: 1, // MUST select 1 level 1 spell
         choiceCount: 3, // Choose 2 cantrips + 1 level 1 spell
         requiresClassSelection: true, // Flag that class must be chosen first
         availableClasses: ['bard', 'cleric', 'druid', 'sorcerer', 'warlock', 'wizard'],
@@ -266,76 +268,168 @@ export async function getAvailableSpellsForFeat(requirement, actor) {
     
     let availableSpells = [];
     
+    window.GAS.log.d('[FEAT PARSER] Loading spells for requirement:', requirement.type, 'from packs:', spellPacks);
+    
     for (const packId of spellPacks) {
       const pack = game.packs.get(packId);
       if (!pack) continue;
       
-      const index = await pack.getIndex();
+      // Use index data first for performance like spellSelection.js does
+      const index = await pack.getIndex({fields: ['system.level', 'system.school']});
+      const indexEntries = Array.from(index.values());
       
-      // Get full spell documents for proper filtering
-      for (const indexEntry of index) {
-        try {
-          const spell = await pack.getDocument(indexEntry._id);
-          const spellData = spell.toObject();
-          
-          // Filter by spell level
-          const spellLevel = spellData.system?.level;
-          if (spellLevel !== undefined) {
-            if (requirement.type === 'magic-initiate' || requirement.type === 'magic-initiate-generic') {
-              // Magic initiate allows cantrips (level 0) and 1st level
-              if (spellLevel > 1) continue;
-            } else if (requirement.levelRestriction !== undefined && spellLevel > requirement.levelRestriction) {
-              continue;
+      window.GAS.log.d(`[FEAT PARSER] Processing ${indexEntries.length} spells from ${packId}`);
+      
+      // Filter using index data first (much faster)
+      const filteredIndexEntries = indexEntries.filter(entry => {
+        if (entry.type !== "spell") return false;
+        
+        // Filter by spell level using index data
+        const spellLevel = entry.system?.level;
+        if (spellLevel !== undefined) {
+          if (requirement.type === 'magic-initiate' || requirement.type === 'magic-initiate-generic') {
+            // Magic initiate allows cantrips (level 0) and 1st level
+            if (spellLevel > 1) return false;
+          } else if (requirement.levelRestriction !== undefined && spellLevel > requirement.levelRestriction) {
+            return false;
+          }
+        }
+        
+        // Filter by spell school using index data (for non-class-based feats)
+        if (requirement.type !== 'magic-initiate' && requirement.type !== 'magic-initiate-generic') {
+          if (requirement.spellSources && requirement.spellSources.length > 0) {
+            const school = entry.system?.school;
+            if (school && !requirement.spellSources.includes(school)) {
+              return false;
             }
           }
-          
-          // Filter by class for Magic Initiate
-          if (requirement.type === 'magic-initiate' || requirement.type === 'magic-initiate-generic') {
-            if (requirement.spellSources && requirement.spellSources.length > 0) {
+        }
+        
+        return true;
+      });
+      
+      window.GAS.log.d(`[FEAT PARSER] After index filtering: ${filteredIndexEntries.length} spells remain`);
+      
+      // For class-based filtering (Magic Initiate), we need full documents
+      // But only load the ones that passed the basic filters
+      if (requirement.type === 'magic-initiate' || requirement.type === 'magic-initiate-generic') {
+        if (requirement.spellSources && requirement.spellSources.length > 0) {
+          // Load full documents for class filtering
+          for (const indexEntry of filteredIndexEntries) {
+            try {
+              const spell = await pack.getDocument(indexEntry._id);
+              const spellData = spell.toObject();
+              
+              // Filter by class using full document data
               const spellClasses = spellData.system?.classes;
               if (spellClasses) {
-                // Check if spell belongs to any of the required classes
                 const classString = typeof spellClasses === 'string' ? spellClasses : 
                                   spellClasses.labels || JSON.stringify(spellClasses) || '';
                 const hasMatchingClass = requirement.spellSources.some(source => 
                   classString.toLowerCase().includes(source.toLowerCase())
                 );
                 if (!hasMatchingClass) continue;
+              } else if (spell.labels?.classes) {
+                // Check D&D 2024 style class data
+                const hasMatchingClass = requirement.spellSources.some(source => 
+                  spell.labels.classes.toLowerCase().includes(source.toLowerCase())
+                );
+                if (!hasMatchingClass) continue;
               }
-            }
-          } else {
-            // Filter by spell school for feats like Fey-Touched, Shadow-Touched
-            if (requirement.spellSources && requirement.spellSources.length > 0) {
-              const school = spellData.system?.school;
-              if (school && !requirement.spellSources.includes(school)) {
-                continue;
-              }
+              
+              // Add spell to available list
+              availableSpells.push({
+                _id: spell._id,
+                name: spell.name,
+                img: spell.img,
+                type: spell.type,
+                uuid: spell.uuid,
+                system: {
+                  level: spellData.system?.level || 0,
+                  school: spellData.system?.school || 'unknown',
+                  activation: spellData.system?.activation || {},
+                  components: spellData.system?.components || {},
+                  description: spellData.system?.description || { value: '' }
+                },
+                labels: spell.labels || {}
+              });
+              
+            } catch (spellError) {
+              window.GAS.log.w('[FEAT PARSER] Error loading spell:', indexEntry.name, spellError);
             }
           }
-          
-          // Filter by ritual tag if required
-          if (requirement.ritualOnly) {
-            const properties = spellData.system?.properties || [];
-            if (!properties.includes('ritual')) continue;
+        } else {
+          // No class specified yet, convert index entries to spell objects
+          availableSpells = filteredIndexEntries.map(entry => ({
+            _id: entry._id,
+            name: entry.name,
+            img: entry.img,
+            type: entry.type,
+            uuid: entry.uuid,
+            system: {
+              level: entry.system?.level || 0,
+              school: entry.system?.school || 'unknown'
+            }
+          }));
+        }
+      } else {
+        // For non-class-based feats, we can use index data directly (much faster)
+        // Only load full documents if we need ritual filtering
+        if (requirement.ritualOnly) {
+          for (const indexEntry of filteredIndexEntries) {
+            try {
+              const spell = await pack.getDocument(indexEntry._id);
+              const spellData = spell.toObject();
+              
+              // Filter by ritual tag
+              const properties = spellData.system?.properties || [];
+              if (!properties.includes('ritual')) continue;
+              
+              // Add spell to available list
+              availableSpells.push({
+                _id: spell._id,
+                name: spell.name,
+                img: spell.img,
+                type: spell.type,
+                uuid: spell.uuid,
+                system: {
+                  level: spellData.system?.level || 0,
+                  school: spellData.system?.school || 'unknown',
+                  activation: spellData.system?.activation || {},
+                  components: spellData.system?.components || {},
+                  description: spellData.system?.description || { value: '' }
+                },
+                labels: spell.labels || {}
+              });
+              
+            } catch (spellError) {
+              window.GAS.log.w('[FEAT PARSER] Error loading spell:', indexEntry.name, spellError);
+            }
           }
-          
-          // Add spell to available list
-          availableSpells.push({
-            _id: spellData._id,
-            name: spellData.name,
-            system: spellData.system,
-            uuid: spell.uuid
-          });
-          
-        } catch (spellError) {
-          window.GAS.log.w('[FEAT PARSER] Error loading spell:', indexEntry.name, spellError);
+        } else {
+          // Use index data directly for maximum performance
+          availableSpells = filteredIndexEntries.map(entry => ({
+            _id: entry._id,
+            name: entry.name,
+            img: entry.img,
+            type: entry.type,
+            uuid: entry.uuid,
+            system: {
+              level: entry.system?.level || 0,
+              school: entry.system?.school || 'unknown'
+            }
+          }));
         }
       }
     }
     
+    window.GAS.log.d(`[FEAT PARSER] Before deduplication: ${availableSpells.length} spells`);
+    
     // Remove duplicates and spells already known by the actor
     availableSpells = removeDuplicateSpells(availableSpells);
     availableSpells = await removeKnownSpells(availableSpells, actor);
+    
+    window.GAS.log.d(`[FEAT PARSER] Final result: ${availableSpells.length} spells`);
     
     return availableSpells;
     

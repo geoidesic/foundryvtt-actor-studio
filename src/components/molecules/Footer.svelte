@@ -38,6 +38,9 @@
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
+  import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
+  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+  import { parseFeatSpellRequirements, getAvailableSpellsForFeat } from "~/src/helpers/FeatSpellParser";
   
   import {
     getLevelByDropType,
@@ -86,6 +89,9 @@
 
   // Add state for processing spells
   const isProcessingSpells = writable(false);
+
+  // Add state for processing feat spells
+  const isProcessingFeatSpells = writable(false);
 
   // Store references for workflow functions
   const storeRefs = {
@@ -280,6 +286,41 @@
     await handleSkipSpellsLevelUp({
       stores: storeRefs
     });
+  }
+
+  // Handle feat spell completion
+  async function handleCompleteFeatSpells() {
+    isProcessingFeatSpells.set(true);
+    try {
+      const actor = get(actorInGame);
+      const isLevelUpWorkflow = get(isLevelUp);
+      
+      if (isLevelUpWorkflow) {
+        const levelUpFSM = getLevelUpFSM();
+        levelUpFSM.handle(LEVELUP_EVENTS.FEAT_SPELLS_COMPLETE);
+      } else {
+        const workflowFSM = getWorkflowFSM();
+        workflowFSM.handle(WORKFLOW_EVENTS.FEAT_SPELLS_COMPLETE);
+      }
+    } catch (err) {
+      window.GAS.log.e('[FOOTER] Error completing feat spell selection:', err);
+      ui.notifications?.error(err.message);
+    } finally {
+      isProcessingFeatSpells.set(false);
+    }
+  }
+
+  // Handle skipping feat spells
+  async function handleSkipFeatSpells() {
+    const isLevelUpWorkflow = get(isLevelUp);
+    
+    if (isLevelUpWorkflow) {
+      const levelUpFSM = getLevelUpFSM();
+      levelUpFSM.handle(LEVELUP_EVENTS.SKIP_FEAT_SPELLS);
+    } else {
+      const workflowFSM = getWorkflowFSM();
+      workflowFSM.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
+    }
   }
 
   // Function to generate a random color
@@ -491,6 +532,27 @@
                       )
                         span {t('Footer.SkipSpells')}
                         i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'feat-spells'")
+          .progress-container
+            .button-container
+              button.mt-xs(
+                type="button"
+                role="button"
+                on:mousedown="{handleCompleteFeatSpells}"
+                disabled="{$isProcessingFeatSpells}"
+              )
+                span {t('Complete')}
+                i.right.ml-md(class="fas fa-chevron-right")
+              +if("$isLevelUp")
+                button.mt-xs.secondary(
+                  type="button"
+                  role="button"
+                  on:mousedown="{handleSkipFeatSpells}"
+                  data-tooltip="{t('Skip')}"
+                )
+                  span {t('Skip')}
+                  i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
