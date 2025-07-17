@@ -4,6 +4,7 @@ import { readOnlyTabs, tabs, activeTab, levelUpTabs } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
+import { shouldShowFeatSpellSelection } from '~/src/helpers/FeatSpellParser';
 import Finity from 'finity';
 
 /**
@@ -13,6 +14,7 @@ export const LEVELUP_STATES = {
   IDLE: 'idle',
   SELECTING_CLASS_LEVEL: 'selecting_class_level',
   PROCESSING_ADVANCEMENTS: 'processing_advancements',
+  SELECTING_FEAT_SPELLS: 'selecting_feat_spells',
   SELECTING_SPELLS: 'selecting_spells',
   COMPLETED: 'completed',
   ERROR: 'error'
@@ -25,6 +27,8 @@ export const LEVELUP_EVENTS = {
   START_LEVEL_UP: 'start_level_up',
   CLASS_LEVEL_SELECTED: 'class_level_selected',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
+  FEAT_SPELLS_COMPLETE: 'feat_spells_complete',
+  SKIP_FEAT_SPELLS: 'skip_feat_spells',
   SPELLS_COMPLETE: 'spells_complete',
   SKIP_SPELLS: 'skip_spells',
   ERROR: 'error',
@@ -127,6 +131,12 @@ export function createLevelUpStateMachine() {
         await dropItemRegistry.advanceQueue(true);
       })
         .onSuccess()
+          .transitionTo('selecting_feat_spells').withCondition((context) => {
+            const actor = levelUpFSMContext.actor || get(actorInGame);
+            const shouldShow = shouldShowFeatSpellSelection(actor);
+            window.GAS.log.d('[LEVELUP] advancements_complete -> selecting_feat_spells condition:', shouldShow);
+            return shouldShow;
+          })
           .transitionTo('selecting_spells').withCondition((context) => {
             const actor = levelUpFSMContext.actor || get(actorInGame);
             const shouldShow = levelUpFSMContext._shouldShowSpellSelection(actor);
@@ -135,6 +145,63 @@ export function createLevelUpStateMachine() {
           })
           .transitionTo('completed') // Default fallback - no spell selection needed
         .onFailure().transitionTo('error')
+    
+    // SELECTING FEAT SPELLS STATE
+    .state('selecting_feat_spells')
+      .on('feat_spells_complete')
+        .transitionTo('selecting_spells').withCondition((context) => {
+          const actor = levelUpFSMContext.actor || get(actorInGame);
+          const shouldShow = levelUpFSMContext._shouldShowSpellSelection(actor);
+          window.GAS.log.d('[LEVELUP] feat_spells_complete -> selecting_spells condition:', shouldShow);
+          return shouldShow;
+        })
+        .transitionTo('completed')
+      .on('skip_feat_spells')
+        .transitionTo('selecting_spells').withCondition((context) => {
+          const actor = levelUpFSMContext.actor || get(actorInGame);
+          const shouldShow = levelUpFSMContext._shouldShowSpellSelection(actor);
+          window.GAS.log.d('[LEVELUP] skip_feat_spells -> selecting_spells condition:', shouldShow);
+          return shouldShow;
+        })
+        .transitionTo('completed')
+      .on('error').transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[LEVELUP] Entered SELECTING_FEAT_SPELLS state');
+        
+        // Always destroy advancement managers to prevent them from persisting
+        try {
+          destroyAdvancementManagers();
+          window.GAS.log.d('[LEVELUP] Destroyed advancement managers before feat spell selection');
+        } catch (error) {
+          window.GAS.log.e('[LEVELUP] Error destroying advancement managers:', error);
+        }
+        
+        // Add feat spells tab if it doesn't exist
+        const currentTabs = get(levelUpTabs);
+        const featSpellsTabExists = currentTabs.find(tab => tab.id === 'feat-spells');
+        
+        if (!featSpellsTabExists) {
+          levelUpTabs.update(tabs => [...tabs, { 
+            label: "Feat Spells", 
+            id: "feat-spells", 
+            component: "FeatSpells" 
+          }]);
+          window.GAS.log.d('[LEVELUP] Added feat spells tab to levelUpTabs');
+        }
+        
+        // Remove other tabs except level-up and feat-spells
+        levelUpTabs.update(tabs => {
+          const filteredTabs = tabs.filter(tab => 
+            tab.id === 'level-up' || tab.id === 'feat-spells'
+          );
+          window.GAS.log.d('[LEVELUP] Final levelUpTabs after filtering:', filteredTabs);
+          return filteredTabs;
+        });
+        activeTab.set("feat-spells");
+        window.GAS.log.d('[LEVELUP] Set active tab to feat-spells');
+      })
     
     // SELECTING SPELLS STATE
     .state('selecting_spells')

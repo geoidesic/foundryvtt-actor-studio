@@ -3,6 +3,9 @@ import { getContext, onMount, tick, onDestroy } from "svelte";
 import { MODULE_ID } from "~/src/helpers/constants";
 import { localize as t } from "~/src/helpers/Utility";
 
+// Accept the sheet prop even though we don't use it, to avoid the warning
+export let sheet = null;
+
 import { 
   classUuidForLevelUp, 
   levelUpClassObject,

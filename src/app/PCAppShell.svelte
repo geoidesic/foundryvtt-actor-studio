@@ -67,8 +67,23 @@
       
       // Start the LevelUp state machine
       const levelUpFSM = getLevelUpFSM();
-      levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
-      window.GAS.log.d('[PCAPP] Started LevelUp workflow');
+      const currentState = levelUpFSM.getCurrentState();
+      window.GAS.log.d('[PCAPP] Current LevelUp FSM state before starting:', currentState);
+      
+      // Reset FSM to idle if it's in a terminal state (completed or error)
+      if (currentState === 'completed' || currentState === 'error') {
+        window.GAS.log.d('[PCAPP] Resetting LevelUp FSM from terminal state:', currentState);
+        levelUpFSM.handle(LEVELUP_EVENTS.RESET);
+      }
+      
+      // Only send START_LEVEL_UP if we're in idle state
+      const finalState = levelUpFSM.getCurrentState();
+      if (finalState === 'idle') {
+        levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
+        window.GAS.log.d('[PCAPP] Started LevelUp workflow from idle state');
+      } else {
+        window.GAS.log.w('[PCAPP] LevelUp FSM not in idle state after reset:', finalState);
+      }
     } else {
       // Character creation workflow
       getWorkflowFSM()

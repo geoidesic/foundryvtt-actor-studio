@@ -837,6 +837,90 @@ export async function handleSkipSpellsLevelUp() {
 }
 
 /**
+ * Handles feat spell selection completion in LevelUp workflow
+ */
+export async function handleFeatSpellsCompleteLevelUp() {
+  window.GAS.log.d('[LEVELUP WORKFLOW] Handling feat spells completion');
+  
+  try {
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.FEAT_SPELLS_COMPLETE);
+    
+    window.GAS.log.d('[LEVELUP WORKFLOW] Feat spells completion handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[LEVELUP WORKFLOW] Error handling feat spells completion:', error);
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Handles skipping feat spell selection in LevelUp workflow
+ */
+export async function handleSkipFeatSpellsLevelUp() {
+  window.GAS.log.d('[LEVELUP WORKFLOW] Handling skip feat spells');
+  
+  try {
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.SKIP_FEAT_SPELLS);
+    
+    window.GAS.log.d('[LEVELUP WORKFLOW] Skip feat spells handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[LEVELUP WORKFLOW] Error handling skip feat spells:', error);
+    const levelUpFSM = getLevelUpFSM();
+    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Handles feat spell selection completion in character creation workflow
+ */
+export async function handleFeatSpellsCompleteCharacterCreation() {
+  window.GAS.log.d('[CHARACTER CREATION] Handling feat spells completion');
+  
+  try {
+    const workflowFSM = getWorkflowFSM();
+    workflowFSM.handle(WORKFLOW_EVENTS.FEAT_SPELLS_COMPLETE);
+    
+    window.GAS.log.d('[CHARACTER CREATION] Feat spells completion handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[CHARACTER CREATION] Error handling feat spells completion:', error);
+    const workflowFSM = getWorkflowFSM();
+    workflowFSM.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Handles skipping feat spell selection in character creation workflow
+ */
+export async function handleSkipFeatSpellsCharacterCreation() {
+  window.GAS.log.d('[CHARACTER CREATION] Handling skip feat spells');
+  
+  try {
+    const workflowFSM = getWorkflowFSM();
+    workflowFSM.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
+    
+    window.GAS.log.d('[CHARACTER CREATION] Skip feat spells handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[CHARACTER CREATION] Error handling skip feat spells:', error);
+    const workflowFSM = getWorkflowFSM();
+    workflowFSM.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
  * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)
  * Decides which workflow state to transition to next, based on settings and actor
  * @param {object} context - Finity workflow context (should include actor)
