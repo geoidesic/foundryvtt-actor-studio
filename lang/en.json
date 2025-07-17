@@ -43,6 +43,8 @@
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
     "Item": "Item",
+    "Skip": "Skip",
+    "Complete": "Complete",
     "Type": "Type",
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
@@ -404,7 +406,9 @@
       "LoadingSpells": "Loading available spells...",
       "Complete": "Complete",
       "Skip": "Skip",
-      "Retry": "Retry"
+      "Retry": "Retry",
+      "SelectedSpells": "Selected Spells",
+      "AvailableSpells":"Available Spells"
     },
     "SpellSchool": {
       "abj": "Abjuration",
