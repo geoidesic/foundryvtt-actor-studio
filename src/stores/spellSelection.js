@@ -144,20 +144,21 @@ export const currentSpellCounts = derived(
 export const spellProgress = derived(
   [spellLimits, currentSpellCounts, isLevelUp],
   ([$spellLimits, $currentSpellCounts, $isLevelUp]) => {
-    const totalRequired = $spellLimits.cantrips + ($spellLimits.spells === 999 ? 0 : $spellLimits.spells);
+    // Calculate total required spells correctly
+    // Don't treat 999 as 0 - that's for available spells, not required spells
+    const totalRequired = $spellLimits.cantrips + $spellLimits.spells;
     const totalSelected = $currentSpellCounts.total;
     
-    // In level-up mode, spell selection is optional (can be skipped), so always show 100%
-    // In character creation mode, show actual progress
+    // Show actual progress for both character creation and level-up
     let progressPercentage = 100;
     let isComplete = true;
     
-    if (!$isLevelUp && totalRequired > 0) {
-      // Character creation: require actual spell selection
+    if (totalRequired > 0) {
+      // Show actual spell selection progress
       progressPercentage = Math.round((totalSelected / totalRequired) * 100);
       isComplete = totalSelected >= totalRequired;
     }
-    // Level-up mode: always 100% since spells can be skipped
+    // If no spells required, always complete
 
     return {
       totalRequired,

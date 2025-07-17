@@ -185,8 +185,12 @@ const progressCalculators = {
   spells: ({ spellProgress }) => {
     if (!spellProgress) return 0;
     
-    // If no spells are required (non-spellcasting class), show 100%
-    if (spellProgress.totalRequired === 0) return 100;
+    // If no spells are required, only show 100% if spell selection shouldn't be shown at all
+    if (spellProgress.totalRequired === 0) {
+      // For non-spellcasting classes, spell selection should be disabled/hidden
+      // Don't show 100% if the user is looking at a spell selection UI that shouldn't exist
+      return 0;
+    }
     
     // Return the calculated percentage from spellProgress
     return Math.min(100, spellProgress.progressPercentage);
