@@ -43,6 +43,8 @@
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
     "Item": "Item",
+    "Skip": "Skip",
+    "Complete": "Complete",
     "Type": "Type",
     "NoAdvancements": "No advancements for this level",
     "PCTitle": "Player Character",
@@ -392,6 +394,33 @@
       "Spells": "Spells",
       "Cantrips": "Cantrips",
       "Level": "Lvl"
-    }
+    },
+    "FeatSpells": {
+      "Title": "Feat Spell Selection",
+      "Description": "Some of your feats grant access to additional spells. Please select the required spells for each feat.",
+      "Loading": "Loading feat requirements...",
+      "Error": "Error loading feat spell requirements: {error}",
+      "NoRequirements": "No feat spell selections are required.",
+      "ChooseCount": "Choose {count}",
+      "ManualReview": "This feat requires manual review. Please add the spells manually after completing the level-up process.",
+      "LoadingSpells": "Loading available spells...",
+      "Complete": "Complete",
+      "Skip": "Skip",
+      "Retry": "Retry",
+      "SelectedSpells": "Selected Spells",
+      "AvailableSpells":"Available Spells",
+      "NoSpellsSelected": "No spells selected"
+    },
+    "SpellSchool": {
+      "abj": "Abjuration",
+      "con": "Conjuration", 
+      "div": "Divination",
+      "enc": "Enchantment",
+      "evo": "Evocation",
+      "ill": "Illusion",
+      "nec": "Necromancy",
+      "trs": "Transmutation"
+    },
+    "Cantrip": "Cantrip"
   }
 }

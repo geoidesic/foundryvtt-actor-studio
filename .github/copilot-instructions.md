@@ -14,6 +14,7 @@
 - NB: ensure you run the tests before claiming success
 
 **Frontend Stack**:
+- **CRITICAL**: ALL Svelte components MUST use Pug templates with `<template lang="pug">` - NEVER use standard HTML markup
 - Pug templates with Svelte preprocessing (NOT standard Pug - see `.cursor/rules/`)
 - Conditional logic must be properly nested: `+else()` indented one level deeper than `+if()`
 - Avoid long expressions in attributes - extract to script functions

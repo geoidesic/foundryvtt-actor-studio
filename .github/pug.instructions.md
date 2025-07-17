@@ -1,5 +1,4 @@
 ---
-copilot: 1.102.0
 applyTo: "**/*.svelte"
 description: Instructions for Svelte components using Pug preprocessing
 ---
@@ -20,17 +19,74 @@ description: Instructions for Svelte components using Pug preprocessing
 - Use Svelte 5 with Pug for markup.
 - Use `<template lang="pug">` for Pug templates.
 - Support Svelte directives with Pug mixins: `+if("condition")`, `+each("items as item")`, `+await("promise")`.
+- **CRITICAL**: `+else()` and `+elseif()` must be indented one level deeper than their `+if()`.
 - Example:
   ```pug
   <template lang="pug">
     +if("condition")
       p Content
-      +else
+      +else()
         p Else content
   </template>
   ```
 - Use TypeScript: `<script lang="ts">`.
 - Declare props: `type Props = { ... }; let { prop } = $props();`.
+
+## Organism Component Structure
+**Top-level components (organisms) should follow this pattern:**
+- Organisms contain only **containers and display conditionals**
+- Each container has a **header plus a single element or sub-components**
+- **Actions belong in Footer.svelte** controlled via stores, not in organism templates
+- Sub-components (molecules/atoms) handle specific functionality
+
+**Example organism structure:**
+```pug
+.main-container.flexrow
+  +if("isLoading")
+    Loading
+  +if("!isLoading")
+    .left-panel
+      h3 Panel Title
+      SubComponentA
+      SubComponentB
+    .right-panel  
+      h3 Another Title
+      SubComponentC
+```
+
+**Actions Pattern:**
+- Move all buttons/actions from organisms to Footer.svelte
+- Use conditional rendering in Footer based on active tab/state
+- Control via stores rather than direct function calls in organisms
+
+**Conditional Logic Best Practices:**
+- **Avoid nested +else() when possible** - use separate +if() conditions at the same level instead
+- Prefer `+if("!condition")` over `+else()` to avoid nesting complexity
+- **Don't add redundant conditionals** - if workflow state machines already handle showing/hiding tabs, don't duplicate that logic in templates
+- **Use ui.notifications.error()** in script blocks instead of error state elements in templates
+- Only use +elseif() and +else() when you genuinely need mutually exclusive conditions
+
+**Example of good conditional structure:**
+```pug
+.container
+  +if("isLoading")
+    LoadingComponent
+  +if("!isLoading && hasData")
+    DataComponent  
+  +if("!isLoading && !hasData")
+    EmptyStateComponent
+```
+
+**Avoid this pattern:**
+```pug
+.container
+  +if("isLoading")
+    LoadingComponent
+    +elseif("hasData")
+      DataComponent
+      +else()
+        EmptyStateComponent
+```
 
 ## Element Attributes
 - Static attributes: `div(class="class" data-id="id")`.
@@ -97,6 +153,48 @@ Apart from those, the Pug preprocessor accepts:
 
 Some of Svelte's template syntax is invalid in Pug. `svelte-preprocess` provides some pug mixins to represent svelte's `{#...}{/...}` and `{@...}` blocks: `+if()`, `+else()`, `+elseif()`, `+each()`, `+key()`, `+await()`, `+then()`, `+catch()`, `+html()`, `+const()`, `+debug()`, `+snippet()`, `+render()`.
 
+**CRITICAL INDENTATION RULE**: In Pug conditional blocks within Svelte, `+else()` and `+elseif()` must be indented ONE LEVEL DEEPER than their corresponding `+if()`. When you have nested conditionals (like `+elseif()` followed by `+else()`), the `+else()` must be indented under the `+elseif()`.
+
+CORRECT:
+```pug
++if("condition")
+  .content
+    p Some content
+  +elseif("otherCondition") 
+    .other-content
+      p Other content
+    +else()
+      .default-content
+        p Default content
+```
+
+INCORRECT (will cause compilation errors):
+```pug
++if("condition")
+  .content
+    p Some content
++elseif("otherCondition")  // ❌ Wrong indentation - same level as +if
+  .other-content
+    p Other content
++else()  // ❌ Wrong indentation - same level as +if
+  .default-content
+    p Default content
+```
+
+ALSO INCORRECT (nested else not properly indented):
+```pug
++if("condition")
+  .content
+    p Some content
+  +elseif("otherCondition") 
+    .other-content
+      p Other content
+  +else()  // ❌ Wrong - should be under +elseif, not +if
+    .default-content
+      p Default content
+```
+
+Example with nested structure:
 ```pug
 ul
   +if('posts && posts.length > 1')
@@ -115,15 +213,21 @@ Pug encodes everything inside an element attribute to html entities, so `attr="{
 button(disabled!="{foo && bar}")
 ```
 
-This is also necessary to pass callbacks:
+**CRITICAL**: This is also necessary to pass callbacks and event handlers:
 
 ```pug
 button(on:click!="{(e) => doTheThing(e)}")
+input(on:change!="{(e) => handleChange(e)}")
+```
+
+**WRONG** (will cause encoding issues):
+```pug
+button(on:click="{(e) => doTheThing(e)}")  // ❌ Will encode the function
 ```
 
 It is not possible to use template literals for attribute values. You can't write `` attr=`Hello ${value ? 'Foo' : 'Bar'}` ``, instead write `attr="Hello {value ? 'Foo' : 'Bar'}"`.
 
-**Spreading props:**
+**Event Handler Rule**: ALWAYS use `!=` for event handlers (`on:click`, `on:change`, `on:input`, etc.) to prevent HTML entity encoding.
 
 To spread props into a pug element, wrap the `{...object}` expression with quotes `"`.
 
@@ -147,3 +251,52 @@ Syntax to use Svelte Element directives with Pug
 input(bind:value="{foo}")
 input(on:input="{bar}")
 ```
+
+## Common Issues and Troubleshooting
+
+### Compilation Errors with Conditionals
+- **Error**: "Cannot have an {:else if ...} block outside an {#if ...} block"
+- **Cause**: Incorrect indentation of `+elseif()` or `+else()` blocks
+- **Solution**: Ensure `+elseif()` and `+else()` are indented one level deeper than their corresponding `+if()`
+- **Complex nesting**: When `+else()` follows `+elseif()`, the `+else()` must be indented under the `+elseif()`, not the original `+if()`
+
+### Template Structure Problems
+- **Error**: HTTP 500 errors when loading Svelte components
+- **Cause**: Malformed Pug template due to incorrect conditional nesting
+- **Solution**: Check indentation of all conditional blocks and ensure proper nesting structure
+
+### Event Handler Issues
+- **Issue**: Event handlers not working or causing encoding issues
+- **Cause**: Using `=` instead of `!=` for event handlers
+- **Solution**: Use `!=` operator for ALL event handlers: `on:click!="{() => handleClick()}"`
+- **Examples of correct usage**:
+  ```pug
+  button(on:click!="{() => doSomething()}")
+  input(on:change!="{(e) => handleChange(e)}")
+  select(on:change!="{(e) => onClassSelected(e.target.value)}")
+  ```
+
+### Indentation Debugging
+- **Problem**: Confusing nested conditional structures
+- **Solution**: Each conditional level should be clearly indented:
+  ```pug
+  +if("level1")
+    content
+    +elseif("level1-alt")
+      content
+      +else()
+        content
+  ```
+- **Rule**: `+else()` always belongs to the most recent conditional at the same or deeper level
+
+### FINAL CHECK: Indentation Purpose
+**Remember: Indentation in Pug replaces closing tags!** 
+
+If a conditional (+elseif, +else) is at the same indentation level as its counterpart (+if), then the counterpart will NOT get its proper closing tag. This is the root cause of most conditional indentation errors.
+
+Before finalizing any conditional structure, ask yourself:
+- "Which element should contain the closing tag for this conditional?"
+- "Is my indentation creating the proper parent-child scope relationship?"  
+- "Will this indentation generate the correct HTML structure with proper opening/closing tags?"
+
+This mental model helps catch indentation errors before they cause template compilation failures.
