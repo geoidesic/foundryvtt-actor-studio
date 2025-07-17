@@ -1,6 +1,6 @@
 <script>
-  import { onMount, getContext } from "svelte";
-  import { localize as t } from "~/src/helpers/Utility";
+  import { onMount, getContext, tick } from "svelte";
+  import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { actorInGame, isLevelUp } from "~/src/stores/index";
   import { parseFeatSpellRequirements, getAvailableSpellsForFeat } from "~/src/helpers/FeatSpellParser";
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
@@ -17,10 +17,32 @@
   let availableSpells = new Map(); // Map of featId -> available spell choices
   let isLoading = true;
   let error = null;
+  let keywordFilter = '';
+  let expandedLevels = {};
+  let scrolled = false;
   
   // Get the current actor and workflow type
   $: actor = $actorInGame;
   $: isLevelUpWorkflow = $isLevelUp;
+  
+  // Cache for enriched spell names
+  let enrichedNames = {};
+
+  // Helper to get enriched HTML for spell name
+  async function getEnrichedName(spell) {
+    const key = spell.uuid || spell._id || spell.id;
+    if (!enrichedNames[key]) {
+      // Create a UUID link if we have a UUID, otherwise fall back to plain name
+      let content;
+      if (spell.uuid) {
+        content = `@UUID[${spell.uuid}]{${spell.name}}`;
+      } else {
+        content = spell.name || "";
+      }
+      enrichedNames[key] = await enrichHTML(content, { async: true });
+    }
+    return enrichedNames[key];
+  }
   
   /**
    * Initialize component on mount
@@ -89,15 +111,39 @@
   /**
    * Handle spell selection for a feat
    */
-  function onSpellSelected(featId, spellId, spellName, isSelected) {
+  async function onSpellSelected(featId, spell, isSelected) {
+    await tick();
     const currentSelected = selectedSpells.get(featId) || [];
+    const requirement = featRequirements.find(req => req.featId === featId);
     
     if (isSelected) {
+      // Check selection limits
+      const spellLevel = spell.system?.level || 0;
+      const isCantrip = spellLevel === 0;
+      
+      if (requirement.cantrips && requirement.spells) {
+        // Magic Initiate style - separate cantrip and spell limits
+        const currentCantrips = currentSelected.filter(s => (s.system?.level || 0) === 0).length;
+        const currentNonCantrips = currentSelected.filter(s => (s.system?.level || 0) > 0).length;
+        
+        if (isCantrip && currentCantrips >= requirement.cantrips) {
+          ui.notifications?.warn(`You can only select ${requirement.cantrips} cantrips for ${requirement.featName}`);
+          return;
+        }
+        if (!isCantrip && currentNonCantrips >= requirement.spells) {
+          ui.notifications?.warn(`You can only select ${requirement.spells} level 1 spell for ${requirement.featName}`);
+          return;
+        }
+      } else if (currentSelected.length >= requirement.choiceCount) {
+        ui.notifications?.warn(`You can only select ${requirement.choiceCount} spells for ${requirement.featName}`);
+        return;
+      }
+      
       // Add spell to selection
-      selectedSpells.set(featId, [...currentSelected, { id: spellId, name: spellName }]);
+      selectedSpells.set(featId, [...currentSelected, spell]);
     } else {
       // Remove spell from selection
-      selectedSpells.set(featId, currentSelected.filter(s => s.id !== spellId));
+      selectedSpells.set(featId, currentSelected.filter(s => s._id !== spell._id));
     }
     
     // Trigger reactivity
@@ -133,7 +179,69 @@
       selectedClasses = selectedClasses;
     }
   }
-
+  
+  // Get all available spells from all feats for the spell browser
+  $: allAvailableSpells = Array.from(availableSpells.values()).flat();
+  
+  // Filter spells by keyword
+  $: filteredSpells = allAvailableSpells.filter(spell => 
+    spell.name.toLowerCase().includes(keywordFilter.toLowerCase())
+  );
+  
+  // Group spells by level
+  $: spellsByLevel = filteredSpells.reduce((acc, spell) => {
+    const level = spell.system?.level || 0;
+    const levelKey = level === 0 ? 'Cantrips' : `Level ${level}`;
+    if (!acc[levelKey]) {
+      acc[levelKey] = [];
+    }
+    acc[levelKey].push(spell);
+    return acc;
+  }, {});
+  
+  $: spellLevels = Object.keys(spellsByLevel).sort((a, b) => {
+    if (a === 'Cantrips') return -1;
+    if (b === 'Cantrips') return 1;
+    const levelA = parseInt(a.replace('Level ', ''));
+    const levelB = parseInt(b.replace('Level ', ''));
+    return levelA - levelB;
+  });
+  
+  // Get all selected spells for display
+  $: allSelectedSpells = Array.from(selectedSpells.entries()).flatMap(([featId, spells]) => 
+    spells.map(spell => ({ featId, spell }))
+  );
+  
+  // Toggle spell level expansion
+  function toggleSpellLevel(level) {
+    expandedLevels[level] = !expandedLevels[level];
+    expandedLevels = { ...expandedLevels };
+  }
+  
+  // Check if a spell is already selected
+  function isSpellSelected(spell) {
+    return allSelectedSpells.some(selected => selected.spell._id === spell._id);
+  }
+  
+  // Add spell to selection
+  async function addToSelection(spell) {
+    // Find which feat this spell belongs to
+    const featId = Array.from(availableSpells.entries()).find(([fId, spells]) => 
+      spells.some(s => s._id === spell._id)
+    )?.[0];
+    
+    if (featId) {
+      await onSpellSelected(featId, spell, true);
+    }
+  }
+  
+  // Remove spell from selection
+  function removeFromSelection(featId, spellId) {
+    const currentSelected = selectedSpells.get(featId) || [];
+    selectedSpells.set(featId, currentSelected.filter(s => s._id !== spellId));
+    selectedSpells = selectedSpells;
+  }
+  
   /**
    * Check if all required selections are complete
    */
@@ -145,7 +253,16 @@
       }
       
       const selected = selectedSpells.get(requirement.featId) || [];
-      if (selected.length < requirement.choiceCount) {
+      
+      if (requirement.cantrips && requirement.spells) {
+        // Magic Initiate style - check separate cantrip and spell counts
+        const selectedCantrips = selected.filter(s => (s.system?.level || 0) === 0).length;
+        const selectedNonCantrips = selected.filter(s => (s.system?.level || 0) > 0).length;
+        
+        if (selectedCantrips < requirement.cantrips || selectedNonCantrips < requirement.spells) {
+          return false;
+        }
+      } else if (selected.length < requirement.choiceCount) {
         return false;
       }
     }
@@ -209,7 +326,7 @@
   async function addSpellToActor(spell, requirement) {
     try {
       // Find the spell in available packs
-      const spellData = await findSpellData(spell.id || spell.name);
+      const spellData = await findSpellData(spell._id || spell.name);
       
       if (!spellData) {
         window.GAS.log.w('[FEAT SPELLS] Could not find spell data for:', spell.name);
@@ -269,457 +386,527 @@
     
     return null;
   }
+  
+  // Get spell school display name
+  function getSchoolName(spell, forList = false) {
+    const school = spell.system?.school;
+    if (!school || school === 'Unknown') {
+      return forList ? '' : '—';
+    }
+    return school;
+  }
+
+  // Get spell level display
+  function getSpellLevelDisplay(spell) {
+    const level = spell.system?.level || 0;
+    return level === 0 ? t('Spells.Cantrip') : `${t('Spells.Level')} ${level}`;
+  }
+
+  // Get casting time display
+  function getCastingTimeDisplay(spell) {
+    return spell.system?.activation?.value && spell.system?.activation?.type 
+      ? `${spell.system.activation.value} ${spell.system.activation.type}`
+        : spell.system?.activation?.type ? spell.system?.activation?.type
+      : 'Unknown';
+  }
 </script>
 
-<div class="feat-spells-container">
-  {#if isLoading}
-    <div class="loading-state">
-      <i class="fas fa-spinner fa-spin"></i>
-      <span>{t('FeatSpells.Loading')}</span>
-    </div>
-  {:else if error}
-    <div class="error-state">
-      <i class="fas fa-exclamation-triangle"></i>
-      <span>{t('FeatSpells.Error', { error })}</span>
-      <button class="retry-btn" on:click={loadFeatSpellRequirements}>{t('Retry')}</button>
-    </div>
-  {:else if featRequirements.length === 0}
-    <div class="no-requirements">
-      <i class="fas fa-info-circle"></i>
-      <span>{t('FeatSpells.NoRequirements')}</span>
-    </div>
-  {:else}
-    <div class="feat-spells-content">
-      <h2>{t('FeatSpells.Title')}</h2>
+<template lang="pug">
+.feat-spells-container
+  +if("isLoading")
+    .loading-state
+      i.fas.fa-spinner.fa-spin
+      span {t('FeatSpells.Loading')}
+  +elseif("error")
+    .error-state
+      i.fas.fa-exclamation-triangle
+      span {t('FeatSpells.Error', { error })}
+      button.retry-btn(on:click="{loadFeatSpellRequirements}") {t('Retry')}
+  +elseif("featRequirements.length === 0")
+    .no-requirements
+      i.fas.fa-info-circle
+      span {t('FeatSpells.NoRequirements')}
+  +else()
+    .feat-spells-tab
+      .left-panel
+        h3 {t('FeatSpells.SelectedSpells')}
+        
+        // Class selection areas for feats that require it
+        +each("featRequirements as requirement")
+          +if("requirement.requiresClassSelection")
+            .class-selection-section
+              h4 {requirement.featName}
+              .class-selection
+                label.filter-label(for="class-select-{requirement.featId}") Choose Spell Class:
+                select.filter-select(
+                  id="class-select-{requirement.featId}"
+                  value="{selectedClasses.get(requirement.featId) || ''}"
+                  on:change="{(e) => onClassSelected(requirement.featId, e.target.value)}"
+                )
+                  option(value="") Select a class...
+                  +each("requirement.availableClasses as className")
+                    option(value="{className}") {className.charAt(0).toUpperCase() + className.slice(1)}
+        
+        // Selected spells display
+        .selected-spells
+          +if("allSelectedSpells.length === 0")
+            .empty-selection
+              p {t('FeatSpells.NoSpellsSelected')}
+          +else()
+            +each("allSelectedSpells as selectedItem")
+              .selected-spell
+                .spell-col1
+                  img.spell-icon(alt="{selectedItem.spell.name}" src="{selectedItem.spell.img}")
+                .spell-col2.left
+                  .spell-name
+                    +await("getEnrichedName(selectedItem.spell)")
+                      span {selectedItem.spell.name}
+                      +then("Html")
+                        span {@html Html}
+                      +catch("error")
+                        span {selectedItem.spell.name}
+                  .spell-subdetails
+                    span.spell-level {getSpellLevelDisplay(selectedItem.spell)}
+                    span.spell-school {getSchoolName(selectedItem.spell)}
+                .spell-col3
+                  button.remove-btn(
+                    on:click="{() => removeFromSelection(selectedItem.featId, selectedItem.spell._id)}"
+                  )
+                    i.fas.fa-trash
+        
+        // Fixed spells display
+        +each("featRequirements as requirement")
+          +if("requirement.fixedSpells && requirement.fixedSpells.length > 0")
+            .fixed-spells-section
+              h4 {requirement.featName} - Granted Spells
+              .fixed-spells
+                +each("requirement.fixedSpells as spellName")
+                  .fixed-spell
+                    i.fas.fa-magic
+                    span {spellName}
+
+      .right-panel.spell-list
+        h3 {t('FeatSpells.AvailableSpells')}
+        .filter-container.mb-sm
+          input.keyword-filter(
+            type="text" 
+            bind:value="{keywordFilter}" 
+            placeholder="{t('Spells.FilterPlaceholder')}"
+          )
+        
+        +if("allAvailableSpells.length === 0")
+          .empty-state
+            p No spells available for selection
+        +elseif("filteredSpells.length === 0")
+          .empty-state
+            p {keywordFilter ? t('Spells.NoMatchingSpells') : 'No spells match your filter'}
+        +else()
+          +each("spellLevels as spellLevel")
+            .spell-level-group
+              h4.left.mt-sm.flexrow.spell-level-header.pointer(
+                on:click="{() => toggleSpellLevel(spellLevel)}"
+              )
+                .flex0.mr-xs
+                  +if("expandedLevels[spellLevel]")
+                    span [-]
+                  +else()
+                    span [+]
+                .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+
+              +if("expandedLevels[spellLevel]")
+                ul.blank
+                  +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
+                    li.flexrow.spell-row.justify-flexrow-vertical
+                      .flex0.spell-details
+                        img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
+
+                      .flex1.spell-info
+                        .flexrow
+                          .flex1.left.spell-name.gold
+                            +await("getEnrichedName(spell)")
+                              span {spell.name}
+                              +then("Html")
+                                span {@html Html}
+                              +catch("error")
+                                span {spell.name}
+                        .flexrow.smalltext
+                          .flex1.left.spell-meta
+                            +if("getSchoolName(spell, true)")
+                              .flexrow.gap-10
+                                .flex2.flexrow
+                                  div School:
+                                  .badge {getSchoolName(spell, true)}
+                                .flex2.flexrow 
+                                  div Activation:
+                                  .badge {getCastingTimeDisplay(spell)}
+
+                      .spell-actions.mx-sm
+                        +if("isSpellSelected(spell)")
+                          .spell-selected
+                            i.fas.fa-check
+                        +else()
+                          button.add-btn(
+                            on:click|preventDefault="{() => addToSelection(spell)}"
+                          )
+                            i.fas.fa-plus
+
+    .feat-spells-actions
+      button.skip-btn(on:click="{handleSkip}") {t('Skip')}
+      button.complete-btn(
+        disabled="{!areAllSelectionsComplete()}" 
+        on:click="{handleComplete}"
+      ) {t('Complete')}
+</template>
+
+<style lang="sass">
+  @import "../../../../../styles/Mixins.sass"
+
+  .badge
+    +badge(var(--color-cool-3), 0.5rem)
+    margin-top: -2px
+    margin-left: -8px
+
+  :global(.GAS.theme-dark .selected-spell .spell-level)
+    color: silver
+
+  :global(.GAS.theme-dark .spell-row .spell-meta .spell-school)
+    color: silver
+  :global(.GAS.theme-dark .selected-spell .spell-school)
+    color: silver !important
+
+  .feat-spells-container
+    height: 100%
+    width: 100%
+    display: flex
+    flex-direction: column
+
+  ul.blank
+     padding: 0 
+
+  .loading-state, .error-state, .no-requirements
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    height: 100%
+    gap: 1rem
+    color: var(--color-text-dark-5, #6c757d)
+
+  .error-state
+    color: var(--color-text-danger, #dc3545)
+
+  .retry-btn
+    padding: 0.5rem 1rem
+    background: var(--color-bg-btn, #007bff)
+    color: white
+    border: none
+    border-radius: 4px
+    cursor: pointer
+
+  .feat-spells-tab
+    display: flex
+    height: 100%
+    width: 100%
+    flex: 1
+
+  .left-panel
+    flex: 1
+    max-width: 40%
+    min-width: 250px
+    border-right: 1px solid var(--color-border-light-tertiary)
+    padding: 1rem
+    overflow-y: auto
+    
+    h3, h4
+      margin-bottom: 0.5rem
+      color: var(--color-text-dark-primary, #212529)
+
+  .class-selection-section
+    margin-bottom: 1rem
+    padding: 1rem
+    background: var(--color-bg-option, #f8f9fa)
+    border: 1px solid var(--color-border-light-tertiary, #e9ecef)
+    border-radius: 6px
+
+    h4
+      margin: 0 0 0.75rem 0
+      font-size: 1rem
+      color: var(--color-text-dark-primary, #212529)
+
+  .class-selection
+    .filter-label
+      display: block
+      margin-bottom: 0.5rem
+      font-weight: 500
+      color: var(--color-text-dark-primary, #212529)
+      font-size: 0.9rem
+
+    .filter-select
+      width: 100%
+      padding: 0.5rem
+      border: 1px solid var(--color-border-light, #dee2e6)
+      border-radius: 4px
+      background: var(--color-bg, white)
+      color: var(--color-text-dark-primary, #212529)
+      font-size: 0.9rem
+
+      &:focus
+        outline: none
+        border-color: var(--color-border-focus, #007bff)
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+
+  .selected-spells
+    margin-bottom: 1rem
+
+    .empty-selection
+      text-align: center
+      padding: 2rem 1rem
+      color: var(--color-text-dark-5, #6c757d)
+      font-style: italic
+
+  .selected-spell
+    display: flex
+    align-items: center
+    gap: 0.75rem
+    padding: 0.75rem
+    margin-bottom: 0.5rem
+    background: var(--color-bg, white)
+    border: 1px solid var(--color-border-light-tertiary, #e9ecef)
+    border-radius: 4px
+
+    .spell-col1
+      flex-shrink: 0
       
-      <p class="description">{t('FeatSpells.Description')}</p>
-      
-      {#each featRequirements as requirement}
-        <div class="feat-requirement">
-          <div class="feat-header">
-            <h3 class="feat-name">{requirement.featName}</h3>
-            {#if requirement.choiceCount > 0}
-              <div class="spell-count">
-                {#if requirement.cantrips}
-                  <span class="cantrip-count">{requirement.cantrips} cantrips</span>
-                {/if}
-                {#if requirement.cantrips && (requirement.choiceCount - requirement.cantrips) > 0}
-                  <span class="separator">+</span>
-                {/if}
-                {#if (requirement.choiceCount - (requirement.cantrips || 0)) > 0}
-                  <span class="spell-level-count">{requirement.choiceCount - (requirement.cantrips || 0)} level 1 spell{(requirement.choiceCount - (requirement.cantrips || 0)) > 1 ? 's' : ''}</span>
-                {/if}
-              </div>
-            {/if}
-          </div>
-          
-          <p class="feat-description">{requirement.description}</p>
-          
-          {#if requirement.requiresClassSelection}
-            <!-- Class Selection for Magic Initiate -->
-            <div class="class-selection">
-              <label class="filter-label">Choose Spell Class:</label>
-              <select 
-                class="filter-select"
-                value={selectedClasses.get(requirement.featId) || ''}
-                on:change={(e) => onClassSelected(requirement.featId, e.target.value)}
-              >
-                <option value="">Select a class...</option>
-                {#each requirement.availableClasses as className}
-                  <option value={className}>{className.charAt(0).toUpperCase() + className.slice(1)}</option>
-                {/each}
-              </select>
-            </div>
-          {/if}
-          
-          <!-- Show spells only if class is selected (for generic) or not needed -->
-          {#if !requirement.requiresClassSelection || selectedClasses.get(requirement.featId)}
-            <div class="spell-selection">
-              {#if requirement.choiceCount > 0}
-                <div class="spell-grid">
-                  {#if availableSpells.has(requirement.featId)}
-                    {#each availableSpells.get(requirement.featId) as spell}
-                      {@const isSelected = (selectedSpells.get(requirement.featId) || []).some(s => s.id === spell._id)}
-                      {@const currentCount = (selectedSpells.get(requirement.featId) || []).length}
-                      {@const isDisabled = currentCount >= requirement.choiceCount && !isSelected}
-                      
-                      <div class="spell-item" class:selected={isSelected} class:disabled={isDisabled}>
-                        <label class="spell-label">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={isDisabled}
-                            on:change={(e) => onSpellSelected(requirement.featId, spell._id, spell.name, e.target.checked)}
-                          />
-                          <div class="spell-info">
-                            <div class="spell-name">{spell.name}</div>
-                            <div class="spell-details">
-                              <span class="spell-level">
-                                {#if spell.system?.level === 0}
-                                  <span class="cantrip">Cantrip</span>
-                                {:else}
-                                  Level {spell.system?.level}
-                                {/if}
-                              </span>
-                              {#if spell.system?.school}
-                                <span class="spell-school">{spell.system.school.charAt(0).toUpperCase() + spell.system.school.slice(1)}</span>
-                              {/if}
-                            </div>
-                          </div>
-                        </label>
-                      </div>
-                    {/each}
-                  {:else}
-                    <div class="loading-spells">
-                      <i class="fas fa-spinner fa-spin"></i>
-                      <span>Loading spells...</span>
-                    </div>
-                  {/if}
-                </div>
-              {/if}
-              
-              {#if requirement.fixedSpells && requirement.fixedSpells.length > 0}
-                <div class="fixed-spells">
-                  <h4>Granted Spells:</h4>
-                  <div class="spell-list">
-                    {#each requirement.fixedSpells as spellName}
-                      <div class="fixed-spell">{spellName}</div>
-                    {/each}
-                  </div>
-                </div>
-              {/if}
-            </div>
-          {/if}
-          
-          {#if requirement.requiresManualReview}
-            <div class="manual-review-warning">
-              <i class="fas fa-exclamation-triangle"></i>
-              <span>This feat requires manual review - please configure spells manually.</span>
-            </div>
-          {/if}
-        </div>
-      {/each}
-      
-      <div class="actions">
-        <button class="skip-btn" on:click={handleSkip}>{t('Skip')}</button>
-        <button class="complete-btn" disabled={!areAllSelectionsComplete()} on:click={handleComplete}>
-          {t('Complete')}
-        </button>
-      </div>
-    </div>
-  {/if}
-</div>
+      .spell-icon
+        width: 32px
+        height: 32px
+        border-radius: 4px
+        object-fit: cover
 
-<style>
-  .feat-spells-container {
-    padding: 0;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: var(--color-bg-option, #f8f9fa);
-    color: var(--color-text-dark-primary, #212529);
-  }
+    .spell-col2
+      flex: 1
+      min-width: 0
 
-  .loading-state, .error-state, .no-requirements {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 1rem;
-    color: var(--color-text-dark-5, #6c757d);
-  }
+      .spell-name
+        font-weight: 500
+        color: var(--color-text-dark-primary, #212529)
+        margin-bottom: 0.25rem
+        line-height: 1.3
 
-  .error-state {
-    color: var(--color-text-danger, #dc3545);
-  }
+      .spell-subdetails
+        display: flex
+        gap: 0.75rem
+        font-size: 0.85rem
+        color: var(--color-text-dark-5, #6c757d)
 
-  .retry-btn {
-    padding: 0.5rem 1rem;
-    background: var(--color-bg-btn, #007bff);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
+    .spell-col3
+      flex-shrink: 0
 
-  .feat-spells-content {
-    padding: 1rem;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-  }
+      .remove-btn
+        padding: 0.25rem 0.5rem
+        background: transparent
+        border: 1px solid var(--color-border-light, #dee2e6)
+        border-radius: 3px
+        color: var(--color-text-danger, #dc3545)
+        cursor: pointer
+        font-size: 0.85rem
 
-  .feat-spells-content h2 {
-    margin: 0 0 0.5rem 0;
-    color: var(--color-text-dark-primary, #212529);
-    font-size: 1.25rem;
-    font-weight: bold;
-  }
+        &:hover
+          background: var(--color-bg-danger, #f8d7da)
 
-  .description {
-    margin: 0 0 1rem 0;
-    color: var(--color-text-dark-5, #6c757d);
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
+  .fixed-spells-section
+    margin-bottom: 1rem
+    padding: 1rem
+    background: var(--color-bg-success, #d4edda)
+    border: 1px solid var(--color-border-success, #c3e6cb)
+    border-radius: 6px
 
-  .feat-requirement {
-    background: var(--color-bg, white);
-    border: 1px solid var(--color-border-light, #dee2e6);
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
+    h4
+      margin: 0 0 0.75rem 0
+      color: var(--color-text-success, #155724)
+      font-size: 1rem
 
-  .feat-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 0.75rem;
-    gap: 1rem;
-  }
+  .fixed-spells
+    display: flex
+    flex-direction: column
+    gap: 0.5rem
 
-  .feat-name {
-    margin: 0;
-    color: var(--color-text-dark-primary, #212529);
-    font-size: 1.1rem;
-    font-weight: 600;
-    flex: 1;
-  }
+  .fixed-spell
+    display: flex
+    align-items: center
+    gap: 0.5rem
+    padding: 0.5rem
+    background: var(--color-bg, white)
+    border: 1px solid var(--color-border-success, #c3e6cb)
+    border-radius: 4px
+    color: var(--color-text-success, #155724)
+    font-size: 0.9rem
 
-  .spell-count {
-    display: flex;
-    gap: 0.25rem;
-    align-items: center;
-    font-size: 0.85rem;
-    color: var(--color-text-dark-5, #6c757d);
-    white-space: nowrap;
-  }
+    i
+      color: var(--color-text-success, #155724)
 
-  .cantrip-count {
-    color: var(--color-text-success, #28a745);
-    font-weight: 500;
-  }
+  .right-panel.spell-list
+    flex: 1
+    padding: 1rem
+    overflow-y: auto
+    
+    h3
+      margin-bottom: 0.5rem
+      color: var(--color-text-dark-primary, #212529)
 
-  .spell-level-count {
-    color: var(--color-text-primary, #007bff);
-    font-weight: 500;
-  }
+  .filter-container
+    margin-bottom: 1rem
 
-  .separator {
-    color: var(--color-text-dark-5, #6c757d);
-  }
+    .keyword-filter
+      width: 100%
+      padding: 0.5rem
+      border: 1px solid var(--color-border-light, #dee2e6)
+      border-radius: 4px
+      background: var(--color-bg, white)
+      color: var(--color-text-dark-primary, #212529)
+      font-size: 0.9rem
 
-  .feat-description {
-    margin: 0 0 1rem 0;
-    color: var(--color-text-dark-secondary, #495057);
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
+      &:focus
+        outline: none
+        border-color: var(--color-border-focus, #007bff)
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
 
-  .class-selection {
-    margin-bottom: 1rem;
-    padding: 1rem;
-    background: var(--color-bg-option, #f8f9fa);
-    border: 1px solid var(--color-border-light-tertiary, #e9ecef);
-    border-radius: 4px;
-  }
+      &::placeholder
+        color: var(--color-text-dark-5, #6c757d)
 
-  .filter-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--color-text-dark-primary, #212529);
-    font-size: 0.9rem;
-  }
+  .empty-state
+    text-align: center
+    padding: 2rem 1rem
+    color: var(--color-text-dark-5, #6c757d)
+    font-style: italic
 
-  .filter-select {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid var(--color-border-light, #dee2e6);
-    border-radius: 4px;
-    background: var(--color-bg, white);
-    color: var(--color-text-dark-primary, #212529);
-    font-size: 0.9rem;
-  }
+  .spell-level-group
+    margin-bottom: 1rem
 
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--color-border-focus, #007bff);
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-  }
+  .spell-level-header
+    background: var(--color-bg-option, #f8f9fa)
+    padding: 0.5rem 0.75rem
+    border: 1px solid var(--color-border-light-tertiary, #e9ecef)
+    border-radius: 4px
+    margin-bottom: 0.5rem
+    cursor: pointer
+    transition: background-color 0.2s
 
-  .spell-selection {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
+    &:hover
+      background: var(--color-bg-btn-secondary, #e9ecef)
 
-  .spell-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.75rem;
-  }
+  .spell-row
+    padding: 0.75rem
+    margin-bottom: 0.5rem
+    background: var(--color-bg, white)
+    border: 1px solid var(--color-border-light-tertiary, #e9ecef)
+    border-radius: 4px
+    align-items: center
+    transition: all 0.2s ease
 
-  .spell-item {
-    background: var(--color-bg, white);
-    border: 1px solid var(--color-border-light-tertiary, #e9ecef);
-    border-radius: 4px;
-    transition: all 0.2s ease;
-  }
+    &:hover
+      border-color: var(--color-border-light, #dee2e6)
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1)
 
-  .spell-item:hover:not(.disabled) {
-    border-color: var(--color-border-light, #dee2e6);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+  .spell-details
+    .spell-icon
+      width: 32px
+      height: 32px
+      border-radius: 4px
+      object-fit: cover
 
-  .spell-item.selected {
-    border-color: var(--color-border-focus, #007bff);
-    background: var(--color-bg-selected, rgba(0, 123, 255, 0.05));
-  }
+  .spell-info
+    .spell-name
+      font-weight: 500
+      color: var(--color-text-dark-primary, #212529)
+      margin-bottom: 0.25rem
 
-  .spell-item.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+    .spell-meta
+      font-size: 0.85rem
+      color: var(--color-text-dark-5, #6c757d)
 
-  .spell-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem;
-    cursor: pointer;
-    margin: 0;
-  }
+  .spell-actions
+    .add-btn
+      padding: 0.25rem 0.5rem
+      background: var(--color-bg-btn, #007bff)
+      color: white
+      border: none
+      border-radius: 3px
+      cursor: pointer
+      font-size: 0.85rem
 
-  .spell-label input[type="checkbox"] {
-    margin: 0;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
+      &:hover
+        background: var(--color-bg-btn-hover, #0056b3)
 
-  .spell-info {
-    flex: 1;
-    min-width: 0;
-  }
+    .spell-selected
+      padding: 0.25rem 0.5rem
+      color: var(--color-text-success, #28a745)
+      font-size: 0.85rem
 
-  .spell-name {
-    font-weight: 500;
-    color: var(--color-text-dark-primary, #212529);
-    margin-bottom: 0.25rem;
-    line-height: 1.3;
-  }
+  .feat-spells-actions
+    display: flex
+    gap: 1rem
+    justify-content: flex-end
+    padding: 1rem
+    border-top: 1px solid var(--color-border-light-tertiary, #e9ecef)
+    background: var(--color-bg-option, #f8f9fa)
 
-  .spell-details {
-    display: flex;
-    gap: 0.75rem;
-    font-size: 0.85rem;
-    color: var(--color-text-dark-5, #6c757d);
-  }
+  .skip-btn, .complete-btn
+    padding: 0.75rem 1.5rem
+    border: 1px solid transparent
+    border-radius: 4px
+    font-weight: 500
+    cursor: pointer
+    transition: all 0.2s
+    font-size: 0.9rem
 
-  .spell-level .cantrip {
-    color: var(--color-text-success, #28a745);
-    font-weight: 500;
-  }
+  .skip-btn
+    background: var(--color-bg-option, #f8f9fa)
+    color: var(--color-text-dark-5, #6c757d)
+    border-color: var(--color-border-light, #dee2e6)
 
-  .spell-school {
-    text-transform: capitalize;
-  }
+    &:hover
+      background: var(--color-bg-btn-secondary, #e9ecef)
+      color: var(--color-text-dark-primary, #212529)
 
-  .fixed-spells {
-    padding: 1rem;
-    background: var(--color-bg-option, #f8f9fa);
-    border: 1px solid var(--color-border-light-tertiary, #e9ecef);
-    border-radius: 4px;
-  }
+  .complete-btn
+    background: var(--color-bg-btn, #007bff)
+    color: white
 
-  .fixed-spells h4 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.9rem;
-    color: var(--color-text-dark-primary, #212529);
-  }
+    &:hover:not(:disabled)
+      background: var(--color-bg-btn-hover, #0056b3)
 
-  .spell-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
+    &:disabled
+      background: var(--color-bg-option, #f8f9fa)
+      color: var(--color-text-dark-inactive, #adb5bd)
+      cursor: not-allowed
 
-  .fixed-spell {
-    padding: 0.25rem 0.5rem;
-    background: var(--color-bg-success, #d4edda);
-    color: var(--color-text-success, #155724);
-    border-radius: 3px;
-    font-size: 0.85rem;
-    font-weight: 500;
-  }
+  // Dark theme support
+  :global(.GAS.theme-dark) .feat-spells-container
+    background: var(--color-bg-dark, #1a1a1a)
+    color: var(--color-text-light, #ffffff)
 
-  .manual-review-warning {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: var(--color-bg-warning, #fff3cd);
-    color: var(--color-text-warning, #856404);
-    border: 1px solid var(--color-border-warning, #ffeaa7);
-    border-radius: 4px;
-    font-size: 0.9rem;
-  }
+    .class-selection-section,
+    .fixed-spells-section,
+    .selected-spell,
+    .spell-row
+      background: var(--color-bg-dark-secondary, #2a2a2a)
+      border-color: var(--color-border-dark, #444)
 
-  .loading-spells {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: center;
-    padding: 2rem;
-    color: var(--color-text-dark-5, #6c757d);
-    font-size: 0.9rem;
-  }
+    .filter-select,
+    .keyword-filter
+      background: var(--color-bg-dark-secondary, #2a2a2a)
+      border-color: var(--color-border-dark, #444)
+      color: var(--color-text-light, #ffffff)
 
-  .actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: auto;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-border-light-tertiary, #e9ecef);
-  }
+    .spell-level-header
+      background: var(--color-bg-dark-secondary, #2a2a2a)
+      border-color: var(--color-border-dark, #444)
 
-  .skip-btn, .complete-btn {
-    padding: 0.75rem 1.5rem;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
-  }
+      &:hover
+        background: var(--color-bg-dark-tertiary, #3a3a3a)
 
-  .skip-btn {
-    background: var(--color-bg-option, #f8f9fa);
-    color: var(--color-text-dark-5, #6c757d);
-    border-color: var(--color-border-light, #dee2e6);
-  }
-
-  .skip-btn:hover {
-    background: var(--color-bg-btn-secondary, #e9ecef);
-    color: var(--color-text-dark-primary, #212529);
-  }
-
-  .complete-btn {
-    background: var(--color-bg-btn, #007bff);
-    color: white;
-  }
-
-  .complete-btn:hover:not(:disabled) {
-    background: var(--color-bg-btn-hover, #0056b3);
-  }
-
-  .complete-btn:disabled {
-    background: var(--color-bg-option, #f8f9fa);
-    color: var(--color-text-dark-inactive, #adb5bd);
-    cursor: not-allowed;
-  }
+    .feat-spells-actions
+      background: var(--color-bg-dark-secondary, #2a2a2a)
+      border-color: var(--color-border-dark, #444)
 </style>
