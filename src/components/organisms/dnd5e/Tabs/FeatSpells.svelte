@@ -6,6 +6,12 @@
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
   import { get } from "svelte/store";
+
+  import Loading from "~/src/components/molecules/dnd5e/FeatSpells/Loading.svelte"
+  import Choices from "~/src/components/molecules/dnd5e/FeatSpells/Choices.svelte"
+  import SelectedSpells from "~/src/components/molecules/dnd5e/FeatSpells/SelectedSpells.svelte"
+  import FixedSpells from "~/src/components/molecules/dnd5e/FeatSpells/FixedSpells.svelte"
+  import AvailableSpells from "~/src/components/molecules/dnd5e/FeatSpells/AvailableSpells.svelte"
   
   // Component props
   export let sheet = null; // Accept but don't use to avoid warnings
@@ -103,6 +109,7 @@
     } catch (err) {
       window.GAS.log.e('[FEAT SPELLS] Error loading requirements:', err);
       error = err.message;
+      ui.notifications?.error(err.message)
     } finally {
       isLoading = false;
     }
@@ -179,6 +186,8 @@
       selectedClasses = selectedClasses;
     }
   }
+  
+  
   
   // Get all available spells from all feats for the spell browser
   $: allAvailableSpells = Array.from(availableSpells.values()).flat();
@@ -271,6 +280,7 @@
   
   /**
    * Handle completion of feat spell selection
+   * Now triggers Footer action instead of handling locally
    */
   async function handleComplete() {
     try {
@@ -309,6 +319,7 @@
   
   /**
    * Skip feat spell selection
+   * Now triggers Footer action instead of handling locally
    */
   function handleSkip() {
     if (isLevelUpWorkflow) {
@@ -412,157 +423,71 @@
 </script>
 
 <template lang="pug">
-.feat-spells-container
+.feat-spells-container.flexrow
   +if("isLoading")
-    .loading-state
-      i.fas.fa-spinner.fa-spin
-      span {t('FeatSpells.Loading')}
-    +elseif("error")
-      .error-state
-        i.fas.fa-exclamation-triangle
-        span {t('FeatSpells.Error', { error })}
-        button.retry-btn(on:click="{loadFeatSpellRequirements}") {t('Retry')}
-      +elseif("featRequirements.length === 0")
-        .no-requirements
-          i.fas.fa-info-circle
-          span {t('FeatSpells.NoRequirements')}
-        +else()
-          .feat-spells-tab
-          .left-panel
-            h3 {t('FeatSpells.SelectedSpells')}
-        
-            //- Class selection areas for feats that require it
-            +each("featRequirements as requirement")
-              +if("requirement.requiresClassSelection")
-                .class-selection-section
-                  h4 {requirement.featName}
-                  .class-selection
-                    label.filter-label(for="class-select-{requirement.featId}") Choose Spell Class:
-                    select.filter-select(
-                      id="class-select-{requirement.featId}"
-                      value="{selectedClasses.get(requirement.featId) || ''}"
-                      on:change!="{(e) => onClassSelected(requirement.featId, e.target.value)}"
-                    )
-                      option(value="") Select a class...
-                      +each("requirement.availableClasses as className")
-                        option(value="{className}") {className.charAt(0).toUpperCase() + className.slice(1)}
-        
-        //- Selected spells display
-        .selected-spells
-          +if("allSelectedSpells.length === 0")
-            .empty-selection
-              p {t('FeatSpells.NoSpellsSelected')}
-            +else()
-              +each("allSelectedSpells as selectedItem")
-                .selected-spell
-                  .spell-col1
-                    img.spell-icon(alt="{selectedItem.spell.name}" src="{selectedItem.spell.img}")
-                  .spell-col2.left
-                    .spell-name
-                      +await("getEnrichedName(selectedItem.spell)")
-                        span {selectedItem.spell.name}
-                        +then("Html")
-                          span {@html Html}
-                        +catch("error")
-                          span {selectedItem.spell.name}
-                    .spell-subdetails
-                      span.spell-level {getSpellLevelDisplay(selectedItem.spell)}
-                      span.spell-school {getSchoolName(selectedItem.spell)}
-                  .spell-col3
-                    button.remove-btn(
-                      on:click!="{() => removeFromSelection(selectedItem.featId, selectedItem.spell._id)}"
-                    )
-                      i.fas.fa-trash
-        
-        //- Fixed spells display
-        +each("featRequirements as requirement")
-          +if("requirement.fixedSpells && requirement.fixedSpells.length > 0")
-            .fixed-spells-section
-              h4 {requirement.featName} - Granted Spells
-              .fixed-spells
-                +each("requirement.fixedSpells as spellName")
-                  .fixed-spell
-                    i.fas.fa-magic
-                    span {spellName}
-
-      .right-panel.spell-list
-        h3 {t('FeatSpells.AvailableSpells')}
-        .filter-container.mb-sm
-          input.keyword-filter(
-            type="text" 
-            bind:value="{keywordFilter}" 
-            placeholder="{t('Spells.FilterPlaceholder')}"
+    Loading
+  +elseif("error")
+    .error-state
+      i.fas.fa-exclamation-triangle
+      span {t('FeatSpells.Error', { error })}
+      button.retry-btn(on:click!="{loadFeatSpellRequirements}") {t('Retry')}
+    +elseif("featRequirements.length === 0")
+      .no-requirements
+        i.fas.fa-info-circle
+        span {t('FeatSpells.NoRequirements')}
+      +else()
+        .left-panel.feat-spells-tab
+          h3 {t('FeatSpells.SelectedSpells')}
+          Choices(
+            featRequirements="{featRequirements}"
+            selectedClasses="{selectedClasses}"
+            availableSpells="{availableSpells}"
+            selectedSpells="{selectedSpells}"
+            actor="{actor}"
+            onClassSelected="{onClassSelected}"
           )
-        
-        +if("allAvailableSpells.length === 0")
-          .empty-state
-            p No spells available for selection
-          +elseif("filteredSpells.length === 0")
-            .empty-state
-              p {keywordFilter ? t('Spells.NoMatchingSpells') : 'No spells match your filter'}
-            +else()
-              +each("spellLevels as spellLevel")
-              .spell-level-group
-                h4.left.mt-sm.flexrow.spell-level-header.pointer(
-                  on:click!="{() => toggleSpellLevel(spellLevel)}"
-                )
-                  .flex0.mr-xs
-                    +if("expandedLevels[spellLevel]")
-                      span [-]
-                      +else()
-                        span [+]
-                  .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+            
+          //- Selected spells display
+          SelectedSpells(
+            allSelectedSpells="{allSelectedSpells}"
+            getEnrichedName="{getEnrichedName}"
+            getSpellLevelDisplay="{getSpellLevelDisplay}"
+            getSchoolName="{getSchoolName}"
+            removeFromSelection="{removeFromSelection}"
+          )
 
-                +if("expandedLevels[spellLevel]")
-                  ul.blank
-                    +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
-                      li.flexrow.spell-row.justify-flexrow-vertical
-                        .flex0.spell-details
-                          img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
+          //- Fixed spells display
+          FixedSpells(featRequirements="{featRequirements}")
 
-                        .flex1.spell-info
-                          .flexrow
-                            .flex1.left.spell-name.gold
-                              +await("getEnrichedName(spell)")
-                                span {spell.name}
-                                +then("Html")
-                                  span {@html Html}
-                                +catch("error")
-                                  span {spell.name}
-                          .flexrow.smalltext
-                            .flex1.left.spell-meta
-                              +if("getSchoolName(spell, true)")
-                                .flexrow.gap-10
-                                  .flex2.flexrow
-                                    div School:
-                                    .badge {getSchoolName(spell, true)}
-                                  .flex2.flexrow 
-                                    div Activation:
-                                    .badge {getCastingTimeDisplay(spell)}
-
-                        .spell-actions.mx-sm
-                          +if("isSpellSelected(spell)")
-                            .spell-selected
-                              i.fas.fa-check
-                            +else()
-                              button.add-btn(
-                                on:click|preventDefault!="{() => addToSelection(spell)}"
-                              )
-                                i.fas.fa-plus
-
-    .feat-spells-actions
-      button.skip-btn(on:click="{handleSkip}") {t('Skip')}
-      button.complete-btn(
-        disabled="{!areAllSelectionsComplete()}" 
-        on:click="{handleComplete}"
-      ) {t('Complete')}
+        .right-panel.spell-list
+          h3 {t('FeatSpells.AvailableSpells')}
+          .filter-container.mb-sm
+            input.keyword-filter(
+              type="text" 
+              bind:value="{keywordFilter}" 
+              placeholder="{t('Spells.FilterPlaceholder')}"
+            )
+          
+          AvailableSpells(
+            allAvailableSpells="{allAvailableSpells}"
+            filteredSpells="{filteredSpells}"
+            spellsByLevel="{spellsByLevel}"
+            spellLevels="{spellLevels}"
+            expandedLevels="{expandedLevels}"
+            toggleSpellLevel="{toggleSpellLevel}"
+            isSpellSelected="{isSpellSelected}"
+            addToSelection="{addToSelection}"
+            getEnrichedName="{getEnrichedName}"
+            getSchoolName="{getSchoolName}"
+            getCastingTimeDisplay="{getCastingTimeDisplay}"
+            keywordFilter="{keywordFilter}"
+          )
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.sass"
-
+  @use "../../../../../styles/Mixins.sass" as M
   .badge
-    +badge(var(--color-cool-3), 0.5rem)
+    +M.badge(var(--color-cool-3), 0.5rem)
     margin-top: -2px
     margin-left: -8px
 
