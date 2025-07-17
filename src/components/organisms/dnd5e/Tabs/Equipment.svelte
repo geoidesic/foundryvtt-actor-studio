@@ -16,6 +16,7 @@
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
   import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";
+  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   const doc = getContext("#doc");
 
   // Get equipment selection setting
@@ -35,7 +36,7 @@
   
   // Equipment should show when user chose equipment AND (choices complete OR variable gold needs selection)
   $: shouldShowEquipment = window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024" ? 
-    (userChoseEquipment && (isGoldComplete || hasVariableGoldNeedingSelection)) :
+    (userChoseEquipment && ($areGoldChoicesComplete || hasVariableGoldNeedingSelection)) :
     ($goldRoll > 0);
 
   // Get proficiencies from actor
@@ -50,7 +51,11 @@
 
   $: window.GAS.log.d("Equipment component:", {
     isDisabled,
-    readOnlyTabs: $readOnlyTabs
+    readOnlyTabs: $readOnlyTabs,
+    characterClass: $characterClass,
+    background: $background,
+    classWealth: $characterClass?.system?.wealth,
+    goldRoll: $goldRoll
   });
 
   onMount(() => {
@@ -58,60 +63,54 @@
       window.GAS.log.d('[EQUIPMENT] Advancement capture disabled - destroying advancement managers');
       destroyAdvancementManagers();
     }
+    
+    // For 2014 rules ONLY, reset gold roll to show choice interface
+    // Don't reset for 2024 rules as they use goldChoices store
+    if (window.GAS.dnd5eVersion < 4 || (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2014")) {
+      window.GAS.log.d('[EQUIPMENT] Resetting gold roll for 2014 rules to show choice interface');
+      goldRoll.set(0);
+    }
   });
 
 </script>
 
 <template lang="pug">
-.container
-  .content
-    .flexrow
-      .flex2.pr-sm.col-a
-        //- pre dnd5eVersion { window.GAS.dnd5eVersion}
-        //- pre dnd5eRules { window.GAS.dnd5eRules}
-        h3 {t('Equipment.StartingGold')}
-        +if("isDisabled")
-          .info-message {t('Equipment.EquipmentReadOnly')}
-        
-        section.equipment-flow(class="{isDisabled ? 'readonly' : ''}")
-          +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
-            StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
-            +else()
-              StartingGold(characterClass="{$characterClass}")
-          +if("shouldShowEquipment || isDisabled")
-            StartingEquipment(
-              startingEquipment="{$compatibleStartingEquipment}" 
-              classEquipment="{$classStartingEquipment}"
-              backgroundEquipment="{$backgroundStartingEquipment}"
-              characterClass="{$characterClass}"
-              background="{$background}"
-              proficiencies="{proficiencies}"
-              disabled="{isDisabled}"
-              parsedEquipmentGold="{$parsedEquipmentGold}"
-              equipmentGoldOptions="{$equipmentGoldOptions}"
-            )
-      .flex0.border-right.right-border-gradient-mask
-      .flex3.left.scroll.col-b
-        PlannedInventory
-        EquipmentSelectorDetail
+StandardTabLayout(tabName="equipment")
+  div(slot="left")
+    //- pre dnd5eVersion { window.GAS.dnd5eVersion}
+    //- pre dnd5eRules { window.GAS.dnd5eRules}
+    h3 {t('Equipment.StartingGold')}
+    +if("isDisabled")
+      .info-message {t('Equipment.EquipmentReadOnly')}
+    
+    section.equipment-flow(class="{isDisabled ? 'readonly' : ''}")        
+      +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
+        StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
+        +else()
+          StartingGold(characterClass="{$characterClass}")
+      +if("shouldShowEquipment || isDisabled")
+        StartingEquipment(
+          startingEquipment="{$compatibleStartingEquipment}" 
+          classEquipment="{$classStartingEquipment}"
+          backgroundEquipment="{$backgroundStartingEquipment}"
+          characterClass="{$characterClass}"
+          background="{$background}"
+          proficiencies="{proficiencies}"
+          disabled="{isDisabled}"
+          parsedEquipmentGold="{$parsedEquipmentGold}"
+          equipmentGoldOptions="{$equipmentGoldOptions}"
+        )
+  div(slot="right")
+    PlannedInventory
+    EquipmentSelectorDetail
 </template>
 
 <style lang="sass">
-.container
-  height: 100%
-  
-  .col-a
-      // max-width: 325px
-.content
-  height: 100%
-  overflow-y: auto
-
 .equipment-flow
   margin-top: 1rem
   display: flex
   flex-direction: column
   gap: 1rem
-
 
 section
   background: rgba(0, 0, 0, 0.05)

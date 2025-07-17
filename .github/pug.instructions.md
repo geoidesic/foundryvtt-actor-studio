@@ -44,19 +44,49 @@ description: Instructions for Svelte components using Pug preprocessing
 .main-container.flexrow
   +if("isLoading")
     Loading
-  .left-panel
-    h3 Panel Title
-    SubComponentA
-    SubComponentB
-  .right-panel  
-    h3 Another Title
-    SubComponentC
+  +if("!isLoading")
+    .left-panel
+      h3 Panel Title
+      SubComponentA
+      SubComponentB
+    .right-panel  
+      h3 Another Title
+      SubComponentC
 ```
 
 **Actions Pattern:**
 - Move all buttons/actions from organisms to Footer.svelte
 - Use conditional rendering in Footer based on active tab/state
 - Control via stores rather than direct function calls in organisms
+
+**Conditional Logic Best Practices:**
+- **Avoid nested +else() when possible** - use separate +if() conditions at the same level instead
+- Prefer `+if("!condition")` over `+else()` to avoid nesting complexity
+- **Don't add redundant conditionals** - if workflow state machines already handle showing/hiding tabs, don't duplicate that logic in templates
+- **Use ui.notifications.error()** in script blocks instead of error state elements in templates
+- Only use +elseif() and +else() when you genuinely need mutually exclusive conditions
+
+**Example of good conditional structure:**
+```pug
+.container
+  +if("isLoading")
+    LoadingComponent
+  +if("!isLoading && hasData")
+    DataComponent  
+  +if("!isLoading && !hasData")
+    EmptyStateComponent
+```
+
+**Avoid this pattern:**
+```pug
+.container
+  +if("isLoading")
+    LoadingComponent
+    +elseif("hasData")
+      DataComponent
+      +else()
+        EmptyStateComponent
+```
 
 ## Element Attributes
 - Static attributes: `div(class="class" data-id="id")`.

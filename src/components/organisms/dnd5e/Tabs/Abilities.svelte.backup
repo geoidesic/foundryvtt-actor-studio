@@ -12,7 +12,6 @@
   import Roll from "~/src/components/molecules/dnd5e/AbilityEntry/Roll.svelte";
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
-  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
@@ -96,28 +95,34 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(
-  title="{t('Tabs.Abilities.Title')}"
-  showTitle="{true}"
-  tabName="abilities"
-)
-  div(slot="left")
-    h2.left {t('Tabs.Abilities.HowCalculated')}
-    +if("options.length > 1")
-      IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
-      +else()
-        ol.properties-list
-          +each("options as option")
-            li {option.label}
-    +if("$abilityGenerationMethod")
-      .relative
-        svelte:component(this="{abilityModule}")
-        +if("isDisabled")
-          .overlay
-  div(slot="right") {@html richHTML}
+  div.content
+    h1.center.mt-none.hide {t('Tabs.Abilities.Title')}
+    .flexrow
+      .flex2.pr-sm.col-a
+        h2.left {t('Tabs.Abilities.HowCalculated')}
+        +if("options.length > 1")
+          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
+          +else()
+            ol.properties-list
+              +each("options as option")
+                li {option.label}
+        +if("$abilityGenerationMethod")
+          .relative
+            svelte:component(this="{abilityModule}")
+            +if("isDisabled")
+              .overlay
+      .flex0.border-right.right-border-gradient-mask 
+      .flex3.left.pl-md.scroll.col-b {@html richHTML}
 </template>
 
 <style lang="sass" scoped>
+@use "../../../../../styles/Mixins.sass" as mixins
+.content 
+  +mixins.staticOptions
+
+  .col-a
+    // max-width: 325px
+
 :global(.icon-select)
   position: relative
 

@@ -426,62 +426,54 @@
 .feat-spells-container.flexrow
   +if("isLoading")
     Loading
-  +elseif("error")
-    .error-state
-      i.fas.fa-exclamation-triangle
-      span {t('FeatSpells.Error', { error })}
-      button.retry-btn(on:click!="{loadFeatSpellRequirements}") {t('Retry')}
-    +elseif("featRequirements.length === 0")
-      .no-requirements
-        i.fas.fa-info-circle
-        span {t('FeatSpells.NoRequirements')}
-      +else()
-        .left-panel.feat-spells-tab
-          h3 {t('FeatSpells.SelectedSpells')}
-          Choices(
-            featRequirements="{featRequirements}"
-            selectedClasses="{selectedClasses}"
-            availableSpells="{availableSpells}"
-            selectedSpells="{selectedSpells}"
-            actor="{actor}"
-            onClassSelected="{onClassSelected}"
-          )
-            
-          //- Selected spells display
-          SelectedSpells(
-            allSelectedSpells="{allSelectedSpells}"
-            getEnrichedName="{getEnrichedName}"
-            getSpellLevelDisplay="{getSpellLevelDisplay}"
-            getSchoolName="{getSchoolName}"
-            removeFromSelection="{removeFromSelection}"
-          )
+    
+  +if("!isLoading")
+    .left-panel.feat-spells-tab
+      h3 {t('FeatSpells.SelectedSpells')}
+      Choices(
+        featRequirements="{featRequirements}"
+        selectedClasses="{selectedClasses}"
+        availableSpells="{availableSpells}"
+        selectedSpells="{selectedSpells}"
+        actor="{actor}"
+        onClassSelected="{onClassSelected}"
+      )
+        
+      //- Selected spells display
+      SelectedSpells(
+        allSelectedSpells="{allSelectedSpells}"
+        getEnrichedName="{getEnrichedName}"
+        getSpellLevelDisplay="{getSpellLevelDisplay}"
+        getSchoolName="{getSchoolName}"
+        removeFromSelection="{removeFromSelection}"
+      )
 
-          //- Fixed spells display
-          FixedSpells(featRequirements="{featRequirements}")
+      //- Fixed spells display
+      FixedSpells(featRequirements="{featRequirements}")
 
-        .right-panel.spell-list
-          h3 {t('FeatSpells.AvailableSpells')}
-          .filter-container.mb-sm
-            input.keyword-filter(
-              type="text" 
-              bind:value="{keywordFilter}" 
-              placeholder="{t('Spells.FilterPlaceholder')}"
-            )
-          
-          AvailableSpells(
-            allAvailableSpells="{allAvailableSpells}"
-            filteredSpells="{filteredSpells}"
-            spellsByLevel="{spellsByLevel}"
-            spellLevels="{spellLevels}"
-            expandedLevels="{expandedLevels}"
-            toggleSpellLevel="{toggleSpellLevel}"
-            isSpellSelected="{isSpellSelected}"
-            addToSelection="{addToSelection}"
-            getEnrichedName="{getEnrichedName}"
-            getSchoolName="{getSchoolName}"
-            getCastingTimeDisplay="{getCastingTimeDisplay}"
-            keywordFilter="{keywordFilter}"
-          )
+    .right-panel.spell-list
+      h3 {t('FeatSpells.AvailableSpells')}
+      .filter-container.mb-sm
+        input.keyword-filter(
+          type="text" 
+          bind:value="{keywordFilter}" 
+          placeholder="{t('Spells.FilterPlaceholder')}"
+        )
+      
+      AvailableSpells(
+        allAvailableSpells="{allAvailableSpells}"
+        filteredSpells="{filteredSpells}"
+        spellsByLevel="{spellsByLevel}"
+        spellLevels="{spellLevels}"
+        expandedLevels="{expandedLevels}"
+        toggleSpellLevel="{toggleSpellLevel}"
+        isSpellSelected="{isSpellSelected}"
+        addToSelection="{addToSelection}"
+        getEnrichedName="{getEnrichedName}"
+        getSchoolName="{getSchoolName}"
+        getCastingTimeDisplay="{getCastingTimeDisplay}"
+        keywordFilter="{keywordFilter}"
+      )
 </template>
 
 <style lang="sass">
@@ -508,7 +500,7 @@
   ul.blank
      padding: 0 
 
-  .loading-state, .error-state, .no-requirements
+  .loading-state
     display: flex
     flex-direction: column
     align-items: center
@@ -516,17 +508,6 @@
     height: 100%
     gap: 1rem
     color: var(--color-text-dark-5, #6c757d)
-
-  .error-state
-    color: var(--color-text-danger, #dc3545)
-
-  .retry-btn
-    padding: 0.5rem 1rem
-    background: var(--color-bg-btn, #007bff)
-    color: white
-    border: none
-    border-radius: 4px
-    cursor: pointer
 
   .feat-spells-tab
     display: flex

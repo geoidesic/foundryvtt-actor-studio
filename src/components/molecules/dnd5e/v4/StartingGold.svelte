@@ -177,6 +177,20 @@
     });
   }
   
+  // Debug visibility logic
+  $: {
+    console.log('🔧 STARTINGGOLD VISIBILITY DEBUG:', {
+      characterClass: !!characterClass,
+      background: !!background,
+      classChoice,
+      backgroundChoice,
+      hasChoices,
+      showEditButton,
+      isComplete,
+      parsedEquipmentGold: $parsedEquipmentGold
+    });
+  }
+  
   // Use the centralized totalGoldFromChoices derived store that includes variable equipment gold
   $: totalGold = $totalGoldFromChoices;
   $: hasChoices = characterClass || background;

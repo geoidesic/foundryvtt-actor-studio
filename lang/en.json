@@ -408,7 +408,8 @@
       "Skip": "Skip",
       "Retry": "Retry",
       "SelectedSpells": "Selected Spells",
-      "AvailableSpells":"Available Spells"
+      "AvailableSpells":"Available Spells",
+      "NoSpellsSelected": "No spells selected"
     },
     "SpellSchool": {
       "abj": "Abjuration",

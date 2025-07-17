@@ -2,6 +2,7 @@
   import { shopItems, shopCart, availableGold, cartTotalCost, remainingGold, updateCart, loadShopItems, finalizePurchase, initializeGold } from '../../../../stores/equipmentShop';
   import { actorInGame, readOnlyTabs } from '../../../../stores/index';
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
+  import StandardTabLayout from '../../../organisms/StandardTabLayout.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
@@ -177,129 +178,129 @@
   });
 </script>
 
-<div class="shop-tab-container" class:readonly={isDisabled}>
-  {#if isDisabled}
-    <div class="info-message">{t('Shop.ShopReadOnly')}</div>
-  {/if}
-
-  <!-- Sticky currency header -->
-  <div class="sticky-header" class:hidden={!scrolled}>
-    <GoldDisplay {...remainingCurrency} />
-  </div>
-
-  <div class="shop-tab">
-    <div class="left-panel" bind:this={shopContainer}>
-      <!-- Original header -->
-      <div class="panel-header" class:hidden={scrolled}>
-        <h3 class="left no-margin">{t('Shop.AvailableGold')}</h3>
-        <div class:negative={$remainingGold < 0} class="remaining-currency">
-          <GoldDisplay {...remainingCurrency} />
-        </div>
-        <h3 class="left no-margin">{t('Shop.SpentGold')}</h3>
-        <GoldDisplay {...cartCurrency} />
-      </div>
- 
-      <h3>{t('Shop.CartItems')}</h3>
-      <div class="cart-items">
-        {#if cartItems.length === 0}
-          <div class="empty-cart">
-            <p>{t('Shop.CartEmpty')}</p>
-          </div>
-        {:else}
-          {#each cartItems as cartItem}
-            <div class="cart-item">
-              <div class="cart-item-col1">
-                <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
-              </div>
-              <div class="cart-item-col2 left">
-                <div class="cart-item-name">
-                  {#await getEnrichedName(cartItem.item)}
-                    {cartItem.item.name}
-                  {:then Html}
-                    {@html Html}
-                  {/await}
-                </div>
-                <div class="cart-item-subdetails">
-                  <span class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</span>
-                  <span class="quantity-display">×{cartItem.quantity}</span>
-                </div>
-              </div>
-              <div class="cart-item-col3">
-                <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-            </div>
-          {/each}
-        {/if}
-      </div>
+<StandardTabLayout
+  title={t('Shop.Title')}
+  showTitle={true}
+  tabName="shop"
+>
+  <div slot="left" class="shop-left-panel">
+    {#if isDisabled}
+      <div class="info-message">{t('Shop.ShopReadOnly')}</div>
+    {/if}
+    
+    <!-- Sticky currency header -->
+    <div class="sticky-header" class:hidden={!scrolled}>
+      <GoldDisplay {...remainingCurrency} />
     </div>
 
-    <!-- Right Panel: Available Equipment -->
-    <div class="right-panel item-list">
-      <h3>{t('Shop.AvailableEquipment')}</h3>
-      
-      <!-- Add Keyword Filter Input -->
-      <div class="filter-container mb-sm">
-        <input 
-          type="text" 
-          bind:value={keywordFilter} 
-          placeholder={t('Shop.FilterPlaceholder')} 
-          class="keyword-filter"
-          disabled={isDisabled}
-        />
+    <!-- Original header -->
+    <div class="panel-header" class:hidden={scrolled}>
+      <h3 class="left no-margin">{t('Shop.AvailableGold')}</h3>
+      <div class="remaining-currency" class:negative={$remainingGold < 0}>
+        <GoldDisplay {...remainingCurrency} />
       </div>
+      <h3 class="left no-margin">{t('Shop.SpentGold')}</h3>
+      <GoldDisplay {...cartCurrency} />
+    </div>
 
-      {#if loading}
-        <div class="loading">{t('Shop.Loading')}</div>
-      {:else if filteredItems.length === 0} <!-- Check filteredItems length -->
-        <div class="empty-state">
-          <p>{keywordFilter ? t('Shop.NoMatchingEquipment') : t('Shop.NoEquipment')}</p> <!-- Adjust message based on filter -->
+    <h3>{t('Shop.CartItems')}</h3>
+    <div class="cart-items">
+      {#if cartItems.length === 0}
+        <div class="empty-cart">
+          <p>{t('Shop.CartEmpty')}</p>
         </div>
       {:else}
-        {#each categories as category}
-          <div class="category">
-            <h4 class="left mt-sm flexrow category-header pointer" on:click={() => toggleCategory(category)}>
-              <div class="flex0 mr-xs">
-                {#if expandedCategories[category]}
-                  <span>[-]</span>
-                {:else}
-                  <span>[+]</span>
-                {/if}
+        {#each cartItems as cartItem}
+          <div class="cart-item">
+            <div class="cart-item-col1">
+              <img src={cartItem.item.img} alt={cartItem.item.name} class="item-icon" />
+            </div>
+            <div class="cart-item-col2 left">
+              <div class="cart-item-name">
+                {#await getEnrichedName(cartItem.item)}
+                  {cartItem.item.name}
+                {:then Html}
+                  {@html Html}
+                {/await}
               </div>
-              <div class="flex">{category}</div>
-            </h4>
-            {#if expandedCategories[category]}
-              <!-- Use categoryGroups which is derived from filteredItems -->
-              {#each categoryGroups[category] as item (item.uuid || item._id)} 
-                <div class="item-row">
-                  <div class="item-details">
-                    <img src={item.img} alt={item.name} class="item-icon" />
-                    <span class="item-name">
-                      {#await getEnrichedName(item)}
-                        {item.name}
-                      {:then Html}
-                        {@html Html}
-                      {/await}
-                    </span>
-                  </div>
-                  <div class="item-actions">
-                    <span class="item-price">
-                      {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
-                    </span>
-                    <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
-                      <i class="fas fa-plus"></i>
-                    </button>
-                  </div>
-                </div>
-              {/each}
-            {/if}
+              <div class="cart-item-subdetails">
+                <span class="cart-item-price">{cartItem.price.value} {cartItem.price.denomination}</span>
+                <span class="quantity-display">×{cartItem.quantity}</span>
+              </div>
+            </div>
+            <div class="cart-item-col3">
+              <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
           </div>
         {/each}
       {/if}
     </div>
   </div>
-</div>
+
+  <div slot="right" class="shop-right-panel">
+    <h3>{t('Shop.AvailableEquipment')}</h3>
+    
+    <!-- Keyword Filter Input -->
+    <div class="filter-container mb-sm">
+      <input 
+        type="text" 
+        bind:value={keywordFilter} 
+        placeholder={t('Shop.FilterPlaceholder')} 
+        class="keyword-filter"
+        disabled={isDisabled}
+      />
+    </div>
+
+    {#if loading}
+      <div class="loading">{t('Shop.Loading')}</div>
+    {:else if filteredItems.length === 0}
+      <div class="empty-state">
+        <p>{keywordFilter ? t('Shop.NoMatchingEquipment') : t('Shop.NoEquipment')}</p>
+      </div>
+    {:else}
+      {#each categories as category}
+        <div class="category">
+          <button class="category-header left mt-sm flexrow pointer" on:click={() => toggleCategory(category)}>
+            <div class="flex0 mr-xs">
+              {#if expandedCategories[category]}
+                <span>[-]</span>
+              {:else}
+                <span>[+]</span>
+              {/if}
+            </div>
+            <div class="flex">{category}</div>
+          </button>
+          {#if expandedCategories[category]}
+            {#each categoryGroups[category] as item (item.uuid || item._id)}
+              <div class="item-row">
+                <div class="item-details">
+                  <img src={item.img} alt={item.name} class="item-icon" />
+                  <span class="item-name">
+                    {#await getEnrichedName(item)}
+                      {item.name}
+                    {:then Html}
+                      {@html Html}
+                    {/await}
+                  </span>
+                </div>
+                <div class="item-actions">
+                  <span class="item-price">
+                    {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
+                  </span>
+                  <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+            {/each}
+          {/if}
+        </div>
+      {/each}
+    {/if}
+  </div>
+</StandardTabLayout>
 
 <style lang="sass">
   @import "../../../../../styles/features/equipment-purchase.sass"
@@ -313,20 +314,6 @@
     background: rgba(255, 255, 255, 0.1) !important
     color: silver !important 
 
-  .shop-tab-container 
-    position: relative
-    height: 100%
-    width: 100%
-    display: flex
-    flex-direction: column
-
-    &.readonly
-      opacity: 0.7
-      pointer-events: none
-      
-      :global(*)
-        cursor: default !important
-    
   .info-message
     font-size: 0.8rem
     color: #666
@@ -351,27 +338,17 @@
   .panel-header.hidden
     display: none
 
-  .shop-tab
-    display: flex
-    height: 100%
-    overflow: visible
-
-  .left-panel
-    flex: 1
+  .shop-left-panel
     display: flex
     flex-direction: column
     height: 100%
     overflow-y: auto
-    padding: 0.5rem
-    border-right: 1px solid var(--color-border-light-tertiary)
 
-  .right-panel
-    flex: 2
+  .shop-right-panel
     display: flex
     flex-direction: column
     height: 100%
     overflow-y: auto
-    padding: 0.5rem
 
   h3
     margin-bottom: 0.5rem
@@ -396,7 +373,6 @@
     display: flex
     flex-direction: column
     gap: 0.5rem
-
 
   .cart-item
     display: flex
@@ -481,13 +457,27 @@
           background: none
 
   .category
-    h4
+    .category-header
+      background: none
+      border: none
+      cursor: pointer
       color: var(--color-highlight)
       font-size: 1rem
       margin-bottom: 0.2rem
       padding-bottom: 0.1rem
       border-bottom: 1px solid var(--color-border-light-highlight)
-      cursor: pointer
+      width: 100%
+      text-align: left
+      font-weight: bold
+
+      &:hover
+        background: rgba(0, 0, 0, 0.05)
+
+      &:disabled
+        opacity: 0.5
+        cursor: not-allowed
+        &:hover
+          background: none
 
   .item-row
     display: flex

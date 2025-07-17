@@ -6,6 +6,7 @@
   import { ApplicationShell } from "@typhonjs-fvtt/runtime/svelte/component/application";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import FeatSpells from "~/src/components/organisms/dnd5e/Tabs/FeatSpells.svelte"
 
   export let elementRoot = void 0;
   export let version = void 0;
@@ -55,6 +56,8 @@
             input(type="checkbox" on:change="{handleChange}" label="{t('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
           .flex.dont-show
             span {t('Setting.DontShowWelcome.Name') }
+
+        FeatSpells
     footer
       div.logo
         a(href="https://www.aardvark.games") 
