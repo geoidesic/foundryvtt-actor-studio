@@ -6,7 +6,7 @@ import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { handleAdvancementCompletion } from '~/src/lib/workflow.js';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
-import { shouldShowFeatSpellSelection } from '~/src/helpers/FeatSpellParser';
+import { parseFeatSpellRequirements } from '~/src/stores/spellSelection.js';
 import Finity from 'finity';
 
 /**
@@ -16,7 +16,6 @@ export const WORKFLOW_STATES = {
   IDLE: 'idle',
   CREATING_CHARACTER: 'creating_character',
   PROCESSING_ADVANCEMENTS: 'processing_advancements',
-  SELECTING_FEAT_SPELLS: 'selecting_feat_spells',
   SELECTING_EQUIPMENT: 'selecting_equipment',
   SELECTING_SPELLS: 'selecting_spells',
   SHOPPING: 'shopping',
@@ -31,8 +30,6 @@ export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
-  FEAT_SPELLS_COMPLETE: 'feat_spells_complete',
-  SKIP_FEAT_SPELLS: 'skip_feat_spells',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
   SHOPPING_COMPLETE: 'shopping_complete',
@@ -59,6 +56,7 @@ export const workflowFSMContext = {
   },
   _shouldShowSpellSelection: function (inGameActor) {
     const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
+    window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection enableSpellSelection:', enableSpellSelection);
     if (!enableSpellSelection) return false;
     
     // Always prioritize the passed inGameActor parameter if it's provided and valid
@@ -75,60 +73,57 @@ export const workflowFSMContext = {
       }
     }
     
+    window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection actorForDecision:', actorForDecision);
     if (!actorForDecision) return false;
+    
+    // Check for class-based spellcasting
     const classes = actorForDecision.classes || {};
     const classKeys = Object.keys(classes);
-    if (!classKeys.length) {
+    window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection classKeys:', classKeys);
+    
+    let hasClassSpellcasting = false;
+    if (classKeys.length > 0) {
+      const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
+        const progression = classData?.system?.spellcasting?.progression;
+        return { className, progression, isSpellcaster: progression && progression !== "none" };
+      });
+      window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection spellcastingInfo:', spellcastingInfo);
+      hasClassSpellcasting = spellcastingInfo.some(info => info.isSpellcaster);
+      
+      if (!hasClassSpellcasting) {
+        const knownSpellcastingClasses = [
+          'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
+          'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+        ];
+        hasClassSpellcasting = classKeys.some(className => knownSpellcastingClasses.includes(className.toLowerCase()));
+        window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection hasKnownSpellcastingClass:', hasClassSpellcasting);
+      }
+    } else {
       // Only fallback to preCreationActor if we have no classes and we're using postCreationActor
       if (actorForDecision === this?.postCreationActor && this?.preCreationActor) {
         return workflowFSMContext._shouldShowSpellSelection(this.preCreationActor);
       }
-      return false;
     }
-    const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
-      const progression = classData?.system?.spellcasting?.progression;
-      return { className, progression, isSpellcaster: progression && progression !== "none" };
-    });
-    const isSpellcaster = spellcastingInfo.some(info => info.isSpellcaster);
-    if (!isSpellcaster) {
-      const knownSpellcastingClasses = [
-        'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-        'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
-      ];
-      const hasKnownSpellcastingClass = classKeys.some(className => knownSpellcastingClasses.includes(className.toLowerCase()));
-      if (hasKnownSpellcastingClass) return true;
+    
+    // Check for feat-based spellcasting using the proper parser
+    let hasFeatSpellcasting = false;
+    try {
+      const featRequirements = parseFeatSpellRequirements(actorForDecision);
+      hasFeatSpellcasting = featRequirements.cantrips > 0 || featRequirements.spells > 0;
+      
+      window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection feat requirements:', featRequirements);
+      window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection hasFeatSpellcasting:', hasFeatSpellcasting);
+    } catch (error) {
+      window.GAS.log.w('[WORKFLOW] Error checking feat spells:', error);
     }
-    return isSpellcaster;
+    
+    const result = hasClassSpellcasting || hasFeatSpellcasting;
+    window.GAS.log.d('[WORKFLOW] _shouldShowSpellSelection final result:', result, '(class:', hasClassSpellcasting, 'feat:', hasFeatSpellcasting, ')');
+    return result;
   },
   _shouldShowShopping: function () {
     const enableShopping = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
     return enableShopping;
-  },
-  _shouldShowFeatSpellSelection: function (inGameActor) {
-    // Check if feat spell selection feature is enabled
-    const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
-    if (!enableSpellSelection) return false;
-    
-    // Always prioritize the passed inGameActor parameter if it's provided and valid
-    let actorForDecision = inGameActor;
-    
-    // Only use context actors as fallback when inGameActor is not provided or is empty
-    if (!actorForDecision || (typeof actorForDecision === 'object' && Object.keys(actorForDecision).length === 0)) {
-      if (this?.preCreationActor) {
-        actorForDecision = this.preCreationActor;
-      } else if (this?.postCreationActor) {
-        actorForDecision = this.postCreationActor;
-      } else if (this?.actor) {
-        actorForDecision = this.actor;
-      }
-    }
-    
-    if (!actorForDecision) return false;
-    
-    // Use the FeatSpellParser to check if feat spell selection is needed
-    const result = shouldShowFeatSpellSelection(actorForDecision);
-    window.GAS.log.d('[WORKFLOW] _shouldShowFeatSpellSelection result:', result);
-    return result;
   },
   actor: undefined,
 };
@@ -169,36 +164,11 @@ export function createWorkflowStateMachine() {
         await dropItemRegistry.advanceQueue(true);
       })
         .onSuccess()
-          .transitionTo('selecting_feat_spells').withCondition((context) => workflowFSMContext._shouldShowFeatSpellSelection(workflowFSMContext.actor))
-          .transitionTo('selecting_equipment').withCondition((context) => !workflowFSMContext._shouldShowFeatSpellSelection(workflowFSMContext.actor) && workflowFSMContext._shouldShowEquipmentSelection())
-          .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowFeatSpellSelection(workflowFSMContext.actor) && !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
-          .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowFeatSpellSelection(workflowFSMContext.actor) && !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
+          .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())
+          .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
+          .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
           .transitionTo('completed') // Default fallback - no other features enabled
         .onFailure().transitionTo('error')
-    .state('selecting_feat_spells')
-    .on('feat_spells_complete')
-      .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())
-      .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
-      .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
-      .transitionTo('completed') // Default fallback
-    .on('skip_feat_spells')
-      .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())
-      .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
-      .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
-      .transitionTo('completed') // Default fallback
-    .on('error').transitionTo('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SELECTING_FEAT_SPELLS state');
-      
-      // Add feat spells tab and switch to it
-      const currentTabs = get(tabs);
-      if (!currentTabs.find(t => t.id === "feat-spells")) {
-        tabs.update(t => [...t, { label: "Feat Spells", id: "feat-spells", component: "FeatSpells" }]);
-      }
-      activeTab.set("feat-spells");
-    })
     .state('selecting_equipment')
     .on('equipment_complete')
       .transitionTo('shopping').withCondition((context) => {
@@ -306,6 +276,24 @@ export function createWorkflowStateMachine() {
     .onEnter((context) => {
       if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
       window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
+      
+      // Ensure the correct actor is set in spell selection stores
+      const actorForSpells = workflowFSMContext.postCreationActor || workflowFSMContext.actor;
+      if (actorForSpells) {
+        window.GAS.log.d('[WORKFLOW] Setting actor for spell selection:', actorForSpells.name);
+        
+        // Import and initialize spell selection with the correct actor
+        import('~/src/stores/spellSelection.js').then(({ initializeSpellSelection, currentCharacter }) => {
+          currentCharacter.set(actorForSpells);
+          initializeSpellSelection(actorForSpells);
+          window.GAS.log.d('[WORKFLOW] Initialized spell selection with actor:', actorForSpells.name);
+        }).catch(error => {
+          window.GAS.log.w('[WORKFLOW] Error initializing spell selection:', error);
+        });
+      } else {
+        window.GAS.log.w('[WORKFLOW] No actor available for spell selection initialization');
+      }
+      
       const currentTabs = get(tabs);
       if (!currentTabs.find(t => t.id === "spells")) {
         tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);

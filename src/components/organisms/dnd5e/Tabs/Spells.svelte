@@ -114,8 +114,8 @@
     // Initialize spell selection with current actor
     initializeSpellSelection($actor);
     
-    // Load available spells with character class filtering
-    await loadAvailableSpells(characterClassName);
+    // Load available spells with character class filtering and pass actor directly
+    await loadAvailableSpells(characterClassName, $actor);
     
     // Debug logging
     console.log(`[SPELLS DEBUG] Loaded spells:`, {

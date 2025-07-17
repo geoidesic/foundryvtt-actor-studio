@@ -16,6 +16,14 @@ global.ui = { notifications: { error: vi.fn(), warn: vi.fn(), info: vi.fn() } };
 global.Hooks = { call: vi.fn(), on: vi.fn(), once: vi.fn() };
 global.window = global;
 global.Actor = { create: vi.fn() };
+global.Collection = class MockCollection {
+  constructor(entries = []) {
+    this.entries = entries;
+  }
+  values() { return this.entries; }
+  keys() { return this.entries.map((_, i) => i); }
+  get size() { return this.entries.length; }
+};
 global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 
 // Mock Svelte stores
@@ -38,7 +46,8 @@ const mockGet = vi.fn((store) => {
   if (store.toString?.().includes('isLevelUp')) {
     return false; // Character creation workflow
   }
-  return {};
+  // Return mockActor for any store.get call - this handles currentCharacter too
+  return mockActor;
 });
 
 vi.mock('svelte/store', () => ({ 
@@ -59,7 +68,13 @@ vi.mock('~/src/stores/index', () => ({
   isLevelUp: mockWritable(false),
   tabs: mockWritable([]),
   activeTab: mockWritable(''),
-  readOnlyTabs: mockWritable([])
+  readOnlyTabs: mockWritable([]),
+  level: mockWritable(1), // Add the missing level export
+  characterClass: mockWritable('fighter'),
+  characterLevel: mockWritable(1), // Add characterLevel too
+  newLevelValueForExistingClass: mockWritable(null),
+  preAdvancementSelections: mockWritable({}),
+  dropItemRegistry: { advanceQueue: vi.fn() }
 }));
 
 // Mock other dependencies
@@ -173,8 +188,8 @@ describe('Feat Spell Support for Character Creation', () => {
     // Import workflow state machine  
     const { workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine');
     
-    // Test the helper function
-    const result = workflowFSMContext._shouldShowFeatSpellSelection(mockActor);
+    // Test the unified spell selection function
+    const result = workflowFSMContext._shouldShowSpellSelection(mockActor);
     expect(result).toBe(true);
   });
 });

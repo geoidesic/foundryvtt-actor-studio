@@ -802,7 +802,14 @@ export async function handleSpellsCompleteLevelUp() {
   
   try {
     const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+    const currentState = levelUpFSM.getCurrentState();
+    
+    // Only send the event if we're not already in completed state
+    if (currentState !== 'completed') {
+      levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+    } else {
+      window.GAS.log.d('[LEVELUP WORKFLOW] FSM already in completed state, skipping spells_complete event');
+    }
     
     window.GAS.log.d('[LEVELUP WORKFLOW] Spells completion handled successfully');
     return true;
@@ -810,7 +817,14 @@ export async function handleSpellsCompleteLevelUp() {
   } catch (error) {
     window.GAS.log.e('[LEVELUP WORKFLOW] Error handling spells completion:', error);
     const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    const currentState = levelUpFSM.getCurrentState();
+    
+    // Only send error event if not already in terminal state
+    if (currentState !== 'error' && currentState !== 'completed') {
+      levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    } else {
+      window.GAS.log.d('[LEVELUP WORKFLOW] FSM in terminal state, skipping error event');
+    }
     return false;
   }
 }
@@ -823,7 +837,14 @@ export async function handleSkipSpellsLevelUp() {
   
   try {
     const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.SKIP_SPELLS);
+    const currentState = levelUpFSM.getCurrentState();
+    
+    // Only send the event if we're not already in completed state
+    if (currentState !== 'completed') {
+      levelUpFSM.handle(LEVELUP_EVENTS.SKIP_SPELLS);
+    } else {
+      window.GAS.log.d('[LEVELUP WORKFLOW] FSM already in completed state, skipping skip_spells event');
+    }
     
     window.GAS.log.d('[LEVELUP WORKFLOW] Skip spells handled successfully');
     return true;
@@ -831,28 +852,56 @@ export async function handleSkipSpellsLevelUp() {
   } catch (error) {
     window.GAS.log.e('[LEVELUP WORKFLOW] Error handling skip spells:', error);
     const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    const currentState = levelUpFSM.getCurrentState();
+    
+    // Only send error event if not already in terminal state
+    if (currentState !== 'error' && currentState !== 'completed') {
+      levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    } else {
+      window.GAS.log.d('[LEVELUP WORKFLOW] FSM in terminal state, skipping error event');
+    }
     return false;
   }
 }
 
 /**
- * Handles feat spell selection completion in LevelUp workflow
+ * Handles feat spell selection completion in character creation workflow
  */
-export async function handleFeatSpellsCompleteLevelUp() {
-  window.GAS.log.d('[LEVELUP WORKFLOW] Handling feat spells completion');
+export async function handleFeatSpellsCompleteCharacterCreation() {
+  window.GAS.log.d('[WORKFLOW] Handling feat spells completion for character creation');
   
   try {
-    const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.FEAT_SPELLS_COMPLETE);
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.FEAT_SPELLS_COMPLETE);
     
-    window.GAS.log.d('[LEVELUP WORKFLOW] Feat spells completion handled successfully');
+    window.GAS.log.d('[WORKFLOW] Feat spells completion handled successfully');
     return true;
     
   } catch (error) {
-    window.GAS.log.e('[LEVELUP WORKFLOW] Error handling feat spells completion:', error);
-    const levelUpFSM = getLevelUpFSM();
-    levelUpFSM.handle(LEVELUP_EVENTS.ERROR, { error: error.message });
+    window.GAS.log.e('[WORKFLOW] Error handling feat spells completion:', error);
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
+    return false;
+  }
+}
+
+/**
+ * Handles skipping feat spell selection in character creation workflow
+ */
+export async function handleSkipFeatSpellsCharacterCreation() {
+  window.GAS.log.d('[WORKFLOW] Handling skip feat spells for character creation');
+  
+  try {
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
+    
+    window.GAS.log.d('[WORKFLOW] Skip feat spells handled successfully');
+    return true;
+    
+  } catch (error) {
+    window.GAS.log.e('[WORKFLOW] Error handling skip feat spells:', error);
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
     return false;
   }
 }
@@ -878,47 +927,9 @@ export async function handleSkipFeatSpellsLevelUp() {
   }
 }
 
-/**
- * Handles feat spell selection completion in character creation workflow
- */
-export async function handleFeatSpellsCompleteCharacterCreation() {
-  window.GAS.log.d('[CHARACTER CREATION] Handling feat spells completion');
-  
-  try {
-    const workflowFSM = getWorkflowFSM();
-    workflowFSM.handle(WORKFLOW_EVENTS.FEAT_SPELLS_COMPLETE);
-    
-    window.GAS.log.d('[CHARACTER CREATION] Feat spells completion handled successfully');
-    return true;
-    
-  } catch (error) {
-    window.GAS.log.e('[CHARACTER CREATION] Error handling feat spells completion:', error);
-    const workflowFSM = getWorkflowFSM();
-    workflowFSM.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
-    return false;
-  }
-}
 
-/**
- * Handles skipping feat spell selection in character creation workflow
- */
-export async function handleSkipFeatSpellsCharacterCreation() {
-  window.GAS.log.d('[CHARACTER CREATION] Handling skip feat spells');
-  
-  try {
-    const workflowFSM = getWorkflowFSM();
-    workflowFSM.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
-    
-    window.GAS.log.d('[CHARACTER CREATION] Skip feat spells handled successfully');
-    return true;
-    
-  } catch (error) {
-    window.GAS.log.e('[CHARACTER CREATION] Error handling skip feat spells:', error);
-    const workflowFSM = getWorkflowFSM();
-    workflowFSM.handle(WORKFLOW_EVENTS.ERROR, { error: error.message });
-    return false;
-  }
-}
+
+
 
 /**
  * Handles what to do when advancements are complete (was handleEmptyQueue/closeOrEquip)

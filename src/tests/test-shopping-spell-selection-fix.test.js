@@ -10,7 +10,7 @@ global.game = {
   }
 };
 global.window = global;
-global.window.GAS = { log: { d: vi.fn() } };
+global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 
 // Mock Svelte stores
 const mockWritable = (value) => ({ 

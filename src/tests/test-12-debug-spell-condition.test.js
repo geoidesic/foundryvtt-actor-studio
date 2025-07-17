@@ -15,7 +15,7 @@ describe('Debug Shopping Spell Selection Condition', () => {
     };
 
     global.window = global;
-    global.window.GAS = { log: { d: vi.fn() } };
+    global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 
     // Mock a complete bard actor exactly as it would be persisted
     mockBardClass = {
