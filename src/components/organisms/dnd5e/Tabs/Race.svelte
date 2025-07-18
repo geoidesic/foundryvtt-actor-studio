@@ -1,6 +1,7 @@
 <script>
   import SvelteSelect from "svelte-select";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     getFoldersFromMultiplePacks,
     extractItemsFromPacksSync,
@@ -52,8 +53,6 @@
   };
 
   async function selectRaceHandler(option) {
-    if (isDisabled) return; // Don't allow changes in readonly mode
-    
     const selectedRace = await fromUuid(option);
     $race = selectedRace;
     active = option;
@@ -96,7 +95,6 @@
   $: source = $race?.system?.source || "";
   $: book = source?.book || "";
   $: page = source?.page ? ", p. " + source.page : "";
-  $: isDisabled = $readOnlyTabs.includes("race");
   
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
@@ -127,7 +125,6 @@
 
   // Debug logs
   $: window.GAS.log.d("Race component:", { 
-    isDisabled, 
     race: $race, 
     active, 
     value, 
@@ -160,67 +157,45 @@
 </script>
 
 <template lang="pug">
-div.content
-  h1.center.mt-none.hide {t('Tabs.Races.Title')}
-  .flexrow
-    .flex2.pr-sm.col-a
-      .flexrow
-        .flex0.required(class="{$race ? '' : 'active'}") *
-        .flex3 
-          IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value disabled="{isDisabled}")
-          +if("isDisabled")
-            .info-message This tab is read-only during advancement selection
-      +if("value")
-        +if("source")
-          //- h3.left {t('Source')}
-          ol.properties-list
-            li {book} {page} {type.value ? ', ' + type.value : ''} 
+StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="race")
+  div(slot="left")
+    .flexrow
+      .flex0.required(class="{$race ? '' : 'active'}") *
+      .flex3 
+        IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value)
+    +if("value")
+      +if("source")
+        //- h3.left {t('Source')}
+        ol.properties-list
+          li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-        +if("filteredMovement")
-          h2.left {t('Tabs.Races.Movement')}
-          ol.properties-list
-            +each("filteredMovement as movement")
-              li.left {movement.label} : {movement.value} {units}
-        +if("filteredSenses.length")
-          h2.left {t('Tabs.Races.Senses')}
-          ol.properties-list
-            +each("filteredSenses as senses")
-              li.left {senses.label} : {senses.value} {units}
-        +if("advancementArray")
-          h2.left {t('Advancements')}
-          ul.icon-list
-            +each("advancementArray as advancement")
-              //- @todo: this should be broken out into components for each advancement.type
-              li.left
-                .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                  .flex0.relative.image
-                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                  .flex2 {advancement.title}
-                .flexrow
-                  svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-                    
-                  
-                
-    .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b {@html richHTML}
-
+      +if("filteredMovement")
+        h2.left {t('Tabs.Races.Movement')}
+        ol.properties-list
+          +each("filteredMovement as movement")
+            li.left {movement.label} : {movement.value} {units}
+      +if("filteredSenses.length")
+        h2.left {t('Tabs.Races.Senses')}
+        ol.properties-list
+          +each("filteredSenses as senses")
+            li.left {senses.label} : {senses.value} {units}
+      +if("advancementArray")
+        h2.left {t('Advancements')}
+        ul.icon-list
+          +each("advancementArray as advancement")
+            //- @todo: this should be broken out into components for each advancement.type
+            li.left
+              .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+                .flex0.relative.image
+                  img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                .flex2 {advancement.title}
+              .flexrow
+                svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
+  
+  div(slot="right") {@html richHTML}
 </template>
 
 <style lang="sass">
-  @use "../../../../../styles/Mixins.sass" as mixins
-  .content 
-    +mixins.staticOptions
-
-    .col-a
-      // max-width: 325px
-
   :global(.icon-select)
     position: relative
-
-  .info-message
-    font-size: 0.8rem
-    color: #666
-    font-style: italic
-    margin-top: -0.5rem
-    margin-bottom: 0.5rem
 </style>

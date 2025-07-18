@@ -83,29 +83,23 @@ export const spellLimits = derived(
       // Parse old level limits
       const [oldCantrips, oldSpells] = oldLevelData[className].split(' / ');
       const oldCantripCount = parseInt(oldCantrips) || 0;
-      const oldSpellCount = oldSpells === 'All' ? 999 : parseInt(oldSpells) || 0;
+      const oldSpellCount = parseInt(oldSpells) || 0;
+      const oldHasAllSpells = oldSpells === 'All';
       
       // Parse new level limits
       const [newCantrips, newSpells] = newLevelData[className].split(' / ');
       const newCantripCount = parseInt(newCantrips) || 0;
-      const newSpellCount = newSpells === 'All' ? 999 : parseInt(newSpells) || 0;
+      const newSpellCount = parseInt(newSpells) || 0;
+      const newHasAllSpells = newSpells === 'All';
       
       // Calculate the difference (new spells gained on level up)
       const cantripDifference = Math.max(0, newCantripCount - oldCantripCount);
-      const spellDifference = oldSpellCount === 999 || newSpellCount === 999 ? 999 : Math.max(0, newSpellCount - oldSpellCount);
-      
-      window.GAS.log.d('[SPELLS] Level-up spell calculation:', {
-        className,
-        oldLevel,
-        newLevel,
-        oldLimits: { cantrips: oldCantripCount, spells: oldSpellCount },
-        newLimits: { cantrips: newCantripCount, spells: newSpellCount },
-        difference: { cantrips: cantripDifference, spells: spellDifference }
-      });
+      const spellDifference = oldHasAllSpells || newHasAllSpells ? 0 : Math.max(0, newSpellCount - oldSpellCount);
       
       return {
         cantrips: cantripDifference,
-        spells: spellDifference
+        spells: spellDifference,
+        hasAllSpells: newHasAllSpells
       };
     } else {
       // Character creation scenario - use total spells for current level
@@ -118,7 +112,8 @@ export const spellLimits = derived(
       const [cantrips, spells] = levelData[className].split(' / ');
       return {
         cantrips: parseInt(cantrips) || 0,
-        spells: spells === 'All' ? 999 : parseInt(spells) || 0
+        spells: parseInt(spells) || 0,
+        hasAllSpells: spells === 'All'
       };
     }
   }
@@ -142,22 +137,87 @@ export const currentSpellCounts = derived(
 
 // Derived store for spell selection progress
 export const spellProgress = derived(
-  [spellLimits, currentSpellCounts, isLevelUp],
-  ([$spellLimits, $currentSpellCounts, $isLevelUp]) => {
-    const totalRequired = $spellLimits.cantrips + ($spellLimits.spells === 999 ? 0 : $spellLimits.spells);
-    const totalSelected = $currentSpellCounts.total;
+  [spellLimits, currentSpellCounts, isLevelUp, characterClass, newLevelValueForExistingClass],
+  ([$spellLimits, $currentSpellCounts, $isLevelUp, $characterClass, $newLevelValueForExistingClass]) => {
+    // For classes that get "All" spells, only cantrips are required choices
+    const hasAllSpells = $spellLimits.hasAllSpells;
     
-    // In level-up mode, spell selection is optional (can be skipped), so always show 100%
-    // In character creation mode, show actual progress
-    let progressPercentage = 100;
-    let isComplete = true;
+    let totalRequired, totalSelected, progressPercentage, isComplete;
     
-    if (!$isLevelUp && totalRequired > 0) {
-      // Character creation: require actual spell selection
-      progressPercentage = Math.round((totalSelected / totalRequired) * 100);
-      isComplete = totalSelected >= totalRequired;
+    // Special case: Level-up with no spell level increases for "All spells" classes
+    if ($isLevelUp && hasAllSpells && $characterClass && $newLevelValueForExistingClass) {
+      const className = $characterClass.name || $characterClass.label || $characterClass;
+      
+      // Calculate max spell levels for old and new levels
+      const getMaxSpellLevelForClass = (level, className) => {
+        const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
+        const halfCasters = ['Paladin', 'Ranger'];
+        const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
+        const warlockProgression = ['Warlock'];
+        
+        if (fullCasters.includes(className)) {
+          return Math.min(9, Math.ceil(level / 2));
+        } else if (halfCasters.includes(className)) {
+          return Math.min(5, Math.ceil((level - 1) / 4));
+        } else if (thirdCasters.includes(className)) {
+          return Math.min(4, Math.ceil((level - 2) / 6));
+        } else if (warlockProgression.includes(className)) {
+          if (level >= 17) return 5;
+          if (level >= 11) return 3;
+          if (level >= 7) return 2;
+          if (level >= 1) return 1;
+          return 0;
+        } else if (className === 'Artificer') {
+          if (level < 2) return 0;
+          return Math.min(5, Math.ceil((level - 1) / 4));
+        }
+        return 0;
+      };
+      
+      const oldMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, className);
+      const newMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass, className);
+      
+      // If no new spell levels gained AND no new cantrips to select, mark as complete automatically
+      if (newMaxSpellLevel <= oldMaxSpellLevel && $spellLimits.cantrips === 0) {
+        return {
+          totalRequired: 0,
+          totalSelected: 0,
+          progressPercentage: 100,
+          isComplete: true,
+          limits: $spellLimits,
+          counts: $currentSpellCounts,
+          hasAllSpells,
+          noUpdatesNeeded: true
+        };
+      }
     }
-    // Level-up mode: always 100% since spells can be skipped
+    
+    if (hasAllSpells) {
+      // Classes with all spells: only count cantrips as required for progress
+      // since they automatically get access to all other spells
+      totalRequired = $spellLimits.cantrips;
+      totalSelected = $currentSpellCounts.cantrips;
+      
+      if (totalRequired > 0) {
+        progressPercentage = Math.round((totalSelected / totalRequired) * 100);
+        isComplete = totalSelected >= totalRequired;
+      } else {
+        progressPercentage = 100;
+        isComplete = true;
+      }
+    } else {
+      // Regular spellcasters: count both cantrips and spells as required
+      totalRequired = $spellLimits.cantrips + $spellLimits.spells;
+      totalSelected = $currentSpellCounts.total;
+      
+      if (totalRequired > 0) {
+        progressPercentage = Math.round((totalSelected / totalRequired) * 100);
+        isComplete = totalSelected >= totalRequired;
+      } else {
+        progressPercentage = 100;
+        isComplete = true;
+      }
+    }
 
     return {
       totalRequired,
@@ -165,7 +225,9 @@ export const spellProgress = derived(
       progressPercentage,
       isComplete,
       limits: $spellLimits,
-      counts: $currentSpellCounts
+      counts: $currentSpellCounts,
+      hasAllSpells,
+      noUpdatesNeeded: false
     };
   }
 );
@@ -173,6 +235,10 @@ export const spellProgress = derived(
 // Function to initialize character data for spell selection
 export function initializeSpellSelection(actor) {
   try {
+    // Clear previous spell selections to prevent persistence across characters
+    selectedSpells.set(new Map());
+    window.GAS.log.d('[SPELLS] Cleared previous spell selections');
+    
     currentCharacter.set(actor);
 
     // Determine character level - check classes or use a default
@@ -512,6 +578,98 @@ export async function finalizeSpellSelection(actor) {
   }
 }
 
+// Function to auto-populate all spells for classes that get access to all spells
+export async function autoPopulateAllSpells(characterClassName, maxSpellLevel, actor, isLevelUp = false, oldMaxSpellLevel = 0) {
+  try {
+    window.GAS.log.d('[SPELLS] Auto-populating spells for', characterClassName, 'up to level', maxSpellLevel, 'isLevelUp:', isLevelUp, 'oldMaxSpellLevel:', oldMaxSpellLevel);
+    
+    // Get current available spells
+    const currentSpells = get(availableSpells);
+    const currentLimits = get(spellLimits);
+    
+    if (currentSpells.length === 0) {
+      ui.notifications?.warn("No spells available to auto-populate");
+      return false;
+    }
+    
+    // For level-up scenarios, only add spells of the NEW maximum level
+    // For character creation, add all spells up to max level
+    let spellsToAdd;
+    if (isLevelUp && oldMaxSpellLevel > 0) {
+      // Level-up: only add spells of the new maximum spell level
+      spellsToAdd = currentSpells.filter(spell => {
+        const spellLevel = spell.system?.level || 0;
+        return spellLevel === maxSpellLevel && spellLevel > oldMaxSpellLevel;
+      });
+    } else {
+      // Character creation: add all spells up to max level (excluding cantrips)
+      spellsToAdd = currentSpells.filter(spell => {
+        const spellLevel = spell.system?.level || 0;
+        return spellLevel > 0 && spellLevel <= maxSpellLevel;
+      });
+    }
+    
+    if (spellsToAdd.length === 0) {
+      if (isLevelUp) {
+        ui.notifications?.info("No new spells available for this level up");
+      } else {
+        ui.notifications?.warn("No spells to auto-populate for this level");
+      }
+      return false;
+    }
+    
+    // Create appropriate dialog content based on context
+    let dialogContent;
+    if (isLevelUp && oldMaxSpellLevel > 0) {
+      dialogContent = `
+        <p><strong>${characterClassName}s</strong> have access to all spells of appropriate level.</p>
+        <p>Would you like to automatically add all ${spellsToAdd.length} new level ${maxSpellLevel} spells to your spellbook?</p>
+        <p><em>Note: This will only add spells of the new maximum level (${maxSpellLevel}) that you gained access to.</em></p>
+      `;
+    } else {
+      dialogContent = `
+        <p><strong>${characterClassName}s</strong> have access to all spells of appropriate level.</p>
+        <p>Would you like to automatically add all ${spellsToAdd.length} spells (levels 1-${maxSpellLevel}) to your spellbook?</p>
+        <p><em>Note: You'll still need to select your cantrips manually, as those are limited and cannot be changed later.</em></p>
+      `;
+    }
+    
+    // Ask user for confirmation
+    const confirmed = await Dialog.confirm({
+      title: `Auto-populate ${characterClassName} Spells`,
+      content: dialogContent,
+      yes: () => true,
+      no: () => false,
+      defaultYes: true
+    });
+    
+    if (!confirmed) {
+      return false;
+    }
+    
+    // Add all spells to selection
+    let addedCount = 0;
+    for (const spell of spellsToAdd) {
+      try {
+        await addSpell(spell);
+        addedCount++;
+      } catch (error) {
+        console.warn(`Failed to add spell ${spell.name}:`, error);
+      }
+    }
+    
+    ui.notifications?.info(`Auto-populated ${addedCount} spells for ${characterClassName}`);
+    window.GAS.log.d('[SPELLS] Auto-populated', addedCount, 'spells');
+    
+    return true;
+    
+  } catch (error) {
+    console.error("Error auto-populating spells:", error);
+    ui.notifications?.error("Error auto-populating spells: " + error.message);
+    return false;
+  }
+}
+
 // Make the stores globally available for other components to access
 if (typeof window !== 'undefined') {
   if (!window.GAS) window.GAS = {};
@@ -528,4 +686,5 @@ if (typeof window !== 'undefined') {
   window.GAS.addSpell = addSpell;
   window.GAS.removeSpell = removeSpell;
   window.GAS.finalizeSpellSelection = finalizeSpellSelection;
+  window.GAS.autoPopulateAllSpells = autoPopulateAllSpells;
 }

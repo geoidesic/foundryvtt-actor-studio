@@ -1,6 +1,7 @@
 <script>
   import SvelteSelect from "svelte-select";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     getFoldersFromMultiplePacks,
     extractItemsFromPacksSync,
@@ -44,7 +45,7 @@
 
   let richHTML = "";
 
-  $: isDisabled = $readOnlyTabs.includes("background");
+  // isDisabled now handled by StandardTabLayout
 
   const importAdvancements = async () => {
     for (const advancement of advancementArray) {
@@ -99,43 +100,29 @@
 </script>
 
 <template lang="pug">
-.content
-  h1.center.mt-none.hide {t('Tabs.Background.Title')}
-  .flexrow
-    .flex2.pr-sm.col-a
-      .flexrow
-        .flex0.required(class="{$background ? '' : 'active'}") *
-        .flex3 
-          IconSelect.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-     
-      +if("advancementArray.length")
-        h2.left {t('Advancements')}
-        ul.icon-list
-          +each("advancementArray as advancement")
-            //- @todo: this should be broken out into components for each advancement.type
-            li.left
-              .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                .flex0.relative.image
-                  img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                .flex2 {advancement.title}
-              .flexrow
-                //- pre advancement {advancement.type}
-                svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-
-    .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b {@html richHTML}
-
+StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background")
+  div(slot="left")
+    .flexrow
+      .flex0.required(class="{$background ? '' : 'active'}") *
+      .flex3 
+        IconSelect.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value)
+    +if("advancementArray.length")
+      h2.left {t('Advancements')}
+      ul.icon-list
+        +each("advancementArray as advancement")
+          //- @todo: this should be broken out into components for each advancement.type
+          li.left
+            .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
+              .flex0.relative.image
+                img.icon(src="{advancement.icon}" alt="{advancement.title}")
+              .flex2 {advancement.title}
+            .flexrow
+              //- pre advancement {advancement.type}
+              svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
+  div(slot="right") {@html richHTML}
 </template>
 
 <style lang="sass">
-  @import "../../../../../styles/Mixins.sass"
-  .content 
-    @include staticOptions
-
-    .col-a
-      // max-width: 325px
-
   :global(.icon-select)
     position: relative
-
 </style>
