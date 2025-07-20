@@ -32,13 +32,13 @@ export const init = (app, html, data) => {
     window.GAS.debug = true;
     window.GAS.race = "Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000"
     window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000"
-    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0"
+    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbftrFighter000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwzdWizard0000"
     // window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000"
-    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbclcCleric0000"
+    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbclcCleric0000"
 
 
     // window.GAS.characterSubClass = "Compendium.dnd-players-handbook.classes.Item.phbwlkCelestialP"
@@ -82,12 +82,20 @@ export const init = (app, html, data) => {
 }
 
 export const ready = (app, html, data) => {
-  if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
+  // Check if the setting exists before trying to access it
+  if (game.settings.settings.has(`${MODULE_ID}.dontShowWelcome`)) {
+    if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
+      new WelcomeApplication().render(true, { focus: true });
+    }
+  } else {
+    // Setting not registered yet, show welcome by default
     new WelcomeApplication().render(true, { focus: true });
   }
 
-  if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
-    game.settings.set("dnd5e", "disableAdvancements", false);
+  if (game.settings.settings.has(`${MODULE_ID}.forceDnd5eLevelUpAutomation`)) {
+    if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
+      game.settings.set("dnd5e", "disableAdvancements", false);
+    }
   }
 
   Hooks.call("gas.readyIsComplete");
