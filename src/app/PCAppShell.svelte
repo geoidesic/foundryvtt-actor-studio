@@ -67,6 +67,18 @@
       
       // Start the LevelUp state machine
       const levelUpFSM = getLevelUpFSM();
+      
+      // Check current state and reset if needed
+      const currentState = levelUpFSM.getCurrentState();
+      window.GAS.log.d('[PCAPP] Current FSM state before starting level-up:', currentState);
+      
+      // Reset FSM to idle if it's in any state other than 'idle'
+      if (currentState !== 'idle') {
+        window.GAS.log.d('[PCAPP] Resetting FSM from state:', currentState, 'to idle');
+        levelUpFSM.handle(LEVELUP_EVENTS.RESET);
+      }
+      
+      // Now start the level-up workflow
       levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
       window.GAS.log.d('[PCAPP] Started LevelUp workflow');
     } else {

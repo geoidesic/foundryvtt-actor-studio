@@ -27,7 +27,8 @@ import {
   extractItemsFromPacksSync,
   extractMapIteratorObjectProperties,
   getPacksFromSettings,
-  illuminatedDescription
+  illuminatedDescription,
+  extractItemsFromPacksAsync
 } from "~/src/helpers/Utility.js";
 
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
@@ -72,20 +73,20 @@ const decorators = {
 /** FILTERS*/
 const filters = {
   getFilteredSubclassIndex: async () => {
-    const filteredSubClassIndex = [];
-    for(let subClassesPack of subClassesPacks) {
-      let index = await subClassesPack.getIndex({
-        fields: ["system.classIdentifier"],
-      });
-      if(!subClassesPack) continue
-      let mappedSubClassIndex =  extractMapIteratorObjectProperties(index.entries(), [...mapKeys, "system"])
-  
-      filteredSubClassIndex.push(mappedSubClassIndex?.filter(
-        (x) => x.system.classIdentifier == $levelUpClassObject.system.identifier,
-      ))
-    }
-    const output = filteredSubClassIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
-    return output
+    let mappedSubClassIndex = await extractItemsFromPacksAsync(
+      subClassesPacks,
+      ["name->label", "img", "type", "folder", "uuid->value", "_id"],
+      ["system.classIdentifier"],
+    );
+
+    mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
+      return x.system?.classIdentifier == $levelUpClassObject?.system?.identifier;
+    });
+
+    const output = mappedSubClassIndex
+      .flat()
+      .sort((a, b) => a.label.localeCompare(b.label));
+    return output;
   }
 }
 

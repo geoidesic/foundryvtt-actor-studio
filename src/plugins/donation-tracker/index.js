@@ -70,8 +70,17 @@ class plugin {
 
     const DTfolders = membershipFolderArray
       .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
-    // window.GAS.log.d('DTfolders', DTfolders)
-    return DTfolders.length > 0
+    
+    console.log('[GAS] DT folder names from settings:', DTfolders);
+    console.log('[GAS] Pack folder names:', pack.folders.map(f => f.name));
+    
+    // Check if any of the configured DT folder names actually exist in this pack
+    const hasDTFolders = DTfolders.some(dtFolderName => 
+      pack.folders.some(packFolder => packFolder.name === dtFolderName)
+    );
+    
+    console.log('[GAS] Pack has DT folders:', hasDTFolders);
+    return hasDTFolders;
   }
 
   /**

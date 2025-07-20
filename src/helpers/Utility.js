@@ -142,17 +142,13 @@ export function filterPackForDTPackItems(pack, entries) {
   // window.GAS.log.d('filterPackForDTPackItems filter', entries.filter);
   if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
 
-
     //- if the pack has no DT folders, include everything, @why: as this compendium is not managed by DT
     if (!DTPlugin.packHasDTFolders(pack)) {
-      // window.GAS.log.d('packHasDTFolders false');
-      return true;
+      return entries;
     }
     // get dt folder id's from this pack
     const allowedDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack)
-    // window.GAS.log.d('allowedDTFolderIds', allowedDTFolderIds);
     const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false)
-    // window.GAS.log.d('allDTFolderIds', allDTFolderIds);
 
     const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
 
