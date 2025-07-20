@@ -97,20 +97,17 @@
 
   const getFilteredSubclassIndex = async () => {
     let filteredSubClassIndex = [];
+    
     let mappedSubClassIndex = await extractItemsFromPacksAsync(
       subClassesPacks,
       ["name->label", "img", "type", "folder", "uuid->value", "_id"],
       ["system.classIdentifier"],
     );
 
-    // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
-      // window.GAS.log.d("subclass", x);
-      // window.GAS.log.d("$characterClass.system.identifier", $characterClass.system.identifier);
       return x.system?.classIdentifier == $characterClass?.system?.identifier;
     });
 
-    // window.GAS.log.d('mappedSubClassIndex', mappedSubClassIndex);
     const output = mappedSubClassIndex
       .flat()
       .sort((a, b) =>
@@ -118,7 +115,6 @@
           showPackLabelInSelect ? b.compoundLabel : b.label,
         ),
       );
-    // window.GAS.log.d("subclass output", output);
     return output;
   };
 
