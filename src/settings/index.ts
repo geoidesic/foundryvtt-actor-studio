@@ -64,6 +64,7 @@ export function registerSettings(app: Game): void {
   debugHooksSetting();
   disableAdvancementCapture();
   advancementCaptureTimerThreshold();
+  usageTracking();
   /** User settings */
   dontShowWelcome();
 }
@@ -635,5 +636,24 @@ function experimentalCharacterNameStyling() {
     config: true,
     default: false,
     type: Boolean,
+  });
+}
+
+function usageTracking() {
+  game.settings.register(MODULE_ID, 'usage-tracking', {
+    name: 'Usage Tracking',
+    hint: 'Allow Actor Studio to collect anonymous usage data to help improve the module. No personal information is collected.',
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false,
+    onChange: (value) => {
+      if (window.GASUsageTracker) {
+        window.GASUsageTracker.consentGranted = value;
+        if (value && window.GASUsageTracker.offlineEvents.length > 0) {
+          window.GASUsageTracker.syncOfflineEvents();
+        }
+      }
+    }
   });
 }

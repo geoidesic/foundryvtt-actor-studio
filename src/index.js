@@ -5,6 +5,9 @@ import { MODULE_ID } from '~/src/helpers/constants';
 
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
 
+// Import usage tracking
+import UsageTracker from '~/src/usage-tracking.js';
+
 
 //- import hooks
 import { init, ready } from './hooks/init.js';
@@ -20,6 +23,12 @@ Hooks.once("init", (app, html, data) => {
 
 Hooks.once("ready", (app, html, data) => {
   ready(app, html, data);
+  
+  // Initialize usage tracker when FoundryVTT is ready
+  if (window.GASUsageTracker) {
+    window.GASUsageTracker.initialize();
+    window.GASUsageTracker.trackSessionStart();
+  }
 });
 
 // Clean up event handlers when module is disabled
@@ -33,11 +42,21 @@ Hooks.once("disableModule", (module) => {
 Hooks.once("unloadModule", (module) => {
   if (module.id === MODULE_ID) {
     cleanupAllEventHandlers();
+    
+    // Track session end
+    if (window.GASUsageTracker) {
+      window.GASUsageTracker.trackSessionEnd();
+    }
   }
 });
 
 Hooks.on('gas.captureAdvancement', (initial = false) => {
   captureAdvancement(initial);
+  
+  // Track advancement capture
+  if (window.GASUsageTracker) {
+    window.GASUsageTracker.trackAdvancementCapture(initial);
+  }
 });
 
 //- donation-tracker integration
@@ -127,4 +146,9 @@ Hooks.on('renderActorDirectory', async (app, html) => {
 
 Hooks.on('gas.openActorStudio', (actorName, folderName, actorType) => {
   openActorStudio(actorName, folderName, actorType);
+  
+  // Track actor studio opened
+  if (window.GASUsageTracker) {
+    window.GASUsageTracker.trackActorStudioOpened(actorName, folderName, actorType);
+  }
 });
