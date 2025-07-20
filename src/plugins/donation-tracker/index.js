@@ -1,3 +1,28 @@
+/**
+ * @file donation-tracker/index.js
+ * @description This file contains the plugin for the Donation Tracker.
+ * @author geoidesic
+ * @version 1.0.0
+ * @license MIT
+ * 
+ * by configuring those 3 attributes you can configure the way you want in devMode
+ * 
+ * Default Membership levels for Developer Mode.
+ * ```js
+ * DEVELOPER_LEVELS = ['member', 'benefactor', 'benefactorOfKnowledge'];
+ * ```
+ * Default Membership for Developer Mode.
+ * ```js
+ * DEVELOPER_MEMBERSHIP = 'member';
+ * ```
+ * Default Admin status for Developer Mode.
+ * ```js
+ * DEVELOPER_IS_ADMIN = false;
+ * ```
+ * ```js
+ * game.membership.DEVELOPER_MEMBERSHIP = 'member' ?
+ * ```
+ */
 import { MODULE_ID } from '~/src/helpers/constants';
 
 class plugin {
@@ -58,16 +83,15 @@ class plugin {
     // window.GAS.log.d('membershipRanks', membershipRanks)
     const membershipFolderArray = Object.entries(membershipRanks).filter(([_, value]) => value !== -1);
     // window.GAS.log.d('membershipFolderArray', membershipFolderArray)
-    const allowedMembershipFolderNames = membershipFolderArray.filter(([key, _]) =>
-      {
-        // window.GAS.log.d('key', key);
-        return game.membership.hasPermission(key)
+    const allowedMembershipFolderNames = membershipFolderArray.filter(([key, _]) => {
+      // window.GAS.log.d('key', key);
+      return game.membership.hasPermission(key)
         //-@why: #102, unregistered = "member"
         || (
           game.membership.membershipLevel == -1
           && key == 'member'
         )
-      }
+    }
     )
       .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
     // window.GAS.log.d('allowedMembershipFolderNames', allowedMembershipFolderNames)

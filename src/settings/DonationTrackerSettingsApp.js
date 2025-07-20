@@ -22,7 +22,7 @@ export default class DonationTrackerSettingsApp extends SvelteApplication
          resizable: true,
          minimizable: true,
          width: 600,
-         height: 400,
+         height: 550,
          minWidth: 550,
          headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.png',
 
