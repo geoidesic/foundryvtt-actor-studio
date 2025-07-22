@@ -18,7 +18,7 @@ const isDraft = args.includes('draft') || args.includes('--draft');
 const isPreRelease = args.includes('pre') || args.includes('--pre');
 const isTestRelease = isDraft || isPreRelease;
 
-// Check for uncommitted changes (moved to top)
+// Check for uncommitted changes (must be before any branch switching or merging)
 try {
     const gitStatus = execSync('git status --porcelain').toString().trim();
     if (gitStatus) {
@@ -332,6 +332,9 @@ if (isDraft) {
     const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : '';
     console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
 }
+
+// Always set environment to production for all releases
+packageJson.env = 'production';
 
 // Check if the new version tag already exists (only for published releases)
 if (!isDraft) {
