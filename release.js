@@ -18,6 +18,20 @@ const isDraft = args.includes('draft') || args.includes('--draft');
 const isPreRelease = args.includes('pre') || args.includes('--pre');
 const isTestRelease = isDraft || isPreRelease;
 
+// Check for uncommitted changes (moved to top)
+try {
+    const gitStatus = execSync('git status --porcelain').toString().trim();
+    if (gitStatus) {
+        console.error('❌ There are uncommitted changes in your working directory:');
+        console.error(gitStatus);
+        console.error('Please commit or stash your changes before running a release.');
+        process.exit(1);
+    }
+} catch (error) {
+    console.error('❌ Error checking git status:', error.message);
+    process.exit(1);
+}
+
 if (!versionType) {
     console.error('Usage: node release.js <major|minor|patch> [draft|pre]');
     console.error('');
@@ -302,20 +316,6 @@ try {
     }
 } catch (error) {
     console.error('❌ Error handling git branches:', error.message);
-    process.exit(1);
-}
-
-// Check for uncommitted changes
-try {
-    const gitStatus = execSync('git status --porcelain').toString().trim();
-    if (gitStatus) {
-        console.error('❌ There are uncommitted changes in your working directory:');
-        console.error(gitStatus);
-        console.error('Please commit or stash your changes before running a release.');
-        process.exit(1);
-    }
-} catch (error) {
-    console.error('❌ Error checking git status:', error.message);
     process.exit(1);
 }
 
