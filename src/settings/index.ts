@@ -643,15 +643,30 @@ function usageTracking() {
   game.settings.register(MODULE_ID, 'usage-tracking', {
     name: 'Usage Tracking',
     hint: 'Allow Actor Studio to collect anonymous usage data to help improve the module. No personal information is collected.',
-    scope: 'world',
+    scope: 'user',
     config: true,
     type: Boolean,
-    default: false,
+    default: true,
     onChange: (value) => {
-      if (window.GASUsageTracker) {
-        window.GASUsageTracker.consentGranted = value;
-        if (value && window.GASUsageTracker.offlineEvents.length > 0) {
-          window.GASUsageTracker.syncOfflineEvents();
+      if (!value) {
+        Dialog.confirm({
+          title: 'Disable Usage Tracking?',
+          content: `<p>Disabling usage tracking means we won’t know which languages or features are most important to our users. This anonymous data helps us improve Actor Studio for everyone. Are you sure you want to disable it?</p>`,
+          yes: () => {
+            if (window.GASUsageTracker) window.GASUsageTracker.consentGranted = false;
+          },
+          no: () => {
+            // Re-enable the setting if user cancels
+            game.settings.set(MODULE_ID, 'usage-tracking', true);
+          },
+          defaultYes: false
+        });
+      } else {
+        if (window.GASUsageTracker) {
+          window.GASUsageTracker.consentGranted = true;
+          if (window.GASUsageTracker.offlineEvents.length > 0) {
+            window.GASUsageTracker.syncOfflineEvents();
+          }
         }
       }
     }

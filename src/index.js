@@ -24,10 +24,11 @@ Hooks.once("init", (app, html, data) => {
 Hooks.once("ready", (app, html, data) => {
   ready(app, html, data);
   
-  // Initialize usage tracker when FoundryVTT is ready
-  if (window.GASUsageTracker) {
-    window.GASUsageTracker.initialize();
-    window.GASUsageTracker.trackSessionStart();
+  // Only send the first usage tracking event (module_loaded or session_start)
+  if (window.GASUsageTracker && !window.GASUsageTracker._hasTrackedFirstEvent) {
+    window.GASUsageTracker.initialize(); // This will send module_loaded
+    window.GASUsageTracker._hasTrackedFirstEvent = true;
+    // Do NOT call trackSessionStart here, as initialize() already tracks module_loaded
   }
 });
 

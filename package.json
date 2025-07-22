@@ -4,7 +4,7 @@
     "private": false,
     "version": "2.0.0-beta.7",
     "type": "module",
-    "debug": false,
+    "debug": true,
     "authors": [
         {
             "name": "Noel da Costa",
@@ -60,21 +60,21 @@
         "not IE 11"
     ],
     "scripts": {
-        "dev": " > dist/style.css; /* blank the style.css to enable HMR for css in dev */; vite;",
+        "dev": "npm pkg set env=dev && > dist/style.css; vite;",
         "build": "vite build",
         "eslint": "eslint .",
-        "release": "node release.js patch",
-        "release:patch": "node release.js patch",
-        "release:minor": "node release.js minor",
-        "release:major": "node release.js major",
-        "release:draft": "node release.js patch draft",
-        "release:draft:patch": "node release.js patch draft",
-        "release:draft:minor": "node release.js minor draft",
-        "release:draft:major": "node release.js major draft",
-        "release:pre": "node release.js patch pre",
-        "release:pre:patch": "node release.js patch pre",
-        "release:pre:minor": "node release.js minor pre",
-        "release:pre:major": "node release.js major pre",
+        "release": "npm pkg set env=production && node release.js patch",
+        "release:patch": "npm pkg set env=production && node release.js patch",
+        "release:minor": "npm pkg set env=production && node release.js minor",
+        "release:major": "npm pkg set env=production && node release.js major",
+        "release:draft": "npm pkg set env=production && node release.js patch draft",
+        "release:draft:patch": "npm pkg set env=production && node release.js patch draft",
+        "release:draft:minor": "npm pkg set env=production && node release.js minor draft",
+        "release:draft:major": "npm pkg set env=production && node release.js major draft",
+        "release:pre": "npm pkg set env=production && node release.js patch pre",
+        "release:pre:patch": "npm pkg set env=production && node release.js patch pre",
+        "release:pre:minor": "npm pkg set env=production && node release.js minor pre",
+        "release:pre:major": "npm pkg set env=production && node release.js major pre",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",
@@ -91,5 +91,6 @@
             "style": "Use SASS/SCSS syntax",
             "script": "Standard JavaScript"
         }
-    }
+    },
+    "env": "dev"
 }

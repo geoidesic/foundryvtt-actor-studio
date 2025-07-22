@@ -6,13 +6,20 @@
  */
 
 import { MODULE_ID } from '~/src/helpers/constants';
+import pkg from '../package.json' assert { type: "json" };
 
 class UsageTracker {
   constructor() {
     this.moduleKey = 'actor_studio_v2';
     this.moduleName = 'Actor Studio';
     this.moduleVersion = '2.0.0-beta.7';
-    this.apiUrl = 'http://localhost:4000/api/v1'; // Local development
+    // Select API URL based on env in package.json
+    const env = pkg.env;
+    if (env === 'dev') {
+      this.apiUrl = 'http://localhost:4000/api/v1';
+    } else {
+      this.apiUrl = 'https://polaris.aardvark.games/api/v1';
+    }
     this.sessionId = this.generateSessionId();
     this.consentGranted = false;
     this.offlineEvents = [];
