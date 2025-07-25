@@ -425,11 +425,32 @@ export async function handleAddEquipment({
         // Create a copy of the item data and set the quantity
         const data = game.items.fromCompendium(item);
         data.system.quantity = quantity;
-        const createdItem = await Item.create(data, { parent: $actorInGame });
-        
+        let createdItem;
+        if (window.GAS.dnd5eVersion >= 5) {
+          createdItem = await Item.create(data, { parent: $actorInGame });
+        } else {
+          // For v4.x and below, use dropItemOnCharacter to ensure advancements fire
+          const preIds = new Set($actorInGame.items.map(i => i.id));
+          await dropItemOnCharacter($actorInGame, data);
+          // Poll for the new item to appear on the actor
+          createdItem = await new Promise((resolve) => {
+            const maxAttempts = 20;
+            let attempts = 0;
+            const interval = setInterval(() => {
+              const newItems = $actorInGame.items.filter(i => !preIds.has(i.id) && i.name === data.name && i.type === data.type);
+              if (newItems.length > 0) {
+                clearInterval(interval);
+                resolve(newItems[0]);
+              } else if (++attempts >= maxAttempts) {
+                clearInterval(interval);
+                window.GAS.log.w('[WORKFLOW] Timed out waiting for dropped item to appear on actor:', data.name);
+                resolve(null);
+              }
+            }, 100);
+          });
+        }
         // Handle containers - contents may be a Promise that resolves to a Collection
         await handleContainerContents(item, createdItem, $actorInGame);
-        
         window.GAS.log.d('[WORKFLOW] Successfully created item:', item.name, 'with quantity:', quantity);
       }
     }

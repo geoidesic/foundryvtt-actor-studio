@@ -13,6 +13,8 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs } from "~/src/stores/index";
 
+  $: console.log('[BG] $background changed:', $background);
+
   let active = null,
     value = null,
     placeHolder = t('Tabs.Background.Placeholder');
@@ -59,19 +61,9 @@
   };
   
   const selectBackgroundHandler = async (option) => {
-    console.log('BACKGROUND SELECTION START:', {
-        option,
-        optionType: typeof option
-    });
-
+    console.log('[BG] selectBackgroundHandler called with:', option);
     const selectedBackground = await fromUuid(option);
-    console.log('BACKGROUND FROM UUID:', {
-        selectedBackground,
-        properties: Object.keys(selectedBackground || {}),
-        system: selectedBackground?.system,
-        advancement: selectedBackground?.advancement
-    });
-
+    console.log('[BG] selectBackgroundHandler selectedBackground:', selectedBackground);
     $background = selectedBackground;
     active = option;
     if(!value) {
@@ -86,12 +78,14 @@
 
 
   onMount(async () => {
+    console.log('[BG] onMount, $background:', $background);
     let backgroundUuid;
     if (window.GAS.debug) {
       backgroundUuid = window.GAS.background;
     } else {
       backgroundUuid = $background?.uuid;
     }
+    console.log('[BG] onMount, backgroundUuid:', backgroundUuid);
     if (backgroundUuid) {
       await selectBackgroundHandler(backgroundUuid);
     }

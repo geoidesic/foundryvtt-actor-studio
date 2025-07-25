@@ -15,22 +15,34 @@ const pulseKeyframes = `
 `;
 
 export function dnd5eSheet2UI(app, html, data) {
-
   const actor = data.actor;
-  // console.log('dnd5eSheet2UI actor', actor);
-
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: dnd5eVersion', window.GAS.dnd5eVersion);
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: actor', actor);
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: html', html);
 
   const sheetheader = html.find('.sheet-header');
-  const buttons = sheetheader.find('.sheet-header-buttons')
-  const classes = window.GAS.dnd5eVersion >= 5 ? actor.classes : actor._classes;
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: sheetheader', sheetheader.length);
+  const buttons = sheetheader.find('.sheet-header-buttons');
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: buttons', buttons.length);
 
-  // console.log('window.GAS.dnd5eVersion', window.GAS.dnd5eVersion)
-  // console.log('actor._classes', classes);
-  if (!Object.keys(classes).length || !game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0)) return;
+  let classes;
+  if (window.GAS.dnd5eVersion >= 5) {
+    classes = actor.classes;
+  } else if (actor.system && actor.system.classes) {
+    classes = actor.system.classes;
+  } else {
+    classes = actor._classes; // fallback for older versions
+  }
+  window.GAS.log.d('[GAS] dnd5eSheet2UI: classes', classes);
+
+  if (!classes || !Object.keys(classes).length || (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
+    window.GAS.log.d('[GAS] dnd5eSheet2UI: No classes or not eligible for level up.');
+    return;
+  }
 
   buttons.css('gap', '0.35rem');
-  const levelUpButton = $(`
-    <button type="button" class="config-button gold-button level-up" data-action="flags" data-tooltip="GAS.LevelUp.Button" aria-label="GAS.LevelUp.Button" style="
+  const levelUpButton = $(
+    `<button type="button" class="config-button gold-button level-up" data-action="flags" data-tooltip="GAS.LevelUp.Button" aria-label="GAS.LevelUp.Button" style="
       animation: pulse 2s infinite;
     ">
       <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 24px; max-height: 24px;"></img>
@@ -46,15 +58,13 @@ export function dnd5eSheet2UI(app, html, data) {
     //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
   })
-  
 
   $('<style>')
     .prop('type', 'text/css')
     .html(pulseKeyframes)
     .appendTo('head');
-  
-  buttons.append(levelUpButton);
 
+  buttons.append(levelUpButton);
 }
 
 export function tidy5eSheetUI(app, element, data) {
