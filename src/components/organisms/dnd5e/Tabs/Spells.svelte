@@ -1,6 +1,6 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs, level as characterLevel, isLevelUp, newLevelValueForExistingClass } from '../../../../stores/index';
+  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass } from '../../../../stores/index';
   import { characterClass, characterSubClass } from '../../../../stores/storeDefinitions';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -26,11 +26,18 @@
   // Get character class name for spell filtering and limits
   $: characterClassName = $characterClass?.name || 'Bard'; // Default to Bard for testing
   
+  // Calculate the effective character level for spell calculations
+  // For character creation: Always use level 1
+  // For level-up: Use the new level value
+  $: effectiveCharacterLevel = $isLevelUp && $newLevelValueForExistingClass 
+    ? $newLevelValueForExistingClass 
+    : 1; // Character creation is always level 1
+  
   // Check if character class gets access to all spells
   $: hasAllSpellsAccess = $spellLimits.hasAllSpells;
   
-  // Calculate max spell level based on character class and level (override store calculation)
-  $: calculatedMaxSpellLevel = getMaxSpellLevelForClass($characterLevel, characterClassName);
+  // Calculate max spell level based on character class and the effective level
+  $: calculatedMaxSpellLevel = getMaxSpellLevelForClass(effectiveCharacterLevel, characterClassName);
   
   // For level-up scenarios, use the new level for spell level calculations
   $: levelUpAwareMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
@@ -59,7 +66,7 @@
     console.log(`[SPELLS DEBUG] Character data:`, {
       characterClass: $characterClass,
       characterClassName,
-      characterLevel: $characterLevel,
+      effectiveCharacterLevel,
       newLevelValueForExistingClass: $newLevelValueForExistingClass,
       isLevelUp: $isLevelUp,
       storeMaxSpellLevel: $maxSpellLevel,
@@ -137,7 +144,7 @@
     // Debug logging
     console.log(`[SPELLS DEBUG] Loaded spells:`, {
       totalSpells: $availableSpells.length,
-      characterLevel: $characterLevel,
+      effectiveCharacterLevel,
       storeMaxSpellLevel: $maxSpellLevel,
       calculatedMaxSpellLevel,
       effectiveMaxSpellLevel,

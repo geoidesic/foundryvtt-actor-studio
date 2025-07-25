@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
-import { readOnlyTabs, characterClass, level as characterLevel, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
+import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
 
 // Import spellsKnown data for determining spell limits
 import spellsKnownData from './spellsKnown.json';
@@ -33,8 +33,8 @@ export const isSpellcaster = derived(
 
 // Derived store to get maximum spell level character can cast
 export const maxSpellLevel = derived(
-  [currentCharacter, characterLevel],
-  ([$currentCharacter, $characterLevel]) => {
+  [currentCharacter, isLevelUp, newLevelValueForExistingClass],
+  ([$currentCharacter, $isLevelUp, $newLevelValueForExistingClass]) => {
     if (!$currentCharacter) return 0;
 
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
@@ -59,9 +59,16 @@ export const maxSpellLevel = derived(
 
 // Derived store for spell limits based on character class and level
 export const spellLimits = derived(
-  [characterClass, characterLevel, isLevelUp, newLevelValueForExistingClass],
-  ([$characterClass, $characterLevel, $isLevelUp, $newLevelValueForExistingClass]) => {
-    if (!$characterClass || !$characterLevel) {
+  [characterClass, isLevelUp, newLevelValueForExistingClass],
+  ([$characterClass, $isLevelUp, $newLevelValueForExistingClass]) => {
+    // Calculate the effective character level for spell selection
+    // For character creation: Always use level 1
+    // For level-up: Use the new level value
+    const effectiveCharacterLevel = $isLevelUp && $newLevelValueForExistingClass 
+      ? $newLevelValueForExistingClass 
+      : 1; // Character creation is always level 1
+      
+    if (!$characterClass || !effectiveCharacterLevel) {
       return { cantrips: 0, spells: 0 };
     }
 
@@ -102,9 +109,9 @@ export const spellLimits = derived(
         hasAllSpells: newHasAllSpells
       };
     } else {
-      // Character creation scenario - use total spells for current level
-      const level = $characterLevel;
-      const levelData = spellsKnownData.levels.find(l => l.level === level);
+      // Character creation scenario - use total spells for level 1
+      const effectiveCharacterLevel = 1;
+      const levelData = spellsKnownData.levels.find(l => l.level === effectiveCharacterLevel);
       if (!levelData || !levelData[className]) {
         return { cantrips: 0, spells: 0 };
       }
