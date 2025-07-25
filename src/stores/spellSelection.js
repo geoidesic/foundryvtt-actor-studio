@@ -681,7 +681,6 @@ if (typeof window !== 'undefined') {
   if (!window.GAS) window.GAS = {};
   window.GAS.availableSpells = availableSpells;
   window.GAS.selectedSpells = selectedSpells;
-  window.GAS.characterLevel = characterLevel;
   window.GAS.isSpellcaster = isSpellcaster;
   window.GAS.maxSpellLevel = maxSpellLevel;
   window.GAS.spellLimits = spellLimits;
