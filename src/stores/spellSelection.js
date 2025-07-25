@@ -110,8 +110,7 @@ export const spellLimits = derived(
       };
     } else {
       // Character creation scenario - use total spells for level 1
-      const effectiveCharacterLevel = 1;
-      const levelData = spellsKnownData.levels.find(l => l.level === effectiveCharacterLevel);
+      const levelData = spellsKnownData.levels.find(l => l.level === 1);
       if (!levelData || !levelData[className]) {
         return { cantrips: 0, spells: 0 };
       }
