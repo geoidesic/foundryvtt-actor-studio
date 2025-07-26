@@ -26,14 +26,12 @@ export function dnd5eSheet2UI(app, html, data) {
   window.GAS.log.d('[GAS] dnd5eSheet2UI: buttons', buttons.length);
 
   let classes;
-  if (window.GAS.dnd5eVersion >= 5) {
+  if (window.GAS.dnd5eVersion >= 4) {
     classes = actor.classes;
   } else if (actor.system && actor.system.classes && Object.keys(actor.system.classes).length) {
     classes = actor.system.classes;
   } else if (actor._classes && Object.keys(actor._classes).length) {
     classes = actor._classes;
-  } else if (actor.items && actor.items.filter(i => i.type === 'class').length) {
-    classes = { items: actor.items.filter(i => i.type === 'class') };
   } else {
     classes = undefined;
   }
@@ -41,7 +39,9 @@ export function dnd5eSheet2UI(app, html, data) {
 
   let hasClasses = false;
   if (classes) {
-    if (Array.isArray(classes.items)) {
+    if (Array.isArray(classes)) {
+      hasClasses = classes.length > 0;
+    } else if (Array.isArray(classes.items)) {
       hasClasses = classes.items.length > 0;
     } else {
       hasClasses = Object.keys(classes).length > 0;

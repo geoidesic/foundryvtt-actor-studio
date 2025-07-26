@@ -285,7 +285,7 @@ $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
 $: subClassProp = $subClassUuidForLevelUp;
 $: classProp = $selectedMultiClassUUID;
-$: classes = window.GAS.dnd5eVersion >= 5 ? $actor.classes : $actor._classes;
+$: classes = window.GAS.dnd5eVersion >= 4 ? $actor.classes : $actor._classes;
 $: classKeys = Object.keys(classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
 // $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${t('SubClass')}</h1>` + richSubClassHTML : '') : '';
