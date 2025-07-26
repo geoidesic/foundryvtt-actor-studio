@@ -28,14 +28,27 @@ export function dnd5eSheet2UI(app, html, data) {
   let classes;
   if (window.GAS.dnd5eVersion >= 5) {
     classes = actor.classes;
-  } else if (actor.system && actor.system.classes) {
+  } else if (actor.system && actor.system.classes && Object.keys(actor.system.classes).length) {
     classes = actor.system.classes;
+  } else if (actor._classes && Object.keys(actor._classes).length) {
+    classes = actor._classes;
+  } else if (actor.items && actor.items.filter(i => i.type === 'class').length) {
+    classes = { items: actor.items.filter(i => i.type === 'class') };
   } else {
-    classes = actor._classes; // fallback for older versions
+    classes = undefined;
   }
   window.GAS.log.d('[GAS] dnd5eSheet2UI: classes', classes);
 
-  if (!classes || !Object.keys(classes).length || (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
+  let hasClasses = false;
+  if (classes) {
+    if (Array.isArray(classes.items)) {
+      hasClasses = classes.items.length > 0;
+    } else {
+      hasClasses = Object.keys(classes).length > 0;
+    }
+  }
+
+  if (!hasClasses || (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
     window.GAS.log.d('[GAS] dnd5eSheet2UI: No classes or not eligible for level up.');
     return;
   }
