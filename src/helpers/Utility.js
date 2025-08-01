@@ -152,7 +152,8 @@ export function filterPackForDTPackItems(pack, entries) {
 
     const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
 
-    if (game.user.isGM && game.membership.DEVELOPER_IS_ADMIN) return entries;
+    // Game Masters should bypass donation tracker restrictions regardless of their login status
+    if (game.user.isGM) return entries;
     // filter the index.entries accordingly
     entries = entries.filter(([key, value]) => {
 
