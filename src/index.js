@@ -16,6 +16,7 @@ import { renderAdvancementManager } from './hooks/advancementManager.js';
 import { renderCompendium } from './hooks/renderCompendium.js';
 import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
+import { renderNPCStudioSidebarButton, renderASButtonInCreateNPCApplication, openNPCStudio } from './hooks/actorStudioNPCStartButtons.js';
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
@@ -118,11 +119,13 @@ Hooks.on('renderCompendium', async (app, html, data) => {
 //- game.version < 13
 Hooks.on('renderApplication', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
+  if (game.settings.get(MODULE_ID, 'enableNPCCreation')) renderASButtonInCreateNPCApplication(app, html, data);
 });
 
 //- game.version >= 13
 Hooks.on('renderApplicationV2', (app, html, data) => {
   renderASButtonInCreateActorApplication(app, html, data);
+  if (game.settings.get(MODULE_ID, 'enableNPCCreation')) renderASButtonInCreateNPCApplication(app, html, data);
 });
 
 // Clean up event handlers when dialogs are closed
@@ -139,16 +142,25 @@ Hooks.on('closeApplication', (app) => {
 //- Add Actor Studio button to the Actor Directory in game.version >= 13
 Hooks.on('activateActorDirectory', async (app) => {
   renderActorStudioSidebarButton(app);
+  if (game.settings.get(MODULE_ID, 'enableNPCCreation') && game.version >= 13) renderNPCStudioSidebarButton(app);
 })
 //- Add Actor Studio button to the Actor Directory in game.version < 13
 Hooks.on('renderActorDirectory', async (app, html) => {
   renderActorStudioSidebarButton(app, html);
+  if (game.settings.get(MODULE_ID, 'enableNPCCreation') && game.version < 13) renderNPCStudioSidebarButton(app, html);
 })
 
 Hooks.on('gas.openActorStudio', (actorName, folderName, actorType) => {
   openActorStudio(actorName, folderName, actorType);
   
   // Track actor studio opened
+  if (window.GASUsageTracker) {
+    window.GASUsageTracker.trackActorStudioOpened(actorName, folderName, actorType);
+  }
+});
+
+Hooks.on('gas.openNPCStudio', (actorName, folderName, actorType) => {
+  openNPCStudio(actorName, folderName, actorType);
   if (window.GASUsageTracker) {
     window.GASUsageTracker.trackActorStudioOpened(actorName, folderName, actorType);
   }

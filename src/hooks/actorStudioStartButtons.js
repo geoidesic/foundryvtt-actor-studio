@@ -73,7 +73,7 @@ function isActorTypeValid(actorTypes, type) {
   return actorTypes.hasOwnProperty(type) && actorTypes[type] === true;
 }
 
-function getActorStudioButton(buttonId, text = false) {
+function getActorStudioButton(buttonId, cssClasses = [], text = false) {
   const gasButton = document.createElement('button');
   gasButton.id = buttonId;
   gasButton.type = 'button';
@@ -97,6 +97,10 @@ function getActorStudioButton(buttonId, text = false) {
     gasButton.appendChild(span);
   }
 
+  if (cssClasses.length) {
+    gasButton.className += ' ' + cssClasses.join(' ');
+  }
+
   setTimeout(() => {
     const btn = document.getElementById(buttonId);
     if (btn) {
@@ -114,7 +118,7 @@ export const renderActorStudioSidebarButton = (app) => {
   if (app.constructor.name !== "ActorDirectory") return;
 
   const element = game.version >= 13 ? app.element : app._element;
-  console.log('GAS: element', element);
+  // console.log('GAS: element', element);
   if (!element) return;
 
   const elementId = `sidebar-${app.id || 'default'}`;
@@ -127,17 +131,17 @@ export const renderActorStudioSidebarButton = (app) => {
   
   if (hasButton) return;
 
-  const gasButton = getActorStudioButton('gas-sidebar-button');
+  const gasButton = getActorStudioButton('gas-sidebar-button', ['gas-sidebar-button']);
   if (game.version >= 13) {
     gasButton.classList.add('v13');
     const headerActions = element.querySelector('header.directory-header .header-actions');
-    console.log('GAS: headerActions found:', headerActions ? 1 : 0);
+    // console.log('GAS: headerActions found:', headerActions ? 1 : 0);
     if (headerActions && headerActions.parentNode) {
       headerActions.parentNode.insertBefore(gasButton, headerActions.nextSibling);
     }
   } else {
     const header = element.find('header.directory-header')[0];
-    console.log('GAS: header found:', header ? 1 : 0);
+    // console.log('GAS: header found:', header ? 1 : 0);
     if (header) header.appendChild(gasButton);
   }
   
@@ -185,7 +189,7 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           $('#document-create .form-fields select', html).prop('disabled', true);
         }
         if (!$('#gas-dialog-button', html).length) {
-          const gasButton = getActorStudioButton('gas-dialog-button');
+          const gasButton = getActorStudioButton('gas-dialog-button', ['gas-sidebar-button']);
           console.log(gasButton);
           if(game.version < 13) {
             $(gasButton).css('line-height', 'unset')
@@ -234,3 +238,5 @@ export default {
   openActorStudio,
   cleanupAllEventHandlers
 }
+
+export { getActorStudioButton };

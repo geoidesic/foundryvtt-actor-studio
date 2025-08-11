@@ -388,8 +388,6 @@
     .icon-list
       .advancement
         color: var(--gas-color-text)
-
-    
   
   .tab-content ul.icon-list 
     .image
@@ -408,20 +406,26 @@ body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
     .flex0
       flex: 0
-#gas-sidebar-button
-  display: flex 
-  align-items: center
-  justify-content: center
-  background-color: white
-  padding: 0
-  margin: 0
-  height: 40px
-  &.v13
-    margin: 0.2rem 0.5rem
 
-#gas-dialog-button
-  background-color: white
+#gas-sidebar-button, #gas-sidebar-npc-button
+  &.gas-sidebar-button
 
+    font-size: 2rem
+    color: var(--button-background-color)
+
+    display: flex 
+    align-items: center
+    justify-content: center
+    background-color: white
+    padding: 0
+    margin: 0
+    height: 40px
+    &.v13
+      margin: 0.2rem 0.5rem
+
+#gas-dialog-button, #gas-dialog-npc-button
+    background-color: white
+    
 #foundryvtt-actor-studio-pc-sheet
   table.core-class-traits
     th, td
