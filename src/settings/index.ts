@@ -34,6 +34,7 @@ export function registerSettings(app: Game): void {
   /** World Settings */
   sourcesConfiguration();
   donationTracker();
+  enableNPCCreation();
   defaultStartingGoldDice();
   allowManualInput();
   allowStandardArray();
@@ -669,6 +670,26 @@ function usageTracking() {
           }
         }
       }
+    }
+  });
+}
+
+function enableNPCCreation() {
+  game.settings.register(MODULE_ID, 'enableNPCCreation', {
+    name: game.i18n.localize('GAS.Setting.EnableNPCCreation.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableNPCCreation.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
     }
   });
 }

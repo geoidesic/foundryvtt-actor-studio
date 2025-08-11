@@ -3,8 +3,9 @@ import { DEFAULT_SOURCES, LOG_PREFIX, MODULE_ID } from '../helpers/constants';
 export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
     super({});
-    this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item');
+    this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item' || p.documentName === 'Actor');
     this.filterPackSourcesAppropriatelyByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
+    this.npcEnabled = game.settings.get(MODULE_ID, 'enableNPCCreation');
   }
 
   static get defaultOptions() {
@@ -56,11 +57,11 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   }
 
   buildTemplateData({ compendiaList, selectedCompendia }) {
-    return {
+    const data = {
       source: {
         races: {
           label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
-          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'races',['race'])
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'races', ['race'])
         },
         classes: {
           label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
@@ -84,6 +85,13 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         }
       }
     };
+    if (this.npcEnabled) {
+      data.source.npcs = {
+        label: game.i18n.localize('GAS.Setting.Sources.NPCCompendia'),
+        compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'npcs', ['npc'])
+      };
+    }
+    return data;
   }
 
   /**

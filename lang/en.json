@@ -297,7 +297,8 @@
         "BackgroundCompendia": "Background Compendia",
         "SpellCompendia": "Spell Compendia",
         "FeatCompendia": "Feat Compendia",
-        "EquipmentCompendia": "Equipment Compendia"
+        "EquipmentCompendia": "Equipment Compendia",
+        "NPCCompendia": "NPC Compendia"
       },
       "TrimSubclasses": {
         "Name": "Trim Subclass names",
@@ -322,6 +323,10 @@
       "EnableSpellSelection": {
         "Name": "Enable Spell Selection",
         "Hint": "Allows players to select their spells during character creation. If disabled, spells will need to be added manually after creation."
+      },
+      "EnableNPCCreation": {
+        "Name": "Enable NPC Creation",
+        "Hint": "Allow creation of NPCs using Actor Studio. If enabled, a compendium source selector for NPCs will appear."
       }
     },
     "Equipment": {
