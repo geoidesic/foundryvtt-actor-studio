@@ -17,6 +17,7 @@ export const activeTab = writable(''); //- tracks the active tab
 export const isActorCreated = writable(false); //- tracks if the actor has been created
 export const tabs = writable([]); //- tracks the tabs
 export const levelUpTabs = writable([]); //- tracks the level up tabs
+export const npcTabs = writable([]); //- tracks the level up tabs
 export const actorInGame = writable(null); //- tracks the actor in game
 export const abilityGenerationMethod = writable(null); //- tracks the ability generation method
 export const subClassesForClass = writable([]); //- tracks the subclasses for the class

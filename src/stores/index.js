@@ -34,6 +34,10 @@ const initialTabs = [
   { label: 'Class', id: 'class', component: 'Class' },
 ];
 
+const npcTabs = [
+  { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
+];
+
 // Tabs for level up
 const upTabs = [
   { label: 'Level Up', id: 'level-up', component: 'LevelUp' },
@@ -42,6 +46,7 @@ const upTabs = [
 // Set initial values for tabs
 storeDefinitions.tabs.set(initialTabs);
 storeDefinitions.levelUpTabs.set(upTabs);
+storeDefinitions.npcTabs.set(npcTabs);
 storeDefinitions.pointBuyLimit.set(27);
 
 // Set names for debugging
@@ -65,6 +70,7 @@ storeDefinitions.selectedMultiClassUUID.name = 'selectedMultiClassUUID';
 storeDefinitions.isActorCreated.name = 'isActorCreated';
 storeDefinitions.tabs.name = 'tabs';
 storeDefinitions.levelUpTabs.name = 'levelUpTabs';
+storeDefinitions.npcTabs.name = 'npcTabs';
 storeDefinitions.actorInGame.name = 'actorInGame';
 storeDefinitions.abilityGenerationMethod.name = 'abilityGenerationMethod';
 storeDefinitions.subClassesForClass.name = 'subClassesForClass';

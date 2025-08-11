@@ -64,7 +64,7 @@ export default class NPCApplication extends SvelteApplication {
         class: NPCAppShell,
         target: document.body,
         props: function () {
-          return { documentStore: this.#documentStore, document: this.reactive.document, levelUp: this.levelUp  };
+          return { documentStore: this.#documentStore, document: this.reactive.document};
         },
       },
     });
