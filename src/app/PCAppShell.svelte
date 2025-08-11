@@ -7,7 +7,6 @@
   import dnd5e from "~/config/systems/dnd5e.json"
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
-  import { log } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';

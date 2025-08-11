@@ -1,5 +1,7 @@
 # FoundryVTT Actor Studio - AI Coding Guide
 
+NB: don't ask for permission to code, just do it.
+
 ## Architecture Overview
 
 **Core Framework**: This is a FoundryVTT module built with Svelte + TyphonJS runtime for reactive UI components and Finity state machines for workflow orchestration. The module creates D&D 5e characters through a guided multi-step process with advancement capture integration.
