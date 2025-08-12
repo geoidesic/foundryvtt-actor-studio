@@ -106,7 +106,7 @@ StandardTabLayout(
     +if("options.length > 1")
       IconSelect.icon-select({options} {active} {placeHolder} handler="{selectHandler}" id="ability-generation-method-select" bind:value="{$abilityGenerationMethod}" disabled="{isDisabled}")
       +else()
-        ol.properties-list
+        ul.properties-list
           +each("options as option")
             li {option.label}
     +if("$abilityGenerationMethod")
@@ -123,6 +123,11 @@ StandardTabLayout(
 
 .relative
   position: relative
+
+.properties-list
+  list-style: none
+  list-style-position: inside
+  padding: 0
 
 .overlay
   position: absolute

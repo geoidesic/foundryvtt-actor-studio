@@ -14,14 +14,15 @@
 </script>
 
 <template lang="pug">
-div.content(class="{contentClass}")
+.content(class="{contentClass}")
   +if("showTitle")
     h1.center.mt-none.hide {title}
-  .flexrow
+  .flexrow.relative.tall
     .flex2.pr-sm.col-a(class="{leftPanelClass}")
       slot(name="left")
-    .flex0.border-right.right-border-gradient-mask
+    .flex0.border-right.right-border-gradient-mask.divider
     .flex3.left.pl-md.scroll.col-b(class="{rightPanelClass}")
+      hr.vertical
       slot(name="right")
 </template>
 
@@ -29,8 +30,24 @@ div.content(class="{contentClass}")
 @use "../../../styles/Mixins.sass" as mixins
 
 .content 
+  container-type: inline-size
   +mixins.staticOptions
+
+  .divider
+    height: 100%
+    position: relative
 
   .col-a
     // max-width: 325px
+  .vertical
+
+@container (width < 497px) 
+  .divider
+    display: none
+  .vertical
+    display: block
+    margin-top: 0
+    padding-top: 0
+    margin-bottom: 2.5rem
+
 </style>
