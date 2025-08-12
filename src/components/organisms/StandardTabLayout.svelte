@@ -40,14 +40,15 @@
   .col-a
     // max-width: 325px
   .vertical
-
-@container (width < 497px) 
-  .divider
     display: none
-  .vertical
-    display: block
-    margin-top: 0
-    padding-top: 0
-    margin-bottom: 2.5rem
+
+  @container (width < 497px) 
+    .divider
+      display: none
+    .vertical
+      display: block
+      margin-top: 0
+      padding-top: 0
+      margin-bottom: 2.5rem
 
 </style>

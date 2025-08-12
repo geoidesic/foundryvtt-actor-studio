@@ -5,6 +5,9 @@
   import { getContext, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
 
+  // Add NPCStatBlock import
+  import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
+
   // Store for selected NPC item
   export let selectedNpc = writable(null);
   let active = null, value = null;
@@ -52,6 +55,12 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
       .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
       .flex3
         IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectNpcHandler}" id="npc-select" bind:value)
+    +if("$selectedNpc")
+      NPCStatBlock(
+        name="{$selectedNpc.name}"
+        npc="{$selectedNpc}"
+        
+      )
   div(slot="right") {@html richHTML}
 </template>
 

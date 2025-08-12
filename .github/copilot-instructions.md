@@ -15,9 +15,28 @@ NB: don't ask for permission to code, just do it.
 ## Critical Development Patterns
 - NB: ensure you run the tests before claiming success
 
-**Frontend Stack**:
+- **Frontend Stack**:
 - **CRITICAL**: ALL Svelte components MUST use Pug templates with `<template lang="pug">` - NEVER use standard HTML markup
 - Pug templates with Svelte preprocessing (NOT standard Pug - see `.cursor/rules/`)
+- **CRITICAL: Svelte Pug attribute assignment syntax:**
+  - Always use `ComponentName(attr1="{expr1}" attr2="{expr2}")` for all props/attributes.
+  - **Do NOT use** `{attr1=expr1}` or `{attr1}` or `{...}` syntax. These are invalid in Svelte Pug.
+  - Example (correct):
+    - `CustomElement(name="{$selectedNpc.name}")`
+  - Example (wrong):
+    - `CustomElement(name={$selectedNpc.name})`
+    - `CustomElement({name=$selectedNpc.name})`
+    - `CustomElement({name})`
+  - **CRITICAL: Complex expressions in Svelte Pug attributes:**
+    - svelte-preprocess pug cannot handle complex expressions inline in attribute values (e.g. ternaries, optional chaining, or computed expressions) unless you use the `!=` operator for unescaped output.
+    - **Best practice:** For anything more than a simple variable or property, break the expression out into a computed variable in the `<script>` block, then reference that variable in the template.
+    - Example (correct):
+      - In `<script>`: `let foo = bar?.baz ? bar.baz : 'default';`
+      - In template: `CustomElement(attr="{foo}")`
+    - Example (with !=):
+      - `CustomElement(attr!=bar && bar.baz ? bar.baz : 'default')`
+    - **Never** put complex expressions directly in quoted attribute values.
+- **CRITICAL: ALL style blocks and CSS in Svelte components MUST use SASS indented format** (never SCSS or CSS block braces). Use `style lang="sass"` and always indent with two spaces per level. Never use curly braces for style blocks.
 - Conditional logic must be properly nested: `+else()` indented one level deeper than `+if()`
 - Avoid long expressions in attributes - extract to script functions
 - ESM-only project - never use `require()`, always `import`

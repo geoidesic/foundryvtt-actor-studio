@@ -106,9 +106,14 @@
       -webkit-transform: scale(1.0)
       transform: scale(1.0)
 
-=stat-block($url)
+=stat-block($url, $headerColor, $backgroundColor)
+  background: url($url) repeat 
+  background-color: $backgroundColor
+  background-blend-mode: lighten
+
+  --gas-text-color-header: $headerColor
+  --gas-text-color-label: $headerColor
   text-align: left
-  background: url($url) repeat
   background-position-x: initial
   background-position-y: initial
   background-size: initial
@@ -120,6 +125,25 @@
   border-bottom: 5px ridge #c27e17
 
 
+  h2
+    color: $headerColor
+    // letter-spacing: 1px
+    font-kerning: 1px
+    font-variant: small-caps
+  
+  .label
+    color: var(--actor-studio-color-tertiary)
+    font-weight: bold
+    display: inline
+
+  .value
+    display: inline
+    
+  hr
+    background-image: linear-gradient(90deg, #8f1010 0%, transparent 100%)
+    height: 4px
+    margin: 0
+    padding: 0
 
 @mixin buttons
   .rowimg

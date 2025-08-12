@@ -226,7 +226,7 @@
   img
     border: none
 
-  
+
   .header-control
     margin: 5px -1px !important
     &::before
@@ -281,7 +281,8 @@
   .justify-flexrow-vertical
     align-items: center
 
-
+  .inline
+    display: inline
   
   .tabs-list
     padding: 0.25rem 1.5rem !important
@@ -405,6 +406,46 @@
     .advancement
       background-color: var(--tabs-content-background)
 
+  .npc-stat-block
+    background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat 
+    background-color: rgba(255,255,255,0.5)
+    background-blend-mode: lighten
+
+    --gas-text-header-color: #6e0000
+    text-align: left
+    background-position-x: initial
+    background-position-y: initial
+    background-size: initial
+    background-repeat: repeat
+    background-attachment: initial
+    background-origin: initial
+    background-clip: initial
+    border-top: 5px ridge #c27e17
+    border-bottom: 5px ridge #c27e17
+
+    h2
+      color: var(--gas-text-header-color)
+      // letter-spacing: 1px
+      font-kerning: 1px
+      font-variant: small-caps
+    
+    .label
+      color: var(--actor-studio-color-tertiary)
+      font-weight: bold
+
+    .value
+      display: inline
+      
+    hr
+      background-image: linear-gradient(90deg, #8f1010 0%, transparent 100%)
+      height: 4px
+      margin: 0
+      padding: 0
+
+  .theme-dark
+    --gas-text-header-color: var(--dnd-color-gold)
+    background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
+
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
     .flex0
@@ -414,7 +455,7 @@ body.game #gas-settings-submenu.app.window-app
   &.gas-sidebar-button
 
     font-size: 2rem
-    color: var(--actor-studio-secondary-color)
+    color: var(--actor-studio-color-secondary)
 
     display: flex 
     align-items: center
@@ -425,6 +466,8 @@ body.game #gas-settings-submenu.app.window-app
     height: 40px
     &.v13
       margin: 0.2rem 0.5rem
+
+
 
 #gas-dialog-button, #gas-dialog-npc-button
     background-color: white
