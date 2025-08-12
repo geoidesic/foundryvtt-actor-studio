@@ -16,19 +16,19 @@
     "type",
     "folder",
     "uuid->value",
-    "_id",
-    "system.details.biography->biography"
+    "_id"
   ]);
   let itemDefinitions = allItems
     .filter((x) => x.type == "npc")
     .sort((a, b) => a.label.localeCompare(b.label));
 
   $: options = itemDefinitions;
-  $: html = $selectedNpc?.system?.details?.biography || "";
+  $: html = $selectedNpc?.system?.details?.biography.value || "";
   let richHTML = "";
 
   const selectNpcHandler = async (option) => {
     const selected = await fromUuid(option);
+    window.GAS.log.p('selected NPC', selected)
     $selectedNpc = selected;
     active = option;
     if (!value) value = option;
@@ -38,7 +38,6 @@
   };
 
   onMount(async () => {
-    alert('o')
     window.GAS.log.d('allItems', allItems)
     if ($selectedNpc?.uuid) {
       await selectNpcHandler($selectedNpc.uuid);
