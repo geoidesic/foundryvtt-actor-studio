@@ -442,9 +442,11 @@
       margin: 0
       padding: 0
 
-  .theme-dark
-    --gas-text-header-color: var(--dnd-color-gold)
-    background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
+  &.theme-dark
+    .npc-stat-block
+      --gas-text-header-color: var(--dnd-color-gold)
+      background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
+      .value
 
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol

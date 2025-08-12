@@ -106,13 +106,11 @@
       -webkit-transform: scale(1.0)
       transform: scale(1.0)
 
-=stat-block($url, $headerColor, $backgroundColor)
-  background: url($url) repeat 
-  background-color: $backgroundColor
+=stat-block($url,)
+  background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat 
+  background-color: rgba(255,255,255,0.5)
   background-blend-mode: lighten
-
-  --gas-text-color-header: $headerColor
-  --gas-text-color-label: $headerColor
+  --gas-text-header-color: #6e0000
   text-align: left
   background-position-x: initial
   background-position-y: initial
@@ -124,9 +122,8 @@
   border-top: 5px ridge #c27e17
   border-bottom: 5px ridge #c27e17
 
-
   h2
-    color: $headerColor
+    color: var(--gas-text-header-color)
     // letter-spacing: 1px
     font-kerning: 1px
     font-variant: small-caps

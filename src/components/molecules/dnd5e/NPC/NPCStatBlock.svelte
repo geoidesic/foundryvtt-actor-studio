@@ -42,7 +42,6 @@
 </template>
 
 <style lang="sass">
-@use '../../../../../styles/Mixins.sass' as mixins
 .npc-stat-block
   margin: 1rem 0 0 0
   padding: 0.5em
@@ -54,13 +53,6 @@
     grid-template-columns: repeat(6, 1fr)
     margin-top: 0.5em
 
-
-
-:global(body.theme-dark)
-  .npc-stat-block
-    --gas-text-header-color: var(--dnd-color-gold)
-    +mixins.stat-block('/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp', var(--gas-text-header-color), rgba(255,255,255,0))
-    // +mixins.stat-block('/modules/foundryvtt-actor-studio/assets/parchment2.webp', rgba(255,255,255,0))
 .name
   margin: 0
 </style>
