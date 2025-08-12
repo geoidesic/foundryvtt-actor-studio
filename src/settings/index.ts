@@ -575,7 +575,7 @@ function enableEquipmentSelection() {
     hint: game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Hint'),
     scope: 'world',
     config: true,
-    default: false,
+    default: true,
     type: Boolean,
     onChange: () => {
       Dialog.confirm({
@@ -615,7 +615,7 @@ function enableSpellSelection() {
     hint: game.i18n.localize('GAS.Setting.EnableSpellSelection.Hint'),
     scope: 'world',
     config: true,
-    default: false,
+    default: true,
     type: Boolean,
     onChange: () => {
       Dialog.confirm({
