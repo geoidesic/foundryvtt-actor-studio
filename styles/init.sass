@@ -283,6 +283,11 @@
 
   .inline
     display: inline
+
+  .small
+    font-size: small
+  .smaller
+    font-size: smaller
   
   .tabs-list
     padding: 0.25rem 1.5rem !important
@@ -444,9 +449,12 @@
 
   &.theme-dark
     .npc-stat-block
-      --gas-text-header-color: var(--dnd-color-gold)
+      --gas-text-header-color: var(--dnd5e-color-gold)
       background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
-      .value
+      h2, .label
+        color: var(--dnd5e-color-gold) !important
+      hr
+        background-image: linear-gradient(90deg, var(--dnd5e-color-gold) 0%, transparent 100%)
 
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol

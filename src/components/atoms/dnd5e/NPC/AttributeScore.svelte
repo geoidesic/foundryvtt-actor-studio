@@ -9,8 +9,7 @@
   .stat
     .flexcol.center
       .flex1.label {abbreviation}
-      .flex1.value {score} 
-      .flex1.value ({modString})
+      .flex1.value {score} ({modString})
 </template>
 
 <style lang="sass">

@@ -27,9 +27,9 @@
   .npc-stat-block
     h2.name {name}
     .details
-      span.mr-sm {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)},
-      span.mr-sm {ucfirst(npc?.system?.details?.type?.value)},
-      span.mr-sm {npc?.system?.details?.alignment}
+      span.mr-sm.smaller {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)},
+      span.mr-sm.smaller {ucfirst(npc?.system?.details?.type?.value)},
+      span.mr-sm.smaller {npc?.system?.details?.alignment}
     .label.inline Armor Class 
     .value {npc?.system?.attributes?.ac.flat}
     HitPoints(hp="{npc?.system?.attributes?.hp}")
