@@ -1,6 +1,6 @@
 <script>
   import SvelteSelect from "svelte-select";
-  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     extractMapIteratorObjectProperties,
@@ -292,14 +292,14 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     .flexrow
       .flex0.required(class="{$characterClass ? '' : 'active'}") *
       .flex3 
-        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}")
+        IconSearchSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}")
     +if("$characterClass")
       +if("subclasses.length && subClassLevel == 1")
         h2.left {t('SubClass')}
         .flexrow
           .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
           .flex3
-            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17")
+            IconSearchSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17")
       +if("!$readOnlyTabs.includes('class')")
         h2.left {t('Tabs.Classes.FilterByLevel')}
         .flexrow
