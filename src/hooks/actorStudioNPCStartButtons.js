@@ -26,13 +26,25 @@ export function renderNPCStudioSidebarButton(app) {
   const element = game.version >= 13 ? app.element : app._element;
   if (!element) return;
 
+  const elementId = `sidebar-npc-${app.id || 'default'}`;
+  // Clean up any previous event handlers for this sidebar instance
+  if (typeof cleanupEventHandlers === 'function') cleanupEventHandlers(elementId);
+
+  // Remove any existing button before adding a new one
+  if (game.version >= 13) {
+    const oldBtn = element.querySelector('#gas-sidebar-npc-button');
+    if (oldBtn && oldBtn.parentNode) oldBtn.parentNode.removeChild(oldBtn);
+  } else {
+    element.find('#gas-sidebar-npc-button').remove();
+  }
+
+  // Prevent duplicate button
   const hasButton = game.version >= 13 
-    ? element.querySelector('.gas-sidebar-npc-button')
-    : element.find('.gas-sidebar-npc-button').length > 0;
+    ? element.querySelector('#gas-sidebar-npc-button')
+    : element.find('#gas-sidebar-npc-button').length > 0;
   if (hasButton) return;
 
   const gasButton = getActorStudioButton('gas-sidebar-npc-button', ['gas-sidebar-button','npc'], 'NPC');
-
   if (game.version >= 13) {
     gasButton.classList.add('v13');
     const headerActions = element.querySelector('header.directory-header .header-actions');
@@ -44,12 +56,19 @@ export function renderNPCStudioSidebarButton(app) {
     if (header) header.appendChild(gasButton);
   }
 
-  gasButton.addEventListener('mousedown', (e) => {
+  // Add event handlers and store for cleanup
+  const mousedownHandler = (e) => {
     Hooks.call('gas.openNPCStudio', game.user.name, '', 'npc');
-  });
-  gasButton.addEventListener('keydown', (e) => {
+  };
+  const keydownHandler = (e) => {
     Hooks.call('gas.openNPCStudio', game.user.name, '', 'npc');
-  });
+  };
+  gasButton.addEventListener('mousedown', mousedownHandler);
+  gasButton.addEventListener('keydown', keydownHandler);
+  if (typeof storeEventHandler === 'function') {
+    storeEventHandler(elementId, gasButton, 'mousedown', mousedownHandler);
+    storeEventHandler(elementId, gasButton, 'keydown', keydownHandler);
+  }
 }
 
 export function renderASButtonInCreateNPCApplication(app, html, data) {

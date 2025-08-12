@@ -139,15 +139,14 @@ Hooks.on('closeApplication', (app) => {
 /** 
  * Handle rendering the Actor Studio button in the Sidebar Actor Directory
  */
-//- Add Actor Studio button to the Actor Directory in game.version >= 13
+//- Always add both PC and NPC Actor Studio buttons to the Actor Directory for all versions
 Hooks.on('activateActorDirectory', async (app) => {
   renderActorStudioSidebarButton(app);
-  if (game.settings.get(MODULE_ID, 'enableNPCCreation') && game.version >= 13) renderNPCStudioSidebarButton(app);
+  renderNPCStudioSidebarButton(app);
 })
-//- Add Actor Studio button to the Actor Directory in game.version < 13
 Hooks.on('renderActorDirectory', async (app, html) => {
   renderActorStudioSidebarButton(app, html);
-  if (game.settings.get(MODULE_ID, 'enableNPCCreation') && game.version < 13) renderNPCStudioSidebarButton(app, html);
+  renderNPCStudioSidebarButton(app, html);
 })
 
 Hooks.on('gas.openActorStudio', (actorName, folderName, actorType) => {
