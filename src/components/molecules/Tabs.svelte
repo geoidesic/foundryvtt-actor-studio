@@ -24,9 +24,12 @@
   }
 
   onMount(async () => {
+    window.GAS.log.d('tabs', tabs);
     initialTabs = tabs;
     for (const tab of tabs) {
       const module = await import(`~/src/components/organisms/dnd5e/Tabs/${tab.component}.svelte`);
+      window.GAS.log.d('module', module);
+
       tabComponents[tab.component] = module.default;
     }
   });

@@ -3,6 +3,7 @@
   import { ApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
   import { activeTab, npcTabs } from "~/src/stores/index";
+  import Tabs from "~/src/components/molecules/Tabs.svelte";
 
   export let elementRoot;
   export let documentStore;
@@ -28,18 +29,22 @@
     '--tjs-app-overflow': 'visible',
   };
 
+
   $: filteredTabs = $npcTabs;
+  $activeTab = $npcTabs[0].id
+
 
 </script>
 
 <svelte:options accessors={true}/>
 
+
 <template lang="pug">
   ApplicationShell(bind:elementRoot bind:stylesApp)
     main
       section.a
-        //- Tabs and content for NPC
-        //- You can add more here as needed for minimal working shell
+        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
+        
 </template>
 
 <style lang="sass">
