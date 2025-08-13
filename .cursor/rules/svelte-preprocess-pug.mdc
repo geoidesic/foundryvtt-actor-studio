@@ -1,9 +1,6 @@
 ---
-description: 
-globs: 
 alwaysApply: false
 ---
-
 # Your rule content
 
 # svelte-preprocess-pug Rules

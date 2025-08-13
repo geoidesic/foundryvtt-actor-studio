@@ -4,6 +4,7 @@
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
   import Speed from "~/src/components/atoms/dnd5e/NPC/Speed.svelte";
   import { ucfirst } from "~/src/helpers/Utility";
+  import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
 
   export let name;
   export let npc; 
@@ -280,18 +281,7 @@
   //- Items list (generic)
   +if("getItemsArray(npc?.items)?.length")
     h3.mt-sm Features
-    ul.icon-list
-      +each("itemsArray as item")
-        li.left
-          .flexrow.gap-4
-            .flex0.relative.image.mr-sm
-              img.icon(src="{item.img}" alt="{item.name}")
-            +if("item?.link")
-              +await("enrichHTML(item.link || '')")
-                +then("Html")
-                  .flex2 {@html Html}
-              +else()
-                .flex2 {item.name}
+    FeatureItemList(items="{itemsArray}")
 </template>
 
 <style lang="sass">
