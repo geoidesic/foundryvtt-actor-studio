@@ -148,7 +148,7 @@
   $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
   $: npcProgress = $npcSelectProgress;
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
-  function goToNpcFeatures() {
+  async function goToNpcFeatures() {
     // Build in-memory NPC actor from selected base and embed its feature items
     try {
       if ($selectedNpcBase && $actor) {
@@ -162,6 +162,19 @@
             const data = it.toObject();
             // Ensure a fresh ID is generated on the in-memory actor
             if (data && data._id) delete data._id;
+            // Persist the original compendium UUID under our module namespace so later tabs can reference it
+            try {
+              const srcUuid = it?.uuid || it?.flags?.core?.sourceId || it?.system?.sourceId || null;
+              if (srcUuid) {
+                const fu = (globalThis?.foundry && globalThis.foundry.utils) ? globalThis.foundry.utils : undefined;
+                if (fu?.setProperty) {
+                  fu.setProperty(data, `flags.${MODULE_ID}.sourceUuid`, srcUuid);
+                } else {
+                  data.flags = data.flags || {};
+                  data.flags[MODULE_ID] = { ...(data.flags[MODULE_ID] || {}), sourceUuid: srcUuid };
+                }
+              }
+            } catch (_) {}
             items.push(data);
           }
         } catch (_) {
@@ -173,6 +186,19 @@
           name: actorName || base.name,
           items
         });
+        // After source update, set module flags on the embedded Item documents as well
+        try {
+          const sourceUuidsByNameType = new Map(items.map(d => [`${d.name}::${d.type}`, d?.flags?.[MODULE_ID]?.sourceUuid]));
+          const setFlags = [];
+          $actor.items?.forEach?.((doc) => {
+            const key = `${doc?.name}::${doc?.type}`;
+            const src = sourceUuidsByNameType.get(key);
+            if (src && !doc.getFlag?.(MODULE_ID, 'sourceUuid')) {
+              setFlags.push(doc.setFlag(MODULE_ID, 'sourceUuid', src));
+            }
+          });
+          if (setFlags.length > 0) await Promise.allSettled(setFlags);
+        } catch (_) {}
         // Helpful debug output
         if (window?.GAS?.log?.g) {
           window.GAS.log.g('[NPC] In-memory actor initialized with features', $actor);

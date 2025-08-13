@@ -47,7 +47,7 @@
 ul.icon-list
   +each("displayItems as item, idx")
     li.left
-      .flexrow.gap-4
+      .flexrow.gap-4.relative
         .flex0.relative.image.mr-sm
           img.icon(src="{item.img}" alt="{item.name}")
         +await("enrichHTML(item.link || item.name)")
