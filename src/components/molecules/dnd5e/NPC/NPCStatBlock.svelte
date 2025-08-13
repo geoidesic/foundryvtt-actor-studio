@@ -141,7 +141,6 @@
     return val && Number(val) > 0 ? `Legendary Resistance (${val}/Day)` : '';
   })();
 
-  // Legendary Actions (from embedded items with activation.type === 'legendary')
   function getItemsArray(collection) {
     if (!collection) return [];
     if (Array.isArray(collection)) return collection;

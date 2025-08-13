@@ -235,8 +235,6 @@
   };
 
 
-  // Derived store providing display items for the right panel, via context
-  const rightPanelItemsStore = getContext("#itemsFromActor");
 
   function removeFeatureAt(index) {
     try {
@@ -279,7 +277,6 @@
     }
   }
 
-  $: rightPanelItems = $rightPanelItemsStore
 
   let unsubscribe;
   onMount(async () => {
@@ -288,9 +285,10 @@
     try {
       unsubscribe = actor.subscribe(async (doc) => {
         try { window.GAS?.log?.g?.('[NPC Features] actor.subscribe triggered', { actorUuid: doc?.uuid, name: doc?.name }); } catch (_) {}
-        await refreshRightPanelFromActor(doc);
+        // await refreshRightPanelFromActor(doc);
       });
     } catch (_) {}
+    window.GAS.log.d('actor', $actor);
   });
   onDestroy(() => { try { if (unsubscribe) unsubscribe(); } catch (_) {} });
 </script>
@@ -302,10 +300,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
       .flex3
         IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectFeatureHandler}" id="npc-feature-select" bind:value)
   div(slot="right")
-    +if("rightPanelItems?.length")
-      FeatureItemList(items="{rightPanelItems}" trashable="{true}")
-    +if("!rightPanelItems?.length")
-      .hint No features added yet.
+    FeatureItemList(trashable="{true}")
 </template>
 
 <style lang="sass" scoped>

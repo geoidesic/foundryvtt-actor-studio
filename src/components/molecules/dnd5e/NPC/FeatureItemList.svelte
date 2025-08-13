@@ -6,6 +6,7 @@
 
   // Items should be an array of objects with at least { img, name, link? }
   export let trashable = false;
+  export let items = false;
 
   const actor = getContext("#doc");
 
@@ -25,20 +26,37 @@
       return null;
     }
   }
-  function handleTrash(index) {
+  async function handleTrash(index) {
     window.GAS.log.d(`Trash ${index}`);
     try {
+      const displayItems = Array.isArray($itemsFromActor) ? $itemsFromActor : [];
+      if (index < 0 || index >= displayItems.length) return;
+
+      // Resolve the live embedded document by index to ensure we use the actual embedded id
+      const embeddedArray = Array.from(($actor?.items && typeof $actor.items.values === 'function') ? $actor.items.values() : []);
+      const embeddedDoc = embeddedArray[index];
+      const liveId = embeddedDoc?.id || displayItems[index]?.id;
+
+      if (!liveId) return;
+
+      const isPersisted = Boolean($actor?.id || $actor?.uuid);
+      const hasEmbedded = Boolean($actor?.items?.get?.(liveId));
+
+      if (isPersisted && hasEmbedded && $actor?.deleteEmbeddedDocuments) {
+        try {
+          await $actor.deleteEmbeddedDocuments('Item', [liveId]);
+          return;
+        } catch (_) {
+          // Fall through to source update
+        }
+      }
+
+      // In-memory/source removal (new/unsaved actor)
       const src = $actor?.toObject?.();
-      window.GAS.log.d('handleTrash src', src);
       if (!src || !Array.isArray(src.items)) return;
-      const updated = [...src.items];
-      window.GAS.log.d('handleTrash updated pre', updated);
-      if (index < 0 || index >= updated.length) return;
-      updated.splice(index, 1);
-      window.GAS.log.d('handleTrash updatedpost ', updated);
+      const updated = src.items.filter((it) => (it._id || it.id) !== liveId);
       $actor.updateSource({ items: updated });
       $actor = $actor;
-      window.GAS.log.d('handleTrash $actor', $actor);
     } catch (_) {}
   }
 
@@ -46,15 +64,18 @@
 
   const itemsFromActor = getContext("#itemsFromActor");
 
-  $: items = trashable ? $itemsFromActor : $actor.Items
-  $: window.GAS.log.d('items', items);
+  $: displayItems = items ? items : $itemsFromActor;
+  $: whichDisplay = items ? 'items' : 'itemsFromActor';
+  $: window.GAS.log.d('items', displayItems);
 
 </script>
 
 <template lang="pug">
 ul.icon-list
-  +if("items?.length")
-    +each("items as item, idx")
+  pre {whichDisplay}
+  pre displayItems?.length {displayItems?.length}
+  +if("displayItems?.length")
+    +each("displayItems as item, idx")
       li.left
         .flexrow.gap-4.relative
           .flex0.relative.image.mr-sm

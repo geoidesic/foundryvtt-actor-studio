@@ -28,48 +28,78 @@
   // Provide the actor document store via context
   setContext("#doc", documentStore);
 
+  console.log('documentStore', $documentStore);
+  console.log('typeof documentStore.items', typeof $documentStore.items);
+
   // Provide a derived store of displayable items from the actor, via context, for reuse
   const itemsFromActor = derived(
     [documentStore],
-    ([$doc]) => {
+    ([$doc], set) => {
+      const toArray = (collection) => {
+        if (!collection) return [];
+        if (Array.isArray(collection)) return collection;
+        if (collection.contents) return collection.contents;
+        if (typeof collection.values === 'function') return Array.from(collection.values());
+        try { return Array.from(collection); } catch (_) { return []; }
+      };
+
+      const compute = () => {
+        try {
+          const list = toArray($doc?.items);
+          const mapped = list.map((itemDoc) => {
+            let uuid = null;
+            try {
+              const flags = itemDoc?.flags || {};
+              const fromModule = flags?.[MODULE_ID]?.sourceUuid || flags?.[MODULE_ID]?.sourceId;
+              const fromCore = flags?.core?.sourceId;
+              const fromSystem = itemDoc?.system?.sourceId;
+              const direct = itemDoc?.uuid;
+              const itemId = itemDoc?.id ?? itemDoc?._id;
+              const parentUuid = $doc?.uuid;
+              const embedded = itemId ? (parentUuid ? `${parentUuid}.Item.${itemId}` : `Item.${itemId}`) : null;
+              uuid = fromModule || fromCore || fromSystem || direct || embedded || null;
+            } catch (_) {
+              uuid = null;
+            }
+
+            const link = uuid ? `@UUID[${uuid}]{${itemDoc?.name}}` : itemDoc?.name;
+            return {
+              id: itemDoc?.id ?? itemDoc?._id,
+              img: itemDoc?.img,
+              name: itemDoc?.name,
+              link,
+            };
+          });
+          set(mapped);
+        } catch (err) {
+          try { window.GAS?.log?.d?.('itemsFromActor error', err); } catch (_) {}
+          set([]);
+        }
+      };
+
+      compute();
+
+      const items = $doc?.items;
       try {
-        const itemsCollection = $doc?.items;
-        const list = itemsCollection
-          ? (Array.isArray(itemsCollection) ? itemsCollection : (itemsCollection.contents || Array.from(itemsCollection)))
-          : [];
+        items?.on?.('create', compute);
+        items?.on?.('update', compute);
+        items?.on?.('delete', compute);
+        $doc?.on?.('update', compute);
+      } catch (_) {}
 
-        return list.map((itemDoc) => {
-          // Best-effort UUID resolution from the embedded item document
-          let uuid = null;
-          try {
-            const flags = itemDoc?.flags || {};
-            const fromModule = flags?.[MODULE_ID]?.sourceUuid || flags?.[MODULE_ID]?.sourceId;
-            const fromCore = flags?.core?.sourceId;
-            const fromSystem = itemDoc?.system?.sourceId;
-            const direct = itemDoc?.uuid;
-            const itemId = itemDoc?.id;
-            const parentUuid = $doc?.uuid;
-            const embedded = itemId ? (parentUuid ? `${parentUuid}.Item.${itemId}` : `Item.${itemId}`) : null;
-            uuid = fromModule || fromCore || fromSystem || direct || embedded || null;
-          } catch (_) {
-            uuid = null;
-          }
-
-          const link = uuid ? `@UUID[${uuid}]{${itemDoc?.name}}` : itemDoc?.name;
-          return {
-            img: itemDoc?.img,
-            name: itemDoc?.name,
-            link,
-          };
-        });
-      } catch (_) {
-        return [];
-      }
+      return () => {
+        try {
+          items?.off?.('create', compute);
+          items?.off?.('update', compute);
+          items?.off?.('delete', compute);
+          $doc?.off?.('update', compute);
+        } catch (_) {}
+      };
     },
     []
   );
 
-  $: window.GAS.log.d('itemsFromActor', $itemsFromActor);
+  $: window.GAS.log.d('$$$itemsFromActor', $itemsFromActor);
   setContext("#itemsFromActor", itemsFromActor);
 
   $: stylesApp = {
