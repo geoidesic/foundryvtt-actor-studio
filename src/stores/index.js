@@ -24,6 +24,9 @@ export {
 } from '~/src/stores/equipmentGold';
 // Import spell selection store to ensure it gets loaded
 import '~/src/stores/spellSelection';
+// Initialize NPC stores (persistence, progress)
+import '~/src/stores/npc';
+import { clearNpcSelection } from '~/src/stores/npc';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -241,6 +244,7 @@ export function resetStores() {
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
+  clearNpcSelection(); //- void
   
   // Clear spell selection stores
   try {

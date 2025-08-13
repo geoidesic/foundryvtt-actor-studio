@@ -50,6 +50,12 @@
       await selectNpcHandler($selectedNpc.uuid);
     }
   });
+
+  // Keep local selection in sync with globally persisted selection
+  $: if ($selectedNpcBase?.uuid && (!$selectedNpc || $selectedNpc?.uuid !== $selectedNpcBase.uuid)) {
+    // Use handler to normalize active/value and compute richHTML; safe to re-fetch
+    selectNpcHandler($selectedNpcBase.uuid);
+  }
 </script>
 
 <template lang="pug">

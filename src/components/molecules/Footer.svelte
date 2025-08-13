@@ -35,6 +35,7 @@
     selectedNpcBase
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
+  import { npcSelectProgress } from "~/src/stores/npc";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
   import { flattenedStartingEquipment } from "~/src/stores/startingEquipment";
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
@@ -145,9 +146,43 @@
   
   // NPC flow helpers
   $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
-  $: npcProgress = $activeTab === 'npc-select' ? ($selectedNpcBase ? 100 : 0) : 0;
+  $: npcProgress = $npcSelectProgress;
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
   function goToNpcFeatures() {
+    // Build in-memory NPC actor from selected base and embed its feature items
+    try {
+      if ($selectedNpcBase && $actor) {
+        const base = $selectedNpcBase;
+        // Convert embedded items to plain data for source update
+        const items = [];
+        try {
+          const arr = base.items && (base.items.contents || Array.from(base.items) || []);
+          for (const it of arr) {
+            if (!it) continue;
+            const data = it.toObject();
+            // Ensure a fresh ID is generated on the in-memory actor
+            if (data && data._id) delete data._id;
+            items.push(data);
+          }
+        } catch (_) {
+          // no-op; fallback to empty items
+        }
+        // Update the in-memory actor source with type, name and items
+        $actor.updateSource({
+          type: 'npc',
+          name: actorName || base.name,
+          items
+        });
+        // Helpful debug output
+        if (window?.GAS?.log?.g) {
+          window.GAS.log.g('[NPC] In-memory actor initialized with features', $actor);
+        } else {
+          console.log('[NPC] In-memory actor initialized with features', $actor);
+        }
+      }
+    } catch (err) {
+      window.GAS?.log?.e?.('[NPC] Failed to initialize in-memory actor', err);
+    }
     npcTabs.update(tabs => {
       if (!tabs.find(t => t.id === 'npc-features')) {
         return [...tabs, { label: 'Features', id: 'npc-features', component: 'NpcFeatures' }];
