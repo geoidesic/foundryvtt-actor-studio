@@ -102,7 +102,7 @@ ul.icon-list > li
   min-width: 40px
   height: 40px
 
-.tab-content ul.icon-list .image img.icon img.icon
+.tab-content ul.icon-list .image img.icon
   position: absolute
   top: 0
   left: 0
