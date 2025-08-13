@@ -4,6 +4,7 @@
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { itemsFromActorStore } from "~/src/stores/index";
   import { enrichHTML } from "~/src/helpers/Utility";
 
   const actor = getContext("#doc");
@@ -12,7 +13,6 @@
   let active = null;
   let value = null;
   let placeHolder = "Add a Feature...";
-  let rightPanelItems = [];
 
   const INDEX_KEY = `${MODULE_ID}-npc-feature-index-v1`;
 
@@ -49,9 +49,12 @@
 
   function getItemSourcesFromActor(doc) {
     try {
-      const src = doc?.toObject?.();
-      if (!src) return [];
-      return Array.isArray(src.items) ? src.items : [];
+      const itemsCollection = doc?.items;
+      if (!itemsCollection) return [];
+      const list = Array.isArray(itemsCollection)
+        ? itemsCollection
+        : (itemsCollection.contents || Array.from(itemsCollection));
+      return list.map((itemDoc) => itemDoc?.toObject ? itemDoc.toObject() : itemDoc);
     } catch (_) {
       return [];
     }
@@ -231,12 +234,17 @@
     }
   };
 
+
+  // Derived store providing display items for the right panel, reactive to actor changes
+  const rightPanelItemsStore = itemsFromActorStore(actor);
+
   function removeFeatureAt(index) {
     try {
       const items = getItemSourcesFromActor($actor);
       if (index < 0 || index >= items.length) return;
       items.splice(index, 1);
       $actor.updateSource({ items });
+      $actor = $actor;
     } catch (err) {
       window.GAS?.log?.e?.('[NPC Features] Failed removing feature', err);
     }
@@ -271,6 +279,8 @@
     }
   }
 
+  $: rightPanelItems = $rightPanelItemsStore
+
   let unsubscribe;
   onMount(async () => {
     options = loadIndexOptions();
@@ -293,7 +303,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
         IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectFeatureHandler}" id="npc-feature-select" bind:value)
   div(slot="right")
     +if("rightPanelItems?.length")
-      FeatureItemList(items="{rightPanelItems}" trashable="true")
+      FeatureItemList(items="{rightPanelItems}" trashable="{true}")
     +if("!rightPanelItems?.length")
       .hint No features added yet.
 </template>

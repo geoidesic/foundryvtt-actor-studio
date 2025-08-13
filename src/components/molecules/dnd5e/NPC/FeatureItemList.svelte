@@ -2,9 +2,9 @@
   import { getContext } from "svelte";
   import { enrichHTML } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { itemsFromActorStore } from "~/src/stores/index";
 
   // Items should be an array of objects with at least { img, name, link? }
-  export let items = [];
   export let trashable = false;
 
   const actor = getContext("#doc");
@@ -25,49 +25,32 @@
       return null;
     }
   }
-
-  // Keep a reactive local list so UI refreshes when the actor changes
-  function mapItemsFromActor(doc) {
-    try {
-      const src = doc?.toObject?.();
-      const list = Array.isArray(src?.items) ? src.items : [];
-      return list.map((it) => {
-        const uuid = getSourceUuidFromRaw(it, doc);
-        const link = uuid ? `@UUID[${uuid}]{${it?.name}}` : (it?.link || it?.name);
-        return {
-          img: it?.img,
-          name: it?.name,
-          link,
-        };
-      });
-    } catch (_) {
-      return [];
-    }
-  }
-
-  let displayItems = items;
-  $: displayItems = trashable ? mapItemsFromActor($actor) : items;
-
   function handleTrash(index) {
-    alert(`Trash ${index}`);
+    window.GAS.log.d(`Trash ${index}`);
     try {
       const src = $actor?.toObject?.();
-      window.GAS.log.d(src);
+      window.GAS.log.d('handleTrash src', src);
       if (!src || !Array.isArray(src.items)) return;
       const updated = [...src.items];
-      window.GAS.log.d(updated);
+      window.GAS.log.d('handleTrash updated pre', updated);
       if (index < 0 || index >= updated.length) return;
       updated.splice(index, 1);
-      window.GAS.log.d(updated);
+      window.GAS.log.d('handleTrash updatedpost ', updated);
       $actor.updateSource({ items: updated });
-      window.GAS.log.d($actor);
+      $actor = $actor;
+      window.GAS.log.d('handleTrash $actor', $actor);
     } catch (_) {}
   }
+
+
+
+  $: items = trashable ? $itemsFromActorStore(actor) : $actor.Items
+
 </script>
 
 <template lang="pug">
 ul.icon-list
-  +each("displayItems as item, idx")
+  +each("items as item, idx")
     li.left
       .flexrow.gap-4.relative
         .flex0.relative.image.mr-sm

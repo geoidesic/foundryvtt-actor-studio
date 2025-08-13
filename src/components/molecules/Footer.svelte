@@ -677,7 +677,7 @@
                       role="button"
                       on:mousedown="{goToNpcFeatures}"
                     )
-                      span Select base NPC
+                      span {t('Footer.SelectBaseNPC')}
                       i.right.ml-md(class="fas fa-chevron-right")
 
 </template>

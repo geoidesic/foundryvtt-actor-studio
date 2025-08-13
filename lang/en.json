@@ -38,7 +38,8 @@
       "SkipSpells": "Skip Spells",
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
-      "UpdateCharacter": "Update Character"
+      "UpdateCharacter": "Update Character",
+      "SelectBaseNPC": "Select Base NPC"
     },
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
