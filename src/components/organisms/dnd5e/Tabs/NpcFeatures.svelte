@@ -4,7 +4,7 @@
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { itemsFromActorStore } from "~/src/stores/index";
+  // itemsFromActor is provided by context from NPCAppShell
   import { enrichHTML } from "~/src/helpers/Utility";
 
   const actor = getContext("#doc");
@@ -235,8 +235,8 @@
   };
 
 
-  // Derived store providing display items for the right panel, reactive to actor changes
-  const rightPanelItemsStore = itemsFromActorStore(actor);
+  // Derived store providing display items for the right panel, via context
+  const rightPanelItemsStore = getContext("#itemsFromActor");
 
   function removeFeatureAt(index) {
     try {

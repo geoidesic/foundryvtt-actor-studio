@@ -200,45 +200,6 @@ export const changedCharacterCreationItems = derived(
   }
 );
 
-// Factory for a derived store that maps displayable item data from an actor document store
-export function itemsFromActorStore(actorStore) {
-  return derived(actorStore, (doc) => {
-    try {
-      const itemsCollection = doc?.items;
-      const list = itemsCollection
-        ? (Array.isArray(itemsCollection) ? itemsCollection : (itemsCollection.contents || Array.from(itemsCollection)))
-        : [];
-
-      return list.map((itemDoc) => {
-        // Best-effort UUID resolution from the embedded item document
-        let uuid = null;
-        try {
-          const flags = itemDoc?.flags || {};
-          const fromModule = flags?.[MODULE_ID]?.sourceUuid || flags?.[MODULE_ID]?.sourceId;
-          const fromCore = flags?.core?.sourceId;
-          const fromSystem = itemDoc?.system?.sourceId;
-          const direct = itemDoc?.uuid;
-          const itemId = itemDoc?.id;
-          const parentUuid = doc?.uuid;
-          const embedded = itemId ? (parentUuid ? `${parentUuid}.Item.${itemId}` : `Item.${itemId}`) : null;
-          uuid = fromModule || fromCore || fromSystem || direct || embedded || null;
-        } catch (_) {
-          uuid = null;
-        }
-
-        const link = uuid ? `@UUID[${uuid}]{${itemDoc?.name}}` : itemDoc?.name;
-        return {
-          img: itemDoc?.img,
-          name: itemDoc?.name,
-          link,
-        };
-      });
-    } catch (_) {
-      return [];
-    }
-  });
-}
-
 export const resetLevelUpStores = () => {
   storeDefinitions.classUuidForLevelUp.set(null); //- tracks the class uuid for level up
   storeDefinitions.newLevelValueForExistingClass.set(false); //- tracks new level value for existing class

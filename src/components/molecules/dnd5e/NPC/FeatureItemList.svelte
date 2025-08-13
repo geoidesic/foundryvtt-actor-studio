@@ -2,7 +2,7 @@
   import { getContext } from "svelte";
   import { enrichHTML } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { itemsFromActorStore } from "~/src/stores/index";
+  // itemsFromActor is provided by context from NPCAppShell
 
   // Items should be an array of objects with at least { img, name, link? }
   export let trashable = false;
@@ -44,24 +44,28 @@
 
 
 
-  $: items = trashable ? $itemsFromActorStore(actor) : $actor.Items
+  const itemsFromActor = getContext("#itemsFromActor");
+
+  $: items = trashable ? $itemsFromActor : $actor.Items
+  $: window.GAS.log.d('items', items);
 
 </script>
 
 <template lang="pug">
 ul.icon-list
-  +each("items as item, idx")
-    li.left
-      .flexrow.gap-4.relative
-        .flex0.relative.image.mr-sm
-          img.icon(src="{item.img}" alt="{item.name}")
-        +await("enrichHTML(item.link || item.name)")
-          +then("Html")
-            .flex2.text {@html Html}
-        +if("trashable")
-          .flex0
-            button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(idx)}" aria-label="Remove")
-              i(class="fas fa-trash")
+  +if("items?.length")
+    +each("items as item, idx")
+      li.left
+        .flexrow.gap-4.relative
+          .flex0.relative.image.mr-sm
+            img.icon(src="{item.img}" alt="{item.name}")
+          +await("enrichHTML(item.link || item.name)")
+            +then("Html")
+              .flex2.text {@html Html}
+          +if("trashable")
+            .flex0
+              button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(idx)}" aria-label="Remove")
+                i(class="fas fa-trash")
 </template>
 
 <style lang="sass" scoped>
