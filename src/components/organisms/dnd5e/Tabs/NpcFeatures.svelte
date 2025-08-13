@@ -293,7 +293,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
         IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectFeatureHandler}" id="npc-feature-select" bind:value)
   div(slot="right")
     +if("rightPanelItems?.length")
-      FeatureItemList(items="{rightPanelItems}")
+      FeatureItemList(items="{rightPanelItems}" trashable="true")
     +if("!rightPanelItems?.length")
       .hint No features added yet.
 </template>
