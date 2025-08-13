@@ -141,11 +141,12 @@
 
   const actor = getContext("#doc");
   const app = getContext("#external").application;
-  let actorName = $actor?.name || "";
+  let actorName = ""; // For NPC flow, default blank; PC flow still binds via value for name input
   
   // NPC flow helpers
   $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
   $: npcProgress = $activeTab === 'npc-select' ? ($selectedNpcBase ? 100 : 0) : 0;
+  $: npcNamePlaceholder = $selectedNpcBase?.name || '';
   function goToNpcFeatures() {
     npcTabs.update(tabs => {
       if (!tabs.find(t => t.id === 'npc-features')) {
@@ -597,16 +598,26 @@
         // NPC flow footer rendering
         +if("$activeTab === 'npc-select'")
           .progress-container
-            ProgressBar(progress="{npcProgress}")
-            +if("npcProgress === 100")
-              .button-container
-                button.mt-xs.wide(
-                  type="button"
-                  role="button"
-                  on:mousedown="{goToNpcFeatures}"
-                )
-                  span Select base NPC
-                  i.right.ml-md(class="fas fa-chevron-right")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  +if("npcProgress === 100")
+                    button.mt-xs.wide(
+                      type="button"
+                      role="button"
+                      on:mousedown="{goToNpcFeatures}"
+                    )
+                      span Select base NPC
+                      i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
 

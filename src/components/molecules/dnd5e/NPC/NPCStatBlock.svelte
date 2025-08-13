@@ -148,22 +148,51 @@
     try { return Array.from(collection); } catch (e) { return []; }
   }
 
-  function stripHtml(html) {
-    if (!html) return '';
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
+  // Enrich HTML for tooltips using Utility.enrichHTML (cached)
+  import { enrichHTML } from "~/src/helpers/Utility";
+  const tooltipCache = new Map();
+  function getItemKey(item) { return item?.uuid || item?._id || item?.id || item?.name; }
+  async function ensureTooltip(item) {
+    const key = getItemKey(item);
+    if (!key || tooltipCache.has(key)) return;
+    try {
+      const raw = item?.system?.description?.value || '';
+      const html = await enrichHTML(raw, { async: true });
+      tooltipCache.set(key, html);
+    } catch (_) {
+      // fallback to raw description
+      tooltipCache.set(key, item?.system?.description?.value || '');
+    }
   }
+  function getTooltip(item) { return tooltipCache.get(getItemKey(item)) || ''; }
+
+  // Enriched name links (anchor that Foundry auto-tooltips)
+  const nameHtmlCache = new Map();
+  async function ensureNameHtml(item) {
+    const key = `name:${getItemKey(item)}`;
+    if (!key || nameHtmlCache.has(key)) return;
+    try {
+      const inline = item?.enrichedName || (item?.uuid ? `@UUID[${item.uuid}]{${item.name}}` : item?.name || '');
+      const html = await enrichHTML(inline, { async: true });
+      nameHtmlCache.set(key, html);
+    } catch (_) {
+      nameHtmlCache.set(key, item?.name || '');
+    }
+  }
+  function getNameHtml(item) { return nameHtmlCache.get(`name:${getItemKey(item)}`) || (item?.name || ''); }
+
+  $: itemsArray = getItemsArray(npc?.items);
+  $: (async () => { for (const it of itemsArray) { await ensureTooltip(it); await ensureNameHtml(it); } })();
 
   $: legendaryActions = (() => {
-    const items = getItemsArray(npc?.items);
+    const items = itemsArray;
     const list = items.filter(i => i?.system?.activation?.type === 'legendary') || [];
     return list.map(i => {
       const cost = Number(i?.system?.activation?.cost) || 1;
       const name = i?.name || 'Legendary Action';
-      const desc = stripHtml(i?.system?.description?.value);
+      const desc = i?.system?.description?.value || '';
       const costNote = cost > 1 ? ` (Costs ${cost} Actions)` : '';
-      return { name, cost, text: `${name}${costNote}. ${desc}` };
+      return { name, cost, item: i, desc, costNote };
     });
   })();
 </script>
@@ -232,10 +261,37 @@
     +if("legendaryActions?.length")
       .mt-sm
         .label.inline Legendary Actions 
-        .value The dragon can take {npc?.system?.resources?.legact?.value || 3} legendary actions, choosing from the options below. Only one legendary action option can be used at a time and only at the end of another creature's turn. The dragon regains spent legendary actions at the start of its turn.
+        .value This creature can take {npc?.system?.resources?.legact?.value || 3} legendary actions, choosing from the options below. Only one legendary action option can be used at a time and only at the end of another creature's turn. It regains spent legendary actions at the start of its turn.
       ul.mt-xxs
         +each("legendaryActions as la")
-          li {la.text}
+          li.left
+            .flexrow.gap-4
+              .flex2
+                +if("la.item?.link")
+                  +await("enrichHTML(la.item.link || '')")
+                    +then("Html")
+                      span {@html Html}
+                  +else()
+                    span {la.item?.name}
+                span {la.costNote}
+                span .
+                span {@html la.desc}
+
+  //- Items list (generic)
+  +if("getItemsArray(npc?.items)?.length")
+    h3.mt-sm Features
+    ul.icon-list
+      +each("itemsArray as item")
+        li.left
+          .flexrow.gap-4
+            .flex0.relative.image.mr-sm
+              img.icon(src="{item.img}" alt="{item.name}")
+            +if("item?.link")
+              +await("enrichHTML(item.link || '')")
+                +then("Html")
+                  .flex2 {@html Html}
+              +else()
+                .flex2 {item.name}
 </template>
 
 <style lang="sass">
