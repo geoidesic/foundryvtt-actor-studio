@@ -30,7 +30,9 @@
     levelUpSubClassObject,
     levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected,
-    readOnlyTabs
+    readOnlyTabs,
+    npcTabs,
+    selectedNpcBase
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -140,6 +142,20 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
+  
+  // NPC flow helpers
+  $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
+  $: npcProgress = $activeTab === 'npc-select' ? ($selectedNpcBase ? 100 : 0) : 0;
+  function goToNpcFeatures() {
+    npcTabs.update(tabs => {
+      if (!tabs.find(t => t.id === 'npc-features')) {
+        return [...tabs, { label: 'Features', id: 'npc-features', component: 'NpcFeatures' }];
+      }
+      return tabs;
+    });
+    readOnlyTabs.set(['npc-select']);
+    activeTab.set('npc-features');
+  }
 
   // Derived store to check if actor has items in inventory
   const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
@@ -431,7 +447,7 @@
 
 <template lang="pug">
 .footer-container
-  +if("FOOTER_TABS.includes($activeTab)")
+  +if("FOOTER_TABS.includes($activeTab) || isNpcFlow")
     .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
@@ -577,6 +593,20 @@
                         )
                           span {t('Footer.UpdateCharacter')}
                           i.right.ml-md(class="fas fa-chevron-right")
+
+        // NPC flow footer rendering
+        +if("$activeTab === 'npc-select'")
+          .progress-container
+            ProgressBar(progress="{npcProgress}")
+            +if("npcProgress === 100")
+              .button-container
+                button.mt-xs.wide(
+                  type="button"
+                  role="button"
+                  on:mousedown="{goToNpcFeatures}"
+                )
+                  span Select base NPC
+                  i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
 

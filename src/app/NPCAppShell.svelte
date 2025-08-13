@@ -4,6 +4,7 @@
   import { setContext, getContext, onMount, onDestroy } from "svelte";
   import { activeTab, npcTabs } from "~/src/stores/index";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
+  import Footer from "~/src/components/molecules/Footer.svelte";
 
   export let elementRoot;
   export let documentStore;
@@ -44,6 +45,8 @@
     main
       section.a
         Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
+      section.b
+        Footer
         
 </template>
 

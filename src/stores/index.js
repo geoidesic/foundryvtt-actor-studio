@@ -47,6 +47,8 @@ const upTabs = [
 storeDefinitions.tabs.set(initialTabs);
 storeDefinitions.levelUpTabs.set(upTabs);
 storeDefinitions.npcTabs.set(npcTabs);
+// Initialize NPC-specific stores
+storeDefinitions.selectedNpcBase.set(null);
 storeDefinitions.pointBuyLimit.set(27);
 
 // Set names for debugging

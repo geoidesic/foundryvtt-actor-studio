@@ -4,6 +4,7 @@
   import { getPacksFromSettings, extractItemsFromPacksSync, illuminatedDescription } from "~/src/helpers/Utility.js";
   import { getContext, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
+  import { activeTab, npcTabs, selectedNpcBase, readOnlyTabs } from "~/src/stores/index";
 
   // Add NPCStatBlock import
   import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
@@ -33,12 +34,15 @@
     const selected = await fromUuid(option);
     window.GAS.log.p('selected NPC', selected)
     $selectedNpc = selected;
+    selectedNpcBase.set(selected);
     active = option;
     if (!value) value = option;
     await tick();
     richHTML = await illuminatedDescription(html, $selectedNpc);
     Hooks.call('gas.richhtmlReady', richHTML);
   };
+
+  // Footer handles progress and advancing to features via its own button
 
   onMount(async () => {
     window.GAS.log.d('allItems', allItems)
