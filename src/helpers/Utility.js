@@ -491,6 +491,10 @@ export const deleteSource = async (source, key) => {
   for(const item of source[key]) {
     await source.items.delete(item.id);
   }
+  await tick();
+  if(source.render) {
+    source.render();
+  }
 }
 
 /**

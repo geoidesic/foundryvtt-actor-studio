@@ -15,12 +15,10 @@
 
   setContext("#doc", documentStore);
 
-
   const application = getContext('#external').application; // the application object
 
   const setActorItems = async  () => {
     app.updateSource($documentStore, {items: [{name: 'test', type: 'feat'}]});
-  
   }
   
   $: stylesApp = {
@@ -50,8 +48,6 @@
         Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
       section.b
         Footer
-
-        
 </template>
 
 <style lang="sass">

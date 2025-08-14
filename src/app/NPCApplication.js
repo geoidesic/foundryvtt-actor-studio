@@ -4,7 +4,6 @@ import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
-import { tick } from "svelte";
 
 import { version } from "../../module.json";
 
@@ -36,8 +35,6 @@ export default class NPCApplication extends SvelteApplication {
     this.reactive.document = object;
   }
 
-
-
   /**
    * Default Application options
    *
@@ -68,15 +65,14 @@ export default class NPCApplication extends SvelteApplication {
         props: function () {
           return { 
             documentStore: this.#documentStore, 
-            document: this.reactive.document,
-            app: this
+            document: this.reactive.document
           };
         },
       },
     });
   }
 
-    /**
+  /**
    * Gets the header buttons configuration for the sheet
    * @return {Array<object>} Returns an array of button configurations for the sheet header
    */

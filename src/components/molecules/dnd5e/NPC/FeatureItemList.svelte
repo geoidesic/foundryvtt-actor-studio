@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, tick } from "svelte";
   import { enrichHTML } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
@@ -26,14 +26,17 @@
       return null;
     }
   }
-  async function handleTrash(index) {
-    window.GAS.log.d(`Trash ${index}`);
+  async function handleTrash(id) {
 
 
       // In-memory removal (new/unsaved actor)
         if ($actor?.items?.delete) {
-          $actor.items.delete(liveId);
-          $actor = $actor;
+          await $actor.items.delete(id);
+          
+          await tick();
+          if($actor.render) {
+            $actor.render();
+          }
           return;
         }
 
@@ -60,7 +63,7 @@ ul.icon-list
               .flex2.text {@html Html}
           +if("trashable")
             .flex0
-              button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(idx)}" aria-label="Remove")
+              button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
                 i(class="fas fa-trash")
 </template>
 
