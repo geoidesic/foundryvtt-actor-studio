@@ -80,10 +80,7 @@ export const init = (app, html, data) => {
 
   Hooks.call("gas.initIsComplete");
 
-  // Kick off NPC feature index build in background (non-blocking)
-  try {
-    initializeNpcFeatureIndex();
-  } catch (_) {}
+  // Defer NPC feature index build to `ready` to ensure world settings are writable
 
 }
 
@@ -108,6 +105,11 @@ export const ready = (app, html, data) => {
 
   // Initialize the subclass level plugin
   SubclassLevelPlugin.init();
+
+  // Kick off NPC feature index build in background (now safe to touch world settings)
+  try {
+    initializeNpcFeatureIndex();
+  } catch (_) {}
 }
 
 export default {

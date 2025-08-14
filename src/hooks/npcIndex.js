@@ -9,6 +9,13 @@ const LOCAL_STORAGE_KEY = `${MODULE_ID}-npc-feature-index-v1`;
 export function getNpcFeatureIndex() {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (window?.GAS?.log?.d) {
+      window.GAS.log.d('[NPC INDEX] Read from localStorage', {
+        key: LOCAL_STORAGE_KEY,
+        hasValue: !!raw,
+        preview: raw ? `${String(raw).slice(0, 120)}…` : null
+      });
+    }
     if (!raw) return null;
     return JSON.parse(raw);
   } catch (_) {
@@ -31,11 +38,31 @@ export function invalidateNpcFeatureIndex() {
  * The heavy work is chunked to avoid blocking the UI.
  */
 export async function buildNpcFeatureIndex() {
+  const startedAt = Date.now();
   const packs = getPacksFromSettings('npcs');
-  if (!packs || packs.length === 0) return [];
+  if (window?.GAS?.log?.i) {
+    window.GAS.log.i('[NPC INDEX] Starting build');
+    window.GAS.log.d('[NPC INDEX] Packs from settings',
+      (packs || []).map(p => ({ id: p?.metadata?.id, label: p?.metadata?.label, type: p?.metadata?.type }))
+    );
+  }
+  if (!packs || packs.length === 0) {
+    window?.GAS?.log?.w?.('[NPC INDEX] No NPC packs configured. Aborting build.');
+    return [];
+  }
 
   // Extract only NPC entries with their UUIDs
-  const entries = extractItemsFromPacksSync(packs, ['uuid->uuid', 'type']).filter(e => e.type === 'npc');
+  const allEntries = extractItemsFromPacksSync(packs, ['uuid->uuid', 'type', 'img']);
+  const entries = allEntries.filter(e => e.type === 'npc');
+  if (window?.GAS?.log?.d) {
+    window.GAS.log.d('[NPC INDEX] Entry counts', {
+      totalFromPacks: allEntries.length,
+      filteredNpc: entries.length
+    });
+    if (entries.length === 0 && allEntries.length > 0) {
+      window.GAS.log.w('[NPC INDEX] No entries with type "npc" found. Sample of first 5 raw entries:', allEntries.slice(0, 5));
+    }
+  }
 
   const index = [];
   const batchSize = 5;
@@ -45,25 +72,45 @@ export async function buildNpcFeatureIndex() {
     await Promise.all(batch.map(async (entry) => {
       try {
         const actor = await fromUuid(entry.uuid);
-        if (!actor) return;
+        if (!actor) {
+          window?.GAS?.log?.w?.('[NPC INDEX] fromUuid returned null for entry', entry);
+          return;
+        }
         const items = [];
         try {
           const collection = actor.items;
           const arr = (collection && (collection.contents || Array.from(collection))) || [];
           for (const item of arr) {
             if (!item) continue;
-            items.push({ name: item.name, uuid: item.uuid });
+            items.push({ name: item.name, uuid: item.uuid, img: item.img });
           }
         } catch (_) {}
         index.push({ npc_uuid: entry.uuid, items });
+        if (window?.GAS?.log?.v) {
+          window.GAS.log.v('[NPC INDEX] Indexed NPC', {
+            npcUuid: entry.uuid,
+            itemCount: items.length
+          });
+        }
       } catch (err) {
-        // Skip problematic entries
+        window?.GAS?.log?.w?.('[NPC INDEX] Failed to index NPC entry; skipping', { entry, err });
       }
     }));
     // Yield to the event loop between batches
     await new Promise(r => setTimeout(r, 0));
+    if (window?.GAS?.log?.d) {
+      window.GAS.log.d('[NPC INDEX] Batch progress', {
+        processed: Math.min(i + batch.length, entries.length),
+        total: entries.length,
+        currentIndexSize: index.length
+      });
+    }
   }
 
+  window?.GAS?.log?.i?.('[NPC INDEX] Build complete', {
+    indexSize: index.length,
+    durationMs: Date.now() - startedAt
+  });
   return index;
 }
 
@@ -74,7 +121,17 @@ export async function buildNpcFeatureIndex() {
 export function initializeNpcFeatureIndex() {
   // If already cached, do nothing
   const cached = getNpcFeatureIndex();
-  if (cached && Array.isArray(cached.index)) return;
+  if (cached && Array.isArray(cached.index) && cached.index.length > 0) {
+    window?.GAS?.log?.i?.('[NPC INDEX] Using cached index', {
+      version: cached.version,
+      builtAt: cached.builtAt,
+      size: Array.isArray(cached.index) ? cached.index.length : 0
+    });
+    return;
+  }
+  if (cached && Array.isArray(cached.index) && cached.index.length === 0) {
+    window?.GAS?.log?.w?.('[NPC INDEX] Cached index exists but is empty; rebuilding now.');
+  }
 
   // Fire-and-forget async build
   (async () => {
@@ -86,7 +143,11 @@ export function initializeNpcFeatureIndex() {
         index,
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-      window.GAS?.log?.g?.('[NPC INDEX] Built NPC feature index', payload);
+      window.GAS?.log?.g?.('[NPC INDEX] Stored NPC feature index', {
+        version: payload.version,
+        builtAt: payload.builtAt,
+        size: payload.index?.length || 0
+      });
     } catch (err) {
       window.GAS?.log?.e?.('[NPC INDEX] Failed to build NPC feature index', err);
     }

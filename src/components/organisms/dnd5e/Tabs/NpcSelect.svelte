@@ -84,7 +84,9 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
     //- +if("$actor?.items.size > 0")
     //-   +each("$actor?.items as item")
     //-     pre {item.name}
-    div {@html richHTML || 'No biography provided'}
+    +if("$selectedNpc")
+      div {@html richHTML ||  'No biography provided'}
+      
 </template>
 
 <style lang="sass">

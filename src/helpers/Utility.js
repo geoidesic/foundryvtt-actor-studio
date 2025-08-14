@@ -365,7 +365,17 @@ export const getPacksFromSettings = (type) => {
   // Update settings if any packs were removed
   if (filteredPackNames.length !== settings[type].length) {
     settings[type] = filteredPackNames;
-    game.settings.set(MODULE_ID, 'compendiumSources', settings);
+    // Only persist the settings after the game is ready; otherwise defer
+    if (game.ready) {
+      game.settings.set(MODULE_ID, 'compendiumSources', settings);
+    } else {
+      try {
+        // Defer the write to the first 'ready' tick
+        globalThis.Hooks?.once?.('ready', () => {
+          try { game.settings.set(MODULE_ID, 'compendiumSources', settings); } catch (_) {}
+        });
+      } catch (_) {}
+    }
   }
 
   return packs;

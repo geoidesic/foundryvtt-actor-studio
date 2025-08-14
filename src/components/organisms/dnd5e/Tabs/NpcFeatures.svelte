@@ -6,6 +6,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
   import { enrichHTML } from "~/src/helpers/Utility";
+  import { updateSource } from "~/src/helpers/Utility";
 
   const actor = getContext("#doc");
 
@@ -37,7 +38,7 @@
         const list = row?.items || [];
         for (const it of list) {
           if (it?.uuid && it?.name) {
-            flattened.push({ label: it.name, value: it.uuid });
+            flattened.push({ label: it.name, value: it.uuid, img: it.img });
           }
         }
       }
@@ -196,9 +197,13 @@
 
       const items = getItemSourcesFromActor($actor);
       items.push(data);
+      
       // Capture existing item ids before source update
       const preIds = new Set(($actor?.items || []).map((i) => i.id));
-      $actor.updateSource({ items });
+      
+      // Use updateSource utility function instead of direct updateSource
+      await updateSource($actor, { items });
+      
       // Poll for the new embedded item to appear, then set flags on the document itself
       try {
         const created = await new Promise((resolve) => {
@@ -226,8 +231,11 @@
           await created.setFlag(MODULE_ID, 'sourceId', src);
         }
       } catch (_) {}
-      value = uuid;
-      active = uuid;
+      
+      // Clear the autocomplete selection
+      value = null;
+      active = null;
+      
       // subscriber will refresh panel
     } catch (err) {
       window.GAS?.log?.e?.('[NPC Features] Failed adding feature', err);
@@ -241,7 +249,7 @@
       const items = getItemSourcesFromActor($actor);
       if (index < 0 || index >= items.length) return;
       items.splice(index, 1);
-      $actor.updateSource({ items });
+      updateSource($actor, { items });
       $actor = $actor;
     } catch (err) {
       window.GAS?.log?.e?.('[NPC Features] Failed removing feature', err);
@@ -285,7 +293,7 @@
     try {
       unsubscribe = actor.subscribe(async (doc) => {
         try { window.GAS?.log?.g?.('[NPC Features] actor.subscribe triggered', { actorUuid: doc?.uuid, name: doc?.name }); } catch (_) {}
-        // await refreshRightPanelFromActor(doc);
+        await refreshRightPanelFromActor(doc);
       });
     } catch (_) {}
     window.GAS.log.d('actor', $actor);
