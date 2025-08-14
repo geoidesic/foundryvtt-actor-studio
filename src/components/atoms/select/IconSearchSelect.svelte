@@ -66,60 +66,6 @@
       }
     }
 
-    function isClickOutsideContainer(event, containerElement) {
-      try {
-        const targetElement = event.target;
-
-        // Check if the target element is the container itself
-        if (targetElement === containerElement) {
-          return false;
-        }
-
-        // Guard: if containerElement is null, treat as click outside
-        if (!containerElement) {
-          console.warn('[IconSelect] containerElement is null, treating as click outside');
-          return true;
-        }
-
-        // Guard: if targetElement is null, treat as click outside
-        if (!targetElement) {
-          console.warn('[IconSelect] targetElement is null, treating as click outside');
-          return true;
-        }
-
-        // Check if the target element is inside the container
-        return !containerElement.contains(targetElement);
-      } catch (error) {
-        console.error('[IconSelect] Error in isClickOutsideContainer:', error);
-        return true; // Treat as click outside on error
-      }
-    }
-
-    function handleClickOutside(event) {
-      try {
-        const containerElement = document.getElementById(id);
-        if (!containerElement) {
-          console.warn('[IconSelect] Element with id', id, 'not found, treating as click outside');
-          // Element not found, treat as click outside and close
-          isOpen = false;
-          return;
-        }
-        const isClickOutside = isClickOutsideContainer(event, containerElement);
-        if(isClickOutside) {
-          isOpen = false;
-        }
-      } catch (error) {
-        console.error('[IconSelect] Error in handleClickOutside:', error);
-        isOpen = false; // Close on error
-      }
-    }
-
-    onMount(() => {
-      window.addEventListener("click", handleClickOutside);
-    });
-    onDestroy(() => {
-      window.removeEventListener("click", handleClickOutside);
-    });
 
     let textOnly = (option) => {
       return option.icon || option.img ? false : true;
@@ -166,7 +112,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
       input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search...")
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option"  on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(role="option"  on:click|stopPropagation|preventDefault="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
