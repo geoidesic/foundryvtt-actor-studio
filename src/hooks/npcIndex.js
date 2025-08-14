@@ -39,15 +39,28 @@ export function invalidateNpcFeatureIndex() {
 function deduplicateItems(index) {
   const seenItems = new Map(); // key: name + content hash, value: { uuid, npc_uuid }
   const deduplicatedIndex = [];
+  let totalItems = 0;
+  let duplicateCount = 0;
   
   for (const npcEntry of index) {
     const deduplicatedItems = [];
     
     for (const item of npcEntry.items) {
-      // Create a content hash based on name and other identifying properties
+      totalItems++;
+      // Create a content hash based on item properties that would indicate duplicate content
       // We'll use a simple hash of the item data to detect duplicates
       const contentHash = createItemHash(item);
       const key = `${item.name}|${contentHash}`;
+      
+      if (window?.GAS?.log?.v) {
+        window.GAS.log.v('[NPC INDEX] Processing item', { 
+          name: item.name, 
+          uuid: item.uuid, 
+          npc_uuid: npcEntry.npc_uuid,
+          contentHash,
+          key
+        });
+      }
       
       if (!seenItems.has(key)) {
         // First time seeing this item, add it
@@ -59,6 +72,7 @@ function deduplicateItems(index) {
         }
       } else {
         // Duplicate item found, log it
+        duplicateCount++;
         const existing = seenItems.get(key);
         if (window?.GAS?.log?.d) {
           window.GAS.log.d('[NPC INDEX] Skipped duplicate item', { 
@@ -66,7 +80,9 @@ function deduplicateItems(index) {
             uuid: item.uuid, 
             npc_uuid: npcEntry.npc_uuid,
             existingUuid: existing.uuid,
-            existingNpcUuid: existing.npc_uuid
+            existingNpcUuid: existing.npc_uuid,
+            contentHash,
+            key
           });
         }
       }
@@ -82,8 +98,10 @@ function deduplicateItems(index) {
     window.GAS.log.i('[NPC INDEX] Deduplication complete', {
       originalIndexSize: index.length,
       deduplicatedIndexSize: deduplicatedIndex.length,
-      totalOriginalItems: index.reduce((sum, npc) => sum + npc.items.length, 0),
-      totalDeduplicatedItems: deduplicatedIndex.reduce((sum, npc) => sum + npc.items.length, 0)
+      totalOriginalItems: totalItems,
+      totalDeduplicatedItems: deduplicatedIndex.reduce((sum, npc) => sum + npc.items.length, 0),
+      duplicatesFound: duplicateCount,
+      uniqueItems: totalItems - duplicateCount
     });
   }
   
@@ -91,12 +109,44 @@ function deduplicateItems(index) {
 }
 
 /**
+ * Sorts all items alphabetically by name for easier navigation
+ */
+function sortItemsAlphabetically(index) {
+  // Flatten all items from all NPCs into a single array
+  const allItems = [];
+  for (const npcEntry of index) {
+    for (const item of npcEntry.items) {
+      allItems.push({
+        ...item,
+        npc_uuid: npcEntry.npc_uuid
+      });
+    }
+  }
+  
+  // Sort alphabetically by name (case-insensitive)
+  allItems.sort((a, b) => {
+    const nameA = (a.name || '').toLowerCase();
+    const nameB = (b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+  
+  if (window?.GAS?.log?.i) {
+    window.GAS.log.i('[NPC INDEX] Alphabetical sorting complete', {
+      totalItems: allItems.length,
+      sampleItems: allItems.slice(0, 5).map(item => item.name)
+    });
+  }
+  
+  return allItems;
+}
+
+/**
  * Creates a hash of item content to detect duplicates
  */
 function createItemHash(item) {
-  // Create a more robust hash based on multiple item properties
-  // This helps detect duplicates even when items have the same name but different content
-  const contentString = `${item.name}|${item.img || ''}|${item.uuid || ''}`;
+  // Create a hash based on item properties that indicate content similarity
+  // Exclude uuid since it's always unique and would prevent duplicate detection
+  const contentString = `${item.name}|${item.img || ''}`;
   
   // Use a better hashing algorithm (simple but effective)
   let hash = 0;
@@ -194,7 +244,10 @@ export async function buildNpcFeatureIndex() {
   // Deduplicate items to prevent showing the same feature multiple times
   const deduplicatedIndex = deduplicateItems(index);
   
-  return deduplicatedIndex;
+  // Sort items alphabetically for easier navigation
+  const sortedItems = sortItemsAlphabetically(deduplicatedIndex);
+  
+  return sortedItems;
 }
 
 /**

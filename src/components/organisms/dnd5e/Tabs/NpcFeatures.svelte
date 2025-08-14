@@ -27,29 +27,29 @@
     }
   }
 
-  async function loadIndexOptions() {
+  function loadIndexOptions() {
     try {
       const raw = localStorage.getItem(INDEX_KEY);
       if (!raw) return [];
       const payload = JSON.parse(raw);
       const idx = payload?.index || [];
-      // Flatten into simple options; allow duplicates by uuid
-      const flattened = [];
-      for (const row of idx) {
-        const list = row?.items || [];
-        for (const it of list) {
-          if (it?.uuid && it?.name) {
-            // Create enriched label using the same pattern as FeatureItemList
-            const enrichedLabel = `@UUID[${it.uuid}]{${it.name}}`;
-            flattened.push({ 
-              label: enrichedLabel, 
-              value: it.uuid, 
-              img: it.img,
-              uuid: it.uuid
-            });
-          }
+      
+      // The index is now a flat array of items, not nested by NPC
+      // Create enriched labels using the @UUID syntax for proper enrichment
+      const flattened = idx.map(item => {
+        if (item?.uuid && item?.name) {
+          // Create enriched label using the same pattern as FeatureItemList
+          const enrichedLabel = `@UUID[${item.uuid}]{${item.name}}`;
+          return { 
+            label: enrichedLabel, 
+            value: item.uuid, 
+            img: item.img,
+            uuid: item.uuid
+          };
         }
-      }
+        return null;
+      }).filter(Boolean); // Remove any null entries
+      
       return flattened;
     } catch (_) {
       return [];
@@ -296,7 +296,7 @@
 
   let unsubscribe;
   onMount(async () => {
-    options = await loadIndexOptions();
+    options = loadIndexOptions();
     // Subscribe to actor changes so the right panel reflects current in-memory items
     try {
       unsubscribe = actor.subscribe(async (doc) => {
