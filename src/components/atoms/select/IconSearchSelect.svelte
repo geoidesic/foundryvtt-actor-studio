@@ -9,8 +9,9 @@
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
+    import { enrichHTML } from "~/src/helpers/Utility.js";
 
-    export let options = []; //- {value, label, icon || img}
+    export let options = []; //- {value, label, link, icon || img}
     export let value = ""; //- the currently selected uuid
     export let disabled = false;
     export let handler = void 0;
@@ -19,6 +20,7 @@
     export let id = void 0;
     export let noImg = false;
     export let truncateWidth = 20;
+    export let enableEnrichment = false;
 
     let isOpen = false;
     export let handleSelect = (option) => {
@@ -171,7 +173,12 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
                   i(class="{option.icon}")
                   +else
                     img(src="{option.img}" alt="{option.label}")
-            div.option-label {getLabel(option)}
+            +if("enableEnrichment")
+              +await("enrichHTML(getLabel(option) || option.label || option.link)")
+                +then("Html")
+                  div.option-label {@html Html}
+              +else
+                div.option-label {getLabel(option)}
 </template>
 
 <style lang="sass">

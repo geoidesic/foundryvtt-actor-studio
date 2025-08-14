@@ -33,6 +33,85 @@ export function invalidateNpcFeatureIndex() {
 }
 
 /**
+ * Deduplicates items across all NPCs to prevent showing the same feature multiple times
+ * Allows duplicate names but prevents duplicate name + content combinations
+ */
+function deduplicateItems(index) {
+  const seenItems = new Map(); // key: name + content hash, value: { uuid, npc_uuid }
+  const deduplicatedIndex = [];
+  
+  for (const npcEntry of index) {
+    const deduplicatedItems = [];
+    
+    for (const item of npcEntry.items) {
+      // Create a content hash based on name and other identifying properties
+      // We'll use a simple hash of the item data to detect duplicates
+      const contentHash = createItemHash(item);
+      const key = `${item.name}|${contentHash}`;
+      
+      if (!seenItems.has(key)) {
+        // First time seeing this item, add it
+        seenItems.set(key, { uuid: item.uuid, npc_uuid: npcEntry.npc_uuid });
+        deduplicatedItems.push(item);
+        
+        if (window?.GAS?.log?.v) {
+          window.GAS.log.v('[NPC INDEX] Added unique item', { name: item.name, uuid: item.uuid, npc_uuid: npcEntry.npc_uuid });
+        }
+      } else {
+        // Duplicate item found, log it
+        const existing = seenItems.get(key);
+        if (window?.GAS?.log?.d) {
+          window.GAS.log.d('[NPC INDEX] Skipped duplicate item', { 
+            name: item.name, 
+            uuid: item.uuid, 
+            npc_uuid: npcEntry.npc_uuid,
+            existingUuid: existing.uuid,
+            existingNpcUuid: existing.npc_uuid
+          });
+        }
+      }
+    }
+    
+    // Only add NPC entries that still have items after deduplication
+    if (deduplicatedItems.length > 0) {
+      deduplicatedIndex.push({ npc_uuid: npcEntry.npc_uuid, items: deduplicatedItems });
+    }
+  }
+  
+  if (window?.GAS?.log?.i) {
+    window.GAS.log.i('[NPC INDEX] Deduplication complete', {
+      originalIndexSize: index.length,
+      deduplicatedIndexSize: deduplicatedIndex.length,
+      totalOriginalItems: index.reduce((sum, npc) => sum + npc.items.length, 0),
+      totalDeduplicatedItems: deduplicatedIndex.reduce((sum, npc) => sum + npc.items.length, 0)
+    });
+  }
+  
+  return deduplicatedIndex;
+}
+
+/**
+ * Creates a hash of item content to detect duplicates
+ */
+function createItemHash(item) {
+  // Create a more robust hash based on multiple item properties
+  // This helps detect duplicates even when items have the same name but different content
+  const contentString = `${item.name}|${item.img || ''}|${item.uuid || ''}`;
+  
+  // Use a better hashing algorithm (simple but effective)
+  let hash = 0;
+  if (contentString.length === 0) return hash.toString(16);
+  
+  for (let i = 0; i < contentString.length; i++) {
+    const char = contentString.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  
+  return Math.abs(hash).toString(16);
+}
+
+/**
  * Builds the NPC feature index by scanning configured NPC compendiums.
  * Note: This must run in the main thread because it relies on Foundry APIs (fromUuid, pack index).
  * The heavy work is chunked to avoid blocking the UI.
@@ -111,7 +190,11 @@ export async function buildNpcFeatureIndex() {
     indexSize: index.length,
     durationMs: Date.now() - startedAt
   });
-  return index;
+  
+  // Deduplicate items to prevent showing the same feature multiple times
+  const deduplicatedIndex = deduplicateItems(index);
+  
+  return deduplicatedIndex;
 }
 
 /**

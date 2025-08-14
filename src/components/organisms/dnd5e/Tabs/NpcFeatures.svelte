@@ -14,6 +14,7 @@
   let active = null;
   let value = null;
   let placeHolder = "Add a Feature...";
+  let rightPanelItems = [];
 
   const INDEX_KEY = `${MODULE_ID}-npc-feature-index-v1`;
 
@@ -26,7 +27,7 @@
     }
   }
 
-  function loadIndexOptions() {
+  async function loadIndexOptions() {
     try {
       const raw = localStorage.getItem(INDEX_KEY);
       if (!raw) return [];
@@ -38,7 +39,14 @@
         const list = row?.items || [];
         for (const it of list) {
           if (it?.uuid && it?.name) {
-            flattened.push({ label: it.name, value: it.uuid, img: it.img });
+            // Create enriched label using the same pattern as FeatureItemList
+            const enrichedLabel = `@UUID[${it.uuid}]{${it.name}}`;
+            flattened.push({ 
+              label: enrichedLabel, 
+              value: it.uuid, 
+              img: it.img,
+              uuid: it.uuid
+            });
           }
         }
       }
@@ -288,7 +296,7 @@
 
   let unsubscribe;
   onMount(async () => {
-    options = loadIndexOptions();
+    options = await loadIndexOptions();
     // Subscribe to actor changes so the right panel reflects current in-memory items
     try {
       unsubscribe = actor.subscribe(async (doc) => {
@@ -296,9 +304,15 @@
         await refreshRightPanelFromActor(doc);
       });
     } catch (_) {}
+    
     window.GAS.log.d('actor', $actor);
   });
-  onDestroy(() => { try { if (unsubscribe) unsubscribe(); } catch (_) {} });
+  onDestroy(() => { 
+    try { 
+      if (unsubscribe) unsubscribe(); 
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+    } catch (_) {} 
+  });
 </script>
 
 <template lang="pug">
@@ -306,7 +320,16 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
   div(slot="left")
     .flexrow
       .flex3
-        IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectFeatureHandler}" id="npc-feature-select" bind:value)
+        IconSearchSelect.icon-select(
+          {options} 
+          {active} 
+          {placeHolder} 
+          handler="{selectFeatureHandler}" 
+          id="npc-feature-select" 
+          bind:value
+          enableEnrichment="{true}"
+        )
+  
   div(slot="right")
     FeatureItemList(trashable="{true}")
 </template>
@@ -327,8 +350,5 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
 .hint
   color: var(--color-text-dark-secondary)
   font-style: italic
-  
-
-  
 </style>
 

@@ -86,7 +86,7 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
     //-     pre {item.name}
     +if("$selectedNpc")
       div {@html richHTML ||  'No biography provided'}
-      
+
 </template>
 
 <style lang="sass">
