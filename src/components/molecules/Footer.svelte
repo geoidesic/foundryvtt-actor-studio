@@ -52,8 +52,9 @@
   } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import { abilityGenerationMethod } from "~/src/stores/index";
+  import { itemsFromActor } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { localize as t } from "~/src/helpers/Utility";
+  import { localize as t, getAndSetActorItems } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
@@ -151,61 +152,8 @@
   async function goToNpcFeatures() {
     // Build in-memory NPC actor from selected base and embed its feature items
     try {
-      if ($selectedNpcBase && $actor) {
-        const base = $selectedNpcBase;
-        // Convert embedded items to plain data for source update
-        const items = [];
-        try {
-          const arr = base.items && (base.items.contents || Array.from(base.items) || []);
-          for (const it of arr) {
-            if (!it) continue;
-            const data = it.toObject();
-            // Ensure a fresh ID is generated on the in-memory actor
-            if (data && data._id) delete data._id;
-            // Persist the original compendium UUID under our module namespace so later tabs can reference it
-            try {
-              const srcUuid = it?.uuid || it?.flags?.core?.sourceId || it?.system?.sourceId || null;
-              if (srcUuid) {
-                const fu = (globalThis?.foundry && globalThis.foundry.utils) ? globalThis.foundry.utils : undefined;
-                if (fu?.setProperty) {
-                  fu.setProperty(data, `flags.${MODULE_ID}.sourceUuid`, srcUuid);
-                } else {
-                  data.flags = data.flags || {};
-                  data.flags[MODULE_ID] = { ...(data.flags[MODULE_ID] || {}), sourceUuid: srcUuid };
-                }
-              }
-            } catch (_) {}
-            items.push(data);
-          }
-        } catch (_) {
-          // no-op; fallback to empty items
-        }
-        // Update the in-memory actor source with type, name and items
-        $actor.updateSource({
-          type: 'npc',
-          name: actorName || base.name,
-          items
-        });
-        // After source update, set module flags on the embedded Item documents as well
-        try {
-          const sourceUuidsByNameType = new Map(items.map(d => [`${d.name}::${d.type}`, d?.flags?.[MODULE_ID]?.sourceUuid]));
-          const setFlags = [];
-          $actor.items?.forEach?.((doc) => {
-            const key = `${doc?.name}::${doc?.type}`;
-            const src = sourceUuidsByNameType.get(key);
-            if (src && !doc.getFlag?.(MODULE_ID, 'sourceUuid')) {
-              setFlags.push(doc.setFlag(MODULE_ID, 'sourceUuid', src));
-            }
-          });
-          if (setFlags.length > 0) await Promise.allSettled(setFlags);
-        } catch (_) {}
-        // Helpful debug output
-        if (window?.GAS?.log?.g) {
-          window.GAS.log.g('[NPC] In-memory actor initialized with features', $actor);
-        } else {
-          console.log('[NPC] In-memory actor initialized with features', $actor);
-        }
-      }
+      // build actor from selectedNpcBase
+      getAndSetActorItems($selectedNpcBase, $actor, actorName);
     } catch (err) {
       window.GAS?.log?.e?.('[NPC] Failed to initialize in-memory actor', err);
     }

@@ -2,6 +2,7 @@ import { LOG_PREFIX, MODULE_ID, MODULE_CODE, LOG_PREFIX_COLOR, LOG_STYLES} from 
 import DTPlugin from "~/src/plugins/donation-tracker";
 import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
+import { tick } from "svelte";
 
 
 export async function illuminatedDescription(html, store) {
@@ -468,6 +469,97 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
     // window.GAS.log.d('item', item);
   }
   return item;
+}
+
+/** 
+ * There are differences in how in-memory documents can be updated between versions of FoundryVTTv12 and v13
+ * This function handles the differences and ensures the source is updated correctly.
+ * THis is necessary because the TRL library doesn't support innate reactivity to the in-memory documents.
+ * @param {Object} source - The source object to update
+ * @param {Object} val - The value to update the source with
+ * @returns {Promise<void>} A promise that resolves when the source is updated
+ */
+export const updateSource = async (source, val) => {
+  await source.updateSource(val);
+  await tick();
+  if(source.render) {
+    source.render();
+  }
+};
+
+export const deleteSource = async (source, key) => {
+  for(const item of source[key]) {
+    await source.items.delete(item.id);
+  }
+}
+
+/**
+ * This function is used to get the items from the selected NPC and set them on the in-memory actor.
+ * This requires a degree of mapping and flagging because item uuids in the compendium are not 
+ * the same as the uuids in the in-memory actor.
+ * @param {Object} selectedNpcBase - The base NPC object from the compendium
+ * @param {Object} actor - The in-memory actor object
+ * @param {string} actorName - The name of the actor
+ * @returns {Promise<void>} A promise that resolves when the items are set on the in-memory actor
+ */
+export const getAndSetActorItems = async (selectedNpcBase, actor, actorName) => {
+  if (selectedNpcBase && actor) {
+    // Convert embedded items to plain data for source update
+    const items = [];
+    try {
+      const arr = selectedNpcBase.items && (selectedNpcBase.items.contents || Array.from(selectedNpcBase.items) || []);
+      for (const it of arr) {
+        if (!it) continue;
+        const data = it.toObject();
+        // Ensure a fresh ID is generated on the in-memory actor
+        if (data && data._id) delete data._id;
+        // Persist the original compendium UUID under our module namespace so later tabs can reference it
+        try {
+          const srcUuid = it?.uuid || it?.flags?.core?.sourceId || it?.system?.sourceId || null;
+          if (srcUuid) {
+            const fu = (globalThis?.foundry && globalThis.foundry.utils) ? globalThis.foundry.utils : undefined;
+            if (fu?.setProperty) {
+              fu.setProperty(data, `flags.${MODULE_ID}.sourceUuid`, srcUuid);
+            } else {
+              data.flags = data.flags || {};
+              data.flags[MODULE_ID] = { ...(data.flags[MODULE_ID] || {}), sourceUuid: srcUuid };
+            }
+          }
+        } catch (_) {}
+        items.push(data);
+      }
+    } catch (_) {
+      // no-op; fallback to empty items
+    }
+    // Update the in-memory actor source with type, name and items
+    await deleteSource(actor, 'items');
+    await updateSource(actor, {
+      type: 'npc',
+      name: actorName || selectedNpcBase.name,
+      items
+    });
+    // Also update store used by NPC Features list
+    try { itemsFromActor.set(items); } catch (_) {}
+    // After source update, set module flags on the embedded Item documents as well
+    try {
+      const sourceUuidsByNameType = new Map(items.map(d => [`${d.name}::${d.type}`, d?.flags?.[MODULE_ID]?.sourceUuid]));
+      const setFlags = [];
+      actor.items?.forEach?.((doc) => {
+        const key = `${doc?.name}::${doc?.type}`;
+        const src = sourceUuidsByNameType.get(key);
+        if (src && !doc.getFlag?.(MODULE_ID, 'sourceUuid')) {
+          setFlags.push(doc.setFlag(MODULE_ID, 'sourceUuid', src));
+        }
+      });
+      if (setFlags.length > 0) await Promise.allSettled(setFlags);
+    } catch (_) {}
+    // Helpful debug output
+    if (window?.GAS?.log?.g) {
+      window.GAS.log.g('[NPC] In-memory actor initialized with features', actor);
+    } else {
+      console.log('[NPC] In-memory actor initialized with features', actor);
+    }
+  }
 }
 
 //- used by dropItemRegistry

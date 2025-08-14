@@ -28,59 +28,34 @@
   }
   async function handleTrash(index) {
     window.GAS.log.d(`Trash ${index}`);
-    try {
-      const displayItems = Array.isArray($itemsFromActor) ? $itemsFromActor : [];
-      if (index < 0 || index >= displayItems.length) return;
 
-      // Resolve the live embedded document by index to ensure we use the actual embedded id
-      const embeddedArray = Array.from(($actor?.items && typeof $actor.items.values === 'function') ? $actor.items.values() : []);
-      const embeddedDoc = embeddedArray[index];
-      const liveId = embeddedDoc?.id || displayItems[index]?.id;
 
-      if (!liveId) return;
-
-      const isPersisted = Boolean($actor?.id || $actor?.uuid);
-      const hasEmbedded = Boolean($actor?.items?.get?.(liveId));
-
-      if (isPersisted && hasEmbedded && $actor?.deleteEmbeddedDocuments) {
-        try {
-          await $actor.deleteEmbeddedDocuments('Item', [liveId]);
+      // In-memory removal (new/unsaved actor)
+        if ($actor?.items?.delete) {
+          $actor.items.delete(liveId);
+          $actor = $actor;
           return;
-        } catch (_) {
-          // Fall through to source update
         }
-      }
 
-      // In-memory/source removal (new/unsaved actor)
-      const src = $actor?.toObject?.();
-      if (!src || !Array.isArray(src.items)) return;
-      const updated = src.items.filter((it) => (it._id || it.id) !== liveId);
-      $actor.updateSource({ items: updated });
-      $actor = $actor;
-    } catch (_) {}
   }
 
-
-
-  const itemsFromActor = getContext("#itemsFromActor");
-
-  $: displayItems = items ? items : $itemsFromActor;
+  $: displayItems = items ? items : $actor.items;
   $: whichDisplay = items ? 'items' : 'itemsFromActor';
-  $: window.GAS.log.d('items', displayItems);
+  $: window.GAS.log.d('items', displayItems, $actor.items);
+  $: itemsLength = displayItems instanceof Map ? displayItems?.size : displayItems?.length;
 
 </script>
 
 <template lang="pug">
 ul.icon-list
-  pre {whichDisplay}
-  pre displayItems?.length {displayItems?.length}
-  +if("displayItems?.length")
+  +if("itemsLength")
     +each("displayItems as item, idx")
       li.left
+        .flexrow
         .flexrow.gap-4.relative
           .flex0.relative.image.mr-sm
             img.icon(src="{item.img}" alt="{item.name}")
-          +await("enrichHTML(item.link || item.name)")
+          +await("enrichHTML(trashable ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
             +then("Html")
               .flex2.text {@html Html}
           +if("trashable")

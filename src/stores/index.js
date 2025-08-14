@@ -83,6 +83,11 @@ storeDefinitions.levelUpClassObject.name = 'levelUpClassObject';
 storeDefinitions.activeRowClassKey.name = 'activeRowClassKey';
 storeDefinitions.levelUpSubClassObject.name = 'levelUpSubClassObject';
 storeDefinitions.levelUpCombinedHtml.name = 'levelUpCombinedHtml';
+storeDefinitions.itemsFromActor.name = 'itemsFromActor';
+storeDefinitions.selectedNpcBase.name = 'selectedNpcBase';
+
+
+
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore();
 dropItemRegistry.name = 'dropItemRegistry';
@@ -240,6 +245,7 @@ export function resetStores() {
   preAdvancementSelections.set({}); //- void
   levelUpPreAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
+  itemsFromActor.set([]); //- void
   clearGoldChoices(); //- void
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void

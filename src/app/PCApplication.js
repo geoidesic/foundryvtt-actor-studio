@@ -128,8 +128,14 @@ export default class PCApplication extends SvelteApplication {
 
   }
 
+  /**
+   * This mechanism is necessary because the app can be closed in two ways:
+   * 1. By clicking the close button in the header
+   * 2. Automatically by triggering the gas.close hook (e.g. when the workflow is complete)
+   * We need to ensure that the gas.close hook is only triggered once, 
+   * so we use this flag to track whether the app is being closed by the gas.close hook.
+   */
   #isClosingFromGasHook = false;
-  
   setClosingFromGasHook(value) {
     this.#isClosingFromGasHook = value;
   }
@@ -172,6 +178,7 @@ export default class PCApplication extends SvelteApplication {
   }
 
   render(force = false, options = {}) {
+    alert('render');
     if (!this.#storeUnsubscribe) {
       this.#storeUnsubscribe = this.#documentStore.subscribe(this.#handleDocUpdate.bind(this));
     }

@@ -19,8 +19,6 @@ export const tabs = writable([]); //- tracks the tabs
 export const levelUpTabs = writable([]); //- tracks the level up tabs
 export const npcTabs = writable([]); //- tracks the level up tabs
 export const actorInGame = writable(null); //- tracks the actor in game
-// NPC Builder stores
-export const selectedNpcBase = writable(null); //- tracks the selected base NPC item (compendium document)
 export const abilityGenerationMethod = writable(null); //- tracks the ability generation method
 export const subClassesForClass = writable([]); //- tracks the subclasses for the class
 export const goldRoll = writable(0); //- tracks the gold roll
@@ -37,3 +35,6 @@ export const activeRowClassKey = writable(null); //- tracks the active row class
 export const levelUpCombinedHtml = writable(''); //- tracks the level up combined html
 export const levelUpRichHTML = writable(''); //- tracks the level up rich html
 export const levelUpRichSubClassHTML = writable(''); //- tracks the level up rich subclass html
+// NPC Builder stores
+export const selectedNpcBase = writable(null); //- tracks the selected base NPC item (compendium document)
+export const itemsFromActor = writable([]);

@@ -1,13 +1,17 @@
 <script>
-  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
-  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
-  import { getPacksFromSettings, extractItemsFromPacksSync, illuminatedDescription } from "~/src/helpers/Utility.js";
+  import { getPacksFromSettings, extractItemsFromPacksSync, illuminatedDescription, getAndSetActorItems } from "~/src/helpers/Utility.js";
   import { getContext, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
   import { activeTab, npcTabs, selectedNpcBase, readOnlyTabs } from "~/src/stores/index";
+  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
+  import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
+  import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
+
 
   // Add NPCStatBlock import
   import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
+
+  const actor = getContext("#doc");
 
   // Store for selected NPC item
   export let selectedNpc = writable(null);
@@ -38,6 +42,7 @@
     active = option;
     if (!value) value = option;
     await tick();
+    getAndSetActorItems($selectedNpcBase, $actor, selected.name);
     richHTML = await illuminatedDescription(html, $selectedNpc);
     Hooks.call('gas.richhtmlReady', richHTML);
   };
@@ -60,6 +65,7 @@
 
 <template lang="pug">
 StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
+  pre blah
   div(slot="left")
     .flexrow
       .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
@@ -71,7 +77,14 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
         npc="{$selectedNpc}"
         
       )
-  div(slot="right") {@html richHTML}
+  div(slot="right") 
+    //- pre {$actor.items.toArray()}
+    //- FeatureItemList(trashable="{true}")
+    //- pre item count {$actor?.items.size}
+    //- +if("$actor?.items.size > 0")
+    //-   +each("$actor?.items as item")
+    //-     pre {item.name}
+    div {@html richHTML || 'No biography provided'}
 </template>
 
 <style lang="sass">

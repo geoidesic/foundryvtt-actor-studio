@@ -4,6 +4,8 @@ import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
+import { tick } from "svelte";
+
 import { version } from "../../module.json";
 
 export default class NPCApplication extends SvelteApplication {
@@ -64,7 +66,11 @@ export default class NPCApplication extends SvelteApplication {
         class: NPCAppShell,
         target: document.body,
         props: function () {
-          return { documentStore: this.#documentStore, document: this.reactive.document};
+          return { 
+            documentStore: this.#documentStore, 
+            document: this.reactive.document,
+            app: this
+          };
         },
       },
     });
@@ -111,31 +117,6 @@ export default class NPCApplication extends SvelteApplication {
 
   }
 
-  #isClosingFromGasHook = false;
-  
-  setClosingFromGasHook(value) {
-    this.#isClosingFromGasHook = value;
-  }
-
-  async close(options = {}) {
-    // Only trigger gas.close hook if we're not already being closed by the gas.close hook
-    if (!this.#isClosingFromGasHook) {
-      console.log('[NPCApplication] User closed Actor Studio - triggering gas.close hook for cleanup');
-      Hooks.call("gas.close");
-      return; // gasClose will call this.close() again with the flag set
-    }
-    
-    console.log('[PCApplication] Closing application (called from gasClose)');
-    await super.close(options);
-
-    if (this.#storeUnsubscribe) {
-      this.#storeUnsubscribe();
-      this.#storeUnsubscribe = void 0;
-    }
-    
-    // Reset the flag for next time
-    this.#isClosingFromGasHook = false;
-  }
 
   /**
    * Handles any changes to document.
