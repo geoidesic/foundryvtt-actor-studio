@@ -144,9 +144,11 @@ function sortItemsAlphabetically(index) {
  * Creates a hash of item content to detect duplicates
  */
 function createItemHash(item) {
+  window.GAS.log.p('createItemHash', item);
   // Create a hash based on item properties that indicate content similarity
   // Exclude uuid since it's always unique and would prevent duplicate detection
-  const contentString = `${item.name}|${item.img || ''}`;
+  // Exclude img since it's just a visual representation and shouldn't affect duplicate detection
+  const contentString = `${item.name}`;
   
   // Use a better hashing algorithm (simple but effective)
   let hash = 0;
@@ -181,7 +183,8 @@ export async function buildNpcFeatureIndex() {
   }
 
   // Extract only NPC entries with their UUIDs
-  const allEntries = extractItemsFromPacksSync(packs, ['uuid->uuid', 'type', 'img']);
+  const allEntries = extractItemsFromPacksSync(packs, ['uuid->uuid', 'type', 'img', 'system->description']);
+  window.GAS.log.p('allEntries', allEntries);
   const entries = allEntries.filter(e => e.type === 'npc');
   if (window?.GAS?.log?.d) {
     window.GAS.log.d('[NPC INDEX] Entry counts', {

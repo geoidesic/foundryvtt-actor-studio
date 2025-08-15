@@ -227,7 +227,7 @@ export function extractItemsFromPacksSync(packs, keys) {
     // window.GAS.log.d('entries', entries);
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
-    // window.GAS.log.d('entries post', entries);
+    window.GAS.log.d('entries post', entries);
     let packItems = extractMapIteratorObjectProperties(entries, keys);
     packItems = packItems.map(item => ({
       ...item,
@@ -315,6 +315,7 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
 export function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
+    window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
     const newObj = {};
     keys.forEach((k) => {
       if (k.includes('->')) {
