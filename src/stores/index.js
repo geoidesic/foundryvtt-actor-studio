@@ -39,6 +39,8 @@ const initialTabs = [
 
 const npcTabs = [
   { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
+  { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
+  { label: 'Create NPC', id: 'npc-create', component: 'NpcCreate' },
 ];
 
 // Tabs for level up

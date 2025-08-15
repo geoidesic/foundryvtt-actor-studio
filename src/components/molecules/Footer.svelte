@@ -219,6 +219,31 @@
     $isActorCreated = true;
   };
 
+  //- Create NPC Actor
+  const clickCreateNPCHandler = async () => {
+    try {
+      // Create the NPC actor in the game
+      const createdActor = await Actor.create($actor.toObject());
+      
+      // Set the actor in the game store
+      actorInGame.set(createdActor);
+      
+      // Mark as created
+      $isActorCreated = true;
+      
+      // Show success notification
+      ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
+      
+      // Optionally close the application
+      if (app) {
+        app.close();
+      }
+    } catch (error) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
+      ui.notifications?.error(`Failed to create NPC: ${error.message}`);
+    }
+  };
+
   const clickUpdateLevelUpHandler = async () => {
     window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
     
@@ -627,6 +652,17 @@
                     )
                       span {t('Footer.SelectBaseNPC')}
                       i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-features'")
+          .progress-container
+            .button-container
+              button.mt-xs.wide(
+                type="button"
+                role="button"
+                on:mousedown="{clickCreateNPCHandler}"
+              )
+                span {t('Footer.CreateNPC')}
+                i.right.ml-md(class="fas fa-chevron-right")
 
 </template>
 

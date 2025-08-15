@@ -324,7 +324,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
           {options} 
           {active} 
           {placeHolder} 
-          handler="{selectFeatureHandler}" 
+          handler!="{selectFeatureHandler}" 
           id="npc-feature-select" 
           bind:value
           enableEnrichment="{true}"

@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from "svelte";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
@@ -8,6 +9,9 @@
 
   export let name;
   export let npc; 
+  export let readonly = true; // Default to readonly for backward compatibility
+
+  const actor = getContext("#doc");
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
   const sizes = {
@@ -199,7 +203,15 @@
 
 <template lang="pug">
   .npc-stat-block
-    h2.name {name}
+    +if("readonly")
+      h2.name {name}
+    +else()
+      input.name-input(
+        type="text"
+        value="{name}"
+        on:input!="{e => $actor.updateSource({ name: e.target.value })}"
+        placeholder="Enter NPC name"
+      )
     .details
       span.mr-sm.smaller {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)},
       span.mr-sm.smaller {ucfirst(npc?.system?.details?.type?.value)},
@@ -297,6 +309,22 @@
 
 .name
   margin: 0
+
+.name-input
+  width: 100%
+  font-size: 1.5rem
+  font-weight: bold
+  border: 1px solid #ccc
+  border-radius: 4px
+  padding: 0.5rem
+  margin-bottom: 0.5rem
+  background: white
+  color: #333
+
+  &:focus
+    outline: none
+    border-color: var(--color-border-highlight)
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
 
 .mt-xs
   margin-top: 0.5em
