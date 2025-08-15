@@ -212,7 +212,7 @@
     hr.my-sm
     
     .label.inline.mt-sm Armor Class 
-    .value {npc?.system?.attributes?.ac.flat} ({npc?.system?.attributes?.ac?.calc === 'natural' ? 'natural armor' : npc?.system?.attributes?.ac?.calc})
+    .value {npc?.system?.attributes?.ac.value} ({npc?.system?.attributes?.ac?.calc === 'natural' || npc?.system?.attributes?.ac?.calc === 'default' ? 'natural' : npc?.system?.attributes?.ac?.calc})
     HitPoints(hp="{npc?.system?.attributes?.hp}")
     Speed(movement="{npc?.system?.attributes?.movement}")
     hr.my-sm
@@ -248,9 +248,10 @@
     .mt-xxs
       .label.inline Senses 
       .value {senseEntries()} (passive Perception {passivePerception})
-    .mt-xxs
-      .label.inline Languages 
-      .value {languages}
+    +if("languages")
+      .mt-xxs
+        .label.inline Languages 
+        .value {languages}
     .mt-xxs
       .label.inline Challenge 
       .value {cr} ({xp.toLocaleString()} XP)
