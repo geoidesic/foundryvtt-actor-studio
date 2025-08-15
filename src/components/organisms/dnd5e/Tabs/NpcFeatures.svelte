@@ -32,28 +32,97 @@
   function loadIndexOptions() {
     try {
       const raw = localStorage.getItem(INDEX_KEY);
-      if (!raw) return [];
+      console.log('[NPC Features] loadIndexOptions - localStorage raw data exists:', !!raw);
+      
+      if (!raw) {
+        console.log('[NPC Features] loadIndexOptions - No localStorage data found');
+        return [];
+      }
+      
       const payload = JSON.parse(raw);
+      console.log('[NPC Features] loadIndexOptions - Parsed payload:', {
+        version: payload.version,
+        builtAt: payload.builtAt,
+        indexLength: payload.index?.length || 0
+      });
+      
       const idx = payload?.index || [];
+      console.log('[NPC Features] loadIndexOptions - Index array length:', idx.length);
+      
+      // Log the loaded index data to show descriptions are available
+      if (window?.GAS?.log?.d) {
+        window.GAS.log.d('[NPC Features] Loaded index from localStorage', {
+          totalItems: idx.length,
+          sampleItems: idx.slice(0, 3).map(item => ({
+            name: item.name,
+            hasDescription: !!item.description,
+            descriptionLength: item.description?.length || 0,
+            descriptionPreview: item.description?.substring(0, 100) || 'N/A'
+          })),
+          descriptionStats: {
+            itemsWithDescription: idx.filter(item => item.description && item.description.length > 0).length,
+            totalDescriptionLength: idx.reduce((sum, item) => sum + (item.description?.length || 0), 0),
+            averageDescriptionLength: idx.length > 0 ? idx.reduce((sum, item) => sum + (item.description?.length || 0), 0) / idx.length : 0
+          }
+        });
+      }
       
       // The index is now a flat array of items, not nested by NPC
       // Create enriched labels using the @UUID syntax for proper enrichment
+      let itemCount = 0;
       const flattened = idx.map(item => {
         if (item?.uuid && item?.name) {
           // Create enriched label using the same pattern as FeatureItemList
           const enrichedLabel = `@UUID[${item.uuid}]{${item.name}}`;
+          
+          // Create a tooltip or additional info from description if available
+          const description = item.description || '';
+          const hasDescription = description.length > 0;
+          
+          // Log detailed information about the first few items being processed
+          if (itemCount < 3) {
+            window?.GAS?.log?.d?.('[NPC Features] Processing item for options', {
+              itemName: item.name,
+              itemUuid: item.uuid,
+              hasDescription: hasDescription,
+              descriptionLength: description.length,
+              descriptionPreview: description.substring(0, 100) || 'N/A',
+              enrichedLabel: enrichedLabel
+            });
+          }
+          itemCount++;
+          
           return { 
             label: enrichedLabel, 
             value: item.uuid, 
             img: item.img,
-            uuid: item.uuid
+            uuid: item.uuid,
+            description: description,
+            hasDescription: hasDescription
           };
         }
         return null;
       }).filter(Boolean); // Remove any null entries
       
+      console.log('[NPC Features] loadIndexOptions - Flattened options length:', flattened.length);
+      console.log('[NPC Features] loadIndexOptions - Sample flattened options:', flattened.slice(0, 3));
+      
+      // Log the final flattened options
+      if (window?.GAS?.log?.d) {
+        window.GAS.log.d('[NPC Features] Flattened options ready', {
+          totalOptions: flattened.length,
+          optionsWithDescription: flattened.filter(opt => opt.hasDescription).length,
+          sampleOptions: flattened.slice(0, 3).map(opt => ({
+            name: opt.label,
+            hasDescription: opt.hasDescription,
+            descriptionLength: opt.description?.length || 0
+          }))
+        });
+      }
+      
       return flattened;
-    } catch (_) {
+    } catch (err) {
+      console.error('[NPC Features] loadIndexOptions - Error:', err);
       return [];
     }
   }
@@ -315,6 +384,51 @@
   let unsubscribe;
   onMount(async () => {
     options = loadIndexOptions();
+    
+    // Debug: Check what we loaded
+    console.log('[NPC Features] onMount - options loaded:', options);
+    console.log('[NPC Features] onMount - options length:', options.length);
+    
+    // If options are empty, try to rebuild the index
+    if (!options || options.length === 0) {
+      console.log('[NPC Features] onMount - No options found, attempting to rebuild index...');
+      try {
+        // Import and call the rebuild function
+        const { buildNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js');
+        console.log('[NPC Features] onMount - buildNpcFeatureIndex imported, calling...');
+        const newIndex = await buildNpcFeatureIndex();
+        console.log('[NPC Features] onMount - Index rebuild result:', {
+          success: !!newIndex,
+          length: newIndex?.length || 0
+        });
+        
+        // Reload options after rebuild
+        if (newIndex && newIndex.length > 0) {
+          options = loadIndexOptions();
+          console.log('[NPC Features] onMount - Options reloaded after rebuild:', options.length);
+        }
+      } catch (err) {
+        console.error('[NPC Features] onMount - Failed to rebuild index:', err);
+      }
+    }
+    
+    // Debug: Check localStorage directly
+    try {
+      const raw = localStorage.getItem(INDEX_KEY);
+      console.log('[NPC Features] onMount - localStorage raw data exists:', !!raw);
+      if (raw) {
+        const payload = JSON.parse(raw);
+        console.log('[NPC Features] onMount - localStorage payload:', {
+          version: payload.version,
+          builtAt: payload.builtAt,
+          indexLength: payload.index?.length || 0,
+          sampleIndex: payload.index?.slice(0, 3) || []
+        });
+      }
+    } catch (err) {
+      console.error('[NPC Features] onMount - localStorage parse error:', err);
+    }
+    
     // Subscribe to actor changes so the right panel reflects current in-memory items
     try {
       unsubscribe = actor.subscribe(async (doc) => {
@@ -347,6 +461,12 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
           bind:value
           enableEnrichment="{true}"
         )
+      .flex0
+        button.debug-button(
+          type="button"
+          on:click!="{async () => { console.log('Manual rebuild clicked'); try { const { buildNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js'); const result = await buildNpcFeatureIndex(); console.log('Manual rebuild result:', result); options = loadIndexOptions(); } catch (err) { console.error('Manual rebuild failed:', err); } }}"
+          title="Debug: Rebuild NPC Index"
+        ) 🔄
   
   div(slot="right")
     FeatureItemList(trashable="{true}")
@@ -368,5 +488,18 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
 .hint
   color: var(--color-text-dark-secondary)
   font-style: italic
+
+.debug-button
+  background: #ff6b6b
+  color: white
+  border: none
+  border-radius: 4px
+  padding: 4px 8px
+  cursor: pointer
+  font-size: 12px
+  margin-left: 8px
+  
+  &:hover
+    background: #ff5252
 </style>
 

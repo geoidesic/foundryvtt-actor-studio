@@ -583,12 +583,6 @@ export const getAndSetActorItems = async (selectedNpcBase, actor, actorName) => 
       });
       if (setFlags.length > 0) await Promise.allSettled(setFlags);
     } catch (_) {}
-    // Helpful debug output
-    if (window?.GAS?.log?.g) {
-      window.GAS.log.g('[NPC] In-memory actor initialized with features', actor);
-    } else {
-      console.log('[NPC] In-memory actor initialized with features', actor);
-    }
   }
 }
 

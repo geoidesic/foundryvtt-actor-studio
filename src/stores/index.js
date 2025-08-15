@@ -247,7 +247,7 @@ export function resetStores() {
   preAdvancementSelections.set({}); //- void
   levelUpPreAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
-  itemsFromActor.set([]); //- void
+  storeDefinitions.itemsFromActor.set([]); //- void
   clearGoldChoices(); //- void
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
