@@ -4,6 +4,21 @@ import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
 import { tick } from "svelte";
 
+/**
+ * Converts various collection types into a standard array
+ * @param {Array|Collection|Set|Map|Object} collection - The collection to convert. Can be:
+ *   - Array: returned as-is
+ *   - Collection: contents property is returned if present
+ *   - Set/Map/Object: converted to array via Array.from()
+ * @returns {Array} The collection contents as a standard array
+ */
+export function getItemsArray(collection) {
+  if (!collection) return [];
+  if (Array.isArray(collection)) return collection;
+  if (collection.contents) return collection.contents;
+  try { return Array.from(collection); } catch (e) { return []; }
+}
+
 
 export async function illuminatedDescription(html, store) {
   const enriched = await enrichHTML(html);
@@ -575,6 +590,95 @@ export const getAndSetActorItems = async (selectedNpcBase, actor, actorName) => 
     }
   }
 }
+
+/**
+ * Copies NPC stats (ability scores, hit points, armor class, etc.) from the selected NPC base to the in-memory actor
+ * @param {Object} selectedNpcBase - The selected NPC base document
+ * @param {Object} actor - The in-memory actor object
+ * @returns {Promise<void>} A promise that resolves when the stats are copied
+ */
+export const copyNpcStatsToActor = async (selectedNpcBase, actor) => {
+  if (selectedNpcBase && actor) {
+    try {
+      // Get the NPC base data
+      const npcData = selectedNpcBase.toObject();
+      
+      // Copy the core stats that should be preserved
+      const statsToCopy = {
+        system: {
+          abilities: npcData.system?.abilities || {},
+          attributes: npcData.system?.attributes || {},
+          details: npcData.system?.details || {},
+          traits: npcData.system?.traits || {},
+          skills: npcData.system?.skills || {},
+          resources: npcData.system?.resources || {},
+          currency: npcData.system?.currency || {},
+          inventory: npcData.system?.inventory || {},
+          spells: npcData.system?.spells || {},
+          effects: npcData.system?.effects || {},
+          modifiers: npcData.system?.modifiers || {},
+          profs: npcData.system?.profs || {},
+          bonuses: npcData.system?.bonuses || {},
+          saves: npcData.system?.saves || {},
+          attributes: npcData.system?.attributes || {},
+          ac: npcData.system?.ac || {},
+          hp: npcData.system?.hp || {},
+          speed: npcData.system?.speed || {},
+          spellcasting: npcData.system?.spellcasting || {},
+          level: npcData.system?.level || {},
+          cr: npcData.system?.cr || {},
+          xp: npcData.system?.xp || {},
+          alignment: npcData.system?.alignment || {},
+          size: npcData.system?.size || {},
+          type: npcData.system?.type || {},
+          subtype: npcData.system?.subtype || {},
+          senses: npcData.system?.senses || {},
+          languages: npcData.system?.languages || {},
+          damage: npcData.system?.damage || {},
+          resistances: npcData.system?.resistances || {},
+          immunities: npcData.system?.immunities || {},
+          vulnerabilities: npcData.system?.vulnerabilities || {},
+          conditionImmunities: npcData.system?.conditionImmunities || {},
+          legendary: npcData.system?.legendary || {},
+          legendaryActions: npcData.system?.legendaryActions || {},
+          lair: npcData.system?.lair || {},
+          lairActions: npcData.system?.lairActions || {},
+          regionalEffects: npcData.system?.regionalEffects || {},
+          regionalEffectsEnd: npcData.system?.regionalEffectsEnd || {},
+          environment: npcData.system?.environment || {},
+          source: npcData.system?.source || {},
+          page: npcData.system?.page || {},
+          otherSources: npcData.system?.otherSources || {},
+          additionalSources: npcData.system?.additionalSources || {},
+          additionalSources2: npcData.system?.additionalSources2 || {},
+          additionalSources3: npcData.system?.additionalSources3 || {},
+          additionalSources4: npcData.system?.additionalSources4 || {},
+          additionalSources5: npcData.system?.additionalSources5 || {},
+          additionalSources6: npcData.system?.additionalSources6 || {},
+          additionalSources7: npcData.system?.additionalSources7 || {},
+          additionalSources8: npcData.system?.additionalSources8 || {},
+          additionalSources9: npcData.system?.additionalSources9 || {},
+          additionalSources10: npcData.system?.additionalSources10 || {}
+        },
+        flags: npcData.flags || {},
+        img: npcData.img || '',
+        token: npcData.token || {}
+      };
+      
+      // Update the in-memory actor with the copied stats
+      await updateSource(actor, statsToCopy);
+      
+      // Helpful debug output
+      if (window?.GAS?.log?.g) {
+        window.GAS.log.g('[NPC] In-memory actor stats copied from base NPC', actor);
+      } else {
+        console.log('[NPC] In-memory actor stats copied from base NPC', actor);
+      }
+    } catch (error) {
+      window.GAS.log.e('[NPC] Error copying NPC stats to actor:', error);
+    }
+  }
+};
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {

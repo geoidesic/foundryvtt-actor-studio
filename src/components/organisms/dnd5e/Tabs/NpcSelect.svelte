@@ -1,5 +1,7 @@
 <script>
-  import { getPacksFromSettings, extractItemsFromPacksSync, illuminatedDescription, getAndSetActorItems } from "~/src/helpers/Utility.js";
+  import { getPacksFromSettings, 
+    extractItemsFromPacksSync, illuminatedDescription, 
+    getAndSetActorItems, copyNpcStatsToActor, getItemsArray } from "~/src/helpers/Utility.js";
   import { getContext, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
   import { activeTab, npcTabs, selectedNpcBase, readOnlyTabs } from "~/src/stores/index";
@@ -42,7 +44,13 @@
     active = option;
     if (!value) value = option;
     await tick();
-    getAndSetActorItems($selectedNpcBase, $actor, selected.name);
+    
+    // Copy NPC stats (ability scores, hit points, armor class, etc.) to the in-memory actor
+    await copyNpcStatsToActor($selectedNpcBase, $actor);
+    
+    // Copy NPC items/features to the in-memory actor
+    await getAndSetActorItems($selectedNpcBase, $actor, selected.name);
+    
     richHTML = await illuminatedDescription(html, $selectedNpc);
     Hooks.call('gas.richhtmlReady', richHTML);
   };
@@ -61,11 +69,11 @@
     // Use handler to normalize active/value and compute richHTML; safe to re-fetch
     selectNpcHandler($selectedNpcBase.uuid);
   }
+  $: itemsArray = getItemsArray($selectedNpc?.items);
 </script>
 
 <template lang="pug">
 StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
-  pre blah
   div(slot="left")
     .flexrow
       .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
@@ -75,8 +83,11 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
       NPCStatBlock(
         name="{$selectedNpc.name}"
         npc="{$selectedNpc}"
-        
       )
+
+      +if("itemsArray?.length")
+        h3.mt-sm Features
+        FeatureItemList(items="{itemsArray}")
   div(slot="right") 
     //- pre {$actor.items.toArray()}
     //- FeatureItemList(trashable="{true}")

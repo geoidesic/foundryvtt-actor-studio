@@ -12,10 +12,16 @@
   export let documentStore;     // svelte store for the document
   export let document;          // document object itelf, which is the same as $documentStore
   export let app;
+  export let npcWorkflowFSM;    // NPC workflow state machine
 
   setContext("#doc", documentStore);
+  setContext("#npcWorkflowFSM", npcWorkflowFSM);
 
   const application = getContext('#external').application; // the application object
+
+  //- register hooks
+  console.log('[NPCAPP] Registering gas.close hook (once)');
+  Hooks.once("gas.close", gasClose);
 
   const setActorItems = async  () => {
     app.updateSource($documentStore, {items: [{name: 'test', type: 'feat'}]});
@@ -34,7 +40,50 @@
     console.log('NPCAcppShell application', application);
     console.log('NPCAcppShell app', app);
     console.log('NPCAcppShell $activeTab', $activeTab);
+    console.log('NPCAcppShell npcWorkflowFSM', npcWorkflowFSM);
   });
+
+  onDestroy(() => {
+    console.log('[NPCAPP] onDestroy called - cleaning up');
+    console.log('[NPCAPP] Unregistering gas.close hook');
+    Hooks.off("gas.close", gasClose);
+    console.log('[NPCAPP] onDestroy complete');
+  });
+
+  function gasClose() {
+    console.log('[NPCAPP] ====== gasClose CALLED ======');
+    window.GAS.log.d('gas.close');
+    
+    // Reset stores
+    console.log('[NPCAPP] Resetting stores and NPC workflow state machine');
+    resetStores();
+    
+    // Reset NPC workflow state machine to idle
+    try {
+      if (npcWorkflowFSM) {
+        const currentState = npcWorkflowFSM.getCurrentState();
+        console.log('[NPCAPP] Current NPC workflow state before reset:', currentState);
+        npcWorkflowFSM.handle('reset');
+        console.log('[NPCAPP] NPC workflow state after reset:', npcWorkflowFSM.getCurrentState());
+      }
+    } catch (error) {
+      console.warn('[NPCAPP] Error during NPC workflow reset:', error);
+    }
+    
+    // Set flag to indicate we're closing from the gas hook
+    if (application && typeof application.setClosingFromGasHook === 'function') {
+      application.setClosingFromGasHook(true);
+      console.log('[NPCAPP] setClosingFromGasHook called on application instance');
+    } else {
+      console.warn('[NPCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
+      // Fallback: try to close directly if possible
+      if (application && typeof application.close === 'function') {
+        application.close();
+      }
+    }
+    application.close();
+    console.log('[NPCAPP] ====== gasClose COMPLETE ======');
+  }
 
 </script>
 
@@ -45,7 +94,7 @@
   ApplicationShell(bind:elementRoot bind:stylesApp)
     main
       section.a
-        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
+        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="NPC")
       section.b
         Footer
 </template>

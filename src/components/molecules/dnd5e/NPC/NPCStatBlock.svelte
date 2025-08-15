@@ -4,7 +4,7 @@
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
   import Speed from "~/src/components/atoms/dnd5e/NPC/Speed.svelte";
-  import { ucfirst } from "~/src/helpers/Utility";
+  import { ucfirst, getItemsArray } from "~/src/helpers/Utility";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
 
   export let name;
@@ -145,13 +145,6 @@
     return val && Number(val) > 0 ? `Legendary Resistance (${val}/Day)` : '';
   })();
 
-  function getItemsArray(collection) {
-    if (!collection) return [];
-    if (Array.isArray(collection)) return collection;
-    if (collection.contents) return collection.contents;
-    try { return Array.from(collection); } catch (e) { return []; }
-  }
-
   // Enrich HTML for tooltips using Utility.enrichHTML (cached)
   import { enrichHTML } from "~/src/helpers/Utility";
   const tooltipCache = new Map();
@@ -205,13 +198,13 @@
   .npc-stat-block
     +if("readonly")
       h2.name {name}
-    +else()
-      input.name-input(
-        type="text"
-        value="{name}"
-        on:input!="{e => $actor.updateSource({ name: e.target.value })}"
-        placeholder="Enter NPC name"
-      )
+      +else()
+        input.name-input(
+          type="text"
+          value="{name}"
+          on:input!="{e => $actor.updateSource({ name: e.target.value })}"
+          placeholder="Enter NPC name"
+        )
     .details
       span.mr-sm.smaller {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)},
       span.mr-sm.smaller {ucfirst(npc?.system?.details?.type?.value)},
@@ -290,9 +283,9 @@
                 span {@html la.desc}
 
   //- Items list (generic)
-  +if("getItemsArray(npc?.items)?.length")
-    h3.mt-sm Features
-    FeatureItemList(items="{itemsArray}")
+  //- +if("getItemsArray(npc?.items)?.length")
+  //-   h3.mt-sm Features
+  //-   FeatureItemList(items="{itemsArray}")
 </template>
 
 <style lang="sass">

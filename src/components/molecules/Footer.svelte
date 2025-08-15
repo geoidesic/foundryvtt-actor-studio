@@ -42,7 +42,8 @@
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
-  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/PC/WorkflowStateMachine";
+  import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS, npcWorkflowFSMContext } from "~/src/helpers/NPC/WorkflowStateMachine";
   
   import {
     getLevelByDropType,
@@ -154,17 +155,19 @@
     try {
       // build actor from selectedNpcBase
       getAndSetActorItems($selectedNpcBase, $actor, actorName);
+      
+      // Use the NPC state machine to handle progression
+      const npcWorkflowFSM = getNPCWorkflowFSM();
+      if (npcWorkflowFSM) {
+        // Pass the context data when calling the event
+        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.NPC_SELECTED, { 
+          ...npcWorkflowFSMContext, 
+          selectedNpcBase: $selectedNpcBase 
+        });
+      }
     } catch (err) {
       window.GAS?.log?.e?.('[NPC] Failed to initialize in-memory actor', err);
     }
-    npcTabs.update(tabs => {
-      if (!tabs.find(t => t.id === 'npc-features')) {
-        return [...tabs, { label: 'Features', id: 'npc-features', component: 'NpcFeatures' }];
-      }
-      return tabs;
-    });
-    readOnlyTabs.set(['npc-select']);
-    activeTab.set('npc-features');
   }
 
   // Derived store to check if actor has items in inventory
@@ -234,15 +237,42 @@
       // Show success notification
       ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
       
-      // Optionally close the application
-      if (app) {
-        app.close();
+      // Use the NPC state machine to handle completion instead of closing the app
+      const npcWorkflowFSM = getNPCWorkflowFSM();
+      if (npcWorkflowFSM) {
+        // Pass the context data when calling the event
+        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.NPC_CREATED, { 
+          ...npcWorkflowFSMContext, 
+          createdActor: createdActor 
+        });
       }
+      
+      // Don't close the application manually - let the state machine handle the workflow
+      // The state machine will trigger gas.close after a delay, which provides programmatic control
+      // This prevents Tab 3 from closing after character creation while maintaining the ability to close programmatically
     } catch (error) {
       window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
       ui.notifications?.error(`Failed to create NPC: ${error.message}`);
     }
   };
+
+  //- Advance from Features to Creation tab
+  const goToNpcCreation = async () => {
+    try {
+      // Use the NPC state machine to handle progression to creation tab
+      const npcWorkflowFSM = getNPCWorkflowFSM();
+      if (npcWorkflowFSM) {
+        // Pass the context data when calling the event
+        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.FEATURES_CONFIGURED, { 
+          ...npcWorkflowFSMContext 
+        });
+      }
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC creation tab', err);
+    }
+  };
+
+
 
   const clickUpdateLevelUpHandler = async () => {
     window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
@@ -650,7 +680,7 @@
                       role="button"
                       on:mousedown="{goToNpcFeatures}"
                     )
-                      span {t('Footer.SelectBaseNPC')}
+                      span {t('Footer.Continue')}
                       i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'npc-features'")
@@ -659,10 +689,21 @@
               button.mt-xs.wide(
                 type="button"
                 role="button"
+                on:mousedown="{goToNpcCreation}"
+              )
+                span {t('Footer.Next')}
+                i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-create'")
+          .progress-container
+            .button-container
+              button.mt-xs.wide(
+                type="button"
+                role="button"
                 on:mousedown="{clickCreateNPCHandler}"
               )
                 span {t('Footer.CreateNPC')}
-                i.right.ml-md(class="fas fa-chevron-right")
+                i.right.ml-md(class="fas fa-check")
 
 </template>
 

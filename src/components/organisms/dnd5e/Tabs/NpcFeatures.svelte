@@ -7,8 +7,10 @@
   // itemsFromActor is provided by context from NPCAppShell
   import { enrichHTML } from "~/src/helpers/Utility";
   import { updateSource } from "~/src/helpers/Utility";
+  import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS } from "~/src/helpers/NPC/WorkflowStateMachine";
 
   const actor = getContext("#doc");
+  const npcWorkflowFSM = getContext("#npcWorkflowFSM");
 
   let options = [];
   let active = null;
@@ -169,7 +171,21 @@
     }
   }
 
-  const selectFeatureHandler = async (uuid) => {
+  // Function to check if features are complete and trigger progression
+  function checkFeaturesComplete() {
+    try {
+      const items = getItemSourcesFromActor($actor);
+      const hasFeatures = items && items.length > 0;
+      
+      // Don't automatically trigger progression - let the user control when to advance
+      // The footer button will handle the transition to the next tab
+      window.GAS.log.d('[NPC Features] Features updated - user can now click button to proceed');
+    } catch (err) {
+      window.GAS?.log?.e?.('[NPC Features] Failed to check features completion', err);
+    }
+  }
+
+  async function selectFeatureHandler(uuid) {
     try {
       const item = await fromUuid(uuid);
       if (!item) return;
@@ -244,12 +260,14 @@
       value = null;
       active = null;
       
+      // Check if features are complete after adding
+      checkFeaturesComplete();
+      
       // subscriber will refresh panel
     } catch (err) {
       window.GAS?.log?.e?.('[NPC Features] Failed adding feature', err);
     }
   };
-
 
 
   function removeFeatureAt(index) {

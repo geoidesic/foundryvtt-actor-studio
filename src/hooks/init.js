@@ -5,7 +5,7 @@ import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase';
 import { log, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
-import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
+import { getWorkflowFSM } from '~/src/helpers/PC/WorkflowStateMachine.js';
 import { initializeNpcFeatureIndex } from '~/src/hooks/npcIndex.js';
 import packageJson from '../../package.json';
 import manifestJson from '../../module.json';

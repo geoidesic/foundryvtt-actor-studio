@@ -5,7 +5,7 @@ import { delay, prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Ut
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections, actorInGame } from '~/src/stores/index';
-import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/PC/WorkflowStateMachine';
 
 /**
  * Class responsible for monitoring and managing the advancement process

@@ -4,7 +4,7 @@
  */
 import { get } from "svelte/store";
 import { MODULE_ID } from "~/src/helpers/constants";
-import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from "~/src/helpers/PC/WorkflowStateMachine";
 import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
 import {
   getLevelByDropType,
@@ -494,7 +494,7 @@ export async function handleAddEquipment({
   };
   
   // Use the helper function to determine the correct equipment completion event
-  const { getEquipmentCompletionEvent } = await import('~/src/helpers/WorkflowStateMachine.js');
+  const { getEquipmentCompletionEvent } = await import('~/src/helpers/PC/WorkflowStateMachine.js');
   const completionEvent = getEquipmentCompletionEvent(contextWithActor, false);
   
   window.GAS.log.d('[WORKFLOW] handleAddEquipment - Triggering event:', completionEvent, 'with context:', contextWithActor);
