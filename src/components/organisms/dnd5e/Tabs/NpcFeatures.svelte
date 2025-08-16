@@ -13,12 +13,50 @@
   const npcWorkflowFSM = getContext("#npcWorkflowFSM");
 
   let options = [];
+  let enrichedOptions = [];
   let active = null;
   let value = null;
   let placeHolder = "Add a Feature...";
   let rightPanelItems = [];
 
   const INDEX_KEY = `${MODULE_ID}-npc-feature-index-v1`;
+
+  // Async function to enrich options
+  async function enrichOptions(rawOptions) {
+    try {
+      if (!rawOptions || rawOptions.length === 0) {
+        enrichedOptions = [];
+        return;
+      }
+      
+      const enriched = await Promise.all(rawOptions.map(async (option) => {
+        try {
+          // Enrich the label if it contains @UUID syntax
+          if (option.label && option.label.includes('@UUID')) {
+            const rollData = typeof $actor?.getRollData === 'function' ? $actor.getRollData() : {};
+            const enrichedLabel = await enrichHTML(option.label, { 
+              async: true, 
+              rollData, 
+              relativeTo: $actor 
+            });
+            return { ...option, enrichedLabel };
+          }
+          return { ...option, enrichedLabel: option.label };
+        } catch (err) {
+          console.warn('[NPC Features] Failed to enrich option:', option, err);
+          return { ...option, enrichedLabel: option.label };
+        }
+      }));
+      
+      enrichedOptions = enriched;
+    } catch (err) {
+      console.error('[NPC Features] Failed to enrich options:', err);
+      enrichedOptions = rawOptions.map(option => ({ ...option, enrichedLabel: option.label }));
+    }
+  }
+
+  // Reactive statement to handle async enrichment
+  $: enrichOptions(options);
 
   function replaceActorName(html, actorName) {
     try {
@@ -453,9 +491,9 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
     .flexrow
       .flex3
         IconSearchSelect.icon-select(
-          {options} 
           {active} 
           {placeHolder} 
+          options="{enrichedOptions}"
           handler!="{selectFeatureHandler}" 
           id="npc-feature-select" 
           bind:value

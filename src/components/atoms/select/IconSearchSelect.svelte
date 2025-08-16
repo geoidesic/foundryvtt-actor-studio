@@ -10,6 +10,7 @@
     import { truncate } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
     import { enrichHTML } from "~/src/helpers/Utility.js";
+    import { derived } from 'svelte/store';
 
     export let options = []; //- {value, label, link, icon || img}
     export let value = ""; //- the currently selected uuid
@@ -81,31 +82,15 @@
         searchTerm = val;
       }, 300);
     }
+
+    let filteredOptions = [];
     // Filter options by search term
     $: filteredOptions = options.filter(option =>
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    let enrichedOptions = [];
 
-    // Reactive enrichment that runs whenever filteredOptions changes
-    $: if (enableEnrichment && filteredOptions.length > 0) {
-      (async () => {
-        enrichedOptions = await Promise.all(filteredOptions.map(async (option) => {
-          if ((option.label || option.link)) {
-            const enrichedLabel = await enrichHTML(option.label || option.link) || option.name || 'Unknown';
-            return {
-              ...option,
-              enrichedLabel
-            };
-          }
-          return option;
-        }));
-      })();
-    } else {
-      enrichedOptions = filteredOptions;
-    }
-
+  
 
 
     onMount(async () => {
@@ -136,7 +121,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
       input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search...")
-      +each("enrichedOptions as option, index")
+      +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
           div.option(role="option"  on:click|stopPropagation|preventDefault="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
