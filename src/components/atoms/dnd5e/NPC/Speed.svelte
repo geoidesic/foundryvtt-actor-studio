@@ -1,5 +1,22 @@
 <script>
+  import { getContext, createEventDispatcher } from "svelte";
+  import EditableValue from "~/src/components/atoms/EditableValue.svelte";
+  
   export let movement; // { walk, fly, swim, burrow, climb, units, hover }
+  export let readonly = false;
+  
+  const actor = getContext("#doc");
+  const dispatch = createEventDispatcher();
+  
+  function handleSpeedSave(type, newValue) {
+    const numValue = parseInt(newValue);
+    if (!isNaN(numValue) && numValue >= 0) {
+      dispatch('speedUpdate', {
+        type: type,
+        value: numValue
+      });
+    }
+  }
 </script>
 
 <template lang="pug">
@@ -8,15 +25,54 @@
   .value
     span
       +if("movement.walk")
-        | {movement.walk} ft.
+        EditableValue(
+          value="{movement.walk}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => handleSpeedSave('walk', val)}"
+          placeholder="30"
+        )
+        span  ft.
       +if("movement.fly")
-        | , Fly {movement.fly} ft.{movement.hover ? ' (hover)' : ''}
+        span , Fly 
+        EditableValue(
+          value="{movement.fly}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => handleSpeedSave('fly', val)}"
+          placeholder="0"
+        )
+        span  ft.{movement.hover ? ' (hover)' : ''}
       +if("movement.swim")
-        | , Swim {movement.swim} ft.
+        span , Swim 
+        EditableValue(
+          value="{movement.swim}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => handleSpeedSave('swim', val)}"
+          placeholder="0"
+        )
+        span  ft.
       +if("movement.burrow")
-        | , Burrow {movement.burrow} ft.
+        span , Burrow 
+        EditableValue(
+          value="{movement.burrow}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => handleSpeedSave('burrow', val)}"
+          placeholder="0"
+        )
+        span  ft.
       +if("movement.climb")
-        | , Climb {movement.climb} ft.
+        span , Climb 
+        EditableValue(
+          value="{movement.climb}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => handleSpeedSave('climb', val)}"
+          placeholder="0"
+        )
+        span  ft.
 </template>
 
 <style lang="scss">

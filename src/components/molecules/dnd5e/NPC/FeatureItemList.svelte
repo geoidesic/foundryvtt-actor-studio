@@ -44,7 +44,6 @@
 
   $: displayItems = items ? items : $actor.items;
   $: whichDisplay = items ? 'items' : 'itemsFromActor';
-  $: window.GAS.log.d('items', displayItems, $actor.items);
   $: itemsLength = displayItems instanceof Map ? displayItems?.size : displayItems?.length;
 
 </script>
