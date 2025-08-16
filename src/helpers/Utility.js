@@ -315,7 +315,7 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
 export function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
-    window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
+    // window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
     const newObj = {};
     keys.forEach((k) => {
       if (k.includes('->')) {

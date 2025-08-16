@@ -86,6 +86,32 @@
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    let enrichedOptions = [];
+
+    // Reactive enrichment that runs whenever filteredOptions changes
+    $: if (enableEnrichment && filteredOptions.length > 0) {
+      (async () => {
+        enrichedOptions = await Promise.all(filteredOptions.map(async (option) => {
+          if ((option.label || option.link)) {
+            const enrichedLabel = await enrichHTML(option.label || option.link) || option.name || 'Unknown';
+            return {
+              ...option,
+              enrichedLabel
+            };
+          }
+          return option;
+        }));
+      })();
+    } else {
+      enrichedOptions = filteredOptions;
+    }
+
+
+
+    onMount(async () => {
+      
+    });
+
     
   </script>
 
@@ -110,7 +136,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
       input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search...")
-      +each("filteredOptions as option, index")
+      +each("enrichedOptions as option, index")
         +if("option && option?.value !== value")
           div.option(role="option"  on:click|stopPropagation|preventDefault="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
@@ -119,10 +145,9 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
                   i(class="{option.icon}")
                   +else
                     img(src="{option.img}" alt="{option.label}")
+            
             +if("enableEnrichment")
-              +await("enrichHTML(getLabel(option) || option.label || option.link)")
-                +then("Html")
-                  div.option-label {@html Html}
+              div.option-label {@html option.enrichedLabel}
               +else
                 div.option-label {getLabel(option)}
 </template>
