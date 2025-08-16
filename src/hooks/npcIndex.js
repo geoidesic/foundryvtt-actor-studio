@@ -1,5 +1,5 @@
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getPacksFromSettings, extractItemsFromPacksSync } from '~/src/helpers/Utility';
+import { getPacksFromSettings, extractItemsFromPacksSync, enrichHTML } from '~/src/helpers/Utility';
 import { startNpcIndexLoading, stopNpcIndexLoading } from '~/src/stores/npcIndexLoading.js';
 
 const LOCAL_STORAGE_KEY = `${MODULE_ID}-npc-feature-index-v1`;
@@ -207,6 +207,53 @@ function createItemHash(item) {
 }
 
 /**
+ * Enriches item descriptions with HTML processing during indexing
+ * This moves the heavy enrichment work from runtime to build time
+ */
+async function enrichItemDescriptions(items, actor) {
+  const enrichedItems = [];
+  
+  for (const item of items) {
+    try {
+      let enrichedLabel = item.name;
+      
+      // Create enriched label using @UUID syntax for proper enrichment
+      if (item.uuid) {
+        const uuidLabel = `@UUID[${item.uuid}]{${item.name}}`;
+        
+        // Enrich the label if it contains @UUID syntax
+        try {
+          const rollData = typeof actor?.getRollData === 'function' ? actor.getRollData() : {};
+          enrichedLabel = await enrichHTML(uuidLabel, { 
+            async: true, 
+            rollData, 
+            relativeTo: actor 
+          });
+        } catch (err) {
+          console.warn('[NPC INDEX] Failed to enrich item label:', item.name, err);
+          enrichedLabel = item.name;
+        }
+      }
+      
+      enrichedItems.push({
+        ...item,
+        enrichedLabel
+      });
+      
+    } catch (err) {
+      console.warn('[NPC INDEX] Failed to enrich item:', item.name, err);
+      // Fallback to unenriched version
+      enrichedItems.push({
+        ...item,
+        enrichedLabel: item.name
+      });
+    }
+  }
+  
+  return enrichedItems;
+}
+
+/**
  * Builds the NPC feature index by scanning configured NPC compendiums.
  * Note: This must run in the main thread because it relies on Foundry APIs (fromUuid, pack index).
  * The heavy work is chunked to avoid blocking the UI.
@@ -357,11 +404,15 @@ export async function buildNpcFeatureIndex() {
               });
             }
           } catch (_) {}
-          index.push({ npc_uuid: entry.uuid, items });
+          
+          // Enrich the items with HTML processing during indexing
+          const enrichedItems = await enrichItemDescriptions(items, actor);
+          
+          index.push({ npc_uuid: entry.uuid, items: enrichedItems });
           // if (window?.GAS?.log?.v) {
           //   window.GAS.log.v('[NPC INDEX] Indexed NPC', {
           //     npcUuid: entry.uuid,
-          //     itemCount: items.length
+          //     itemCount: enrichedItems.length
           //   });
           // }
         } catch (err) {

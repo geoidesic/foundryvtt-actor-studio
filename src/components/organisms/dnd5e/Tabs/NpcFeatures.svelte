@@ -5,7 +5,6 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
-  import { enrichHTML } from "~/src/helpers/Utility";
   import { updateSource } from "~/src/helpers/Utility";
   import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS } from "~/src/helpers/NPC/WorkflowStateMachine";
 
@@ -13,50 +12,12 @@
   const npcWorkflowFSM = getContext("#npcWorkflowFSM");
 
   let options = [];
-  let enrichedOptions = [];
   let active = null;
   let value = null;
   let placeHolder = "Add a Feature...";
   let rightPanelItems = [];
 
   const INDEX_KEY = `${MODULE_ID}-npc-feature-index-v1`;
-
-  // Async function to enrich options
-  async function enrichOptions(rawOptions) {
-    try {
-      if (!rawOptions || rawOptions.length === 0) {
-        enrichedOptions = [];
-        return;
-      }
-      
-      const enriched = await Promise.all(rawOptions.map(async (option) => {
-        try {
-          // Enrich the label if it contains @UUID syntax
-          if (option.label && option.label.includes('@UUID')) {
-            const rollData = typeof $actor?.getRollData === 'function' ? $actor.getRollData() : {};
-            const enrichedLabel = await enrichHTML(option.label, { 
-              async: true, 
-              rollData, 
-              relativeTo: $actor 
-            });
-            return { ...option, enrichedLabel };
-          }
-          return { ...option, enrichedLabel: option.label };
-        } catch (err) {
-          console.warn('[NPC Features] Failed to enrich option:', option, err);
-          return { ...option, enrichedLabel: option.label };
-        }
-      }));
-      
-      enrichedOptions = enriched;
-    } catch (err) {
-      console.error('[NPC Features] Failed to enrich options:', err);
-      enrichedOptions = rawOptions.map(option => ({ ...option, enrichedLabel: option.label }));
-    }
-  }
-
-  // Reactive statement to handle async enrichment
-  $: enrichOptions(options);
 
   function replaceActorName(html, actorName) {
     try {
@@ -95,7 +56,8 @@
             name: item.name,
             hasDescription: !!item.description,
             descriptionLength: item.description?.length || 0,
-            descriptionPreview: item.description?.substring(0, 100) || 'N/A'
+            descriptionPreview: item.description?.substring(0, 100) || 'N/A',
+            hasEnrichedLabel: !!item.enrichedLabel
           })),
           descriptionStats: {
             itemsWithDescription: idx.filter(item => item.description && item.description.length > 0).length,
@@ -105,30 +67,15 @@
         });
       }
       
-      // The index is now a flat array of items, not nested by NPC
-      // Create enriched labels using the @UUID syntax for proper enrichment
-      let itemCount = 0;
+      // The index now contains pre-enriched data, so we can use it directly
       const flattened = idx.map(item => {
         if (item?.uuid && item?.name) {
-          // Create enriched label using the same pattern as FeatureItemList
-          const enrichedLabel = `@UUID[${item.uuid}]{${item.name}}`;
+          // Use the pre-enriched label from the index
+          const enrichedLabel = item.enrichedLabel || item.name;
           
           // Create a tooltip or additional info from description if available
           const description = item.description || '';
           const hasDescription = description.length > 0;
-          
-          // Log detailed information about the first few items being processed
-          if (itemCount < 3) {
-            window?.GAS?.log?.d?.('[NPC Features] Processing item for options', {
-              itemName: item.name,
-              itemUuid: item.uuid,
-              hasDescription: hasDescription,
-              descriptionLength: description.length,
-              descriptionPreview: description.substring(0, 100) || 'N/A',
-              enrichedLabel: enrichedLabel
-            });
-          }
-          itemCount++;
           
           return { 
             label: enrichedLabel, 
@@ -136,7 +83,9 @@
             img: item.img,
             uuid: item.uuid,
             description: description,
-            hasDescription: hasDescription
+            hasDescription: hasDescription,
+            // Store the enriched data for the IconSearchSelect
+            enrichedLabel: enrichedLabel
           };
         }
         return null;
@@ -150,10 +99,12 @@
         window.GAS.log.d('[NPC Features] Flattened options ready', {
           totalOptions: flattened.length,
           optionsWithDescription: flattened.filter(opt => opt.hasDescription).length,
+          optionsWithEnrichedLabel: flattened.filter(opt => opt.enrichedLabel).length,
           sampleOptions: flattened.slice(0, 3).map(opt => ({
             name: opt.label,
             hasDescription: opt.hasDescription,
-            descriptionLength: opt.description?.length || 0
+            descriptionLength: opt.description?.length || 0,
+            hasEnrichedLabel: !!opt.enrichedLabel
           }))
         });
       }
@@ -397,26 +348,7 @@
     } catch (_) {}
   }
 
-  // Async helpers used with +await for enrichment (ensures parity with tab 1 rendering)
-  async function enrichNameInline(name, uuid, doc) {
-    try {
-      const inline = uuid ? `@UUID[${uuid}]{${name}}` : name;
-      const rollData = typeof doc?.getRollData === 'function' ? doc.getRollData() : {};
-      const html = await enrichHTML(inline, { async: true, rollData, relativeTo: doc });
-      return replaceActorName(html, doc?.name);
-    } catch (_) {
-      return name;
-    }
-  }
-  async function enrichTextWithActor(raw, doc) {
-    try {
-      const rollData = typeof doc?.getRollData === 'function' ? doc.getRollData() : {};
-      const html = await enrichHTML(raw || '', { async: true, rollData, relativeTo: doc });
-      return replaceActorName(html, doc?.name);
-    } catch (_) {
-      return raw || '';
-    }
-  }
+
 
 
   let unsubscribe;
@@ -480,7 +412,6 @@
   onDestroy(() => { 
     try { 
       if (unsubscribe) unsubscribe(); 
-      window.removeEventListener('mousemove', handleGlobalMouseMove);
     } catch (_) {} 
   });
 </script>
@@ -493,7 +424,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
         IconSearchSelect.icon-select(
           {active} 
           {placeHolder} 
-          options="{enrichedOptions}"
+          options="{options}"
           handler!="{selectFeatureHandler}" 
           id="npc-feature-select" 
           bind:value

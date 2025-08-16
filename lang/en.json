@@ -40,7 +40,9 @@
       "CreateCharacter": "Create Character",
       "UpdateCharacter": "Update Character",
       "SelectBaseNPC": "Select Base NPC",
-      "CreateNPC": "Create NPC"
+      "CreateNPC": "Create NPC",
+      "Continue": "Continue",
+      "Next": "Next"
     },
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
