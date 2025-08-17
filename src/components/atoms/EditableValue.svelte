@@ -15,12 +15,7 @@
   let inputElement;
   
   function startEdit() {
-    console.log('EditableValue - startEdit called, readonly:', readonly, 'value:', value);
-    if (readonly) {
-      console.log('EditableValue - Cannot edit, readonly is true');
-      return;
-    }
-    console.log('EditableValue - Starting edit mode');
+    if (readonly) return;
     editValue = value;
     isEditing = true;
     setTimeout(() => {
@@ -32,19 +27,13 @@
   }
   
   function handleSave() {
-    console.log('EditableValue - handleSave called, editValue:', editValue, 'original value:', value);
     if (editValue !== value) {
       const newValue = editValue;
-      console.log('EditableValue - Dispatching save event with:', newValue);
       dispatch('save', { value: newValue, oldValue: value });
       if (onSave) {
-        console.log('EditableValue - Calling onSave callback with:', newValue);
         onSave(newValue);
       }
-    } else {
-      console.log('EditableValue - No change in value, not saving');
     }
-    console.log('EditableValue - Exiting edit mode');
     isEditing = false;
   }
   
@@ -54,12 +43,9 @@
   }
   
   function handleKeydown(event) {
-    console.log('EditableValue - handleKeydown called with key:', event.key);
     if (event.key === 'Enter') {
-      console.log('EditableValue - Enter key detected, calling handleSave');
       handleSave();
     } else if (event.key === 'Escape') {
-      console.log('EditableValue - Escape key detected, calling handleCancel');
       handleCancel();
     }
   }
@@ -73,12 +59,12 @@
       placeholder="{placeholder}"
       on:blur="{handleSave}"
       on:keydown="{handleKeydown}"
-      on:input!="{e => console.log('EditableValue - Input value changed to:', e.target.value)}"
+
       class!="{className}"
     )
   +if("!isEditing")
     span.editable-value(
-      on:click!="{() => { console.log('EditableValue - Clicked! readonly:', readonly, 'value:', value); startEdit(); }}"
+      on:click!="{startEdit}"
       on:keydown!="{e => e.key === 'Enter' && startEdit()}"
       tabindex="0"
       role="button"

@@ -4,6 +4,10 @@
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
   import Speed from "~/src/components/atoms/dnd5e/NPC/Speed.svelte";
+  import Skills from "~/src/components/atoms/dnd5e/NPC/Skills.svelte";
+  import Senses from "~/src/components/atoms/dnd5e/NPC/Senses.svelte";
+  import Languages from "~/src/components/atoms/dnd5e/NPC/Languages.svelte";
+  import SavingThrows from "~/src/components/atoms/dnd5e/NPC/SavingThrows.svelte";
   import { ucfirst, getItemsArray, updateSource } from "~/src/helpers/Utility";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
@@ -80,10 +84,7 @@
     score: npc?.system?.abilities?.[abbr]?.value
   }));
 
-  // Debug logging
-  $: console.log('NPCStatBlock - abilityScores:', abilityScores);
-  $: console.log('NPCStatBlock - readonly prop:', readonly);
-  $: console.log('NPCStatBlock - npc data:', npc);
+
 
   function abilityMod(score) {
     if (typeof score !== 'number') return 0;
@@ -127,16 +128,15 @@
     return [];
   }
 
-  // Saving throws list (only proficient)
-  const abilityLabel = { str: 'Str', dex: 'Dex', con: 'Con', int: 'Int', wis: 'Wis', cha: 'Cha' };
-  $: savingThrowsList = abilityOrder
-    .filter(abbr => npc?.system?.abilities?.[abbr]?.proficient)
-    .map(abbr => {
-      const score = npc?.system?.abilities?.[abbr]?.value ?? 10;
-      const mod = abilityMod(score);
-      const save = mod + pbForCR(npc?.system?.details?.cr ?? 0);
-      return `${abilityLabel[abbr] || abbr.toUpperCase()} ${formatBonus(save)}`;
-    });
+  // Saving throws - now handled by the SavingThrows component
+  // $: savingThrowsList = abilityOrder
+  //   .filter(abbr => npc?.system?.abilities?.[abbr]?.proficient)
+  //   .map(abbr => {
+  //     const score = npc?.system?.abilities?.[abbr]?.value ?? 10;
+  //     const mod = abilityMod(score);
+  //     const save = mod + pbForCR(npc?.system?.details?.cr ?? 0);
+  //     return `${abilityLabel[abbr] || abbr.toUpperCase()} ${formatBonus(save)}`;
+  //   });
 
   // Skills
   const skillToLabel = {
@@ -184,12 +184,12 @@
   $: dv = normalizeList(npc?.system?.traits?.dv?.value).join(', ');
   $: ci = normalizeList(npc?.system?.traits?.ci?.value).join(', ');
 
-  // Languages
-  $: languages = (() => {
-    const vals = normalizeList(npc?.system?.traits?.languages?.value);
-    const custom = npc?.system?.traits?.languages?.custom || '';
-    return [vals.join(', '), custom].filter(Boolean).join(', ');
-  })();
+  // Languages - now handled by the Languages component
+  // $: languages = (() => {
+  //   const vals = normalizeList(npc?.system?.traits?.languages?.value);
+  //   const custom = npc?.system?.traits?.languages?.custom || '';
+  //   return [vals.join(', '), custom].filter(Boolean).join(', ');
+  // })();
 
   // PB / XP
   $: cr = npc?.system?.details?.cr ?? 0;
@@ -371,27 +371,40 @@
     }
   }
 
-  async function updateActorSavingThrows(value) {
-    if ($actor) {
-      try {
-        await updateSource($actor, { 'system.saves': value });
-        // Also update the local npc object for reactivity
-        if (npc?.system) npc.system.saves = value;
-      } catch (error) {
-        console.error('Failed to update actor saving throws:', error);
-      }
-    }
-  }
 
-  async function updateActorSkills(value) {
+
+  async function updateActorSkills(skill, proficient, ability) {
+    console.log('🔍 updateActorSkills called with:', { skill, proficient, ability });
+    console.log('🔍 $actor value:', $actor);
+    
     if ($actor) {
+      console.log('✅ $actor found, attempting to update skills...');
       try {
-        await updateSource($actor, { 'system.skills': value });
+        const updateData = {
+          [`system.skills.${skill}.proficient`]: proficient,
+          [`system.skills.${skill}.ability`]: ability
+        };
+        
+        console.log('📝 Calling Utility.updateSource with:', updateData);
+        await updateSource($actor, updateData);
+        console.log('✅ Utility.updateSource completed');
+        
         // Also update the local npc object for reactivity
-        if (npc?.system) npc.system.skills = value;
+        if (npc?.system?.skills) {
+          if (!npc.system.skills[skill]) {
+            npc.system.skills[skill] = {};
+          }
+          npc.system.skills[skill].proficient = proficient;
+          npc.system.skills[skill].ability = ability;
+        }
+        
+        console.log('🎉 Skills update completed successfully');
       } catch (error) {
-        console.error('Failed to update actor skills:', error);
+        console.error('❌ Failed to update actor skills:', error);
+        console.error('❌ Error stack:', error.stack);
       }
+    } else {
+      console.error('❌ No $actor found!');
     }
   }
 
@@ -443,15 +456,33 @@
     }
   }
 
-  async function updateActorSenses(value) {
+  async function updateActorSenses(sense, value) {
+    console.log('🔍 updateActorSenses called with:', { sense, value });
+    console.log('🔍 $actor value:', $actor);
+    
     if ($actor) {
+      console.log('✅ $actor found, attempting to update senses...');
       try {
-        await updateSource($actor, { 'system.traits.senses': value });
+        const updateData = {
+          [`system.attributes.senses.${sense}`]: value
+        };
+        
+        console.log('📝 Calling Utility.updateSource with:', updateData);
+        await updateSource($actor, updateData);
+        console.log('✅ Utility.updateSource completed');
+        
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.senses = value;
+        if (npc?.system?.attributes?.senses) {
+          npc.system.attributes.senses[sense] = value;
+        }
+        
+        console.log('🎉 Senses update completed successfully');
       } catch (error) {
-        console.error('Failed to update actor senses:', error);
+        console.error('❌ Failed to update actor senses:', error);
+        console.error('❌ Error stack:', error.stack);
       }
+    } else {
+      console.error('❌ No $actor found!');
     }
   }
 
@@ -467,15 +498,88 @@
     }
   }
 
-  async function updateActorLanguages(value) {
+  async function updateActorLanguages(updateData) {
+    console.log('🔍 updateActorLanguages called with:', updateData);
+    console.log('🔍 $actor value:', $actor);
+    
     if ($actor) {
+      console.log('✅ $actor found, attempting to update languages...');
       try {
-        await updateSource($actor, { 'system.traits.languages': value });
-        // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.languages = value;
+        const { type, language, isCustom } = updateData;
+        
+        if (type === 'add') {
+          if (isCustom) {
+            // Add custom language
+            const currentCustom = npc?.system?.traits?.languages?.custom || '';
+            const newCustom = currentCustom ? `${currentCustom}, ${language}` : language;
+            await updateSource($actor, { 'system.traits.languages.custom': newCustom });
+            if (npc?.system?.traits?.languages) {
+              npc.system.traits.languages.custom = newCustom;
+            }
+          } else {
+            // Add standard language
+            const currentLanguages = npc?.system?.traits?.languages?.value || [];
+            const newLanguages = Array.isArray(currentLanguages) ? [...currentLanguages, language] : [language];
+            await updateSource($actor, { 'system.traits.languages.value': newLanguages });
+            if (npc?.system?.traits?.languages) {
+              npc.system.traits.languages.value = newLanguages;
+            }
+          }
+        } else if (type === 'remove') {
+          if (isCustom) {
+            // Remove custom language
+            const currentCustom = npc?.system?.traits?.languages?.custom || '';
+            const newCustom = currentCustom.split(',').filter(lang => lang.trim() !== language).join(', ').trim();
+            await updateSource($actor, { 'system.traits.languages.custom': newCustom });
+            if (npc?.system?.traits?.languages) {
+              npc.system.traits.languages.custom = newCustom;
+            }
+          } else {
+            // Remove standard language
+            const currentLanguages = npc?.system?.traits?.languages?.value || [];
+            const newLanguages = currentLanguages.filter(lang => lang !== language);
+            await updateSource($actor, { 'system.traits.languages.value': newLanguages });
+            if (npc?.system?.traits?.languages) {
+              npc.system.traits.languages.value = newLanguages;
+            }
+          }
+        }
+        
+        console.log('🎉 Languages update completed successfully');
       } catch (error) {
-        console.error('Failed to update actor languages:', error);
+        console.error('❌ Failed to update actor languages:', error);
+        console.error('❌ Error stack:', error.stack);
       }
+    } else {
+      console.error('❌ No $actor found!');
+    }
+  }
+  
+  async function updateActorSavingThrows(updateData) {
+    console.log('🔍 updateActorSavingThrows called with:', updateData);
+    console.log('🔍 $actor value:', $actor);
+    
+    if ($actor) {
+      console.log('✅ $actor found, attempting to update saving throws...');
+      try {
+        const { type, ability } = updateData;
+        
+        if (type === 'add') {
+          // Add saving throw proficiency
+          await updateSource($actor, { [`system.abilities.${ability}.proficient`]: true });
+          if (npc?.system?.abilities?.[ability]) npc.system.abilities[ability].proficient = true;
+        } else if (type === 'remove') {
+          // Remove saving throw proficiency
+          await updateSource($actor, { [`system.abilities.${ability}.proficient`]: false });
+          if (npc?.system?.abilities?.[ability]) npc.system.abilities[ability].proficient = false;
+        }
+        
+        console.log('✅ Saving throws updated successfully');
+      } catch (error) {
+        console.error('❌ Failed to update actor saving throws:', error);
+      }
+    } else {
+      console.log('❌ No actor found');
     }
   }
 
@@ -665,6 +769,10 @@
       console.error('❌ No $actor found!');
     }
   }
+
+
+
+
 </script>
 
 <template lang="pug">
@@ -763,26 +871,19 @@
         )
     hr.my-sm
     
-    +if("savingThrowsList && savingThrowsList.length > 0")
-      .mt-sm
-        .label.inline Saving Throws 
-        .value
-          EditableValue(
-            value="{savingThrowsList.join(', ')}"
-            readonly="{readonly}"
-            onSave!="{val => updateActorSavingThrows(val)}"
-            placeholder="Str +2, Dex +4"
-          )
-    +if("skillsList && skillsList.length > 0")
-      .mt-xxs
-        .label.inline Skills 
-        .value
-          EditableValue(
-            value="{skillsList.join(', ')}"
-            readonly="{readonly}"
-            onSave!="{val => updateActorSkills(val)}"
-            placeholder="Athletics +5, Perception +3"
-          )
+    .mt-sm
+      SavingThrows(
+        abilities="{npc?.system?.abilities || {}}"
+        proficiencyBonus="{pb}"
+        readonly="{readonly}"
+        on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
+      )
+    .mt-xxs
+      Skills(
+        skills="{npc?.system?.skills || {}}"
+        readonly="{readonly}"
+        on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
+      )
     +if("dr && dr.length > 0")
       .mt-xxs
         .label.inline Damage Resistances 
@@ -824,33 +925,26 @@
             placeholder="None"
           )
     .mt-xxs
-      .label.inline Senses 
-      .value
-        EditableValue(
-          value="{senseEntries()}"
-          readonly="{readonly}"
-          onSave!="{val => updateActorSenses(val)}"
-          placeholder="Darkvision 60 ft."
-        )
-        span  ( Passive Perception 
-        EditableValue(
-          value="{passivePerception}"
-          type="number"
-          readonly="{readonly}"
-          onSave!="{val => updateActorPassivePerception(val)}"
-          placeholder="10"
-        )
-        span )
-    +if("languages && languages.length > 0")
-      .mt-xxs
-        .label.inline Languages 
-        .value
-          EditableValue(
-            value="{languages}"
-            readonly="{readonly}"
-            onSave!="{val => updateActorLanguages(val)}"
-            placeholder="Common"
-          )
+      Senses(
+        senses="{npc?.system?.attributes?.senses || {}}"
+        readonly="{readonly}"
+        on:senseUpdate!="{e => updateActorSenses(e.detail.sense, e.detail.value)}"
+      )
+      span  ( Passive Perception 
+      EditableValue(
+        value="{passivePerception}"
+        type="number"
+        readonly="{readonly}"
+        onSave!="{val => updateActorPassivePerception(val)}"
+        placeholder="10"
+      )
+      span )
+    .mt-xxs
+      Languages(
+        languages="{npc?.system?.traits?.languages || {}}"
+        readonly="{readonly}"
+        on:languageUpdate!="{e => updateActorLanguages(e.detail)}"
+      )
     .mt-xxs
       .label.inline Challenge 
       .value
@@ -871,14 +965,7 @@
         span  XP )
     .mt-xxs
       .label.inline Proficiency Bonus 
-      .value +
-        EditableValue(
-          value="{pb}"
-          type="number"
-          readonly="{readonly}"
-          onSave!="{val => updateActorProficiencyBonus(val)}"
-          placeholder="2"
-        )
+      .value +{pb}
     hr.my-sm
     //- Traits (summary)
     +if("legendaryResistances && legendaryResistances.length > 0")
