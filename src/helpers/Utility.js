@@ -280,16 +280,27 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
-    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    window.GAS.log.d('extractItemsFromPacks pack', pack);
-    window.GAS.log.d('extractItemsFromPacks packindex', index);
+    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // window.GAS.log.d('extractItemsFromPacks pack', pack);
+    // window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    window.GAS.log.d('extractItemsFromPacks entries', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    
+    // Debug: Log the first few items to see the data structure
+    if (packItems.length > 0) {
+      // console.log('Enhanced index data structure sample:', {
+      //   packName: pack.metadata.name,
+      //   firstItem: packItems[0],
+      //   keys: [...keys, ...nonIndexKeys],
+      //   hasSystemFields: nonIndexKeys.some(key => key.startsWith('system.'))
+      // });
+    }
+    
     packItems = packItems.map(item => ({
       ...item,
       packName: pack.metadata.name,
@@ -317,12 +328,41 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
   for (const [key, data] of mapIterator) {
     // window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
     const newObj = {};
+    
+    // Debug: Log the first item to see the data structure
+    if (newArray.length === 0) {
+      // console.log('extractMapIteratorObjectProperties - First item data:', {
+      //   key,
+      //   data,
+      //   keys,
+      //   dataKeys: Object.keys(data),
+      //   hasSystemFields: keys.some(k => k.startsWith('system.'))
+      // });
+    }
+    
     keys.forEach((k) => {
       if (k.includes('->')) {
         const split = k.split('->');
         newObj[split[1]] = data[split[0]];
       } else if (k.includes('.')) {
-        setNestedProperty(newObj, k, getNestedProperty(data, k))
+        // For enhanced index data, the system fields are returned as flat properties
+        // Check if the field exists directly in the data
+        if (data.hasOwnProperty(k)) {
+          newObj[k] = data[k];
+        } else {
+          // Fallback to nested property extraction for backward compatibility
+          const value = getNestedProperty(data, k);
+          setNestedProperty(newObj, k, value);
+        }
+        
+        // Debug: Log system field extraction
+        if (k.startsWith('system.')) {
+          // console.log(`System field extraction: ${k} = ${newObj[k]}`, {
+          //   sourceData: data,
+          //   extractedValue: newObj[k],
+          //   hasDirectProperty: data.hasOwnProperty(k)
+          // });
+        }
       } else {
         newObj[k] = data[k];
       }
