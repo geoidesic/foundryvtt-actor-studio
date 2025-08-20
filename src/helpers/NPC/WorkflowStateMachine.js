@@ -11,6 +11,8 @@ export const NPC_WORKFLOW_STATES = {
   IDLE: 'idle',
   SELECTING_NPC: 'selecting_npc',
   CONFIGURING_FEATURES: 'configuring_features',
+  CONFIGURING_STATS: 'configuring_stats',
+  CONFIGURING_EQUIPMENT: 'configuring_equipment',
   CREATING_NPC: 'creating_npc',
   COMPLETED: 'completed',
   ERROR: 'error'
@@ -23,11 +25,15 @@ export const NPC_WORKFLOW_EVENTS = {
   START_NPC_SELECTION: 'start_npc_selection',
   NPC_SELECTED: 'npc_selected',
   FEATURES_CONFIGURED: 'features_configured',
+  STATS_CONFIGURED: 'stats_configured',
+  EQUIPMENT_CONFIGURED: 'equipment_configured',
   NPC_CREATED: 'npc_created',
   ERROR: 'error',
   RESET: 'reset',
   BACK_TO_SELECTION: 'back_to_selection',
-  BACK_TO_FEATURES: 'back_to_features'
+  BACK_TO_FEATURES: 'back_to_features',
+  BACK_TO_STATS: 'back_to_stats',
+  BACK_TO_EQUIPMENT: 'back_to_equipment'
 };
 
 /**
@@ -41,8 +47,16 @@ export const npcWorkflowFSMContext = {
     // Always show features tab after NPC selection
     return true;
   },
+  _shouldShowStatsTab: function () {
+    // Show stats tab after features are configured
+    return true;
+  },
+  _shouldShowEquipmentTab: function () {
+    // Show equipment tab after stats are configured
+    return true;
+  },
   _shouldShowCreateTab: function () {
-    // Show create tab after features are configured
+    // Show create tab after equipment is configured
     return true;
   }
 };
@@ -73,7 +87,7 @@ export function createNPCWorkflowStateMachine() {
       activeTab.set('npc-select');
     })
     .state('configuring_features')
-    .on('features_configured').transitionTo('creating_npc')
+    .on('features_configured').transitionTo('configuring_stats')
     .on('back_to_selection').transitionTo('selecting_npc')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
@@ -84,16 +98,40 @@ export function createNPCWorkflowStateMachine() {
       // Set the active tab to npc-features
       activeTab.set('npc-features');
     })
+    .state('configuring_stats')
+    .on('stats_configured').transitionTo('configuring_equipment')
+    .on('back_to_features').transitionTo('configuring_features')
+    .on('error').transitionTo('error')
+    .on('reset').transitionTo('idle')
+    .onEnter((context) => {
+      if (npcWorkflowFSMContext.isProcessing) npcWorkflowFSMContext.isProcessing.set(false);
+      window.GAS.log.d('[NPC WORKFLOW] Entered CONFIGURING_STATS state');
+      
+      // Set the active tab to npc-create (which handles stats)
+      activeTab.set('npc-create');
+    })
+    .state('configuring_equipment')
+    .on('equipment_configured').transitionTo('creating_npc')
+    .on('back_to_stats').transitionTo('configuring_stats')
+    .on('error').transitionTo('error')
+    .on('reset').transitionTo('idle')
+    .onEnter((context) => {
+      if (npcWorkflowFSMContext.isProcessing) npcWorkflowFSMContext.isProcessing.set(false);
+      window.GAS.log.d('[NPC WORKFLOW] Entered CONFIGURING_EQUIPMENT state');
+      
+      // Set the active tab to npc-equipment-shop
+      activeTab.set('npc-equipment-shop');
+    })
     .state('creating_npc')
     .on('npc_created').transitionTo('completed')
-    .on('back_to_features').transitionTo('configuring_features')
+    .on('back_to_equipment').transitionTo('configuring_equipment')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
       if (npcWorkflowFSMContext.isProcessing) npcWorkflowFSMContext.isProcessing.set(false);
       window.GAS.log.d('[NPC WORKFLOW] Entered CREATING_NPC state');
       
-      // Set the active tab to npc-create
+      // Set the active tab to npc-create (final review)
       activeTab.set('npc-create');
     })
     .state('completed')
@@ -109,14 +147,9 @@ export function createNPCWorkflowStateMachine() {
         createdActor.sheet.render(true);
       }
       
-      // Don't auto-close the application - let the user decide when to close
-      // This prevents Tab 3 from closing after character creation
-      window.GAS.log.d('[NPC WORKFLOW] NPC creation completed - keeping application open');
-      
-      // However, we can trigger the gas.close event to allow programmatic closing
-      // This provides the same capability as the PC workflow
+      // Close the application after a short delay
       setTimeout(() => {
-        window.GAS.log.d('[NPC WORKFLOW] Triggering gas.close event for programmatic control');
+        window.GAS.log.d('[NPC WORKFLOW] Triggering gas.close event to close application');
         Hooks.call("gas.close");
       }, 1500);
     })

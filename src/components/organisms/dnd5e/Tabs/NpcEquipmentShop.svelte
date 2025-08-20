@@ -1,31 +1,52 @@
 <script>
-  import { shopItems, shopCart, availableGold, cartTotalCost, remainingGold, updateCart, loadShopItems, finalizePurchase, initializeGold } from '../../../../stores/equipmentShop';
-  import { actorInGame, readOnlyTabs } from '../../../../stores/index';
-  import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
-  import StandardTabLayout from '../../../organisms/StandardTabLayout.svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import { writable, derived } from 'svelte/store';
+  import { activeTab, readOnlyTabs, npcCurrencyCopper } from '~/src/stores/index';
+  import { shopItems, shopCart, cartTotalCost, loadShopItems, initializeGold, updateCart } from '../../../../stores/equipmentShop';
+  import StandardTabLayout from '~/src/components/organisms/StandardTabLayout.svelte';
+  import GoldDisplay from '~/src/components/molecules/GoldDisplay.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
-  import { onMount, onDestroy, tick } from 'svelte';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';
 
+  // Get ui for notifications
+  const ui = game?.ui;
+  
+  // Compatibility check for fromUuid (Foundry VTT v12 vs v13+)
+  const fromUuid = foundry.utils?.fromUuid || globalThis.fromUuid;
+  
+  // NPC currency store is imported from global stores
+
+  // NPC currency in different denominations (local state for editing)
+  let npcCurrency = { gp: 0, sp: 0, cp: 0 };
+
+  // NPC currency store is used directly as availableGold for this session
+
+  // Sync local currency with global store
+  $: {
+    if ($npcCurrencyCopper > 0) {
+      const gp = Math.floor($npcCurrencyCopper / 100);
+      const sp = Math.floor(($npcCurrencyCopper % 100) / 10);
+      const cp = $npcCurrencyCopper % 10;
+      npcCurrency = { gp, sp, cp };
+    }
+  }
+
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };
-  let cartCurrency = { gp: 0, sp: 0, cp: 0 };
-  let remainingCurrency = { gp: 0, sp: 0, cp: 0 };
-  let loading = true;
   let cartItems = [];
   let keywordFilter = ''; // Add variable for keyword filter
   let expandedCategories = {}; // Track which categories are expanded
+  let loading = true;
   
   // NPC-specific currency management
-  let npcCurrency = { gp: 0, sp: 0, cp: 0 };
   let editingCurrency = false;
 
   $: isDisabled = $readOnlyTabs.includes('npc-equipment-shop');
 
   // Reactive updates for currency display
-  $: availableCurrency = PurchaseHandler.formatCurrency($availableGold);
+  $: availableCurrency = PurchaseHandler.formatCurrency($npcCurrencyCopper);
   $: cartCurrency = PurchaseHandler.formatCurrency($cartTotalCost);
-  $: remainingCurrency = PurchaseHandler.formatCurrency($remainingGold);
+  $: remainingCurrency = PurchaseHandler.formatCurrency($npcCurrencyCopper - $cartTotalCost);
 
   // Update cart items whenever shopCart changes
   $: {
@@ -133,7 +154,7 @@
     
     // Update the available gold store (convert to copper)
     const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    availableGold.set(totalCopper);
+    npcCurrencyCopper.set(totalCopper);
   }
 
   function addCurrency(denomination, amount = 1) {
@@ -142,7 +163,7 @@
     
     // Update the available gold store (convert to copper)
     const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    availableGold.set(totalCopper);
+    npcCurrencyCopper.set(totalCopper);
   }
 
   function removeCurrency(denomination, amount = 1) {
@@ -151,7 +172,7 @@
     
     // Update the available gold store (convert to copper)
     const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    availableGold.set(totalCopper);
+    npcCurrencyCopper.set(totalCopper);
   }
 
   // Filter and group items by category, applying keyword filter first
@@ -184,8 +205,16 @@
   onMount(async () => {
     loading = true;
     
-    // Initialize NPC currency with some default values
-    npcCurrency = { gp: 10, sp: 50, cp: 100 };
+    // Initialize NPC currency with some default values if not already set
+    if ($npcCurrencyCopper === 1000) {
+      npcCurrencyCopper.set(1000); // Start with 10 GP worth of copper
+    }
+    
+    // Initialize local currency from global store
+    const gp = Math.floor($npcCurrencyCopper / 100);
+    const sp = Math.floor(($npcCurrencyCopper % 100) / 10);
+    const cp = $npcCurrencyCopper % 10;
+    npcCurrency = { gp, sp, cp };
     
     // Initialize gold first to make sure it's available
     initializeGold();
@@ -290,7 +319,7 @@
         {/if}
       </div>
       
-      <div class="remaining-currency" class:negative={$remainingGold < 0}>
+              <div class="remaining-currency" class:negative={($npcCurrencyCopper - $cartTotalCost) < 0}>
         <h4>Remaining:</h4>
         <GoldDisplay {...remainingCurrency} />
       </div>

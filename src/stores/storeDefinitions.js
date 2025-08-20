@@ -38,3 +38,4 @@ export const levelUpRichSubClassHTML = writable(''); //- tracks the level up ric
 // NPC Builder stores
 export const selectedNpcBase = writable(null); //- tracks the selected base NPC item (compendium document)
 export const itemsFromActor = writable([]);
+export const npcCurrencyCopper = writable(1000); //- tracks NPC currency in copper (default: 10 GP)

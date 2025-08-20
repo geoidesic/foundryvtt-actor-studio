@@ -41,6 +41,7 @@ const npcTabs = [
   { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
   { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
   { label: 'Create NPC', id: 'npc-create', component: 'NpcCreate' },
+  { label: 'Equipment Shop', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
 ];
 
 // Tabs for level up
@@ -87,6 +88,7 @@ storeDefinitions.levelUpSubClassObject.name = 'levelUpSubClassObject';
 storeDefinitions.levelUpCombinedHtml.name = 'levelUpCombinedHtml';
 storeDefinitions.itemsFromActor.name = 'itemsFromActor';
 storeDefinitions.selectedNpcBase.name = 'selectedNpcBase';
+storeDefinitions.npcCurrencyCopper.name = 'npcCurrencyCopper';
 
 
 
@@ -253,6 +255,7 @@ export function resetStores() {
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
   clearNpcSelection(); //- void
+  storeDefinitions.npcCurrencyCopper.set(1000); //- reset NPC currency to default 10 GP
   
   // Clear spell selection stores
   try {

@@ -9,12 +9,26 @@ const NPC_STATE_KEY = `${MODULE_ID}-npc-state`;
 // Persist only what we need to restore selection efficiently
 export const npcSelectedBaseUuid = writable(null);
 
+// NPC workflow state stores
+export const npcFeatures = writable([]); // Features selected for the NPC
+export const npcStats = writable({}); // Custom stats modifications
+export const npcEquipment = writable([]); // Equipment selections
+export const npcCurrency = writable({ gp: 0, sp: 0, cp: 0 }); // NPC currency
+export const npcName = writable(''); // Custom NPC name
+export const npcProgress = writable({
+  'npc-select': 0,
+  'npc-features': 0,
+  'npc-create': 0,
+  'npc-equipment-shop': 0
+});
+
 // Load persisted state on module import
 (function initializeNpcState() {
   try {
     const stored = localStorage.getItem(NPC_STATE_KEY);
     if (!stored) return;
     const state = JSON.parse(stored);
+    
     if (state?.selectedBaseUuid) {
       npcSelectedBaseUuid.set(state.selectedBaseUuid);
       // Resolve the UUID and set the full Document into selectedNpcBase
@@ -25,18 +39,43 @@ export const npcSelectedBaseUuid = writable(null);
         }).catch(() => {});
       }
     }
+    
+    // Restore other NPC state
+    if (state?.features) npcFeatures.set(state.features);
+    if (state?.stats) npcStats.set(state.stats);
+    if (state?.equipment) npcEquipment.set(state.equipment);
+    if (state?.currency) npcCurrency.set(state.currency);
+    if (state?.name) npcName.set(state.name);
+    if (state?.progress) npcProgress.set(state.progress);
   } catch (e) {
     // no-op on parse / access errors
   }
 })();
 
-// Keep localStorage in sync when either the UUID or the selected document changes
-npcSelectedBaseUuid.subscribe((uuid) => {
+// Keep localStorage in sync when any NPC state changes
+function persistNpcState() {
   try {
-    const next = { selectedBaseUuid: uuid };
-    localStorage.setItem(NPC_STATE_KEY, JSON.stringify(next));
+    const currentState = {
+      selectedBaseUuid: get(npcSelectedBaseUuid),
+      features: get(npcFeatures),
+      stats: get(npcStats),
+      equipment: get(npcEquipment),
+      currency: get(npcCurrency),
+      name: get(npcName),
+      progress: get(npcProgress)
+    };
+    localStorage.setItem(NPC_STATE_KEY, JSON.stringify(currentState));
   } catch (_) {}
-});
+}
+
+// Subscribe to all NPC state changes to persist them
+npcSelectedBaseUuid.subscribe(() => persistNpcState());
+npcFeatures.subscribe(() => persistNpcState());
+npcStats.subscribe(() => persistNpcState());
+npcEquipment.subscribe(() => persistNpcState());
+npcCurrency.subscribe(() => persistNpcState());
+npcName.subscribe(() => persistNpcState());
+npcProgress.subscribe(() => persistNpcState());
 
 selectedNpcBase.subscribe((doc) => {
   const uuid = doc?.uuid || null;
@@ -54,12 +93,119 @@ export const npcSelectProgress = derived(
   }
 );
 
+// Derived progress for each tab
+export const npcTabProgress = derived(
+  [npcProgress, activeTab],
+  ([$npcProgress, $activeTab]) => {
+    return $npcProgress[$activeTab] || 0;
+  }
+);
+
+// Helper function to update progress for a specific tab
+export function updateNpcTabProgress(tabId, progress) {
+  npcProgress.update(current => ({
+    ...current,
+    [tabId]: Math.max(0, Math.min(100, progress))
+  }));
+}
+
+// Helper function to check if a tab is complete
+export function isNpcTabComplete(tabId) {
+  const progress = get(npcProgress);
+  return (progress[tabId] || 0) >= 100;
+}
+
+// Helper function to reset NPC state when base NPC changes
+export function resetNpcStateOnBaseChange() {
+  // Reset features, stats, and equipment when base NPC changes
+  npcFeatures.set([]);
+  npcStats.set({});
+  npcEquipment.set([]);
+  npcCurrency.set({ gp: 0, sp: 0, cp: 0 });
+  npcName.set('');
+  
+  // Reset progress for all tabs except selection
+  npcProgress.update(current => ({
+    ...current,
+    'npc-features': 0,
+    'npc-create': 0,
+    'npc-equipment-shop': 0
+  }));
+}
+
+// Helper function to add a feature to the NPC
+export function addNpcFeature(feature) {
+  npcFeatures.update(features => {
+    // Check if feature already exists (by UUID)
+    const exists = features.some(f => f.uuid === feature.uuid);
+    if (!exists) {
+      return [...features, feature];
+    }
+    return features;
+  });
+}
+
+// Helper function to remove a feature from the NPC
+export function removeNpcFeature(featureUuid) {
+  npcFeatures.update(features => 
+    features.filter(f => f.uuid !== featureUuid)
+  );
+}
+
+// Helper function to update NPC stats
+export function updateNpcStats(stats) {
+  npcStats.update(current => ({
+    ...current,
+    ...stats
+  }));
+}
+
+// Helper function to add equipment to the NPC
+export function addNpcEquipment(equipment) {
+  npcEquipment.update(equipmentList => {
+    // Check if equipment already exists (by UUID)
+    const exists = equipmentList.some(e => e.uuid === equipment.uuid);
+    if (!exists) {
+      return [...equipmentList, equipment];
+    }
+    return equipmentList;
+  });
+}
+
+// Helper function to remove equipment from the NPC
+export function removeNpcEquipment(equipmentUuid) {
+  npcEquipment.update(equipmentList => 
+    equipmentList.filter(e => e.uuid !== equipmentUuid)
+  );
+}
+
+// Helper function to update NPC currency
+export function updateNpcCurrency(currency) {
+  npcCurrency.set(currency);
+}
+
+// Helper function to update NPC name
+export function updateNpcName(name) {
+  npcName.set(name);
+}
+
 export function clearNpcSelection() {
   try {
     localStorage.removeItem(NPC_STATE_KEY);
   } catch (_) {}
   npcSelectedBaseUuid.set(null);
   selectedNpcBase.set(null);
+  npcFeatures.set([]);
+  npcStats.set({});
+  npcEquipment.set([]);
+  npcCurrency.set({ gp: 0, sp: 0, cp: 0 });
+  npcName.set('');
+  npcProgress.set({
+    'npc-select': 0,
+    'npc-features': 0,
+    'npc-create': 0,
+    'npc-equipment-shop': 0
+  });
 }
 
 
