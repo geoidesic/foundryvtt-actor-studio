@@ -4,7 +4,7 @@ export class PurchaseHandler {
     // Default setup
   }
 
-  // Format a copper value to display GP, SP, CP
+  // Format a copper value to display GP, SP, CP (legacy method)
   static formatCurrency(totalCopper) {
     // Handle negative values
     const isNegative = totalCopper < 0;
@@ -26,6 +26,48 @@ export class PurchaseHandler {
     return { gp, sp, cp };
   }
 
+  // Convert any coin denomination to copper
+  static toCopper(amount, denomination) {
+    const multipliers = {
+      'pp': 1000, // 1 PP = 10 GP = 1000 CP
+      'gp': 100,  // 1 GP = 100 CP
+      'ep': 50,   // 1 EP = 5 SP = 50 CP
+      'sp': 10,   // 1 SP = 10 CP
+      'cp': 1     // 1 CP = 1 CP
+    };
+    
+    return amount * (multipliers[denomination] || 1);
+  }
+
+  // Convert copper to all coin denominations
+  static fromCopper(totalCopper) {
+    const isNegative = totalCopper < 0;
+    const absCopper = Math.abs(totalCopper);
+    
+    let pp = Math.floor(absCopper / 1000);
+    let gp = Math.floor((absCopper % 1000) / 100);
+    let ep = Math.floor((absCopper % 100) / 50);
+    let sp = Math.floor((absCopper % 50) / 10);
+    let cp = absCopper % 10;
+
+    // Apply the sign to the largest nonzero denomination
+    if (isNegative) {
+      if (pp > 0) {
+        pp = -pp;
+      } else if (gp > 0) {
+        gp = -gp;
+      } else if (ep > 0) {
+        ep = -ep;
+      } else if (sp > 0) {
+        sp = -sp;
+      } else {
+        cp = -cp;
+      }
+    }
+    
+    return { pp, gp, ep, sp, cp };
+  }
+
   // Calculate the total cost of items in cart
   static calculateTotalCost(items, cart) {
     let totalCopper = 0;
@@ -37,16 +79,7 @@ export class PurchaseHandler {
         const denomination = item.system.price.denomination || 'cp';
         
         // Convert to copper based on denomination
-        let multiplier = 1;
-        switch (denomination) {
-          case 'gp': multiplier = 100; break;
-          case 'sp': multiplier = 10; break;
-          case 'pp': multiplier = 1000; break;
-          case 'ep': multiplier = 50; break;
-          default: multiplier = 1; // cp
-        }
-        
-        totalCopper += value * multiplier * quantity;
+        totalCopper += this.toCopper(value, denomination) * quantity;
       }
     });
     

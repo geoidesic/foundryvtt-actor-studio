@@ -1,11 +1,10 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { writable, derived } from 'svelte/store';
-  import { activeTab, readOnlyTabs, npcCurrencyCopper } from '~/src/stores/index';
-  import { shopItems, shopCart, cartTotalCost, loadShopItems, initializeGold, updateCart } from '../../../../stores/equipmentShop';
+  import { activeTab, readOnlyTabs, npcCurrency, selectedNpcBase } from '~/src/stores/index';
+  import { shopItems, shopCart, loadShopItems, updateCart } from '../../../../stores/equipmentShop';
   import StandardTabLayout from '~/src/components/organisms/StandardTabLayout.svelte';
-  import GoldDisplay from '~/src/components/molecules/GoldDisplay.svelte';
-  import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
+  import NPCCoinageManager from '~/src/components/molecules/dnd5e/NPC/NPCCoinageManager.svelte';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';
 
@@ -14,39 +13,25 @@
   
   // Compatibility check for fromUuid (Foundry VTT v12 vs v13+)
   const fromUuid = foundry.utils?.fromUuid || globalThis.fromUuid;
-  
-  // NPC currency store is imported from global stores
 
-  // NPC currency in different denominations (local state for editing)
-  let npcCurrency = { gp: 0, sp: 0, cp: 0 };
-
-  // NPC currency store is used directly as availableGold for this session
-
-  // Sync local currency with global store
-  $: {
-    if ($npcCurrencyCopper > 0) {
-      const gp = Math.floor($npcCurrencyCopper / 100);
-      const sp = Math.floor(($npcCurrencyCopper % 100) / 10);
-      const cp = $npcCurrencyCopper % 10;
-      npcCurrency = { gp, sp, cp };
-    }
-  }
-
-  let availableCurrency = { gp: 0, sp: 0, cp: 0 };
+  // Local state
   let cartItems = [];
-  let keywordFilter = ''; // Add variable for keyword filter
-  let expandedCategories = {}; // Track which categories are expanded
+  let keywordFilter = '';
+  let expandedCategories = {};
   let loading = true;
+  let editingCoinage = false;
   
-  // NPC-specific currency management
-  let editingCurrency = false;
+  // NPC coinage management
+  let npcCoinage = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
 
   $: isDisabled = $readOnlyTabs.includes('npc-equipment-shop');
 
-  // Reactive updates for currency display
-  $: availableCurrency = PurchaseHandler.formatCurrency($npcCurrencyCopper);
-  $: cartCurrency = PurchaseHandler.formatCurrency($cartTotalCost);
-  $: remainingCurrency = PurchaseHandler.formatCurrency($npcCurrencyCopper - $cartTotalCost);
+  // Sync local coinage with global store
+  $: {
+    if ($npcCurrency) {
+      npcCoinage = { ...$npcCurrency };
+    }
+  }
 
   // Update cart items whenever shopCart changes
   $: {
@@ -78,11 +63,6 @@
       enrichedNames[key] = await enrichHTML(item.enrichedName || item.name || "", { async: true });
     }
     return enrichedNames[key];
-  }
-
-  // Helper function to get item display name with quantity
-  function getItemDisplayName(item) {
-    return item.name;
   }
 
   // Add item to cart
@@ -143,36 +123,19 @@
     }
   }
 
-  // NPC Currency Management Functions
-  function toggleCurrencyEdit() {
-    editingCurrency = !editingCurrency;
+  // Handle coinage updates
+  function handleCoinageUpdate(event) {
+    // Extract the coinage data from the CustomEvent detail
+    const newCoinage = event.detail;
+    console.log('Parent received coinage update:', newCoinage);
+    npcCurrency.set(newCoinage);
+    // Also update local state so the child component gets the new values
+    npcCoinage = { ...newCoinage };
+    console.log('Updated local npcCoinage:', npcCoinage);
   }
 
-  function updateNpcCurrency(denomination, value) {
-    npcCurrency[denomination] = Math.max(0, parseInt(value) || 0);
-    npcCurrency = { ...npcCurrency }; // Trigger reactivity
-    
-    // Update the available gold store (convert to copper)
-    const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    npcCurrencyCopper.set(totalCopper);
-  }
-
-  function addCurrency(denomination, amount = 1) {
-    npcCurrency[denomination] += amount;
-    npcCurrency = { ...npcCurrency }; // Trigger reactivity
-    
-    // Update the available gold store (convert to copper)
-    const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    npcCurrencyCopper.set(totalCopper);
-  }
-
-  function removeCurrency(denomination, amount = 1) {
-    npcCurrency[denomination] = Math.max(0, npcCurrency[denomination] - amount);
-    npcCurrency = { ...npcCurrency }; // Trigger reactivity
-    
-    // Update the available gold store (convert to copper)
-    const totalCopper = (npcCurrency.gp * 100) + (npcCurrency.sp * 10) + npcCurrency.cp;
-    npcCurrencyCopper.set(totalCopper);
+  function handleCoinageToggle() {
+    editingCoinage = !editingCoinage;
   }
 
   // Filter and group items by category, applying keyword filter first
@@ -205,21 +168,15 @@
   onMount(async () => {
     loading = true;
     
-    // Initialize NPC currency with some default values if not already set
-    if ($npcCurrencyCopper === 1000) {
-      npcCurrencyCopper.set(1000); // Start with 10 GP worth of copper
+    // Initialize NPC coinage with default values if not already set
+    if (!$npcCurrency || Object.values($npcCurrency).every(v => v === 0)) {
+      npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 }); // Start with 10 GP
     }
     
-    // Initialize local currency from global store
-    const gp = Math.floor($npcCurrencyCopper / 100);
-    const sp = Math.floor(($npcCurrencyCopper % 100) / 10);
-    const cp = $npcCurrencyCopper % 10;
-    npcCurrency = { gp, sp, cp };
+    // Initialize local coinage from global store
+    npcCoinage = { ...$npcCurrency };
     
-    // Initialize gold first to make sure it's available
-    initializeGold();
-    
-    // Then load shop items
+    // Load shop items
     await loadShopItems();
     
     loading = false;
@@ -256,79 +213,15 @@
       <div class="info-message">{t('Shop.ShopReadOnly')}</div>
     {/if}
     
-    <!-- Sticky currency header -->
-    <div class="sticky-header" class:hidden={!scrolled}>
-      <GoldDisplay {...remainingCurrency} />
-    </div>
-
-    <!-- NPC Currency Management -->
-    <div class="panel-header" class:hidden={scrolled}>
-      <h3 class="left no-margin">NPC Available Gold</h3>
-      <div class="npc-currency-section">
-        {#if editingCurrency}
-          <div class="currency-inputs">
-            <div class="currency-input-group">
-              <label>GP:</label>
-              <input 
-                type="number" 
-                bind:value={npcCurrency.gp} 
-                on:input={() => updateNpcCurrency('gp', npcCurrency.gp)}
-                min="0"
-                class="currency-input"
-              />
-              <div class="currency-buttons">
-                <button class="currency-btn add" on:click={() => addCurrency('gp', 1)}>+</button>
-                <button class="currency-btn remove" on:click={() => removeCurrency('gp', 1)}>-</button>
-              </div>
-            </div>
-            <div class="currency-input-group">
-              <label>SP:</label>
-              <input 
-                type="number" 
-                bind:value={npcCurrency.sp} 
-                on:input={() => updateNpcCurrency('sp', npcCurrency.sp)}
-                min="0"
-                class="currency-input"
-              />
-              <div class="currency-buttons">
-                <button class="currency-btn add" on:click={() => addCurrency('sp', 1)}>+</button>
-                <button class="currency-btn remove" on:click={() => removeCurrency('sp', 1)}>-</button>
-              </div>
-            </div>
-            <div class="currency-input-group">
-              <label>CP:</label>
-              <input 
-                type="number" 
-                bind:value={npcCurrency.cp} 
-                on:input={() => updateNpcCurrency('cp', npcCurrency.cp)}
-                min="0"
-                class="currency-input"
-              />
-              <div class="currency-buttons">
-                <button class="currency-btn add" on:click={() => addCurrency('cp', 1)}>+</button>
-                <button class="currency-btn remove" on:click={() => removeCurrency('cp', 1)}>-</button>
-              </div>
-            </div>
-          </div>
-          <button class="edit-currency-btn" on:click={toggleCurrencyEdit}>Done</button>
-        {:else}
-          <div class="npc-currency-display">
-            <GoldDisplay {...npcCurrency} />
-            <button class="edit-currency-btn" on:click={toggleCurrencyEdit}>Edit</button>
-          </div>
-        {/if}
-      </div>
-      
-              <div class="remaining-currency" class:negative={($npcCurrencyCopper - $cartTotalCost) < 0}>
-        <h4>Remaining:</h4>
-        <GoldDisplay {...remainingCurrency} />
-      </div>
-      
-      <div class="cart-currency">
-        <h4>Spent:</h4>
-        <GoldDisplay {...cartCurrency} />
-      </div>
-    </div>
+    <!-- NPC Coinage Management -->
+    <NPCCoinageManager 
+      coinage={npcCoinage}
+      isEditing={editingCoinage}
+      disabled={isDisabled}
+      selectedNpc={$selectedNpcBase}
+      on:update={handleCoinageUpdate}
+      on:toggleEdit={handleCoinageToggle}
+    />
 
     <h3>Cart Items</h3>
     <div class="cart-items">
@@ -449,112 +342,6 @@
     padding: 1rem
     background: rgba(0, 0, 0, 0.05)
     border-radius: var(--border-radius)
-
-  .sticky-header
-    position: sticky
-    top: 15px
-    left: 1rem
-    z-index: 5
-    background: black
-    padding: 0
-    margin: 0
-    max-width: 150px
-    &.hidden
-      display: none
-
-  .panel-header.hidden
-    display: none
-
-  .npc-currency-section
-    margin: 1rem 0
-    padding: 1rem
-    background: rgba(0, 0, 0, 0.05)
-    border-radius: var(--border-radius)
-    border: 1px solid var(--color-border-light-tertiary)
-
-    .npc-currency-display
-      display: flex
-      align-items: center
-      gap: 1rem
-
-    .currency-inputs
-      display: flex
-      flex-direction: column
-      gap: 0.5rem
-
-    .currency-input-group
-      display: flex
-      align-items: center
-      gap: 0.5rem
-
-      label
-        min-width: 30px
-        font-weight: bold
-        color: var(--color-text-dark-secondary)
-
-      .currency-input
-        width: 60px
-        padding: 0.25rem
-        border: 1px solid var(--color-border-light-tertiary)
-        border-radius: 3px
-        text-align: center
-
-      .currency-buttons
-        display: flex
-        gap: 0.25rem
-
-        .currency-btn
-          width: 24px
-          height: 24px
-          border: none
-          border-radius: 3px
-          cursor: pointer
-          font-weight: bold
-          display: flex
-          align-items: center
-          justify-content: center
-
-          &.add
-            background: var(--dnd5e-color-gold, #b59e54)
-            color: black
-
-            &:hover
-              background: darken(#b59e54, 10%)
-
-          &.remove
-            background: #dc3545
-            color: white
-
-            &:hover
-              background: darken(#dc3545, 10%)
-
-    .edit-currency-btn
-      margin-top: 0.5rem
-      padding: 0.5rem 1rem
-      background: var(--color-highlight)
-      border: none
-      border-radius: 3px
-      color: white
-      cursor: pointer
-
-      &:hover
-        background: #0066cc
-
-  .remaining-currency, .cart-currency
-    margin: 1rem 0
-    padding: 0.5rem
-    background: rgba(0, 0, 0, 0.03)
-    border-radius: var(--border-radius)
-
-    h4
-      margin: 0 0 0.5rem 0
-      font-size: 0.9rem
-      color: var(--color-text-dark-secondary)
-
-    &.negative
-      :global(.currency-display)
-        background-color: rgba(255, 0, 0, 0.1)
-        border-color: rgba(255, 0, 0, 0.5)
 
   .shop-left-panel
     display: flex
@@ -770,16 +557,28 @@
       cursor: not-allowed
       background: rgba(0, 0, 0, 0.02)
 
-  .toggle-icon
-    margin-left: 0.5rem
-    font-size: 0.8rem
-    color: var(--color-text-dark-secondary)
+  .mb-sm
+    margin-bottom: 0.5rem
 
-  .gold-header
-    position: sticky
-    top: 0
-    z-index: 5
-    background: var(--color-bg-primary)
-    padding: 0.5rem
-    border-bottom: 1px solid var(--color-border-light-tertiary)
+  .mt-sm
+    margin-top: 0.5rem
+
+  .flexrow
+    display: flex
+    align-items: center
+
+  .flex0
+    flex: 0 0 auto
+
+  .flex
+    flex: 1
+
+  .mr-xs
+    margin-right: 0.25rem
+
+  .pointer
+    cursor: pointer
+
+  .left
+    text-align: left
 </style>

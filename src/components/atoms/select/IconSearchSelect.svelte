@@ -24,6 +24,8 @@
     export let enableEnrichment = false;
 
     let isOpen = false;
+    let searchInput;
+    
     export let handleSelect = (option) => {
       if (handler) {
         if (handler(option.value)) {

@@ -88,13 +88,16 @@ storeDefinitions.levelUpSubClassObject.name = 'levelUpSubClassObject';
 storeDefinitions.levelUpCombinedHtml.name = 'levelUpCombinedHtml';
 storeDefinitions.itemsFromActor.name = 'itemsFromActor';
 storeDefinitions.selectedNpcBase.name = 'selectedNpcBase';
-storeDefinitions.npcCurrencyCopper.name = 'npcCurrencyCopper';
+storeDefinitions.npcCurrency.name = 'npcCurrency';
 
 
 
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore();
 dropItemRegistry.name = 'dropItemRegistry';
+
+// Export NPC currency store
+export const npcCurrency = storeDefinitions.npcCurrency;
 
 export const isNewMultiClass = derived(
   [storeDefinitions.characterClass, storeDefinitions.newLevelValueForExistingClass],
@@ -255,7 +258,7 @@ export function resetStores() {
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
   clearNpcSelection(); //- void
-  storeDefinitions.npcCurrencyCopper.set(1000); //- reset NPC currency to default 10 GP
+  storeDefinitions.npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 }); //- reset NPC currency to default 10 GP
   
   // Clear spell selection stores
   try {

@@ -1,19 +1,27 @@
 <script>
   // Props to receive currency values
-  export let gp = 0;
-  export let sp = 0;
-  export let cp = 0;
+  export let pp = 0; // Platinum pieces
+  export let gp = 0; // Gold pieces
+  export let ep = 0; // Electrum pieces
+  export let sp = 0; // Silver pieces
+  export let cp = 0; // Copper pieces
+  
+  // Support for legacy props (if only gp, sp, cp are passed)
+  $: if (typeof pp === 'undefined' && typeof ep === 'undefined') {
+    // Legacy mode - only show gp, sp, cp
+    pp = 0;
+    ep = 0;
+  }
 </script>
 
 <div class="currency-display">
-  {#if gp !== 0}
-    <span class="gold">{gp} <i class="fas fa-coins gold-coin"></i></span>
-  {/if}
-  {#if sp !== 0 || gp !== 0}
-    <span class="silver">{sp} <i class="fas fa-coins silver-coin"></i></span>
-  {/if}
+  <span class="platinum">{pp} <i class="fas fa-coins platinum-coin"></i></span>
+  <span class="gold">{gp} <i class="fas fa-coins gold-coin"></i></span>
+  <span class="electrum">{ep} <i class="fas fa-coins electrum-coin"></i></span>
+  <span class="silver">{sp} <i class="fas fa-coins silver-coin"></i></span>
   <span class="copper">{cp} <i class="fas fa-coins copper-coin"></i></span>
 </div>
+
 <style lang="sass">
   .currency-display
     display: flex
@@ -25,8 +33,14 @@
     border-radius: 4px
     font-size: 1.2rem
 
+    .platinum
+      color: #e5e4e2
+
     .gold
       color: var(--dnd5e-color-gold, #b59e54)
+
+    .electrum
+      color: #b8860b
 
     .silver
       color: #c0c0c0
@@ -34,8 +48,14 @@
     .copper
       color: #b87333
 
+    .platinum-coin
+      filter: sepia(100%) saturate(0%) brightness(90%) hue-rotate(0deg)
+
     .gold-coin
       filter: sepia(100%) saturate(300%) brightness(70%) hue-rotate(5deg)
+
+    .electrum-coin
+      filter: sepia(100%) saturate(200%) brightness(70%) hue-rotate(45deg)
 
     .silver-coin
       filter: sepia(100%) saturate(0%) brightness(70%) hue-rotate(5deg)

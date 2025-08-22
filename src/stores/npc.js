@@ -13,7 +13,7 @@ export const npcSelectedBaseUuid = writable(null);
 export const npcFeatures = writable([]); // Features selected for the NPC
 export const npcStats = writable({}); // Custom stats modifications
 export const npcEquipment = writable([]); // Equipment selections
-export const npcCurrency = writable({ gp: 0, sp: 0, cp: 0 }); // NPC currency
+export const npcCurrency = writable({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }); // NPC currency
 export const npcName = writable(''); // Custom NPC name
 export const npcProgress = writable({
   'npc-select': 0,
@@ -121,7 +121,7 @@ export function resetNpcStateOnBaseChange() {
   npcFeatures.set([]);
   npcStats.set({});
   npcEquipment.set([]);
-  npcCurrency.set({ gp: 0, sp: 0, cp: 0 });
+  npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
   npcName.set('');
   
   // Reset progress for all tabs except selection
@@ -198,7 +198,7 @@ export function clearNpcSelection() {
   npcFeatures.set([]);
   npcStats.set({});
   npcEquipment.set([]);
-  npcCurrency.set({ gp: 0, sp: 0, cp: 0 });
+  npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
   npcName.set('');
   npcProgress.set({
     'npc-select': 0,
