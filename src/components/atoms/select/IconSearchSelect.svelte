@@ -153,7 +153,13 @@
 
 
     onMount(async () => {
-      
+      // Automatically focus and open the dropdown
+      isOpen = true;
+      // Use nextTick to ensure the DOM is updated before focusing
+      await tick();
+      if (searchInput) {
+        searchInput.focus();
+      }
     });
 
     
@@ -179,7 +185,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
   +if("isOpen")
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
-      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search...")
+      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus)
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
           div.option(role="option"  on:click|stopPropagation|preventDefault="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
