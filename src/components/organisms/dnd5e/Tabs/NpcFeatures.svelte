@@ -5,7 +5,7 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
-  import { updateSource } from "~/src/helpers/Utility";
+  import { updateSource, getItemSourcesFromActor } from "~/src/helpers/Utility";
   import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS } from "~/src/helpers/NPC/WorkflowStateMachine";
 
   const actor = getContext("#doc");
@@ -116,18 +116,6 @@
     }
   }
 
-  function getItemSourcesFromActor(doc) {
-    try {
-      const itemsCollection = doc?.items;
-      if (!itemsCollection) return [];
-      const list = Array.isArray(itemsCollection)
-        ? itemsCollection
-        : (itemsCollection.contents || Array.from(itemsCollection));
-      return list.map((itemDoc) => itemDoc?.toObject ? itemDoc.toObject() : itemDoc);
-    } catch (_) {
-      return [];
-    }
-  }
 
   // For DnD5e v3, actors maintain a sourcedItems map keyed by compendium UUIDs.
   // Use it to backfill our module flag on embedded item documents so flags are present at runtime.

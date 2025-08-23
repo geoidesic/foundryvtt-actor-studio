@@ -11,6 +11,7 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
 
 
+
   // Add NPCStatBlock import
   import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
 
@@ -213,6 +214,8 @@
     selectNpcHandler($selectedNpcBase.uuid);
   }
   $: itemsArray = getItemsArray($selectedNpc?.items);
+
+
 </script>
 
 <template lang="pug">
@@ -283,6 +286,7 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
       +if("itemsArray?.length")
         h3.mt-sm Features
         FeatureItemList(items="{itemsArray}")
+
   div(slot="right") 
     //- pre {$actor.items.toArray()}
     //- FeatureItemList(trashable="{true}")
@@ -375,4 +379,6 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
 
   .mb-0
     margin-bottom: 0
+
+
 </style>

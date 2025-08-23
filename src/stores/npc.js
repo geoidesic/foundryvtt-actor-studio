@@ -15,11 +15,23 @@ export const npcStats = writable({}); // Custom stats modifications
 export const npcEquipment = writable([]); // Equipment selections
 export const npcCurrency = writable({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }); // NPC currency
 export const npcName = writable(''); // Custom NPC name
+
+// Magic Items tab state
+export const magicItemsState = writable({
+  generationType: 'hoard',
+  partyLevel: 5,
+  generatedMagicItems: [],
+  manualNpcName: '',
+  manualNpcCR: 0,
+  manualNpcType: ''
+});
+
 export const npcProgress = writable({
   'npc-select': 0,
   'npc-features': 0,
   'npc-create': 0,
-  'npc-equipment-shop': 0
+  'npc-equipment-shop': 0,
+  'magic-items': 0
 });
 
 // Load persisted state on module import
@@ -47,6 +59,7 @@ export const npcProgress = writable({
     if (state?.currency) npcCurrency.set(state.currency);
     if (state?.name) npcName.set(state.name);
     if (state?.progress) npcProgress.set(state.progress);
+    if (state?.magicItems) magicItemsState.set(state.magicItems);
   } catch (e) {
     // no-op on parse / access errors
   }
@@ -62,7 +75,8 @@ function persistNpcState() {
       equipment: get(npcEquipment),
       currency: get(npcCurrency),
       name: get(npcName),
-      progress: get(npcProgress)
+      progress: get(npcProgress),
+      magicItems: get(magicItemsState)
     };
     localStorage.setItem(NPC_STATE_KEY, JSON.stringify(currentState));
   } catch (_) {}
@@ -76,6 +90,7 @@ npcEquipment.subscribe(() => persistNpcState());
 npcCurrency.subscribe(() => persistNpcState());
 npcName.subscribe(() => persistNpcState());
 npcProgress.subscribe(() => persistNpcState());
+magicItemsState.subscribe(() => persistNpcState());
 
 selectedNpcBase.subscribe((doc) => {
   const uuid = doc?.uuid || null;
@@ -124,12 +139,23 @@ export function resetNpcStateOnBaseChange() {
   npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
   npcName.set('');
   
+  // Reset magic items state when base NPC changes
+  magicItemsState.set({
+    generationType: 'hoard',
+    partyLevel: 5,
+    generatedMagicItems: [],
+    manualNpcName: '',
+    manualNpcCR: 0,
+    manualNpcType: ''
+  });
+  
   // Reset progress for all tabs except selection
   npcProgress.update(current => ({
     ...current,
     'npc-features': 0,
     'npc-create': 0,
-    'npc-equipment-shop': 0
+    'npc-equipment-shop': 0,
+    'magic-items': 0
   }));
 }
 
@@ -200,11 +226,20 @@ export function clearNpcSelection() {
   npcEquipment.set([]);
   npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
   npcName.set('');
+  magicItemsState.set({
+    generationType: 'hoard',
+    partyLevel: 5,
+    generatedMagicItems: [],
+    manualNpcName: '',
+    manualNpcCR: 0,
+    manualNpcType: ''
+  });
   npcProgress.set({
     'npc-select': 0,
     'npc-features': 0,
     'npc-create': 0,
-    'npc-equipment-shop': 0
+    'npc-equipment-shop': 0,
+    'magic-items': 0
   });
 }
 

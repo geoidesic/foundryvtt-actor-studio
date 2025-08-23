@@ -148,21 +148,6 @@
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-
-  
-
-
-    onMount(async () => {
-      // Automatically focus and open the dropdown
-      isOpen = true;
-      // Use nextTick to ensure the DOM is updated before focusing
-      await tick();
-      if (searchInput) {
-        searchInput.focus();
-      }
-    });
-
-    
   </script>
 
 <template lang="pug">
@@ -188,7 +173,7 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
       input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus)
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option"  on:click|stopPropagation|preventDefault="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(role="option"  on:click|stopPropagation|preventDefault!="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")

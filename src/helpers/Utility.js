@@ -19,6 +19,22 @@ export function getItemsArray(collection) {
   try { return Array.from(collection); } catch (e) { return []; }
 }
 
+  /**
+   * Get the current items from the actor in the correct format
+   */
+  export function getItemSourcesFromActor(doc) {
+    try {
+      const itemsCollection = doc?.items;
+      if (!itemsCollection) return [];
+      const list = Array.isArray(itemsCollection)
+        ? itemsCollection
+        : (itemsCollection.contents || Array.from(itemsCollection));
+      return list.map((itemDoc) => itemDoc?.toObject ? itemDoc.toObject() : itemDoc);
+    } catch (_) {
+      return [];
+    }
+  }
+
 
 export async function illuminatedDescription(html, store) {
   const enriched = await enrichHTML(html);

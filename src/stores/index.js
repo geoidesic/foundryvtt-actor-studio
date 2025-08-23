@@ -26,7 +26,7 @@ export {
 import '~/src/stores/spellSelection';
 // Initialize NPC stores (persistence, progress)
 import '~/src/stores/npc';
-import { clearNpcSelection } from '~/src/stores/npc';
+import { clearNpcSelection, magicItemsState } from '~/src/stores/npc';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -42,6 +42,7 @@ const npcTabs = [
   { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
   { label: 'Create NPC', id: 'npc-create', component: 'NpcCreate' },
   { label: 'Equipment Shop', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
+  { label: 'Magic Items', id: 'magic-items', component: 'MagicItems' },
 ];
 
 // Tabs for level up
@@ -98,6 +99,9 @@ dropItemRegistry.name = 'dropItemRegistry';
 
 // Export NPC currency store
 export const npcCurrency = storeDefinitions.npcCurrency;
+
+// Export magic items state store only
+export { magicItemsState };
 
 export const isNewMultiClass = derived(
   [storeDefinitions.characterClass, storeDefinitions.newLevelValueForExistingClass],
@@ -259,6 +263,25 @@ export function resetStores() {
   clearEquipmentGoldChoices(); //- void
   clearNpcSelection(); //- void
   storeDefinitions.npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 }); //- reset NPC currency to default 10 GP
+  
+  // Clear magic items store
+  try {
+    import('~/src/stores/npc.js').then(({ magicItemsState }) => {
+      magicItemsState.set({
+        generationType: 'hoard',
+        partyLevel: 5,
+        generatedMagicItems: [],
+        manualNpcName: '',
+        manualNpcCR: 0,
+        manualNpcType: ''
+      });
+      window.GAS.log.d('[resetStores] Cleared magicItemsState store');
+    }).catch(error => {
+      window.GAS.log.w('[resetStores] Failed to clear magic items store:', error);
+    });
+  } catch (error) {
+    window.GAS.log.w('[resetStores] Error importing magic items module:', error);
+  }
   
   // Clear spell selection stores
   try {
