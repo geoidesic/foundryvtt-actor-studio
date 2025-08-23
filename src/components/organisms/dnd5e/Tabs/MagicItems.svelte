@@ -103,8 +103,16 @@
         console.log(`Items for ${result.rarity} rarity:`, itemsForRarity.length, itemsForRarity);
       }
       
-      console.log('Calling generateIndividualMagicItemObjects...');
-      const items = await MagicItemGenerator.generateIndividualMagicItemObjects(npcToUse, equipmentPacks);
+      // Get treasure categories from the NPC if available
+      const treasureCategories = npcToUse.system?.details?.treasure?.value || [];
+      console.log('Treasure categories from NPC:', treasureCategories);
+      console.log('Treasure categories type:', typeof treasureCategories);
+      console.log('Treasure categories is array:', Array.isArray(treasureCategories));
+      console.log('NPC system details:', npcToUse.system?.details);
+      console.log('NPC treasure value:', npcToUse.system?.details?.treasure);
+      
+      console.log('Calling generateIndividualMagicItemObjectsWithCategories...');
+      const items = await MagicItemGenerator.generateIndividualMagicItemObjectsWithCategories(npcToUse, equipmentPacks, treasureCategories);
       console.log('Generated items:', items);
       
       console.log('Updating store with generated items...');

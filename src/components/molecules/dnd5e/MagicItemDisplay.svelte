@@ -105,9 +105,9 @@
         return item.system?.properties?.includes('mgc');
       }).map(item => {
         // Add rarity color and label for display
-        const rarity = item.system?.rarity?.value || 'common';
+        const rarity = item.system?.rarity;
         const rarityColor = getRarityColor(rarity);
-        const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+        const rarityLabel = rarity
         
         // Get the source UUID for enrichment
         const sourceUuid = item.flags?.[MODULE_ID]?.sourceUuid || 
@@ -137,7 +137,7 @@
       common: '#b0b0b0',
       uncommon: '#1a9850',
       rare: '#2b83ba',
-      very_rare: '#7b3294',
+      veryRare: '#7b3294',
       legendary: '#d73027'
     };
     return colors[rarity] || colors.common;
@@ -476,7 +476,7 @@
                 .item-rarity
                   font-size: 0.75rem
                   font-weight: 500
-                  text-transform: uppercase
+                  text-transform: capitalize
                   letter-spacing: 0.5px
 
           .item-description
