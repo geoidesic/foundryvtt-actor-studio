@@ -472,7 +472,6 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
                 border: 1px solid rgba(255, 255, 255, 0.3)
                 border-radius: 4px
                 background: rgba(0, 0, 0, 0.3)
-                color: white
                 font-size: 0.875rem
                 
                 &::placeholder
@@ -536,7 +535,6 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
       h4
         margin-top: 0
         margin-bottom: 0.75rem
-        color: var(--color-text-dark-primary)
         font-size: 1rem
 
       .description-content
@@ -550,7 +548,6 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
       h4
         margin-top: 0
         margin-bottom: 0.75rem
-        color: var(--color-text-dark-primary)
         font-size: 1rem
 
       .packs-list
@@ -565,17 +562,14 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
           font-size: 0.875rem
 
           .pack-name
-            color: var(--color-text-dark-primary)
             font-weight: 500
 
           .pack-count
-            color: var(--color-text-dark-secondary)
             background: rgba(255, 255, 255, 0.1)
             padding: 0.25rem 0.5rem
             border-radius: 3px
 
       .no-packs
-        color: var(--color-text-dark-secondary)
         font-size: 0.875rem
 
         a
@@ -641,7 +635,6 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
 
       h3
         margin: 0 0 1rem 0
-        color: var(--color-text-dark-primary)
 
       p
         margin: 0 0 0.5rem 0

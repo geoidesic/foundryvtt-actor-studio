@@ -1,6 +1,7 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
-  import { localize as t, updateSource, getItemSourcesFromActor } from "~/src/helpers/Utility";
+  import { localize as t, updateSource, getItemSourcesFromActor, enrichHTML } from "~/src/helpers/Utility";
+  import { MODULE_ID } from "~/src/helpers/constants.ts";
 
   const actor = getContext("#doc");
 
@@ -94,36 +95,39 @@
   /**
    * Get magic items currently on the actor
    */
-  function getActorMagicItems() {
+  $: actorMagicItems = (() => {
     if (!$actor?.items) return [];
     
     try {
       const items = getItemSourcesFromActor($actor);
       return items.filter(item => {
-        // Check if item has magic properties
-        return item.system?.properties?.includes('mgc') || 
-               item.system?.rarity?.value || 
-               item.type === 'weapon' || 
-               item.type === 'armor' || 
-               item.type === 'consumable';
+        // Only show items that are actually magical
+        return item.system?.properties?.includes('mgc');
       }).map(item => {
         // Add rarity color and label for display
         const rarity = item.system?.rarity?.value || 'common';
         const rarityColor = getRarityColor(rarity);
         const rarityLabel = rarity.charAt(0).toUpperCase() + rarity.slice(1);
         
+        // Get the source UUID for enrichment
+        const sourceUuid = item.flags?.[MODULE_ID]?.sourceUuid || 
+                          item.flags?.core?.sourceId || 
+                          item.system?.sourceId || 
+                          item.uuid;
+        
         return {
           ...item,
           rarity,
           rarityColor,
-          rarityLabel
+          rarityLabel,
+          sourceUuid
         };
       });
     } catch (error) {
       console.error('Error getting actor magic items:', error);
       return [];
     }
-  }
+  })();
 
   /**
    * Get color for rarity display
@@ -197,7 +201,9 @@
                 i.fas.fa-plus
 
           +if("item.system?.description?.value")
-            .item-description {@html item.system.description.value}
+            +await("enrichHTML(item.system.description.value)")
+              +then("Html")
+                .item-description {@html Html}
 
   +if("magicItems.length > 0")
     .footer
@@ -214,7 +220,7 @@
     .actor-magic-items
       h4 Actor's Magic Items
       .actor-items-list
-        +each("getActorMagicItems() as item, index")
+        +each("actorMagicItems as item, index")
           .actor-item(
             class!="{item.rarity}"
             style!="border-left-color: {item.rarityColor}"
@@ -227,8 +233,13 @@
                   .item-name {item.name}
                   .item-type {item.type}
                   .item-rarity {item.rarity}
-            .item-description
-              span This item is already on the actor
+            +if("item.system?.description?.value")
+              +await("enrichHTML(item.sourceUuid ? `@UUID[${item.sourceUuid}]{${item.name}}` : item.system.description.value)")
+                +then("Html")
+                  .item-description {@html Html}
+              +else
+                .item-description
+                  span This item is already on the actor
 </template>
 
 <style lang="sass">

@@ -165,12 +165,46 @@
   let shopContainer;
   let cleanup;
 
+  /**
+   * Auto-roll gold for NPCs based on their CR
+   */
+  async function autoRollGold() {
+    try {
+      // Get the NPC's CR for gold calculation
+      const npcCR = $selectedNpcBase?.system?.details?.cr?.value || 0;
+      
+      // Calculate gold based on CR (DMG table)
+      let goldAmount = 0;
+      if (npcCR <= 4) {
+        goldAmount = new Roll("6d6 * 100").evaluate().total; // 600-3600 gp
+      } else if (npcCR <= 10) {
+        goldAmount = new Roll("3d6 * 1000").evaluate().total; // 3000-18000 gp
+      } else if (npcCR <= 16) {
+        goldAmount = new Roll("4d6 * 1000").evaluate().total; // 4000-24000 gp
+      } else {
+        goldAmount = new Roll("8d6 * 1000").evaluate().total; // 8000-48000 gp
+      }
+      
+      // Set the rolled gold amount
+      const newCurrency = { pp: 0, gp: goldAmount, ep: 0, sp: 0, cp: 0 };
+      npcCurrency.set(newCurrency);
+      
+      // Log the roll
+      window.GAS?.log?.d?.('[NPC Equipment Shop] Auto-rolled gold:', { npcCR, goldAmount, newCurrency });
+      
+    } catch (error) {
+      console.error('Error auto-rolling gold:', error);
+      // Fallback to default 10 GP if roll fails
+      npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 });
+    }
+  }
+
   onMount(async () => {
     loading = true;
     
-    // Initialize NPC coinage with default values if not already set
+    // Auto-roll gold if not already set
     if (!$npcCurrency || Object.values($npcCurrency).every(v => v === 0)) {
-      npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 }); // Start with 10 GP
+      await autoRollGold();
     }
     
     // Initialize local coinage from global store
