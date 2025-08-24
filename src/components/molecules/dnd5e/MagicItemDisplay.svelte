@@ -1,6 +1,6 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
-  import { localize as t, updateSource, getItemSourcesFromActor, enrichHTML } from "~/src/helpers/Utility";
+  import { localize as t, updateSource, getItemSourcesFromActor, enrichHTML, deleteActorItem } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants.ts";
 
   const actor = getContext("#doc");
@@ -175,21 +175,63 @@
         return;
       }
 
-      // Get current items from actor and remove the specified item
-      const currentItems = getItemSourcesFromActor($actor);
-      const itemIndex = currentItems.findIndex(i => i.name === item.name && i.type === item.type);
+      // Find the item on the actor by name and type
+      const actorItem = $actor.items.find(i => i.name === item.name && i.type === item.type);
       
-      if (itemIndex === -1) {
+      if (!actorItem) {
         ui.notifications.error(`Item ${item.name} not found on actor`);
         return;
       }
       
-      currentItems.splice(itemIndex, 1);
+      // Use the utility function to delete the item from the actor
+      const success = await deleteActorItem($actor, actorItem.id);
       
-      // Update the actor using updateSource
-      await updateSource($actor, { items: currentItems });
-      
-      ui.notifications.info(`Removed ${item.name} from ${$actor.name}`);
+      if (success) {
+        ui.notifications.info(`Removed ${item.name} from ${$actor.name}`);
+        
+        // Debug: Log the item structure to understand what we're working with
+        console.log('Removed item structure:', item);
+        console.log('Actor item structure:', actorItem);
+        console.log('Module flags:', actorItem.flags);
+        
+        // Format the removed item to match the structure expected by generated items list
+        const formattedRemovedItem = {
+          label: actorItem.name,
+          name: actorItem.name,
+          img: actorItem.img,
+          type: actorItem.type,
+          uuid: actorItem.flags?.[MODULE_ID]?.sourceUuid || actorItem.uuid,
+          value: actorItem.flags?.[MODULE_ID]?.sourceUuid || actorItem.uuid,
+          rarity: actorItem.system?.rarity,
+          rarityLabel: actorItem.system?.rarity,
+          rarityColor: getRarityColor(actorItem.system?.rarity),
+          packLabel: actorItem.flags?.[MODULE_ID]?.sourceUuid ? 'From Actor' : undefined
+          // Don't include system property to match original generated items structure
+        };
+        
+        console.log('Formatted removed item:', formattedRemovedItem);
+        
+        // Dispatch an event to notify the parent component that an item was removed
+        // This allows the parent to move the item back to the generated items list
+        console.log('Dispatching itemRemoved event with:', { item: formattedRemovedItem, remainingActorItems: Array.from($actor.items.values()).filter(i => {
+          // Check if properties exists and is an array before calling includes
+          const properties = i.system?.properties;
+          return properties && Array.isArray(properties) && properties.includes('mgc');
+        }) });
+        
+        dispatch('itemRemoved', { 
+          item: formattedRemovedItem, 
+          remainingActorItems: Array.from($actor.items.values()).filter(i => {
+            // Check if properties exists and is an array before calling includes
+            const properties = i.system?.properties;
+            return properties && Array.isArray(properties) && properties.includes('mgc');
+          })
+        });
+        
+        console.log('Event dispatched successfully');
+      } else {
+        ui.notifications.error(`Failed to remove ${item.name} from actor`);
+      }
       
     } catch (error) {
       console.error('Error removing magic item from actor:', error);
@@ -218,7 +260,7 @@
           i.fas.fa-trash
         +if("showAddButtons && magicItems.length > 1")
           button.add-all-btn(on:click!="{addAllMagicItems}" title="Add all items to actor")
-            i.fas.fa-plus-double
+            i.fas.fa-folder-plus
 
   +if("magicItems.length === 0")
     .no-items
@@ -240,8 +282,8 @@
               +if("item.img")
                 img.item-image(src="{item.img}" alt="{item.label}")
               .item-details
-                +if("item.uuid")
-                  +await("enrichHTML(`@UUID[${item.uuid}]{${item.label}}`)")
+                +if("item.uuid || item.value")
+                  +await("enrichHTML(`@UUID[${item.uuid || item.value}]{${item.label}}`)")
                     +then("Html")
                       .item-name {@html Html}
                   +else()
@@ -253,26 +295,21 @@
                   .item-source {item.packLabel}
             
             +if("showAddButtons")
-              button.add-item-btn(
+              button.add-item-btn.ml-xs(
                 on:click!="{() => addMagicItemToActor(item)}"
                 title="Add {item.label} to actor"
               )
                 i.fas.fa-plus
 
-          +if("item.system?.description?.value")
-            +await("enrichHTML(item.system.description.value)")
-              +then("Html")
-                .item-description {@html Html}
-
   +if("magicItems.length > 0")
     .footer
       .item-count
-        span Generated {magicItems.length} magic item{magicItems.length === 1 ? '' : 's'}
+        span {magicItems.length} magic item{magicItems.length === 1 ? '' : 's'}
       +if("showAddButtons")
         .footer-actions
           button.add-all-btn(on:click!="{addAllMagicItems}")
-            i.fas.fa-plus-double
-            span Add All to Actor
+            i.fas.fa-folder-plus
+            span Add All
 
   // Actor's current magic items section
   +if("actorMagicItems.length > 0")
@@ -425,7 +462,7 @@
               .item-rarity
                 font-size: 0.875rem
                 font-weight: 500
-                text-transform: uppercase
+                text-transform: capitalize
                 letter-spacing: 0.5px
                 margin-bottom: 0.25rem
 

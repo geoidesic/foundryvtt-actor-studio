@@ -203,6 +203,21 @@
     console.log('Store updated. New state:', $magicItemsState.generatedMagicItems);
     console.log('Store length:', $magicItemsState.generatedMagicItems.length);
   }
+
+  // Handle item being removed from actor from MagicItemDisplay
+  function handleItemRemoved(event) {
+    console.log('=== handleItemRemoved DEBUG ===');
+    console.log('Event detail:', event.detail);
+    const { item, remainingActorItems } = event.detail;
+    console.log('Removed item:', item);
+    console.log('Remaining actor items:', remainingActorItems);
+    
+    // Add the removed item back to the generated items list
+    $magicItemsState.generatedMagicItems = [...$magicItemsState.generatedMagicItems, item];
+    
+    console.log('Item moved back to generated list. New state:', $magicItemsState.generatedMagicItems);
+    console.log('Generated items length:', $magicItemsState.generatedMagicItems.length);
+  }
 </script>
 
 <template lang="pug">
@@ -369,6 +384,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
       showAddButtons="{true}"
       on:regenerate="{handleRegenerate}"
       on:itemAdded!="{handleItemAdded}"
+      on:itemRemoved!="{handleItemRemoved}"
     )
 
 </template>
@@ -550,10 +566,12 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
           gap: 0.5rem
           padding: 0.75rem 1.5rem
           border: none
-          border-radius: 6px
+          border-radius: 3px
+          background: var(--color-success, #28a745)
+          color: white
           cursor: pointer
           font-size: 1rem
-          font-weight: 500
+          font-weight: 600
           transition: all 0.2s ease
           min-width: 180px
           justify-content: center
@@ -562,19 +580,10 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
             opacity: 0.6
             cursor: not-allowed
 
-          &.generate-hoard-btn
-            background: var(--color-success, #28a745)
-            color: white
-
-            &:hover:not(:disabled)
-              background: var(--color-success-hover, #218838)
-
-          &.generate-individual-btn
-            background: var(--color-success, #28a745)
-            color: white
-
-            &:hover:not(:disabled)
-              background: var(--color-success-hover, #218838)
+          &:hover:not(:disabled)
+            background: var(--color-success-hover, #218838)
+            transform: translateY(-1px)
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
 
           i
             font-size: 1.1rem

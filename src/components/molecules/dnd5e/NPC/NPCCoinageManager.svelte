@@ -291,36 +291,47 @@
         gap: 0.5rem
 
         .action-btn
+          display: inline-flex
+          align-items: center
+          gap: 0.5rem
           padding: 0.5rem 1rem
           border: none
           border-radius: 3px
           cursor: pointer
           font-size: 0.9rem
+          font-weight: 500
+          transition: all 0.2s ease
+          min-width: 120px
+          justify-content: center
+
+          &:disabled
+            opacity: 0.6
+            cursor: not-allowed
+
+          &:hover:not(:disabled)
+            transform: translateY(-1px)
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
 
           &.roll
-            background: #28a745
+            background: var(--color-success, #28a745)
             color: white
 
-            &:hover
-              background: #218838
+            &:hover:not(:disabled)
+              background: var(--color-success-hover, #218838)
 
           &.save
-            background: var(--color-highlight)
+            background: var(--color-highlight, #2196f3)
             color: white
 
-            &:hover
-              background: #0066cc
+            &:hover:not(:disabled)
+              background: var(--color-highlight-hover, #0066cc)
 
           &.cancel
             background: #6c757d
             color: white
 
-            &:hover
+            &:hover:not(:disabled)
               background: #5a6268
-
-          &:disabled
-            opacity: 0.5
-            cursor: not-allowed
 
     .coinage-display
       display: flex
@@ -346,26 +357,43 @@
         gap: 0.5rem
 
       .roll-treasure-btn, .edit-coinage-btn
+        display: inline-flex
+        align-items: center
+        gap: 0.5rem
         padding: 0.5rem 1rem
         border: none
         border-radius: 3px
         color: white
         cursor: pointer
         font-size: 0.9rem
+        font-weight: 500
+        transition: all 0.2s ease
+        min-width: 120px
+        justify-content: center
 
         &:disabled
-          opacity: 0.5
+          opacity: 0.6
           cursor: not-allowed
 
-      .roll-treasure-btn
-        background: #28a745
+        &:hover:not(:disabled)
+          transform: translateY(-1px)
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
 
-        &:hover
-          background: #218838
+        i
+          font-size: 1rem
+
+        span
+          white-space: nowrap
+
+      .roll-treasure-btn
+        background: var(--color-success, #28a745)
+
+        &:hover:not(:disabled)
+          background: var(--color-success-hover, #218838)
 
       .edit-coinage-btn
-        background: var(--color-highlight)
+        background: var(--color-highlight, #2196f3)
 
-        &:hover
-          background: #0066cc
+        &:hover:not(:disabled)
+          background: var(--color-highlight-hover, #0066cc)
 </style>

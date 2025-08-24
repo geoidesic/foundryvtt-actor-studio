@@ -927,3 +927,38 @@ export async function enrichHTML(content, options = {}) {
   const textEditor = getTextEditorAPI();
   return await textEditor.enrichHTML(content, options);
 }
+
+/**
+ * Delete an item from an actor by ID
+ * @param {Object} actor - The actor to delete the item from
+ * @param {string} itemId - The ID of the item to delete
+ * @returns {Promise<boolean>} - True if deletion was successful, false otherwise
+ */
+export const deleteActorItem = async (actor, itemId) => {
+  try {
+    if (!actor?.items?.delete) {
+      console.error('Actor does not support item deletion');
+      return false;
+    }
+
+    await actor.items.delete(itemId);
+    
+    // Force a refresh of the reactive statement
+    await tick();
+    if (actor.render) {
+      actor.render();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting item from actor:', error);
+    return false;
+  }
+};
+
+/**
+ * Update a source object with new values
+ * @param {Object} source - The source object to update
+ * @param {Object} val - The value to update the source with
+ * @returns {Promise<void>} A promise that resolves when the source is updated
+ */
