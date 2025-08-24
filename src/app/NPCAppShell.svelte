@@ -32,11 +32,12 @@
     '--tjs-app-overflow': 'visible',
   };
 
-  $: filteredTabs = $npcSelectProgress === 100 ? $npcTabs : [$npcTabs[0]];
-  $: if ($npcSelectProgress === 100 && $activeTab === 'npc-select') {
-    // When progress reaches 100%, automatically switch to the second tab
-    activeTab.set('npc-features');
-  }
+  // Show all tabs once progress has reached 100%, and keep them visible
+  let hasReached100Percent = false;
+  $: if ($npcSelectProgress === 100) hasReached100Percent = true;
+  $: filteredTabs = hasReached100Percent ? $npcTabs : [$npcTabs[0]];
+  
+  // Let the workflow handle navigation - no automatic redirects
 
   onMount(() => {
     console.log('NPCAcppShell documentStore', $documentStore);
