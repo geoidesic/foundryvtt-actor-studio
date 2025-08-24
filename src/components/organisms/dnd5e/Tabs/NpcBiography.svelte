@@ -54,8 +54,8 @@
     localFlaw = $actor.system?.details?.flaw || "";
     localAlignment = $actor.system?.details?.alignment || "";
     localType = $actor.system?.details?.type?.value || "";
-    localCR = $actor.system?.details?.cr || 0;
-    localXP = $actor.system?.details?.xp?.value || 0;
+    localCR = $actor.system?.details?.cr ?? 0;
+    localXP = $actor.system?.details?.xp?.value ?? 0;
     localTreasure = new Set($actor.system?.details?.treasure?.value || []);
     localHabitat = $actor.system?.details?.habitat?.value || [];
     initialized = true;
@@ -265,8 +265,8 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
         +if("!editingCR")
           .display-value(
             on:click!="{() => editingCR = true}"
-            class!="{localCR === 0 ? 'empty' : ''}"
-          ) {localCR || 'Click to set CR'}
+            class!="{localCR == null ? 'empty' : ''}"
+          ) {localCR ?? 'Click to set CR'}
 
 
       .detail-row
@@ -337,28 +337,21 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
 
   div(slot="right")
     .biography-content
-      +if("$actor?.system?.details?.biography?.public")
-        .biography-section
-          h3 Public Information
-          ProseMirror(
-            attr="system.details.biography.public"
-            classes="biography-editor"
-            inMemory="true"
-          )
+      .biography-section
+        h3 Public Information
+        ProseMirror(
+          attr="system.details.biography.public"
+          classes="biography-editor"
+          inMemory="true"
+        )
       
-      +if("$actor?.system?.details?.biography?.value")
-        .biography-section
-          h3 GM Details
-          ProseMirror(
-            attr="system.details.biography.value"
-            classes="biography-editor"
-            inMemory="true"
-          )
-      
-      +if("!$actor?.system?.details?.biography?.public && !$actor?.system?.details?.biography?.value")
-        .no-biography
-          p No biography information available.
-          p Select an NPC from the NPC Select tab to view their biography.
+      .biography-section
+        h3 GM Details
+        ProseMirror(
+          attr="system.details.biography.value"
+          classes="biography-editor"
+          inMemory="true"
+        )
 </template>
 
 <style lang="sass" scoped>

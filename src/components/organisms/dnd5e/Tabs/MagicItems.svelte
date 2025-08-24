@@ -17,7 +17,7 @@
   // Watch for changes in the selected NPC base
   $: if ($selectedNpcBase) {
     $magicItemsState.manualNpcName = $selectedNpcBase.name || "";
-    $magicItemsState.manualNpcCR = $selectedNpcBase.system?.details?.cr || 0;
+    $magicItemsState.manualNpcCR = $selectedNpcBase.system?.details?.cr ?? 0;
     $magicItemsState.manualNpcType = $selectedNpcBase.system?.details?.type?.value || "";
   }
 
@@ -55,7 +55,7 @@
     
     // Use the selected NPC base or create a mock NPC object from manual input
     let npcToUse = $selectedNpcBase;
-    if (!npcToUse && $magicItemsState.manualNpcName && $magicItemsState.manualNpcCR > 0) {
+    if (!npcToUse && $magicItemsState.manualNpcName && $magicItemsState.manualNpcCR >= 0) {
       npcToUse = {
         name: $magicItemsState.manualNpcName,
         system: {
@@ -290,7 +290,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
                       step="0.5"
                       placeholder="CR"
                       value="{$magicItemsState.manualNpcCR}"
-                      on:input!="{e => $magicItemsState.manualNpcCR = parseFloat(e.target.value) || 0}"
+                      on:input!="{e => $magicItemsState.manualNpcCR = parseFloat(e.target.value) ?? 0}"
                     )
                     input.npc-type-input(
                       type="text"
@@ -299,7 +299,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
                       on:input!="{e => $magicItemsState.manualNpcType = e.target.value}"
                     )
                     
-                    +if("$magicItemsState.manualNpcName && $magicItemsState.manualNpcCR > 0")
+                    +if("$magicItemsState.manualNpcName && $magicItemsState.manualNpcCR >= 0")
                       .generation-button
                         button.generate-manual-btn(
                           on:click!="{generateIndividualMagicItems}"
@@ -340,7 +340,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
             +if("$magicItemsState.generationType === 'hoard'")
               span Party Level: {$magicItemsState.partyLevel}
             +if("$magicItemsState.generationType === 'individual'")
-              span NPC CR: {$magicItemsState.manualNpcCR || 'None'}
+              span NPC CR: {$magicItemsState.manualNpcCR ?? 'None'}
             span Equipment Packs: {equipmentPacks.length}
             span Selected NPC: {$selectedNpcBase ? $selectedNpcBase.name : 'None'}
             span Generated Items: {$magicItemsState.generatedMagicItems.length}

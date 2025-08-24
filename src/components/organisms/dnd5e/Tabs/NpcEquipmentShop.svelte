@@ -171,7 +171,7 @@
   async function autoRollGold() {
     try {
       // Get the NPC's CR for gold calculation
-      const npcCR = $selectedNpcBase?.system?.details?.cr?.value || 0;
+      const npcCR = $selectedNpcBase?.system?.details?.cr?.value ?? 0;
       
       // Calculate gold based on CR (DMG table)
       let goldAmount = 0;
