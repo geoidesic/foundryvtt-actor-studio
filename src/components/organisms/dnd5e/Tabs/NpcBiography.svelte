@@ -17,6 +17,8 @@
   let editingXP = false;
   let editingTreasure = false;
   let editingHabitat = false;
+  let editingModuleFlags = false;
+
 
   // Local values for editing
   let localIdeal = "";
@@ -28,8 +30,46 @@
   let localTreasure = new Set();
   let localHabitat = [];
   
+  // Module flags for token generation
+  let moduleFlags = {
+    enableRandomGold: false,
+    enableMagicItemRoll: false,
+    rollHP: false,
+    randomizeArt: false,
+    enableBioVariance: false
+  };
+  
+  // Load module flags from actor data
+  const loadModuleFlags = () => {
+    if ($actor && $actor.flags && $actor.flags['foundryvtt-actor-studio']) {
+      const flags = $actor.flags['foundryvtt-actor-studio'];
+      moduleFlags = {
+        enableRandomGold: flags.enableRandomGold || false,
+        enableMagicItemRoll: flags.enableMagicItemRoll || false,
+        rollHP: flags.rollHP || false,
+        randomizeArt: flags.randomizeArt || false,
+        enableBioVariance: flags.enableBioVariance || false
+      };
+    }
+  };
+
+  // Save module flags to actor data
+  const saveModuleFlags = async () => {
+    if ($actor) {
+      await updateSource($actor, {
+        'flags.foundryvtt-actor-studio.enableRandomGold': moduleFlags.enableRandomGold,
+        'flags.foundryvtt-actor-studio.enableMagicItemRoll': moduleFlags.enableMagicItemRoll,
+        'flags.foundryvtt-actor-studio.rollHP': moduleFlags.rollHP,
+        'flags.foundryvtt-actor-studio.randomizeArt': moduleFlags.randomizeArt,
+        'flags.foundryvtt-actor-studio.enableBioVariance': moduleFlags.enableBioVariance
+      });
+    }
+  };
+  
+
+  
   // Click outside detection using refs
-  let idealContainer, bondContainer, flawContainer, alignmentContainer, typeContainer, crContainer, treasureContainer, habitatContainer;
+  let idealContainer, bondContainer, flawContainer, alignmentContainer, typeContainer, crContainer, treasureContainer, habitatContainer, moduleFlagsContainer;
   
   function isClickOutsideContainer(event, containerElement) {
     try {
@@ -89,6 +129,10 @@
       if (editingHabitat && habitatContainer && isClickOutsideContainer(event, habitatContainer)) {
         editingHabitat = false;
       }
+      
+      if (editingModuleFlags && moduleFlagsContainer && isClickOutsideContainer(event, moduleFlagsContainer)) {
+        editingModuleFlags = false;
+      }
     } catch (error) {
       console.error('[NpcBiography] Error in handleClickOutside:', error);
     }
@@ -121,6 +165,7 @@
     localXP = $actor.system?.details?.xp?.value ?? 0;
     localTreasure = new Set($actor.system?.details?.treasure?.value || []);
     localHabitat = $actor.system?.details?.habitat?.value || [];
+    loadModuleFlags(); // Load module flags on initial load
     initialized = true;
   }
   
@@ -216,6 +261,8 @@
   }
 
   // Biography content is handled automatically by ProseMirror
+  
+
   
   // Set up click outside detection
   onMount(() => {
@@ -383,6 +430,48 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
                 span.habitat-tag {habitat.type}{habitat.subtype ? ' (' + habitat.subtype + ')' : ''}
             +if("localHabitat.length === 0")
               span Click to set habitat
+
+      .detail-row
+        label Module Flags
+        .module-flags-section
+          .module-flags-grid
+            label.checkbox-label
+              input(
+                type="checkbox"
+                checked="{moduleFlags.enableRandomGold}"
+                on:change!="{() => { moduleFlags.enableRandomGold = !moduleFlags.enableRandomGold; saveModuleFlags(); }}"
+              )
+              span Enable Random Gold
+            label.checkbox-label
+              input(
+                type="checkbox"
+                checked="{moduleFlags.enableMagicItemRoll}"
+                on:change!="{() => { moduleFlags.enableMagicItemRoll = !moduleFlags.enableMagicItemRoll; saveModuleFlags(); }}"
+              )
+              span Enable Magic Item Roll
+            label.checkbox-label
+              input(
+                type="checkbox"
+                checked="{moduleFlags.rollHP}"
+                on:change!="{() => { moduleFlags.rollHP = !moduleFlags.rollHP; saveModuleFlags(); }}"
+              )
+              span Roll HP
+            label.checkbox-label
+              input(
+                type="checkbox"
+                checked="{moduleFlags.randomizeArt}"
+                on:change!="{() => { moduleFlags.randomizeArt = !moduleFlags.randomizeArt; saveModuleFlags(); }}"
+              )
+              span Randomize Art
+            label.checkbox-label
+              input(
+                type="checkbox"
+                checked="{moduleFlags.enableBioVariance}"
+                on:change!="{() => { moduleFlags.enableBioVariance = !moduleFlags.enableBioVariance; saveModuleFlags(); }}"
+              )
+              span Enable Bio Variance
+
+
 
   div(slot="right")
     .biography-content
@@ -583,6 +672,28 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
     font-size: 0.8em
     color: var(--color-text-light)
     font-style: italic
+
+.module-flags-section
+  margin-top: 1rem
+  
+  .module-flags-grid
+    display: grid
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+    gap: 0.75rem
+    margin-bottom: 1rem
+    
+    .checkbox-label
+      display: flex
+      align-items: center
+      gap: 0.5rem
+      
+      input[type="checkbox"]
+        transform: scale(1.1)
+        accent-color: var(--color-primary)
+      
+      span
+        color: var(--color-text-light)
+        font-size: 0.875rem
 
 
 .no-biography

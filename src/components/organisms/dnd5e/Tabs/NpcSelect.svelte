@@ -25,6 +25,10 @@
   let allItems = [];
   let itemDefinitions = [];
 
+
+
+
+
   // Load NPC data with system fields
   const loadNpcData = async () => {
     try {
@@ -216,6 +220,8 @@
   $: itemsArray = getItemsArray($selectedNpc?.items);
 
 
+
+
 </script>
 
 <template lang="pug">
@@ -282,6 +288,8 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
         name="{$selectedNpc.name}"
         npc="{$selectedNpc}"
       )
+
+
 
       +if("itemsArray?.length")
         h3.mt-sm Features
@@ -379,6 +387,7 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
 
   .mb-0
     margin-bottom: 0
+
 
 
 </style>
