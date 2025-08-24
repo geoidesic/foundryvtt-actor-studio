@@ -43,6 +43,27 @@
       // Ensure a fresh ID is generated on the in-memory actor
       if (itemData && itemData._id) delete itemData._id;
       
+      // Store the original compendium UUID under our module namespace
+      try {
+        const srcUuid = item?.uuid || itemUuid;
+        const fu = (globalThis?.foundry && globalThis.foundry.utils) ? globalThis.foundry.utils : undefined;
+        if (fu?.setProperty) {
+          fu.setProperty(itemData, `flags.${MODULE_ID}.sourceUuid`, srcUuid);
+          fu.setProperty(itemData, `flags.${MODULE_ID}.sourceId`, srcUuid);
+        } else {
+          const existingFlags = itemData.flags && typeof itemData.flags === 'object' ? itemData.flags : {};
+          const moduleFlags = existingFlags[MODULE_ID] && typeof existingFlags[MODULE_ID] === 'object' ? existingFlags[MODULE_ID] : {};
+          itemData.flags = {
+            ...existingFlags,
+            [MODULE_ID]: {
+              ...moduleFlags,
+              sourceUuid: srcUuid,
+              sourceId: srcUuid
+            }
+          };
+        }
+      } catch (_) {}
+      
       // Get current items from actor and add the new item
       const currentItems = getItemSourcesFromActor($actor);
       currentItems.push(itemData);
@@ -52,8 +73,8 @@
       
       ui.notifications.info(`Added ${item.label} to ${$actor.name}`);
       
-      // Remove the item from the generated list
-      magicItems = magicItems.filter(i => (i.uuid || i.value) !== itemUuid);
+      // Remove the item from the generated list by dispatching an event
+      dispatch('itemAdded', { item, remainingItems: magicItems.filter(i => (i.uuid || i.value) !== itemUuid) });
       
     } catch (error) {
       console.error('Error adding magic item to actor:', error);
@@ -107,7 +128,7 @@
         // Add rarity color and label for display
         const rarity = item.system?.rarity;
         const rarityColor = getRarityColor(rarity);
-        const rarityLabel = rarity
+        const rarityLabel = rarity;
         
         // Get the source UUID for enrichment
         const sourceUuid = item.flags?.[MODULE_ID]?.sourceUuid || 
@@ -141,6 +162,39 @@
       legendary: '#d73027'
     };
     return colors[rarity] || colors.common;
+  }
+
+  /**
+   * Remove a magic item from the actor
+   * @param {Object} item - The magic item to remove
+   */
+  async function removeMagicItemFromActor(item) {
+    try {
+      if (!actor) {
+        ui.notifications.error('No actor available to remove items from');
+        return;
+      }
+
+      // Get current items from actor and remove the specified item
+      const currentItems = getItemSourcesFromActor($actor);
+      const itemIndex = currentItems.findIndex(i => i.name === item.name && i.type === item.type);
+      
+      if (itemIndex === -1) {
+        ui.notifications.error(`Item ${item.name} not found on actor`);
+        return;
+      }
+      
+      currentItems.splice(itemIndex, 1);
+      
+      // Update the actor using updateSource
+      await updateSource($actor, { items: currentItems });
+      
+      ui.notifications.info(`Removed ${item.name} from ${$actor.name}`);
+      
+    } catch (error) {
+      console.error('Error removing magic item from actor:', error);
+      ui.notifications.error(`Failed to remove ${item.name}: ${error.message}`);
+    }
   }
 
   /**
@@ -186,7 +240,12 @@
               +if("item.img")
                 img.item-image(src="{item.img}" alt="{item.label}")
               .item-details
-                .item-name {item.label}
+                +if("item.uuid")
+                  +await("enrichHTML(`@UUID[${item.uuid}]{${item.label}}`)")
+                    +then("Html")
+                      .item-name {@html Html}
+                  +else()
+                    .item-name {item.label}
                 .item-rarity(
                   style!="color: {item.rarityColor}"
                 ) {item.rarityLabel}
@@ -216,7 +275,7 @@
             span Add All to Actor
 
   // Actor's current magic items section
-  +if("$actor?.items?.size > 0")
+  +if("actorMagicItems.length > 0")
     .actor-magic-items
       h4 Actor's Magic Items
       .actor-items-list
@@ -230,16 +289,20 @@
                 +if("item.img")
                   img.item-image(src="{item.img}" alt="{item.name}")
                 .item-details
-                  .item-name {item.name}
+                  +if("item.sourceUuid")
+                    +await("enrichHTML(`@UUID[${item.sourceUuid}]{${item.name}}`)")
+                      +then("Html")
+                        .item-name {@html Html}
+                    +else()
+                      .item-name {item.name}
                   .item-type {item.type}
                   .item-rarity {item.rarity}
-            +if("item.system?.description?.value")
-              +await("enrichHTML(item.sourceUuid ? `@UUID[${item.sourceUuid}]{${item.name}}` : item.system.description.value)")
-                +then("Html")
-                  .item-description {@html Html}
-              +else
-                .item-description
-                  span This item is already on the actor
+              button.remove-item-btn(
+                on:click!="{() => removeMagicItemFromActor(item)}"
+                title="Remove {item.name} from actor"
+              )
+                i.fas.fa-trash
+
 </template>
 
 <style lang="sass">
@@ -386,6 +449,23 @@
 
             &:hover
               background-color: #388e3c
+
+          .remove-item-btn
+            background: #f44336
+            color: white
+            border: none
+            border-radius: 4px
+            padding: 0.5rem
+            cursor: pointer
+            transition: background-color 0.2s ease
+            min-width: 36px
+            height: 36px
+            display: flex
+            align-items: center
+            justify-content: center
+
+            &:hover
+              background-color: #d32f2f
 
         .item-description
           font-size: 0.875rem

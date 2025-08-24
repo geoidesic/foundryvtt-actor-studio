@@ -10,6 +10,8 @@ export class TreasureCategoryMapper {
       description: 'Can have any type of treasure',
       itemTypes: ['weapon', 'armor', 'equipment', 'consumable', 'tool', 'backpack', 'loot'],
       properties: [], // No restrictions
+      minRarity: null, // No minimum rarity
+      maxRarity: null, // No maximum rarity
       weight: 1
     },
     
@@ -18,6 +20,8 @@ export class TreasureCategoryMapper {
       description: 'Magical items, scrolls, potions, spell components',
       itemTypes: ['consumable', 'equipment', 'loot'],
       properties: ['mgc'], // Magic items and spell-related
+      minRarity: null, // No minimum rarity
+      maxRarity: null, // No maximum rarity
       weight: 1.2
     },
     
@@ -26,6 +30,8 @@ export class TreasureCategoryMapper {
       description: 'Weapons, armor, shields',
       itemTypes: ['weapon', 'armor'],
       properties: ['mgc'], // Magic weapons/armor
+      minRarity: null, // No minimum rarity
+      maxRarity: null, // No maximum rarity
       weight: 1.1
     },
     
@@ -34,6 +40,8 @@ export class TreasureCategoryMapper {
       description: 'Tools, instruments, magical foci',
       itemTypes: ['tool', 'equipment'],
       properties: ['mgc', 'foc'], // Magic tools and foci
+      minRarity: null, // No minimum rarity
+      maxRarity: 'uncommon', // Maximum of uncommon
       weight: 1.0
     },
     
@@ -42,6 +50,8 @@ export class TreasureCategoryMapper {
       description: 'Personal items, jewelry, coins',
       itemTypes: ['loot', 'equipment'],
       properties: ['mgc'], // Magic jewelry, etc.
+      minRarity: null, // No minimum rarity
+      maxRarity: null, // No maximum rarity
       weight: 0.9
     },
     
@@ -50,6 +60,8 @@ export class TreasureCategoryMapper {
       description: 'Ancient artifacts, powerful magical items',
       itemTypes: ['weapon', 'armor', 'equipment', 'loot'],
       properties: ['mgc'], // Magic items, especially rare+
+      minRarity: 'veryRare', // Minimum of very rare
+      maxRarity: null, // No maximum rarity
       weight: 1.5
     }
   };
@@ -80,7 +92,9 @@ export class TreasureCategoryMapper {
 
     // Check item type - D&D 5e uses system.type.value
     const itemType = item.system?.type?.value || item.type;
-    console.log(`Checking item ${item.name} (type: ${itemType}) against category ${category} (allowed types: ${categoryData.itemTypes.join(', ')})`);
+    const itemRarity = item['system.rarity'] || item.system?.rarity || 'common';
+    
+    console.log(`Checking item ${item.name} (type: ${itemType}, rarity: ${itemRarity}) against category ${category} (allowed types: ${categoryData.itemTypes.join(', ')})`);
     
     if (!categoryData.itemTypes.includes(itemType)) {
       console.log(`  ❌ Item type ${itemType} not in allowed types for ${category}`);
@@ -93,9 +107,37 @@ export class TreasureCategoryMapper {
       const hasRequiredProperty = categoryData.properties.some(prop => 
         itemProperties.includes(prop)
       );
-      if (!hasRequiredProperty) return false;
+      if (!hasRequiredProperty) {
+        console.log(`  ❌ Item missing required properties for ${category}: needs one of [${categoryData.properties.join(', ')}], has [${itemProperties.join(', ')}]`);
+        return false;
+      }
     }
 
+    // Check rarity constraints if specified
+    if (categoryData.minRarity || categoryData.maxRarity) {
+      const rarityOrder = ['common', 'uncommon', 'rare', 'veryRare', 'legendary'];
+      const itemRarityIndex = rarityOrder.indexOf(itemRarity);
+      
+      // Check minimum rarity
+      if (categoryData.minRarity) {
+        const minRarityIndex = rarityOrder.indexOf(categoryData.minRarity);
+        if (itemRarityIndex < minRarityIndex) {
+          console.log(`  ❌ Item rarity ${itemRarity} too low for ${category} (needs ${categoryData.minRarity}+)`);
+          return false;
+        }
+      }
+      
+      // Check maximum rarity
+      if (categoryData.maxRarity) {
+        const maxRarityIndex = rarityOrder.indexOf(categoryData.maxRarity);
+        if (itemRarityIndex > maxRarityIndex) {
+          console.log(`  ❌ Item rarity ${itemRarity} too high for ${category} (max ${categoryData.maxRarity})`);
+          return false;
+        }
+      }
+    }
+
+    console.log(`  ✅ Item matches category ${category}`);
     return true;
   }
 

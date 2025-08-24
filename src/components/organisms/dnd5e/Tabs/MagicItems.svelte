@@ -192,6 +192,12 @@
       generateHoardMagicItems();
     }
   }
+
+  // Handle item being added to actor from MagicItemDisplay
+  function handleItemAdded(event) {
+    const { remainingItems } = event.detail;
+    $magicItemsState.generatedMagicItems = remainingItems;
+  }
 </script>
 
 <template lang="pug">
@@ -355,6 +361,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
         title="Generated Magic Items"
         showAddButtons="{true}"
         on:regenerate="{handleRegenerate}"
+        on:itemAdded!="{handleItemAdded}"
       )
       +else()
         .no-items-placeholder

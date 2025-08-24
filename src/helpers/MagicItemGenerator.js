@@ -239,6 +239,48 @@ export class MagicItemGenerator {
   }
 
   /**
+   * Get all magic items from equipment packs (regardless of rarity)
+   * @param {Array} packs - Array of compendium packs
+   * @returns {Promise<Array>} - Array of all magic items
+   */
+  static async getAllMagicItems(packs) {
+    try {
+      const { extractItemsFromPacksAsync } = await import("./index.js");
+      const items = await extractItemsFromPacksAsync(packs, [
+        "name->label",
+        "img",
+        "type",
+        "uuid->value",
+        "_id"
+      ], [
+        "system.rarity",
+        "system.properties"
+      ]);
+      
+      if (items.length > 0) {
+        console.log("All items from packs - first 3:", items.slice(0, 3).map((item) => ({
+          name: item.name || item.label,
+          system: item.system,
+          systemKeys: item.system ? Object.keys(item.system) : [],
+          rarity: item.system?.rarity,
+          properties: item.system?.properties,
+          fullItem: item
+        })));
+      }
+      
+      // Filter to only magic items (regardless of rarity)
+      return items.filter((item) => {
+        const isMagic = item.system?.properties?.includes("mgc");
+        console.log(`Filtering item ${item.name || item.label}: magic=${isMagic}`);
+        return isMagic;
+      });
+    } catch (error) {
+      console.error("Error fetching all magic items:", error);
+      return [];
+    }
+  }
+
+  /**
    * Get magic items from equipment packs based on rarity
    * @param {Array} packs - Array of compendium packs
    * @param {string} rarity - The rarity to filter by
@@ -466,26 +508,41 @@ export class MagicItemGenerator {
    * @returns {Promise<Object|null>} - Random magic item or null
    */
   static async getRandomMagicItemWithCategories(packs, rarity, treasureCategories) {
-    const items = await this.getMagicItemsByRarity(packs, rarity);
+    // Import the TreasureCategoryMapper first
+    const { TreasureCategoryMapper } = await import('./TreasureCategoryMapper.js');
     
-    if (!items || items.length === 0) {
-      console.warn(`No magic items found for rarity: ${rarity}`);
+    // Get all magic items first, then apply category filtering (which includes rarity constraints)
+    const allItems = await this.getAllMagicItems(packs);
+    
+    if (!allItems || allItems.length === 0) {
+      console.warn(`No magic items found in packs`);
       return null;
     }
 
-    // Import the TreasureCategoryMapper
-    const { TreasureCategoryMapper } = await import('./TreasureCategoryMapper.js');
+    // Filter items by treasure categories first (this now includes rarity constraints)
+    const categoryFilteredItems = TreasureCategoryMapper.filterItemsByCategories(allItems, treasureCategories);
     
-    // Filter items by treasure categories
-    const filteredItems = TreasureCategoryMapper.filterItemsByCategories(items, treasureCategories);
+    if (categoryFilteredItems.length === 0) {
+      console.warn(`No magic items found for categories: ${treasureCategories.join(', ')}`);
+      return null;
+    }
+
+    // Now filter by the requested rarity, but only if it's compatible with the category constraints
+    const rarityFilteredItems = categoryFilteredItems.filter(item => {
+      const itemRarity = item['system.rarity'] || item.system?.rarity || 'common';
+      return itemRarity === rarity;
+    });
     
-    if (filteredItems.length === 0) {
-      console.warn(`No magic items found for rarity: ${rarity} and categories: ${treasureCategories.join(', ')}`);
+    if (rarityFilteredItems.length === 0) {
+      console.warn(`No magic items found for rarity: ${rarity} after category filtering. This may be due to rarity constraints in the treasure categories.`);
+      console.log(`Category filtered items had rarities:`, [...new Set(categoryFilteredItems.map(item => 
+        item['system.rarity'] || item.system?.rarity || 'common'
+      ))]);
       return null;
     }
 
     // Return a random item from the filtered list
-    const randomIndex = Math.floor(Math.random() * filteredItems.length);
-    return filteredItems[randomIndex];
+    const randomIndex = Math.floor(Math.random() * rarityFilteredItems.length);
+    return rarityFilteredItems[randomIndex];
   }
 }
