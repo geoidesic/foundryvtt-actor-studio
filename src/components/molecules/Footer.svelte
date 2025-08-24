@@ -55,7 +55,7 @@
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { itemsFromActor } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { localize as t, getAndSetActorItems } from "~/src/helpers/Utility";
+  import { localize as t, getAndSetActorItems, updateSource } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
@@ -164,11 +164,33 @@
   $: npcProgress = $npcSelectProgress;
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
   $: shouldShowNpcFooter = isNpcFlow && $npcSelectProgress === 100;
+  
+  // Initialize actorName when selectedNpcBase changes
+  $: if ($selectedNpcBase && !actorName) {
+    actorName = $selectedNpcBase.name || '';
+    console.log('[FOOTER] Initialized actorName with selected NPC:', actorName);
+  }
+  
+  // Keep actorName in sync with the in-memory actor name
+  $: if ($actor && $actor.name && $actor.name !== actorName) {
+    actorName = $actor.name;
+    console.log('[FOOTER] Synced actorName with actor name:', actorName);
+  }
+
   async function goToNpcFeatures() {
     // Build in-memory NPC actor from selected base and embed its feature items
     try {
+      console.log('[FOOTER] ====== GOING TO NPC FEATURES ======');
+      console.log('[FOOTER] Selected NPC base:', $selectedNpcBase);
+      console.log('[FOOTER] Current actorName:', actorName);
+      console.log('[FOOTER] Current in-memory actor:', $actor);
+      
       // build actor from selectedNpcBase
+      console.log('[FOOTER] Calling getAndSetActorItems with:', { selectedNpcBase: $selectedNpcBase, actor: $actor, actorName });
       getAndSetActorItems($selectedNpcBase, $actor, actorName);
+      
+      console.log('[FOOTER] After getAndSetActorItems - actor name:', $actor?.name);
+      console.log('[FOOTER] After getAndSetActorItems - actorName variable:', actorName);
       
       // Use the NPC state machine to handle progression
       const npcWorkflowFSM = getNPCWorkflowFSM();
@@ -180,6 +202,9 @@
         });
       }
     } catch (err) {
+      console.error('[FOOTER] ====== FAILED TO GO TO NPC FEATURES ======');
+      console.error('[FOOTER] Error details:', err);
+      console.error('[FOOTER] Error stack:', err.stack);
       window.GAS?.log?.e?.('[NPC] Failed to initialize in-memory actor', err);
     }
   }
@@ -214,12 +239,24 @@
   });
 
   const handleNameInput = (e) => {
+    const newName = e.target.value;
+    console.log('[FOOTER] handleNameInput called with:', newName);
+    
     if ($isLevelUp) {
       //- @why: for existing actors, we need to update the actor object in the database
-      actorName = e.target.value;
+      actorName = newName;
+      console.log('[FOOTER] Updated actorName for level up:', actorName);
     } else {
       //- @why: for new actors, we need to update the actor source object in memory,
-      $actor.updateSource({ name: e.target.value });
+      actorName = newName; // Update local variable first
+      console.log('[FOOTER] Updated actorName for new actor:', actorName);
+      
+      if ($actor) {
+        console.log('[FOOTER] Updating in-memory actor name to:', newName);
+        updateSource($actor, { name: newName });
+      } else {
+        console.warn('[FOOTER] No actor available to update name');
+      }
     }
   };
   const handleTokenNameInput = (e) => {
@@ -239,8 +276,19 @@
   //- Create NPC Actor
   const clickCreateNPCHandler = async () => {
     try {
+      console.log('[FOOTER] ====== NPC CREATION STARTED ======');
+      console.log('[FOOTER] Local actorName variable:', actorName);
+      console.log('[FOOTER] In-memory actor object:', $actor);
+      console.log('[FOOTER] In-memory actor name:', $actor?.name);
+      console.log('[FOOTER] In-memory actor toObject():', $actor?.toObject());
+      
       // Create the NPC actor in the game
+      console.log('[FOOTER] Calling Actor.create with:', $actor.toObject());
       const createdActor = await Actor.create($actor.toObject());
+      
+      console.log('[FOOTER] Actor created successfully:', createdActor);
+      console.log('[FOOTER] Created actor name:', createdActor.name);
+      console.log('[FOOTER] Created actor ID:', createdActor.id);
       
       // Set the actor in the game store
       actorInGame.set(createdActor);
@@ -258,6 +306,9 @@
       }, 1500);
       
     } catch (error) {
+      console.error('[FOOTER] ====== NPC CREATION FAILED ======');
+      console.error('[FOOTER] Error details:', error);
+      console.error('[FOOTER] Error stack:', error.stack);
       window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
       ui.notifications?.error(`Failed to create NPC: ${error.message}`);
     }
