@@ -714,58 +714,113 @@
 
         +if("$activeTab === 'npc-features'")
           .progress-container
-            .button-container
-              button.mt-xs.wide(
-                type="button"
-                role="button"
-                on:mousedown="{goToNpcCreation}"
-              )
-                span {t('Footer.Next')}
-                i.right.ml-md(class="fas fa-chevron-right")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToNpcCreation}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'npc-create'")
           .progress-container
-            .button-container
-              button.mt-xs.wide(
-                type="button"
-                role="button"
-                on:mousedown="{goToNpcEquipment}"
-              )
-                span {t('Footer.Next')}
-                i.right.ml-md(class="fas fa-chevron-right")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToNpcEquipment}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'npc-equipment-shop'")
           .progress-container
-            .button-container
-              button.mt-xs.wide(
-                type="button"
-                role="button"
-                on:mousedown="{goToMagicItems}"
-              )
-                span {t('Footer.Next')}
-                i.right.ml-md(class="fas fa-chevron-right")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToMagicItems}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'magic-items'")
           .progress-container
-            .button-container
-              button.mt-xs.wide(
-                type="button"
-                role="button"
-                on:mousedown="{goToBiography}"
-              )
-                span {t('Footer.Next')}
-                i.right.ml-md(class="fas fa-chevron-right")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToBiography}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
 
         +if("$activeTab === 'npc-biography'")
           .progress-container
-            .button-container
-              button.mt-xs.wide(
-                type="button"
-                role="button"
-                on:mousedown="{clickCreateNPCHandler}"
-              )
-                span {t('Footer.CreateNPC')}
-                i.right.ml-md(class="fas fa-check")
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{clickCreateNPCHandler}"
+                  )
+                    span {t('Footer.CreateNPC')}
+                    i.right.ml-md(class="fas fa-check")
 
 </template>
 
