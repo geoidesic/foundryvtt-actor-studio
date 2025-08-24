@@ -22,11 +22,9 @@
     $magicItemsState.manualNpcCR = $selectedNpcBase.system?.details?.cr ?? 0;
     $magicItemsState.manualNpcType = $selectedNpcBase.system?.details?.type?.value || "";
     
-    // Auto-roll gold when NPC is selected
-    if ($selectedNpcBase && (!$npcCurrency || Object.values($npcCurrency).every(v => v === 0))) {
-      console.log('[Treasure] Auto-rolling gold for selected NPC:', $selectedNpcBase.name);
-      autoRollGold($selectedNpcBase);
-    }
+    // Auto-roll gold when NPC is selected (regardless of current currency values)
+    console.log('[Treasure] NPC selected, auto-rolling gold for:', $selectedNpcBase.name);
+    autoRollGold($selectedNpcBase);
   }
 
   onMount(async () => {
@@ -279,8 +277,8 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
                   +if("isGeneratingMagicItems")
                     i.fas.fa-spinner.fa-spin
                     +else()
-                      i.fas.fa-magic
-                  span Generate Magic Items
+                      i.fas.fa-dice
+                      span Generate Items
               +else()
                 .no-npc-selected
                   p No NPC selected. Select an NPC from the NPC Select tab to generate individual magic items.

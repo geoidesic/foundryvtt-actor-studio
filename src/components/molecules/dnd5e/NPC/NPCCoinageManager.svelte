@@ -201,7 +201,7 @@
           disabled={disabled || !selectedNpc}
           title={rollDescription}
         >
-          <i class="fas fa-dice"></i> Roll
+          <i class="fas fa-dice"></i> Roll Coins
         </button>
         <button class="edit-coinage-btn" on:click={toggleEdit} disabled={disabled}>
           <i class="fas fa-edit"></i> Edit

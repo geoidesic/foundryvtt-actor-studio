@@ -10,10 +10,18 @@
 
   // Functions
   function handleRollCurrency() {
+    console.log('[NPCCurrencyDisplay] Roll button clicked');
+    console.log('[NPCCurrencyDisplay] selectedNpcBase:', $selectedNpcBase);
     if ($selectedNpcBase) {
+      console.log('[NPCCurrencyDisplay] Calling autoRollGold with:', $selectedNpcBase);
       autoRollGold($selectedNpcBase);
+    } else {
+      console.warn('[NPCCurrencyDisplay] No NPC selected, cannot roll currency');
     }
   }
+
+  // Debug: Log whenever currency changes
+  $: console.log('[NPCCurrencyDisplay] Currency changed:', $npcCurrency);
 
   function handleEditCurrency() {
     if (onEdit) {

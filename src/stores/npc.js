@@ -1,7 +1,7 @@
-import { writable, derived, get } from 'svelte/store';
+import { writable, get, derived } from 'svelte/store';
+import { npcCurrency, selectedNpcBase } from './storeDefinitions.js';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab } from '~/src/stores/index';
-import { selectedNpcBase } from '~/src/stores/storeDefinitions';
 
 // Key for localStorage persistence
 const NPC_STATE_KEY = `${MODULE_ID}-npc-state`;
@@ -13,13 +13,6 @@ export const npcSelectedBaseUuid = writable(null);
 export const npcFeatures = writable([]); // Features selected for the NPC
 export const npcStats = writable({}); // Custom stats modifications
 export const npcEquipment = writable([]); // Equipment selections
-// Create the NPC currency store
-export const npcCurrency = writable({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
-
-// Debug: Log whenever the store changes
-npcCurrency.subscribe(value => {
-  console.log('[NPC Store] npcCurrency store updated:', value);
-});
 export const npcName = writable(''); // Custom NPC name
 
 // Magic Items tab state
@@ -38,6 +31,11 @@ export const npcProgress = writable({
   'npc-create': 0,
   'npc-equipment-shop': 0,
   'magic-items': 0
+});
+
+// Debug: Log whenever the store changes
+npcCurrency.subscribe(value => {
+  console.log('[NPC Store] npcCurrency store updated:', value);
 });
 
 // Load persisted state on module import
