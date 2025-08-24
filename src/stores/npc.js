@@ -143,6 +143,10 @@ export function isNpcTabComplete(tabId) {
 
 // Helper function to reset NPC state when base NPC changes
 export function resetNpcStateOnBaseChange() {
+  // Get current magic items state to preserve party level if in hoard mode
+  const currentMagicItems = get(magicItemsState);
+  const preservePartyLevel = currentMagicItems.generationType === 'hoard';
+  
   // Reset features, stats, and equipment when base NPC changes
   npcFeatures.set([]);
   npcStats.set({});
@@ -150,10 +154,10 @@ export function resetNpcStateOnBaseChange() {
   // Don't reset currency here - let it be properly rolled based on NPC CR
   npcName.set('');
   
-  // Reset magic items state when base NPC changes
+  // Reset magic items state when base NPC changes, but preserve party level if in hoard mode
   magicItemsState.set({
     generationType: 'individual',
-    partyLevel: 5,
+    partyLevel: preservePartyLevel ? currentMagicItems.partyLevel : 5,
     generatedMagicItems: [],
     manualNpcName: '',
     manualNpcCR: 0,
@@ -376,6 +380,128 @@ export function resetMagicItemsToDefault() {
     manualNpcCR: 0,
     manualNpcType: ''
   });
+}
+
+// Function to roll hoard treasure based on party level (DMG tables)
+export async function autoRollHoardGold(partyLevel) {
+  try {
+    console.log('[NPC Store] Starting autoRollHoardGold for party level:', partyLevel);
+    
+    let newCurrency = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+    
+    if (partyLevel <= 4) {
+      // Hoard Challenge 0-4
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 30) {
+        newCurrency.cp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 6d6 × 100 CP
+      } else if (d100 <= 60) {
+        newCurrency.cp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 6d6 × 100 CP
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 EP
+      } else if (d100 <= 70) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+      } else if (d100 <= 95) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 GP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+        newCurrency.pp = Math.floor(Math.random() * 6 + 1); // 1d6 PP
+      }
+    } else if (partyLevel <= 10) {
+      // Hoard Challenge 5-10
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 30) {
+        newCurrency.cp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 CP
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+      } else if (d100 <= 60) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 GP
+      } else if (d100 <= 70) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 PP
+      } else if (d100 <= 95) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 PP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 PP
+      }
+    } else if (partyLevel <= 16) {
+      // Hoard Challenge 11-16
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 20) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 1000; // 2d6 × 1,000 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 GP
+      } else if (d100 <= 35) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 2d6 × 100 PP
+      } else if (d100 <= 75) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 100; // 3d6 × 100 PP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 2d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 PP
+      }
+    } else {
+      // Hoard Challenge 17+
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 15) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 1000; // 2d6 × 1,000 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 8d6 × 100 GP
+      } else if (d100 <= 55) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 PP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 6d6 × 100 PP
+      }
+    }
+    
+    console.log('[NPC Store] Rolled hoard currency:', newCurrency);
+    
+    // Set the rolled currency
+    npcCurrency.set(newCurrency);
+    
+    // Log the roll
+    console.log('[NPC Store] Hoard currency store updated, current value:', get(npcCurrency));
+    
+    return newCurrency;
+  } catch (error) {
+    console.error('Error auto-rolling hoard gold:', error);
+    // Fallback to default 100 GP if roll fails
+    const fallbackCurrency = { pp: 0, gp: 100, ep: 0, sp: 0, cp: 0 };
+    npcCurrency.set(fallbackCurrency);
+    return fallbackCurrency;
+  }
 }
 
 

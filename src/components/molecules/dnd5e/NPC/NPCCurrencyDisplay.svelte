@@ -1,23 +1,38 @@
 <script>
   import { npcCurrency, selectedNpcBase } from '~/src/stores/index';
-  import { autoRollGold } from '~/src/stores/npc';
+  import { autoRollGold, autoRollHoardGold } from '~/src/stores/npc';
   import GoldDisplay from '~/src/components/molecules/GoldDisplay.svelte';
 
   // Props
   export let showRollButton = true;
   export let showEditButton = false;
   export let onEdit = null;
+  export let hoardMode = false;
+  export let partyLevel = 5;
 
   // Functions
   function handleRollCurrency() {
     console.log('[NPCCurrencyDisplay] Roll button clicked');
-    console.log('[NPCCurrencyDisplay] selectedNpcBase:', $selectedNpcBase);
-    if ($selectedNpcBase) {
-      console.log('[NPCCurrencyDisplay] Calling autoRollGold with:', $selectedNpcBase);
-      autoRollGold($selectedNpcBase);
+    if (hoardMode) {
+      console.log('[NPCCurrencyDisplay] Hoard mode - rolling hoard currency for level:', partyLevel);
+      rollHoardCurrency();
     } else {
-      console.warn('[NPCCurrencyDisplay] No NPC selected, cannot roll currency');
+      console.log('[NPCCurrencyDisplay] Individual mode - rolling NPC currency');
+      console.log('[NPCCurrencyDisplay] selectedNpcBase:', $selectedNpcBase);
+      if ($selectedNpcBase) {
+        console.log('[NPCCurrencyDisplay] Calling autoRollGold with:', $selectedNpcBase);
+        autoRollGold($selectedNpcBase);
+      } else {
+        console.warn('[NPCCurrencyDisplay] No NPC selected, cannot roll currency');
+      }
     }
+  }
+
+  function rollHoardCurrency() {
+    console.log('[NPCCurrencyDisplay] Rolling hoard currency for party level:', partyLevel);
+    
+    // Call the hoard roll function
+    autoRollHoardGold(partyLevel);
   }
 
   // Debug: Log whenever currency changes
@@ -43,10 +58,10 @@
         <button 
           class="roll-treasure-btn" 
           on:click={handleRollCurrency}
-          disabled={!$selectedNpcBase}
-          title="Roll currency based on NPC CR"
+          disabled={hoardMode ? false : !$selectedNpcBase}
+          title={hoardMode ? "Roll hoard currency based on party level" : "Roll currency based on NPC CR"}
         >
-          <i class="fas fa-dice"></i> Roll
+          <i class="fas fa-dice"></i> {hoardMode ? 'Roll Hoard' : 'Roll'}
         </button>
       {/if}
       

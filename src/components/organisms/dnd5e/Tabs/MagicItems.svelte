@@ -16,6 +16,14 @@
   // Magic item generation state
   let isGeneratingMagicItems = false;
   
+  // Local party level for hoard generation - initialize from store
+  let localPartyLevel = $magicItemsState.partyLevel;
+  
+  // Update store when local party level changes
+  $: if (localPartyLevel !== $magicItemsState.partyLevel) {
+    $magicItemsState.partyLevel = localPartyLevel;
+  }
+  
   // Watch for changes in the selected NPC base
   $: if ($selectedNpcBase) {
     $magicItemsState.manualNpcName = $selectedNpcBase.name || "";
@@ -222,34 +230,38 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
           )
           label(for="individual-type") Individual Monster
 
-            //- Hoard Generation Controls
+      //- Hoard Generation Controls
       +if("$magicItemsState.generationType === 'hoard'")
         .hoard-controls
           h4 Hoard Generation
-          p.description Generate magic items for a treasure hoard based on party level (DMG tables)
+          p.description Generate treasure for a treasure hoard based on party tier (DMG tables)
           
-          .control-group
-            label Party Level:
-            input.party-level-input(
-              type="number"
-              min="1"
-              max="20"
-              value="{$magicItemsState.partyLevel}"
-              on:input!="{e => $magicItemsState.partyLevel = parseInt(e.target.value) || 5}"
-              placeholder="5"
-            )
+          // Currency Display Section for Hoard
+          NPCCurrencyDisplay(showRollButton="{true}" hoardMode="{true}" partyLevel="{localPartyLevel}")
           
-          .generation-button
-            button.generate-hoard-btn(
-              on:click!="{generateHoardMagicItems}"
-              disabled="{isGeneratingMagicItems || !equipmentPacks.length}"
-              title="Generate magic items for a level {$magicItemsState.partyLevel} hoard"
-            )
-              +if("isGeneratingMagicItems")
-                i.fas.fa-spinner.fa-spin
-                +else()
-                i.fas.fa-treasure-chest
-              span Generate Hoard (Level {$magicItemsState.partyLevel})
+          .hoard-info
+            .control-group
+              label Party Level:
+              select.party-tier-select(
+                bind:value="{localPartyLevel}"
+                on:change!="{e => console.log('Select changed to:', e.target.value)}"
+              )
+                option(value="{1}") 1-4
+                option(value="{5}") 5-10
+                option(value="{11}") 11-16
+                option(value="{17}") 17+
+            
+            .generation-button
+              button.generate-hoard-btn(
+                on:click!="{generateHoardMagicItems}"
+                disabled="{isGeneratingMagicItems || !equipmentPacks.length}"
+                title="Generate magic items for levels {localPartyLevel === 1 ? '1-4' : localPartyLevel === 5 ? '5-10' : localPartyLevel === 11 ? '11-16' : '17+'} hoard"
+              )
+                +if("isGeneratingMagicItems")
+                  i.fas.fa-spinner.fa-spin
+                  +else()
+                    i.fas.fa-treasure-chest
+                    span Roll Magic Items
 
       //- Individual Monster Generation Controls
       +if("$magicItemsState.generationType === 'individual'")
@@ -431,6 +443,41 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
           &::placeholder
             color: rgba(255, 255, 255, 0.6)
 
+        .party-tier-select
+          width: 120px
+          padding: 0.25rem 0.5rem
+          border: 1px solid rgba(255, 255, 255, 0.3)
+          border-radius: 4px
+          background: rgba(0, 0, 0, 0.3)
+          color: white
+          font-size: 0.875rem
+
+      .currency-section
+        margin-bottom: 1rem
+        padding: 0.75rem 1rem
+        background: rgba(0, 0, 0, 0.1)
+        border-radius: 6px
+        border: 1px solid rgba(255, 255, 255, 0.1)
+
+        h4
+          margin-top: 0
+          margin-bottom: 0.5rem
+          font-size: 1rem
+
+        .description
+          margin-bottom: 0.5rem
+          color: #ff6b6b
+          font-size: 0.875rem
+          line-height: 1.4
+          font-weight: 500
+
+      .hoard-info
+        margin: 1rem 0
+        padding: 1rem
+        background: rgba(0, 0, 0, 0.05)
+        border-radius: var(--border-radius)
+        border: 1px solid var(--color-border-light-tertiary)
+
       .npc-info
 
         margin: 1rem 0
@@ -516,11 +563,11 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
             cursor: not-allowed
 
           &.generate-hoard-btn
-            background: #ff9800
+            background: var(--color-success, #28a745)
             color: white
 
             &:hover:not(:disabled)
-              background: #f57c00
+              background: var(--color-success-hover, #218838)
 
           &.generate-individual-btn
             background: var(--color-success, #28a745)

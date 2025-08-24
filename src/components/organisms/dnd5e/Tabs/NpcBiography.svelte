@@ -476,20 +476,20 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
   div(slot="right")
     .biography-content
       .biography-section
-        h3 Public Information
+        h3 GM Description
+        ProseMirror(
+          attr="system.details.biography.value"
+          classes="biography-editor"
+          inMemory="true"
+        )
+      .biography-section
+        h3 Player Description
         ProseMirror(
           attr="system.details.biography.public"
           classes="biography-editor"
           inMemory="true"
         )
       
-      .biography-section
-        h3 GM Details
-        ProseMirror(
-          attr="system.details.biography.value"
-          classes="biography-editor"
-          inMemory="true"
-        )
 </template>
 
 <style lang="sass" scoped>
