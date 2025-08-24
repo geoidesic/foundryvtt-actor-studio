@@ -88,6 +88,19 @@
   //   }
   // }
 
+  // Debug footer visibility
+  $: {
+    console.log('[FOOTER] Debug footer visibility:', {
+      activeTab: $activeTab,
+      isInFooterTabs: FOOTER_TABS.includes($activeTab),
+      isNpcFlow,
+      npcSelectProgress: $npcSelectProgress,
+      shouldShowNpcFooter,
+      shouldShow: FOOTER_TABS.includes($activeTab) || shouldShowNpcFooter,
+      selectedNpcBase: $selectedNpcBase
+    });
+  }
+
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
 
@@ -529,8 +542,7 @@
 
 <template lang="pug">
 .footer-container
-  +if("FOOTER_TABS.includes($activeTab) || shouldShowNpcFooter")
-    .flexrow.gap-10.pr-md.mt-sm
+  .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
         .flex2
@@ -676,8 +688,8 @@
                           span {t('Footer.UpdateCharacter')}
                           i.right.ml-md(class="fas fa-chevron-right")
 
-        // NPC flow footer rendering
-        +if("$activeTab === 'npc-select' && shouldShowNpcFooter")
+        // NPC flow footer rendering - ALWAYS SHOW
+        +if("$activeTab === 'npc-select'")
           .progress-container
             .flexrow.gap-10
               .flex2
@@ -700,7 +712,7 @@
                       span {t('Footer.Next')}
                       i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-features' && shouldShowNpcFooter")
+        +if("$activeTab === 'npc-features'")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -711,7 +723,7 @@
                 span {t('Footer.Next')}
                 i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-create' && shouldShowNpcFooter")
+        +if("$activeTab === 'npc-create'")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -722,7 +734,7 @@
                 span {t('Footer.Next')}
                 i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-equipment-shop' && shouldShowNpcFooter")
+        +if("$activeTab === 'npc-equipment-shop'")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -733,7 +745,7 @@
                 span {t('Footer.Next')}
                 i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'magic-items' && shouldShowNpcFooter")
+        +if("$activeTab === 'magic-items'")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -744,7 +756,7 @@
                 span {t('Footer.Next')}
                 i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-biography' && shouldShowNpcFooter")
+        +if("$activeTab === 'npc-biography'")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -758,6 +770,28 @@
 </template>
 
 <style lang="sass">
+.test-footer
+  background: #ff0000
+  color: white
+  padding: 2rem
+  margin: 1rem
+  border: 5px solid #ff0000
+  border-radius: 10px
+  font-size: 20px
+  font-weight: bold
+  text-align: center
+
+  p
+    margin: 0.5rem 0
+
+.footer-container
+  display: block
+  width: 100%
+  padding: 1rem
+  background: rgba(0, 0, 0, 0.1)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  margin-top: auto
+
 .button-container
   button
     white-space: nowrap
