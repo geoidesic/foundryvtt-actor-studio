@@ -59,7 +59,14 @@ export const npcProgress = writable({
     if (state?.currency) npcCurrency.set(state.currency);
     if (state?.name) npcName.set(state.name);
     if (state?.progress) npcProgress.set(state.progress);
-    if (state?.magicItems) magicItemsState.set(state.magicItems);
+    if (state?.magicItems) {
+      // Ensure the generationType is set to 'individual' by default
+      const magicItems = state.magicItems;
+      if (magicItems.generationType !== 'individual') {
+        magicItems.generationType = 'individual';
+      }
+      magicItemsState.set(magicItems);
+    }
   } catch (e) {
     // no-op on parse / access errors
   }
@@ -141,7 +148,7 @@ export function resetNpcStateOnBaseChange() {
   
   // Reset magic items state when base NPC changes
   magicItemsState.set({
-    generationType: 'hoard',
+    generationType: 'individual',
     partyLevel: 5,
     generatedMagicItems: [],
     manualNpcName: '',
@@ -227,7 +234,7 @@ export function clearNpcSelection() {
   npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
   npcName.set('');
   magicItemsState.set({
-    generationType: 'hoard',
+    generationType: 'individual',
     partyLevel: 5,
     generatedMagicItems: [],
     manualNpcName: '',
@@ -240,6 +247,18 @@ export function clearNpcSelection() {
     'npc-create': 0,
     'npc-equipment-shop': 0,
     'magic-items': 0
+  });
+}
+
+// Function to reset just the magic items state to default
+export function resetMagicItemsToDefault() {
+  magicItemsState.set({
+    generationType: 'individual',
+    partyLevel: 5,
+    generatedMagicItems: [],
+    manualNpcName: '',
+    manualNpcCR: 0,
+    manualNpcType: ''
   });
 }
 

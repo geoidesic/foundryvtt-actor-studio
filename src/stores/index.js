@@ -26,7 +26,7 @@ export {
 import '~/src/stores/spellSelection';
 // Initialize NPC stores (persistence, progress)
 import '~/src/stores/npc';
-import { clearNpcSelection, magicItemsState } from '~/src/stores/npc';
+import { clearNpcSelection, magicItemsState, resetMagicItemsToDefault } from '~/src/stores/npc';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -101,8 +101,8 @@ dropItemRegistry.name = 'dropItemRegistry';
 // Export NPC currency store
 export const npcCurrency = storeDefinitions.npcCurrency;
 
-// Export magic items state store only
-export { magicItemsState };
+// Export magic items state store and reset function
+export { magicItemsState, resetMagicItemsToDefault };
 
 export const isNewMultiClass = derived(
   [storeDefinitions.characterClass, storeDefinitions.newLevelValueForExistingClass],
@@ -269,7 +269,7 @@ export function resetStores() {
   try {
     import('~/src/stores/npc.js').then(({ magicItemsState }) => {
       magicItemsState.set({
-        generationType: 'hoard',
+        generationType: 'individual',
         partyLevel: 5,
         generatedMagicItems: [],
         manualNpcName: '',

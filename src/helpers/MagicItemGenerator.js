@@ -41,44 +41,46 @@ export class MagicItemGenerator {
 
   // CR-based individual monster magic item chances
   static INDIVIDUAL_MAGIC_ITEMS = {
-    // CR 0-4: Very low chance
-    0: { common: 15, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
-    1: { common: 15, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
-    2: { common: 15, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
-    3: { common: 15, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
-    4: { common: 15, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
+    // CR 0-4: Very low chance, gradual increase
+    0: { common: 12, uncommon: 5, rare: 1, veryRare: 0, legendary: 0 },
+    1: { common: 14, uncommon: 6, rare: 1, veryRare: 0, legendary: 0 },
+    2: { common: 16, uncommon: 7, rare: 2, veryRare: 0, legendary: 0 },
+    3: { common: 18, uncommon: 8, rare: 2, veryRare: 0, legendary: 0 },
+    4: { common: 20, uncommon: 9, rare: 3, veryRare: 1, legendary: 0 },
     
-    // CR 5-10: Low chance
-    5: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
-    6: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
-    7: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
-    8: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
-    9: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
-    10: { common: 25, uncommon: 15, rare: 8, veryRare: 2, legendary: 0 },
+    // CR 5-10: Low chance, steady progression
+    5: { common: 22, uncommon: 11, rare: 4, veryRare: 1, legendary: 0 },
+    6: { common: 24, uncommon: 13, rare: 5, veryRare: 2, legendary: 0 },
+    7: { common: 26, uncommon: 15, rare: 6, veryRare: 2, legendary: 0 },
+    8: { common: 28, uncommon: 17, rare: 7, veryRare: 3, legendary: 0 },
+    9: { common: 30, uncommon: 19, rare: 8, veryRare: 3, legendary: 0 },
+    10: { common: 32, uncommon: 21, rare: 9, veryRare: 4, legendary: 1 },
     
-    // CR 11-16: Medium chance
-    11: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
-    12: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
-    13: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
-    14: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
-    15: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
-    16: { common: 35, uncommon: 25, rare: 15, veryRare: 8, legendary: 2 },
+    // CR 11-16: Medium chance, accelerating progression
+    11: { common: 34, uncommon: 23, rare: 11, veryRare: 5, legendary: 1 },
+    12: { common: 36, uncommon: 25, rare: 13, veryRare: 6, legendary: 2 },
+    13: { common: 38, uncommon: 27, rare: 15, veryRare: 7, legendary: 2 },
+    14: { common: 40, uncommon: 29, rare: 17, veryRare: 8, legendary: 3 },
+    15: { common: 42, uncommon: 31, rare: 19, veryRare: 9, legendary: 3 },
+    16: { common: 44, uncommon: 33, rare: 21, veryRare: 10, legendary: 4 },
     
-    // CR 17+: High chance
-    17: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    18: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    19: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    20: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    21: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    22: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    23: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    24: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    25: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    26: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    27: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    28: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    29: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 },
-    30: { common: 45, uncommon: 35, rare: 25, veryRare: 15, legendary: 8 }
+    // CR 17-22: High chance, continued acceleration
+    17: { common: 46, uncommon: 35, rare: 23, veryRare: 12, legendary: 5 },
+    18: { common: 48, uncommon: 37, rare: 25, veryRare: 14, legendary: 6 },
+    19: { common: 50, uncommon: 39, rare: 27, veryRare: 16, legendary: 7 },
+    20: { common: 52, uncommon: 41, rare: 29, veryRare: 18, legendary: 8 },
+    21: { common: 54, uncommon: 43, rare: 31, veryRare: 20, legendary: 9 },
+    22: { common: 56, uncommon: 45, rare: 33, veryRare: 22, legendary: 10 },
+    
+    // CR 23+: Very high chance, peak progression
+    23: { common: 58, uncommon: 47, rare: 35, veryRare: 24, legendary: 11 },
+    24: { common: 60, uncommon: 49, rare: 37, veryRare: 26, legendary: 12 },
+    25: { common: 62, uncommon: 51, rare: 39, veryRare: 28, legendary: 13 },
+    26: { common: 64, uncommon: 53, rare: 41, veryRare: 30, legendary: 14 },
+    27: { common: 66, uncommon: 55, rare: 43, veryRare: 32, legendary: 15 },
+    28: { common: 68, uncommon: 57, rare: 45, veryRare: 34, legendary: 16 },
+    29: { common: 70, uncommon: 59, rare: 47, veryRare: 36, legendary: 17 },
+    30: { common: 72, uncommon: 61, rare: 49, veryRare: 38, legendary: 18 }
   };
 
   // Magic item rarity definitions
@@ -222,25 +224,41 @@ export class MagicItemGenerator {
 
     const results = [];
     
-    // Check each rarity level
+    // Check each rarity level with chain reaction logic
     for (const [rarity, chance] of Object.entries(crData)) {
       if (chance > 0) {
-        // Roll percentage chance
-        const roll = Math.random() * 100;
-        console.log(`Rolling for ${rarity}: ${roll.toFixed(1)} vs ${chance}% chance`);
+        console.log(`=== Rolling for ${rarity} rarity ===`);
         
-        if (roll <= chance) {
-          console.log(`✅ ${rarity} passed the roll!`);
-          // Individual monsters typically get 1 item of each rarity that passes
-          results.push({
-            rarity,
-            count: 1,
-            label: this.RARITIES[rarity].label,
-            color: this.RARITIES[rarity].color
-          });
-        } else {
-          console.log(`❌ ${rarity} failed the roll`);
+        // Keep rolling until we fail or hit a reasonable limit
+        let itemsGenerated = 0;
+        const maxItemsPerRarity = 5; // Prevent infinite loops
+        
+        while (itemsGenerated < maxItemsPerRarity) {
+          // Roll percentage chance
+          const roll = Math.random() * 100;
+          console.log(`Roll ${itemsGenerated + 1} for ${rarity}: ${roll.toFixed(1)} vs ${chance}% chance`);
+          
+          if (roll <= chance) {
+            console.log(`✅ ${rarity} passed the roll! Adding item ${itemsGenerated + 1}`);
+            // Add the item and continue rolling
+            results.push({
+              rarity,
+              count: 1,
+              label: this.RARITIES[rarity].label,
+              color: this.RARITIES[rarity].color
+            });
+            itemsGenerated++;
+          } else {
+            console.log(`❌ ${rarity} failed the roll. Stopping for this rarity.`);
+            break; // Stop rolling for this rarity
+          }
         }
+        
+        if (itemsGenerated >= maxItemsPerRarity) {
+          console.log(`⚠️ Reached maximum items limit (${maxItemsPerRarity}) for ${rarity} rarity`);
+        }
+        
+        console.log(`Generated ${itemsGenerated} items for ${rarity} rarity`);
       }
     }
     
