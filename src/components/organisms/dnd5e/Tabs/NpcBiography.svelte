@@ -4,6 +4,7 @@
   import { updateSource, enrichHTML } from "~/src/helpers/Utility";
   import { selectedNpcBase } from "~/src/stores/index";
   import { TreasureCategoryMapper } from "~/src/helpers/TreasureCategoryMapper";
+  import ProseMirror from "~/src/components/molecules/ProseMirror.svelte";
 
   const actor = getContext("#doc");
 
@@ -157,21 +158,7 @@
     return TreasureCategoryMapper.TREASURE_CATEGORIES[category] || { label: category, description: '' };
   }
 
-  // Enrich biography content
-  let enrichedBiography = "";
-  let enrichedPublic = "";
-
-  $: if ($actor?.system?.details?.biography?.value) {
-    enrichHTML($actor.system.details.biography.value).then(html => {
-      enrichedBiography = html;
-    });
-  }
-
-  $: if ($actor?.system?.details?.biography?.public) {
-    enrichHTML($actor.system.details.biography.public).then(html => {
-      enrichedPublic = html;
-    });
-  }
+  // Biography content is handled automatically by ProseMirror
 </script>
 
 <template lang="pug">
@@ -353,12 +340,20 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
       +if("$actor?.system?.details?.biography?.public")
         .biography-section
           h3 Public Information
-          .biography-text {@html enrichedPublic}
+          ProseMirror(
+            attr="system.details.biography.public"
+            classes="biography-editor"
+            inMemory="true"
+          )
       
       +if("$actor?.system?.details?.biography?.value")
         .biography-section
           h3 GM Details
-          .biography-text {@html enrichedBiography}
+          ProseMirror(
+            attr="system.details.biography.value"
+            classes="biography-editor"
+            inMemory="true"
+          )
       
       +if("!$actor?.system?.details?.biography?.public && !$actor?.system?.details?.biography?.value")
         .no-biography
@@ -375,6 +370,64 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
     border-bottom: 1px solid var(--color-border-highlight)
     padding-bottom: 0.5rem
     margin-bottom: 1rem
+
+.biography-editor
+  min-height: 500px
+  height: 70vh
+  width: 100%
+  border: 1px solid var(--color-border-highlight)
+  border-radius: 4px
+  background: rgba(0, 0, 0, 0.3)
+  padding: 1rem
+  margin-top: 1rem
+  color: white
+  font-family: inherit
+  font-size: inherit
+  line-height: 1.5
+  resize: vertical
+  
+  &:focus
+    outline: none
+    border-color: var(--color-border-highlight-secondary)
+    background: rgba(0, 0, 0, 0.4)
+  
+  &:hover
+    border-color: var(--color-border-highlight-secondary)
+    background: rgba(0, 0, 0, 0.35)
+  
+  &::placeholder
+    color: var(--color-text-dark-secondary)
+    font-style: italic
+  
+  // Force ProseMirror editor to be much taller - target all possible elements
+  :global(.ProseMirror)
+    height: 600px !important
+    min-height: 600px !important
+    max-height: none !important
+    background: red !important // Debug: make it obvious if this works
+  
+  :global(.editor)
+    height: 600px !important
+    min-height: 600px !important
+    max-height: none !important
+    background: blue !important // Debug: make it obvious if this works
+  
+  :global(.ProseMirror-focused)
+    height: 600px !important
+    min-height: 600px !important
+  
+  // Target the actual wrapper that ProseMirror creates
+  :global(.tjs-prosemirror)
+    height: 600px !important
+    min-height: 600px !important
+    max-height: none !important
+    background: green !important // Debug: make it obvious if this works
+  
+  // Target any other ProseMirror-related classes
+  :global([class*="ProseMirror"])
+    height: 600px !important
+    min-height: 600px !important
+    max-height: none !important
 
 .detail-row
   margin-bottom: 1rem
