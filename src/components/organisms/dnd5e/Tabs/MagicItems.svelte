@@ -14,24 +14,17 @@
   // Magic item generation state
   let isGeneratingMagicItems = false;
   
-  // Debug logging
-  console.log('MagicItems component initialized with partyLevel:', $magicItemsState.partyLevel);
-  
   // Watch for changes in the selected NPC base
   $: if ($selectedNpcBase) {
     $magicItemsState.manualNpcName = $selectedNpcBase.name || "";
     $magicItemsState.manualNpcCR = $selectedNpcBase.system?.details?.cr || 0;
     $magicItemsState.manualNpcType = $selectedNpcBase.system?.details?.type?.value || "";
   }
-  
-  // Watch for changes in party level
-  $: console.log('Party level changed to:', $magicItemsState.partyLevel);
 
   onMount(async () => {
     // Initialize equipment packs
     equipmentPacks = getPacksFromSettings("equipment");
     console.log('MagicItems mounted, equipment packs:', equipmentPacks);
-    console.log('MagicItems initial state:', $magicItemsState);
     
     // Test import of MagicItemGenerator
     try {
@@ -91,25 +84,11 @@
       console.log('MagicItemGenerator imported successfully');
       console.log('MagicItemGenerator object:', MagicItemGenerator);
       
-      // Debug: Check what rarity results we get
-      console.log('Calling generateIndividualMagicItems...');
-      const rarityResults = MagicItemGenerator.generateIndividualMagicItems(npcToUse);
-      console.log('Rarity results:', rarityResults);
-      
-      // Debug: Check what items we can find for each rarity
-      console.log('Getting items for each rarity...');
-      for (const result of rarityResults) {
-        const itemsForRarity = await MagicItemGenerator.getMagicItemsByRarity(equipmentPacks, result.rarity);
-        console.log(`Items for ${result.rarity} rarity:`, itemsForRarity.length, itemsForRarity);
-      }
-      
       // Get treasure categories from the NPC if available
       const treasureCategories = npcToUse.system?.details?.treasure?.value || [];
       console.log('Treasure categories from NPC:', treasureCategories);
       console.log('Treasure categories type:', typeof treasureCategories);
       console.log('Treasure categories is array:', Array.isArray(treasureCategories));
-      console.log('NPC system details:', npcToUse.system?.details);
-      console.log('NPC treasure value:', npcToUse.system?.details?.treasure);
       
       console.log('Calling generateIndividualMagicItemObjectsWithCategories...');
       const items = await MagicItemGenerator.generateIndividualMagicItemObjectsWithCategories(npcToUse, equipmentPacks, treasureCategories);
@@ -177,8 +156,12 @@
 
   // Get description of what will be generated
   function getGenerationDescription() {
-    if ($magicItemsState.generationType === "individual" && $selectedNpcBase) {
-      return `CR ${$magicItemsState.manualNpcCR}: Magic item generation based on challenge rating`;
+    if ($magicItemsState.generationType === "individual") {
+      if ($selectedNpcBase) {
+        return `CR ${$magicItemsState.manualNpcCR}: Magic item generation based on challenge rating`;
+      } else {
+        return `Individual monster magic item generation (select an NPC or enter details)`;
+      }
     } else {
       return `Level ${$magicItemsState.partyLevel}: Magic item generation for hoard`;
     }
@@ -195,8 +178,16 @@
 
   // Handle item being added to actor from MagicItemDisplay
   function handleItemAdded(event) {
+    console.log('=== handleItemAdded DEBUG ===');
+    console.log('Event detail:', event.detail);
     const { remainingItems } = event.detail;
+    console.log('Remaining items:', remainingItems);
+    console.log('Current store state before update:', $magicItemsState.generatedMagicItems);
+    
     $magicItemsState.generatedMagicItems = remainingItems;
+    
+    console.log('Store updated. New state:', $magicItemsState.generatedMagicItems);
+    console.log('Store length:', $magicItemsState.generatedMagicItems.length);
   }
 </script>
 
@@ -346,30 +337,25 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
         .debug-section
           h4 Debug Info
           .debug-info
-            span Party Level: {$magicItemsState.partyLevel}
+            +if("$magicItemsState.generationType === 'hoard'")
+              span Party Level: {$magicItemsState.partyLevel}
+            +if("$magicItemsState.generationType === 'individual'")
+              span NPC CR: {$magicItemsState.manualNpcCR || 'None'}
             span Equipment Packs: {equipmentPacks.length}
             span Selected NPC: {$selectedNpcBase ? $selectedNpcBase.name : 'None'}
             span Generated Items: {$magicItemsState.generatedMagicItems.length}
           button.test-btn(
-            on:click!="{() => console.log('Test button clicked, current state:', { partyLevel: $magicItemsState.partyLevel, equipmentPacks: equipmentPacks.length, selectedNpc: $selectedNpcBase, generatedItems: $magicItemsState.generatedMagicItems.length })}"
+            on:click!="{() => console.log('Test button clicked, current state:', { generationType: $magicItemsState.generationType, partyLevel: $magicItemsState.partyLevel, npcCR: $magicItemsState.manualNpcCR, equipmentPacks: equipmentPacks.length, selectedNpc: $selectedNpcBase, generatedItems: $magicItemsState.generatedMagicItems.length })}"
           ) Test State
 
   div(slot="right")
-    +if("$magicItemsState.generatedMagicItems.length > 0")
-      MagicItemDisplay(
-        magicItems="{$magicItemsState.generatedMagicItems}"
-        title="Generated Magic Items"
-        showAddButtons="{true}"
-        on:regenerate="{handleRegenerate}"
-        on:itemAdded!="{handleItemAdded}"
-      )
-      +else()
-        .no-items-placeholder
-          .placeholder-content
-            i.fas.fa-magic
-            h3 No Magic Items Generated
-            p Select a generation type and click generate to create magic items.
-            p Magic items will be pulled from your configured equipment sources and filtered by rarity based on the generation method.
+    MagicItemDisplay(
+      magicItems="{$magicItemsState.generatedMagicItems}"
+      title="Magic Items"
+      showAddButtons="{true}"
+      on:regenerate="{handleRegenerate}"
+      on:itemAdded!="{handleItemAdded}"
+    )
 </template>
 
 <style lang="sass">

@@ -18,7 +18,7 @@ export const npcName = writable(''); // Custom NPC name
 
 // Magic Items tab state
 export const magicItemsState = writable({
-  generationType: 'hoard',
+  generationType: 'individual',
   partyLevel: 5,
   generatedMagicItems: [],
   manualNpcName: '',

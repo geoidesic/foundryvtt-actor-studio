@@ -211,6 +211,10 @@ export class MagicItemGenerator {
     const crKey = this.findMagicItemTableCR(cr);
     const crData = this.INDIVIDUAL_MAGIC_ITEMS[crKey];
     
+    console.log(`=== generateIndividualMagicItems DEBUG ===`);
+    console.log(`NPC CR: ${cr}, CR Key: ${crKey}`);
+    console.log(`CR Data:`, crData);
+    
     if (!crData) {
       console.warn(`No individual magic item data found for CR ${cr}`);
       return [];
@@ -223,7 +227,10 @@ export class MagicItemGenerator {
       if (chance > 0) {
         // Roll percentage chance
         const roll = Math.random() * 100;
+        console.log(`Rolling for ${rarity}: ${roll.toFixed(1)} vs ${chance}% chance`);
+        
         if (roll <= chance) {
+          console.log(`✅ ${rarity} passed the roll!`);
           // Individual monsters typically get 1 item of each rarity that passes
           results.push({
             rarity,
@@ -231,10 +238,13 @@ export class MagicItemGenerator {
             label: this.RARITIES[rarity].label,
             color: this.RARITIES[rarity].color
           });
+        } else {
+          console.log(`❌ ${rarity} failed the roll`);
         }
       }
     }
     
+    console.log(`Final results:`, results);
     return results;
   }
 
@@ -245,7 +255,11 @@ export class MagicItemGenerator {
    */
   static async getAllMagicItems(packs) {
     try {
-      const { extractItemsFromPacksAsync } = await import("./index.js");
+      console.log(`=== getAllMagicItems DEBUG ===`);
+      console.log(`Packs:`, packs);
+      
+      // Import the utility function dynamically to avoid circular dependencies
+      const { extractItemsFromPacksAsync } = await import('~/src/helpers/Utility.js');
       const items = await extractItemsFromPacksAsync(packs, [
         "name->label",
         "img",
@@ -257,8 +271,9 @@ export class MagicItemGenerator {
         "system.properties"
       ]);
       
+      console.log(`Raw items from extractItemsFromPacksAsync: ${items.length}`);
       if (items.length > 0) {
-        console.log("All items from packs - first 3:", items.slice(0, 3).map((item) => ({
+        console.log("Raw items - first 3:", items.slice(0, 3).map((item) => ({
           name: item.name || item.label,
           system: item.system,
           systemKeys: item.system ? Object.keys(item.system) : [],
@@ -269,11 +284,14 @@ export class MagicItemGenerator {
       }
       
       // Filter to only magic items (regardless of rarity)
-      return items.filter((item) => {
+      const magicItems = items.filter((item) => {
         const isMagic = item.system?.properties?.includes("mgc");
-        console.log(`Filtering item ${item.name || item.label}: magic=${isMagic}`);
+        console.log(`Magic filter: ${item.name || item.label} - properties: ${item.system?.properties} - magic: ${isMagic}`);
         return isMagic;
       });
+      
+      console.log(`After magic filtering: ${magicItems.length} items`);
+      return magicItems;
     } catch (error) {
       console.error("Error fetching all magic items:", error);
       return [];
@@ -289,7 +307,7 @@ export class MagicItemGenerator {
   static async getMagicItemsByRarity(packs, rarity) {
     try {
       // Import the utility function dynamically to avoid circular dependencies
-      const { extractItemsFromPacksAsync } = await import('./Utility.js');
+      const { extractItemsFromPacksAsync } = await import('~/src/helpers/Utility.js');
       
       const items = await extractItemsFromPacksAsync(packs, [
         "name->label",
@@ -509,9 +527,24 @@ export class MagicItemGenerator {
    */
   static async getRandomMagicItemWithCategories(packs, rarity, treasureCategories) {
     // Import the TreasureCategoryMapper first
-    const { TreasureCategoryMapper } = await import('./TreasureCategoryMapper.js');
+    const { TreasureCategoryMapper } = await import('~/src/helpers/TreasureCategoryMapper.js');
     
-    // Get all magic items first, then apply category filtering (which includes rarity constraints)
+    console.log(`=== getRandomMagicItemWithCategories DEBUG ===`);
+    console.log(`Requested rarity: ${rarity}`);
+    console.log(`Treasure categories:`, treasureCategories);
+    
+    // First, check if the requested rarity is compatible with the treasure categories
+    const isRarityCompatible = TreasureCategoryMapper.isRarityCompatibleWithCategories(rarity, treasureCategories);
+    
+    if (!isRarityCompatible) {
+      console.warn(`Rarity ${rarity} is incompatible with treasure categories:`, treasureCategories);
+      console.log(`Skipping item fetching - no items can match both constraints`);
+      return null;
+    }
+    
+    console.log(`Rarity ${rarity} is compatible with treasure categories - proceeding with item generation`);
+    
+    // Get all magic items, then apply category filtering (which includes rarity constraints)
     const allItems = await this.getAllMagicItems(packs);
     
     if (!allItems || allItems.length === 0) {
@@ -519,30 +552,36 @@ export class MagicItemGenerator {
       return null;
     }
 
+    console.log(`Total magic items found: ${allItems.length}`);
+
     // Filter items by treasure categories first (this now includes rarity constraints)
     const categoryFilteredItems = TreasureCategoryMapper.filterItemsByCategories(allItems, treasureCategories);
     
+    console.log(`After category filtering: ${categoryFilteredItems.length} items`);
+    
     if (categoryFilteredItems.length === 0) {
-      console.warn(`No magic items found for categories: ${treasureCategories.join(', ')}`);
+      console.warn(`No magic items found for categories:`, treasureCategories);
       return null;
     }
 
-    // Now filter by the requested rarity, but only if it's compatible with the category constraints
+    // Now filter by the requested rarity (we know it's compatible, so this should find items)
     const rarityFilteredItems = categoryFilteredItems.filter(item => {
       const itemRarity = item['system.rarity'] || item.system?.rarity || 'common';
-      return itemRarity === rarity;
+      const matches = itemRarity === rarity;
+      console.log(`Rarity filter: ${item.name || item.label} (${itemRarity}) === ${rarity} = ${matches}`);
+      return matches;
     });
     
+    console.log(`After rarity filtering: ${rarityFilteredItems.length} items`);
+    
     if (rarityFilteredItems.length === 0) {
-      console.warn(`No magic items found for rarity: ${rarity} after category filtering. This may be due to rarity constraints in the treasure categories.`);
-      console.log(`Category filtered items had rarities:`, [...new Set(categoryFilteredItems.map(item => 
-        item['system.rarity'] || item.system?.rarity || 'common'
-      ))]);
+      console.warn(`No magic items found for rarity: ${rarity} after category filtering. This should not happen if rarity compatibility was checked.`);
       return null;
     }
 
     // Return a random item from the filtered list
     const randomIndex = Math.floor(Math.random() * rarityFilteredItems.length);
+    console.log(`Selected random item at index ${randomIndex} from ${rarityFilteredItems.length} items`);
     return rarityFilteredItems[randomIndex];
   }
 }

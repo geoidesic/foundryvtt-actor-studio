@@ -142,6 +142,49 @@ export class TreasureCategoryMapper {
   }
 
   /**
+   * Check if a rarity is compatible with the given treasure categories
+   * @param {string} rarity - The rarity to check
+   * @param {Array|Set} categories - Array or Set of treasure category values
+   * @returns {boolean} True if the rarity is compatible with at least one category
+   */
+  static isRarityCompatibleWithCategories(rarity, categories) {
+    if (!categories || categories.length === 0) {
+      return true; // No categories means no restrictions
+    }
+    
+    // Convert categories to array if it's a Set
+    const categoryArray = Array.isArray(categories) ? categories : Array.from(categories);
+    
+    // Check if any category is compatible with the rarity
+    return categoryArray.some(category => {
+      if (category === 'any') return true; // 'any' category accepts all rarities
+      
+      const categoryData = this.TREASURE_CATEGORIES[category];
+      if (!categoryData) return false;
+      
+      // If no rarity constraints, accept all rarities
+      if (!categoryData.minRarity && !categoryData.maxRarity) return true;
+      
+      const rarityOrder = ['common', 'uncommon', 'rare', 'veryRare', 'legendary'];
+      const rarityIndex = rarityOrder.indexOf(rarity);
+      
+      // Check minimum rarity constraint
+      if (categoryData.minRarity) {
+        const minRarityIndex = rarityOrder.indexOf(categoryData.minRarity);
+        if (rarityIndex < minRarityIndex) return false;
+      }
+      
+      // Check maximum rarity constraint
+      if (categoryData.maxRarity) {
+        const maxRarityIndex = rarityOrder.indexOf(categoryData.maxRarity);
+        if (rarityIndex > maxRarityIndex) return false;
+      }
+      
+      return true;
+    });
+  }
+
+  /**
    * Filter a list of items by treasure categories
    * @param {Array} items - Array of items to filter
    * @param {Array} categories - Array of treasure category values
