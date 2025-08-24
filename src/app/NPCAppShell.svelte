@@ -21,8 +21,8 @@
   const application = getContext('#external').application; // the application object
 
   //- register hooks
-  console.log('[NPCAPP] Registering gas.close hook (once)');
-  Hooks.once("gas.close", gasClose);
+  console.log('[NPCAPP] Registering gas.close hook');
+  Hooks.on("gas.close", gasClose);
 
   const setActorItems = async  () => {
     app.updateSource($documentStore, {items: [{name: 'test', type: 'feat'}]});
@@ -79,6 +79,9 @@
     if (application && typeof application.setClosingFromGasHook === 'function') {
       application.setClosingFromGasHook(true);
       console.log('[NPCAPP] setClosingFromGasHook called on application instance');
+      
+      // Close the application
+      application.close();
     } else {
       console.warn('[NPCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
       // Fallback: try to close directly if possible
@@ -86,7 +89,7 @@
         application.close();
       }
     }
-    application.close();
+    
     console.log('[NPCAPP] ====== gasClose COMPLETE ======');
   }
 

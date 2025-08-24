@@ -301,7 +301,7 @@
       
       // Close the application after a short delay
       setTimeout(() => {
-        window.GAS.log.d('[FOOTER] Closing NPC creation application');
+        console.log('[FOOTER] Closing NPC creation application');
         Hooks.call("gas.close");
       }, 1500);
       
