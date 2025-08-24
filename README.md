@@ -29,7 +29,7 @@ For detailed setup and usage instructions, please refer to the full documentatio
 - Supports standard dnd5e (v3+) character sheet
 - Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets)
 - Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system.
-- Also backports support for Subclass selection to dnd5e system v4.x (natively supported in v5.x)
+- Also support native Subclass selection v4.x+
 
 ## Basic Usage Overview (Player)
 
