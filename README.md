@@ -17,7 +17,8 @@ For detailed setup and usage instructions, please refer to the full documentatio
 
 ## Key Features (dnd5e)
 
-- Supports both dnd5e v3.x and v4.x
+- Supports dnd5e versions: v3.x, v4.x and v5.x
+- Supports Foundry versions: 12, 13
 - The DM / GM can set which compendiums are available to Actor Studio (See [GM Configuration](./docs/gm/configuration.md))
 - Set your Ability Scores using either: point buy, manual entry, standard array or dice rolls (See [Player Guide](./docs/player/ability_scores.md))
 - Preview and select your race, background, class and subclass (See [Player Guide](./docs/player/README.md))
@@ -28,7 +29,7 @@ For detailed setup and usage instructions, please refer to the full documentatio
 - Supports standard dnd5e (v3+) character sheet
 - Supports [Tidy5eSheet](https://github.com/kgar/foundry-vtt-tidy-5e-sheets)
 - Supports Subclass Advancements and selection in dnd5e (system v3.x) where this wasn't something available in the 3.x system.
-- Also supports Subclass selection for dnd5e system v4.x
+- Also backports support for Subclass selection to dnd5e system v4.x (natively supported in v5.x)
 
 ## Basic Usage Overview (Player)
 
@@ -36,8 +37,10 @@ For detailed setup and usage instructions, please refer to the full documentatio
 2.  **Tabs:** Work through the tabs (Ability Scores, Race, Background, Class/Subclass) making selections. You can go back and change choices.
 3.  **Create:** Click "Create Character".
 4.  **Advancements:** Follow the pop-up prompts to make choices (skills, languages, etc.).
-5.  **Equipment:** Select starting equipment/gold if prompted.
-6.  **Level Up:** When you gain a level, use the "Level Up" button on your character sheet.
+5.  **Equipment Selection:** Select starting equipment/gold if prompted.
+6.  **Equipment Shop** Buy equipment using your starting gold
+7.  **Spell Selection** Select spells for your level
+8.  **Level Up:** When you gain a level, use the "Level Up" button on your character sheet.
 
 *(See the [Player Guide](./docs/player/README.md) for full details)*
 
