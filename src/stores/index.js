@@ -40,8 +40,8 @@ const initialTabs = [
 const npcTabs = [
   { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
   { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
-  { label: 'Create NPC', id: 'npc-create', component: 'NpcCreate' },
-  { label: 'Equipment Shop', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
+  { label: 'Stats', id: 'npc-create', component: 'NpcCreate' },
+  { label: 'Equipment', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
   { label: 'Magic Items', id: 'magic-items', component: 'MagicItems' },
   { label: 'Biography', id: 'npc-biography', component: 'NpcBiography' },
 ];

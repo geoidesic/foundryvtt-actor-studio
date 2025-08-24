@@ -1,5 +1,5 @@
 <script>
-  import { getContext, onMount } from "svelte";
+  import { getContext, onMount, onDestroy } from "svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import { updateSource, enrichHTML } from "~/src/helpers/Utility";
   import { selectedNpcBase } from "~/src/stores/index";
@@ -14,7 +14,6 @@
   let editingFlaw = false;
   let editingAlignment = false;
   let editingType = false;
-  let editingCR = false;
   let editingXP = false;
   let editingTreasure = false;
   let editingHabitat = false;
@@ -25,10 +24,75 @@
   let localFlaw = "";
   let localAlignment = "";
   let localType = "";
-  let localCR = 0;
   let localXP = 0;
   let localTreasure = new Set();
   let localHabitat = [];
+  
+  // Click outside detection using refs
+  let idealContainer, bondContainer, flawContainer, alignmentContainer, typeContainer, crContainer, treasureContainer, habitatContainer;
+  
+  function isClickOutsideContainer(event, containerElement) {
+    try {
+      const targetElement = event.target;
+      
+      // Check if the target element is the container itself
+      if (targetElement === containerElement) {
+        return false;
+      }
+      
+      // Guard: if containerElement is null, treat as click outside
+      if (!containerElement) {
+        return true;
+      }
+      
+      // Guard: if targetElement is null, treat as click outside
+      if (!targetElement) {
+        return true;
+      }
+      
+      // Check if the target element is inside the container
+      return !containerElement.contains(targetElement);
+    } catch (error) {
+      console.error('[NpcBiography] Error in isClickOutsideContainer:', error);
+      return true; // Treat as click outside on error
+    }
+  }
+  
+  function handleClickOutside(event) {
+    try {
+      // Check each editable field using refs
+      if (editingIdeal && idealContainer && isClickOutsideContainer(event, idealContainer)) {
+        editingIdeal = false;
+      }
+      
+      if (editingBond && bondContainer && isClickOutsideContainer(event, bondContainer)) {
+        editingBond = false;
+      }
+      
+      if (editingFlaw && flawContainer && isClickOutsideContainer(event, flawContainer)) {
+        editingFlaw = false;
+      }
+      
+      if (editingAlignment && alignmentContainer && isClickOutsideContainer(event, alignmentContainer)) {
+        editingAlignment = false;
+      }
+      
+      if (editingType && typeContainer && isClickOutsideContainer(event, typeContainer)) {
+        editingType = false;
+      }
+      
+      
+      if (editingTreasure && treasureContainer && isClickOutsideContainer(event, treasureContainer)) {
+        editingTreasure = false;
+      }
+      
+      if (editingHabitat && habitatContainer && isClickOutsideContainer(event, habitatContainer)) {
+        editingHabitat = false;
+      }
+    } catch (error) {
+      console.error('[NpcBiography] Error in handleClickOutside:', error);
+    }
+  }
 
   // Get treasure categories from the mapper
   const treasureCategories = TreasureCategoryMapper.getTreasureCategories();
@@ -54,7 +118,6 @@
     localFlaw = $actor.system?.details?.flaw || "";
     localAlignment = $actor.system?.details?.alignment || "";
     localType = $actor.system?.details?.type?.value || "";
-    localCR = $actor.system?.details?.cr ?? 0;
     localXP = $actor.system?.details?.xp?.value ?? 0;
     localTreasure = new Set($actor.system?.details?.treasure?.value || []);
     localHabitat = $actor.system?.details?.habitat?.value || [];
@@ -102,12 +165,6 @@
     }
   }
 
-  async function updateCR() {
-    if ($actor) {
-      await updateSource($actor, { 'system.details.cr': localCR });
-      editingCR = false;
-    }
-  }
 
   async function updateTreasure() {
     if ($actor) {
@@ -159,6 +216,15 @@
   }
 
   // Biography content is handled automatically by ProseMirror
+  
+  // Set up click outside detection
+  onMount(() => {
+    window.addEventListener("click", handleClickOutside);
+  });
+  
+  onDestroy(() => {
+    window.removeEventListener("click", handleClickOutside);
+  });
 </script>
 
 <template lang="pug">
@@ -168,7 +234,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
       .detail-row
         label Ideal
         +if("editingIdeal")
-          .edit-controls
+          .edit-controls(bind:this="{idealContainer}")
             input(
               type="text"
               bind:value="{localIdeal}"
@@ -176,14 +242,14 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingIdeal")
           .display-value(
-            on:click!="{() => editingIdeal = true}"
+            on:click|stopPropagation!="{() => editingIdeal = true}"
             class!="{!localIdeal ? 'empty' : ''}"
           ) {localIdeal || 'Click to add ideal'}
 
       .detail-row
         label Bond
         +if("editingBond")
-          .edit-controls
+          .edit-controls(bind:this="{bondContainer}")
             input(
               type="text"
               bind:value="{localBond}"
@@ -191,14 +257,14 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingBond")
           .display-value(
-            on:click!="{() => editingBond = true}"
+            on:click|stopPropagation!="{() => editingBond = true}"
             class!="{!localBond ? 'empty' : ''}"
           ) {localBond || 'Click to add bond'}
 
       .detail-row
         label Flaw
         +if("editingFlaw")
-          .edit-controls
+          .edit-controls(bind:this="{flawContainer}")
             input(
               type="text"
               bind:value="{localFlaw}"
@@ -206,14 +272,14 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingFlaw")
           .display-value(
-            on:click!="{() => editingFlaw = true}"
+            on:click|stopPropagation!="{() => editingFlaw = true}"
             class!="{!localFlaw ? 'empty' : ''}"
           ) {localFlaw || 'Click to add flaw'}
 
       .detail-row
         label Alignment
         +if("editingAlignment")
-          .edit-controls
+          .edit-controls(bind:this="{alignmentContainer}")
             select(
               bind:value="{localAlignment}"
               on:change!="{updateAlignment}"
@@ -230,14 +296,14 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
               option(value="Chaotic Evil") Chaotic Evil
         +if("!editingAlignment")
           .display-value(
-            on:click!="{() => editingAlignment = true}"
+            on:click|stopPropagation!="{() => editingAlignment = true}"
             class!="{!localAlignment ? 'empty' : ''}"
           ) {localAlignment || 'Click to set alignment'}
 
       .detail-row
         label Type
         +if("editingType")
-          .edit-controls
+          .edit-controls(bind:this="{typeContainer}")
             select(
               bind:value="{localType}"
               on:change!="{updateType}"
@@ -246,33 +312,16 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
                 option(value="{type}") {type.charAt(0).toUpperCase() + type.slice(1)}
         +if("!editingType")
           .display-value(
-            on:click!="{() => editingType = true}"
+            on:click|stopPropagation!="{() => editingType = true}"
             class!="{!localType ? 'empty' : ''}"
           ) {localType ? localType.charAt(0).toUpperCase() + localType.slice(1) : 'Click to set type'}
 
-      .detail-row
-        label Challenge Rating ({localXP} XP)
-        +if("editingCR")
-          .edit-controls
-            input(
-              type="number"
-              min="0"
-              max="30"
-              step="0.5"
-              bind:value="{localCR}"
-              on:keydown!="{e => e.key === 'Enter' && updateCR()}"
-            )
-        +if("!editingCR")
-          .display-value(
-            on:click!="{() => editingCR = true}"
-            class!="{localCR == null ? 'empty' : ''}"
-          ) {localCR ?? 'Click to set CR'}
-
+      
 
       .detail-row
         label Treasure Categories
         +if("editingTreasure")
-          .edit-controls
+          .edit-controls(bind:this="{treasureContainer}")
             .treasure-checkboxes
               +each("treasureCategories as category")
                 label.checkbox-label
@@ -285,7 +334,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             button.save-btn(on:click!="{updateTreasure}") Save
         +if("!editingTreasure")
           .display-value(
-            on:click!="{() => editingTreasure = true}"
+            on:click|stopPropagation!="{() => editingTreasure = true}"
             class!="{localTreasure.size === 0 ? 'empty' : ''}"
           )
             +if("localTreasure.size > 0")
@@ -301,7 +350,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
       .detail-row
         label Habitat
         +if("editingHabitat")
-          .edit-controls
+          .edit-controls(bind:this="{habitatContainer}")
             .habitat-controls
               +each("localHabitat as habitat, index")
                 .habitat-entry
@@ -326,7 +375,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             button.save-btn(on:click!="{updateHabitat}") Save
         +if("!editingHabitat")
           .display-value(
-            on:click!="{() => editingHabitat = true}"
+            on:click|stopPropagation!="{() => editingHabitat = true}"
             class!="{localHabitat.length === 0 ? 'empty' : ''}"
           )
             +if("localHabitat.length > 0")
