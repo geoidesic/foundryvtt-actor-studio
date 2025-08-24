@@ -42,7 +42,7 @@ const npcTabs = [
   { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
   { label: 'Stats', id: 'npc-create', component: 'NpcCreate' },
   { label: 'Equipment', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
-  { label: 'Magic Items', id: 'magic-items', component: 'MagicItems' },
+  { label: 'Treasure', id: 'magic-items', component: 'MagicItems' },
   { label: 'Biography', id: 'npc-biography', component: 'NpcBiography' },
 ];
 
@@ -263,7 +263,7 @@ export function resetStores() {
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
   clearNpcSelection(); //- void
-  storeDefinitions.npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 }); //- reset NPC currency to default 10 GP
+  // Don't reset NPC currency here - let it be properly rolled based on NPC CR
   
   // Clear magic items store
   try {

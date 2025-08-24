@@ -234,7 +234,6 @@
         label
           min-width: 30px
           font-weight: bold
-          color: var(--color-text-dark-secondary)
 
         .coinage-input
           width: 60px
@@ -336,12 +335,10 @@
         h4
           margin: 0 0 0.25rem 0
           font-size: 1rem
-          color: var(--color-text-dark-primary)
 
         .coinage-description
           margin: 0
           font-size: 0.8rem
-          color: var(--color-text-dark-secondary)
           font-style: italic
 
       .coinage-actions

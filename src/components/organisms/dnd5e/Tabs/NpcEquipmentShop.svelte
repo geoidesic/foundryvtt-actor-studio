@@ -1,11 +1,10 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { writable, derived } from 'svelte/store';
-  import { activeTab, readOnlyTabs, npcCurrency, selectedNpcBase } from '~/src/stores/index';
-  import { shopItems, shopCart, loadShopItems, updateCart } from '../../../../stores/equipmentShop';
+  import { activeTab, readOnlyTabs, selectedNpcBase } from '~/src/stores/index';
+  import { shopItems, shopCart, loadShopItems, updateCart } from '~/src/stores/equipmentShop';
   import StandardTabLayout from '~/src/components/organisms/StandardTabLayout.svelte';
-  import NPCCoinageManager from '~/src/components/molecules/dnd5e/NPC/NPCCoinageManager.svelte';
-  import { localize as t, enrichHTML } from "~/src/helpers/Utility";
+  import { localize as t } from '~/src/helpers/Utility';
   import { get } from 'svelte/store';
 
   // Get ui for notifications
@@ -19,19 +18,8 @@
   let keywordFilter = '';
   let expandedCategories = {};
   let loading = true;
-  let editingCoinage = false;
-  
-  // NPC coinage management
-  let npcCoinage = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
 
   $: isDisabled = $readOnlyTabs.includes('npc-equipment-shop');
-
-  // Sync local coinage with global store
-  $: {
-    if ($npcCurrency) {
-      npcCoinage = { ...$npcCurrency };
-    }
-  }
 
   // Update cart items whenever shopCart changes
   $: {
@@ -123,21 +111,6 @@
     }
   }
 
-  // Handle coinage updates
-  function handleCoinageUpdate(event) {
-    // Extract the coinage data from the CustomEvent detail
-    const newCoinage = event.detail;
-    console.log('Parent received coinage update:', newCoinage);
-    npcCurrency.set(newCoinage);
-    // Also update local state so the child component gets the new values
-    npcCoinage = { ...newCoinage };
-    console.log('Updated local npcCoinage:', npcCoinage);
-  }
-
-  function handleCoinageToggle() {
-    editingCoinage = !editingCoinage;
-  }
-
   // Filter and group items by category, applying keyword filter first
   $: filteredItems = $shopItems.filter(item => 
     item.name.toLowerCase().includes(keywordFilter.toLowerCase())
@@ -165,50 +138,8 @@
   let shopContainer;
   let cleanup;
 
-  /**
-   * Auto-roll gold for NPCs based on their CR
-   */
-  async function autoRollGold() {
-    try {
-      // Get the NPC's CR for gold calculation
-      const npcCR = $selectedNpcBase?.system?.details?.cr?.value ?? 0;
-      
-      // Calculate gold based on CR (DMG table)
-      let goldAmount = 0;
-      if (npcCR <= 4) {
-        goldAmount = new Roll("6d6 * 100").evaluate().total; // 600-3600 gp
-      } else if (npcCR <= 10) {
-        goldAmount = new Roll("3d6 * 1000").evaluate().total; // 3000-18000 gp
-      } else if (npcCR <= 16) {
-        goldAmount = new Roll("4d6 * 1000").evaluate().total; // 4000-24000 gp
-      } else {
-        goldAmount = new Roll("8d6 * 1000").evaluate().total; // 8000-48000 gp
-      }
-      
-      // Set the rolled gold amount
-      const newCurrency = { pp: 0, gp: goldAmount, ep: 0, sp: 0, cp: 0 };
-      npcCurrency.set(newCurrency);
-      
-      // Log the roll
-      window.GAS?.log?.d?.('[NPC Equipment Shop] Auto-rolled gold:', { npcCR, goldAmount, newCurrency });
-      
-    } catch (error) {
-      console.error('Error auto-rolling gold:', error);
-      // Fallback to default 10 GP if roll fails
-      npcCurrency.set({ pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 });
-    }
-  }
-
   onMount(async () => {
     loading = true;
-    
-    // Auto-roll gold if not already set
-    if (!$npcCurrency || Object.values($npcCurrency).every(v => v === 0)) {
-      await autoRollGold();
-    }
-    
-    // Initialize local coinage from global store
-    npcCoinage = { ...$npcCurrency };
     
     // Load shop items
     await loadShopItems();
@@ -246,16 +177,6 @@
     {#if isDisabled}
       <div class="info-message">{t('Shop.ShopReadOnly')}</div>
     {/if}
-    
-    <!-- NPC Coinage Management -->
-    <NPCCoinageManager 
-      coinage={npcCoinage}
-      isEditing={editingCoinage}
-      disabled={isDisabled}
-      selectedNpc={$selectedNpcBase}
-      on:update={handleCoinageUpdate}
-      on:toggleEdit={handleCoinageToggle}
-    />
 
     <h3>Cart Items</h3>
     <div class="cart-items">

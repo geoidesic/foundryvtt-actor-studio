@@ -5,6 +5,7 @@
   import { getContext, onMount, tick } from "svelte";
   import { writable } from "svelte/store";
   import { activeTab, npcTabs, selectedNpcBase, readOnlyTabs } from "~/src/stores/index";
+  import { autoRollGold } from "~/src/stores/npc";
   import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
@@ -198,6 +199,11 @@
     
     // Copy NPC items/features to the in-memory actor
     await getAndSetActorItems($selectedNpcBase, $actor, selected.name);
+    
+    // Auto-roll gold based on NPC CR - do this after NPC is fully set
+    console.log('[NpcSelect] About to roll gold for NPC:', selected.name);
+    const rolledCurrency = await autoRollGold($selectedNpcBase);
+    console.log('[NpcSelect] Gold rolled successfully:', rolledCurrency);
     
     richHTML = await illuminatedDescription(html, $selectedNpc);
     Hooks.call('gas.richhtmlReady', richHTML);

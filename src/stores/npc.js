@@ -13,7 +13,13 @@ export const npcSelectedBaseUuid = writable(null);
 export const npcFeatures = writable([]); // Features selected for the NPC
 export const npcStats = writable({}); // Custom stats modifications
 export const npcEquipment = writable([]); // Equipment selections
-export const npcCurrency = writable({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 }); // NPC currency
+// Create the NPC currency store
+export const npcCurrency = writable({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
+
+// Debug: Log whenever the store changes
+npcCurrency.subscribe(value => {
+  console.log('[NPC Store] npcCurrency store updated:', value);
+});
 export const npcName = writable(''); // Custom NPC name
 
 // Magic Items tab state
@@ -143,7 +149,7 @@ export function resetNpcStateOnBaseChange() {
   npcFeatures.set([]);
   npcStats.set({});
   npcEquipment.set([]);
-  npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
+  // Don't reset currency here - let it be properly rolled based on NPC CR
   npcName.set('');
   
   // Reset magic items state when base NPC changes
@@ -222,6 +228,118 @@ export function updateNpcName(name) {
   npcName.set(name);
 }
 
+/**
+ * Auto-roll gold for NPCs based on their CR
+ */
+export async function autoRollGold(selectedNpcBase) {
+  try {
+    console.log('[NPC Store] Starting autoRollGold with:', selectedNpcBase);
+    
+    // Get the NPC's CR for gold calculation - the CR is stored at system.details.cr
+    const npcCR = selectedNpcBase?.system?.details?.cr ?? 0;
+    console.log('[NPC Store] NPC CR:', npcCR);
+    
+    // Calculate gold based on CR using Individual Treasure table (DMG)
+    let newCurrency = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+    
+    if (npcCR === 0) {
+      // CR 0: Individual Treasure Challenge 0-4
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 30) {
+        newCurrency.cp = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                        Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                        Math.floor(Math.random() * 6 + 1); // 5d6 CP
+      } else if (d100 <= 60) {
+        newCurrency.sp = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                        Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1); // 4d6 SP
+      } else if (d100 <= 70) {
+        newCurrency.ep = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                        Math.floor(Math.random() * 6 + 1); // 3d6 EP
+      } else if (d100 <= 95) {
+        newCurrency.gp = Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                        Math.floor(Math.random() * 6 + 1); // 3d6 GP
+      } else {
+        newCurrency.pp = Math.floor(Math.random() * 6 + 1); // 1d6 PP
+      }
+    } else if (npcCR <= 10) {
+      // CR 5-10: Individual Treasure Challenge 5-10
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 30) {
+        newCurrency.cp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 CP
+        newCurrency.ep = Math.floor(Math.random() * 6 + 1) * 10; // 1d6 × 10 EP
+      } else if (d100 <= 60) {
+        newCurrency.sp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 6d6 × 10 SP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+      } else if (d100 <= 70) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+      } else if (d100 <= 95) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 4d6 × 10 GP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)); // 3d6 PP
+      }
+    } else if (npcCR <= 16) {
+      // CR 11-16: Individual Treasure Challenge 11-16
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 20) {
+        newCurrency.sp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 4d6 × 100 SP
+        newCurrency.gp = Math.floor(Math.random() * 6 + 1) * 100; // 1d6 × 100 GP
+      } else if (d100 <= 35) {
+        newCurrency.ep = Math.floor(Math.random() * 6 + 1) * 100; // 1d6 × 100 EP
+        newCurrency.gp = Math.floor(Math.random() * 6 + 1) * 100; // 1d6 × 100 GP
+      } else if (d100 <= 75) {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 2d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1)) * 10; // 3d6 × 10 PP
+      } else {
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 2d6 × 100 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 10; // 2d6 × 10 PP
+      }
+    } else {
+      // CR 17+: Individual Treasure Challenge 17+
+      const d100 = Math.floor(Math.random() * 100) + 1;
+      if (d100 <= 15) {
+        newCurrency.ep = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 1000; // 2d6 × 1,000 EP
+        newCurrency.gp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1) + 
+                         Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 8d6 × 100 GP
+      } else if (d100 <= 55) {
+        newCurrency.gp = Math.floor(Math.random() * 6 + 1) * 1000; // 1d6 × 1,000 GP
+        newCurrency.pp = Math.floor(Math.random() * 6 + 1) * 100; // 1d6 × 100 PP
+      } else {
+        newCurrency.gp = Math.floor(Math.random() * 6 + 1) * 1000; // 1d6 × 1,000 GP
+        newCurrency.pp = (Math.floor(Math.random() * 6 + 1) + Math.floor(Math.random() * 6 + 1)) * 100; // 2d6 × 100 PP
+      }
+    }
+    
+    console.log('[NPC Store] Rolled currency:', newCurrency);
+    
+    // Set the rolled currency
+    npcCurrency.set(newCurrency);
+    
+    // Log the roll
+    window.GAS?.log?.d?.('[NPC Store] Auto-rolled currency:', { npcCR, newCurrency });
+    console.log('[NPC Store] Currency store updated, current value:', get(npcCurrency));
+    
+    return newCurrency;
+  } catch (error) {
+    console.error('Error auto-rolling gold:', error);
+    // Fallback to default 10 GP if roll fails
+    const fallbackCurrency = { pp: 0, gp: 10, ep: 0, sp: 0, cp: 0 };
+    npcCurrency.set(fallbackCurrency);
+    return fallbackCurrency;
+  }
+}
+
 export function clearNpcSelection() {
   try {
     localStorage.removeItem(NPC_STATE_KEY);
@@ -231,7 +349,7 @@ export function clearNpcSelection() {
   npcFeatures.set([]);
   npcStats.set({});
   npcEquipment.set([]);
-  npcCurrency.set({ pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 });
+  // Don't reset currency here - let it be properly rolled based on NPC CR
   npcName.set('');
   magicItemsState.set({
     generationType: 'individual',

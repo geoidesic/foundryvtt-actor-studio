@@ -147,9 +147,10 @@
   let actorName = ""; // For NPC flow, default blank; PC flow still binds via value for name input
   
   // NPC flow helpers
-  $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
+  $: isNpcFlow = ['npc-select', 'npc-features', 'npc-create', 'npc-equipment-shop', 'magic-items', 'npc-biography'].includes($activeTab);
   $: npcProgress = $npcSelectProgress;
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
+  $: shouldShowNpcFooter = isNpcFlow && $npcSelectProgress === 100;
   async function goToNpcFeatures() {
     // Build in-memory NPC actor from selected base and embed its feature items
     try {
@@ -237,19 +238,12 @@
       // Show success notification
       ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
       
-      // Use the NPC state machine to handle completion instead of closing the app
-      const npcWorkflowFSM = getNPCWorkflowFSM();
-      if (npcWorkflowFSM) {
-        // Pass the context data when calling the event
-        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.NPC_CREATED, { 
-          ...npcWorkflowFSMContext, 
-          createdActor: createdActor 
-        });
-      }
+      // Close the application after a short delay
+      setTimeout(() => {
+        window.GAS.log.d('[FOOTER] Closing NPC creation application');
+        Hooks.call("gas.close");
+      }, 1500);
       
-      // Don't close the application manually - let the state machine handle the workflow
-      // The state machine will trigger gas.close after a delay, which provides programmatic control
-      // This prevents Tab 3 from closing after character creation while maintaining the ability to close programmatically
     } catch (error) {
       window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
       ui.notifications?.error(`Failed to create NPC: ${error.message}`);
@@ -259,19 +253,42 @@
   //- Advance from Features to Creation tab
   const goToNpcCreation = async () => {
     try {
-      // Use the NPC state machine to handle progression to creation tab
-      const npcWorkflowFSM = getNPCWorkflowFSM();
-      if (npcWorkflowFSM) {
-        // Pass the context data when calling the event
-        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.FEATURES_CONFIGURED, { 
-          ...npcWorkflowFSMContext 
-        });
-      }
+      // Simply set the active tab to npc-create
+      activeTab.set('npc-create');
     } catch (err) {
       window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC creation tab', err);
     }
   };
 
+  //- Advance from Creation to Equipment tab
+  const goToNpcEquipment = async () => {
+    try {
+      // Simply set the active tab to npc-equipment-shop
+      activeTab.set('npc-equipment-shop');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC equipment tab', err);
+    }
+  };
+
+  //- Advance from Equipment to Magic Items tab
+  const goToMagicItems = async () => {
+    try {
+      // Simply set the active tab to magic-items
+      activeTab.set('magic-items');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC magic items tab', err);
+    }
+  };
+
+  //- Advance from Magic Items to Biography tab
+  const goToBiography = async () => {
+    try {
+      // Simply set the active tab to npc-biography
+      activeTab.set('npc-biography');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC biography tab', err);
+    }
+  };
 
 
   const clickUpdateLevelUpHandler = async () => {
@@ -512,7 +529,7 @@
 
 <template lang="pug">
 .footer-container
-  +if("FOOTER_TABS.includes($activeTab) || isNpcFlow")
+  +if("FOOTER_TABS.includes($activeTab) || shouldShowNpcFooter")
     .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
@@ -660,7 +677,7 @@
                           i.right.ml-md(class="fas fa-chevron-right")
 
         // NPC flow footer rendering
-        +if("$activeTab === 'npc-select'")
+        +if("$activeTab === 'npc-select' && shouldShowNpcFooter")
           .progress-container
             .flexrow.gap-10
               .flex2
@@ -680,10 +697,10 @@
                       role="button"
                       on:mousedown="{goToNpcFeatures}"
                     )
-                      span {t('Footer.Continue')}
+                      span {t('Footer.Next')}
                       i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-features'")
+        +if("$activeTab === 'npc-features' && shouldShowNpcFooter")
           .progress-container
             .button-container
               button.mt-xs.wide(
@@ -694,7 +711,40 @@
                 span {t('Footer.Next')}
                 i.right.ml-md(class="fas fa-chevron-right")
 
-        +if("$activeTab === 'npc-create'")
+        +if("$activeTab === 'npc-create' && shouldShowNpcFooter")
+          .progress-container
+            .button-container
+              button.mt-xs.wide(
+                type="button"
+                role="button"
+                on:mousedown="{goToNpcEquipment}"
+              )
+                span {t('Footer.Next')}
+                i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-equipment-shop' && shouldShowNpcFooter")
+          .progress-container
+            .button-container
+              button.mt-xs.wide(
+                type="button"
+                role="button"
+                on:mousedown="{goToMagicItems}"
+              )
+                span {t('Footer.Next')}
+                i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'magic-items' && shouldShowNpcFooter")
+          .progress-container
+            .button-container
+              button.mt-xs.wide(
+                type="button"
+                role="button"
+                on:mousedown="{goToBiography}"
+              )
+                span {t('Footer.Next')}
+                i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-biography' && shouldShowNpcFooter")
           .progress-container
             .button-container
               button.mt-xs.wide(

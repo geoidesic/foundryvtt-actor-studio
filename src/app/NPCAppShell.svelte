@@ -4,6 +4,7 @@
   import { setContext, getContext, onMount, onDestroy, tick } from "svelte";
   import { derived } from 'svelte/store';
   import { activeTab, npcTabs, resetStores, selectedNpcBase, } from "~/src/stores/index";
+  import { npcSelectProgress } from "~/src/stores/npc";
   import { MODULE_ID } from "~/src/helpers/constants";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
@@ -31,8 +32,11 @@
     '--tjs-app-overflow': 'visible',
   };
 
-  $: filteredTabs = $npcTabs;
-  $activeTab = $npcTabs[0].id
+  $: filteredTabs = $npcSelectProgress === 100 ? $npcTabs : [$npcTabs[0]];
+  $: if ($npcSelectProgress === 100 && $activeTab === 'npc-select') {
+    // When progress reaches 100%, automatically switch to the second tab
+    activeTab.set('npc-features');
+  }
 
   onMount(() => {
     console.log('NPCAcppShell documentStore', $documentStore);

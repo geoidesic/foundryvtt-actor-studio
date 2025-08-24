@@ -3,8 +3,10 @@
   import { getPacksFromSettings } from "~/src/helpers/Utility.js";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import MagicItemDisplay from "~/src/components/molecules/dnd5e/MagicItemDisplay.svelte";
+  import NPCCurrencyDisplay from "~/src/components/molecules/dnd5e/NPC/NPCCurrencyDisplay.svelte";
   import { localize as t } from "~/src/helpers/Utility";
-  import { selectedNpcBase, magicItemsState } from "~/src/stores/index";
+  import { selectedNpcBase, magicItemsState, npcCurrency } from "~/src/stores/index";
+  import { autoRollGold } from "~/src/stores/npc";
 
   const actor = getContext("#doc");
 
@@ -19,6 +21,12 @@
     $magicItemsState.manualNpcName = $selectedNpcBase.name || "";
     $magicItemsState.manualNpcCR = $selectedNpcBase.system?.details?.cr ?? 0;
     $magicItemsState.manualNpcType = $selectedNpcBase.system?.details?.type?.value || "";
+    
+    // Auto-roll gold when NPC is selected
+    if ($selectedNpcBase && (!$npcCurrency || Object.values($npcCurrency).every(v => v === 0))) {
+      console.log('[Treasure] Auto-rolling gold for selected NPC:', $selectedNpcBase.name);
+      autoRollGold($selectedNpcBase);
+    }
   }
 
   onMount(async () => {
@@ -192,7 +200,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-items")
+StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-items")
   div(slot="left")
     .generation-section
       h3 Generation Type
@@ -248,9 +256,12 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
       //- Individual Monster Generation Controls
       +if("$magicItemsState.generationType === 'individual'")
         .individual-controls
-          h4 Individual Monster Generation
-          p.description Generate magic items for a specific monster based on their Challenge Rating
+          h4 Individual Treasure Generation
+          p.description Generate treasure based on Challenge Rating
           
+          // Currency Display Section
+          NPCCurrencyDisplay(showRollButton="{true}")
+
           .npc-info
             +if("$selectedNpcBase")
               .npc-details
@@ -269,7 +280,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
                     i.fas.fa-spinner.fa-spin
                     +else()
                       i.fas.fa-magic
-                  span Generate for {$magicItemsState.manualNpcName}
+                  span Generate Magic Items
               +else()
                 .no-npc-selected
                   p No NPC selected. Select an NPC from the NPC Select tab to generate individual magic items.
@@ -312,13 +323,6 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
                               i.fas.fa-magic
                           span Generate for {$magicItemsState.manualNpcName}
 
-      //- Generation Description
-      +if("$magicItemsState.generationType")
-        .generation-description
-          h4 What Will Be Generated
-          .description-content
-            span {getGenerationDescription()}
-
       //- Equipment Pack Status
       .equipment-packs-status
         h4 Equipment Sources
@@ -334,19 +338,19 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
               a(href="#" on:click!="{() => game.settings.open(MODULE_ID)}") Configure equipment sources
         
         //- Debug section
-        .debug-section
-          h4 Debug Info
-          .debug-info
-            +if("$magicItemsState.generationType === 'hoard'")
-              span Party Level: {$magicItemsState.partyLevel}
-            +if("$magicItemsState.generationType === 'individual'")
-              span NPC CR: {$magicItemsState.manualNpcCR ?? 'None'}
-            span Equipment Packs: {equipmentPacks.length}
-            span Selected NPC: {$selectedNpcBase ? $selectedNpcBase.name : 'None'}
-            span Generated Items: {$magicItemsState.generatedMagicItems.length}
-          button.test-btn(
-            on:click!="{() => console.log('Test button clicked, current state:', { generationType: $magicItemsState.generationType, partyLevel: $magicItemsState.partyLevel, npcCR: $magicItemsState.manualNpcCR, equipmentPacks: equipmentPacks.length, selectedNpc: $selectedNpcBase, generatedItems: $magicItemsState.generatedMagicItems.length })}"
-          ) Test State
+        //- .debug-section
+        //-   h4 Debug Info
+        //-   .debug-info
+        //-     +if("$magicItemsState.generationType === 'hoard'")
+        //-       span Party Level: {$magicItemsState.partyLevel}
+        //-     +if("$magicItemsState.generationType === 'individual'")
+        //-       span NPC CR: {$magicItemsState.manualNpcCR ?? 'None'}
+        //-     span Equipment Packs: {equipmentPacks.length}
+        //-     span Selected NPC: {$selectedNpcBase ? $selectedNpcBase.name : 'None'}
+        //-     span Generated Items: {$magicItemsState.generatedMagicItems.length}
+        //-   button.test-btn(
+        //-     on:click!="{() => console.log('Test button clicked, current state:', { generationType: $magicItemsState.generationType, partyLevel: $magicItemsState.partyLevel, npcCR: $magicItemsState.manualNpcCR, equipmentPacks: equipmentPacks.length, selectedNpc: $selectedNpcBase, generatedItems: $magicItemsState.generatedMagicItems.length })}"
+        //-   ) Test State
 
   div(slot="right")
     MagicItemDisplay(
@@ -356,6 +360,7 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
       on:regenerate="{handleRegenerate}"
       on:itemAdded!="{handleItemAdded}"
     )
+
 </template>
 
 <style lang="sass">
@@ -429,6 +434,12 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
             color: rgba(255, 255, 255, 0.6)
 
       .npc-info
+
+        margin: 1rem 0
+        padding: 1rem
+        background: rgba(0, 0, 0, 0.05)
+        border-radius: var(--border-radius)
+        border: 1px solid var(--color-border-light-tertiary)
         .npc-details
           margin-bottom: 1rem
           padding: 0.75rem
@@ -514,11 +525,11 @@ StandardTabLayout(title="Magic Item Generation" showTitle="true" tabName="magic-
               background: #f57c00
 
           &.generate-individual-btn
-            background: #9c27b0
+            background: var(--color-success, #28a745)
             color: white
 
             &:hover:not(:disabled)
-              background: #7b1fa2
+              background: var(--color-success-hover, #218838)
 
           i
             font-size: 1.1rem

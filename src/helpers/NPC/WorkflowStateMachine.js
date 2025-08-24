@@ -13,6 +13,8 @@ export const NPC_WORKFLOW_STATES = {
   CONFIGURING_FEATURES: 'configuring_features',
   CONFIGURING_STATS: 'configuring_stats',
   CONFIGURING_EQUIPMENT: 'configuring_equipment',
+  CONFIGURING_MAGIC_ITEMS: 'configuring_magic_items',
+  CONFIGURING_BIOGRAPHY: 'configuring_biography',
   CREATING_NPC: 'creating_npc',
   COMPLETED: 'completed',
   ERROR: 'error'
@@ -27,13 +29,17 @@ export const NPC_WORKFLOW_EVENTS = {
   FEATURES_CONFIGURED: 'features_configured',
   STATS_CONFIGURED: 'stats_configured',
   EQUIPMENT_CONFIGURED: 'equipment_configured',
+  MAGIC_ITEMS_CONFIGURED: 'magic_items_configured',
+  BIOGRAPHY_CONFIGURED: 'biography_configured',
   NPC_CREATED: 'npc_created',
   ERROR: 'error',
   RESET: 'reset',
   BACK_TO_SELECTION: 'back_to_selection',
   BACK_TO_FEATURES: 'back_to_features',
   BACK_TO_STATS: 'back_to_stats',
-  BACK_TO_EQUIPMENT: 'back_to_equipment'
+  BACK_TO_EQUIPMENT: 'back_to_equipment',
+  BACK_TO_MAGIC_ITEMS: 'back_to_magic_items',
+  BACK_TO_BIOGRAPHY: 'back_to_biography'
 };
 
 /**
@@ -55,8 +61,16 @@ export const npcWorkflowFSMContext = {
     // Show equipment tab after stats are configured
     return true;
   },
+  _shouldShowMagicItemsTab: function () {
+    // Show magic items tab after equipment is configured
+    return true;
+  },
+  _shouldShowBiographyTab: function () {
+    // Show biography tab after magic items are configured
+    return true;
+  },
   _shouldShowCreateTab: function () {
-    // Show create tab after equipment is configured
+    // Show create tab after biography is configured
     return true;
   }
 };
@@ -77,6 +91,7 @@ export function createNPCWorkflowStateMachine() {
     })
     .state('selecting_npc')
     .on('npc_selected').transitionTo('configuring_features')
+    .on('npc_created').transitionTo('completed')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
@@ -111,7 +126,7 @@ export function createNPCWorkflowStateMachine() {
       activeTab.set('npc-create');
     })
     .state('configuring_equipment')
-    .on('equipment_configured').transitionTo('creating_npc')
+    .on('equipment_configured').transitionTo('configuring_magic_items')
     .on('back_to_stats').transitionTo('configuring_stats')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
@@ -122,9 +137,34 @@ export function createNPCWorkflowStateMachine() {
       // Set the active tab to npc-equipment-shop
       activeTab.set('npc-equipment-shop');
     })
+    .state('configuring_magic_items')
+    .on('magic_items_configured').transitionTo('configuring_biography')
+    .on('back_to_equipment').transitionTo('configuring_equipment')
+    .on('error').transitionTo('error')
+    .on('reset').transitionTo('idle')
+    .onEnter((context) => {
+      if (npcWorkflowFSMContext.isProcessing) npcWorkflowFSMContext.isProcessing.set(false);
+      window.GAS.log.d('[NPC WORKFLOW] Entered CONFIGURING_MAGIC_ITEMS state');
+      
+      // Set the active tab to magic-items
+      activeTab.set('magic-items');
+    })
+    .state('configuring_biography')
+    .on('biography_configured').transitionTo('creating_npc')
+    .on('npc_created').transitionTo('completed')
+    .on('back_to_magic_items').transitionTo('configuring_magic_items')
+    .on('error').transitionTo('error')
+    .on('reset').transitionTo('idle')
+    .onEnter((context) => {
+      if (npcWorkflowFSMContext.isProcessing) npcWorkflowFSMContext.isProcessing.set(false);
+      window.GAS.log.d('[NPC WORKFLOW] Entered CONFIGURING_BIOGRAPHY state');
+      
+      // Set the active tab to npc-biography
+      activeTab.set('npc-biography');
+    })
     .state('creating_npc')
     .on('npc_created').transitionTo('completed')
-    .on('back_to_equipment').transitionTo('configuring_equipment')
+    .on('back_to_biography').transitionTo('configuring_biography')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
