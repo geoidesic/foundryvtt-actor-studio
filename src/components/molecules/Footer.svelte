@@ -282,13 +282,46 @@
       console.log('[FOOTER] In-memory actor name:', $actor?.name);
       console.log('[FOOTER] In-memory actor toObject():', $actor?.toObject());
       
+      // Prepare the actor data with correct prototype token name
+      const actorData = $actor.toObject();
+      
+      // Ensure the prototype token name is set correctly
+      if (actorData.prototypeToken) {
+        actorData.prototypeToken.name = actorData.name;
+        console.log('[FOOTER] Set prototypeToken.name to:', actorData.prototypeToken.name);
+      } else {
+        // Create prototypeToken if it doesn't exist
+        actorData.prototypeToken = {
+          name: actorData.name,
+          actorLink: false,
+          displayName: 20,
+          displayBars: 20,
+          bar1: { attribute: 'attributes.hp' },
+          bar2: { attribute: null },
+          disposition: -1,
+          alpha: 1,
+          height: 1,
+          width: 1,
+          lockRotation: true,
+          rotation: 0,
+          elevation: 0,
+          light: { alpha: 0.5, angle: 0, bright: 0, coloration: 1, dim: 0, elevation: 0, intensity: 1, saturation: 0, shadows: 0, color: null, attenuation: 0.5, luminosity: 0.5, contrast: 0.25, saturation: 0.1, darkness: { min: 0, max: 1 } },
+          detectionModes: [],
+          flags: {}
+        };
+        console.log('[FOOTER] Created prototypeToken with name:', actorData.prototypeToken.name);
+      }
+      
+      console.log('[FOOTER] Final actor data for creation:', actorData);
+      
       // Create the NPC actor in the game
-      console.log('[FOOTER] Calling Actor.create with:', $actor.toObject());
-      const createdActor = await Actor.create($actor.toObject());
+      console.log('[FOOTER] Calling Actor.create with:', actorData);
+      const createdActor = await Actor.create(actorData);
       
       console.log('[FOOTER] Actor created successfully:', createdActor);
       console.log('[FOOTER] Created actor name:', createdActor.name);
       console.log('[FOOTER] Created actor ID:', createdActor.id);
+      console.log('[FOOTER] Created actor prototypeToken name:', createdActor.prototypeToken?.name);
       
       // Set the actor in the game store
       actorInGame.set(createdActor);
