@@ -273,6 +273,27 @@
     $isActorCreated = true;
   };
 
+  // Function to ensure module flags are saved before actor creation
+  const ensureModuleFlagsSaved = async () => {
+    try {
+      // Check if the actor has any module flags that need to be saved
+      if ($actor && $actor.flags && $actor.flags[MODULE_ID]) {
+        console.log(`[${MODULE_ID}] Module flags found, ensuring they are saved:`, $actor.flags[MODULE_ID]);
+        
+        // Force a save of the current flags to ensure they are persisted
+        await $actor.updateSource({
+          [`flags.${MODULE_ID}`]: $actor.flags[MODULE_ID]
+        });
+        
+        console.log(`[${MODULE_ID}] Module flags saved successfully`);
+      } else {
+        console.log(`[${MODULE_ID}] No module flags found, nothing to save`);
+      }
+    } catch (error) {
+      console.error(`[${MODULE_ID}] Error saving module flags:`, error);
+    }
+  };
+
   //- Create NPC Actor
   const clickCreateNPCHandler = async () => {
     try {
@@ -282,8 +303,16 @@
       console.log('[FOOTER] In-memory actor name:', $actor?.name);
       console.log('[FOOTER] In-memory actor toObject():', $actor?.toObject());
       
+      // Ensure module flags are saved before creating the actor
+      await ensureModuleFlagsSaved();
+      
       // Prepare the actor data with correct prototype token name
       const actorData = $actor.toObject();
+      
+      // Debug: Check if module flags are present
+      console.log(`[${MODULE_ID}] Actor flags before toObject():`, $actor.flags);
+      console.log(`[${MODULE_ID}] Actor data flags after toObject():`, actorData.flags);
+      console.log(`[${MODULE_ID}] Module flags in actor data:`, actorData.flags?.[MODULE_ID]);
       
       // Ensure the prototype token name is set correctly
       if (actorData.prototypeToken) {

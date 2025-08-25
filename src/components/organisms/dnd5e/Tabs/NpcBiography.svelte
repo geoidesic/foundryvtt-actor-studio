@@ -5,6 +5,7 @@
   import { selectedNpcBase } from "~/src/stores/index";
   import { TreasureCategoryMapper } from "~/src/helpers/TreasureCategoryMapper";
   import ProseMirror from "~/src/components/molecules/ProseMirror.svelte";
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   const actor = getContext("#doc");
 
@@ -41,8 +42,12 @@
   
   // Load module flags from actor data
   const loadModuleFlags = () => {
-    if ($actor && $actor.flags && $actor.flags['foundryvtt-actor-studio']) {
-      const flags = $actor.flags['foundryvtt-actor-studio'];
+    console.log(`[foundryvtt-actor-studio] Loading module flags from actor:`, $actor);
+    console.log(`[foundryvtt-actor-studio] Actor flags:`, $actor?.flags);
+    console.log(`[foundryvtt-actor-studio] Module flags:`, $actor?.flags?.[MODULE_ID]);
+    
+    if ($actor && $actor.flags && $actor.flags[MODULE_ID]) {
+      const flags = $actor.flags[MODULE_ID];
       moduleFlags = {
         enableRandomGold: flags.enableRandomGold || false,
         enableMagicItemRoll: flags.enableMagicItemRoll || false,
@@ -50,12 +55,18 @@
         randomizeArt: flags.randomizeArt || false,
         enableBioVariance: flags.enableBioVariance || false
       };
+      console.log(`[foundryvtt-actor-studio] Loaded module flags:`, moduleFlags);
+    } else {
+      console.log(`[foundryvtt-actor-studio] No module flags found, using defaults:`, moduleFlags);
     }
   };
 
   // Save module flags to actor data
   const saveModuleFlags = async () => {
     if ($actor) {
+      console.log(`[foundryvtt-actor-studio] Saving module flags:`, moduleFlags);
+      console.log(`[foundryvtt-actor-studio] Actor before save:`, $actor.flags);
+      
       await updateSource($actor, {
         'flags.foundryvtt-actor-studio.enableRandomGold': moduleFlags.enableRandomGold,
         'flags.foundryvtt-actor-studio.enableMagicItemRoll': moduleFlags.enableMagicItemRoll,
@@ -63,6 +74,9 @@
         'flags.foundryvtt-actor-studio.randomizeArt': moduleFlags.randomizeArt,
         'flags.foundryvtt-actor-studio.enableBioVariance': moduleFlags.enableBioVariance
       });
+      
+      console.log(`[foundryvtt-actor-studio] Actor after save:`, $actor.flags);
+      console.log(`[foundryvtt-actor-studio] Module flags after save:`, $actor.flags?.[MODULE_ID]);
     }
   };
   
