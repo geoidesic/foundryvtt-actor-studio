@@ -11,6 +11,7 @@
   import { ucfirst, getItemsArray, updateSource } from "~/src/helpers/Utility";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
+  import CRAdjuster from "~/src/components/molecules/dnd5e/NPC/CRAdjuster.svelte";
 
   export let name;
   export let npc; 
@@ -23,6 +24,7 @@
   let editingType = false;
   let editingAlignment = false;
   let editingName = false;
+  let showCRAdjuster = false;
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
   
@@ -606,6 +608,15 @@
       }
     }
   }
+  
+  // Handle CR adjustment events from the CR adjuster
+  function handleCRAdjusted(event) {
+    console.log('CR adjusted in NPCStatBlock:', event.detail);
+    // Hide the CR adjuster after successful adjustment
+    showCRAdjuster = false;
+    // The CR adjuster will have already updated the actor
+    // We can add additional logic here if needed
+  }
 
   async function updateActorProficiencyBonus(value) {
     if ($actor) {
@@ -954,6 +965,12 @@
           onSave!="{val => updateActorCR(val)}"
           placeholder="1"
         )
+        +if("!readonly")
+          button.btn.btn-sm.cr-adjust-btn(
+            on:click!="{() => showCRAdjuster = !showCRAdjuster}"
+            title="Adjust CR and automatically update stats"
+          )
+            i.fas.fa-magic
         span  (
         EditableValue(
           value="{xpValue}"
@@ -963,6 +980,14 @@
           placeholder="200"
         )
         span  XP )
+    
+    +if("showCRAdjuster && !readonly")
+      .cr-adjuster-container
+        CRAdjuster(
+          actor="{$actor}"
+          readonly="{readonly}"
+          on:crAdjusted="{handleCRAdjusted}"
+        )
     .mt-xxs
       .label.inline Proficiency Bonus 
       .value +{pb}
@@ -1104,4 +1129,29 @@
 
 .mt-xxs
   margin-top: 0.25em
+
+.cr-adjust-btn
+  margin-left: 0.5rem
+  padding: 0.25rem 0.5rem
+  background: #007bff
+  color: white
+  border: none
+  border-radius: 3px
+  cursor: pointer
+  font-size: 0.8rem
+  transition: background-color 0.2s ease
+
+  &:hover
+    background: #0056b3
+
+  &:focus
+    outline: none
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+
+.cr-adjuster-container
+  margin: 1rem 0
+  padding: 1rem
+  border: 1px solid #ddd
+  border-radius: 4px
+  background: #f9f9f9
 </style>
