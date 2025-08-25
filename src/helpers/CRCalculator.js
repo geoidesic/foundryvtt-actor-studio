@@ -357,11 +357,17 @@ class CRCalculator {
         console.log(`🔍 Item ${item.name} calculated damage: ${damage}`);
         
         if (damage > 0) {
-          // Apply multi-attack to weapons, but not to features that are already multi-attack
-          if (item.type === 'weapon' && multiAttackCount > 1) {
-            totalDPR += damage * multiAttackCount;
-            attackCount += multiAttackCount;
-            console.log(`[CRCalculator] Weapon ${item.name}: ${damage} × ${multiAttackCount} = ${damage * multiAttackCount}`);
+          if (item.type === 'weapon') {
+            // Weapons get their damage (with multi-attack if applicable)
+            if (multiAttackCount > 1) {
+              totalDPR += damage * multiAttackCount;
+              attackCount += multiAttackCount;
+              console.log(`[CRCalculator] Weapon ${item.name}: ${damage} × ${multiAttackCount} = ${damage * multiAttackCount}`);
+            } else {
+              totalDPR += damage;
+              attackCount += 1;
+              console.log(`[CRCalculator] Weapon ${item.name}: ${damage}`);
+            }
           } else if (item.type === 'feat' && !item.name?.toLowerCase().includes('multiattack')) {
             // Features get their base damage (spells, special abilities)
             totalDPR += damage;
