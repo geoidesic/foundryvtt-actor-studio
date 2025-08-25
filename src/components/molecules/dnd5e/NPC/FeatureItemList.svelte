@@ -27,7 +27,7 @@
     }
   }
   async function handleTrash(id) {
-    await deleteActorItem(actor, id);
+    await deleteActorItem($actor, id);
   }
 
   $: displayItems = items ? items : $actor.items;
