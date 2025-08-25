@@ -208,6 +208,13 @@ class CRCalculator {
     
     console.log(`[CRCalculator] Base offensive CR from DPR: ${offensiveCR}`);
     
+    // Add utility bonus for creatures with multiple At Will abilities and combat control spells
+    const utilityBonus = await this.calculateUtilityBonus(actor);
+    if (utilityBonus > 0) {
+      console.log(`[CRCalculator] Adding utility bonus: +${utilityBonus} to offensive CR`);
+      offensiveCR += utilityBonus;
+    }
+    
     // Adjust for attack bonus/save DC differences
     const expectedAttack = this.CR_TABLES.offensive[offensiveCR]?.attack || 3;
     const expectedSave = this.CR_TABLES.offensive[offensiveCR]?.save || 13;
@@ -260,14 +267,22 @@ class CRCalculator {
       const average = (defensiveCR + offensiveCR) / 2;
       console.log(`[CRCalculator] CRs are close, average: ${average}`);
       
-      // For D&D CR calculation, round up when we're close to the next CR
-      // This ensures creatures with high offensive capabilities get appropriate CR
+      // For D&D CR calculation, use proper rounding rules for different CR ranges
       if (average >= 4.25) {
-        finalCR = Math.ceil(average); // Round up to 5
+        // High CRs: round up when close to next CR
+        finalCR = Math.ceil(average);
         console.log(`[CRCalculator] Average ${average} >= 4.25, rounding up to: ${finalCR}`);
+      } else if (average >= 0.25) {
+        // Low CRs: round to nearest valid D&D CR value
+        if (average >= 0.375) finalCR = 0.5; // 3/8+ rounds up to 1/2
+        else finalCR = 0.25; // 1/4 to 3/8 rounds to 1/4
+        console.log(`[CRCalculator] Average ${average} >= 0.25, rounding to nearest valid CR: ${finalCR}`);
       } else {
-        finalCR = Math.floor(average); // Round down to 4
-        console.log(`[CRCalculator] Average ${average} < 4.25, rounding down to: ${finalCR}`);
+        // Very low CRs: round to nearest valid CR
+        if (average >= 0.1875) finalCR = 0.25; // 3/16 rounds up to 1/4
+        else if (average >= 0.0625) finalCR = 0.125; // 1/16 rounds up to 1/8
+        else finalCR = 0;
+        console.log(`[CRCalculator] Average ${average} < 0.25, rounding to nearest valid CR: ${finalCR}`);
       }
     }
     
@@ -545,6 +560,35 @@ class CRCalculator {
               if (spell) {
                 console.log(`[CRCalculator] Found referenced spell:`, spell.name);
                 
+                // Check if this spell is limited-use by looking at the Spellcasting feature's description
+                if (item.name === 'Spellcasting' && item.system.description?.value) {
+                  const spellcastingDesc = item.system.description.value.toLowerCase();
+                  const spellName = spell.name.toLowerCase();
+                  
+                  // Check if this spell is limited-use by looking for UUID references
+                  // The Spellcasting description uses UUIDs like "@UUID[Compendium.dnd-players-handbook.spells.Item.phbsplLightningB]"
+                  const spellUUID = activity.spell.uuid;
+                  // Updated regex to handle HTML tags: look for "1/day" followed by any characters including HTML tags, then the UUID
+                  const uuidPattern = new RegExp(`(\\d+)/day\\s*(?:each)?\\s*:?\\s*.*?${spellUUID.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                  const limitedMatch = spellcastingDesc.match(uuidPattern);
+                  
+                  if (limitedMatch) {
+                    const usesPerDay = parseInt(limitedMatch[1]);
+                    console.log(`[CRCalculator] Detected ${usesPerDay}/day spell ${spell.name} via UUID - reducing damage contribution`);
+                    
+                    if (usesPerDay <= 3) {
+                      return 0; // Don't count limited-use spells in average DPR
+                    }
+                  }
+                  
+                  // Check if this is an "At Will" spell by looking for UUID references
+                  const atWillPattern = new RegExp(`at will.*?${spellUUID.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                  if (atWillPattern.test(spellcastingDesc)) {
+                    console.log(`[CRCalculator] Detected At Will spell ${spell.name} via UUID - counting for DPR`);
+                    // Continue with normal damage calculation for At Will spells
+                  }
+                }
+                
                 // Check if the spell has damage data
                 if (spell.system.damage && spell.system.damage.parts) {
                   console.log(`[CRCalculator] Spell has damage parts:`, spell.system.damage.parts);
@@ -596,6 +640,41 @@ class CRCalculator {
               }
             } catch (error) {
               console.log(`[CRCalculator] Error looking up spell ${activity.spell.uuid}:`, error);
+            }
+            
+            // Note: The Spellcasting feature itself doesn't have individual spell usage info
+            // We'll check individual spell usage in the second block below
+            
+            // If we're processing a spell through the Spellcasting feature, check if it's limited-use
+            // We need to find the Spellcasting feature in the actor's items to check its description
+            if (item.type === 'spell' && actor.system?.items) {
+              const spellcastingFeature = actor.system.items.find(feat => 
+                feat.type === 'feat' && feat.name === 'Spellcasting'
+              );
+              
+              if (spellcastingFeature?.system?.description?.value) {
+                const spellcastingDesc = spellcastingFeature.system.description.value.toLowerCase();
+                const spellName = spell.name.toLowerCase();
+                
+                // Check if this spell is limited-use
+                const limitedUsePattern = new RegExp(`(\\d+)/day\\s*(?:each)?\\s*:?\\s*[^<]*${spellName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'i');
+                const match = spellcastingDesc.match(limitedUsePattern);
+                
+                if (match) {
+                  const usesPerDay = parseInt(match[1]);
+                  console.log(`[CRCalculator] Detected ${usesPerDay}/day spell ${spell.name} - reducing damage contribution`);
+                  
+                  if (usesPerDay <= 3) {
+                    return 0; // Don't count limited-use spells in average DPR
+                  }
+                }
+                
+                // Check if this is an "At Will" spell (should count for DPR)
+                if (spellcastingDesc.includes('at will') && spellcastingDesc.includes(spellName)) {
+                  console.log(`[CRCalculator] Detected At Will spell ${spell.name} - counting for DPR`);
+                  // Continue with normal damage calculation for At Will spells
+                }
+              }
             }
           }
           
@@ -893,18 +972,51 @@ class CRCalculator {
     
     if (!actor.system?.items) return updates;
     
-    // Find features that deal damage
+    // Find weapons and features that deal damage
     for (let i = 0; i < actor.system.items.length; i++) {
       const item = actor.system.items[i];
-      if (item.type === 'feat' && item.system.damage) {
+      
+      // Handle weapons with damage
+      if (item.type === 'weapon' && item.system.damage?.base) {
         const currentDamage = this.calculateItemDamage(item);
         if (currentDamage > 0) {
-          // Adjust damage to contribute to target DPR
-          // This is a simplified approach - in practice, you'd need more sophisticated logic
-          const damageAdjustment = Math.round(targetAverage / 2); // Assume 2-3 attacks per round
-          const newFormula = `${Math.max(1, damageAdjustment)}d6`;
+          // Calculate how much damage this weapon should do to contribute to target DPR
+          // Assume 1-2 attacks per round for basic creatures
+          const attacksPerRound = 1;
+          const targetDamagePerAttack = Math.round(targetAverage / attacksPerRound);
           
-          updates[`system.items.${i}.system.damage.parts.0.0`] = newFormula;
+          // Adjust the weapon's damage to reach target damage per attack
+          const newNumber = Math.max(1, Math.round(targetDamagePerAttack / 3.5)); // Assume d6 average
+          const newDenomination = 6; // Use d6 for simplicity
+          
+          updates[`system.items.${i}.system.damage.base.number`] = newNumber;
+          updates[`system.items.${i}.system.damage.base.denomination`] = newDenomination;
+          updates[`system.items.${i}.system.damage.base.bonus`] = 0;
+          
+          console.log(`[CRCalculator] Adjusting weapon ${item.name} damage to ${newNumber}d${newDenomination} (target: ${targetDamagePerAttack} per attack)`);
+        }
+      }
+      
+      // Handle features with damage (spells, special abilities)
+      if (item.type === 'feat' && item.system.activities) {
+        // Look for activities with damage
+        for (const [activityKey, activity] of Object.entries(item.system.activities)) {
+          if (activity.damage && activity.damage.parts) {
+            const currentDamage = this.calculateItemDamage(item);
+            if (currentDamage > 0) {
+              // Adjust feature damage to contribute to target DPR
+              const targetDamagePerFeature = Math.round(targetAverage / 3); // Assume 3 features
+              const newNumber = Math.max(1, Math.round(targetDamagePerFeature / 3.5));
+              const newDenomination = 6;
+              
+              // Update the activity's damage
+              updates[`system.items.${i}.system.activities.${activityKey}.damage.parts.0.number`] = newNumber;
+              updates[`system.items.${i}.system.activities.${activityKey}.damage.parts.0.denomination`] = newDenomination;
+              updates[`system.items.${i}.system.activities.${activityKey}.damage.parts.0.bonus`] = 0;
+              
+              console.log(`[CRCalculator] Adjusting feature ${item.name} damage to ${newNumber}d${newDenomination} (target: ${targetDamagePerFeature} per feature)`);
+            }
+          }
         }
       }
     }
@@ -934,6 +1046,81 @@ class CRCalculator {
       }
     }
     return null;
+  }
+  /**
+   * Calculate utility bonus for creatures with multiple At Will abilities and combat control spells
+   * @param {Object} actor - The actor to analyze
+   * @returns {number} - Utility bonus to add to offensive CR
+   */
+  static async calculateUtilityBonus(actor) {
+    const items = this.getActorItems(actor);
+    if (!items) return 0;
+    
+    let utilityBonus = 0;
+    let atWillCount = 0;
+    let hasCombatControl = false;
+    let highestSpellLevel = 0;
+    
+    // Look for Spellcasting feature
+    const spellcastingFeature = items.find(item => 
+      item.type === 'feat' && item.name === 'Spellcasting'
+    );
+    
+    if (spellcastingFeature?.system?.description?.value) {
+      const desc = spellcastingFeature.system.description.value.toLowerCase();
+      
+      // Count At Will spells
+      const atWillMatches = desc.match(/at will/g);
+      if (atWillMatches) {
+        atWillCount = atWillMatches.length;
+        console.log(`[CRCalculator] Found ${atWillCount} At Will spell sections`);
+      }
+      
+      // Check for combat control spells by looking at the actual spell data
+      // We need to examine the CastActivity objects to get spell levels
+      if (spellcastingFeature.system.activities) {
+        // Use .values() for ActivityCollection, just like in the DPR calculation
+        for (const activity of spellcastingFeature.system.activities.values()) {
+          if (activity.type === 'cast' && activity.spell && activity.spell.uuid) {
+            try {
+              const spell = await fromUuid(activity.spell.uuid);
+              if (spell) {
+                // Check if this is a combat control spell
+                const spellName = spell.name.toLowerCase();
+                const combatControlSpells = ['gust of wind', 'thunderwave', 'entangle', 'web', 'hypnotic pattern'];
+                if (combatControlSpells.some(controlSpell => spellName.includes(controlSpell))) {
+                  hasCombatControl = true;
+                  console.log(`[CRCalculator] Found combat control spell: ${spell.name}`);
+                }
+                
+                // Track highest spell level
+                if (spell.system.level && spell.system.level > highestSpellLevel) {
+                  highestSpellLevel = spell.system.level;
+                  console.log(`[CRCalculator] Found spell level ${spell.system.level} for ${spell.name}`);
+                }
+              }
+            } catch (error) {
+              console.log(`[CRCalculator] Error looking up spell for utility bonus:`, error);
+            }
+          }
+        }
+      }
+      
+      console.log(`[CRCalculator] Highest spell level: ${highestSpellLevel}`);
+    }
+    
+    // Calculate utility bonus based on At Will abilities and combat control
+    if (atWillCount >= 2) utilityBonus += 0.5;
+    if (atWillCount >= 4) utilityBonus += 0.5;
+    if (hasCombatControl) utilityBonus += 1.0;
+    
+    // Add baseline CR for spellcasting level
+    if (highestSpellLevel >= 3) utilityBonus += 2.0; // 3rd level spells = CR 3-4 baseline
+    else if (highestSpellLevel >= 2) utilityBonus += 1.5; // 2nd level spells = CR 2-3 baseline
+    
+    console.log(`[CRCalculator] Utility bonus calculation: At Will sections: ${atWillCount}, Combat control: ${hasCombatControl}, Spell level: ${highestSpellLevel}, Total bonus: ${utilityBonus}`);
+    
+    return utilityBonus;
   }
 }
 

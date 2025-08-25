@@ -1,5 +1,6 @@
 <script>
   import { CRCalculator } from "~/src/helpers/CRCalculator.js";
+  import { updateSource } from "~/src/helpers/Utility.js";
   import { createEventDispatcher, getContext } from "svelte";
   
   const actor = getContext("#doc");
@@ -13,6 +14,7 @@
   let currentCRBreakdown = null;
   let showAdvanced = false;
   let isAdjusting = false;
+  let isCollapsed = false;
   
   // Debug: Log the CRCalculator version and check if it's the updated one
   console.log('🔧 CRCalculator loaded:', CRCalculator);
@@ -60,11 +62,16 @@
   
   // Reactive statements
   $: if ($actor) {
-    currentCR = $actor.system?.details?.cr || 0;
-    targetCR = currentCR;
-    console.log('🔄 Actor changed, calculating CR...');
-    // Use a separate function for async CR calculation
-    calculateInitialCR($actor);
+    const newCurrentCR = $actor.system?.details?.cr || 0;
+    
+    // Only set targetCR on initial load, not on every actor change
+    if (currentCR !== newCurrentCR) {
+      currentCR = newCurrentCR;
+      targetCR = currentCR;
+      console.log('🔄 Actor changed, calculating CR...');
+      // Use a separate function for async CR calculation
+      calculateInitialCR($actor);
+    }
   }
   
   async function calculateInitialCR(actor) {
@@ -127,8 +134,8 @@
       // Calculate the adjustments needed
       const updates = CRCalculator.adjustActorToCR($actor, targetCR);
       
-      // Apply the updates to the actor
-      await $actor.update(updates);
+      // Apply the updates to the actor using updateSource utility
+      await updateSource($actor, updates);
       
       // Dispatch event to notify parent components
       dispatch('crAdjusted', {
@@ -171,17 +178,27 @@
 .cr-adjuster
   .cr-header
     h3 Challenge Rating Adjustment
-    button(
-      type="button"
-      class="btn btn-sm"
-      on:click!="{recalculateCurrentCR}"
-      disabled="{!actor}"
-      title="Recalculate current CR based on current stats"
-    )
-      i.fas.fa-calculator
-      span Analyze Current CR
-
-  .cr-current
+    .header-controls
+      button(
+        type="button"
+        class="btn btn-sm"
+        on:click!="{recalculateCurrentCR}"
+        disabled="{!actor}"
+        title="Recalculate current CR based on current stats"
+      )
+        i.fas.fa-calculator
+        span Analyze Current CR
+      button(
+        type="button"
+        class="btn btn-sm btn-icon"
+        on:click!="{() => isCollapsed = !isCollapsed}"
+        title="{isCollapsed ? 'Expand' : 'Collapse'}"
+      )
+        i.fas(class!="{isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}")
+  
+  +if("!isCollapsed")
+    .cr-content
+      .cr-current
     .cr-info
       strong Current CR: {formatCR(currentCR)} ({formatXP(actor?.system?.details?.xp?.value || 0)} XP)
 
@@ -314,6 +331,15 @@
     justify-content: space-between
     align-items: center
     margin-bottom: 1rem
+
+  .header-controls
+    display: flex
+    gap: 0.5rem
+    align-items: center
+
+  .btn-icon
+    padding: 0.25rem 0.5rem
+    min-width: auto
 
   .cr-header h3
     margin: 0
