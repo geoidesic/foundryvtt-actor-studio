@@ -9,34 +9,34 @@ const LOCAL_STORAGE_KEY = `${MODULE_ID}-npc-feature-index-v1`;
  */
 export function getNpcFeatureIndex() {
   try {
-    console.log('[NPC INDEX] getNpcFeatureIndex called, key:', LOCAL_STORAGE_KEY);
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
-    console.log('[NPC INDEX] localStorage.getItem result:', {
-      hasRaw: !!raw,
-      rawLength: raw?.length || 0,
-      rawPreview: raw ? `${String(raw).slice(0, 120)}…` : null
-    });
+    // console.log('[NPC INDEX] getNpcFeatureIndex called, key:', LOCAL_STORAGE_KEY);
+    // console.log('[NPC INDEX] localStorage.getItem result:', {
+    //   hasRaw: !!raw,
+    //   rawLength: raw?.length || 0,
+    //   rawPreview: raw ? `${String(raw).slice(0, 120)}…` : null
+    // });
     
-    if (window?.GAS?.log?.d) {
-      window.GAS.log.d('[NPC INDEX] Read from localStorage', {
-        key: LOCAL_STORAGE_KEY,
-        hasValue: !!raw,
-        preview: raw ? `${String(raw).slice(0, 120)}…` : null
-      });
-    }
+    // if (window?.GAS?.log?.d) {
+    //   window.GAS.log.d('[NPC INDEX] Read from localStorage', {
+    //     key: LOCAL_STORAGE_KEY,
+    //     hasValue: !!raw,
+    //     preview: raw ? `${String(raw).slice(0, 120)}…` : null
+    //   });
+    // }
     if (!raw) {
       console.log('[NPC INDEX] No localStorage data found');
       return null;
     }
     
     const parsed = JSON.parse(raw);
-    console.log('[NPC INDEX] Parsed result:', {
-      hasVersion: !!parsed.version,
-      hasBuiltAt: !!parsed.builtAt,
-      hasIndex: !!parsed.index,
-      indexLength: parsed.index?.length || 0,
-      indexType: typeof parsed.index
-    });
+    // console.log('[NPC INDEX] Parsed result:', {
+    //   hasVersion: !!parsed.version,
+    //   hasBuiltAt: !!parsed.builtAt,
+    //   hasIndex: !!parsed.index,
+    //   indexLength: parsed.index?.length || 0,
+    //   indexType: typeof parsed.index
+    // });
     
     return parsed;
   } catch (err) {
@@ -74,49 +74,49 @@ function deduplicateItems(index) {
       const contentHash = createItemHash(item);
       const key = `${item.name}|${contentHash}`;
       
-      if (window?.GAS?.log?.v) {
-        window.GAS.log.v('[NPC INDEX] Processing item', { 
-          name: item.name, 
-          uuid: item.uuid, 
-          npc_uuid: npcEntry.npc_uuid,
-          contentHash,
-          key,
-          hasDescription: !!(item.description),
-          descriptionLength: item.description?.length || 0,
-          descriptionPreview: item.description?.substring(0, 50) || 'N/A'
-        });
-      }
+      // if (window?.GAS?.log?.v) {
+      //   window.GAS.log.v('[NPC INDEX] Processing item', { 
+      //     name: item.name, 
+      //     uuid: item.uuid, 
+      //     npc_uuid: npcEntry.npc_uuid,
+      //     contentHash,
+      //     key,
+      //     hasDescription: !!(item.description),
+      //     descriptionLength: item.description?.length || 0,
+      //     descriptionPreview: item.description?.substring(0, 50) || 'N/A'
+      //   });
+      // }
       
       if (!seenItems.has(key)) {
         // First time seeing this item, add it
         seenItems.set(key, { uuid: item.uuid, npc_uuid: npcEntry.npc_uuid });
         deduplicatedItems.push(item);
         
-        if (window?.GAS?.log?.v) {
-          window.GAS.log.v('[NPC INDEX] Added unique item', { 
-            name: item.name, 
-            uuid: item.uuid, 
-            npc_uuid: npcEntry.npc_uuid,
-            descriptionLength: item.description?.length || 0
-          });
-        }
+        // if (window?.GAS?.log?.v) {
+        //   window.GAS.log.v('[NPC INDEX] Added unique item', { 
+        //     name: item.name, 
+        //     uuid: item.uuid, 
+        //     npc_uuid: npcEntry.npc_uuid,
+        //     descriptionLength: item.description?.length || 0
+        //   });
+        // }
       } else {
         // Duplicate item found, log it
         duplicateCount++;
         const existing = seenItems.get(key);
-        if (window?.GAS?.log?.d) {
-          window.GAS.log.d('[NPC INDEX] Skipped duplicate item', { 
-            name: item.name, 
-            uuid: item.uuid, 
-            npc_uuid: npcEntry.npc_uuid,
-            existingUuid: existing.uuid,
-            existingNpcUuid: existing.npc_uuid,
-            contentHash,
-            key,
-            currentDescriptionLength: item.description?.length || 0,
-            existingDescriptionLength: 'N/A' // We don't store description in seenItems map
-          });
-        }
+        // if (window?.GAS?.log?.d) {
+        //   window.GAS.log.d('[NPC INDEX] Skipped duplicate item', { 
+        //     name: item.name, 
+        //     uuid: item.uuid, 
+        //     npc_uuid: npcEntry.npc_uuid,
+        //     existingUuid: existing.uuid,
+        //     existingNpcUuid: existing.npc_uuid,
+        //     contentHash,
+        //     key,
+        //     currentDescriptionLength: item.description?.length || 0,
+        //     existingDescriptionLength: 'N/A' // We don't store description in seenItems map
+        //   });
+        // }
       }
     }
     
@@ -126,16 +126,16 @@ function deduplicateItems(index) {
     }
   }
   
-  if (window?.GAS?.log?.i) {
-    window.GAS.log.i('[NPC INDEX] Deduplication complete', {
-      originalIndexSize: index.length,
-      deduplicatedIndexSize: deduplicatedIndex.length,
-      totalOriginalItems: totalItems,
-      totalDeduplicatedItems: deduplicatedIndex.reduce((sum, npc) => sum + npc.items.length, 0),
-      duplicatesFound: duplicateCount,
-      uniqueItems: totalItems - duplicateCount
-    });
-  }
+  // if (window?.GAS?.log?.i) {
+  //   window.GAS.log.i('[NPC INDEX] Deduplication complete', {
+  //     originalIndexSize: index.length,
+  //     deduplicatedIndexSize: deduplicatedIndex.length,
+  //     totalOriginalItems: totalItems,
+  //     totalDeduplicatedItems: deduplicatedIndex.reduce((sum, npc) => sum + npc.items.length, 0),
+  //     duplicatesFound: duplicateCount,
+  //     uniqueItems: totalItems - duplicateCount
+  //   });
+  // }
   
   return deduplicatedIndex;
 }
@@ -162,22 +162,22 @@ function sortItemsAlphabetically(index) {
     return nameA.localeCompare(nameB);
   });
   
-  if (window?.GAS?.log?.i) {
-    window.GAS.log.i('[NPC INDEX] Alphabetical sorting complete', {
-      totalItems: allItems.length,
-      sampleItems: allItems.slice(0, 5).map(item => ({ 
-        name: item.name, 
-        hasDescription: !!item.description,
-        descriptionLength: item.description?.length || 0,
-        descriptionPreview: item.description?.substring(0, 80) || 'N/A'
-      })),
-      descriptionStats: {
-        totalItems: allItems.length,
-        itemsWithDescription: allItems.filter(item => item.description && item.description.length > 0).length,
-        averageDescriptionLength: allItems.reduce((sum, item) => sum + (item.description?.length || 0), 0) / allItems.length
-      }
-    });
-  }
+  // if (window?.GAS?.log?.i) {
+  //   window.GAS.log.i('[NPC INDEX] Alphabetical sorting complete', {
+  //     totalItems: allItems.length,
+  //     sampleItems: allItems.slice(0, 5).map(item => ({ 
+  //       name: item.name, 
+  //       hasDescription: !!item.description,
+  //       descriptionLength: item.description?.length || 0,
+  //       descriptionPreview: item.description?.substring(0, 80) || 'N/A'
+  //     })),
+  //     descriptionStats: {
+  //       totalItems: allItems.length,
+  //       itemsWithDescription: allItems.filter(item => item.description && item.description.length > 0).length,
+  //       averageDescriptionLength: allItems.reduce((sum, item) => sum + (item.description?.length || 0), 0) / allItems.length
+  //     }
+  //   });
+  // }
   
   return allItems;
 }
@@ -482,27 +482,27 @@ export function initializeNpcFeatureIndex() {
   (async () => {
     try {
       startNpcIndexLoading();
-      console.log('[NPC INDEX] Async build started');
+      // console.log('[NPC INDEX] Async build started');
       const index = await buildNpcFeatureIndex();
-      console.log('[NPC INDEX] Async build completed, result length:', index?.length || 0);
+      // console.log('[NPC INDEX] Async build completed, result length:', index?.length || 0);
       
       // Log detailed information about the final index before storing
-      if (window?.GAS?.log?.d) {
-        window.GAS.log.d('[NPC INDEX] Final index before storage', {
-          totalItems: index.length,
-          sampleItems: index.slice(0, 3).map(item => ({
-            name: item.name,
-            hasDescription: !!item.description,
-            descriptionLength: item.description?.length || 0,
-            descriptionPreview: item.description?.substring(0, 100) || 'N/A'
-          })),
-          descriptionStats: {
-            itemsWithDescription: index.filter(item => item.description && item.description.length > 0).length,
-            totalDescriptionLength: index.reduce((sum, item) => sum + (item.description?.length || 0), 0),
-            averageDescriptionLength: index.length > 0 ? index.reduce((sum, item) => sum + (item.description?.length || 0), 0) / index.length : 0
-          }
-        });
-      }
+      // if (window?.GAS?.log?.d) {
+      //   window.GAS.log.d('[NPC INDEX] Final index before storage', {
+      //     totalItems: index.length,
+      //     sampleItems: index.slice(0, 3).map(item => ({
+      //       name: item.name,
+      //       hasDescription: !!item.description,
+      //       descriptionLength: item.description?.length || 0,
+      //       descriptionPreview: item.description?.substring(0, 100) || 'N/A'
+      //     })),
+      //     descriptionStats: {
+      //       itemsWithDescription: index.filter(item => item.description && item.description.length > 0).length,
+      //       totalDescriptionLength: index.reduce((sum, item) => sum + (item.description?.length || 0), 0),
+      //       averageDescriptionLength: index.length > 0 ? index.reduce((sum, item) => sum + (item.description?.length || 0), 0) / index.length : 0
+      //     }
+      //   });
+      // }
       
       const payload = {
         version: 1,
@@ -510,17 +510,17 @@ export function initializeNpcFeatureIndex() {
         index,
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
-      console.log('[NPC INDEX] Index stored in localStorage, key:', LOCAL_STORAGE_KEY);
-      window.GAS?.log?.g?.('[NPC INDEX] Stored NPC feature index', {
-        version: payload.version,
-        builtAt: payload.builtAt,
-        size: payload.index?.length || 0,
-        storageSize: JSON.stringify(payload).length,
-        descriptionStats: {
-          itemsWithDescription: payload.index.filter(item => item.description && item.description.length > 0).length,
-          totalDescriptionLength: payload.index.reduce((sum, item) => sum + (item.description?.length || 0), 0)
-        }
-      });
+      // console.log('[NPC INDEX] Index stored in localStorage, key:', LOCAL_STORAGE_KEY);
+      // window.GAS?.log?.g?.('[NPC INDEX] Stored NPC feature index', {
+      //   version: payload.version,
+      //   builtAt: payload.builtAt,
+      //   size: payload.index?.length || 0,
+      //   storageSize: JSON.stringify(payload).length,
+      //   descriptionStats: {
+      //     itemsWithDescription: payload.index.filter(item => item.description && item.description.length > 0).length,
+      //     totalDescriptionLength: payload.index.reduce((sum, item) => sum + (item.description?.length || 0), 0)
+      //   }
+      // });
     } catch (err) {
       console.error('[NPC INDEX] Async build failed:', err);
       window.GAS?.log?.e?.('[NPC INDEX] Async build failed', err);
