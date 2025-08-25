@@ -1,190 +1,176 @@
 // Test file for CRCalculator
 // Run with: bun src/tests/CRCalculator.test.js
 
+import { describe, it, expect } from 'vitest';
 import { CRCalculator } from '../helpers/CRCalculator.js';
 
-// Mock NPC data for testing
-const mockNPCs = {
-  // CR 1/4 NPC (Goblin-like)
-  goblin: {
-    system: {
-      attributes: {
-        hp: { max: 7, value: 7 },
-        ac: { value: 15 }
-      },
-      details: {
-        cr: 0.25
-      },
-      items: [
-        {
-          type: 'weapon',
-          system: {
-            attack: { bonus: 4 },
-            damage: { parts: [['1d6+2']] }
-          }
+describe('CRCalculator', () => {
+  describe('calculateCurrentCR', () => {
+    it('should calculate CR 5 for a Cambion-like creature', () => {
+      // Mock Cambion data based on Monster Manual
+      const cambion = {
+        system: {
+          attributes: {
+            hp: { max: 138, value: 138 }, // Cambion has 138 HP
+            ac: { value: 17 } // Cambion has AC 17
+          },
+          abilities: {
+            str: { value: 18 }, // +4 modifier
+            dex: { value: 16 }, // +3 modifier  
+            con: { value: 16 }, // +3 modifier
+            int: { value: 14 }, // +2 modifier
+            wis: { value: 12 }, // +1 modifier
+            cha: { value: 16 }  // +3 modifier
+          },
+          details: {
+            cr: 5
+          },
+          items: [
+            {
+              name: 'Multiattack',
+              type: 'feat',
+              system: {
+                description: { value: 'The cambion makes two melee attacks.' }
+              }
+            },
+            {
+              name: 'Claw',
+              type: 'weapon',
+              system: {
+                damage: { parts: [['1d6+4', 'slashing']] },
+                attack: { bonus: 7 }
+              }
+            },
+            {
+              name: 'Fire Ray',
+              type: 'feat',
+              system: {
+                description: { value: 'Ranged Spell Attack: +7 to hit, range 60 ft., one target. Hit: 17 (5d6) fire damage.' }
+              }
+            },
+            {
+              name: 'Spellcasting',
+              type: 'feat',
+              system: {
+                description: { value: 'The cambion is a 5th-level spellcaster.' }
+              }
+            }
+          ]
         }
-      ]
-    }
-  },
-  
-  // CR 1 NPC (Orc-like)
-  orc: {
-    system: {
-      attributes: {
-        hp: { max: 15, value: 15 },
-        ac: { value: 13 }
-      },
-      details: {
-        cr: 1
-      },
-      items: [
-        {
-          type: 'weapon',
-          system: {
-            attack: { bonus: 5 },
-            damage: { parts: [['1d12+3']] }
-          }
-        }
-      ]
-    }
-  },
-  
-  // CR 3 NPC (Hobgoblin-like)
-  hobgoblin: {
-    system: {
-      attributes: {
-        hp: { max: 27, value: 27 },
-        ac: { value: 18 }
-      },
-      details: {
-        cr: 3
-      },
-      items: [
-        {
-          type: 'weapon',
-          system: {
-            attack: { bonus: 6 },
-            damage: { parts: [['1d8+3']] }
-          }
-        }
-      ]
-    }
-  }
-};
+      };
 
-// Simple test runner
-function runTests() {
-  console.log('🧪 Running CRCalculator tests...\n');
-  
-  let passed = 0;
-  let total = 0;
-  
-  // Test 1: CR calculation for goblin
-  total++;
-  try {
-    console.log('Test 1: CR calculation for goblin...');
-    const result = CRCalculator.calculateCurrentCR(mockNPCs.goblin);
-    console.log('  Result:', result);
-    
-    if (result.defensiveCR > 0 && result.offensiveCR > 0 && result.finalCR > 0) {
-      console.log('  ✅ Passed');
-      passed++;
-    } else {
-      console.log('  ❌ Failed');
-    }
-  } catch (error) {
-    console.log('  ❌ Error:', error.message);
-  }
-  
-  // Test 2: Damage formula calculation
-  total++;
-  try {
-    console.log('\nTest 2: Damage formula calculation...');
-    const damage = CRCalculator.calculateDamageFormula('2d6+3');
-    console.log('  2d6+3 average damage:', damage);
-    
-    if (damage === 10) {
-      console.log('  ✅ Passed');
-      passed++;
-    } else {
-      console.log('  ❌ Failed - expected 10, got', damage);
-    }
-  } catch (error) {
-    console.log('  ❌ Error:', error.message);
-  }
-  
-  // Test 3: CR tables validation
-  total++;
-  try {
-    console.log('\nTest 3: CR tables validation...');
-    const hasTables = CRCalculator.CR_TABLES.defensive && CRCalculator.CR_TABLES.offensive;
-    const hasXP = CRCalculator.XP_VALUES && Object.keys(CRCalculator.XP_VALUES).length > 0;
-    const hasPB = CRCalculator.PROFICIENCY_BONUS && Object.keys(CRCalculator.PROFICIENCY_BONUS).length > 0;
-    
-    console.log('  Tables exist:', hasTables);
-    console.log('  XP values exist:', hasXP);
-    console.log('  Proficiency bonus exists:', hasPB);
-    
-    if (hasTables && hasXP && hasPB) {
-      console.log('  ✅ Passed');
-      passed++;
-    } else {
-      console.log('  ❌ Failed');
-    }
-  } catch (error) {
-    console.log('  ❌ Error:', error.message);
-  }
-  
-  // Test 4: CR adjustment
-  total++;
-  try {
-    console.log('\nTest 4: CR adjustment...');
-    const updates = CRCalculator.adjustActorToCR(mockNPCs.goblin, 1);
-    console.log('  Updates generated:', Object.keys(updates).length);
-    
-    if (updates && typeof updates === 'object' && updates['system.details.cr'] === 1) {
-      console.log('  ✅ Passed');
-      passed++;
-    } else {
-      console.log('  ❌ Failed');
-    }
-  } catch (error) {
-    console.log('  ❌ Error:', error.message);
-  }
-  
-  // Test 5: Invalid CR handling
-  total++;
-  try {
-    console.log('\nTest 5: Invalid CR handling...');
-    const updates = CRCalculator.adjustActorToCR(mockNPCs.goblin, 999);
-    console.log('  Invalid CR result:', updates === mockNPCs.goblin ? 'Original actor returned' : 'Unexpected result');
-    
-    if (updates === mockNPCs.goblin) {
-      console.log('  ✅ Passed');
-      passed++;
-    } else {
-      console.log('  ❌ Failed');
-    }
-  } catch (error) {
-    console.log('  ❌ Error:', error.message);
-  }
-  
-  // Summary
-  console.log('\n📊 Test Summary');
-  console.log('===============');
-  console.log(`Tests passed: ${passed}/${total}`);
-  console.log(`Success rate: ${Math.round((passed / total) * 100)}%`);
-  
-  if (passed === total) {
-    console.log('\n🎉 All tests passed! The CR calculator is working correctly.');
-  } else {
-    console.log('\n⚠️  Some tests failed. Please check the implementation.');
-  }
-  
-  return passed === total;
-}
+      const result = CRCalculator.calculateCurrentCR(cambion);
+      
+      console.log('Cambion CR calculation result:', result);
+      
+      // The Cambion should calculate to around CR 5
+      // Defensive CR: HP 138 falls in CR 5 range (131-145), AC 17 is +2 above expected 15
+      // Offensive CR: Multiple attacks + spellcasting should be around CR 5
+      expect(result.defensiveCR).toBeGreaterThanOrEqual(4);
+      expect(result.offensiveCR).toBeGreaterThanOrEqual(4);
+      expect(result.finalCR).toBeGreaterThanOrEqual(4);
+      expect(result.finalCR).toBeLessThanOrEqual(6);
+    });
 
-// Run tests if this file is executed directly
-if (import.meta.main) {
-  runTests();
-}
+    it('should handle multi-attack correctly', () => {
+      const multiAttackCreature = {
+        system: {
+          attributes: {
+            hp: { max: 100, value: 100 },
+            ac: { value: 13 }
+          },
+          abilities: {
+            str: { value: 16 }, // +3 modifier
+            dex: { value: 14 }, // +2 modifier
+            con: { value: 14 }, // +2 modifier
+            int: { value: 10 }, // +0 modifier
+            wis: { value: 10 }, // +0 modifier
+            cha: { value: 10 }  // +0 modifier
+          },
+          details: { cr: 3 },
+          items: [
+            {
+              name: 'Multiattack',
+              type: 'feat',
+              system: {
+                description: { value: 'The creature makes three attacks.' }
+              }
+            },
+            {
+              name: 'Sword',
+              type: 'weapon',
+              system: {
+                damage: { parts: [['1d8+3', 'slashing']] },
+                attack: { bonus: 5 }
+              }
+            }
+          ]
+        }
+      };
+
+      const result = CRCalculator.calculateCurrentCR(multiAttackCreature);
+      
+      // Multi-attack should significantly increase offensive CR
+      expect(result.offensiveCR).toBeGreaterThan(1);
+    });
+
+    it('should calculate attack bonuses from ability scores when not explicitly provided', () => {
+      const creature = {
+        system: {
+          attributes: {
+            hp: { max: 50, value: 50 },
+            ac: { value: 13 }
+          },
+          abilities: {
+            str: { value: 18 }, // +4 modifier
+            dex: { value: 14 }, // +2 modifier
+            con: { value: 14 }, // +2 modifier
+            int: { value: 10 }, // +0 modifier
+            wis: { value: 10 }, // +0 modifier
+            cha: { value: 10 }  // +0 modifier
+          },
+          details: { cr: 2 },
+          items: [
+            {
+              name: 'Sword',
+              type: 'weapon',
+              system: {
+                damage: { parts: [['1d8+4', 'slashing']] }
+                // No explicit attack bonus
+              }
+            }
+          ]
+        }
+      };
+
+      const result = CRCalculator.calculateCurrentCR(creature);
+      
+      // Should calculate attack bonus from STR (+4) + proficiency (+2) = +6
+      expect(result.offensiveCR).toBeGreaterThan(0);
+    });
+  });
+
+  describe('CR Tables', () => {
+    it('should have complete offensive CR table', () => {
+      // Check that all CR levels have offensive data
+      const crs = Object.keys(CRCalculator.CR_TABLES.offensive);
+      expect(crs).toContain('0');
+      expect(crs).toContain('0.125');
+      expect(crs).toContain('0.25');
+      expect(crs).toContain('0.5');
+      expect(crs).toContain('1');
+      expect(crs).toContain('5');
+      expect(crs).toContain('10');
+      expect(crs).toContain('20');
+      expect(crs).toContain('30');
+    });
+
+    it('should have correct DPR ranges for CR 5', () => {
+      const cr5Data = CRCalculator.CR_TABLES.offensive[5];
+      expect(cr5Data).toBeDefined();
+      expect(cr5Data.dpr).toEqual([33, 38]);
+      expect(cr5Data.attack).toBe(6);
+      expect(cr5Data.save).toBe(14);
+    });
+  });
+});

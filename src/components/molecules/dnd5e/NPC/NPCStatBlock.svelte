@@ -984,7 +984,6 @@
     +if("showCRAdjuster && !readonly")
       .cr-adjuster-container
         CRAdjuster(
-          actor="{$actor}"
           readonly="{readonly}"
           on:crAdjusted="{handleCRAdjusted}"
         )
