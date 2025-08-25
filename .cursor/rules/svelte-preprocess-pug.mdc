@@ -1,7 +1,11 @@
 ---
 alwaysApply: true
 ---
-# Your rule content
+# Styles
+- Never use CSS directly, always use SASS indented syntax
+
+# Templates
+- Never use HTML syntax directly, always use Pug / Svelte-preprocess syntax
 
 # svelte-preprocess-pug Rules
 
