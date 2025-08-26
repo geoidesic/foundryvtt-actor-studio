@@ -1,9 +1,9 @@
 // Magic Item Generator for D&D 5e
-// Based on Dungeon Master's Guide treasure tables and custom CR-based generation
+// Based ontreasure tables and custom CR-based generation
 
 export class MagicItemGenerator {
   
-  // DMG Hoard Magic Item Tables by tier (DMG page 136-139)
+  //  Hoard Magic Item Tables by tier
   static HOARD_MAGIC_ITEMS = {
     // Tier 1 (Levels 1-4)
     1: {

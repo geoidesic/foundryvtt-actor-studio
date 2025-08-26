@@ -276,7 +276,7 @@
         hr
         h4 Advanced CR Calculation
         p.text-muted
-          | This tool uses the DMG challenge rating calculation rules to automatically adjust your NPC's stats.
+          | This tool uses the challenge rating calculation rules to automatically adjust your NPC's stats.
           | It will modify HP, AC, ability scores, and feature damage to match the target CR.
 
         .warning
@@ -284,41 +284,7 @@
           strong Warning:
           | This will modify your NPC's stats. Make sure to review the changes before applying.
 
-        .cr-tables
-          details
-            summary View CR Tables (DMG 273-283)
-            .table-container
-              .table-section
-                h5 Defensive CR Table
-                table.cr-table
-                  thead
-                    tr
-                      th CR
-                      th HP Range
-                      th Expected AC
-                  tbody
-                    +each("Object.entries(CRCalculator.CR_TABLES.defensive).slice(0, 10) as [cr, stats]")
-                      tr
-                        td {formatCR(parseFloat(cr))}
-                        td {stats.hp[0]}-{stats.hp[1]}
-                        td {stats.ac}
-
-              .table-section
-                h5 Offensive CR Table
-                table.cr-table
-                  thead
-                    tr
-                      th CR
-                      th DPR Range
-                      th Attack Bonus
-                      th Save DC
-                  tbody
-                    +each("Object.entries(CRCalculator.CR_TABLES.offensive).slice(0, 10) as [cr, stats]")
-                      tr
-                        td {formatCR(parseFloat(cr))}
-                        td {stats.dpr[0]}-{stats.dpr[1]}
-                        td +{stats.attack}
-                        td {stats.save}
+       
 </template>
 <style lang="sass">
   .cr-adjuster

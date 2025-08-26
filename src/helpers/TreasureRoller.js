@@ -1,9 +1,8 @@
-// DMG Treasure tables for individual treasure by CR
-// Based on Dungeon Master's Guide page 136-139
+// Treasure tables for individual treasure by CR
 
 export class TreasureRoller {
   
-  // DMG Individual Treasure by CR (page 136)
+  // Individual Treasure by CR
   static TREASURE_BY_CR = {
     // CR 0-4
     0: { cp: [5, 6], sp: [1, 4], ep: [0, 0], gp: [0, 0], pp: [0, 0] },

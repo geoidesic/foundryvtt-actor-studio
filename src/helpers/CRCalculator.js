@@ -1,12 +1,12 @@
 // CR Calculator for D&D 5e
-// Based on Dungeon Master's Guide challenge rating calculation rules (DMG pages 273-283)
+// Based on challenge rating calculation rules
 // Updated with improved CR calculation for Cambion and other creatures
 
 class CRCalculator {
   
-  // DMG Challenge Rating Tables
+  // Challenge Rating Tables
   static CR_TABLES = {
-    // Defensive CR table (DMG page 274)
+    // Defensive CR table
     defensive: {
       0: { hp: [1, 6], ac: 13 },
       0.125: { hp: [7, 35], ac: 13 },
@@ -44,7 +44,7 @@ class CRCalculator {
       30: { hp: [806, 850], ac: 19 }
     },
     
-    // Offensive CR table (DMG page 275)
+    // Offensive CR table
     offensive: {
       0: { dpr: [1, 3], attack: 3, save: 13 },
       0.125: { dpr: [3, 5], attack: 3, save: 13 },
@@ -83,7 +83,7 @@ class CRCalculator {
     }
   };
 
-  // XP values for each CR (DMG page 275)
+  // XP values for each CR
   static XP_VALUES = {
     0: 10, 0.125: 25, 0.25: 50, 0.5: 100,
     1: 200, 2: 450, 3: 700, 4: 1100, 5: 1800,
@@ -154,7 +154,7 @@ class CRCalculator {
     const expectedAC = this.CR_TABLES.defensive[defensiveCR]?.ac || 13;
     const acDifference = ac - expectedAC;
     
-    // AC adjustments (DMG page 274)
+    // AC adjustments
     if (acDifference >= 8) defensiveCR += 2;
     else if (acDifference >= 6) defensiveCR += 1;
     else if (acDifference >= 2) defensiveCR += 0.5;
@@ -206,18 +206,13 @@ class CRCalculator {
       console.log(`[CRCalculator] No exact DPR match, using closest CR: ${closestCR}`);
     }
     
-    console.log(`[CRCalculator] Base offensive CR from DPR: ${offensiveCR}`);
-    
-    // Add utility bonus for creatures with multiple At Will abilities and combat control spells
-    const utilityBonus = await this.calculateUtilityBonus(actor);
-    if (utilityBonus > 0) {
-      console.log(`[CRCalculator] Adding utility bonus: +${utilityBonus} to offensive CR`);
-      offensiveCR += utilityBonus;
-    }
     
     // Adjust for attack bonus/save DC differences
     const expectedAttack = this.CR_TABLES.offensive[offensiveCR]?.attack || 3;
     const expectedSave = this.CR_TABLES.offensive[offensiveCR]?.save || 13;
+    
+    console.log(`[CRCalculator] Expected attack bonus for CR ${offensiveCR}: ${expectedAttack}`);
+    console.log(`[CRCalculator] Expected save DC for CR ${offensiveCR}: ${expectedSave}`);
     
     // Get the highest attack bonus or save DC
     const highestAttackBonus = this.getHighestAttackBonus(actor);
@@ -232,7 +227,7 @@ class CRCalculator {
     // Use the higher difference for adjustment
     const difference = Math.max(attackDifference, saveDifference);
     
-    // Attack bonus/save DC adjustments (DMG page 275)
+    // Attack bonus/save DC adjustments
     let adjustment = 0;
     if (difference >= 8) adjustment = 2;
     else if (difference >= 6) adjustment = 1;
@@ -256,7 +251,7 @@ class CRCalculator {
   static calculateFinalCR(defensiveCR, offensiveCR) {
     console.log(`[CRCalculator] Final CR calculation - Defensive: ${defensiveCR}, Offensive: ${offensiveCR}`);
     
-    // Use the higher CR when there's a significant difference (DMG page 275)
+    // Use the higher CR when there's a significant difference
     // This prevents a high offensive CR from being dragged down by a low defensive CR
     let finalCR;
     if (Math.abs(defensiveCR - offensiveCR) >= 1) {
@@ -396,6 +391,13 @@ class CRCalculator {
     // If no attacks found, return 0
     if (attackCount === 0) return 0;
     
+    // Add legendary action damage to DPR
+    const legendaryActionDamage = await this.calculateLegendaryActionDamage(items);
+    if (legendaryActionDamage > 0) {
+      totalDPR += legendaryActionDamage;
+      console.log(`[CRCalculator] Added legendary action damage: ${legendaryActionDamage}, total DPR: ${totalDPR}`);
+    }
+    
     console.log(`[CRCalculator] Total DPR: ${totalDPR} from ${attackCount} attacks`);
     // Return total DPR (not average, as we want the full damage potential)
     return Math.round(totalDPR);
@@ -526,6 +528,16 @@ class CRCalculator {
                 
                 const damage = this.calculateDamageFormula(`${number}d${denomination}${bonus ? '+' + bonus : ''}`);
                 console.log(`[CRCalculator] Calculated activity damage: ${damage}`);
+                
+                // Check if this is a limited-use ability and reduce damage accordingly
+                const isLimitedUse = this.isLimitedUseAbility(item, item.system.description?.value || '');
+                console.log(`[CRCalculator] Checking limited-use for ${item.name}: ${isLimitedUse}`);
+                if (isLimitedUse) {
+                  const reducedDamage = Math.round(damage * 0.6);
+                  console.log(`[CRCalculator] Limited-use ability detected, reducing damage from ${damage} to ${reducedDamage}`);
+                  return reducedDamage;
+                }
+                
                 return damage;
               }
             }
@@ -689,13 +701,17 @@ class CRCalculator {
       const desc = item.system.description.value.toLowerCase();
       console.log(`[CRCalculator] Analyzing feature description: ${desc}`);
       
+      // Check if this is a limited-use ability (breath weapon, etc.)
+      const isLimitedUse = this.isLimitedUseAbility(item, desc);
+      
       // Look for damage in text like "Hit: 17 (5d6) fire damage"
       const damageMatch = desc.match(/hit:\s*(\d+)\s*\(([^)]+)\)/i);
       if (damageMatch) {
         const damageAmount = parseInt(damageMatch[1]);
         if (!isNaN(damageAmount)) {
           console.log(`[CRCalculator] Found damage in description: ${damageAmount}`);
-          return damageAmount;
+          // Reduce damage for limited-use abilities
+          return isLimitedUse ? Math.round(damageAmount * 0.6) : damageAmount;
         }
       }
       
@@ -706,7 +722,8 @@ class CRCalculator {
         const diceSize = parseInt(formulaMatch[2]);
         const damage = this.calculateDamageFormula(`${numDice}d${diceSize}`);
         console.log(`[CRCalculator] Found damage formula in description: ${numDice}d${diceSize} = ${damage}`);
-        return damage;
+        // Reduce damage for limited-use abilities
+        return isLimitedUse ? Math.round(damage * 0.6) : damage;
       }
       
       // Look for flat damage numbers like "17 fire damage"
@@ -715,7 +732,8 @@ class CRCalculator {
         const damageAmount = parseInt(flatDamageMatch[1]);
         if (!isNaN(damageAmount)) {
           console.log(`[CRCalculator] Found flat damage in description: ${damageAmount}`);
-          return damageAmount;
+          // Reduce damage for limited-use abilities
+          return isLimitedUse ? Math.round(damageAmount * 0.6) : damageAmount;
         }
       }
       
@@ -1106,21 +1124,187 @@ class CRCalculator {
         }
       }
       
+      // Also check other feats for spell levels (like Counterspell)
+      for (const item of items) {
+        if (item.type === 'feat' && item.system.activities) {
+          for (const activity of item.system.activities.values()) {
+            if (activity.type === 'cast' && activity.spell && activity.spell.uuid) {
+              try {
+                const spell = await fromUuid(activity.spell.uuid);
+                if (spell && spell.system.level && spell.system.level > highestSpellLevel) {
+                  highestSpellLevel = spell.system.level;
+                  console.log(`[CRCalculator] Found spell level ${spell.system.level} for ${spell.name} in ${item.name}`);
+                }
+              } catch (error) {
+                console.log(`[CRCalculator] Error looking up spell for utility bonus:`, error);
+              }
+            }
+          }
+        }
+      }
+      
       console.log(`[CRCalculator] Highest spell level: ${highestSpellLevel}`);
     }
     
-    // Calculate utility bonus based on At Will abilities and combat control
-    if (atWillCount >= 2) utilityBonus += 0.5;
-    if (atWillCount >= 4) utilityBonus += 0.5;
-    if (hasCombatControl) utilityBonus += 1.0;
+    // Calculate utility bonus based on At Will abilities and combat control (reduced values)
+    if (atWillCount >= 2) utilityBonus += 0.25;
+    if (atWillCount >= 4) utilityBonus += 0.25;
+    if (hasCombatControl) utilityBonus += 0.5;
     
-    // Add baseline CR for spellcasting level
-    if (highestSpellLevel >= 3) utilityBonus += 2.0; // 3rd level spells = CR 3-4 baseline
-    else if (highestSpellLevel >= 2) utilityBonus += 1.5; // 2nd level spells = CR 2-3 baseline
+    // Add bonus for powerful abilities
+    for (const item of items) {
+      if (item.type === 'feat') {
+        const itemName = item.name.toLowerCase();
+        if (itemName.includes('mind rot') || itemName.includes('counterspell')) {
+          utilityBonus += 0.75; // Powerful abilities worth +0.75 CR
+          console.log(`[CRCalculator] Found powerful ability: ${item.name}, adding +0.75 to utility bonus`);
+        }
+        // Add bonuses for legendary and powerful abilities
+        if (itemName.includes('legendary resistance')) {
+          utilityBonus += 0.5; // Legendary Resistance is worth +0.5 CR
+          console.log(`[CRCalculator] Found Legendary Resistance, adding +0.5 to utility bonus`);
+        }
+        if (itemName.includes('dominate mind') || itemName.includes('dominate')) {
+          utilityBonus += 0.5; // Mind control abilities worth +0.5 CR
+          console.log(`[CRCalculator] Found mind control ability: ${item.name}, adding +0.5 to utility bonus`);
+        }
+        if (itemName.includes('eldritch restoration') || itemName.includes('immortality')) {
+          utilityBonus += 0.5; // Immortality/regeneration worth +0.5 CR
+          console.log(`[CRCalculator] Found immortality ability: ${item.name}, adding +0.5 to utility bonus`);
+        }
+      }
+    }
+    
+    // Add baseline CR for spellcasting level (reduced values)
+    if (highestSpellLevel >= 3) utilityBonus += 0.5; // 3rd level spells = CR 0.5 baseline
+    else if (highestSpellLevel >= 2) utilityBonus += 0.25; // 2nd level spells = CR 0.25 baseline
+    
+    // Add bonus for legendary actions (multiple actions per round)
+    const legendaryActions = items.filter(item => 
+      item.type === 'feat' && 
+      item.system.activities && 
+      Array.from(item.system.activities.values()).some(activity => 
+        activity.activation?.type === 'legendary'
+      )
+    );
+    
+    if (legendaryActions.length > 0) {
+      utilityBonus += 0.5; // Legendary actions worth +0.5 CR
+      console.log(`[CRCalculator] Found ${legendaryActions.length} legendary actions, adding +0.5 to utility bonus`);
+    }
+    
+    // Cap utility bonus to prevent overvaluation
+    const maxUtilityBonus = 2.5;
+    if (utilityBonus > maxUtilityBonus) {
+      console.log(`[CRCalculator] Capping utility bonus from ${utilityBonus} to ${maxUtilityBonus}`);
+      utilityBonus = maxUtilityBonus;
+    }
     
     console.log(`[CRCalculator] Utility bonus calculation: At Will sections: ${atWillCount}, Combat control: ${hasCombatControl}, Spell level: ${highestSpellLevel}, Total bonus: ${utilityBonus}`);
     
     return utilityBonus;
+  }
+
+  /**
+   * Calculate damage from legendary actions
+   * @param {Array} items - Array of actor items
+   * @returns {Promise<number>} - Total legendary action damage
+   */
+  static async calculateLegendaryActionDamage(items) {
+    let legendaryDamage = 0;
+    
+    for (const item of items) {
+      if (item.type === 'feat' && item.system.activities) {
+        for (const activity of item.system.activities.values()) {
+          if (activity.activation?.type === 'legendary') {
+            // For legendary actions, we need to look up the referenced abilities
+            // Lash references Tentacle attack, Psychic Drain references Consume Memories
+            if (item.name.toLowerCase().includes('lash')) {
+              // Lash makes one Tentacle attack
+              const tentacleItem = items.find(i => i.name.toLowerCase().includes('tentacle') && i.type === 'weapon');
+              if (tentacleItem) {
+                const damage = await this.calculateItemDamage(tentacleItem);
+                legendaryDamage += damage;
+                console.log(`[CRCalculator] Legendary action Lash (Tentacle): ${damage} damage`);
+              }
+            } else if (item.name.toLowerCase().includes('psychic drain')) {
+              // Psychic Drain uses Consume Memories
+              const consumeItem = items.find(i => i.name.toLowerCase().includes('consume memories'));
+              if (consumeItem) {
+                const damage = await this.calculateItemDamage(consumeItem);
+                legendaryDamage += damage;
+                console.log(`[CRCalculator] Legendary action Psychic Drain (Consume Memories): ${damage} damage`);
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    return legendaryDamage;
+  }
+
+  /**
+   * Check if an ability is limited-use (breath weapon, etc.)
+   * @param {Object} item - The item to check
+   * @param {string} description - The item description
+   * @returns {boolean} - True if the ability is limited-use
+   */
+  static isLimitedUseAbility(item, description) {
+    const itemName = item.name.toLowerCase();
+    
+    // Decode HTML entities before converting to lowercase
+    const decodedDesc = description
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .toLowerCase();
+    
+    console.log(`[CRCalculator] isLimitedUseAbility called for ${item.name} with description: "${decodedDesc}"`);
+    
+    // Check for breath weapons
+    if (itemName.includes('breath') || itemName.includes('cold breath') || itemName.includes('fire breath')) {
+      console.log(`[CRCalculator] Detected breath weapon: ${item.name} - treating as limited-use`);
+      return true;
+    }
+    
+    // Check for other limited-use abilities
+    if (itemName.includes('gaze') || itemName.includes('stare')) {
+      console.log(`[CRCalculator] Detected gaze ability: ${item.name} - treating as limited-use`);
+      return true;
+    }
+    
+    // Check for abilities that can't be used again until next turn
+    console.log(`[CRCalculator] Searching for: "can't take this action again until the start of its next turn"`);
+    console.log(`[CRCalculator] In text: "${decodedDesc}"`);
+    console.log(`[CRCalculator] Text contains target: ${decodedDesc.includes("can't take this action again until the start of its next turn")}`);
+    
+    if (decodedDesc.includes("can't take this action again until the start of its next turn")) {
+      console.log(`[CRCalculator] Detected limited-use ability: ${item.name} - can't be used again until next turn`);
+      return true;
+    }
+    
+    // More flexible search patterns
+    if (decodedDesc.includes("can't take this action again")) {
+      console.log(`[CRCalculator] Detected limited-use ability: ${item.name} - can't take this action again (flexible match)`);
+      return true;
+    }
+    
+    if (decodedDesc.includes("until the start of its next turn")) {
+      console.log(`[CRCalculator] Detected limited-use ability: ${item.name} - until start of next turn (flexible match)`);
+      return true;
+    }
+    
+    // Check description for limited-use indicators
+    if (decodedDesc.includes('recharge') || decodedDesc.includes('1/day') || decodedDesc.includes('once per day')) {
+      console.log(`[CRCalculator] Detected limited-use indicator in description: ${item.name}`);
+      return true;
+    }
+    
+    console.log(`[CRCalculator] No limited-use indicators found for ${item.name}`);
+    return false;
   }
 }
 

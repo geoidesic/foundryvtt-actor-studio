@@ -1,15 +1,14 @@
 # CR Adjustment System
 
-The CR Adjustment System is a powerful tool that allows Game Masters to automatically adjust NPCs to different Challenge Ratings (CR) according to the Dungeon Master's Guide (DMG) rules. This system automatically recalculates and updates the NPC's stats, features, and abilities to match the target CR.
+The CR Adjustment System is a powerful tool that allows Game Masters to automatically adjust NPCs to different Challenge Ratings (CR) according to the rules. This system automatically recalculates and updates the NPC's stats, features, and abilities to match the target CR.
 
 ## Overview
 
-The CR Adjustment System implements the official D&D 5e challenge rating calculation rules from the DMG (pages 273-283). It provides:
+The CR Adjustment System implements the official D&D 5e challenge rating calculation rules It provides:
 
 - **Automatic CR calculation** based on current NPC stats
 - **CR adjustment** to any valid challenge rating
 - **Stat recalculation** including HP, AC, ability scores, and feature damage
-- **DMG compliance** following official rules and tables
 
 ## How It Works
 
@@ -31,9 +30,9 @@ When adjusting to a target CR, the system:
 - Recalculates feature damage to match target DPR expectations
 - Updates XP value and proficiency bonus
 
-### 3. DMG Tables
+### 3. Tables
 
-The system uses official DMG tables for:
+The system uses custom tables for:
 
 - **Defensive CR**: HP ranges and expected AC values
 - **Offensive CR**: DPR ranges, attack bonuses, and save DCs
@@ -75,7 +74,6 @@ The system uses official DMG tables for:
 
 ### Advanced Options
 
-- **DMG Tables**: View the official challenge rating tables
 - **Calculation Details**: See how CR is calculated
 - **Warning System**: Alerts before making significant changes
 
@@ -92,7 +90,6 @@ The system uses official DMG tables for:
 
 - **Svelte**: For reactive UI components
 - **Foundry VTT**: For actor updates and notifications
-- **DMG Rules**: Official challenge rating calculation tables
 
 ## Examples
 
@@ -155,7 +152,7 @@ The system uses official DMG tables for:
 
 **"Invalid target CR" error**
 - Ensure the target CR is a valid value (0, 0.125, 0.25, 0.5, 1, 2, etc.)
-- Check that the CR exists in the DMG tables
+- Check that the CR exists in the CR tables
 
 **Stats not updating**
 - Verify the NPC is editable (not in readonly mode)
@@ -178,6 +175,6 @@ If you encounter issues:
 
 ## Conclusion
 
-The CR Adjustment System provides a powerful, rules-accurate way to scale NPCs up or down in challenge rating. By following the official DMG guidelines, it ensures that adjusted NPCs maintain appropriate balance and challenge for your players.
+The CR Adjustment System provides a powerful, rules-accurate way to scale NPCs up or down in challenge rating. By following the CR guidelines, it ensures that adjusted NPCs maintain appropriate balance and challenge for your players.
 
 Remember that while the system provides excellent baseline adjustments, you may want to fine-tune specific aspects based on your campaign's needs and your players' preferences.

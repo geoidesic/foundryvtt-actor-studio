@@ -241,7 +241,7 @@ export async function autoRollGold(selectedNpcBase) {
     const npcCR = selectedNpcBase?.system?.details?.cr ?? 0;
     console.log('[NPC Store] NPC CR:', npcCR);
     
-    // Calculate gold based on CR using Individual Treasure table (DMG)
+    // Calculate gold based on CR using Individual Treasure table
     let newCurrency = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
     
     if (npcCR === 0) {
@@ -382,7 +382,7 @@ export function resetMagicItemsToDefault() {
   });
 }
 
-// Function to roll hoard treasure based on party level (DMG tables)
+// Function to roll hoard treasure based on party level
 export async function autoRollHoardGold(partyLevel) {
   try {
     console.log('[NPC Store] Starting autoRollHoardGold for party level:', partyLevel);

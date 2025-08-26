@@ -95,7 +95,7 @@ Goal: Move editing to the NPC actor sheet for long-term flexibility; allow CR re
 
 - [ ] CR calculator
   - [ ] Add a “Recalculate CR” button on the sheet header or within the stat block.
-  - [ ] Use deterministic DMG algorithm from `src/helpers/CR.js` (see Step 6) to compute and optionally sync to `system.details.cr` and `system.details.xp`.
+  - [ ] Use deterministic algorithm from `src/helpers/CR.js` (see Step 6) to compute and optionally sync to `system.details.cr` and `system.details.xp`.
 
 ---
 
@@ -108,12 +108,12 @@ Goal: From Tab 2, create the actual Actor in the world using the base NPC plus s
 
 ---
 
-### Step 6 — CR calculation algorithm (deterministic, DMG-based)
+### Step 6 — CR calculation algorithm (deterministic, rules-based)
 
-Goal: Provide a reliable, offline, deterministic implementation of the DMG method.
+Goal: Provide a reliable, offline, deterministic implementation of the CR method.
 
 - [ ] `src/helpers/CR.js`
-  - [ ] DMG tables (CR ↔ expected HP/AC and DPR/Attack bonus/Save DC) and mapping utilities.
+  - [ ] CR tables (CR ↔ expected HP/AC and DPR/Attack bonus/Save DC) and mapping utilities.
   - [ ] Defensive CR calculation (HP + resistance multiplier; AC adjustment).
   - [ ] Offensive CR calculation (DPR; attack bonus or save DC adjustment; include toggles for legendary/lair contributions if desired).
   - [ ] Average and final CR with rounding rules.
@@ -160,7 +160,7 @@ If Adult Green Dragon data is provided, we will use it to validate layout and pa
 ### CR Calculation – Feasibility & Approach
 
 Assessment:
-- A deterministic algorithm matching the DMG method is feasible and reliable. Inputs: effective HP (with resistance multipliers), AC, DPR, attack bonus or save DC, and optional adjustments for legendary/lair actions.
+- A deterministic algorithm matching the CR method is feasible and reliable. Inputs: effective HP (with resistance multipliers), AC, DPR, attack bonus or save DC, and optional adjustments for legendary/lair actions.
 - Edge cases like complex spellcasters, AoE assumptions, rider effects, or control abilities require judgment; we can expose toggles/inputs so users can include/exclude those contributions.
 
 Recommendation:

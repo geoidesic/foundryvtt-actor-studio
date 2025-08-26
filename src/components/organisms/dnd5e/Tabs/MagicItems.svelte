@@ -249,7 +249,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
       +if("$magicItemsState.generationType === 'hoard'")
         .hoard-controls
           h4 Hoard Generation
-          p.description Generate treasure for a treasure hoard based on party tier (DMG tables)
+          p.description Generate treasure for a treasure hoard based on party tier (CR tables)
           
           // Currency Display Section for Hoard
           NPCCurrencyDisplay(showRollButton="{true}" hoardMode="{true}" partyLevel="{localPartyLevel}")
