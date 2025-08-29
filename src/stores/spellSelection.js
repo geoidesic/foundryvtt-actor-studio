@@ -352,7 +352,9 @@ export async function loadAvailableSpells(characterClassName = null) {
                     window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
                 }
               }
-
+                if (!availableToClass) {
+                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present? ${doc._lazy.classes}`);
+                }
                 // If still not available, check for lazy-loaded class items directly (some compendia store class refs under _lazy)
                 if (!availableToClass && doc._lazy?.classes) {
                   try {
