@@ -6,6 +6,44 @@ import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass 
 // Import spellsKnown data for determining spell limits
 import spellsKnownData from './spellsKnown.json';
 
+// Helper: produce a small, safe summary of a `_lazy.classes` object to avoid
+// printing large prototypes or causing getters to run. Returns null when empty.
+function safeInspectLazyClasses(lazy) {
+  try {
+    if (!lazy || typeof lazy !== 'object') return null;
+    const keys = Object.keys(lazy || {}).slice(0, 10);
+    const samples = keys.map(k => {
+      const v = lazy[k];
+      const type = v?.type || v?.constructor?.name || null;
+      const id = v?.system?.identifier || v?.system?.id || v?._id || v?.uuid || null;
+      const name = v?.name || v?.system?.name || null;
+      return { key: k, type, id, name };
+    });
+    return { count: Object.keys(lazy).length, keys, samples };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
+// Helper: summarize class information found on a spell document (labels, system, _lazy)
+function inspectSpellClasses(doc) {
+  try {
+    const labels = doc.labels?.classes ?? null;
+    const systemClasses = (() => {
+      const sc = doc.system?.classes;
+      if (!sc) return null;
+      // system.classes may be an object with a `value` string or other shapes
+      if (typeof sc === 'object' && sc.value) return sc.value;
+      return sc;
+    })();
+    const lazySummary = safeInspectLazyClasses(doc._lazy?.classes || null);
+    const lazyKeys = doc._lazy?.classes ? Object.keys(doc._lazy.classes).slice(0, 10) : [];
+    return { labels, systemClasses, lazySummary, lazyKeys };
+  } catch (e) {
+    return { error: String(e) };
+  }
+}
+
 // Store for managing the state of spell selection
 
 // List of spells available for selection, fetched from selected compendiums
@@ -411,6 +449,24 @@ export async function loadAvailableSpells(characterClassName = null) {
               if (availableToClass) {
                 // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
                 // Create spell object with enhanced data
+                // Avoid accessing the deprecated SpellData#preparation getter. Prefer new
+                // fields `method` and `prepared` when present, otherwise fall back to
+                // raw source (`_source`) if available, or a safe default.
+                const sys = doc.system || {};
+                const prepObj = (() => {
+                  // New API: method + prepared
+                  if (sys.method !== undefined || sys.prepared !== undefined) {
+                    return { mode: sys.method ?? 'prepared', prepared: sys.prepared ?? false };
+                  }
+                  // Avoid doc.system.preparation getter; inspect raw packed source if present
+                  const rawPrep = doc._source?.system?.preparation;
+                  if (rawPrep) {
+                    return { mode: rawPrep.mode ?? 'prepared', prepared: rawPrep.prepared ?? false };
+                  }
+                  // Fallback default
+                  return { mode: 'prepared', prepared: false };
+                })();
+
                 const spellObj = {
                   _id: doc.id,
                   name: doc.name,
@@ -418,12 +474,12 @@ export async function loadAvailableSpells(characterClassName = null) {
                   type: doc.type,
                   uuid: doc.uuid,
                   system: {
-                    level: doc.system.level,
-                    school: doc.system.school,
-                    preparation: doc.system.preparation,
-                    components: doc.system.components,
-                    description: doc.system.description,
-                    activation: doc.system.activation
+                    level: sys.level,
+                    school: sys.school,
+                    preparation: prepObj,
+                    components: sys.components,
+                    description: sys.description,
+                    activation: sys.activation
                   },
                   labels: doc.labels
                 };
@@ -432,15 +488,15 @@ export async function loadAvailableSpells(characterClassName = null) {
                 // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
                 // Detailed diagnostic for why this spell was filtered out
                 try {
-                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
-                  //   pack: pack.collection,
-                  //   uuid: doc.uuid,
-                  //   name: doc.name,
-                  //   level: doc.system?.level,
-                  //   labelsClasses: doc.labels?.classes,
-                  //   systemClasses: doc.system?.classes,
-                  //   availableToClass
-                  // });
+                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
+                    pack: pack.collection,
+                    uuid: doc.uuid,
+                    name: doc.name,
+                    level: doc.system?.level,
+                    itemClasses: doc.labels.classes,
+                    available: availableToClass,
+                    characterClassName: characterClassName, 
+                  });
                 } catch (e) {
                   // Fallback to simple log if structured logging fails
                   window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
@@ -474,7 +530,7 @@ export async function loadAvailableSpells(characterClassName = null) {
               system: {
                 level: entry.system?.level || 0,
                 school: entry.system?.school || 'unknown',
-                preparation: { mode: 'prepared' }, // Default for compatibility
+                preparation: { mode: 'prepared', prepared: false }, // Default for compatibility
                 components: {},
                 description: { value: '' },
                 activation: {}
