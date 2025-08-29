@@ -55,7 +55,7 @@
                 "type": "system",
                 "compatibility": {
                     "minimum": "3.0.0",
-                    "verified": "4",
+                    "verified": "5.1",
                     "maximum": "6"
                 }
             }
