@@ -16,6 +16,23 @@
   let isAdjusting = false;
   let isCollapsed = false;
   
+  // Apply calculated CR to the in-memory actor
+  async function applyCalculatedCR() {
+    if (!$actor || readonly || !currentCRBreakdown) return;
+    const finalCR = currentCRBreakdown.finalCR;
+    if (finalCR === undefined || finalCR === null) return;
+    try {
+      // Update only the in-memory actor's CR (do not persist to compendium)
+      await updateSource($actor, { system: { details: { cr: finalCR } } });
+      // update local state to reflect change
+      currentCR = finalCR;
+      ui.notifications.info(`Applied calculated CR ${formatCR(finalCR)} to actor`);
+    } catch (err) {
+      console.error('Failed to apply calculated CR:', err);
+      ui.notifications.error('Failed to apply calculated CR. See console for details.');
+    }
+  }
+  
   // Debug: Log the CRCalculator version and check if it's the updated one
   console.log('🔧 CRCalculator loaded:', CRCalculator);
   console.log('🔧 CRCalculator.calculateCurrentCR:', typeof CRCalculator.calculateCurrentCR);
@@ -177,249 +194,85 @@
 <template lang="pug">
 .cr-adjuster
   .cr-header
-    h3 Challenge Rating Adjustment
+    h4 Challenge Rating Adjustment
     .header-controls
-      button(
-        type="button"
-        class="btn btn-sm"
-        on:click!="{recalculateCurrentCR}"
-        disabled="{!actor}"
-        title="Recalculate current CR based on current stats"
-      )
-        i.fas.fa-calculator
-        span Analyze Current CR
+      // collapse/expand only (icon-only)
       button(
         type="button"
         class="btn btn-sm btn-icon"
         on:click!="{() => isCollapsed = !isCollapsed}"
-        title="{isCollapsed ? 'Expand' : 'Collapse'}"
+        data-tooltip="{isCollapsed ? 'Expand' : 'Collapse'}"
+        aria-label="{isCollapsed ? 'Expand' : 'Collapse'}"
       )
         i.fas(class!="{isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}")
   
   +if("!isCollapsed")
     .cr-content
-      .cr-current
-    .cr-info
-      strong Current CR: {formatCR(currentCR)} ({formatXP(actor?.system?.details?.xp?.value || 0)} XP)
+      .cr-row
+        .cr-main
+          .cr-text
+            .cr-current
+            .cr-info
+              strong Current CR: {formatCR(currentCR)} ({formatXP(actor?.system?.details?.xp?.value || 0)} XP)
+            +if("currentCRBreakdown")
+              .cr-breakdown
+                .breakdown-item
+                  .label Defensive CR:
+                  .value {formatCR(currentCRBreakdown.defensiveCR)}
+                .breakdown-item
+                  .label Offensive CR:
+                  .value {formatCR(currentCRBreakdown.offensiveCR)}
+                .breakdown-item
+                  .label Calculated CR:
+                  .value {formatCR(currentCRBreakdown.finalCR)}
+                .breakdown-item
+                  .label Proficiency Bonus:
+                  .value +{currentCRBreakdown.proficiencyBonus}
 
-    +if("currentCRBreakdown")
-      .cr-breakdown
-        .breakdown-item
-          .label Defensive CR:
-          .value {formatCR(currentCRBreakdown.defensiveCR)}
-        .breakdown-item
-          .label Offensive CR:
-          .value {formatCR(currentCRBreakdown.offensiveCR)}
-        .breakdown-item
-          .label Calculated CR:
-          .value {formatCR(currentCRBreakdown.finalCR)}
-        .breakdown-item
-          .label Proficiency Bonus:
-          .value +{currentCRBreakdown.proficiencyBonus}
+            // add compact advanced-toggle inside text block
+            .advanced-toggle
+              button(
+                type="button"
+                class="btn btn-sm btn-icon"
+                on:click!="{() => showAdvanced = !showAdvanced}"
+                data-tooltip="{showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}"
+                aria-label="{showAdvanced ? 'Hide Advanced Options' : 'Show Advanced Options'}"
+              )
+                i.fas.fa-cog
 
-  hr
+            +if("showAdvanced")
+              .cr-advanced
+                h5 Advanced CR Calculation
+                p.text-muted
+                  | This tool uses the challenge rating calculation rules to automatically analyse and suggest adjustments for your NPC's stats.
+                  | It will propose changes for HP, AC, ability scores, and feature damage to better match the calculated CR.
 
-  .cr-target
-    .form-group
-      label(for="target-cr") Target CR:
-      select(
-        id="target-cr"
-        bind:value="{targetCR}"
-        disabled="{readonly}"
-        class="cr-select"
-      )
-        +each("crOptions as option")
-          option(value="{option.value}") {option.label}
+                .warning
+                  i.fas.fa-exclamation-triangle
+                  strong Warning:
+                  | These are suggested changes only. Review any adjustments before applying them to your NPC.
 
-    .target-stats
-      .stat-item
-        .label Target XP:
-        .value {formatXP(targetXP)}
-      .stat-item
-        .label Target HP:
-        .value {targetHP}
-      .stat-item
-        .label Target AC:
-        .value {targetAC}
-      .stat-item
-        .label Target DPR:
-        .value {targetDPR}
-      .stat-item
-        .label Proficiency Bonus:
-        .value +{targetPB}
+          .cr-buttons
+            button(
+              type="button"
+              class="btn btn-sm btn-icon"
+              on:click!="{recalculateCurrentCR}"
+              disabled="{!actor}"
+              data-tooltip="Recalculate current CR based on current stats"
+              aria-label="Recalculate current CR"
+            )
+              i.fas.fa-calculator
+            button(
+              type="button"
+              class="btn btn-sm btn-icon"
+              on:click!="{applyCalculatedCR}"
+              disabled="{!actor || readonly || !currentCRBreakdown || currentCRBreakdown.finalCR === currentCR}"
+              data-tooltip="Apply the calculated CR to the in-memory actor"
+              aria-label="Apply calculated CR"
+            )
+              i.fas.fa-save
 
-    .cr-actions
-      button(
-        type="button"
-        class="btn btn-primary"
-        on:click!="{adjustToTargetCR}"
-        disabled="{!actor || readonly || isAdjusting || targetCR === currentCR}"
-      )
-        +if("isAdjusting")
-          i.fas.fa-spinner.fa-spin
-          span Adjusting...
-          +else()
-            i.fas.fa-magic
-            span Adjust to CR {formatCR(targetCR)}
-
-      button(
-        type="button"
-        class="btn btn-secondary"
-        on:click!="{() => showAdvanced = !showAdvanced}"
-        disabled="{!actor}"
-      )
-        i.fas.fa-cog
-        span {showAdvanced ? 'Hide' : 'Show'} Advanced Options
-
-    +if("showAdvanced")
-      .cr-advanced
-        hr
-        h4 Advanced CR Calculation
-        p.text-muted
-          | This tool uses the challenge rating calculation rules to automatically adjust your NPC's stats.
-          | It will modify HP, AC, ability scores, and feature damage to match the target CR.
-
-        .warning
-          i.fas.fa-exclamation-triangle
-          strong Warning:
-          | This will modify your NPC's stats. Make sure to review the changes before applying.
-
-       
+  //- Target CR UI removed - feature deprecated / unstable
 </template>
 <style lang="sass">
-  .cr-adjuster
-    padding: 1rem
-    border: 1px solid #ccc
-    border-radius: 4px
-
-  .cr-header
-    display: flex
-    justify-content: space-between
-    align-items: center
-    margin-bottom: 1rem
-
-  .header-controls
-    display: flex
-    gap: 0.5rem
-    align-items: center
-
-  .btn-icon
-    padding: 0.25rem 0.5rem
-    min-width: auto
-
-  .cr-header h3
-    margin: 0
-
-  .cr-current, .cr-target
-    margin-bottom: 1rem
-
-  .cr-info
-    font-size: 1.1em
-    margin-bottom: 0.5rem
-
-  .cr-breakdown
-    display: grid
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr))
-    gap: 0.5rem
-    margin-top: 0.5rem
-    padding: 0.5rem
-    border-radius: 3px
-    border: 1px solid #ddd
-
-  .breakdown-item
-    display: flex
-    justify-content: space-between
-
-  .breakdown-item .label
-    font-weight: bold
-
-
-  .form-group
-    margin-bottom: 1rem
-
-  .form-group label
-    display: block
-    margin-bottom: 0.25rem
-    font-weight: bold
-
-  .cr-select
-    width: 100%
-    padding: 0.5rem
-    border: 1px solid #ccc
-    border-radius: 3px
-    font-size: 1em
-
-  .target-stats
-    display: grid
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr))
-    gap: 0.5rem
-    margin: 1rem 0
-    padding: 1rem
-    border-radius: 3px
-    border: 1px solid #ddd
-
-  .stat-item
-    display: flex
-    justify-content: space-between
-    align-items: center
-
-  .stat-item .label
-    font-weight: bold
-
-  .stat-item .value
-    font-weight: bold
-
-  .cr-actions
-    display: flex
-    gap: 0.5rem
-    flex-wrap: wrap
-
-  .cr-advanced
-    margin-top: 1rem
-
-  .warning
-    background: #fff3cd
-    border: 1px solid #ffeaa7
-    color: #856404
-    padding: 0.75rem
-    border-radius: 3px
-    margin: 1rem 0
-    display: flex
-    align-items: center
-    gap: 0.5rem
-
-  .cr-tables
-    margin-top: 1rem
-
-  .table-container
-    display: grid
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))
-    gap: 1rem
-    margin-top: 1rem
-
-  .cr-table
-    width: 100%
-    border-collapse: collapse
-    font-size: 0.9em
-
-  .cr-table th,
-  .cr-table td
-    padding: 0.25rem 0.5rem
-    text-align: left
-    border: 1px solid #ddd
-
-  .cr-table th
-    background: #f5f5f5
-    font-weight: bold
-
-  .text-muted
-    color: #666
-    font-style: italic
-
-  details summary
-    cursor: pointer
-    font-weight: bold
-    margin-bottom: 0.5rem
-
-  details summary:hover
 </style>
