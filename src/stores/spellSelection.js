@@ -349,67 +349,68 @@ export async function loadAvailableSpells(characterClassName = null) {
                   window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes.value found: ${spellClasses}, availableToClass: ${availableToClass}`);
                 } else {
                   window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
-                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
+                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
                 }
               }
-                if (!availableToClass) {
-                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present? ${doc._lazy.classes}`);
-                }
-                // If still not available, check for lazy-loaded class items directly (some compendia store class refs under _lazy)
-                if (!availableToClass && doc._lazy?.classes) {
-                  try {
-                    const lazyClasses = doc._lazy.classes;
-                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present, keys=${Object.keys(lazyClasses).slice(0,5).join(',')}`);
-                    if (typeof lazyClasses === 'object') {
-                      const keys = Object.keys(lazyClasses);
-                      // Quick key match (slug keys like 'bard')
-                      if (keys.some(k => k.toLowerCase() === characterClassName.toLowerCase() || k.toLowerCase().includes(characterClassName.toLowerCase()))) {
-                        availableToClass = true;
-                        spellClasses = keys.join(', ');
-                      } else {
-                        // Inspect values (ItemDocuments or prototypes)
-                        for (const val of Object.values(lazyClasses)) {
-                          // Handle Item-like shapes (Item5e) where type==='class' and system.identifier exists
-                          const valType = val?.type || val?.constructor?.name || '';
-                          const identifier = val?.system?.identifier || val?.system?.id || '';
-                          const candidateName = val?.name || val?.system?.name || '';
+              window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present?`, doc?._lazy?.classes);
+              if (!availableToClass) {
+                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present?`, doc?._lazy?.classes);
+              }
+              // If still not available, check for lazy-loaded class items directly (some compendia store class refs under _lazy)
+              if (!availableToClass && doc._lazy?.classes) {
+                try {
+                  const lazyClasses = doc._lazy.classes;
+                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present, keys=${Object.keys(lazyClasses).slice(0, 5).join(',')}`);
+                  if (typeof lazyClasses === 'object') {
+                    const keys = Object.keys(lazyClasses);
+                    // Quick key match (slug keys like 'bard')
+                    if (keys.some(k => k.toLowerCase() === characterClassName.toLowerCase() || k.toLowerCase().includes(characterClassName.toLowerCase()))) {
+                      availableToClass = true;
+                      spellClasses = keys.join(', ');
+                    } else {
+                      // Inspect values (ItemDocuments or prototypes)
+                      for (const val of Object.values(lazyClasses)) {
+                        // Handle Item-like shapes (Item5e) where type==='class' and system.identifier exists
+                        const valType = val?.type || val?.constructor?.name || '';
+                        const identifier = val?.system?.identifier || val?.system?.id || '';
+                        const candidateName = val?.name || val?.system?.name || '';
 
-                          // Exact slug/identifier match (most robust)
-                          if (identifier && identifier.toLowerCase() === characterClassName.toLowerCase()) {
+                        // Exact slug/identifier match (most robust)
+                        if (identifier && identifier.toLowerCase() === characterClassName.toLowerCase()) {
+                          availableToClass = true;
+                          spellClasses = identifier;
+                          break;
+                        }
+
+                        // If the lazy value is an Item5e class descriptor, check its type and name
+                        if (valType === 'class' || valType.toLowerCase().includes('class')) {
+                          if (typeof candidateName === 'string' && candidateName.toLowerCase() === characterClassName.toLowerCase()) {
                             availableToClass = true;
-                            spellClasses = identifier;
+                            spellClasses = candidateName;
                             break;
                           }
-
-                          // If the lazy value is an Item5e class descriptor, check its type and name
-                          if (valType === 'class' || valType.toLowerCase().includes('class')) {
-                            if (typeof candidateName === 'string' && candidateName.toLowerCase() === characterClassName.toLowerCase()) {
-                              availableToClass = true;
-                              spellClasses = candidateName;
-                              break;
-                            }
-                            if (typeof candidateName === 'string' && candidateName.toLowerCase().includes(characterClassName.toLowerCase())) {
-                              availableToClass = true;
-                              spellClasses = candidateName;
-                              break;
-                            }
-                          }
-
-                          // Fallback: substring match on identifier or name
-                          if ((typeof identifier === 'string' && identifier.toLowerCase().includes(characterClassName.toLowerCase())) ||
-                              (typeof candidateName === 'string' && candidateName.toLowerCase().includes(characterClassName.toLowerCase()))) {
+                          if (typeof candidateName === 'string' && candidateName.toLowerCase().includes(characterClassName.toLowerCase())) {
                             availableToClass = true;
-                            spellClasses = identifier || candidateName;
+                            spellClasses = candidateName;
                             break;
                           }
                         }
+
+                        // Fallback: substring match on identifier or name
+                        if ((typeof identifier === 'string' && identifier.toLowerCase().includes(characterClassName.toLowerCase())) ||
+                          (typeof candidateName === 'string' && candidateName.toLowerCase().includes(characterClassName.toLowerCase()))) {
+                          availableToClass = true;
+                          spellClasses = identifier || candidateName;
+                          break;
+                        }
                       }
-                      window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes resolved: ${spellClasses}, availableToClass=${availableToClass}`);
                     }
-                  } catch (e) {
-                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Error inspecting _lazy.classes: ${e}`);
+                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes resolved: ${spellClasses}, availableToClass=${availableToClass}`);
                   }
+                } catch (e) {
+                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Error inspecting _lazy.classes: ${e}`);
                 }
+              }
 
               if (availableToClass) {
                 window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
@@ -491,7 +492,7 @@ export async function loadAvailableSpells(characterClassName = null) {
           if (spells.length === 0) {
             // Provide more context when index yields no spells
             try {
-              const sampleTypes = indexEntries.slice(0,5).map(e => ({ name: e.name, type: e.type }));
+              const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
               window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
             } catch (e) {
               window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
@@ -526,7 +527,7 @@ export async function loadAvailableSpells(characterClassName = null) {
         window.GAS.log.d(`[SPELLSDEBUG ] Loaded ${spells.length} spells (index only) from ${pack.collection}`);
         if (spells.length === 0) {
           try {
-            const sampleTypes = indexEntries.slice(0,5).map(e => ({ name: e.name, type: e.type }));
+            const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
             window.GAS.log.p(`[SPELLS DEBUG] [INDEX ONLY EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
           } catch (e) {
             window.GAS.log.p(`[SPELLS DEBUG] [INDEX ONLY EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
