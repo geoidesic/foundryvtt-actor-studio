@@ -274,27 +274,27 @@ export async function loadAvailableSpells(characterClassName = null) {
     // Get spell compendium sources from settings
     const packs = getPacksFromSettings("spells");
 
-    window.GAS.log.d('[SPELLS DEBUG] loadAvailableSpells called:', {
-      characterClassName,
-      packsFound: packs?.length || 0,
-      packs: packs?.map(p => p.collection) || 'No packs',
-      dnd5eVersion: window.GAS?.dnd5eVersion,
-      willUseClassFiltering: window.GAS?.dnd5eVersion >= 4 && characterClassName
-    });
+    // window.GAS.log.d('[SPELLS DEBUG] loadAvailableSpells called:', {
+    //   characterClassName,
+    //   packsFound: packs?.length || 0,
+    //   packs: packs?.map(p => p.collection) || 'No packs',
+    //   dnd5eVersion: window.GAS?.dnd5eVersion,
+    //   willUseClassFiltering: window.GAS?.dnd5eVersion >= 4 && characterClassName
+    // });
 
     if (!packs || packs.length === 0) {
       availableSpells.set([]);
       console.warn("[SPELLS DEBUG] No spell compendiums configured in settings");
-      window.GAS.log.d("[SPELLS DEBUG] No spell compendiums configured");
+      // window.GAS.log.d("[SPELLS DEBUG] No spell compendiums configured");
       return;
     }
 
-    window.GAS.log.d('[SPELLS DEBUG] Loading spells, character class:', characterClassName);
+    // window.GAS.log.d('[SPELLS DEBUG] Loading spells, character class:', characterClassName);
 
     let allSpells = [];
 
     for (const pack of packs) {
-      window.GAS.log.d('[SPELLS DEBUG] Processing pack:', pack.collection);
+      // window.GAS.log.d('[SPELLS DEBUG] Processing pack:', pack.collection);
 
       if (characterClassName) {
         // VERSION-BASED APPROACH: D&D 5e v4+ has class data, v3.x does not
@@ -311,7 +311,7 @@ export async function loadAvailableSpells(characterClassName = null) {
           // Filter by class and convert to our format
           for (const doc of allDocs) {
             if (doc.type === "spell") {
-              window.GAS.log.d(`[SPELLS DEBUG] Checking spell: ${doc.name}`);
+              // window.GAS.log.d(`[SPELLS DEBUG] Checking spell: ${doc.name}`);
               // Check multiple possible locations for class information
               let spellClasses = null;
               let availableToClass = false;
@@ -333,7 +333,7 @@ export async function loadAvailableSpells(characterClassName = null) {
                 } else {
                   availableToClass = false;
                 }
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] labels.classes found: ${JSON.stringify(spellClasses)}, availableToClass: ${availableToClass}`);
+                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] labels.classes found: ${JSON.stringify(spellClasses)}, availableToClass: ${availableToClass}`);
               }
 
               // Check doc.system.classes (potential 2014 style)
@@ -346,21 +346,17 @@ export async function loadAvailableSpells(characterClassName = null) {
                     spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
                     spellClasses.trim().length === 0
                     : false;
-                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes.value found: ${spellClasses}, availableToClass: ${availableToClass}`);
+                  // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes.value found: ${spellClasses}, availableToClass: ${availableToClass}`);
                 } else {
-                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
+                  // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
                   window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] system.classes present but value missing or not object`);
                 }
-              }
-              window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present?`, doc?._lazy?.classes);
-              if (!availableToClass) {
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present?`, doc?._lazy?.classes);
               }
               // If still not available, check for lazy-loaded class items directly (some compendia store class refs under _lazy)
               if (!availableToClass && doc._lazy?.classes) {
                 try {
                   const lazyClasses = doc._lazy.classes;
-                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present, keys=${Object.keys(lazyClasses).slice(0, 5).join(',')}`);
+                  // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes present, keys=${Object.keys(lazyClasses).slice(0, 5).join(',')}`);
                   if (typeof lazyClasses === 'object') {
                     const keys = Object.keys(lazyClasses);
                     // Quick key match (slug keys like 'bard')
@@ -405,7 +401,7 @@ export async function loadAvailableSpells(characterClassName = null) {
                         }
                       }
                     }
-                    window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes resolved: ${spellClasses}, availableToClass=${availableToClass}`);
+                    // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes resolved: ${spellClasses}, availableToClass=${availableToClass}`);
                   }
                 } catch (e) {
                   window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Error inspecting _lazy.classes: ${e}`);
@@ -413,7 +409,7 @@ export async function loadAvailableSpells(characterClassName = null) {
               }
 
               if (availableToClass) {
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
+                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
                 // Create spell object with enhanced data
                 const spellObj = {
                   _id: doc.id,
@@ -433,19 +429,18 @@ export async function loadAvailableSpells(characterClassName = null) {
                 };
                 filteredSpells.push(spellObj);
               } else {
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
-                window.GAS.log.p(`[SPELLS DEBUG] ${doc}`)
+                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
                 // Detailed diagnostic for why this spell was filtered out
                 try {
-                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
-                    pack: pack.collection,
-                    uuid: doc.uuid,
-                    name: doc.name,
-                    level: doc.system?.level,
-                    labelsClasses: doc.labels?.classes,
-                    systemClasses: doc.system?.classes,
-                    availableToClass
-                  });
+                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
+                  //   pack: pack.collection,
+                  //   uuid: doc.uuid,
+                  //   name: doc.name,
+                  //   level: doc.system?.level,
+                  //   labelsClasses: doc.labels?.classes,
+                  //   systemClasses: doc.system?.classes,
+                  //   availableToClass
+                  // });
                 } catch (e) {
                   // Fallback to simple log if structured logging fails
                   window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
@@ -488,12 +483,12 @@ export async function loadAvailableSpells(characterClassName = null) {
             }));
 
           allSpells.push(...spells);
-          window.GAS.log.d(`[SPELLS DEBUG] Loaded ${spells.length} spells (no class filtering) from ${pack.collection}`);
+          // window.GAS.log.d(`[SPELLS DEBUG] Loaded ${spells.length} spells (no class filtering) from ${pack.collection}`);
           if (spells.length === 0) {
             // Provide more context when index yields no spells
             try {
               const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
-              window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
+              // window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
             } catch (e) {
               window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
             }
@@ -524,11 +519,11 @@ export async function loadAvailableSpells(characterClassName = null) {
           }));
 
         allSpells.push(...spells);
-        window.GAS.log.d(`[SPELLSDEBUG ] Loaded ${spells.length} spells (index only) from ${pack.collection}`);
+        // window.GAS.log.d(`[SPELLSDEBUG ] Loaded ${spells.length} spells (index only) from ${pack.collection}`);
         if (spells.length === 0) {
           try {
             const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
-            window.GAS.log.p(`[SPELLS DEBUG] [INDEX ONLY EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
+            // window.GAS.log.p(`[SPELLS DEBUG] [INDEX ONLY EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
           } catch (e) {
             window.GAS.log.p(`[SPELLS DEBUG] [INDEX ONLY EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
           }
@@ -561,7 +556,7 @@ export async function loadAvailableSpells(characterClassName = null) {
 
     // Update the store with spells
     availableSpells.set(uniqueSpells);
-    window.GAS.log.d('[SPELLS] Final loaded spells:', uniqueSpells.length);
+    // window.GAS.log.d('[SPELLS] Final loaded spells:', uniqueSpells.length);
     window.GAS.log.d('[SPELLS DEBUG] FINAL RESULT: Set availableSpells store with', uniqueSpells.length, 'spells');
     if (uniqueSpells.length === 0) {
       // When no spells survive filtering, dump helpful state
