@@ -180,6 +180,20 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
       // window.GAS.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         // disable the button if the setting is enabled
+        // Optionally remove the default "Create Actor" submit button and show only GAS button
+        if (game.settings.get(MODULE_ID, 'forceASButtonOnlyInNewActorApp')) {
+          const $root = $(html);
+          if (!$root.attr('data-gas-default-removed')) {
+            const $dialogButtons = $('.dialog-buttons', html);
+            let $buttons = $dialogButtons.length ? $('button', $dialogButtons) : $('button', html);
+            let $submit = $buttons.filter('[type="submit"]').last();
+            if (!$submit.length) $submit = $buttons.last();
+            if ($submit && $submit.length) {
+              $submit.remove();
+              $root.attr('data-gas-default-removed', '1');
+            }
+          }
+        }
         const hideOtherButtons = !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
         const nonGmsCanOnlyCreatePCs = !game.user.isGM && game.settings.get(MODULE_ID, 'nonGmsCanOnlyCreatePCs');
         if (!game.user.isGM && hideOtherButtons) {

@@ -44,6 +44,7 @@ export function registerSettings(app: Game): void {
   abilityRollFormula();
   allowAbilityRollScoresToBeMoved();
   showButtonInSideBar(app);
+  forceASButtonOnlyInNewActorApp();
   disableOtherActorCreationOptionsForPlayers();
   nonGmsCanOnlyCreatePCs();
   filterPackSourcesAppropriatelyByName();
@@ -492,6 +493,16 @@ function showButtonInSideBar(app) {
   game.settings.register(MODULE_ID, 'showButtonInSideBar', {
     name: game.i18n.localize('GAS.Setting.showButtonInSideBar.Name'),
     hint: game.i18n.localize('GAS.Setting.showButtonInSideBar.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+  });
+}
+function forceASButtonOnlyInNewActorApp() {
+  game.settings.register(MODULE_ID, 'forceASButtonOnlyInNewActorApp', {
+    name: game.i18n.localize('GAS.Setting.ForceASButtonOnlyInNewActorApp.Name'),
+    hint: game.i18n.localize('GAS.Setting.ForceASButtonOnlyInNewActorApp.Hint'),
     scope: 'world',
     config: true,
     default: false,

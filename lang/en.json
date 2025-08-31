@@ -243,6 +243,10 @@
         "Name": "Show button in sidebar",
         "Hint": "Show the Actor Studio button in the sidebar. (Requires a browser refresh to take effect)"
       },
+      "ForceASButtonOnlyInNewActorApp": {
+        "Name": "Force Actor Studio button only in New Actor app",
+        "Hint": "Replace the default Create Actor submit button with the Actor Studio button in the New Actor dialog. This helps avoid duplicate buttons and respects localization by not relying on button text."
+      },
       "illuminatedDescription": {
         "Name": "Enable illuminated description",
         "Hint": "This will add a larger version of the selection icons to the right-hand panel of the tab, where appropriate."
