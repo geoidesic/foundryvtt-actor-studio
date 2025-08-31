@@ -115,20 +115,29 @@ export const log = {
 };
 
 export const getDnd5eVersion = () => {
-  const system = game.system;
-  console.trace()
-  log.level = log.DEBUG;
-  log.d('game', game);
-  log.d('system', system);
-  if (system.id !== 'dnd5e') return null;
-  return Number(system.version.split('.')[0]); // Returns 3 or 4
+  // Prefer the runtime-initialized value if present (set in hooks/init.js)
+  if (typeof window !== 'undefined' && window.GAS && Number.isFinite(Number(window.GAS.dnd5eVersion))) {
+    return Number(window.GAS.dnd5eVersion);
+  }
+
+  // Fallback: inspect the installed system at runtime if available
+  try {
+    const system = globalThis?.game?.system;
+    if (!system || system.id !== 'dnd5e') return null;
+    const major = Number(system.version?.split?.('.')?.[0]);
+    return Number.isFinite(major) ? major : null;
+  } catch (e) {
+    return null;
+  }
 };
 
 export const getDndRulesVersion = () => {
-  if (getDnd5eVersion() === 3) {
-    return "2014";
-  } 
-  return game.settings.get("dnd5e", "rulesVersion") === "modern" ? "2024" : "2014";
+  const ver = (typeof window !== 'undefined' && window.GAS && Number.isFinite(Number(window.GAS.dnd5eVersion)))
+    ? Number(window.GAS.dnd5eVersion)
+    : getDnd5eVersion();
+
+  if (ver === 3) return '2014';
+  return game.settings.get('dnd5e', 'rulesVersion') === 'modern' ? '2024' : '2014';
 };
 
 export function getLevelByDropType(actor, droppedItem) {
