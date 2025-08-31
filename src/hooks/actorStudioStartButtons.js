@@ -127,17 +127,17 @@ export const renderActorStudioSidebarButton = (app) => {
   
   if (hasButton) return;
 
-  const gasButton = getActorStudioButton('gas-sidebar-button');
+  const gasButton = getActorStudioButton('gas-sidebar-button', ['gas-sidebar-button']);
   if (game.version >= 13) {
     gasButton.classList.add('v13');
     const headerActions = element.querySelector('header.directory-header .header-actions');
-    console.log('GAS: headerActions found:', headerActions ? 1 : 0);
+    // console.log('GAS: headerActions found:', headerActions ? 1 : 0);
     if (headerActions && headerActions.parentNode) {
       headerActions.parentNode.insertBefore(gasButton, headerActions.nextSibling);
     }
   } else {
     const header = element.find('header.directory-header')[0];
-    console.log('GAS: header found:', header ? 1 : 0);
+    // console.log('GAS: header found:', header ? 1 : 0);
     if (header) header.appendChild(gasButton);
   }
   
@@ -176,16 +176,16 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
       // window.GAS.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         // disable the button if the setting is enabled
-        const hideOtherButtons = !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
+        const hideOtherButtons =  !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
         const nonGmsCanOnlyCreatePCs = !game.user.isGM && game.settings.get(MODULE_ID, 'nonGmsCanOnlyCreatePCs');
-        if (!game.user.isGM && hideOtherButtons) {
-          $('.dialog-buttons .dialog-button:not(#gas-dialog-button)', html).hide();
+        if ( hideOtherButtons) {
+          $('button:not(#gas-dialog-button)', html).hide();
         }
         if (!game.user.isGM && nonGmsCanOnlyCreatePCs) {
           $('#document-create .form-fields select', html).prop('disabled', true);
         }
         if (!$('#gas-dialog-button', html).length) {
-          const gasButton = getActorStudioButton('gas-dialog-button');
+          const gasButton = getActorStudioButton('gas-dialog-button', ['gas-sidebar-button']);
           console.log(gasButton);
           if(game.version < 13) {
             $(gasButton).css('line-height', 'unset')
@@ -234,3 +234,5 @@ export default {
   openActorStudio,
   cleanupAllEventHandlers
 }
+
+export { getActorStudioButton };
