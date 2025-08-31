@@ -270,7 +270,7 @@ const generateReleaseNotes = (commitMessages, previousTag) => {
         return '## Release Notes\n\nNo significant changes in this release.';
     }
     const formattedCommits = commitMessages.map(message => `- ${message}`);
-    return `## What's Changed\n\n${formattedCommits.join('\n')}`;
+    return `## What’s Changed\n\n${formattedCommits.join('\n')}`;
 };
 
 // Function to get the previous tag
@@ -393,6 +393,16 @@ console.log('📝 Generating release notes...');
 const previousTag = getPreviousTag();
 const releaseNotes = await generateReleaseNotesWithFallback(previousTag);
 
+// Normalize characters to improve Open Graph preview rendering (avoid HTML entity escapes)
+const normalizeForOpenGraph = (text) => {
+    try {
+        return text ? text.replace(/'/g, '’') : text;
+    } catch (e) {
+        return text;
+    }
+};
+const ogSafeReleaseNotes = normalizeForOpenGraph(releaseNotes);
+
 // Create tag (skip for drafts)
 if (!isDraft) {
     console.log('🏷️  Creating tag...');
@@ -413,7 +423,7 @@ if (!isDraft) {
 
 // Create a temporary file for release notes
 const releaseNotesPath = path.join(__dirname, 'release-notes.md');
-fs.writeFileSync(releaseNotesPath, releaseNotes);
+fs.writeFileSync(releaseNotesPath, ogSafeReleaseNotes);
 
 // Create GitHub release
 const releaseTypeText = isDraft ? ' (draft)' : isPreRelease ? ' (pre-release)' : '';
@@ -446,7 +456,7 @@ try {
 
 const actionText = isDraft ? 'drafted' : isPreRelease ? 'pre-released' : 'released';
 console.log(`🎉 Successfully ${actionText} version ${newVersion} on ${targetBranch} branch`);
-console.log(`📄 Release notes:\n${releaseNotes}`);
+console.log(`📄 Release notes:\n${ogSafeReleaseNotes}`);
 console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
 
 if (isDraft) {
