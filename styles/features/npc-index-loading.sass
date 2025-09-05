@@ -1,0 +1,42 @@
+/* NPC Index Loading States */
+
+.gas-sidebar-button,
+.gas-dialog-button
+  transition: all 0.3s ease
+  
+  &:disabled
+    opacity: 0.7 !important
+    cursor: not-allowed !important
+    
+    .fa-spinner
+      animation: spin 1s linear infinite
+      margin-right: 8px
+      color: var(--dnd5e-color-gold)
+      
+    span
+      color: var(--dnd5e-color-gold)
+      font-weight: 500
+
+/* Ensure the spinner actually spins */
+@keyframes spin
+  from
+    transform: rotate(0deg)
+  to
+    transform: rotate(360deg)
+
+/* Alternative spinner if FontAwesome isn't working */
+.gas-loading-spinner
+  display: inline-block
+  width: 16px
+  height: 16px
+  border: 2px solid var(--color-border-light-primary, #ccc)
+  border-radius: 50%
+  border-top-color: var(--dnd5e-color-gold)
+  animation: spin 1s ease-in-out infinite
+  margin-right: 8px
+
+/* Loading text styling */
+.gas-loading-text
+  color: var(--dnd5e-color-gold)
+  font-weight: 500
+  font-size: 0.9em

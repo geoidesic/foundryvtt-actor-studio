@@ -39,7 +39,10 @@
       "CharacterName": "Character Name",
       "CreateCharacter": "Create Character",
       "UpdateCharacter": "Update Character",
-      "SelectBaseNPC": "Select Base NPC"
+      "SelectBaseNPC": "Select Base NPC",
+      "CreateNPC": "Create NPC",
+      "Continue": "Continue",
+      "Next": "Next"
     },
     "Name": "Name",
     "MulticlassMode": "Multiclass Mode",
@@ -94,6 +97,27 @@
       },
       "Shop": {
         "Title": "Shop"
+      },
+      "MagicItems": {
+        "Title": "Magic Item Generation",
+        "Individual": "Generate for {npcName}",
+        "Hoard": "Generate Hoard (Level {level})",
+        "PartyLevel": "Party Level for Hoard:",
+        "GeneratedItems": "Generated Magic Items",
+        "NoItems": "No magic items generated yet.",
+        "GenerateItems": "Generate Items",
+        "AddToActor": "Add to Actor",
+        "AddAllToActor": "Add All to Actor",
+        "Regenerate": "Regenerate",
+        "Clear": "Clear All",
+        "ItemCount": "Generated {count} magic item{count === 1 ? '' : 's'}",
+        "Rarities": {
+          "Common": "Common",
+          "Uncommon": "Uncommon",
+          "Rare": "Rare",
+          "VeryRare": "Very Rare",
+          "Legendary": "Legendary"
+        }
       }
     },
     "Welcome": {

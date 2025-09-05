@@ -26,7 +26,7 @@ export {
 import '~/src/stores/spellSelection';
 // Initialize NPC stores (persistence, progress)
 import '~/src/stores/npc';
-import { clearNpcSelection } from '~/src/stores/npc';
+import { clearNpcSelection, magicItemsState, resetMagicItemsToDefault } from '~/src/stores/npc';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -39,6 +39,11 @@ const initialTabs = [
 
 const npcTabs = [
   { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
+  { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
+  { label: 'Stats', id: 'npc-create', component: 'NpcCreate' },
+  { label: 'Equipment', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
+  { label: 'Treasure', id: 'magic-items', component: 'MagicItems' },
+  { label: 'Biography', id: 'npc-biography', component: 'NpcBiography' },
 ];
 
 // Tabs for level up
@@ -85,12 +90,19 @@ storeDefinitions.levelUpSubClassObject.name = 'levelUpSubClassObject';
 storeDefinitions.levelUpCombinedHtml.name = 'levelUpCombinedHtml';
 storeDefinitions.itemsFromActor.name = 'itemsFromActor';
 storeDefinitions.selectedNpcBase.name = 'selectedNpcBase';
+storeDefinitions.npcCurrency.name = 'npcCurrency';
 
 
 
 // Export the advancement queue store
 export const dropItemRegistry = advancementQueueStore();
 dropItemRegistry.name = 'dropItemRegistry';
+
+// Export NPC currency store
+export const npcCurrency = storeDefinitions.npcCurrency;
+
+// Export magic items state store and reset function
+export { magicItemsState, resetMagicItemsToDefault };
 
 export const isNewMultiClass = derived(
   [storeDefinitions.characterClass, storeDefinitions.newLevelValueForExistingClass],
@@ -245,12 +257,32 @@ export function resetStores() {
   preAdvancementSelections.set({}); //- void
   levelUpPreAdvancementSelections.set({}); //- void
   dropItemRegistry.removeAll(); //- void
-  itemsFromActor.set([]); //- void
+  storeDefinitions.itemsFromActor.set([]); //- void
   clearGoldChoices(); //- void
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
   clearNpcSelection(); //- void
+  // Don't reset NPC currency here - let it be properly rolled based on NPC CR
+  
+  // Clear magic items store
+  try {
+    import('~/src/stores/npc.js').then(({ magicItemsState }) => {
+      magicItemsState.set({
+        generationType: 'individual',
+        partyLevel: 5,
+        generatedMagicItems: [],
+        manualNpcName: '',
+        manualNpcCR: 0,
+        manualNpcType: ''
+      });
+      window.GAS.log.d('[resetStores] Cleared magicItemsState store');
+    }).catch(error => {
+      window.GAS.log.w('[resetStores] Failed to clear magic items store:', error);
+    });
+  } catch (error) {
+    window.GAS.log.w('[resetStores] Error importing magic items module:', error);
+  }
   
   // Clear spell selection stores
   try {

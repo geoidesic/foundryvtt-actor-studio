@@ -42,7 +42,8 @@
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
-  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/PC/WorkflowStateMachine";
+  import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS, npcWorkflowFSMContext } from "~/src/helpers/NPC/WorkflowStateMachine";
   
   import {
     getLevelByDropType,
@@ -54,7 +55,7 @@
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { itemsFromActor } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
-  import { localize as t, getAndSetActorItems } from "~/src/helpers/Utility";
+  import { localize as t, getAndSetActorItems, updateSource } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
   import { goldRoll } from "~/src/stores/storeDefinitions";
@@ -63,7 +64,6 @@
   // Import workflow functions
   import {
     createActorInGameAndEmbedItems as createActorWorkflow,
-    updateActorAndEmbedItems as updateActorWorkflow,
     updateActorLevelUpWorkflow,
     handleAddEquipment as addEquipmentWorkflow,
     handleFinalizePurchase as finalizePurchaseWorkflow,
@@ -86,6 +86,19 @@
   //     });
   //   }
   // }
+
+  // Debug footer visibility
+  $: {
+    console.log('[FOOTER] Debug footer visibility:', {
+      activeTab: $activeTab,
+      isInFooterTabs: FOOTER_TABS.includes($activeTab),
+      isNpcFlow,
+      npcSelectProgress: $npcSelectProgress,
+      shouldShowNpcFooter,
+      shouldShow: FOOTER_TABS.includes($activeTab) || shouldShowNpcFooter,
+      selectedNpcBase: $selectedNpcBase
+    });
+  }
 
   // Add state for processing purchase
   const isProcessingPurchase = writable(false);
@@ -146,25 +159,53 @@
   let actorName = ""; // For NPC flow, default blank; PC flow still binds via value for name input
   
   // NPC flow helpers
-  $: isNpcFlow = $activeTab === 'npc-select' || $activeTab === 'npc-features';
+  $: isNpcFlow = ['npc-select', 'npc-features', 'npc-create', 'npc-equipment-shop', 'magic-items', 'npc-biography'].includes($activeTab);
   $: npcProgress = $npcSelectProgress;
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
+  $: shouldShowNpcFooter = isNpcFlow && $npcSelectProgress === 100;
+  
+  // Initialize actorName when selectedNpcBase changes
+  $: if ($selectedNpcBase && !actorName) {
+    actorName = $selectedNpcBase.name || '';
+    console.log('[FOOTER] Initialized actorName with selected NPC:', actorName);
+  }
+  
+  // Keep actorName in sync with the in-memory actor name
+  $: if ($actor && $actor.name && $actor.name !== actorName) {
+    actorName = $actor.name;
+    console.log('[FOOTER] Synced actorName with actor name:', actorName);
+  }
+
   async function goToNpcFeatures() {
     // Build in-memory NPC actor from selected base and embed its feature items
     try {
+      console.log('[FOOTER] ====== GOING TO NPC FEATURES ======');
+      console.log('[FOOTER] Selected NPC base:', $selectedNpcBase);
+      console.log('[FOOTER] Current actorName:', actorName);
+      console.log('[FOOTER] Current in-memory actor:', $actor);
+      
       // build actor from selectedNpcBase
+      console.log('[FOOTER] Calling getAndSetActorItems with:', { selectedNpcBase: $selectedNpcBase, actor: $actor, actorName });
       getAndSetActorItems($selectedNpcBase, $actor, actorName);
+      
+      console.log('[FOOTER] After getAndSetActorItems - actor name:', $actor?.name);
+      console.log('[FOOTER] After getAndSetActorItems - actorName variable:', actorName);
+      
+      // Use the NPC state machine to handle progression
+      const npcWorkflowFSM = getNPCWorkflowFSM();
+      if (npcWorkflowFSM) {
+        // Pass the context data when calling the event
+        npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.NPC_SELECTED, { 
+          ...npcWorkflowFSMContext, 
+          selectedNpcBase: $selectedNpcBase 
+        });
+      }
     } catch (err) {
+      console.error('[FOOTER] ====== FAILED TO GO TO NPC FEATURES ======');
+      console.error('[FOOTER] Error details:', err);
+      console.error('[FOOTER] Error stack:', err.stack);
       window.GAS?.log?.e?.('[NPC] Failed to initialize in-memory actor', err);
     }
-    npcTabs.update(tabs => {
-      if (!tabs.find(t => t.id === 'npc-features')) {
-        return [...tabs, { label: 'Features', id: 'npc-features', component: 'NpcFeatures' }];
-      }
-      return tabs;
-    });
-    readOnlyTabs.set(['npc-select']);
-    activeTab.set('npc-features');
   }
 
   // Derived store to check if actor has items in inventory
@@ -197,12 +238,24 @@
   });
 
   const handleNameInput = (e) => {
+    const newName = e.target.value;
+    console.log('[FOOTER] handleNameInput called with:', newName);
+    
     if ($isLevelUp) {
       //- @why: for existing actors, we need to update the actor object in the database
-      actorName = e.target.value;
+      actorName = newName;
+      console.log('[FOOTER] Updated actorName for level up:', actorName);
     } else {
       //- @why: for new actors, we need to update the actor source object in memory,
-      $actor.updateSource({ name: e.target.value });
+      actorName = newName; // Update local variable first
+      console.log('[FOOTER] Updated actorName for new actor:', actorName);
+      
+      if ($actor) {
+        console.log('[FOOTER] Updating in-memory actor name to:', newName);
+        updateSource($actor, { name: newName });
+      } else {
+        console.warn('[FOOTER] No actor available to update name');
+      }
     }
   };
   const handleTokenNameInput = (e) => {
@@ -218,6 +271,150 @@
     });
     $isActorCreated = true;
   };
+
+  // Function to ensure module flags are saved before actor creation
+  const ensureModuleFlagsSaved = async () => {
+    try {
+      // Check if the actor has any module flags that need to be saved
+      if ($actor && $actor.flags && $actor.flags[MODULE_ID]) {
+        console.log(`[${MODULE_ID}] Module flags found, ensuring they are saved:`, $actor.flags[MODULE_ID]);
+        
+        // Force a save of the current flags to ensure they are persisted
+        await $actor.updateSource({
+          [`flags.${MODULE_ID}`]: $actor.flags[MODULE_ID]
+        });
+        
+        console.log(`[${MODULE_ID}] Module flags saved successfully`);
+      } else {
+        console.log(`[${MODULE_ID}] No module flags found, nothing to save`);
+      }
+    } catch (error) {
+      console.error(`[${MODULE_ID}] Error saving module flags:`, error);
+    }
+  };
+
+  //- Create NPC Actor
+  const clickCreateNPCHandler = async () => {
+    try {
+      console.log('[FOOTER] ====== NPC CREATION STARTED ======');
+      console.log('[FOOTER] Local actorName variable:', actorName);
+      console.log('[FOOTER] In-memory actor object:', $actor);
+      console.log('[FOOTER] In-memory actor name:', $actor?.name);
+      console.log('[FOOTER] In-memory actor toObject():', $actor?.toObject());
+      
+      // Ensure module flags are saved before creating the actor
+      await ensureModuleFlagsSaved();
+      
+      // Prepare the actor data with correct prototype token name
+      const actorData = $actor.toObject();
+      
+      // Debug: Check if module flags are present
+      console.log(`[${MODULE_ID}] Actor flags before toObject():`, $actor.flags);
+      console.log(`[${MODULE_ID}] Actor data flags after toObject():`, actorData.flags);
+      console.log(`[${MODULE_ID}] Module flags in actor data:`, actorData.flags?.[MODULE_ID]);
+      
+      // Ensure the prototype token name is set correctly
+      if (actorData.prototypeToken) {
+        actorData.prototypeToken.name = actorData.name;
+        console.log('[FOOTER] Set prototypeToken.name to:', actorData.prototypeToken.name);
+      } else {
+        // Create prototypeToken if it doesn't exist
+        actorData.prototypeToken = {
+          name: actorData.name,
+          actorLink: false,
+          displayName: 20,
+          displayBars: 20,
+          bar1: { attribute: 'attributes.hp' },
+          bar2: { attribute: null },
+          disposition: -1,
+          alpha: 1,
+          height: 1,
+          width: 1,
+          lockRotation: true,
+          rotation: 0,
+          elevation: 0,
+          light: { alpha: 0.5, angle: 0, bright: 0, coloration: 1, dim: 0, elevation: 0, intensity: 1, saturation: 0, shadows: 0, color: null, attenuation: 0.5, luminosity: 0.5, contrast: 0.25, saturation: 0.1, darkness: { min: 0, max: 1 } },
+          detectionModes: [],
+          flags: {}
+        };
+        console.log('[FOOTER] Created prototypeToken with name:', actorData.prototypeToken.name);
+      }
+      
+      console.log('[FOOTER] Final actor data for creation:', actorData);
+      
+      // Create the NPC actor in the game
+      console.log('[FOOTER] Calling Actor.create with:', actorData);
+      const createdActor = await Actor.create(actorData);
+      
+      console.log('[FOOTER] Actor created successfully:', createdActor);
+      console.log('[FOOTER] Created actor name:', createdActor.name);
+      console.log('[FOOTER] Created actor ID:', createdActor.id);
+      console.log('[FOOTER] Created actor prototypeToken name:', createdActor.prototypeToken?.name);
+      
+      // Set the actor in the game store
+      actorInGame.set(createdActor);
+      
+      // Mark as created
+      $isActorCreated = true;
+      
+      // Show success notification
+      ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
+      
+      // Close the application after a short delay
+      setTimeout(() => {
+        console.log('[FOOTER] Closing NPC creation application');
+        Hooks.call("gas.close");
+      }, 1500);
+      
+    } catch (error) {
+      console.error('[FOOTER] ====== NPC CREATION FAILED ======');
+      console.error('[FOOTER] Error details:', error);
+      console.error('[FOOTER] Error stack:', error.stack);
+      window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
+      ui.notifications?.error(`Failed to create NPC: ${error.message}`);
+    }
+  };
+
+  //- Advance from Features to Creation tab
+  const goToNpcCreation = async () => {
+    try {
+      // Simply set the active tab to npc-create
+      activeTab.set('npc-create');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC creation tab', err);
+    }
+  };
+
+  //- Advance from Creation to Equipment tab
+  const goToNpcEquipment = async () => {
+    try {
+      // Simply set the active tab to npc-equipment-shop
+      activeTab.set('npc-equipment-shop');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC equipment tab', err);
+    }
+  };
+
+  //- Advance from Equipment to Magic Items tab
+  const goToMagicItems = async () => {
+    try {
+      // Simply set the active tab to magic-items
+      activeTab.set('magic-items');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC magic items tab', err);
+    }
+  };
+
+  //- Advance from Magic Items to Biography tab
+  const goToBiography = async () => {
+    try {
+      // Simply set the active tab to npc-biography
+      activeTab.set('npc-biography');
+    } catch (err) {
+      window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC biography tab', err);
+    }
+  };
+
 
   const clickUpdateLevelUpHandler = async () => {
     window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
@@ -241,7 +438,7 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells', 'magic-items'];
   const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
 
   // Handle adding equipment to the actor
@@ -457,8 +654,7 @@
 
 <template lang="pug">
 .footer-container
-  +if("FOOTER_TABS.includes($activeTab) || isNpcFlow")
-    .flexrow.gap-10.pr-md.mt-sm
+  .flexrow.gap-10.pr-md.mt-sm
       //- Character name section (not available in level-up tab)
       +if("CHARACTER_CREATION_TABS.includes($activeTab) && $activeTab !== 'level-up'")
         .flex2
@@ -604,7 +800,7 @@
                           span {t('Footer.UpdateCharacter')}
                           i.right.ml-md(class="fas fa-chevron-right")
 
-        // NPC flow footer rendering
+        // NPC flow footer rendering - ALWAYS SHOW
         +if("$activeTab === 'npc-select'")
           .progress-container
             .flexrow.gap-10
@@ -625,12 +821,144 @@
                       role="button"
                       on:mousedown="{goToNpcFeatures}"
                     )
-                      span {t('Footer.SelectBaseNPC')}
+                      span {t('Footer.Next')}
                       i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-features'")
+          .progress-container
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToNpcCreation}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-create'")
+          .progress-container
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToNpcEquipment}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-equipment-shop'")
+          .progress-container
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToMagicItems}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'magic-items'")
+          .progress-container
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{goToBiography}"
+                  )
+                    span {t('Footer.Next')}
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'npc-biography'")
+          .progress-container
+            .flexrow.gap-10
+              .flex2
+                .character-name-input-container
+                  input.left.character-name-input(
+                    type="text"
+                    placeholder="{npcNamePlaceholder}"
+                    value="{actorName}"
+                    on:input="{handleNameInput}"
+                  )
+              .flex1
+                ProgressBar(progress="{npcProgress}")
+                .button-container
+                  button.mt-xs.wide(
+                    type="button"
+                    role="button"
+                    on:mousedown="{clickCreateNPCHandler}"
+                  )
+                    span {t('Footer.CreateNPC')}
+                    i.right.ml-md(class="fas fa-check")
 
 </template>
 
 <style lang="sass">
+.test-footer
+  background: #ff0000
+  color: white
+  padding: 2rem
+  margin: 1rem
+  border: 5px solid #ff0000
+  border-radius: 10px
+  font-size: 20px
+  font-weight: bold
+  text-align: center
+
+  p
+    margin: 0.5rem 0
+
+.footer-container
+  display: block
+  width: 100%
+  padding: 1rem
+  background: rgba(0, 0, 0, 0.1)
+  border-top: 1px solid rgba(255, 255, 255, 0.1)
+  margin-top: auto
+
 .button-container
   button
     white-space: nowrap

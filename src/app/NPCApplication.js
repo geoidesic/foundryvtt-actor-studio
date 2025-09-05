@@ -4,6 +4,7 @@ import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
+import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS, npcWorkflowFSMContext } from "~/src/helpers/NPC/WorkflowStateMachine";
 
 import { version } from "../../module.json";
 
@@ -22,6 +23,23 @@ export default class NPCApplication extends SvelteApplication {
    */
   #storeUnsubscribe;
 
+  /**
+   * NPC workflow state machine instance
+   */
+  #npcWorkflowFSM;
+
+  /**
+   * This mechanism is necessary because the app can be closed in two ways:
+   * 1. By clicking the close button in the header
+   * 2. Automatically by triggering the gas.close hook (e.g. when the workflow is complete)
+   * We need to ensure that the gas.close hook is only triggered once, 
+   * so we use this flag to track whether the app is being closed by the gas.close hook.
+   */
+  #isClosingFromGasHook = false;
+  setClosingFromGasHook(value) {
+    this.#isClosingFromGasHook = value;
+  }
+
   constructor(object) {
     super(object);
 
@@ -33,6 +51,12 @@ export default class NPCApplication extends SvelteApplication {
       },
     });
     this.reactive.document = object;
+
+    // Initialize the NPC workflow state machine
+    this.#npcWorkflowFSM = getNPCWorkflowFSM();
+    
+    // Start the workflow
+    this.#npcWorkflowFSM.handle(NPC_WORKFLOW_EVENTS.START_NPC_SELECTION);
   }
 
   /**
@@ -65,7 +89,8 @@ export default class NPCApplication extends SvelteApplication {
         props: function () {
           return { 
             documentStore: this.#documentStore, 
-            document: this.reactive.document
+            document: this.reactive.document,
+            npcWorkflowFSM: this.#npcWorkflowFSM
           };
         },
       },
@@ -127,7 +152,7 @@ export default class NPCApplication extends SvelteApplication {
       const isDebug = game.settings.get(MODULE_ID, 'debug');
       const moduleVersion = game.modules.get(MODULE_ID)?.version;
       const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : "";
-      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')} - ${isDebug ? moduleVersion : ''} [${window.GAS.dnd5eRules}] - ${game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;
+      this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')} - ${isDebug ? moduleVersion : ''} [${window.GAS.dnd5eRules}] - ${game.i18n.localize('GAS.NPCTitle')} - ${doc.name} ${tokenText}`;
     }
   }
 
@@ -139,4 +164,23 @@ export default class NPCApplication extends SvelteApplication {
     return this;
   }
 
+  async close(options = {}) {
+    // Only trigger gas.close hook if we're not already being closed by the gas.close hook
+    if (!this.#isClosingFromGasHook) {
+      console.log('[NPCApplication] User closed Actor Studio - triggering gas.close hook for cleanup');
+      Hooks.call("gas.close");
+      return; // gasClose will call this.close() again with the flag set
+    }
+    
+    console.log('[NPCApplication] Closing application (called from gasClose)');
+    await super.close(options);
+
+    if (this.#storeUnsubscribe) {
+      this.#storeUnsubscribe();
+      this.#storeUnsubscribe = void 0;
+    }
+    
+    // Reset the flag for next time
+    this.#isClosingFromGasHook = false;
+  }
 }

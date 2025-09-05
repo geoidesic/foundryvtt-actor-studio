@@ -4,6 +4,37 @@ import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
 import { tick } from "svelte";
 
+/**
+ * Converts various collection types into a standard array
+ * @param {Array|Collection|Set|Map|Object} collection - The collection to convert. Can be:
+ *   - Array: returned as-is
+ *   - Collection: contents property is returned if present
+ *   - Set/Map/Object: converted to array via Array.from()
+ * @returns {Array} The collection contents as a standard array
+ */
+export function getItemsArray(collection) {
+  if (!collection) return [];
+  if (Array.isArray(collection)) return collection;
+  if (collection.contents) return collection.contents;
+  try { return Array.from(collection); } catch (e) { return []; }
+}
+
+  /**
+   * Get the current items from the actor in the correct format
+   */
+  export function getItemSourcesFromActor(doc) {
+    try {
+      const itemsCollection = doc?.items;
+      if (!itemsCollection) return [];
+      const list = Array.isArray(itemsCollection)
+        ? itemsCollection
+        : (itemsCollection.contents || Array.from(itemsCollection));
+      return list.map((itemDoc) => itemDoc?.toObject ? itemDoc.toObject() : itemDoc);
+    } catch (_) {
+      return [];
+    }
+  }
+
 
 export async function illuminatedDescription(html, store) {
   const enriched = await enrichHTML(html);
@@ -221,7 +252,7 @@ export function extractItemsFromPacksSync(packs, keys) {
     // window.GAS.log.d('entries', entries);
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
-    // window.GAS.log.d('entries post', entries);
+    window.GAS.log.d('entries post', entries);
     let packItems = extractMapIteratorObjectProperties(entries, keys);
     packItems = packItems.map(item => ({
       ...item,
@@ -274,16 +305,27 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
-    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    window.GAS.log.d('extractItemsFromPacks pack', pack);
-    window.GAS.log.d('extractItemsFromPacks packindex', index);
+    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // window.GAS.log.d('extractItemsFromPacks pack', pack);
+    // window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    window.GAS.log.d('extractItemsFromPacks entries', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    
+    // Debug: Log the first few items to see the data structure
+    if (packItems.length > 0) {
+      // console.log('Enhanced index data structure sample:', {
+      //   packName: pack.metadata.name,
+      //   firstItem: packItems[0],
+      //   keys: [...keys, ...nonIndexKeys],
+      //   hasSystemFields: nonIndexKeys.some(key => key.startsWith('system.'))
+      // });
+    }
+    
     packItems = packItems.map(item => ({
       ...item,
       packName: pack.metadata.name,
@@ -309,13 +351,43 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
 export function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
+    // window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
     const newObj = {};
+    
+    // Debug: Log the first item to see the data structure
+    if (newArray.length === 0) {
+      // console.log('extractMapIteratorObjectProperties - First item data:', {
+      //   key,
+      //   data,
+      //   keys,
+      //   dataKeys: Object.keys(data),
+      //   hasSystemFields: keys.some(k => k.startsWith('system.'))
+      // });
+    }
+    
     keys.forEach((k) => {
       if (k.includes('->')) {
         const split = k.split('->');
         newObj[split[1]] = data[split[0]];
       } else if (k.includes('.')) {
-        setNestedProperty(newObj, k, getNestedProperty(data, k))
+        // For enhanced index data, the system fields are returned as flat properties
+        // Check if the field exists directly in the data
+        if (data.hasOwnProperty(k)) {
+          newObj[k] = data[k];
+        } else {
+          // Fallback to nested property extraction for backward compatibility
+          const value = getNestedProperty(data, k);
+          setNestedProperty(newObj, k, value);
+        }
+        
+        // Debug: Log system field extraction
+        if (k.startsWith('system.')) {
+          // console.log(`System field extraction: ${k} = ${newObj[k]}`, {
+          //   sourceData: data,
+          //   extractedValue: newObj[k],
+          //   hasDirectProperty: data.hasOwnProperty(k)
+          // });
+        }
       } else {
         newObj[k] = data[k];
       }
@@ -499,10 +571,12 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
  * @returns {Promise<void>} A promise that resolves when the source is updated
  */
 export const updateSource = async (source, val) => {
+  window.GAS.log.p('updateSource', source, val)
   await source.updateSource(val);
   await tick();
   if(source.render) {
     source.render();
+    window.GAS.log.p('updated source', source)
   }
 };
 
@@ -576,14 +650,97 @@ export const getAndSetActorItems = async (selectedNpcBase, actor, actorName) => 
       });
       if (setFlags.length > 0) await Promise.allSettled(setFlags);
     } catch (_) {}
-    // Helpful debug output
-    if (window?.GAS?.log?.g) {
-      window.GAS.log.g('[NPC] In-memory actor initialized with features', actor);
-    } else {
-      console.log('[NPC] In-memory actor initialized with features', actor);
-    }
   }
 }
+
+/**
+ * Copies NPC stats (ability scores, hit points, armor class, etc.) from the selected NPC base to the in-memory actor
+ * @param {Object} selectedNpcBase - The selected NPC base document
+ * @param {Object} actor - The in-memory actor object
+ * @returns {Promise<void>} A promise that resolves when the stats are copied
+ */
+export const copyNpcStatsToActor = async (selectedNpcBase, actor) => {
+  if (selectedNpcBase && actor) {
+    try {
+      // Get the NPC base data
+      const npcData = selectedNpcBase.toObject();
+      
+      // Copy the core stats that should be preserved
+      const statsToCopy = {
+        system: {
+          abilities: npcData.system?.abilities || {},
+          attributes: npcData.system?.attributes || {},
+          details: npcData.system?.details || {},
+          traits: npcData.system?.traits || {},
+          skills: npcData.system?.skills || {},
+          resources: npcData.system?.resources || {},
+          currency: npcData.system?.currency || {},
+          inventory: npcData.system?.inventory || {},
+          spells: npcData.system?.spells || {},
+          effects: npcData.system?.effects || {},
+          modifiers: npcData.system?.modifiers || {},
+          profs: npcData.system?.profs || {},
+          bonuses: npcData.system?.bonuses || {},
+          saves: npcData.system?.saves || {},
+          attributes: npcData.system?.attributes || {},
+          ac: npcData.system?.ac || {},
+          hp: npcData.system?.hp || {},
+          speed: npcData.system?.speed || {},
+          spellcasting: npcData.system?.spellcasting || {},
+          level: npcData.system?.level || {},
+          cr: npcData.system?.cr || {},
+          xp: npcData.system?.xp || {},
+          alignment: npcData.system?.alignment || {},
+          size: npcData.system?.size || {},
+          type: npcData.system?.type || {},
+          subtype: npcData.system?.subtype || {},
+          senses: npcData.system?.senses || {},
+          languages: npcData.system?.languages || {},
+          damage: npcData.system?.damage || {},
+          resistances: npcData.system?.resistances || {},
+          immunities: npcData.system?.immunities || {},
+          vulnerabilities: npcData.system?.vulnerabilities || {},
+          conditionImmunities: npcData.system?.conditionImmunities || {},
+          legendary: npcData.system?.legendary || {},
+          legendaryActions: npcData.system?.legendaryActions || {},
+          lair: npcData.system?.lair || {},
+          lairActions: npcData.system?.lairActions || {},
+          regionalEffects: npcData.system?.regionalEffects || {},
+          regionalEffectsEnd: npcData.system?.regionalEffectsEnd || {},
+          environment: npcData.system?.environment || {},
+          source: npcData.system?.source || {},
+          page: npcData.system?.page || {},
+          otherSources: npcData.system?.otherSources || {},
+          additionalSources: npcData.system?.additionalSources || {},
+          additionalSources2: npcData.system?.additionalSources2 || {},
+          additionalSources3: npcData.system?.additionalSources3 || {},
+          additionalSources4: npcData.system?.additionalSources4 || {},
+          additionalSources5: npcData.system?.additionalSources5 || {},
+          additionalSources6: npcData.system?.additionalSources6 || {},
+          additionalSources7: npcData.system?.additionalSources7 || {},
+          additionalSources8: npcData.system?.additionalSources8 || {},
+          additionalSources9: npcData.system?.additionalSources9 || {},
+          additionalSources10: npcData.system?.additionalSources10 || {}
+        },
+        flags: npcData.flags || {},
+        img: npcData.img || '',
+        token: npcData.token || {}
+      };
+      
+      // Update the in-memory actor with the copied stats
+      await updateSource(actor, statsToCopy);
+      
+      // Helpful debug output
+      if (window?.GAS?.log?.g) {
+        window.GAS.log.g('[NPC] In-memory actor stats copied from base NPC', actor);
+      } else {
+        console.log('[NPC] In-memory actor stats copied from base NPC', actor);
+      }
+    } catch (error) {
+      window.GAS.log.e('[NPC] Error copying NPC stats to actor:', error);
+    }
+  }
+};
 
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
@@ -779,3 +936,38 @@ export async function enrichHTML(content, options = {}) {
   const textEditor = getTextEditorAPI();
   return await textEditor.enrichHTML(content, options);
 }
+
+/**
+ * Delete an item from an actor by ID
+ * @param {Object} actor - The actor to delete the item from
+ * @param {string} itemId - The ID of the item to delete
+ * @returns {Promise<boolean>} - True if deletion was successful, false otherwise
+ */
+export const deleteActorItem = async (actor, itemId) => {
+  try {
+    if (!actor?.items?.delete) {
+      console.error('Actor does not support item deletion');
+      return false;
+    }
+
+    await actor.items.delete(itemId);
+    
+    // Force a refresh of the reactive statement
+    await tick();
+    if (actor.render) {
+      actor.render();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting item from actor:', error);
+    return false;
+  }
+};
+
+/**
+ * Update a source object with new values
+ * @param {Object} source - The source object to update
+ * @param {Object} val - The value to update the source with
+ * @returns {Promise<void>} A promise that resolves when the source is updated
+ */

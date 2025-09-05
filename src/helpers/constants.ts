@@ -51,6 +51,7 @@ export const DEFAULT_SOURCES = {
   spells: [DEFAULT_PACKS.SPELLS],
   feats: [],
   items: [DEFAULT_PACKS.ITEMS],
+  npcFeatures: [],
 };
 
 export const INTEGRATION = {

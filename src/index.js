@@ -8,6 +8,8 @@ import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSetti
 // Import usage tracking
 import UsageTracker from '~/src/usage-tracking.js';
 
+// Import token flag processor
+import { processTokenFlags } from '~/src/helpers/TokenFlagProcessor.js';
 
 //- import hooks
 import { init, ready } from './hooks/init.js';
@@ -31,6 +33,9 @@ Hooks.once("ready", (app, html, data) => {
     window.GASUsageTracker._hasTrackedFirstEvent = true;
     // Do NOT call trackSessionStart here, as initialize() already tracks module_loaded
   }
+  
+  // Log that the module is ready and hooks are registered
+  console.log(`[${MODULE_ID}] Module ready, hooks registered`);
 });
 
 // Clean up event handlers when module is disabled
@@ -164,3 +169,114 @@ Hooks.on('gas.openNPCStudio', (actorName, folderName, actorType) => {
     window.GASUsageTracker.trackActorStudioOpened(actorName, folderName, actorType);
   }
 });
+
+/**
+ * Process module flags before token creation to enable variance between token instances
+ */
+Hooks.on('preCreateToken', async (tokenData, options, userId) => {
+  try {
+    console.log(`[${MODULE_ID}] ====== preCreateToken hook triggered ======`);
+    console.log(`[${MODULE_ID}] Hook parameters:`, { tokenData, options, userId });
+    console.log(`[${MODULE_ID}] Token data actorId:`, tokenData.actorId);
+    
+    // Get the actor from the token data
+    console.log(`[${MODULE_ID}] Attempting to get actor from UUID:`, tokenData.actorId);
+    const actor = await fromUuid(tokenData.actorId);
+    
+    if (!actor) {
+      console.warn(`[${MODULE_ID}] Could not find actor for token creation:`, tokenData.actorId);
+      return;
+    }
+
+    console.log(`[${MODULE_ID}] Found actor:`, actor.name);
+    console.log(`[${MODULE_ID}] Actor type:`, actor.type);
+    console.log(`[${MODULE_ID}] Actor flags:`, actor.flags);
+    console.log(`[${MODULE_ID}] Module flags:`, actor.flags?.[MODULE_ID]);
+
+    // Check if there are any module flags to process
+    if (!actor.flags || !actor.flags[MODULE_ID]) {
+      console.log(`[${MODULE_ID}] No module flags found, skipping processing`);
+      return;
+    }
+
+    const flags = actor.flags[MODULE_ID];
+    console.log(`[${MODULE_ID}] Processing flags:`, flags);
+    
+    // Check which flags are enabled
+    const enabledFlags = Object.entries(flags)
+      .filter(([key, value]) => value === true)
+      .map(([key]) => key);
+    
+    console.log(`[${MODULE_ID}] Enabled flags:`, enabledFlags);
+    
+    if (enabledFlags.length === 0) {
+      console.log(`[${MODULE_ID}] No enabled flags found, skipping processing`);
+      return;
+    }
+
+    // Process the module flags if any are set
+    console.log(`[${MODULE_ID}] Calling processTokenFlags...`);
+    await processTokenFlags(actor);
+    
+    console.log(`[${MODULE_ID}] ====== Token flags processed successfully for ${actor.name} ======`);
+  } catch (error) {
+    console.error(`[${MODULE_ID}] ====== Error in preCreateToken hook ======`);
+    console.error(`[${MODULE_ID}] Error details:`, error);
+    console.error(`[${MODULE_ID}] Error stack:`, error.stack);
+  }
+});
+
+/**
+ * Process module flags after token creation as a backup method
+ */
+Hooks.on('createToken', async (token, options, userId) => {
+  try {
+    console.log(`[${MODULE_ID}] ====== createToken hook triggered ======`);
+    console.log(`[${MODULE_ID}] Token:`, token);
+    console.log(`[${MODULE_ID}] Token actor:`, token.actor);
+    
+    if (!token.actor) {
+      console.log(`[${MODULE_ID}] No actor found on token, skipping processing`);
+      return;
+    }
+
+    const actor = token.actor;
+    console.log(`[${MODULE_ID}] Actor:`, actor.name);
+    console.log(`[${MODULE_ID}] Actor flags:`, actor.flags);
+    console.log(`[${MODULE_ID}] Module flags:`, actor.flags?.[MODULE_ID]);
+
+    // Check if there are any module flags to process
+    if (!actor.flags || !actor.flags[MODULE_ID]) {
+      console.log(`[${MODULE_ID}] No module flags found, skipping processing`);
+      return;
+    }
+
+    const flags = actor.flags[MODULE_ID];
+    console.log(`[${MODULE_ID}] Processing flags:`, flags);
+    
+    // Check which flags are enabled
+    const enabledFlags = Object.entries(flags)
+      .filter(([key, value]) => value === true)
+      .map(([key]) => key);
+    
+    console.log(`[${MODULE_ID}] Enabled flags:`, enabledFlags);
+    
+    if (enabledFlags.length === 0) {
+      console.log(`[${MODULE_ID}] No enabled flags found, skipping processing`);
+      return;
+    }
+
+    // Process the module flags if any are set
+    console.log(`[${MODULE_ID}] Calling processTokenFlags...`);
+    await processTokenFlags(actor);
+    
+    console.log(`[${MODULE_ID}] ====== Token flags processed successfully for ${actor.name} ======`);
+  } catch (error) {
+    console.error(`[${MODULE_ID}] ====== Error in createToken hook ======`);
+    console.error(`[${MODULE_ID}] Error details:`, error);
+    console.error(`[${MODULE_ID}] Error stack:`, error.stack);
+  }
+});
+
+// Log that the hooks have been registered
+console.log(`[${MODULE_ID}] preCreateToken and createToken hooks registered successfully`);

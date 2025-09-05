@@ -1,12 +1,12 @@
 <script>
-  import { getContext, tick } from "svelte";
-  import { enrichHTML } from "~/src/helpers/Utility";
+  import { getContext } from "svelte";
+  import { localize as t, enrichHTML, deleteActorItem } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
 
   // Items should be an array of objects with at least { img, name, link? }
-  export let trashable = false;
-  export let items = false;
+  export let trashable = true;
+  export let items = null;
 
   const actor = getContext("#doc");
 
@@ -27,24 +27,11 @@
     }
   }
   async function handleTrash(id) {
-
-
-      // In-memory removal (new/unsaved actor)
-        if ($actor?.items?.delete) {
-          await $actor.items.delete(id);
-          
-          await tick();
-          if($actor.render) {
-            $actor.render();
-          }
-          return;
-        }
-
+    await deleteActorItem(actor, id);
   }
 
   $: displayItems = items ? items : $actor.items;
   $: whichDisplay = items ? 'items' : 'itemsFromActor';
-  $: window.GAS.log.d('items', displayItems, $actor.items);
   $: itemsLength = displayItems instanceof Map ? displayItems?.size : displayItems?.length;
 
 </script>

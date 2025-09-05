@@ -5,9 +5,11 @@
 @import 'Fonts.sass'
 @import 'Mixins.sass'
 @import 'Animations.sass'
+@import '_buttons.sass'
 
 // Features
 @import 'features/equipment-purchase.sass'
+@import 'features/npc-index-loading.sass'
 
 // Base
 /**
@@ -453,6 +455,25 @@
         color: var(--dnd5e-color-gold) !important
       hr
         background-image: linear-gradient(90deg, var(--dnd5e-color-gold) 0%, transparent 100%)
+      
+    .icon-select
+      background-color: #000
+      border: none
+      .selected-option
+        background-color: #000
+        border: 1px solid #000
+        margin-top: 2px
+        margin-bottom: 2px
+        color: var(--dnd5e-color-gold)
+      .options-dropdown
+        background-color: #111
+        border: 1px solid #000
+
+        .option
+          color: var(--dnd5e-color-gold)
+          &:hover
+            background-color: #000
+            color:  var(--gas-color-text)
 
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
@@ -480,7 +501,7 @@ body.game #gas-settings-submenu.app.window-app
 #gas-dialog-button, #gas-dialog-npc-button
     background-color: white
     
-#foundryvtt-actor-studio-pc-sheet
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet
   table.core-class-traits
     th, td
       vertical-align: top

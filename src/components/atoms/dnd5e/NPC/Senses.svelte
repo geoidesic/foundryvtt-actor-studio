@@ -1,181 +1,183 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { getContext, createEventDispatcher } from "svelte";
   
-  export let movement = {};
+  export let senses = {};
   export let readonly = false;
   
+  const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
   
-  // Available movement types
-  const movementTypes = [
-    { key: 'walk', label: 'Walk' },
-    { key: 'fly', label: 'Fly' },
-    { key: 'swim', label: 'Swim' },
-    { key: 'climb', label: 'Climb' },
-    { key: 'burrow', label: 'Burrow' }
+  // Available sense types
+  const senseTypes = [
+    { key: 'blindsight', label: 'Blindsight' },
+    { key: 'darkvision', label: 'Darkvision' },
+    { key: 'tremorsense', label: 'Tremorsense' },
+    { key: 'truesight', label: 'Truesight' }
   ];
   
-  // Reactive declarations - filter out zero values
-  $: currentMovements = movement ? Object.entries(movement)
-    .filter(([key, value]) => value > 0) // Only show movements with values > 0
-    .map(([key, value]) => ({ key, value })) : [];
+  // Get current senses that have values
+  $: currentSenses = Object.entries(senses || {})
+    .filter(([key, value]) => value && value > 0)
+    .map(([key, value]) => ({ 
+      key, 
+      label: senseTypes.find(s => s.key === key)?.label || key,
+      value: value
+    }));
   
-  $: availableTypes = movementTypes.filter(type => !movement || !movement[type.key] || movement[type.key] <= 0);
+  // Get available sense types to add
+  $: availableSenses = senseTypes.filter(sense => 
+    !currentSenses.some(s => s.key === sense.key)
+  );
+  
+  // Helper functions
+  function getSenseLabel(key) {
+    return senseTypes.find(s => s.key === key)?.label || key;
+  }
   
   // State for inline editing
-  let editingMovement = null;
+  let editingSense = null;
   let editValue = '';
   let showAddSelect = false;
-  let newMovementType = '';
-  let newMovementValue = 30;
+  let newSenseType = '';
+  let newSenseValue = 60;
   
-  // Helper function to get movement label
-  function getMovementLabel(key) {
-    return movementTypes.find(t => t.key === key)?.label || key;
-  }
-  
-  function startEdit(movementItem) {
+  function startEdit(sense) {
     if (readonly) return;
-    editingMovement = movementItem.key;
-    editValue = movementItem.value;
+    editingSense = sense.key;
+    editValue = sense.value.toString();
   }
   
-  function handleSpeedSave(movementKey) {
-    if (editingMovement === movementKey) {
-      const newValue = parseInt(editValue) || 0;
-      if (newValue > 0) {
-        dispatch('speedUpdate', { type: movementKey, value: newValue });
-      } else {
-        // If value is 0 or negative, remove the movement
-        dispatch('speedUpdate', { type: movementKey, value: null });
+  function handleSenseSave(senseKey) {
+    if (editingSense === senseKey) {
+      const numValue = parseInt(editValue);
+      if (!isNaN(numValue) && numValue >= 0) {
+        if (numValue > 0) {
+          dispatch('senseUpdate', { sense: senseKey, value: numValue });
+        } else {
+          // If value is 0 or negative, remove the sense
+          dispatch('senseUpdate', { sense: senseKey, value: null });
+        }
       }
-      editingMovement = null;
+      editingSense = null;
       editValue = '';
     }
   }
   
-  function handleRemoveMovement(movementKey) {
-    dispatch('speedUpdate', { type: movementKey, value: null });
+  function handleRemoveSense(senseKey) {
+    dispatch('senseUpdate', { sense: senseKey, value: null });
   }
   
-  function handleAddMovement() {
-    if (availableTypes.length > 0) {
+  function handleAddSense() {
+    if (availableSenses.length > 0) {
       showAddSelect = true;
-      newMovementType = availableTypes[0].key;
-      newMovementValue = 30;
+      newSenseType = availableSenses[0].key;
+      newSenseValue = 60;
     }
   }
   
-  function confirmAddMovement() {
-    if (newMovementType && newMovementValue > 0) {
-      dispatch('speedUpdate', { type: newMovementType, value: newMovementValue });
+  function confirmAddSense() {
+    if (newSenseType && newSenseValue > 0) {
+      dispatch('senseUpdate', { sense: newSenseType, value: newSenseValue });
       showAddSelect = false;
-      newMovementType = '';
-      newMovementValue = 30;
+      newSenseType = '';
+      newSenseValue = 60;
     }
   }
   
-  function cancelAddMovement() {
+  function cancelAddSense() {
     showAddSelect = false;
-    newMovementType = '';
-    newMovementValue = 30;
+    newSenseType = '';
+    newSenseValue = 60;
   }
   
-  function handleKeydown(event, movementKey) {
+  function handleKeydown(event, senseKey) {
     if (event.key === 'Enter') {
-      handleSpeedSave(movementKey);
+      handleSenseSave(senseKey);
     } else if (event.key === 'Escape') {
-      editingMovement = null;
+      editingSense = null;
     }
   }
 </script>
 
 <template lang="pug">
-  .speed-container
-    .label.inline Speed
+  .senses-container
+    .label.inline Senses
     .value
-      +if("currentMovements && currentMovements.length > 0")
-        +each("currentMovements as movement")
-          .movement-item
-            span.movement-type {getMovementLabel(movement.key)}
+      +if("currentSenses && currentSenses.length > 0")
+        +each("currentSenses as sense")
+          .sense-item
+            span.sense-type {getSenseLabel(sense.key)}
+            +if("!readonly")
+              +if("editingSense === sense.key")
+                input.sense-value(
+                  type="number"
+                  bind:value="{editValue}"
+                  min="0"
+                  on:blur!="{() => handleSenseSave(sense.key)}"
+                  on:keydown!="{e => handleKeydown(e, sense.key)}"
+                  placeholder="60"
+                  autofocus
+                )
+                button.remove-btn(
+                  on:click!="{() => handleRemoveSense(sense.key)}"
+                  title="Remove {getSenseLabel(sense.key)}"
+                ) ×
+                +else()
+                  span.sense-value.sense-editable(
+                    on:click!="{() => startEdit(sense)}"
+                    class!="{editingSense === sense.key ? 'editing' : ''}"
+                  ) {sense.value}
             +if("readonly")
-              span.movement-value {movement.value}
-              span.unit ft.
-              +else()
-                +if("editingMovement === movement.key")
-                  input.movement-input(
-                    type="number"
-                    bind:value="{editValue}"
-                    min="0"
-                    on:blur!="{() => handleSpeedSave(movement.key)}"
-                    on:keydown!="{e => handleKeydown(e, movement.key)}"
-                    placeholder="30"
-                    autofocus
-                  )
-                  button.remove-btn(
-                    on:click!="{() => handleRemoveMovement(movement.key)}"
-                    title="Remove {getMovementLabel(movement.key)}"
-                  ) ×
-                  +else()
-                    span.movement-value.speed-editable(
-                      on:click!="{() => startEdit(movement)}"
-                      class!="{editingMovement === movement.key ? 'editing' : ''}"
-                    ) {movement.value}
-                    span.unit ft.
+              span.sense-value {sense.value}
+            span.unit ft.
       
-      +if("!readonly && availableTypes && availableTypes.length > 0")
+      +if("!readonly && availableSenses && availableSenses.length > 0")
         +if("showAddSelect")
-          .add-movement-form
-            select.movement-type-select(
-              bind:value="{newMovementType}"
+          .add-sense-form
+            select.sense-type-select(
+              bind:value="{newSenseType}"
             )
-              +each("availableTypes as type")
-                option(value="{type.key}") {type.label}
-            input.movement-value-input(
+              +each("availableSenses as sense")
+                option(value="{sense.key}") {sense.label}
+            input.sense-value-input(
               type="number"
-              bind:value="{newMovementValue}"
+              bind:value="{newSenseValue}"
               min="1"
-              placeholder="30"
+              placeholder="60"
             )
             span.unit ft.
             button.confirm-btn(
-              on:click!="{confirmAddMovement}"
-              title="Add Movement"
+              on:click!="{confirmAddSense}"
+              title="Add Sense"
             ) ✓
             button.cancel-btn(
-              on:click!="{cancelAddMovement}"
+              on:click!="{cancelAddSense}"
               title="Cancel"
             ) ×
           +else()
             button.add-btn(
-              on:click!="{handleAddMovement}"
-              title="Add Movement"
-            ) + Add Movement
+              on:click!="{handleAddSense}"
+              title="Add Sense"
+            ) + Add Sense
       
-      +if("!currentMovements || currentMovements.length === 0")
-        span.no-movement (no movement)
+      +if("!currentSenses || currentSenses.length === 0")
+        span.no-senses (no senses)
 </template>
 
 <style lang="sass" scoped>
-.speed-container
-  .movement-item
+.senses-container
+  .sense-item
     display: flex
     align-items: center
     gap: 4px
     margin-bottom: 2px
     
-    .movement-type
-      font-weight: bold
-      // min-width: 40px
+    .sense-type
+      font-weight: 500
+      min-width: 80px
       text-transform: capitalize
     
-    .movement-value
-      // Styles for the span display value only
-      // width: 50px
-      text-align: center
-      padding: 2px 4px
-    
-    .movement-input
+    .sense-value
       width: 50px
       text-align: center
       padding: 2px 4px
@@ -218,18 +220,19 @@
     padding: 4px 8px
     cursor: pointer
     font-size: 0.9em
+    margin-top: 4px
     
     &:hover
       background: var(--color-success-hover, #218838)
   
-  .add-movement-form
+  .add-sense-form
     display: flex
     align-items: center
     gap: 4px
     margin-top: 4px
     
-    .movement-type-select
-      min-width: 80px
+    .sense-type-select
+      min-width: 100px
       padding: 2px 4px
       border: 1px solid var(--color-border-highlight, #007bff)
       border-radius: 3px
@@ -243,7 +246,7 @@
         border-color: var(--color-border-highlight, #007bff)
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
     
-    .movement-value-input
+    .sense-value-input
       width: 50px
       text-align: center
       padding: 2px 4px
@@ -289,11 +292,11 @@
       &:hover
         background: var(--color-secondary-hover, #5a6268)
   
-  .no-movement
+  .no-senses
     color: var(--color-text-secondary, #666)
     font-style: italic
   
-  .speed-editable
+  .sense-editable
     cursor: pointer
     border-radius: 3px
     transition: background-color 0.2s
@@ -306,9 +309,9 @@
 
 // Dark theme overrides
 @media (prefers-color-scheme: dark)
-  .speed-container
-    .movement-item
-      .movement-input
+  .senses-container
+    .sense-item
+      .sense-value
         background: var(--color-bg-primary, #2b2b2b)
         color: var(--color-text-primary, #ffffff)
         border-color: var(--color-border-highlight, #4a9eff)
@@ -317,9 +320,9 @@
           border-color: var(--color-border-highlight, #4a9eff)
           box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.25)
     
-    .add-movement-form
-      .movement-type-select,
-      .movement-value-input
+    .add-sense-form
+      .sense-type-select,
+      .sense-value-input
         background: var(--color-bg-primary, #2b2b2b)
         color: var(--color-text-primary, #ffffff)
         border-color: var(--color-border-highlight, #4a9eff)
@@ -329,9 +332,9 @@
           box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.25)
 
 :global(.dark-mode)
-  .speed-container
-    .movement-item
-      .movement-input
+  .senses-container
+    .sense-item
+      .sense-value
         background: var(--color-bg-primary, #2b2b2b)
         color: var(--color-text-primary, #ffffff)
         border-color: var(--color-border-highlight, #4a9eff)
@@ -340,9 +343,9 @@
           border-color: var(--color-border-highlight, #4a9eff)
           box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.25)
     
-    .add-movement-form
-      .movement-type-select,
-      .movement-value-input
+    .add-sense-form
+      .sense-type-select,
+      .sense-value-input
         background: var(--color-bg-primary, #2b2b2b)
         color: var(--color-text-primary, #ffffff)
         border-color: var(--color-border-highlight, #4a9eff)
