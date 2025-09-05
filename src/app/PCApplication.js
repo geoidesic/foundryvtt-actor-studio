@@ -178,7 +178,6 @@ export default class PCApplication extends SvelteApplication {
   }
 
   render(force = false, options = {}) {
-    alert('render');
     if (!this.#storeUnsubscribe) {
       this.#storeUnsubscribe = this.#documentStore.subscribe(this.#handleDocUpdate.bind(this));
     }

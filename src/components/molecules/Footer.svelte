@@ -64,7 +64,6 @@
   // Import workflow functions
   import {
     createActorInGameAndEmbedItems as createActorWorkflow,
-    updateActorAndEmbedItems as updateActorWorkflow,
     updateActorLevelUpWorkflow,
     handleAddEquipment as addEquipmentWorkflow,
     handleFinalizePurchase as finalizePurchaseWorkflow,

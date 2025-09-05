@@ -35,6 +35,7 @@ export function registerSettings(app: Game): void {
   sourcesConfiguration();
   donationTracker();
   enableNPCCreation();
+  assignSeparateNpcFeatureSources();
   defaultStartingGoldDice();
   allowManualInput();
   allowStandardArray();
@@ -68,6 +69,26 @@ export function registerSettings(app: Game): void {
   usageTracking();
   /** User settings */
   dontShowWelcome();
+}
+
+function assignSeparateNpcFeatureSources() {
+  game.settings.register(MODULE_ID, 'assignSeparateNpcFeatureSources', {
+    name: game.i18n.localize('GAS.Setting.AssignSeparateNpcFeatureSources.Name'),
+    hint: game.i18n.localize('GAS.Setting.AssignSeparateNpcFeatureSources.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
+  });
 }
 
 function illuminatedHeight() {

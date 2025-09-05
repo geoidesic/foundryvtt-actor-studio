@@ -1,5 +1,5 @@
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getPacksFromSettings, extractItemsFromPacksSync, enrichHTML } from '~/src/helpers/Utility';
+import { getPacksFromSettings, enrichHTML } from '~/src/helpers/Utility';
 import { startNpcIndexLoading, stopNpcIndexLoading } from '~/src/stores/npcIndexLoading.js';
 
 const LOCAL_STORAGE_KEY = `${MODULE_ID}-npc-feature-index-v1`;
@@ -52,6 +52,35 @@ export function invalidateNpcFeatureIndex() {
   try {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
   } catch (_) {}
+}
+
+function getCurrentNpcFeatureConfig() {
+  try {
+    const useSeparateFeatures = game.settings.get(MODULE_ID, 'assignSeparateNpcFeatureSources');
+    const key = useSeparateFeatures ? 'npcFeatures' : 'npcs';
+    const packs = getPacksFromSettings(key) || [];
+    const packCollections = packs.map(p => p?.collection).filter(Boolean);
+    return { mode: useSeparateFeatures ? 'features' : 'npcs', packCollections };
+  } catch (_) {
+    return { mode: 'npcs', packCollections: [] };
+  }
+}
+
+function isCachedIndexStale(cached) {
+  try {
+    const current = getCurrentNpcFeatureConfig();
+    if (!cached || !cached.meta) return true;
+    if (cached.meta.mode !== current.mode) return true;
+    const a = Array.isArray(cached.meta.packCollections) ? cached.meta.packCollections.slice().sort() : [];
+    const b = Array.isArray(current.packCollections) ? current.packCollections.slice().sort() : [];
+    if (a.length !== b.length) return true;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return true;
+    }
+    return false;
+  } catch (_) {
+    return true;
+  }
 }
 
 /**
@@ -263,7 +292,8 @@ export async function buildNpcFeatureIndex() {
   const startedAt = Date.now();
   
   try {
-    const packs = getPacksFromSettings('npcs');
+    const useSeparateFeatures = game.settings.get(MODULE_ID, 'assignSeparateNpcFeatureSources');
+    const packs = getPacksFromSettings(useSeparateFeatures ? 'npcFeatures' : 'npcs');
     // if (window?.GAS?.log?.i) {
     //   window.GAS.log.i('[NPC INDEX] Starting build');
     //   window.GAS.log.d('[NPC INDEX] Packs from settings',
@@ -308,7 +338,7 @@ export async function buildNpcFeatureIndex() {
         let descriptionCount = 0;
         
         for (const [key, data] of entries) {
-          if (data.type === 'npc') {
+          if (!useSeparateFeatures && data.type === 'npc') {
             npcCount++;
             const hasDescription = !!(data.system?.description?.value);
             if (hasDescription) descriptionCount++;
@@ -328,6 +358,14 @@ export async function buildNpcFeatureIndex() {
               // });
             }
             
+            enhancedEntries.push({
+              uuid: data.uuid || key,
+              type: data.type,
+              img: data.img,
+              name: data.name,
+              description: data.system?.description?.value || ''
+            });
+          } else if (useSeparateFeatures) {
             enhancedEntries.push({
               uuid: data.uuid || key,
               type: data.type,
@@ -365,56 +403,41 @@ export async function buildNpcFeatureIndex() {
       const batch = enhancedEntries.slice(i, i + batchSize);
       await Promise.all(batch.map(async (entry) => {
         try {
-          const actor = await fromUuid(entry.uuid);
-          if (!actor) {
-            // window?.GAS?.log?.w?.('[NPC INDEX] fromUuid returned null for entry', entry);
-            return;
-          }
-          const items = [];
-          try {
-            const collection = actor.items;
-            const arr = (collection && (collection.contents || Array.from(collection))) || [];
-            for (const item of arr) {
-              if (!item) continue;
-              
-              const itemDescription = item.system?.description?.value || '';
-              const hasDescription = itemDescription.length > 0;
-              
-              // Log detailed information about the first few items to show what we're getting
-              if (items.length < 3) {
-                // window?.GAS?.log?.d?.('[NPC INDEX] Sample item from actor', {
-                //   actorName: actor.name,
-                //   itemName: item.name,
-                //   itemType: item.type,
-                //   itemUuid: item.uuid,
-                //   hasSystemField: !!item.system,
-                //   hasDescriptionField: !!item.system?.description,
-                //   descriptionLength: itemDescription.length,
-                //   descriptionPreview: itemDescription.substring(0, 100) || 'N/A',
-                //   rawSystemData: Object.keys(item.system || {}),
-                //   fullItemKeys: Object.keys(item)
-                // });
-              }
-              
-              items.push({ 
-                name: item.name, 
-                uuid: item.uuid, 
-                img: item.img,
-                description: itemDescription
-              });
+          if (!useSeparateFeatures) {
+            const actor = await fromUuid(entry.uuid);
+            if (!actor) {
+              return;
             }
-          } catch (_) {}
-          
-          // Enrich the items with HTML processing during indexing
-          const enrichedItems = await enrichItemDescriptions(items, actor);
-          
-          index.push({ npc_uuid: entry.uuid, items: enrichedItems });
-          // if (window?.GAS?.log?.v) {
-          //   window.GAS.log.v('[NPC INDEX] Indexed NPC', {
-          //     npcUuid: entry.uuid,
-          //     itemCount: enrichedItems.length
-          //   });
-          // }
+            const items = [];
+            try {
+              const collection = actor.items;
+              const arr = (collection && (collection.contents || Array.from(collection))) || [];
+              for (const item of arr) {
+                if (!item) continue;
+                const itemDescription = item.system?.description?.value || '';
+                items.push({ 
+                  name: item.name, 
+                  uuid: item.uuid, 
+                  img: item.img,
+                  description: itemDescription
+                });
+              }
+            } catch (_) {}
+            // Enrich the items with HTML processing during indexing
+            const enrichedItems = await enrichItemDescriptions(items, actor);
+            index.push({ npc_uuid: entry.uuid, items: enrichedItems });
+          } else {
+            // Direct feature mode: entries are feature Items
+            const enrichedItems = await enrichItemDescriptions([
+              {
+                name: entry.name,
+                uuid: entry.uuid,
+                img: entry.img,
+                description: entry.description || ''
+              }
+            ], null);
+            index.push({ npc_uuid: 'features-source', items: enrichedItems });
+          }
         } catch (err) {
           window?.GAS?.log?.w?.('[NPC INDEX] Failed to index NPC entry; skipping', { entry, err });
         }
@@ -462,7 +485,8 @@ export function initializeNpcFeatureIndex() {
     cachedLength: cached?.index?.length || 0
   });
   
-  if (cached && Array.isArray(cached.index) && cached.index.length > 0) {
+  const stale = isCachedIndexStale(cached);
+  if (cached && Array.isArray(cached.index) && cached.index.length > 0 && !stale) {
     console.log('[NPC INDEX] Using cached index, length:', cached.index.length);
     window?.GAS?.log?.i?.('[NPC INDEX] Using cached index', {
       version: cached.version,
@@ -471,7 +495,10 @@ export function initializeNpcFeatureIndex() {
     });
     return;
   }
-  if (cached && Array.isArray(cached.index) && cached.index.length === 0) {
+  if (stale) {
+    console.log('[NPC INDEX] Cached index is stale; rebuilding now.');
+    window?.GAS?.log?.w?.('[NPC INDEX] Cached index is stale; rebuilding now.');
+  } else if (cached && Array.isArray(cached.index) && cached.index.length === 0) {
     console.log('[NPC INDEX] Cached index exists but is empty; rebuilding now.');
     window?.GAS?.log?.w?.('[NPC INDEX] Cached index exists but is empty; rebuilding now.');
   }
@@ -508,6 +535,7 @@ export function initializeNpcFeatureIndex() {
         version: 1,
         builtAt: Date.now(),
         index,
+        meta: getCurrentNpcFeatureConfig()
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(payload));
       console.log('[NPC INDEX] Index stored in localStorage, key:', LOCAL_STORAGE_KEY);
