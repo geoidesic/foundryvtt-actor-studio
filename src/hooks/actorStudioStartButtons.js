@@ -180,10 +180,10 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
       // window.GAS.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         // disable the button if the setting is enabled
-        const hideOtherButtons = !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
+        const hideOtherButtons =  !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
         const nonGmsCanOnlyCreatePCs = !game.user.isGM && game.settings.get(MODULE_ID, 'nonGmsCanOnlyCreatePCs');
-        if (!game.user.isGM && hideOtherButtons) {
-          $('.dialog-buttons .dialog-button:not(#gas-dialog-button)', html).hide();
+        if ( hideOtherButtons) {
+          $('button:not(#gas-dialog-button)', html).hide();
         }
         if (!game.user.isGM && nonGmsCanOnlyCreatePCs) {
           $('#document-create .form-fields select', html).prop('disabled', true);

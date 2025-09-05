@@ -1,14 +1,14 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass } from '../../../../stores/index';
-  import { characterClass, characterSubClass } from '../../../../stores/storeDefinitions';
+  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
+  import { characterClass, characterSubClass } from '~/src/stores/storeDefinitions';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
     initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
     spellLimits, currentSpellCounts, spellProgress, autoPopulateAllSpells
-  } from '../../../../stores/spellSelection';
-  import spellsKnownData from '../../../../stores/spellsKnown.json';
+  } from '~/src/stores/spellSelection';
+  import spellsKnownData from '~/src/stores/spellsKnown.json';
   
   const actor = getContext("#doc");
   
@@ -62,21 +62,21 @@
   $: isLevelUpWithNoSpellUpdates = $isLevelUp && hasAllSpellsAccess && effectiveMaxSpellLevel <= oldMaxSpellLevel;
   
   // Debug logging for character data
-  $: {
-    console.log(`[SPELLS DEBUG] Character data:`, {
-      characterClass: $characterClass,
-      characterClassName,
-      effectiveCharacterLevel,
-      newLevelValueForExistingClass: $newLevelValueForExistingClass,
-      isLevelUp: $isLevelUp,
-      storeMaxSpellLevel: $maxSpellLevel,
-      calculatedMaxSpellLevel,
-      levelUpAwareMaxSpellLevel,
-      effectiveMaxSpellLevel,
-      spellLimits: $spellLimits,
-      progress: $spellProgress
-    });
-  }
+  // $: {
+  //   window.GAS.log.d(`[SPELLS DEBUG] Character data:`, {
+  //     characterClass: $characterClass,
+  //     characterClassName,
+  //     effectiveCharacterLevel,
+  //     newLevelValueForExistingClass: $newLevelValueForExistingClass,
+  //     isLevelUp: $isLevelUp,
+  //     storeMaxSpellLevel: $maxSpellLevel,
+  //     calculatedMaxSpellLevel,
+  //     levelUpAwareMaxSpellLevel,
+  //     effectiveMaxSpellLevel,
+  //     spellLimits: $spellLimits,
+  //     progress: $spellProgress
+  //   });
+  // }
   
   // Cache for enriched spell names
   let enrichedNames = {};
@@ -142,20 +142,20 @@
     await loadAvailableSpells(characterClassName);
     
     // Debug logging
-    console.log(`[SPELLS DEBUG] Loaded spells:`, {
-      totalSpells: $availableSpells.length,
-      effectiveCharacterLevel,
-      storeMaxSpellLevel: $maxSpellLevel,
-      calculatedMaxSpellLevel,
-      effectiveMaxSpellLevel,
-      characterClassName,
-      spellLimits,
-      sampleSpells: $availableSpells.slice(0, 5).map(s => ({
-        name: s.name,
-        level: s.system?.level,
-        classes: s.labels?.classes || []
-      }))
-    });
+    // window.GAS.log.d(`[SPELLS DEBUG] Loaded spells:`, {
+    //   totalSpells: $availableSpells.length,
+    //   effectiveCharacterLevel,
+    //   storeMaxSpellLevel: $maxSpellLevel,
+    //   calculatedMaxSpellLevel,
+    //   effectiveMaxSpellLevel,
+    //   characterClassName,
+    //   spellLimits,
+    //   sampleSpells: $availableSpells.slice(0, 5).map(s => ({
+    //     name: s.name,
+    //     level: s.system?.level,
+    //     classes: s.labels?.classes || []
+    //   }))
+    // });
     
     loading = false;
 
@@ -195,35 +195,10 @@
     const matchesKeyword = spell.name.toLowerCase().includes(keywordFilter.toLowerCase());
     const spellLevel = spell.system?.level || 0;
     const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
-    
-    // Filter by character class - check spell.labels.classes (it's a STRING, not array)
-    const spellClasses = spell.labels?.classes || '';
-    
-    // Check if the character class is in the spell's class string
-    // labels.classes is a STRING like "Bard, Wizard" not an array
-    const availableToClass = typeof spellClasses === 'string'
-      ? spellClasses.includes(characterClassName) ||
-        spellClasses.toLowerCase().includes(characterClassName.toLowerCase()) ||
-        spellClasses.trim().length === 0 // No restrictions (empty string)
-      : false;
-    
-    // Debug logging for spell filtering
-    if (spell.name === "Acid Splash" || spell.name === "Cure Wounds" || spellLevel === 1) {
-      console.log(`[SPELLS DEBUG] ${spell.name}:`, {
-        spell,
-        spellLevel,
-        storeMaxSpellLevel: $maxSpellLevel,
-        effectiveMaxSpellLevel,
-        withinCharacterLevel,
-        spellClasses,
-        characterClassName,
-        availableToClass,
-        matchesKeyword,
-        finalResult: matchesKeyword && withinCharacterLevel && availableToClass
-      });
-    }
-    
-    return matchesKeyword && withinCharacterLevel && availableToClass;
+  // NOTE: class availability is already resolved by `loadAvailableSpells()` and
+  // embedded in the `availableSpells` store. The UI should not re-run class
+  // filtering here to avoid accidental double-filtering or divergent logic.
+  return matchesKeyword && withinCharacterLevel;
   });
 
   // Group spells by level
@@ -238,18 +213,18 @@
   }, {});
 
   // Debug logging for spell grouping
-  $: {
-    if (Object.keys(spellsByLevel).length > 0) {
-      console.log(`[SPELLS DEBUG] Spells by level:`, {
-        totalFiltered: filteredSpells.length,
-        groupedByLevel: Object.keys(spellsByLevel).map(level => ({
-          level,
-          count: spellsByLevel[level].length,
-          samples: spellsByLevel[level].slice(0, 3).map(s => s.name)
-        }))
-      });
-    }
-  }
+  // $: {
+  //   if (Object.keys(spellsByLevel).length > 0) {
+  //     window.GAS.log.d(`[SPELLS DEBUG] Spells by level:`, {
+  //       totalFiltered: filteredSpells.length,
+  //       groupedByLevel: Object.keys(spellsByLevel).map(level => ({
+  //         level,
+  //         count: spellsByLevel[level].length,
+  //         samples: spellsByLevel[level].slice(0, 3).map(s => s.name)
+  //       }))
+  //     });
+  //   }
+  // }
 
   $: spellLevels = Object.keys(spellsByLevel).sort((a, b) => {
     if (a === 'Cantrips') return -1;
@@ -342,7 +317,7 @@
 
   // Get casting time display
   function getCastingTimeDisplay(spell) {
-    window.GAS.log.q(spell)
+    // window.GAS.log.q(spell)
     return spell.system?.activation?.value && spell.system?.activation?.type 
       ? `${spell.system.activation.value} ${spell.system.activation.type}`
         : spell.system?.activation?.type ? spell.system?.activation?.type
