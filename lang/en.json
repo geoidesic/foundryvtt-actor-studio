@@ -45,6 +45,16 @@
       "Next": "Next"
     },
     "Name": "Name",
+    "NPCStatblockSheet": "Actor Studio Stat Block",
+    "Header": {
+      "ConfigureSheet": "Configure Sheet",
+      "ConfigureToken": "Configure Token",
+      "PrototypeToken": "Prototype Token",
+      "ViewCharacterArtwork": "View Character Artwork",
+      "ViewTokenArtwork": "View Token Artwork",
+      "CopyDocumentUUID": "Copy Document UUID",
+      "CopiedUUID": "Copied UUID to clipboard"
+    },
     "MulticlassMode": "Multiclass Mode",
     "Item": "Item",
     "Skip": "Skip",
@@ -352,6 +362,10 @@
       "EnableNPCCreation": {
         "Name": "Enable NPC Creation",
         "Hint": "Allow creation of NPCs using Actor Studio. If enabled, a compendium source selector for NPCs will appear."
+      },
+      "EnableNpcStatblockSheet": {
+        "Name": "Enable NPC actor sheet",
+        "Hint": "Provides a traditional stat block NPC actor sheet instead of the default dnd5e sheet."
       }
     },
     "Equipment": {

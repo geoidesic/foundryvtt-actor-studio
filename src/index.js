@@ -25,6 +25,11 @@ Hooks.once("init", (app, html, data) => {
 
   // Register our TJS NPC Statblock sheet as the default for NPC actors
   try {
+    const enabled = game.settings?.get?.(MODULE_ID, 'enableNpcStatblockSheet');
+    if (!enabled) {
+      console.log(`[${MODULE_ID}] [NPC-SHEET] Disabled by setting; not registering NPC sheet.`);
+      return;
+    }
     Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
       if (globalThis?.Actors?.registerSheet) {
         Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
@@ -59,16 +64,21 @@ Hooks.once("ready", (app, html, data) => {
 
   // Register our NPC sheet again on ready to override any later registrations by other modules
   try {
-    Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
-      if (globalThis?.Actors?.registerSheet) {
-        Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
-          types: ["npc", "NPC"],
-          makeDefault: true,
-          label: 'GAS.NPCStatblockSheet'
-        });
-        console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Registered as default NPC sheet.`);
-      }
-    });
+    const enabled = game.settings?.get?.(MODULE_ID, 'enableNpcStatblockSheet');
+    if (!enabled) {
+      console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Disabled by setting; skipping registration.`);
+    } else {
+      Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
+        if (globalThis?.Actors?.registerSheet) {
+          Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
+            types: ["npc", "NPC"],
+            makeDefault: true,
+            label: 'GAS.NPCStatblockSheet'
+          });
+          console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Registered as default NPC sheet.`);
+        }
+      });
+    }
   } catch (e) {
     console.warn(`[${MODULE_ID}] [NPC-SHEET] (ready) Failed to register NPC sheet`, e);
   }

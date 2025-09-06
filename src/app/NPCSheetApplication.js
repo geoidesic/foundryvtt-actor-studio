@@ -3,6 +3,7 @@ import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import NPCSheetShell from "~/src/app/NPCSheetShell.svelte";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants";
 import HeaderEditToggle from "~/src/components/atoms/HeaderEditToggle.svelte";
+import HeaderIconButton from "~/src/components/atoms/HeaderIconButton.svelte";
 import { writable } from 'svelte/store';
 
 /**
@@ -32,7 +33,7 @@ export default class NPCSheetApplication extends SvelteApplication {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'gas-npc-statblock-sheet',
       title: game.i18n.localize('GAS.NPCStatblockSheet') || 'NPC',
-      classes: [MODULE_CODE, 'gas-npc-sheet'],
+  classes: ['window-app', MODULE_CODE, 'gas-npc-sheet'],
       width: 720,
       height: 840,
       resizable: true,
@@ -67,6 +68,159 @@ export default class NPCSheetApplication extends SvelteApplication {
       alignLeft: true,
       svelte: { class: HeaderEditToggle, props: { editStore: this.editStore, canEdit } }
     });
+
+    // Preserve common Actor sheet tools: Configure Sheet and Configure Token
+    const doc = this.reactive.document;
+    if (doc) {
+      // Configure Sheet button
+      buttons.push({
+        svelte: {
+          class: HeaderIconButton,
+          props: {
+            extraClass: 'configure-sheet flex0',
+            iconClass: 'fa-solid fa-gear fas fa-cog',
+            title: game?.i18n?.localize?.('GAS.Header.ConfigureSheet') || 'Configure Sheet',
+            onPress: () => {
+          try {
+            // DocumentSheetConfig is provided by Foundry core
+            // eslint-disable-next-line no-undef
+            new DocumentSheetConfig(doc, {
+              top: this.position.top + 40,
+              left: this.position.left + 40
+            }).render(true);
+          } catch (e) {
+            console.warn('[GAS][NPC-SHEET] Failed to open DocumentSheetConfig', e);
+          }
+            }
+          }
+        }
+      });
+
+      // Configure Token button (for prototype token or placed token)
+      const tokenDoc = doc.isToken ? doc.token : doc.prototypeToken;
+      if (tokenDoc) {
+        buttons.push({
+          svelte: {
+            class: HeaderIconButton,
+            props: {
+              extraClass: 'configure-token flex0',
+              iconClass: 'fa-solid fa-circle-user fas fa-user-circle far fa-user-circle',
+              title: doc.isToken
+                ? (game?.i18n?.localize?.('GAS.Header.ConfigureToken') || 'Configure Token')
+                : (game?.i18n?.localize?.('GAS.Header.PrototypeToken') || 'Prototype Token'),
+              onPress: () => {
+            try {
+              // TokenConfig is provided by Foundry core
+              // eslint-disable-next-line no-undef
+              new TokenConfig(tokenDoc, {
+                top: this.position.top + 60,
+                left: this.position.left + 60
+              }).render(true);
+            } catch (e) {
+              console.warn('[GAS][NPC-SHEET] Failed to open TokenConfig', e);
+            }
+              }
+            }
+          }
+        });
+
+        // View Character Artwork
+        if (doc.img) {
+          buttons.push({
+            svelte: {
+              class: HeaderIconButton,
+              props: {
+                extraClass: 'view-character-art flex0',
+                iconClass: 'fa-solid fa-image fas fa-image',
+                title: game?.i18n?.localize?.('GAS.Header.ViewCharacterArtwork') || 'View Character Artwork',
+                onPress: () => {
+              try {
+                // eslint-disable-next-line no-undef
+                new ImagePopout(doc.img, { title: doc.name }).render(true);
+              } catch (e) {
+                console.warn('[GAS][NPC-SHEET] Failed to open character artwork', e);
+              }
+                }
+              }
+            }
+          });
+        }
+
+        // View Token Artwork (prototype or placed)
+        const tokenImg = tokenDoc?.texture?.src ?? tokenDoc?.img;
+        if (tokenImg) {
+          buttons.push({
+            svelte: {
+              class: HeaderIconButton,
+              props: {
+                extraClass: 'view-token-art flex0',
+                iconClass: 'fa-solid fa-images fas fa-images',
+                title: game?.i18n?.localize?.('GAS.Header.ViewTokenArtwork') || 'View Token Artwork',
+                onPress: () => {
+              try {
+                // eslint-disable-next-line no-undef
+                new ImagePopout(tokenImg, { title: `${doc.name} — Token` }).render(true);
+              } catch (e) {
+                console.warn('[GAS][NPC-SHEET] Failed to open token artwork', e);
+              }
+                }
+              }
+            }
+          });
+        }
+
+        // Copy Document UUID
+        buttons.push({
+          svelte: {
+            class: HeaderIconButton,
+            props: {
+              extraClass: 'copy-uuid flex0',
+              iconClass: 'fa-solid fa-copy fas fa-copy',
+              title: game?.i18n?.localize?.('GAS.Header.CopyDocumentUUID') || 'Copy Document UUID',
+              onPress: async () => {
+            try {
+              const uuid = doc?.uuid ?? '';
+              if (!uuid) return;
+              if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(uuid);
+              } else {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = uuid;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) { /* noop */ }
+                document.body.removeChild(ta);
+              }
+              ui?.notifications?.info?.(game?.i18n?.localize?.('GAS.Header.CopiedUUID') || 'Copied UUID to clipboard');
+            } catch (e) {
+              console.warn('[GAS][NPC-SHEET] Failed to copy UUID', e);
+            }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Ensure the close button renders last in the header
+    try {
+      const idx = buttons.findIndex((b) => {
+        const cls = `${b?.class ?? b?.classes ?? ''}`;
+        const icon = `${b?.icon ?? ''}`;
+        const title = `${b?.title ?? ''}`.toLowerCase?.() || '';
+        return cls.includes('close') || icon.includes('fa-times') || icon.includes('fa-xmark') || title.includes('close');
+      });
+      if (idx >= 0 && idx < buttons.length - 1) {
+        const [closeBtn] = buttons.splice(idx, 1);
+        buttons.push(closeBtn);
+      }
+    } catch (e) {
+      // no-op; if anything goes wrong just return buttons as-is
+    }
 
     return buttons;
   }
