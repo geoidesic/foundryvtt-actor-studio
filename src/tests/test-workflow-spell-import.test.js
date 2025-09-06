@@ -38,8 +38,15 @@ beforeEach(() => {
   }));
 
   // Mock other stores
-  vi.doMock('~/src/stores/storeDefinitions', () => ({ goldRoll: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() } }));
-  vi.doMock('~/src/stores/goldChoices', () => ({ totalGoldFromChoices: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() } }));
+  vi.doMock('~/src/stores/storeDefinitions', () => ({ 
+    goldRoll: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    characterClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    background: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+  }));
+  vi.doMock('~/src/stores/goldChoices', () => ({ 
+    totalGoldFromChoices: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+    goldChoices: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+  }));
   vi.doMock('~/src/stores/index.js', () => ({ 
     tabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
     activeTab: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },

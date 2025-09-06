@@ -15,15 +15,19 @@ vi.mock('svelte/store', () => ({
       return () => {};
     })
   }),
+  derived: vi.fn(() => ({ subscribe: vi.fn() })),
   get: vi.fn((store) => store?.value || [])
 }));
 
 vi.mock('~/src/stores/index', () => ({
-  activeTab: { set: vi.fn(), update: vi.fn() },
+  activeTab: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
   tabs: { 
     update: vi.fn(),
     subscribe: vi.fn()
-  }
+  },
+  isLevelUp: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+  newLevelValueForExistingClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+  currentCharacter: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
 }));
 
 vi.mock('~/src/helpers/constants', () => ({
@@ -41,12 +45,33 @@ vi.mock('~/src/stores/startingEquipment', () => ({
 }));
 
 vi.mock('~/src/stores/storeDefinitions', () => ({
-  goldRoll: { subscribe: vi.fn() }
+  goldRoll: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+  characterClass: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+  background: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
 }));
 
-vi.mock('~/src/helpers/WorkflowStateMachine', () => ({
-  getWorkflowFSM: vi.fn(),
+vi.mock('~/src/stores/goldChoices', () => ({
+  goldChoices: {
+    set: vi.fn(),
+    update: vi.fn(),
+    subscribe: vi.fn((fn) => {
+      fn({ fromClass: { choice: null, goldValue: 0 }, fromBackground: { choice: null, goldValue: 0 } });
+      return () => {};
+    })
+  },
+  totalGoldFromChoices: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+}));
+
+// Mock the PC WorkflowStateMachine to avoid importing heavy lib/workflow chain
+vi.mock('~/src/helpers/PC/WorkflowStateMachine', () => ({
+  getWorkflowFSM: vi.fn(() => ({ handle: vi.fn(), getCurrentState: vi.fn(() => 'idle') })),
   WORKFLOW_EVENTS: {}
+}));
+
+// Also mock lib/workflow to be safe if anything imports it indirectly
+vi.mock('~/src/lib/workflow.js', () => ({
+  handleAdvancementCompletion: vi.fn(),
+  finalizeSpellSelection: vi.fn()
 }));
 
 // Mock FoundryVTT globals

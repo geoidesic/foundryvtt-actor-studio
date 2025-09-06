@@ -22,6 +22,26 @@ import { renderNPCStudioSidebarButton, renderASButtonInCreateNPCApplication, ope
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
+
+  // Register our TJS NPC Statblock sheet as the default for NPC actors
+  try {
+    Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
+      if (globalThis?.Actors?.registerSheet) {
+        Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
+          types: ["npc", "NPC"],
+          makeDefault: true,
+          label: 'GAS.NPCStatblockSheet'
+        });
+        console.log(`[${MODULE_ID}] [NPC-SHEET] Registered GAS NPC Statblock sheet as default for NPC actors`);
+      } else {
+        console.warn(`[${MODULE_ID}] [NPC-SHEET] Actors.registerSheet not available; NPC sheet not registered.`);
+      }
+    }).catch((e) => {
+      console.error(`[${MODULE_ID}] [NPC-SHEET] Failed to register NPC sheet`, e);
+    });
+  } catch (e) {
+    console.error(`[${MODULE_ID}] [NPC-SHEET] NPC sheet registration threw`, e);
+  }
 });
 
 Hooks.once("ready", (app, html, data) => {
@@ -36,6 +56,22 @@ Hooks.once("ready", (app, html, data) => {
   
   // Log that the module is ready and hooks are registered
   console.log(`[${MODULE_ID}] Module ready, hooks registered`);
+
+  // Register our NPC sheet again on ready to override any later registrations by other modules
+  try {
+    Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
+      if (globalThis?.Actors?.registerSheet) {
+        Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
+          types: ["npc", "NPC"],
+          makeDefault: true,
+          label: 'GAS.NPCStatblockSheet'
+        });
+        console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Registered as default NPC sheet.`);
+      }
+    });
+  } catch (e) {
+    console.warn(`[${MODULE_ID}] [NPC-SHEET] (ready) Failed to register NPC sheet`, e);
+  }
 });
 
 // Clean up event handlers when module is disabled
@@ -86,9 +122,122 @@ Hooks.on('renderCompendium', (pack, html, data ) => {
 Hooks.on("renderFolderConfig", (app, html, folder) => {
   window.GAS.log.d("folder", folder);
 })
-Hooks.on("renderActorSheet", (app, html, actor) => {
-  window.GAS.log.d("actor", actor);
-})
+// Debug helpers for NPC sheet interception
+const __GAS_NPC_SHEET__ = {
+  seen: new Set(),
+  debug: (...args) => console.debug(`[${MODULE_ID}] [NPC-SHEET]`, ...args),
+  warn: (...args) => console.warn(`[${MODULE_ID}] [NPC-SHEET]`, ...args),
+  error: (...args) => console.error(`[${MODULE_ID}] [NPC-SHEET]`, ...args)
+};
+
+// Optional debug for sheet rendering — disabled by default
+// Hooks.on("renderActorSheet", (app, html, data) => {
+//   try {
+//     const actor = app?.actor ?? app?.object ?? app?.document;
+//     const atype = (actor?.type ?? actor?.document?.type ?? '').toString().toLowerCase();
+//     __GAS_NPC_SHEET__.debug('renderActorSheet fired', {
+//       appClass: app?.constructor?.name,
+//       appId: app?.id,
+//       title: app?.title,
+//       actorName: actor?.name,
+//       actorType: atype
+//     });
+//   } catch (e) {
+//     __GAS_NPC_SHEET__.error('renderActorSheet debug failed', e);
+//   }
+// });
+
+// Intercept NPC sheet opening and render TJS sheet instead (TJS SvelteApplication)
+async function interceptNpcSheet(app, hookName = 'renderActorSheet') {
+  try {
+    const actor = app?.actor ?? app?.object ?? app?.document;
+    const atype = (actor?.type ?? actor?.document?.type ?? '').toString().toLowerCase();
+    if (!actor || atype !== 'npc') return; // Non-NPC; ignore
+
+    // Prevent loops / repeated interception during rapid rerenders
+    if (actor.id && __GAS_NPC_SHEET__.seen.has(actor.id)) {
+      __GAS_NPC_SHEET__.debug(`skip duplicate intercept for actor ${actor.name} (${actor.id}) on ${hookName}`);
+      return;
+    }
+    if (actor.id) __GAS_NPC_SHEET__.seen.add(actor.id);
+
+    __GAS_NPC_SHEET__.debug(`intercepting ${hookName} for NPC`, {
+      actorName: actor?.name,
+      actorId: actor?.id,
+      appClass: app?.constructor?.name,
+      appId: app?.id
+    });
+
+    const { default: NPCSheetApplication } = await import('~/src/app/NPCSheetApplication.js');
+    const tjs = new NPCSheetApplication(actor);
+    tjs.render(true, { focus: true });
+    __GAS_NPC_SHEET__.debug('opened NPCSheetApplication', { actorName: actor?.name });
+
+    // Close the standard sheet; force close if possible
+    try {
+      await app?.close?.();
+      __GAS_NPC_SHEET__.debug('closed standard NPC sheet');
+    } catch (e) {
+      __GAS_NPC_SHEET__.warn('failed to close standard NPC sheet', e);
+      // As a fallback, try hiding the DOM to avoid double UI
+      try { $(app.element).hide(); } catch (_e) {}
+    }
+
+    // Release seen flag shortly after to allow future opens
+    if (actor.id) setTimeout(() => __GAS_NPC_SHEET__.seen.delete(actor.id), 500);
+  } catch (e) {
+    __GAS_NPC_SHEET__.error('interceptNpcSheet error', { hookName, error: e });
+  }
+}
+
+// Intercept earlier at pre-render and attempt to cancel the default render entirely (currently unused)
+function preInterceptNpcSheet(app, hookName = 'preRenderNPCActorSheet') {
+  try {
+    const actor = app?.actor ?? app?.object ?? app?.document;
+    const atype = (actor?.type ?? actor?.document?.type ?? '').toString().toLowerCase();
+    if (!actor || atype !== 'npc') return; // Non-NPC; ignore
+
+    // Prevent loops / repeated interception during rapid rerenders
+    const key = `${hookName}:${app?.id ?? 'no-app'}:${actor?.id ?? 'no-actor'}`;
+    if (__GAS_NPC_SHEET__.seen.has(key)) {
+      __GAS_NPC_SHEET__.debug(`pre: skip duplicate intercept for actor ${actor.name} (${actor.id}) on ${hookName}`);
+      return false;
+    }
+    __GAS_NPC_SHEET__.seen.add(key);
+
+    __GAS_NPC_SHEET__.debug(`pre: intercepting ${hookName} for NPC`, {
+      actorName: actor?.name,
+      actorId: actor?.id,
+      appClass: app?.constructor?.name,
+      appId: app?.id
+    });
+
+    // Fire-and-forget open of our TJS SvelteApplication on microtask to avoid interfering with the cancel return path
+    Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
+      try {
+        const tjs = new NPCSheetApplication(actor);
+        tjs.render(true, { focus: true });
+        __GAS_NPC_SHEET__.debug('pre: opened NPCSheetApplication', { actorName: actor?.name });
+      } catch (e) {
+        __GAS_NPC_SHEET__.error('pre: failed to open NPCSheetApplication', e);
+      }
+    });
+
+  // Release seen flag shortly after to allow future opens
+  setTimeout(() => __GAS_NPC_SHEET__.seen.delete(key), 500);
+
+    // Returning false on many preRender hooks cancels the render; safe even if ignored
+    return false;
+  } catch (e) {
+    __GAS_NPC_SHEET__.error('preInterceptNpcSheet error', { hookName, error: e });
+  }
+}
+
+// Try at multiple hook points to ensure interception in v12/v13
+// Disable render-time interceptions; we’ll open our sheet directly from the directory to avoid flicker
+// Hooks.on('renderActorSheet', (app, html, data) => interceptNpcSheet(app, 'renderActorSheet'));
+// Hooks.on('renderActorSheetV2', (app, html, data) => interceptNpcSheet(app, 'renderActorSheetV2'));
+// Hooks.on('renderNPCActorSheet', (app, html, data) => interceptNpcSheet(app, 'renderNPCActorSheet'));
 Hooks.on("renderItemSheet5e", (app, html, item) => {
   window.GAS.log.d("item", item);
 })
