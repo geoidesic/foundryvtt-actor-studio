@@ -1013,8 +1013,6 @@
 
 <style lang="sass">
 .npc-stat-block
-  margin: 1rem 0 0 0
-  padding: 0.5em
   .details
     font-style: italic
     margin-bottom: 0.5em

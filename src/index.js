@@ -26,18 +26,15 @@ Hooks.once("init", (app, html, data) => {
   // Register our TJS NPC Statblock sheet as the default for NPC actors
   try {
     const enabled = game.settings?.get?.(MODULE_ID, 'enableNpcStatblockSheet');
-    if (!enabled) {
-      console.log(`[${MODULE_ID}] [NPC-SHEET] Disabled by setting; not registering NPC sheet.`);
-      return;
-    }
     Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
       if (globalThis?.Actors?.registerSheet) {
+        // Always register the sheet so it appears in the dropdown; set as default only if setting is enabled
         Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
           types: ["npc", "NPC"],
-          makeDefault: true,
+          makeDefault: !!enabled,
           label: 'GAS.NPCStatblockSheet'
         });
-        console.log(`[${MODULE_ID}] [NPC-SHEET] Registered GAS NPC Statblock sheet as default for NPC actors`);
+        console.log(`[${MODULE_ID}] [NPC-SHEET] Registered GAS NPC Statblock sheet (makeDefault=${!!enabled})`);
       } else {
         console.warn(`[${MODULE_ID}] [NPC-SHEET] Actors.registerSheet not available; NPC sheet not registered.`);
       }
@@ -62,26 +59,7 @@ Hooks.once("ready", (app, html, data) => {
   // Log that the module is ready and hooks are registered
   console.log(`[${MODULE_ID}] Module ready, hooks registered`);
 
-  // Register our NPC sheet again on ready to override any later registrations by other modules
-  try {
-    const enabled = game.settings?.get?.(MODULE_ID, 'enableNpcStatblockSheet');
-    if (!enabled) {
-      console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Disabled by setting; skipping registration.`);
-    } else {
-      Promise.resolve().then(() => import('~/src/app/NPCSheetApplication.js')).then(({ default: NPCSheetApplication }) => {
-        if (globalThis?.Actors?.registerSheet) {
-          Actors.registerSheet(MODULE_ID, NPCSheetApplication, {
-            types: ["npc", "NPC"],
-            makeDefault: true,
-            label: 'GAS.NPCStatblockSheet'
-          });
-          console.log(`[${MODULE_ID}] [NPC-SHEET] (ready) Registered as default NPC sheet.`);
-        }
-      });
-    }
-  } catch (e) {
-    console.warn(`[${MODULE_ID}] [NPC-SHEET] (ready) Failed to register NPC sheet`, e);
-  }
+  // No aggressive re-registration on ready; rely on standard sheet selection system
 });
 
 // Clean up event handlers when module is disabled

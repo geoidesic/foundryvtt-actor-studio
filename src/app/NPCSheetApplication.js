@@ -27,15 +27,24 @@ export default class NPCSheetApplication extends SvelteApplication {
       set: (document) => this.documentStore.set(document),
     });
     this.reactive.document = actor;
+
+    // Ensure each window instance has a unique element id so multiple can be opened
+    try {
+      const aid = actor?.id || actor?._id || foundry.utils.randomID?.() || Math.random().toString(36).slice(2);
+      this.options.id = `gas-npc-statblock-sheet-${aid}`;
+    } catch (_) {
+      this.options.id = `gas-npc-statblock-sheet-${Math.random().toString(36).slice(2)}`;
+    }
   }
 
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
+      // id is set per-instance in the constructor to allow multiple windows
       id: 'gas-npc-statblock-sheet',
-      title: game.i18n.localize('GAS.NPCStatblockSheet') || 'NPC',
-  classes: ['window-app', MODULE_CODE, 'gas-npc-sheet'],
-      width: 720,
-      height: 840,
+      title: this.reactive?.document?.name,
+      classes: ['window-app', MODULE_CODE, 'gas-npc-sheet'],
+      width: 400,
+      height: 500,
       resizable: true,
       minimizable: true,
       headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png',
@@ -228,7 +237,7 @@ export default class NPCSheetApplication extends SvelteApplication {
   async #handleDocUpdate(doc, options) {
     if (!doc) return;
     const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : '';
-    this.reactive.title = `${game.i18n.localize('GAS.NPCStatblockSheet')} - ${doc.name}${tokenText}`;
+    this.reactive.title = `${doc.name}${tokenText}`;
   }
 
   render(force=false, options={}) {

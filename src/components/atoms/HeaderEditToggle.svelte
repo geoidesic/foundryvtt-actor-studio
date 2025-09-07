@@ -46,7 +46,16 @@
 <style lang="sass">
 // Compact & aligned header toggle with dnd5e palette
 .gas-mode-slider
+  --slide-toggle-height: 18px
+  --slide-toggle-width: 36px
+  --slide-toggle-padding: 3px
+  --slide-toggle-thumb-width: calc(var(--slide-toggle-height) - var(--slide-toggle-padding) * 2)
+  --slide-toggle-thumb-height: var(--slide-toggle-thumb-width)
+  --slide-toggle-transition-time: 250ms
   display: inline-block
+  width: var(--slide-toggle-width)
+  height: var(--slide-toggle-height)
+  cursor: var(--cursor-pointer)
   vertical-align: middle
   margin: 0 .25rem
   width: 35px
@@ -54,19 +63,33 @@
   // Prevent stretching in some headers
   flex: 0 0 auto
 
-  .slide-toggle-track
-    height: 16px
-    border-radius: 999px
-    background-color: var(--dnd5e-color-gold)
-    border: 1px solid rgba(0,0,0,0.25)
+:global(.gas-mode-slider .slide-toggle-track)
+  --slide-toggle-track-color-unchecked: dimgrey
+  width: 100%
+  height: 100%
+  background: var(--slide-toggle-track-color-unchecked, black)
+  border-radius: calc((var(--slide-toggle-height) * 2) / 3)
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.45)
+  display: flex
 
-  .slide-toggle-thumb
-    width: 16px
-    height: 16px
-    border-radius: 50%
-    background: #111
-    border: 1px solid rgba(0,0,0,0.35)
+  flex-direction: row
+  justify-content: start
+  padding: var(--slide-toggle-padding)
 
+:global(.gas-mode-slider .slide-toggle-thumb)
+  width: var(--slide-toggle-thumb-width)
+  height: var(--slide-toggle-thumb-height)
+  border-radius: 100%
+  background: var(--slide-toggle-thumb-color, white)
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.45)
+  text-align: center
+  transition: margin-left var(--slide-toggle-transition-time) ease
+:global(.dnd5e2.sheet:is(.item, .actor):where(:not(.minimized)) > header > slide-toggle.gas-mode-slider .slide-toggle-thumb::before )
+  content: "\f0ad"
+  font-family: var(--font-awesome)
+  color: var(--dnd5e-background-alt-1)
+  font-weight: bold
+  font-size: var(--font-size-9)
 // Slightly reduce size on compact headers
 :global(.window-app .window-header) .gas-mode-slider
   transform: translateY(1px)
