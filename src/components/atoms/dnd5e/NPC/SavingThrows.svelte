@@ -101,11 +101,19 @@
     });
   }
 
-  async function rollSave(key) {
+  async function rollSave(key, event) {
     try {
       const a = $actor;
-      if (a?.rollAbilitySave) return a.rollAbilitySave(key);
-      if (a?.saves?.[key]?.roll) return a.saves[key].roll();
+      const ab = String(key || '').toLowerCase();
+      if (!a || !ab) return;
+
+      // Prefer dnd5e v4 API
+      if (typeof a.rollSavingThrow === 'function') return a.rollSavingThrow({ ability: ab, event });
+      // Fallback to dnd5e v3 API
+      if (typeof a.rollAbilitySave === 'function') return a.rollAbilitySave(ab, { event });
+      // Legacy/alt paths
+      if (a?.system?.abilities?.[ab]?.save?.roll) return a.system.abilities[ab].save.roll({ event });
+      if (a?.saves?.[ab]?.roll) return a.saves[ab].roll({ event });
       ui?.notifications?.warn?.(`Save roll not supported: ${key}`);
     } catch (err) {
       console.warn('Save roll failed', key, err);

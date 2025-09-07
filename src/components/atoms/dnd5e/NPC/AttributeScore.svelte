@@ -11,14 +11,31 @@
   
   const mod = Math.floor((score - 10) / 2);
   const modString = mod >= 0 ? `+${mod}` : `${mod}`;
-  
-  async function rollAbility() {
+
+  // Roll an ability check: prefer 5e v4 (actor.rollAbilityCheck), fallback to 5e v3 (actor.rollAbilityTest)
+  async function rollAbility(event) {
     try {
       const a = $actor;
-      if (a?.rollAbilityTest) return a.rollAbilityTest(abbreviation);
-      // fallback dnd5e v4 ability object roll
-      if (a?.abilities?.[abbreviation]?.roll) return a.abilities[abbreviation].roll();
-      ui?.notifications?.warn?.(`Ability roll not supported: ${abbreviation}`);
+      const ab = String(abbreviation || '').toLowerCase();
+      if (!a || !ab) return;
+
+      // DnD5e v4.x API (Foundry V13+)
+      if (typeof a.rollAbilityCheck === 'function') {
+        return a.rollAbilityCheck({ ability: ab, event });
+      }
+
+      // DnD5e v3.x API
+      if (typeof a.rollAbilityTest === 'function') {
+        return a.rollAbilityTest(ab, { event });
+      }
+
+      // Older/alternate fallbacks sometimes expose a direct roll on the ability
+      const directRoll = a?.system?.abilities?.[ab]?.roll || a?.abilities?.[ab]?.roll;
+      if (typeof directRoll === 'function') {
+        return directRoll({ event });
+      }
+
+      ui?.notifications?.warn?.(`Ability roll not supported: ${ab}`);
     } catch (err) {
       console.warn('Ability roll failed', abbreviation, err);
     }
@@ -44,7 +61,12 @@
   .stat
     .flexcol.center
       .flex1.label
-        button.roll(title="Roll {abbreviation}" on:click!="{rollAbility}")
+        button.roll.rollable.ability-check(
+          title="Roll {abbreviation}"
+          data-ability="{abbreviation}"
+          aria-label="{abbreviation} ability check"
+          on:click!="{rollAbility}"
+        )
           i.fas.fa-dice-d20
         span {abbreviation}
       .flex1.value
