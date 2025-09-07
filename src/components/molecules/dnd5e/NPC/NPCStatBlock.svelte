@@ -846,6 +846,31 @@
                   on:click!="{() => { console.log('🖱️ Alignment field clicked!'); editingAlignment = true; }}"
                   class!="{editingAlignment ? 'editing' : ''}"
                 ) {npc?.system?.details?.alignment || 'Unaligned'}
+
+    hr.my-ms
+    
+    .mt-xxs
+      .label.inline Challenge 
+      .value
+        EditableValue(
+          value="{crValue}"
+          readonly="{readonly}"
+          onSave!="{val => updateActorCR(val)}"
+          placeholder="1"
+        )
+        span  (
+        EditableValue(
+          value="{xpValue}"
+          type="number"
+          readonly="{readonly}"
+          onSave!="{val => updateActorXP(val)}"
+          placeholder="200"
+        )
+        span  XP )
+    .mt-xxs
+      .label.inline Proficiency Bonus 
+      .value +{pb}
+      
     hr.my-sm
     
     .value
@@ -884,6 +909,7 @@
         readonly="{readonly}"
         on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
       )
+    hr.my-sm
     +if("dr && dr.length > 0")
       .mt-xxs
         .label.inline Damage Resistances 
@@ -945,28 +971,7 @@
         readonly="{readonly}"
         on:languageUpdate!="{e => updateActorLanguages(e.detail)}"
       )
-    .mt-xxs
-      .label.inline Challenge 
-      .value
-        EditableValue(
-          value="{crValue}"
-          readonly="{readonly}"
-          onSave!="{val => updateActorCR(val)}"
-          placeholder="1"
-        )
-        span  (
-        EditableValue(
-          value="{xpValue}"
-          type="number"
-          readonly="{readonly}"
-          onSave!="{val => updateActorXP(val)}"
-          placeholder="200"
-        )
-        span  XP )
-    .mt-xxs
-      .label.inline Proficiency Bonus 
-      .value +{pb}
-    hr.my-sm
+    
     //- Traits (summary)
     +if("legendaryResistances && legendaryResistances.length > 0")
       .mt-sm
