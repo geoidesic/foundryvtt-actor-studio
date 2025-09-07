@@ -1,7 +1,9 @@
 <script>
   import { ApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { getContext, setContext, onMount, onDestroy } from 'svelte';
-  import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
+  import Tabs from "~/src/components/molecules/Tabs.svelte";
+  // Overview tab will render the stat block molecule
+  // Other tabs are standalone components loaded by Tabs.svelte
 
   // Props provided by the sheet class
   export let documentStore; // TJSDocument store
@@ -12,6 +14,8 @@
 
   // Provide standard GAS contexts used by molecules
   setContext('#doc', documentStore);
+  // Provide edit store so tab components can derive readonly
+  setContext('#editStore', editStore);
 
   onMount(() => {
     try { console.debug('[GAS] NPCSheetShell mounted for', document?.name); } catch (_) {}
@@ -38,6 +42,17 @@
     } catch (_) {}
   }
   onDestroy(() => { try { unsubEdit?.(); } catch (_) {} });
+
+  // Tabs setup for NPC Sheet
+  // Component names must exist under components/organisms/dnd5e/Tabs
+  let activeTab = 'overview';
+  $: sheetTabs = [
+    { id: 'overview', label: 'Overview', icon: 'fas fa-id-card', component: 'NpcSheetOverview' },
+    { id: 'features', label: 'Features', icon: 'fas fa-star', component: 'NpcSheetFeatures' },
+    { id: 'equipment', label: 'Equipment', icon: 'fas fa-boxes', component: 'NpcSheetEquipment' },
+    { id: 'skills', label: 'Skills', icon: 'fas fa-dice-d20', component: 'NpcSheetSkills' },
+    { id: 'effects', label: 'Effects', icon: 'fas fa-bolt', component: 'NpcSheetEffects' }
+  ];
 </script>
 
 <svelte:options accessors={true} />
@@ -49,8 +64,8 @@
       +if("hasPortrait")
         button.gas-portrait(type="button" class="header-control" on:click="{openPortrait}" data-tooltip="{npcName}" aria-label="{npcName}")
           img.gas-portrait-img(src="{portraitSrc}" alt="{npcName}")
-      //- Render the existing statblock molecule
-      NPCStatBlock(name="{npcName}" npc="{npc}" readonly="{readOnly}")
+      //- Icon tabs for NPC sheet
+      Tabs.gas-tabs( tabs="{sheetTabs}" bind:activeTab="{activeTab}" sheet="NPC-SHEET" labels="{false}")
 </template>
 
 <style lang="sass">
