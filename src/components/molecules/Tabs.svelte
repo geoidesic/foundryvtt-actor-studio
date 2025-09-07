@@ -132,7 +132,7 @@
     flex: 2
     width: 100%
     position: relative
-    padding: 1.6rem 1rem
+    padding: 1.6rem 0.5rem
 
   .readonly-overlay
     position: absolute
