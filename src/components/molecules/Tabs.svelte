@@ -51,8 +51,12 @@
         }}
         on:mousedown={preventDefault}
         use:efx
+        aria-label={tab.label}
+        title={tab.label}
       >
-        {tab.label}
+        {#if tab.icon}
+          <i class="{tab.icon}"></i>
+        {/if}
       </button>
     {/each}
   </div>
@@ -66,112 +70,97 @@
     {/each}
   </div>
 </div>
+<style lang="sass">
+  @import "../../../styles/Mixins.sass"
 
-<style lang="scss">
-  @import "../../../styles/Mixins.sass";
+  .tabs
+    +flex-column
+    +flex-group-top
+    +border
+    height: 100%
+    width: 100%
 
-  .tabs {
-    @include flex-column;
-    @include flex-group-top;
-    @include border;
-    height: 100%;
-    width: 100%;
+    .tabs-list
+      +flex-row
+      +flex-space-evenly
+      +border-bottom
+      +panel-1
+      list-style: none
+      width: 100%
+      margin: 0
+      padding: 0.25rem
+      height: 100%
+      flex: 0
 
-    .tabs-list {
-      @include flex-row;
-      @include flex-space-evenly;
-      @include border-bottom;
-      @include panel-1;
-      list-style: none;
-      width: 100%;
-      margin: 0;
-      padding: 0.25rem;
-      height: 100%;
-      flex: 0;
+      button
+        --button-border-radius: 5px
+        --button-line-height: var(--tab-line-height)
+        --button-font-size: var(--tab-font-size)
+        +button
+        text-align: center
+        position: relative
+        overflow: hidden
+        width: 100%
+        height: 200%
+        margin: -10px 2px
+        font-weight: normal
+        font-size: larger
+        margin-bottom: -10px
+        padding: 10px 0
+        align-items: end
 
-      button {
-        --button-border-radius: 5px;
-        --button-line-height: var(--tab-line-height);
-        --button-font-size: var(--tab-font-size);
-        @include button;
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        height: 200%;
-        margin: -10px 2px;
-        font-weight: normal;
-        font-size: larger;
-        margin-bottom: -10px;
-        padding: 10px 0;
-        align-items: end;
+        &:not(:first-child)
+          border-left: none
 
-        &:not(:first-child) {
-          border-left: none;
-        }
+        &:not(.active)
+          &:before
+            content: ""
+            border-top: 5px solid var(--color-border-highlight)
+            position: absolute
+            width: 100%
+            bottom: 5px
+          &:not(:hover)
+            &:before
+              border-top: 5px solid brown
 
-        &:not(.active) {
-          &:before {
-            content: "";
-            border-top: 5px solid var(--color-border-highlight);
-            position: absolute;
-            width: 100%;
-            bottom: 5px;
-          } 
-          &:not(:hover) {
-            &:before {
-              border-top: 5px solid brown;
-            }
-          }
-        }
-
-        &.active {
-          &:hover {
-            background: #f9f9f9;
-            box-shadow: none;
-          }
-          font-weight: bold;
-          background: #f9f9f9;
+        &.active
+          &:hover
+            background: #f9f9f9
+            box-shadow: none
+          font-weight: bold
+          background: #f9f9f9
           color: var(--dnd5e-color-gold)
-        }
-      }
-    }
-  }
 
+  .tab-content
+    +flex-column
+    flex: 2
+    width: 100%
+    position: relative
+    padding: 1rem
 
-  .tab-content {
-    @include flex-column;
-    flex: 2;
-    width: 100%;
-    position: relative;
-  }
+  .readonly-overlay
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background: rgba(0, 0, 0, 0.4)
+    z-index: 100
+    display: flex
+    align-items: center
+    justify-content: center
 
-  .readonly-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .overlay-message
+    background: #fff
+    padding: 1rem
+    border-radius: 5px
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3)
 
-  .overlay-message {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  }
+  button.readonly
+    opacity: 0.7
+    cursor: not-allowed
 
-  button.readonly {
-    opacity: 0.7;
-    cursor: not-allowed;
-
-    &:hover {
-      box-shadow: none;
-      background: inherit;
-    }
-  }
+    &:hover
+      box-shadow: none
+      background: inherit
 </style>

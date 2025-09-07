@@ -100,6 +100,17 @@
       ability: abilityKey
     });
   }
+
+  async function rollSave(key) {
+    try {
+      const a = $actor;
+      if (a?.rollAbilitySave) return a.rollAbilitySave(key);
+      if (a?.saves?.[key]?.roll) return a.saves[key].roll();
+      ui?.notifications?.warn?.(`Save roll not supported: ${key}`);
+    } catch (err) {
+      console.warn('Save roll failed', key, err);
+    }
+  }
 </script>
 
 <template lang="pug">
@@ -109,6 +120,8 @@
       +if("currentSavingThrows && currentSavingThrows.length > 0")
         +each("currentSavingThrows as savingThrow")
           .saving-throw-item
+            button.roll(title="Roll {savingThrow.label} Save" on:click!="{() => rollSave(savingThrow.key)}")
+              i.fas.fa-dice-d20
             span.ability-abbr {savingThrow.abbr}
             span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
             +if("!readonly")
@@ -151,6 +164,16 @@
     align-items: center
     gap: 8px
     margin-bottom: 3px
+    
+    .roll
+      width: 24px
+      height: 24px
+      display: inline-flex
+      align-items: center
+      justify-content: center
+      border: 1px solid var(--color-border, rgba(0,0,0,.2))
+      border-radius: 4px
+      background: rgba(0,0,0,.05)
     
     .ability-abbr
       font-weight: 600
