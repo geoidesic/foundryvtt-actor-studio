@@ -7,6 +7,9 @@
   // Items should be an array of objects with at least { img, name, link? }
   export let trashable = true;
   export let items = null;
+  export let sort = false;    // opt-in alphabetical sort
+  export let dedupe = false;  // opt-in deduplication
+  export let showActions = false; // show chat/roll actions
 
   const actor = getContext("#doc");
 
@@ -32,7 +35,49 @@
 
   $: displayItems = items ? items : $actor.items;
   $: whichDisplay = items ? 'items' : 'itemsFromActor';
-  $: itemsLength = displayItems instanceof Map ? displayItems?.size : displayItems?.length;
+
+  function toArray(coll) {
+    try {
+      if (!coll) return [];
+      if (Array.isArray(coll)) return [...coll];
+      if (coll instanceof Map) return Array.from(coll.values());
+      if (typeof coll.values === 'function') return Array.from(coll.values());
+      if (Array.isArray(coll.contents)) return [...coll.contents];
+      return Object.values(coll);
+    } catch (_) { return []; }
+  }
+
+  function dedupeByKey(arr) {
+    if (!dedupe) return arr;
+    const seen = new Set();
+    const out = [];
+    for (const it of arr) {
+      const key = (it?.flags?.[MODULE_ID]?.sourceUuid)
+        || it?.flags?.core?.sourceId
+        || it?.system?.sourceId
+        || it?.uuid
+        || it?._id
+        || it?.id
+        || `${(it?.name || '').toLowerCase()}|${it?.type || ''}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(it);
+    }
+    return out;
+  }
+
+  function maybeSort(arr) {
+    if (!sort) return arr;
+    return [...arr].sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? '', undefined, { sensitivity: 'base' }));
+  }
+
+  // Always render from an array, but only dedupe/sort when explicitly requested
+  $: listItems = (() => {
+    const base = toArray(displayItems);
+    const uniq = dedupeByKey(base);
+    return maybeSort(uniq);
+  })();
+  $: itemsLength = Array.isArray(listItems) ? listItems.length : 0;
 
   // --- Feature actions: Send to Chat & Roll ---
   async function sendItemToChat(it) {
@@ -134,7 +179,7 @@
 <template lang="pug">
 ul.icon-list
   +if("itemsLength")
-    +each("displayItems as item, idx")
+  +each("listItems as item, idx")
       li.left
         .flexrow
         .flexrow.relative
@@ -143,13 +188,14 @@ ul.icon-list
           +await("enrichHTML(trashable ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
             +then("Html")
               .flex2.text {@html Html}
-          // Feature action buttons: chat + roll
-          .flex0
-            button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
-              i(class="fas fa-comment")
-          .flex0
-            button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
-              i(class="fas fa-dice-d20")
+          // Feature action buttons: chat + roll (optional)
+          +if("showActions")
+            .flex0
+              button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
+                i(class="fas fa-comment")
+            .flex0
+              button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
+                i(class="fas fa-dice-d20")
           +if("trashable")
             .flex0
               button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")

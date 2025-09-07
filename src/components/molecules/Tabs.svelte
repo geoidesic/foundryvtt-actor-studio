@@ -69,6 +69,11 @@
     --tabs-list-background: rgba(0,0,0,0.8)
   :global(.tabs)
     --tabs-list-background: rgba(255,255,255,0.8)
+
+  
+  :global(.gas-npc-sheet .tab-content)
+    padding: 1.6rem 0.5rem
+
   .tabs
 
     +flex-column
@@ -133,7 +138,6 @@
     flex: 2
     width: 100%
     position: relative
-    padding: 1.6rem 0.5rem
 
   .readonly-overlay
     position: absolute
