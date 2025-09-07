@@ -128,8 +128,13 @@
       +if("currentSavingThrows && currentSavingThrows.length > 0")
         +each("currentSavingThrows as savingThrow")
           .saving-throw-item
-            button.roll(title="Roll {savingThrow.label} Save" on:click!="{() => rollSave(savingThrow.key)}")
-              i.fas.fa-dice-d20
+            button.roll.rollable.ability-save(
+              title="Roll {savingThrow.label} Save"
+              data-ability="{savingThrow.key}"
+              aria-label="{savingThrow.label} save"
+              on:click!="{(e) => rollSave(savingThrow.key, e)}"
+            )
+              i.fas.fa-shield-alt
             span.ability-abbr {savingThrow.abbr}
             span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
             +if("!readonly")

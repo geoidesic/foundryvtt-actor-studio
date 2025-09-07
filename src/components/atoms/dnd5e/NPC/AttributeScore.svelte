@@ -40,6 +40,23 @@
       console.warn('Ability roll failed', abbreviation, err);
     }
   }
+
+  // Roll a saving throw: prefer 5e v4 (actor.rollSavingThrow), fallback to 5e v3 (actor.rollAbilitySave)
+  async function rollSave(event) {
+    try {
+      const a = $actor;
+      const ab = String(abbreviation || '').toLowerCase();
+      if (!a || !ab) return;
+
+      if (typeof a.rollSavingThrow === 'function') return a.rollSavingThrow({ ability: ab, event });
+      if (typeof a.rollAbilitySave === 'function') return a.rollAbilitySave(ab, { event });
+      if (a?.system?.abilities?.[ab]?.save?.roll) return a.system.abilities[ab].save.roll({ event });
+      if (a?.saves?.[ab]?.roll) return a.saves[ab].roll({ event });
+      ui?.notifications?.warn?.(`Save roll not supported: ${ab}`);
+    } catch (err) {
+      console.warn('Save roll failed', abbreviation, err);
+    }
+  }
   
   function handleScoreSave(newValue) {
     console.log('AttributeScore - handleScoreSave called with:', newValue);
@@ -69,6 +86,13 @@
         )
           i.fas.fa-dice-d20
         span {abbreviation}
+        button.roll.rollable.ability-save(
+          title="Roll {abbreviation} Save"
+          data-ability="{abbreviation}"
+          aria-label="{abbreviation} saving throw"
+          on:click!="{rollSave}"
+        )
+          i.fas.fa-shield-alt
       .flex1.value
         EditableValue(
           value="{score}"
