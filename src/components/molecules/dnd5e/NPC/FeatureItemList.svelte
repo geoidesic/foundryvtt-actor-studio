@@ -13,6 +13,26 @@
 
   const actor = getContext("#doc");
 
+  function capitalize(s) {
+    try { return s ? (s.charAt(0).toUpperCase() + s.slice(1)) : ''; } catch (_) { return s || ''; }
+  }
+
+  // Resolve a user-facing label for an item's type (e.g., "Spell", "Feat")
+  function typeLabelOf(it) {
+    try {
+      const rawType = it?.type || it?.system?.type || it?.source?.type || '';
+      if (!rawType) return '';
+      // Try common localization keys first
+      const key1 = `TYPES.Item.${rawType}`;
+      const key2 = `DND5E.ItemType${capitalize(rawType)}`;
+      const loc1 = game?.i18n?.localize?.(key1);
+      if (loc1 && loc1 !== key1) return loc1;
+      const loc2 = game?.i18n?.localize?.(key2);
+      if (loc2 && loc2 !== key2) return loc2;
+      return capitalize(rawType);
+    } catch (_) { return ''; }
+  }
+
   // Derive a best-effort UUID for enrichment from raw item source
   function getSourceUuidFromRaw(it, doc) {
     try {
@@ -188,6 +208,10 @@ ul.icon-list
           +await("enrichHTML(trashable ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
             +then("Html")
               .flex2.text {@html Html}
+          // Type badge (e.g., Spell / Feat)
+          +if("typeLabelOf(item)")
+            .flex0
+              span.type-badge {typeLabelOf(item)}
           // Feature action buttons: chat + roll (optional)
           +if("showActions")
             .flex0
@@ -242,6 +266,18 @@ button.icon-button
 .text
   display: flex
   align-items: center
+
+.type-badge
+  display: inline-block
+  padding: 2px 6px
+  margin-left: .25rem
+  font-size: 10px
+  line-height: 1
+  text-transform: uppercase
+  border-radius: 9999px
+  background: var(--dnd5e-background-20)
+  border: 1px solid var(--color-border-highlight)
+  color: var(--color-text-light-0)
 </style>
 
 
