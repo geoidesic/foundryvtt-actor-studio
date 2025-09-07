@@ -120,7 +120,7 @@
 
 <template lang="pug">
   .skills-container
-    .label.inline Skills
+    .label.inline Skill Proficiencies
     .value
       +if("currentSkills && currentSkills.length > 0")
         +each("currentSkills as skill")

@@ -48,6 +48,7 @@
         on:click|preventDefault!="{() => { activeTab = tab.id }}"
         use:efx
         aria-label="{tab.label}"
+  data-tooltip="{tab.label}"
 
       ) 
         +if("labels")

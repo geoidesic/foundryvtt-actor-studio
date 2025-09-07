@@ -123,7 +123,7 @@
 
 <template lang="pug">
   .saving-throws-container
-    .label.inline Saving Throws
+    .label.inline Saving Throw Proficiencies
     .value
       +if("currentSavingThrows && currentSavingThrows.length > 0")
         +each("currentSavingThrows as savingThrow")
