@@ -14,7 +14,7 @@
 
 <template lang="pug">
   section
-  FeatureItemList(trashable="{isEditing}" items="{itemsArray}" dedupe="{true}" sort="{true}" showActions="{true}")
+    FeatureItemList(trashable="{isEditing}" items="{itemsArray}" dedupe="{true}" sort="{true}" showActions="{true}" hideSpellDuplicates="{true}")
 </template>
 
 <style lang="sass">

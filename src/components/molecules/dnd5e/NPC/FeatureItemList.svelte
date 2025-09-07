@@ -10,6 +10,7 @@
   export let sort = false;    // opt-in alphabetical sort
   export let dedupe = false;  // opt-in deduplication
   export let showActions = false; // show chat/roll actions
+  export let hideSpellDuplicates = false; // hide spells already represented by feature activities
 
   const actor = getContext("#doc");
 
@@ -91,10 +92,60 @@
     return [...arr].sort((a, b) => (a?.name ?? '').localeCompare(b?.name ?? '', undefined, { sensitivity: 'base' }));
   }
 
+  function getStableUuid(it) {
+    try {
+      return (
+        it?.uuid ||
+        it?.flags?.[MODULE_ID]?.sourceUuid ||
+        it?.flags?.core?.sourceId ||
+        it?.system?.sourceId ||
+        it?._id ||
+        it?.id ||
+        null
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function collectReferencedSpellUuids(arr) {
+    const out = new Set();
+    try {
+      for (const it of arr) {
+        if (!it || it?.type === 'spell') continue;
+        const acts = it?.system?.activities || {};
+        for (const key of Object.keys(acts)) {
+          const act = acts[key];
+          const uuid = act?.consumers?.spell?.uuid
+            || act?.config?.spell?.uuid
+            || act?.spell?.uuid
+            || act?.uuid;
+          if (uuid) out.add(uuid);
+        }
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  function maybeHideSpellDuplicates(arr) {
+    if (!hideSpellDuplicates) return arr;
+    const referenced = collectReferencedSpellUuids(arr);
+    return arr.filter((it) => {
+      if (it?.type !== 'spell') return true;
+      const uuid = getStableUuid(it) || getSourceUuidFromRaw(it, actor);
+      if (uuid && referenced.has(uuid)) return false;
+      // Fallback: hide same-named spell if a non-spell item with same name exists
+      const name = (it?.name || '').toLowerCase();
+      const hasSameNamedNonSpell = arr.some((x) => x !== it && x?.type !== 'spell' && (x?.name || '').toLowerCase() === name);
+      return !hasSameNamedNonSpell;
+    });
+  }
+
   // Always render from an array, but only dedupe/sort when explicitly requested
   $: listItems = (() => {
-    const base = toArray(displayItems);
-    const uniq = dedupeByKey(base);
+  const base0 = toArray(displayItems);
+  const base = maybeHideSpellDuplicates(base0);
+  const uniq = dedupeByKey(base);
     return maybeSort(uniq);
   })();
   $: itemsLength = Array.isArray(listItems) ? listItems.length : 0;
