@@ -63,7 +63,13 @@
 <style lang="sass">
   @import "../../../styles/Mixins.sass"
 
+
+  :global(.theme-dark .tabs)
+    --tabs-list-background: rgba(0,0,0,0.8)
+  :global(.tabs)
+    --tabs-list-background: rgba(255,255,255,0.8)
   .tabs
+
     +flex-column
     +flex-group-top
     +border
@@ -108,10 +114,10 @@
             border-top: 5px solid var(--color-border-highlight)
             position: absolute
             width: 100%
-            bottom: 5px
+            bottom: -3px
           &:not(:hover)
             &:before
-              border-top: 5px solid brown
+              border-top: 5px ridge brown
 
         &.active
           &:hover
@@ -126,7 +132,7 @@
     flex: 2
     width: 100%
     position: relative
-    padding: 1rem
+    padding: 1.6rem 1rem
 
   .readonly-overlay
     position: absolute
