@@ -37,6 +37,15 @@
   
   // Subscribe to the currentProcess to know when advancements are active
   $: isAdvancementTab = activeTab === 'advancements';
+
+  // Helper to create a stable, CSS-safe class name from a component name
+  const sanitizeClass = (name) => {
+    if (!name) return '';
+    return String(name)
+      .replace(/[^a-zA-Z0-9_-]+/g, '-') // replace unsafe chars with hyphen
+      .replace(/^[^a-zA-Z]+/, '') // ensure starts with letter when possible
+      .toLowerCase();
+  }
 </script>
 
 <template lang="pug">
@@ -58,7 +67,9 @@
   .tab-content
     +each("tabs as tab")
       +if("tab.id === activeTab && tabComponents[tab.component]")
-        svelte:component(this="{tabComponents[tab.component]}" sheet="{sheet}")
+        // Wrap component in a container with a stable class and data attribute so it's findable in markup
+        .tab-pane(class="tab-{sanitizeClass(tab.component)}" data-component="{tab.component}")
+          svelte:component(this="{tabComponents[tab.component]}" sheet="{sheet}")
 </template>
 
 <style lang="sass">
