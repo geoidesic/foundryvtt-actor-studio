@@ -5,7 +5,7 @@
   // itemsFromActor is provided by context from NPCAppShell
 
   // Items should be an array of objects with at least { img, name, link? }
-  export let trashable = true;
+  export let trashable;
   export let items = null;
   export let sort = false;    // opt-in alphabetical sort
   export let dedupe = false;  // opt-in deduplication
