@@ -850,27 +850,29 @@
 
     hr.my-ms
     
-    .mt-xxs
-      .label.inline Challenge 
-      .value
-        EditableValue(
-          value="{crValue}"
-          readonly="{readonly}"
-          onSave!="{val => updateActorCR(val)}"
-          placeholder="1"
-        )
-        span  (
-        EditableValue(
-          value="{xpValue}"
-          type="number"
-          readonly="{readonly}"
-          onSave!="{val => updateActorXP(val)}"
-          placeholder="200"
-        )
-        span  XP )
-    .mt-xxs
-      .label.inline Proficiency Bonus 
-      .value +{pb}
+    .flexrow
+      .flex1
+        .label.inline Challenge 
+        .value
+          EditableValue(
+            value="{crValue}"
+            readonly="{readonly}"
+            onSave!="{val => updateActorCR(val)}"
+            placeholder="1"
+          )
+          span  (
+          EditableValue(
+            value="{xpValue}"
+            type="number"
+            readonly="{readonly}"
+            onSave!="{val => updateActorXP(val)}"
+            placeholder="200"
+          )
+          span  XP )
+    
+      .flex1.ml-sm
+        .label.inline Proficiency Bonus 
+        .value +{pb}
       
     hr.my-sm
     
@@ -898,19 +900,20 @@
         )
     hr.my-sm
     
-    .mt-sm
-      SavingThrows(
-        abilities="{npc?.system?.abilities || {}}"
-        proficiencyBonus="{pb}"
-        readonly="{readonly}"
-        on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
-      )
-    .mt-xxs
-      Skills(
-        skills="{npc?.system?.skills || {}}"
-        readonly="{readonly}"
-        on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
-      )
+    .flexrow.justify-flexrow-vertical-top
+      .flex1
+        Skills(
+          skills="{npc?.system?.skills || {}}"
+          readonly="{readonly}"
+          on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
+        )
+      .flex1.ml-sm
+        SavingThrows(
+          abilities="{npc?.system?.abilities || {}}"
+          proficiencyBonus="{pb}"
+          readonly="{readonly}"
+          on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
+        )
     hr.my-sm
     +if("dr && dr.length > 0")
       .mt-xxs
