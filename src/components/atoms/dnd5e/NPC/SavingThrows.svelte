@@ -4,6 +4,7 @@
   export let abilities = {};
   export let readonly = false;
   export let proficiencyBonus = 2; // Default to +2
+  export let includeRollButtons = false;
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
@@ -128,13 +129,14 @@
       +if("currentSavingThrows && currentSavingThrows.length > 0")
         +each("currentSavingThrows as savingThrow")
           .saving-throw-item
-            button.roll.rollable.ability-save(
-              title="Roll {savingThrow.label} Save"
-              data-ability="{savingThrow.key}"
-              aria-label="{savingThrow.label} save"
-              on:click!="{(e) => rollSave(savingThrow.key, e)}"
-            )
-              i.fas.fa-shield-alt
+            +if("includeRollButtons")
+              button.roll.rollable.ability-save(
+                title="Roll {savingThrow.label} Save"
+                data-ability="{savingThrow.key}"
+                aria-label="{savingThrow.label} save"
+                on:click!="{(e) => rollSave(savingThrow.key, e)}"
+              )
+                i.fas.fa-shield-alt
             span.ability-abbr {savingThrow.abbr}
             span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
             +if("!readonly")

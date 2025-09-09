@@ -252,7 +252,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
           p.description Generate treasure for a treasure hoard based on party tier (DMG tables)
           
           // Currency Display Section for Hoard
-          NPCCurrencyDisplay(showRollButton="{true}" hoardMode="{true}" partyLevel="{localPartyLevel}")
+          NPCCurrencyDisplay(showRollButton="{true}" hoardMode="{true}" partyLevel="{localPartyLevel}" sheet="{$actor?.id}")
           
           .hoard-info
             .control-group
@@ -285,7 +285,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
           p.description Generate treasure based on Challenge Rating
           
           // Currency Display Section
-          NPCCurrencyDisplay(showRollButton="{true}")
+          NPCCurrencyDisplay(showRollButton="{true}" sheet="{$actor?.id}")
 
           .npc-info
             +if("$selectedNpcBase")

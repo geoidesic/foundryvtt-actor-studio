@@ -15,6 +15,7 @@
   export let name;
   export let npc; 
   export let readonly = true; // Default to readonly for backward compatibility
+  export let includeRollButtons = false;
 
   const actor = getContext("#doc");
 
@@ -891,7 +892,8 @@
         AttributeScore(
           abbreviation="{ab.abbr}" 
           score="{ab.score}" 
-          readonly="{readonly}" 
+          readonly="{readonly}"
+          includeRollButtons="{includeRollButtons}"
           on:scoreUpdate!="{e => updateActorAbilityScore(e.detail.ability, e.detail.value)}"
         )
     hr.my-sm

@@ -26,7 +26,12 @@
   +if("hasPortrait")
     button.gas-portrait(type="button" class="header-control" on:click="{openPortrait}" data-tooltip="{npcName}" aria-label="{npcName}")
       img.gas-portrait-img(src="{portraitSrc}" alt="{npcName}")
-  NPCStatBlock(name="{npcName}" npc="{npc}" readonly="{readOnly}")
+  NPCStatBlock(
+    name="{npcName}" 
+    npc="{npc}" 
+    readonly="{readOnly}"
+    includeRollButtons="{true}"
+  )
 </template>
 
 <style lang="sass">

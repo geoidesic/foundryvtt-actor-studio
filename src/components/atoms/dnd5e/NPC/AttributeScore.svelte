@@ -5,6 +5,7 @@
   export let abbreviation;
   export let score;
   export let readonly = false;
+  export let includeRollButtons = false
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
@@ -78,21 +79,23 @@
   .stat
     .flexcol.center
       .flex1.label
-        button.roll.rollable.ability-check(
-          title="Roll {abbreviation}"
-          data-ability="{abbreviation}"
-          aria-label="{abbreviation} ability check"
-          on:click!="{rollAbility}"
-        )
-          i.fas.fa-dice-d20
+        +if("includeRollButtons")
+          button.roll.rollable.ability-check(
+            title="Roll {abbreviation}"
+            data-ability="{abbreviation}"
+            aria-label="{abbreviation} ability check"
+            on:click!="{rollAbility}"
+          )
+            i.fas.fa-dice-d20
         span {abbreviation}
-        button.roll.rollable.ability-save(
-          title="Roll {abbreviation} Save"
-          data-ability="{abbreviation}"
-          aria-label="{abbreviation} saving throw"
-          on:click!="{rollSave}"
-        )
-          i.fas.fa-shield-alt
+        +if("includeRollButtons")
+          button.roll.rollable.ability-save(
+            title="Roll {abbreviation} Save"
+            data-ability="{abbreviation}"
+            aria-label="{abbreviation} saving throw"
+            on:click!="{rollSave}"
+          )
+            i.fas.fa-shield-alt
       .flex1.value
         EditableValue(
           value="{score}"

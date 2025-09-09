@@ -295,8 +295,6 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
         npc="{$selectedNpc}"
       )
 
-
-
       +if("itemsArray?.length")
         h3.mt-sm Features
         FeatureItemList(items="{itemsArray}")

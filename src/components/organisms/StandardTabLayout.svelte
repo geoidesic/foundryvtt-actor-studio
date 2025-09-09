@@ -16,7 +16,7 @@
 <template lang="pug">
 .content(class="{contentClass}")
   +if("showTitle")
-    h1.center.mt-none.hide {title}
+    h1.center.hide(style="height: 0; margin: 0; line-height: 0") {title}
   .flexrow.relative.tall
     .flex2.pr-sm.col-a(class="{leftPanelClass}")
       slot(name="left")
