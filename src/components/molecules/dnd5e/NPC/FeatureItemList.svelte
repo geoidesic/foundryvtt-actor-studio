@@ -6,10 +6,12 @@
 
   // Items should be an array of objects with at least { img, name, link? }
   export let trashable;
+  export let uuidFromFlags = false;
   export let items = null;
   export let sort = false;    // opt-in alphabetical sort
   export let dedupe = false;  // opt-in deduplication
   export let showActions = false; // show chat/roll actions
+  export let showImage = true; // show item image column
   export let hideSpellDuplicates = false; // hide spells already represented by feature activities
 
   const actor = getContext("#doc");
@@ -254,9 +256,10 @@ ul.icon-list
       li.left
         .flexrow
         .flexrow.relative
-          .flex0.relative.image.mr-sm
-            img.icon(src="{item.img}" alt="{item.name}")
-          +await("enrichHTML(trashable ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
+          +if("showImage")
+            .flex0.relative.image.mr-sm
+              img.icon(src="{item.img}" alt="{item.name}")
+          +await("enrichHTML(uuidFromFlags ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
             +then("Html")
               .flex2.text {@html Html}
           // Type badge (e.g., Spell / Feat)
