@@ -423,7 +423,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
           i(class="fas fa-sync")
   
   div(slot="right")
-    FeatureItemList(trashable="{true}" dedupe="{true}" sort="{true}")
+    FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}")
 </template>
 
 <style lang="sass" scoped>
