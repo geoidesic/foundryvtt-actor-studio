@@ -13,6 +13,10 @@
   export let showActions = false; // show chat/roll actions
   export let showImage = true; // show item image column
   export let hideSpellDuplicates = false; // hide spells already represented by feature activities
+  // Optional extra action to render per-item. If provided, should be a function(item) => void
+  export let extraAction = null;
+  export let extraActionIcon = null;
+  export let extraActionTitle = null;
 
   const actor = getContext("#doc");
 
@@ -274,6 +278,10 @@ ul.icon-list
             .flex0
               button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
                 i(class="fas fa-dice-d20")
+          +if("extraAction")
+            .flex0
+              button.icon-button.mr-sm(type="button" title="{extraActionTitle || ''}" on:click!="{() => extraAction(item)}" aria-label="Extra Action")
+                i(class="{extraActionIcon || 'fas fa-bolt'}")
           +if("trashable")
             .flex0
               button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
