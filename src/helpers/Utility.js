@@ -934,7 +934,47 @@ export function getTextEditorAPI() {
  */
 export async function enrichHTML(content, options = {}) {
   const textEditor = getTextEditorAPI();
-  return await textEditor.enrichHTML(content, options);
+  const enriched = await textEditor.enrichHTML(content, options);
+
+  try {
+    // Post-process the enriched HTML string to add a tooltip for broken links
+    // that reference the Player's Handbook compendium. We operate on the
+    // HTML string to avoid relying on the current document DOM.
+    if (typeof enriched === 'string' && enriched.length) {
+      // Create a temporary container to query and mutate elements
+      const wrapper = document?.createElement ? document.createElement('div') : null;
+      if (wrapper) {
+        wrapper.innerHTML = enriched;
+
+        // Find elements that are marked as broken content links.
+        // In templates they may be rendered with class "content-link broken" or simply "broken".
+        const brokenEls = wrapper.querySelectorAll('.content-link.broken, .broken');
+        brokenEls.forEach(el => {
+          // Search attributes and inner text for a Compendium UUID that includes the players handbook id
+          // Commonly the uuid may appear in attributes like 'data-uuid', 'href', or inside the element text.
+          const attrs = ['data-uuid', 'href', 'data-encoded-uuid', 'data-link'];
+          let found = false;
+          for (const a of attrs) {
+            const val = el.getAttribute?.(a);
+            if (val && val.includes && val.includes('Compendium.dnd-players-handbook')) { found = true; break; }
+          }
+          if (!found) {
+            const txt = el.textContent || '';
+            if (txt.includes && txt.includes('Compendium.dnd-players-handbook')) found = true;
+          }
+          if (found) {
+            el.setAttribute('data-tooltip', "Requires D&D Player's Handbook module to be installed");
+          }
+        });
+
+        return wrapper.innerHTML;
+      }
+    }
+  } catch (err) {
+    console.warn('enrichHTML post-process failed', err);
+  }
+
+  return enriched;
 }
 
 /**

@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte";
+  import { getContext, onMount, tick } from "svelte";
   import { localize as t, enrichHTML, deleteActorItem } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   // itemsFromActor is provided by context from NPCAppShell
@@ -258,35 +258,35 @@
 ul.icon-list(style="{customStyles}")
   +if("itemsLength")
   +each("listItems as item, idx")
-      li.left
-        .flexrow
-        .flexrow.relative
-          +if("showImage")
-            .flex0.relative.image.mr-sm
-              img.icon(src="{item.img}" alt="{item.name}")
-          +await("enrichHTML(uuidFromFlags ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.link || item.name)")
-            +then("Html")
-              .flex2.text {@html Html}
-          // Type badge (e.g., Spell / Feat)
-          +if("typeLabelOf(item)")
-            .flex0
-              span.type-badge {typeLabelOf(item)}
-          // Feature action buttons: chat + roll (optional)
-          +if("showActions")
-            .flex0
-              button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
-                i(class="fas fa-comment")
-            .flex0
-              button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
-                i(class="fas fa-dice-d20")
-          +if("extraAction")
-            .flex0
-              button.icon-button.mr-sm(type="button" title="{extraActionTitle || ''}" on:click!="{() => extraAction(item)}" aria-label="Extra Action")
-                i(class="{extraActionIcon || 'fas fa-bolt'}")
-          +if("trashable")
-            .flex0
-              button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
-                i(class="fas fa-trash")
+    li.left
+      .flexrow
+      .flexrow.relative
+        +if("showImage")
+          .flex0.relative.image.mr-sm
+            img.icon(src="{item.img}" alt="{item.name}")
+        +await("enrichHTML(uuidFromFlags ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.uuid ? '@UUID['+item.uuid+']' : item.link  || item.name)")
+          +then("Html")
+            .flex2.text {@html Html}
+        // Type badge (e.g., Spell / Feat)
+        +if("typeLabelOf(item)")
+          .flex0
+            span.type-badge {typeLabelOf(item)}
+        // Feature action buttons: chat + roll (optional)
+        +if("showActions")
+          .flex0
+            button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
+              i(class="fas fa-comment")
+          .flex0
+            button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
+              i(class="fas fa-dice-d20")
+        +if("extraAction")
+          .flex0
+            button.icon-button.mr-sm(type="button" title="{extraActionTitle || ''}" on:click!="{() => extraAction(item)}" aria-label="Extra Action")
+              i(class="{extraActionIcon || 'fas fa-bolt'}")
+        +if("trashable")
+          .flex0
+            button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
+              i(class="fas fa-trash")
 </template>
 
 <style lang="sass" scoped>

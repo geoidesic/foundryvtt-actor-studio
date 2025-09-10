@@ -1,6 +1,7 @@
 <script>
-  import { getContext } from 'svelte';
+  import { getContext, onMount, tick } from 'svelte';
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
+  import { CONDITION_DEFS } from '~/src/helpers/constants';
   const documentStore = getContext('#doc');
   // ensure defaults to avoid runtime undefined errors during reactive updates
   let actor = null;
@@ -14,24 +15,7 @@
     catch(err){ console.warn('Failed toggling effect', err); }
   }
 
-  // Standard D&D condition definitions used for the Conditions grid
-  const CONDITION_DEFS = [
-  { key: 'blinded', label: 'Blinded', icon: 'systems/dnd5e/icons/svg/statuses/blinded.svg' },
-  { key: 'charmed', label: 'Charmed', icon: 'systems/dnd5e/icons/svg/statuses/charmed.svg' },
-  { key: 'deafened', label: 'Deafened', icon: 'systems/dnd5e/icons/svg/statuses/deafened.svg' },
-  { key: 'exhaustion', label: 'Exhaustion', icon: 'systems/dnd5e/icons/svg/statuses/exhaustion.svg' },
-  { key: 'frightened', label: 'Frightened', icon: 'systems/dnd5e/icons/svg/statuses/frightened.svg' },
-  { key: 'grappled', label: 'Grappled', icon: 'systems/dnd5e/icons/svg/statuses/grappled.svg' },
-  { key: 'incapacitated', label: 'Incapacitated', icon: 'systems/dnd5e/icons/svg/statuses/incapacitated.svg' },
-  { key: 'invisible', label: 'Invisible', icon: 'systems/dnd5e/icons/svg/statuses/invisible.svg' },
-  { key: 'paralyzed', label: 'Paralyzed', icon: 'systems/dnd5e/icons/svg/statuses/paralyzed.svg' },
-  { key: 'petrified', label: 'Petrified', icon: 'systems/dnd5e/icons/svg/statuses/petrified.svg' },
-  { key: 'poisoned', label: 'Poisoned', icon: 'systems/dnd5e/icons/svg/statuses/poisoned.svg' },
-  { key: 'prone', label: 'Prone', icon: 'systems/dnd5e/icons/svg/statuses/prone.svg' },
-  { key: 'restrained', label: 'Restrained', icon: 'systems/dnd5e/icons/svg/statuses/restrained.svg' },
-  { key: 'stunned', label: 'Stunned', icon: 'systems/dnd5e/icons/svg/statuses/stunned.svg' },
-  { key: 'unconscious', label: 'Unconscious', icon: 'systems/dnd5e/icons/svg/statuses/unconscious.svg' }
-  ];
+  // CONDITION_DEFS imported from constants.ts
 
   // Helper to find a condition active effect by key
   function findConditionEffect(key){
@@ -99,11 +83,24 @@
   }
 
   // Build condition items for FeatureItemList
-  $: conditionItems = CONDITION_DEFS.map(c => ({
+  // If the optional Player's Handbook module isn't installed, filter out
+  // any condition defs that reference the PHB compendium to avoid broken UUIDs.
+  $: availableConditionDefs = (function(){
+    try {
+      const phbInstalled = !!(game?.modules?.get && game.modules.get('dnd-players-handbook')?.active);
+      if (phbInstalled) return CONDITION_DEFS;
+      return CONDITION_DEFS.filter(c => !(c.uuid && String(c.uuid).includes('Compendium.dnd-players-handbook')));
+    } catch (err) {
+      return CONDITION_DEFS;
+    }
+  })();
+
+  $: conditionItems = availableConditionDefs.map(c => ({
     id: c.key,
     img: c.icon,
     name: c.label,
-    link: c.label,
+    // prefer compendium uuid enrichment when available
+    link: c.uuid ? `@UUID[${c.uuid}]{${c.label}}` : c.label,
     checked: conditionFound[c.key],
     _condKey: c.key
   }));
@@ -113,7 +110,7 @@
     if (!key) return;
     await toggleCondition(key);
   }
-  
+
 </script>
 
 <template lang="pug">
