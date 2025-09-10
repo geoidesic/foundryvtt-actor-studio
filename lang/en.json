@@ -1,5 +1,9 @@
 {
   "GAS": {
+    "CRCalculator": {
+      "Title": "CR Calculator",
+      "Apply": "Apply CR"
+    },
     "Error": {
       "ItemNotFoundInCompendium": "Item not found in compendium",
       "PackIndexNotFound": "The compendium pack from which the character class was imported not found in this world",

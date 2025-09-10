@@ -6,7 +6,7 @@ import { CRCalculator } from '../helpers/CRCalculator.js';
 
 describe('CRCalculator', () => {
   describe('calculateCurrentCR', () => {
-    it('should calculate CR 5 for a Cambion-like creature', () => {
+    it('should calculate CR 5 for a Cambion-like creature', async () => {
       // Mock Cambion data based on Monster Manual
       const cambion = {
         system: {
@@ -59,7 +59,7 @@ describe('CRCalculator', () => {
         }
       };
 
-      const result = CRCalculator.calculateCurrentCR(cambion);
+  const result = await CRCalculator.calculateCurrentCR(cambion);
       
       console.log('Cambion CR calculation result:', result);
       
@@ -72,7 +72,7 @@ describe('CRCalculator', () => {
       expect(result.finalCR).toBeLessThanOrEqual(6);
     });
 
-    it('should handle multi-attack correctly', () => {
+  it('should handle multi-attack correctly', async () => {
       const multiAttackCreature = {
         system: {
           attributes: {
@@ -108,13 +108,13 @@ describe('CRCalculator', () => {
         }
       };
 
-      const result = CRCalculator.calculateCurrentCR(multiAttackCreature);
+  const result = await CRCalculator.calculateCurrentCR(multiAttackCreature);
       
       // Multi-attack should significantly increase offensive CR
       expect(result.offensiveCR).toBeGreaterThan(1);
     });
 
-    it('should calculate attack bonuses from ability scores when not explicitly provided', () => {
+  it('should calculate attack bonuses from ability scores when not explicitly provided', async () => {
       const creature = {
         system: {
           attributes: {
@@ -143,7 +143,7 @@ describe('CRCalculator', () => {
         }
       };
 
-      const result = CRCalculator.calculateCurrentCR(creature);
+  const result = await CRCalculator.calculateCurrentCR(creature);
       
       // Should calculate attack bonus from STR (+4) + proficiency (+2) = +6
       expect(result.offensiveCR).toBeGreaterThan(0);

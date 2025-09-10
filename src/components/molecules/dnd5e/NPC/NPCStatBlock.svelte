@@ -1,5 +1,8 @@
 <script>
+  import { TJSDialog } from "@typhonjs-fvtt/runtime/svelte/application";
   import { getContext } from "svelte";
+  import { CRCalculator } from "~/src/helpers/CRCalculator.js";
+  import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR } from "~/src/helpers/Utility";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
@@ -8,7 +11,6 @@
   import Senses from "~/src/components/atoms/dnd5e/NPC/Senses.svelte";
   import Languages from "~/src/components/atoms/dnd5e/NPC/Languages.svelte";
   import SavingThrows from "~/src/components/atoms/dnd5e/NPC/SavingThrows.svelte";
-  import { ucfirst, getItemsArray, updateSource } from "~/src/helpers/Utility";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
 
@@ -25,8 +27,11 @@
   let editingType = false;
   let editingAlignment = false;
   let editingName = false;
+  let currentCRBreakdown = null;
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
+  // Reactive list of ability scores for rendering AttributeScore components
+  $: abilityScores = abilityOrder.map(abbr => ({ abbr, score: npc?.system?.abilities?.[abbr]?.value ?? 10 }));
   
   // D&D 5e size options
   const sizeOptions = [
@@ -67,68 +72,14 @@
     { value: 'Lawful Evil', label: 'Lawful Evil' },
     { value: 'Neutral Evil', label: 'Neutral Evil' },
     { value: 'Chaotic Evil', label: 'Chaotic Evil' },
-    { value: 'Unaligned', label: 'Unaligned' },
-    { value: 'Any Alignment', label: 'Any Alignment' }
+    { value: 'Unaligned', label: 'Unaligned' }
   ];
 
-  const sizes = {
-    'grg': 'Gargantuan',
-    'lg': 'Large',
-    'med': 'Medium',
-    'sm': 'Small',
-    'tiny': 'Tiny',
-    'huge': 'Huge'
-  }
+  // pbForCR now imported from Utility
 
-  // For svelte-preprocess pug: precompute ability scores for template
-  $: abilityScores = abilityOrder.map(abbr => ({
-    abbr,
-    score: npc?.system?.abilities?.[abbr]?.value
-  }));
+  // xpForCR now imported from Utility
 
-
-
-  function abilityMod(score) {
-    if (typeof score !== 'number') return 0;
-    return Math.floor((score - 10) / 2);
-  }
-
-  function formatBonus(n) {
-    return n >= 0 ? `+${n}` : `${n}`;
-  }
-
-  function pbForCR(cr) {
-    const n = Number(cr) ?? 0;
-    if (n <= 4) return 2;
-    if (n <= 8) return 3;
-    if (n <= 12) return 4;
-    if (n <= 16) return 5;
-    if (n <= 20) return 6;
-    if (n <= 24) return 7;
-    if (n <= 28) return 8;
-    return 9;
-  }
-
-  function xpForCR(cr) {
-    const table = {
-      0: 10, 1: 200, 2: 450, 3: 700, 4: 1100, 5: 1800, 6: 2300, 7: 2900, 8: 3900,
-      9: 5000, 10: 5900, 11: 7200, 12: 8400, 13: 10000, 14: 11500, 15: 13000,
-      16: 15000, 17: 18000, 18: 20000, 19: 22000, 20: 25000, 21: 33000, 22: 41000,
-      23: 50000, 24: 62000, 25: 75000, 26: 90000, 27: 105000, 28: 120000, 29: 135000, 30: 155000
-    };
-    const n = Number(cr) ?? 0;
-    return table[n] ?? 0;
-  }
-
-  // Normalize arrays that may sometimes be strings, Sets, or objects
-  function normalizeList(val) {
-    if (!val) return [];
-    if (Array.isArray(val)) return val;
-    if (val instanceof Set) return Array.from(val);
-    if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
-    if (typeof val === 'object') return Object.keys(val).filter(k => !!val[k]);
-    return [];
-  }
+  // normalizeList now imported from Utility
 
   // Saving throws - now handled by the SavingThrows component
   // $: savingThrowsList = abilityOrder
@@ -148,12 +99,14 @@
     slt: 'Sleight of Hand', ste: 'Stealth', sur: 'Survival'
   };
 
+  // Use dnd5eModCalc from Utility
+
   function skillBonus(key) {
     const skill = npc?.system?.skills?.[key];
     if (!skill) return null;
     const ability = skill.ability || 'int';
     const abilityScore = npc?.system?.abilities?.[ability]?.value ?? 10;
-    const mod = abilityMod(abilityScore);
+  const mod = dnd5eModCalc(abilityScore);
     const tier = Number(skill.value) || 0; // 0/1/2
     const pb = pbForCR(npc?.system?.details?.cr ?? 0);
     return mod + (tier * pb);
@@ -161,7 +114,7 @@
 
   $: skillsList = Object.keys(npc?.system?.skills || {})
     .filter(k => (npc?.system?.skills?.[k]?.value || 0) > 0)
-    .map(k => `${skillToLabel[k] || k} ${formatBonus(skillBonus(k))}`);
+    .map(k => `${skillToLabel[k] || k} ${CRCalculator.formatBonus(skillBonus(k))}`);
 
   // Senses & passive perception
   function senseEntries() {
@@ -773,6 +726,137 @@
     }
   }
 
+  async function calculateCR() {
+    if (!$actor) return;
+    
+    console.log('🔄 Recalculating CR for actor:', $actor);
+    currentCRBreakdown = await CRCalculator.calculateCurrentCR($actor);
+    console.log('📊 New CR breakdown:', currentCRBreakdown);
+
+    // Force a reactive update
+    currentCRBreakdown = { ...currentCRBreakdown };
+
+    // Build dialog content
+    const defensive = CRCalculator.formatCR(currentCRBreakdown.defensiveCR);
+    const offensive = CRCalculator.formatCR(currentCRBreakdown.offensiveCR);
+    const finalCR = CRCalculator.formatCR(currentCRBreakdown.finalCR);
+    const xp = currentCRBreakdown.xp ?? 0;
+    const pb = currentCRBreakdown.proficiencyBonus ?? 2;
+
+    const detailsId = `cr-details-${crypto?.randomUUID ? crypto.randomUUID() : Math.floor(Math.random()*1e6)}`;
+    // Gather detailed breakdown data for the dialog details
+    const hp = $actor?.system?.attributes?.hp?.max ?? $actor?.system?.attributes?.hp?.value ?? 1;
+    const ac = $actor?.system?.attributes?.ac?.value ?? 10;
+    const defTable = CRCalculator.CR_TABLES.defensive?.[currentCRBreakdown.defensiveCR] ?? { hp: [hp, hp], ac };
+    const [hpMin, hpMax] = defTable.hp ?? [hp, hp];
+    const expectedAC = defTable.ac ?? ac;
+    const acDiff = (ac - expectedAC);
+
+    const dpr = await CRCalculator.calculateAverageDPR($actor);
+    const offTable = CRCalculator.CR_TABLES.offensive?.[currentCRBreakdown.offensiveCR] ?? { dpr: [dpr, dpr], attack: 0, save: 10 };
+    const [dprMin, dprMax] = offTable.dpr ?? [dpr, dpr];
+    const expectedAttack = offTable.attack ?? 0;
+    const expectedSave = offTable.save ?? 10;
+    const highestAttack = CRCalculator.getHighestAttackBonus($actor);
+    const highestSave = CRCalculator.getHighestSaveDC($actor);
+    const attackDiff = highestAttack - expectedAttack;
+    const saveDiff = highestSave - expectedSave;
+    const crGap = Math.abs((currentCRBreakdown.defensiveCR ?? 0) - (currentCRBreakdown.offensiveCR ?? 0));
+    const finalRule = crGap >= 1 ? 'Higher CR used (difference ≥ 1)' : 'Average of defensive & offensive';
+
+    const summaryHtml = `
+      <div class="gas-cr-summary">
+        <style>
+          .gas-cr-summary { font-size: 13px; }
+          .gas-grid { display: grid; grid-template-columns: auto auto; gap: 4px 12px; align-items: center; }
+          .gas-label { color: var(--color-text-dark-secondary, #666); }
+          details.gas-details { margin-top: 0.5rem; }
+          details.gas-details > summary { cursor: pointer; user-select: none; }
+          .gas-monosp { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+          .gas-section { margin-top: 0.5rem; }
+          .gas-section h4 { margin: 0 0 4px 0; font-size: 12px; color: var(--color-text-dark-secondary, #555); text-transform: uppercase; letter-spacing: .02em; }
+          .gas-kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+          .gas-hr { border-top: 1px solid var(--color-border, #9993); margin: 6px 0; }
+          .gas-diff-pos { color: var(--color-positive, #2e7d32); }
+          .gas-diff-neg { color: var(--color-negative, #c62828); }
+        </style>
+        <div class="gas-grid">
+          <div class="gas-label">Defensive CR</div><div class="gas-monosp">${defensive}</div>
+          <div class="gas-label">Offensive CR</div><div class="gas-monosp">${offensive}</div>
+          <div class="gas-label"><strong>Final CR</strong></div><div class="gas-monosp"><strong>${finalCR}</strong></div>
+          <div class="gas-label">XP</div><div class="gas-monosp">${xp.toLocaleString?.() ?? xp}</div>
+          <div class="gas-label">Proficiency Bonus</div><div class="gas-monosp">+${pb}</div>
+        </div>
+        <details id="${detailsId}" class="gas-details">
+          <summary>Show detailed calculation</summary>
+          <div class="gas-details-body">
+            <div class="gas-section">
+              <h4>Defensive</h4>
+              <div class="gas-kv">
+                <div>HP</div><div class="gas-monosp">${hp} (range for CR ${defensive}: ${hpMin}–${hpMax})</div>
+                <div>AC</div><div class="gas-monosp">${ac}</div>
+                <div>Expected AC</div><div class="gas-monosp">${expectedAC} <span class="${acDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${acDiff>=0?'+':''}${acDiff})</span></div>
+              </div>
+            </div>
+            <div class="gas-hr"></div>
+            <div class="gas-section">
+              <h4>Offensive</h4>
+              <div class="gas-kv">
+                <div>DPR</div><div class="gas-monosp">${dpr} (range for CR ${offensive}: ${dprMin}–${dprMax})</div>
+                <div>Highest attack bonus</div><div class="gas-monosp">${highestAttack} (expected ${expectedAttack}) <span class="${attackDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${attackDiff>=0?'+':''}${attackDiff})</span></div>
+                <div>Highest save DC</div><div class="gas-monosp">${highestSave} (expected ${expectedSave}) <span class="${saveDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${saveDiff>=0?'+':''}${saveDiff})</span></div>
+              </div>
+            </div>
+            <div class="gas-hr"></div>
+            <div class="gas-section">
+              <h4>Finalization</h4>
+              <div class="gas-kv">
+                <div>Rule</div><div class="gas-monosp">${finalRule}</div>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>`;
+
+    // Open Svelte-based dialog with Apply button using TJSDialog
+    try {
+      await TJSDialog.wait({
+        title: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Title') : 'CR Calculator',
+        modal: true,
+        draggable: false,
+        content: summaryHtml,
+        buttons: {
+          apply: {
+            icon: 'fas fa-check',
+            label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR',
+            onPress: async () => {
+              try {
+                const value = currentCRBreakdown.finalCR;
+                await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
+                if (npc?.system?.details) {
+                  npc.system.details.cr = value;
+                  if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
+                }
+                ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
+              } catch (err) {
+                console.error('Failed to apply CR:', err);
+                ui.notifications?.error?.('Failed to apply calculated CR.');
+              }
+              return true;
+            }
+          },
+          close: {
+            icon: 'fas fa-times',
+            label: game?.i18n?.localize ? game.i18n.localize('Close') : 'Close'
+          }
+        },
+        default: 'apply'
+      }, { classes: ['tjs-actor-studio'] });
+    } catch (e) {
+      console.error('Failed opening TJSDialog:', e);
+    }
+  }
+
 
 
 
@@ -800,7 +884,7 @@
     .details
       span.mr-sm.smaller
         +if("readonly")
-          span {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)}
+          span {SIZES[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)}
           +else()
             +if("editingSize")
               select.size-select(
@@ -814,7 +898,7 @@
                 span.size-editable(
                   on:click!="{() => { console.log('🖱️ Size field clicked!'); editingSize = true; }}"
                   class!="{editingSize ? 'editing' : ''}"
-                ) {sizes[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)}
+                ) {SIZES[npc?.system?.traits?.size] || ucfirst(npc?.system?.traits?.size)}
       span.mr-sm.smaller
         +if("readonly")
           span {ucfirst(npc?.system?.details?.type?.value)}
@@ -874,7 +958,7 @@
       
       +if("enableCrCalculator && !readonly")
         .flex0
-          button.cr-calc-btn(title="Open CR calculator")
+          button.cr-calc-btn(title="Open CR calculator" on:click!="{calculateCR}")
             i.fas.fa-solid.fa-calculator
 
       .flex1.ml-sm

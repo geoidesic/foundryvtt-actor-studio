@@ -82,6 +82,7 @@ class CRCalculator {
       30: { dpr: [225, 232], attack: 18, save: 23 }
     }
   };
+  
 
   // XP values for each CR
   static XP_VALUES = {
@@ -129,6 +130,20 @@ class CRCalculator {
       xp: this.XP_VALUES[finalCR] || 0,
       proficiencyBonus: this.PROFICIENCY_BONUS[finalCR] || 2
     };
+  }
+
+  static formatCR(cr) {
+    if (cr === 0) return '0';
+    if (cr === 0.125) return '1/8';
+    if (cr === 0.25) return '1/4';
+    if (cr === 0.5) return '1/2';
+    return cr.toString();
+  }
+
+  // Format a numeric bonus with sign, e.g., +3 or -1
+  static formatBonus(value) {
+    const n = Number(value) || 0;
+    return n >= 0 ? `+${n}` : `${n}`;
   }
 
   /**

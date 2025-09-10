@@ -64,6 +64,44 @@ export function dnd5eModCalc(score) {
   return Math.floor((score - 10) / 2);
 }
 
+// Standard D&D 5e size display map
+export const SIZES = { tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan' };
+
+// Normalize arrays that may sometimes be strings, Sets, or objects
+export function normalizeList(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (val instanceof Set) return Array.from(val);
+  if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+  if (typeof val === 'object') return Object.keys(val).filter(k => !!val[k]);
+  return [];
+}
+
+// Utility proficiency bonus by CR (fallback for UI; prefer CRCalculator when available)
+export function pbForCR(cr) {
+  const n = Number(cr) ?? 0;
+  if (n <= 4) return 2;
+  if (n <= 8) return 3;
+  if (n <= 12) return 4;
+  if (n <= 16) return 5;
+  if (n <= 20) return 6;
+  if (n <= 24) return 7;
+  if (n <= 28) return 8;
+  return 9;
+}
+
+// Utility XP by CR (fallback for UI; prefer CRCalculator when available)
+export function xpForCR(cr) {
+  const table = {
+    0: 10, 1: 200, 2: 450, 3: 700, 4: 1100, 5: 1800, 6: 2300, 7: 2900, 8: 3900,
+    9: 5000, 10: 5900, 11: 7200, 12: 8400, 13: 10000, 14: 11500, 15: 13000,
+    16: 15000, 17: 18000, 18: 20000, 19: 22000, 20: 25000, 21: 33000, 22: 41000,
+    23: 50000, 24: 62000, 25: 75000, 26: 90000, 27: 105000, 28: 120000, 29: 135000, 30: 155000
+  };
+  const n = Number(cr) ?? 0;
+  return table[n] ?? 0;
+}
+
 
 export const log = {
   ASSERT: 1, ERROR: 2, WARN: 3, INFO: 4, DEBUG: 5, VERBOSE: 6,

@@ -22,11 +22,11 @@ StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
   
   div(slot="right")
     // CR Adjustment Tool
-    CRAdjuster(
-      actor="{$actor}"
-      readonly="{false}"
-      on:crAdjusted="{handleCRAdjusted}"
-    )
+    //- CRAdjuster(
+    //-   actor="{$actor}"
+    //-   readonly="{false}"
+    //-   on:crAdjusted="{handleCRAdjusted}"
+    //- )
     
     hr.my-md
     
