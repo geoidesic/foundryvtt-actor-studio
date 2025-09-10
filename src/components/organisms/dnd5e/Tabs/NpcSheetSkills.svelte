@@ -1,6 +1,5 @@
 <script>
   import { getContext } from 'svelte';
-  const actor = getContext('#doc');
   const documentStore = getContext('#doc');
   $: npc = $documentStore;
 
@@ -32,52 +31,65 @@
     return typeof s?.mod === 'number' ? s.mod : 0;
   }
 
-  async function rollSkill(key){
-    try {
-      const a = $actor;
-      if (a?.rollSkill) return a.rollSkill(key);
-      if (a?.skills?.[key]?.roll) return a.skills[key].roll();
-      ui?.notifications?.warn?.(`Skill roll not supported: ${key}`);
-    } catch(err) { console.warn('Skill roll failed', err); }
+  async function rollSkill(key, event){
+    npc.rollSkill({ skill: key, event })
   }
 </script>
 
 <template lang="pug">
   section
-    ul.skills
+    ul.icon-list.skills
       +each("allSkills as s")
-        li
-          button.icon(on:click!="{() => rollSkill(s.key)}" title="Roll {s.label}")
-            i.fas.fa-dice-d20
-          span.name {s.label}
-          span.mod {modStr(getSkillMod(s.key))}
+        li.left
+          .flexrow
+            .flex0
+              button.icon-button.icon(type="button" on:click!="{(ev) => rollSkill(s.key, ev)}" title="Roll {s.label}" aria-label="Roll {s.label}")
+                i.fas.fa-dice-d20
+            .flex2.text.text-center
+              span.skill-name {s.label}
+            .flex0
+              span.skill-mod.badge {modStr(getSkillMod(s.key))}
 </template>
 
 <style lang="sass">
 section
   padding: .25rem
-ul.skills
+
+ul.icon-list.skills
   list-style: none
-  padding: 0
   margin: 0
-  li
-    display: grid
-    grid-template-columns: 28px 1fr auto
-    align-items: center
-    gap: 6px
-    padding: 2px 0
-  .icon
-    width: 24px
-    height: 24px
-    display: inline-flex
-    align-items: center
-    justify-content: center
-    border: 1px solid var(--color-border,
-      rgba(0,0,0,.2))
-    border-radius: 4px
-    background: rgba(0,0,0,.05)
-  .name
-    font-weight: 500
-  .mod
-    font-variant-numeric: tabular-nums
+  padding: 0
+
+ul.icon-list.skills > li
+  padding: 6px 0
+  &:hover
+    box-shadow: 4px 0px 8px 3px var(--actor-studio-color-primary) inset
+
+.flexrow
+  display: flex
+  align-items: center
+
+.icon-button
+  width: 40px
+  min-width: 40px
+  height: 40px
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  border-radius: 6px
+
+.text-center
+  text-align: center
+  font-weight: 600
+  color: var(--color-text)
+
+.skill-mod.badge
+  display: inline-block
+  min-width: 48px
+  padding: 6px 8px
+  text-align: center
+  border-radius: 8px
+  border: 1px solid var(--color-border-highlight)
+  font-variant-numeric: tabular-nums
+
 </style>
