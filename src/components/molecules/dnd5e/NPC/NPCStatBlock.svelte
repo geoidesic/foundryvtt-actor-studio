@@ -13,6 +13,7 @@
   import SavingThrows from "~/src/components/atoms/dnd5e/NPC/SavingThrows.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
+  import CRCalculatorDialog from "~/src/components/molecules/dnd5e/NPC/CRCalculatorDialog.svelte";
 
   export let name;
   export let npc; 
@@ -736,14 +737,13 @@
     // Force a reactive update
     currentCRBreakdown = { ...currentCRBreakdown };
 
-    // Build dialog content
+    // Build dialog props
     const defensive = CRCalculator.formatCR(currentCRBreakdown.defensiveCR);
     const offensive = CRCalculator.formatCR(currentCRBreakdown.offensiveCR);
     const finalCR = CRCalculator.formatCR(currentCRBreakdown.finalCR);
     const xp = currentCRBreakdown.xp ?? 0;
     const pb = currentCRBreakdown.proficiencyBonus ?? 2;
-
-    const detailsId = `cr-details-${crypto?.randomUUID ? crypto.randomUUID() : Math.floor(Math.random()*1e6)}`;
+    
     // Gather detailed breakdown data for the dialog details
     const hp = $actor?.system?.attributes?.hp?.max ?? $actor?.system?.attributes?.hp?.value ?? 1;
     const ac = $actor?.system?.attributes?.ac?.value ?? 10;
@@ -763,95 +763,56 @@
     const saveDiff = highestSave - expectedSave;
     const crGap = Math.abs((currentCRBreakdown.defensiveCR ?? 0) - (currentCRBreakdown.offensiveCR ?? 0));
     const finalRule = crGap >= 1 ? 'Higher CR used (difference ≥ 1)' : 'Average of defensive & offensive';
-
-    const summaryHtml = `
-      <div class="gas-cr-summary">
-        <style>
-          .gas-cr-summary { font-size: 13px; }
-          .gas-grid { display: grid; grid-template-columns: auto auto; gap: 4px 12px; align-items: center; }
-          .gas-label { color: var(--color-text-dark-secondary, #666); }
-          details.gas-details { margin-top: 0.5rem; }
-          details.gas-details > summary { cursor: pointer; user-select: none; }
-          .gas-monosp { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
-          .gas-section { margin-top: 0.5rem; }
-          .gas-section h4 { margin: 0 0 4px 0; font-size: 12px; color: var(--color-text-dark-secondary, #555); text-transform: uppercase; letter-spacing: .02em; }
-          .gas-kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
-          .gas-hr { border-top: 1px solid var(--color-border, #9993); margin: 6px 0; }
-          .gas-diff-pos { color: var(--color-positive, #2e7d32); }
-          .gas-diff-neg { color: var(--color-negative, #c62828); }
-        </style>
-        <div class="gas-grid">
-          <div class="gas-label">Defensive CR</div><div class="gas-monosp">${defensive}</div>
-          <div class="gas-label">Offensive CR</div><div class="gas-monosp">${offensive}</div>
-          <div class="gas-label"><strong>Final CR</strong></div><div class="gas-monosp"><strong>${finalCR}</strong></div>
-          <div class="gas-label">XP</div><div class="gas-monosp">${xp.toLocaleString?.() ?? xp}</div>
-          <div class="gas-label">Proficiency Bonus</div><div class="gas-monosp">+${pb}</div>
-        </div>
-        <details id="${detailsId}" class="gas-details">
-          <summary>Show detailed calculation</summary>
-          <div class="gas-details-body">
-            <div class="gas-section">
-              <h4>Defensive</h4>
-              <div class="gas-kv">
-                <div>HP</div><div class="gas-monosp">${hp} (range for CR ${defensive}: ${hpMin}–${hpMax})</div>
-                <div>AC</div><div class="gas-monosp">${ac}</div>
-                <div>Expected AC</div><div class="gas-monosp">${expectedAC} <span class="${acDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${acDiff>=0?'+':''}${acDiff})</span></div>
-              </div>
-            </div>
-            <div class="gas-hr"></div>
-            <div class="gas-section">
-              <h4>Offensive</h4>
-              <div class="gas-kv">
-                <div>DPR</div><div class="gas-monosp">${dpr} (range for CR ${offensive}: ${dprMin}–${dprMax})</div>
-                <div>Highest attack bonus</div><div class="gas-monosp">${highestAttack} (expected ${expectedAttack}) <span class="${attackDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${attackDiff>=0?'+':''}${attackDiff})</span></div>
-                <div>Highest save DC</div><div class="gas-monosp">${highestSave} (expected ${expectedSave}) <span class="${saveDiff>=0?'gas-diff-pos':'gas-diff-neg'}">(${saveDiff>=0?'+':''}${saveDiff})</span></div>
-              </div>
-            </div>
-            <div class="gas-hr"></div>
-            <div class="gas-section">
-              <h4>Finalization</h4>
-              <div class="gas-kv">
-                <div>Rule</div><div class="gas-monosp">${finalRule}</div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>`;
-
-    // Open Svelte-based dialog with Apply button using TJSDialog
+    // Open Svelte-based dialog with Apply button using TJSDialog.prompt
     try {
-      await TJSDialog.wait({
+      const result = await TJSDialog.prompt({
         title: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Title') : 'CR Calculator',
-        modal: true,
         draggable: false,
-        content: summaryHtml,
-        buttons: {
-          apply: {
-            icon: 'fas fa-check',
-            label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR',
-            onPress: async () => {
-              try {
-                const value = currentCRBreakdown.finalCR;
-                await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
-                if (npc?.system?.details) {
-                  npc.system.details.cr = value;
-                  if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
-                }
-                ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
-              } catch (err) {
-                console.error('Failed to apply CR:', err);
-                ui.notifications?.error?.('Failed to apply calculated CR.');
-              }
-              return true;
-            }
-          },
-          close: {
-            icon: 'fas fa-times',
-            label: game?.i18n?.localize ? game.i18n.localize('Close') : 'Close'
+        minimizable: false,
+        modal: true,
+        content: {
+          class: CRCalculatorDialog,
+          props: {
+            defensive,
+            offensive,
+            finalCR,
+            xp,
+            pb,
+            hp,
+            hpMin,
+            hpMax,
+            ac,
+            expectedAC,
+            acDiff,
+            dpr,
+            dprMin,
+            dprMax,
+            highestAttack,
+            expectedAttack,
+            highestSave,
+            expectedSave,
+            attackDiff,
+            saveDiff,
+            finalRule
           }
         },
-        default: 'apply'
+        label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR'
       }, { classes: ['tjs-actor-studio'] });
+
+      if (result) {
+        try {
+          const value = currentCRBreakdown.finalCR;
+          await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
+          if (npc?.system?.details) {
+            npc.system.details.cr = value;
+            if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
+          }
+          ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
+        } catch (err) {
+          console.error('Failed to apply CR:', err);
+          ui.notifications?.error?.('Failed to apply calculated CR.');
+        }
+      }
     } catch (e) {
       console.error('Failed opening TJSDialog:', e);
     }
