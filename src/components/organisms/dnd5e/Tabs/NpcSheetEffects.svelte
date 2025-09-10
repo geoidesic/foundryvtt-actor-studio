@@ -111,6 +111,10 @@
     await toggleCondition(key);
   }
 
+  onMount(() => {
+    console.log(game.modules.get('dnd-players-handbook')?.active);
+  })
+
 </script>
 
 <template lang="pug">
@@ -121,6 +125,8 @@
       FeatureItemList(customStyles="--gas-item-list-height: 30px" items="{featureEffects}" showImage="{true}" showActions="{false}" trashable="{false}" extraAction="{handleEffectToggle}" extraActionIcon="fas fa-toggle-on" extraActionTitle="Toggle Effect")
     +if("conditionItems.length > 0")
       FeatureItemList(customStyles="--gas-item-list-height: 30px" items="{conditionItems}" showImage="{true}" showActions="{false}" trashable="{false}" extraAction="{handleConditionAction}" extraActionIcon="fas fa-toggle-on" extraActionTitle="Toggle Condition")
+    +if("!game.modules.get('dnd-players-handbook')?.active")
+      warning Please install D&D Player's Handbook module to see a full list of conditions
 </template>
 
 <style lang="sass">
