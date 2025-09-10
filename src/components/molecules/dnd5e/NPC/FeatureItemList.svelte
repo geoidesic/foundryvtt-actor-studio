@@ -17,6 +17,7 @@
   export let extraAction = null;
   export let extraActionIcon = null;
   export let extraActionTitle = null;
+  export let customStyles = '--gas-item-list-height: 40px'
 
   const actor = getContext("#doc");
 
@@ -254,7 +255,7 @@
 </script>
 
 <template lang="pug">
-ul.icon-list
+ul.icon-list(style="{customStyles}")
   +if("itemsLength")
   +each("listItems as item, idx")
       li.left
@@ -303,12 +304,6 @@ ul.icon-list > li
 .flexrow
   align-items: center
 
-.image
-  position: relative
-  width: 40px
-  min-width: 40px
-  height: 40px
-
 .tab-content ul.icon-list .image img.icon
   position: absolute
   top: 0
@@ -320,7 +315,12 @@ ul.icon-list > li
   object-fit: cover
 
 .tab-content ul.icon-list .image
-  min-width: 40px
+  position: relative
+  width: var(--gas-item-list-height)
+  min-width: var(--gas-item-list-height)
+  height: var(--gas-item-list-height)
+  min-width: var(--gas-item-list-height)
+
 // Keep the trash button centered vertically
 button.icon-button
   margin-top: 0
