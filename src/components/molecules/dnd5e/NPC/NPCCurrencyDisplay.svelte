@@ -45,6 +45,10 @@
       onEdit();
     }
   }
+
+  // Treat sheet as a string marker; only enable controls when the parent explicitly passes
+  // a sheet identifier that includes 'sheet'
+  $: isSheet = typeof sheet === 'string' ? sheet.toLowerCase().includes('sheet') : !!sheet;
 </script>
 
 <div class="npc-currency-display">
@@ -53,9 +57,7 @@
   </div>
   
   <GoldDisplay {...$npcCurrency} />
-  
-  // Treat sheet as a string marker; only enable controls when the parent explicitly passes a sheet identifier that includes 'sheet'
-  $: isSheet = typeof sheet === 'string' ? sheet.toLowerCase().includes('sheet') : !!sheet;
+
 
   {#if (showRollButton || showEditButton) && isSheet}
     <div class="coinage-actions">
