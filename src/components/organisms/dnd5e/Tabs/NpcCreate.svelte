@@ -18,7 +18,7 @@
 <template lang="pug">
 StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
   div(slot="left")
-    FeatureItemList(trashable="{true}")
+    FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}")
   
   div(slot="right")
     // CR Adjustment Tool
