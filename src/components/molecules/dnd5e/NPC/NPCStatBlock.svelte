@@ -16,6 +16,7 @@
   export let npc; 
   export let readonly = true; // Default to readonly for backward compatibility
   export let includeRollButtons = false;
+  export let enableCrCalculator = false; // guard for CR calculator UI
 
   const actor = getContext("#doc");
 
@@ -608,6 +609,7 @@
     }
   }
 
+
   async function updateActorProficiencyBonus(value) {
     if ($actor) {
       try {
@@ -853,7 +855,7 @@
     .flexrow
       .flex1
         .label.inline Challenge 
-        .value
+        .value.nowrap
           EditableValue(
             value="{crValue}"
             readonly="{readonly}"
@@ -869,7 +871,12 @@
             placeholder="200"
           )
           span  XP )
-    
+      
+      +if("enableCrCalculator && !readonly")
+        .flex0
+          button.cr-calc-btn(title="Open CR calculator")
+            i.fas.fa-solid.fa-calculator
+
       .flex1.ml-sm
         .label.inline Proficiency Bonus 
         .value +{pb}
@@ -1015,6 +1022,34 @@
                 span .
                 span {@html la.desc}
 
+    //- CR Calculator popup
+    +if("false")
+      //- .modal-backdrop(on:click!="{() => showCrCalc = false}")
+      //- .modal
+      //-   .modal-header
+      //-     h3 CR Calculator
+      //-     button.close-btn(title="Close" on:click!="{() => showCrCalc = false}") ×
+      //-   .modal-body
+      //-     +if("crCalcResult")
+      //-       .summary
+      //-         p Current CR: {crCalcResult.currentCr}
+      //-         p Suggested CR: {crCalcResult.suggestedCr}
+      //-         p Reason: {crCalcResult.reason}
+      //-       button.link-btn(on:click!="{() => showCrDetails = !showCrDetails}") {showCrDetails ? 'Hide details' : 'Show details'}
+      //-       +if("showCrDetails")
+      //-         .details
+      //-           p Method: {crCalcResult.details.method}
+      //-           p Exact XP match: {crCalcResult.details.exactMatch ? 'Yes' : 'No'}
+      //-           p XP value: {crCalcResult.details.xpValue}
+      //-           .mapping
+      //-             p XP table (CR → XP):
+      //-             ul.scrollable
+      //-               +each("crCalcResult.details.mapping as row")
+      //-                 li CR {row.cr}: {row.xp}
+      //-   .modal-footer
+      //-     button.apply-btn(on:click!="{applySuggestedCr}") Apply Suggested CR
+      //-     button.cancel-btn(on:click!="{() => showCrCalc = false}") Cancel
+
   //- Items list (generic)
   //- +if("getItemsArray(npc?.items)?.length")
   //-   h3.mt-sm Features
@@ -1112,4 +1147,77 @@
 
 .mt-xxs
   margin-top: 0.25em
+
+.cr-calc-btn
+  margin-left: 0.5rem
+  background: transparent
+  border: 1px solid #ccc
+  border-radius: 4px
+  padding: 0 0.4rem
+  cursor: pointer
+  &:hover
+    background: rgba(0,0,0,0.05)
+
+.modal-backdrop
+  position: fixed
+  inset: 0
+  background: rgba(0,0,0,0.4)
+  z-index: 1000
+
+.modal
+  position: fixed
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  background: var(--app-background, #fff)
+  color: inherit
+  width: min(520px, 95vw)
+  max-height: 80vh
+  display: flex
+  flex-direction: column
+  border-radius: 8px
+  border: 1px solid var(--color-border, #888)
+  z-index: 1001
+
+  .modal-header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    padding: 0.5rem 0.75rem
+    border-bottom: 1px solid var(--color-border, #888)
+
+    .close-btn
+      background: transparent
+      border: none
+      font-size: 1.2rem
+      cursor: pointer
+
+  .modal-body
+    padding: 0.75rem
+
+    .mapping
+      ul.scrollable
+        max-height: 200px
+        overflow: auto
+
+  .modal-footer
+    display: flex
+    gap: 0.5rem
+    justify-content: flex-end
+    padding: 0.5rem 0.75rem
+    border-top: 1px solid var(--color-border, #888)
+
+    .apply-btn
+      background: var(--color-accent, #2e7d32)
+      color: #fff
+      border: none
+      border-radius: 4px
+      padding: 0.35rem 0.6rem
+      cursor: pointer
+    .cancel-btn, .link-btn
+      background: transparent
+      border: 1px solid #aaa
+      border-radius: 4px
+      padding: 0.35rem 0.6rem
+      cursor: pointer
 </style>
