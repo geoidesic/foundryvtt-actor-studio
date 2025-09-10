@@ -46,7 +46,7 @@
               button.icon-button.icon(type="button" on:click!="{(ev) => rollSkill(s.key, ev)}" title="Roll {s.label}" aria-label="Roll {s.label}")
                 i.fas.fa-dice-d20
             .flex2.text.text-center
-              span.skill-name {s.label}
+              span.skill-name.pointer(on:click!="{(ev) => rollSkill(s.key, ev)}") {s.label}
             .flex0
               span.skill-mod.badge {modStr(getSkillMod(s.key))}
 </template>
@@ -61,7 +61,7 @@ ul.icon-list.skills
   padding: 0
 
 ul.icon-list.skills > li
-  padding: 6px 0
+  padding: 0
   &:hover
     box-shadow: 4px 0px 8px 3px var(--actor-studio-color-primary) inset
 
@@ -70,9 +70,6 @@ ul.icon-list.skills > li
   align-items: center
 
 .icon-button
-  width: 40px
-  min-width: 40px
-  height: 40px
   display: inline-flex
   align-items: center
   justify-content: center
