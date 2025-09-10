@@ -2,9 +2,9 @@
     "description": "Easily create Heroes, Villains and everything in between.",
     "license": "MIT",
     "private": false,
-    "version": "2.0.1",
+    "version": "2.0.4",
     "type": "module",
-    "debug": false,
+    "debug": true,
     "authors": [
         {
             "name": "Noel da Costa",

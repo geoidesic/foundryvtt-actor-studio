@@ -92,68 +92,71 @@
 
 <template lang="pug">
   .speed-container
-    .label.inline Speed
-    .value
-      +if("currentMovements && currentMovements.length > 0")
-        +each("currentMovements as movement")
-          .movement-item
-            span.movement-type {getMovementLabel(movement.key)}
-            +if("readonly")
-              span.movement-value {movement.value}
-              span.unit ft.
-              +else()
-                +if("editingMovement === movement.key")
-                  input.movement-input(
-                    type="number"
-                    bind:value="{editValue}"
-                    min="0"
-                    on:blur!="{() => handleSpeedSave(movement.key)}"
-                    on:keydown!="{e => handleKeydown(e, movement.key)}"
-                    placeholder="30"
-                    autofocus
-                  )
-                  button.remove-btn(
-                    on:click!="{() => handleRemoveMovement(movement.key)}"
-                    title="Remove {getMovementLabel(movement.key)}"
-                  ) ×
+    .flexrow.justify-flexrow-vertical
+      .flex1
+        .label.inline Speed
+      .flex4
+        .value
+          +if("currentMovements && currentMovements.length > 0")
+            +each("currentMovements as movement")
+              .movement-item
+                span.movement-type {getMovementLabel(movement.key)}
+                +if("readonly")
+                  span.movement-value {movement.value}
+                  span.unit ft.
                   +else()
-                    span.movement-value.speed-editable(
-                      on:click!="{() => startEdit(movement)}"
-                      class!="{editingMovement === movement.key ? 'editing' : ''}"
-                    ) {movement.value}
-                    span.unit ft.
-      
-      +if("!readonly && availableTypes && availableTypes.length > 0")
-        +if("showAddSelect")
-          .add-movement-form
-            select.movement-type-select(
-              bind:value="{newMovementType}"
-            )
-              +each("availableTypes as type")
-                option(value="{type.key}") {type.label}
-            input.movement-value-input(
-              type="number"
-              bind:value="{newMovementValue}"
-              min="1"
-              placeholder="30"
-            )
-            span.unit ft.
-            button.confirm-btn(
-              on:click!="{confirmAddMovement}"
-              title="Add Movement"
-            ) ✓
-            button.cancel-btn(
-              on:click!="{cancelAddMovement}"
-              title="Cancel"
-            ) ×
-          +else()
-            button.add-btn(
-              on:click!="{handleAddMovement}"
-              title="Add Movement"
-            ) + Add Movement
-      
-      +if("!currentMovements || currentMovements.length === 0")
-        span.no-movement (no movement)
+                    +if("editingMovement === movement.key")
+                      input.movement-input(
+                        type="number"
+                        bind:value="{editValue}"
+                        min="0"
+                        on:blur!="{() => handleSpeedSave(movement.key)}"
+                        on:keydown!="{e => handleKeydown(e, movement.key)}"
+                        placeholder="30"
+                        autofocus
+                      )
+                      button.remove-btn(
+                        on:click!="{() => handleRemoveMovement(movement.key)}"
+                        title="Remove {getMovementLabel(movement.key)}"
+                      ) ×
+                      +else()
+                        span.movement-value.speed-editable(
+                          on:click!="{() => startEdit(movement)}"
+                          class!="{editingMovement === movement.key ? 'editing' : ''}"
+                        ) {movement.value}
+                        span.unit ft.
+          
+          +if("!readonly && availableTypes && availableTypes.length > 0")
+            +if("showAddSelect")
+              .add-movement-form
+                select.movement-type-select(
+                  bind:value="{newMovementType}"
+                )
+                  +each("availableTypes as type")
+                    option(value="{type.key}") {type.label}
+                input.movement-value-input(
+                  type="number"
+                  bind:value="{newMovementValue}"
+                  min="1"
+                  placeholder="30"
+                )
+                span.unit ft.
+                button.confirm-btn(
+                  on:click!="{confirmAddMovement}"
+                  title="Add Movement"
+                ) ✓
+                button.cancel-btn(
+                  on:click!="{cancelAddMovement}"
+                  title="Cancel"
+                ) ×
+              +else()
+                button.add-btn(
+                  on:click!="{handleAddMovement}"
+                  title="Add Movement"
+                ) + Add Movement
+          
+          +if("!currentMovements || currentMovements.length === 0")
+            span.no-movement (no movement)
 </template>
 
 <style lang="sass" scoped>

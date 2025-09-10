@@ -34,7 +34,9 @@ export function registerSettings(app: Game): void {
   /** World Settings */
   sourcesConfiguration();
   donationTracker();
+  enableNpcStatblockSheet();
   enableNPCCreation();
+  assignSeparateNpcFeatureSources();
   defaultStartingGoldDice();
   allowManualInput();
   allowStandardArray();
@@ -68,6 +70,45 @@ export function registerSettings(app: Game): void {
   usageTracking();
   /** User settings */
   dontShowWelcome();
+}
+function enableNpcStatblockSheet() {
+  game.settings.register(MODULE_ID, 'enableNpcStatblockSheet', {
+    name: game.i18n.localize('GAS.Setting.EnableNpcStatblockSheet.Name') || 'Enable GAS NPC statblock sheet',
+    hint: game.i18n.localize('GAS.Setting.EnableNpcStatblockSheet.Hint') || 'When enabled, NPC actors use the GAS statblock sheet instead of the default.',
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle') || 'Reload Required',
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent') || 'A reload is required to apply this change.'}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
+  });
+}
+
+function assignSeparateNpcFeatureSources() {
+  game.settings.register(MODULE_ID, 'assignSeparateNpcFeatureSources', {
+    name: game.i18n.localize('GAS.Setting.AssignSeparateNpcFeatureSources.Name'),
+    hint: game.i18n.localize('GAS.Setting.AssignSeparateNpcFeatureSources.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: () => {
+      Dialog.confirm({
+        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
+        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
+        yes: () => window.location.reload(),
+        no: () => {},
+        defaultYes: true
+      });
+    }
+  });
 }
 
 function illuminatedHeight() {

@@ -233,14 +233,14 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
 
         if (commitMessages.length === 0) {
             console.log('No new commits found to summarize.');
-            return '## Release Notes\n\nNo significant changes in this release.';
+            return generateReleaseNotes(commitMessages, previousTag);
         }
 
         // Check if Ollama is running before calling it
         const ollamaRunning = await checkOllamaStatus();
         if (!ollamaRunning) {
             console.warn('Ollama server is not running or unreachable. Falling back to raw commit list.');
-            return generateReleaseNotes(commitMessages);
+            return generateReleaseNotes(commitMessages, previousTag);
         }
 
         const aiSummary = await callOllama(commitMessages);
@@ -255,16 +255,22 @@ const generateReleaseNotesWithFallback = async (previousTag) => {
     }
 
     console.log('Falling back to generating release notes from commit messages.');
-    return generateReleaseNotes(commitMessages);
+    return generateReleaseNotes(commitMessages, previousTag);
 };
 
 // Function to generate fallback release notes
-const generateReleaseNotes = (commitMessages) => {
+const generateReleaseNotes = (commitMessages, previousTag) => {
+    // If there are no commits to list, prefer to point users at the pre-release notes
+    // when the previous tag is a pre-release (e.g. -beta.n). This avoids saying
+    // "No significant changes" when all changes were already documented on the pre-release.
     if (!commitMessages || commitMessages.length === 0) {
+        if (previousTag && /-beta\.\d+$/.test(previousTag)) {
+            return `## Release Notes\n\nThis release finalizes pre-release ${previousTag}. All changes were documented in the pre-release notes.\n\nSee: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${previousTag}`;
+        }
         return '## Release Notes\n\nNo significant changes in this release.';
     }
     const formattedCommits = commitMessages.map(message => `- ${message}`);
-    return `## What's Changed\n\n${formattedCommits.join('\n')}`;
+    return `## What’s Changed\n\n${formattedCommits.join('\n')}`;
 };
 
 // Function to get the previous tag
@@ -387,6 +393,16 @@ console.log('📝 Generating release notes...');
 const previousTag = getPreviousTag();
 const releaseNotes = await generateReleaseNotesWithFallback(previousTag);
 
+// Normalize characters to improve Open Graph preview rendering (avoid HTML entity escapes)
+const normalizeForOpenGraph = (text) => {
+    try {
+        return text ? text.replace(/'/g, '’') : text;
+    } catch (e) {
+        return text;
+    }
+};
+const ogSafeReleaseNotes = normalizeForOpenGraph(releaseNotes);
+
 // Create tag (skip for drafts)
 if (!isDraft) {
     console.log('🏷️  Creating tag...');
@@ -407,7 +423,7 @@ if (!isDraft) {
 
 // Create a temporary file for release notes
 const releaseNotesPath = path.join(__dirname, 'release-notes.md');
-fs.writeFileSync(releaseNotesPath, releaseNotes);
+fs.writeFileSync(releaseNotesPath, ogSafeReleaseNotes);
 
 // Create GitHub release
 const releaseTypeText = isDraft ? ' (draft)' : isPreRelease ? ' (pre-release)' : '';
@@ -440,7 +456,7 @@ try {
 
 const actionText = isDraft ? 'drafted' : isPreRelease ? 'pre-released' : 'released';
 console.log(`🎉 Successfully ${actionText} version ${newVersion} on ${targetBranch} branch`);
-console.log(`📄 Release notes:\n${releaseNotes}`);
+console.log(`📄 Release notes:\n${ogSafeReleaseNotes}`);
 console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
 
 if (isDraft) {

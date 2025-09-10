@@ -9,6 +9,12 @@
 
   const actor = getContext("#doc");
 
+  // Parent can pass a truthy `sheet` value when this component is used inside an actor sheet.
+  export let sheet = false;
+
+  // Treat sheet value as a sheet marker when it contains the word 'sheet'
+  $: isSheet = typeof sheet === 'string' ? sheet.toLowerCase().includes('sheet') : !!sheet;
+
   // Local state for editing
   let editingIdeal = false;
   let editingBond = false;
@@ -392,7 +398,8 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
                     on:change!="{() => toggleTreasureCategory(category.value)}"
                   )
                   span {category.label}
-            button.save-btn(on:click!="{updateTreasure}") Save
+            +if("isSheet")
+              button.save-btn(on:click!="{updateTreasure}") Save
         +if("!editingTreasure")
           .display-value(
             on:click|stopPropagation!="{() => editingTreasure = true}"
@@ -433,7 +440,8 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
                   ) ×
               +if("localHabitat.length < 3")
                 button.add-btn(on:click!="{addHabitatType}") + Add Habitat
-            button.save-btn(on:click!="{updateHabitat}") Save
+            +if("isSheet")
+              button.save-btn(on:click!="{updateHabitat}") Save
         +if("!editingHabitat")
           .display-value(
             on:click|stopPropagation!="{() => editingHabitat = true}"

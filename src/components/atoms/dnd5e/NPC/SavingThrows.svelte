@@ -4,6 +4,7 @@
   export let abilities = {};
   export let readonly = false;
   export let proficiencyBonus = 2; // Default to +2
+  export let includeRollButtons = false;
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
@@ -100,15 +101,42 @@
       ability: abilityKey
     });
   }
+
+  async function rollSave(key, event) {
+    try {
+      const a = $actor;
+      const ab = String(key || '').toLowerCase();
+      if (!a || !ab) return;
+
+      // Prefer dnd5e v4 API
+      if (typeof a.rollSavingThrow === 'function') return a.rollSavingThrow({ ability: ab, event });
+      // Fallback to dnd5e v3 API
+      if (typeof a.rollAbilitySave === 'function') return a.rollAbilitySave(ab, { event });
+      // Legacy/alt paths
+      if (a?.system?.abilities?.[ab]?.save?.roll) return a.system.abilities[ab].save.roll({ event });
+      if (a?.saves?.[ab]?.roll) return a.saves[ab].roll({ event });
+      ui?.notifications?.warn?.(`Save roll not supported: ${key}`);
+    } catch (err) {
+      console.warn('Save roll failed', key, err);
+    }
+  }
 </script>
 
 <template lang="pug">
   .saving-throws-container
-    .label.inline Saving Throws
+    .label.inline Saving Throw Proficiencies
     .value
       +if("currentSavingThrows && currentSavingThrows.length > 0")
         +each("currentSavingThrows as savingThrow")
           .saving-throw-item
+            +if("includeRollButtons")
+              button.roll.rollable.ability-save(
+                title="Roll {savingThrow.label} Save"
+                data-ability="{savingThrow.key}"
+                aria-label="{savingThrow.label} save"
+                on:click!="{(e) => rollSave(savingThrow.key, e)}"
+              )
+                i.fas.fa-shield-alt
             span.ability-abbr {savingThrow.abbr}
             span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
             +if("!readonly")
@@ -151,6 +179,16 @@
     align-items: center
     gap: 8px
     margin-bottom: 3px
+    
+    .roll
+      width: 24px
+      height: 24px
+      display: inline-flex
+      align-items: center
+      justify-content: center
+      border: 1px solid var(--color-border, rgba(0,0,0,.2))
+      border-radius: 4px
+      background: rgba(0,0,0,.05)
     
     .ability-abbr
       font-weight: 600

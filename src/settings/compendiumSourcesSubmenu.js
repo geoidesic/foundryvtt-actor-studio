@@ -6,6 +6,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
     this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item' || p.documentName === 'Actor');
     this.filterPackSourcesAppropriatelyByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
     this.npcEnabled = game.settings.get(MODULE_ID, 'enableNPCCreation');
+    this.separateNpcFeatures = game.settings.get(MODULE_ID, 'assignSeparateNpcFeatureSources');
   }
 
   static get defaultOptions() {
@@ -90,6 +91,12 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         label: game.i18n.localize('GAS.Setting.Sources.NPCCompendia'),
         compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'npcs', ['npc'])
       };
+      if (this.separateNpcFeatures) {
+        data.source.npcFeatures = {
+          label: game.i18n.localize('GAS.Setting.Sources.NPCFeatureCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'npcFeatures', ['feature','trait','action','legendary','lair','reaction','feat','item'])
+        };
+      }
     }
     return data;
   }

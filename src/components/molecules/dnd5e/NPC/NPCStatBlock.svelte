@@ -11,11 +11,12 @@
   import { ucfirst, getItemsArray, updateSource } from "~/src/helpers/Utility";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
-  import CRAdjuster from "~/src/components/molecules/dnd5e/NPC/CRAdjuster.svelte";
 
   export let name;
   export let npc; 
   export let readonly = true; // Default to readonly for backward compatibility
+  export let includeRollButtons = false;
+  export let enableCrCalculator = false; // guard for CR calculator UI
 
   const actor = getContext("#doc");
 
@@ -24,7 +25,6 @@
   let editingType = false;
   let editingAlignment = false;
   let editingName = false;
-  let showCRAdjuster = false;
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
   
@@ -608,15 +608,7 @@
       }
     }
   }
-  
-  // Handle CR adjustment events from the CR adjuster
-  function handleCRAdjusted(event) {
-    console.log('CR adjusted in NPCStatBlock:', event.detail);
-    // Hide the CR adjuster after successful adjustment
-    showCRAdjuster = false;
-    // The CR adjuster will have already updated the actor
-    // We can add additional logic here if needed
-  }
+
 
   async function updateActorProficiencyBonus(value) {
     if ($actor) {
@@ -857,6 +849,38 @@
                   on:click!="{() => { console.log('🖱️ Alignment field clicked!'); editingAlignment = true; }}"
                   class!="{editingAlignment ? 'editing' : ''}"
                 ) {npc?.system?.details?.alignment || 'Unaligned'}
+
+    hr.my-ms
+    
+    .flexrow
+      .flex1
+        .label.inline Challenge 
+        .value.nowrap
+          EditableValue(
+            value="{crValue}"
+            readonly="{readonly}"
+            onSave!="{val => updateActorCR(val)}"
+            placeholder="1"
+          )
+          span  (
+          EditableValue(
+            value="{xpValue}"
+            type="number"
+            readonly="{readonly}"
+            onSave!="{val => updateActorXP(val)}"
+            placeholder="200"
+          )
+          span  XP )
+      
+      +if("enableCrCalculator && !readonly")
+        .flex0
+          button.cr-calc-btn(title="Open CR calculator")
+            i.fas.fa-solid.fa-calculator
+
+      .flex1.ml-sm
+        .label.inline Proficiency Bonus 
+        .value +{pb}
+      
     hr.my-sm
     
     .value
@@ -877,24 +901,27 @@
         AttributeScore(
           abbreviation="{ab.abbr}" 
           score="{ab.score}" 
-          readonly="{readonly}" 
+          readonly="{readonly}"
+          includeRollButtons="{includeRollButtons}"
           on:scoreUpdate!="{e => updateActorAbilityScore(e.detail.ability, e.detail.value)}"
         )
     hr.my-sm
     
-    .mt-sm
-      SavingThrows(
-        abilities="{npc?.system?.abilities || {}}"
-        proficiencyBonus="{pb}"
-        readonly="{readonly}"
-        on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
-      )
-    .mt-xxs
-      Skills(
-        skills="{npc?.system?.skills || {}}"
-        readonly="{readonly}"
-        on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
-      )
+    .flexrow.justify-flexrow-vertical-top
+      .flex1
+        Skills(
+          skills="{npc?.system?.skills || {}}"
+          readonly="{readonly}"
+          on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
+        )
+      .flex1.ml-sm
+        SavingThrows(
+          abilities="{npc?.system?.abilities || {}}"
+          proficiencyBonus="{pb}"
+          readonly="{readonly}"
+          on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
+        )
+    hr.my-sm
     +if("dr && dr.length > 0")
       .mt-xxs
         .label.inline Damage Resistances 
@@ -956,41 +983,7 @@
         readonly="{readonly}"
         on:languageUpdate!="{e => updateActorLanguages(e.detail)}"
       )
-    .mt-xxs
-      .label.inline Challenge 
-      .value
-        EditableValue(
-          value="{crValue}"
-          readonly="{readonly}"
-          onSave!="{val => updateActorCR(val)}"
-          placeholder="1"
-        )
-        +if("!readonly")
-          button.btn.btn-sm.cr-adjust-btn(
-            on:click!="{() => showCRAdjuster = !showCRAdjuster}"
-            title="Adjust CR and automatically update stats"
-          )
-            i.fas.fa-magic
-        span  (
-        EditableValue(
-          value="{xpValue}"
-          type="number"
-          readonly="{readonly}"
-          onSave!="{val => updateActorXP(val)}"
-          placeholder="200"
-        )
-        span  XP )
     
-    +if("showCRAdjuster && !readonly")
-      .cr-adjuster-container
-        CRAdjuster(
-          readonly="{readonly}"
-          on:crAdjusted="{handleCRAdjusted}"
-        )
-    .mt-xxs
-      .label.inline Proficiency Bonus 
-      .value +{pb}
-    hr.my-sm
     //- Traits (summary)
     +if("legendaryResistances && legendaryResistances.length > 0")
       .mt-sm
@@ -1029,6 +1022,34 @@
                 span .
                 span {@html la.desc}
 
+    //- CR Calculator popup
+    +if("false")
+      //- .modal-backdrop(on:click!="{() => showCrCalc = false}")
+      //- .modal
+      //-   .modal-header
+      //-     h3 CR Calculator
+      //-     button.close-btn(title="Close" on:click!="{() => showCrCalc = false}") ×
+      //-   .modal-body
+      //-     +if("crCalcResult")
+      //-       .summary
+      //-         p Current CR: {crCalcResult.currentCr}
+      //-         p Suggested CR: {crCalcResult.suggestedCr}
+      //-         p Reason: {crCalcResult.reason}
+      //-       button.link-btn(on:click!="{() => showCrDetails = !showCrDetails}") {showCrDetails ? 'Hide details' : 'Show details'}
+      //-       +if("showCrDetails")
+      //-         .details
+      //-           p Method: {crCalcResult.details.method}
+      //-           p Exact XP match: {crCalcResult.details.exactMatch ? 'Yes' : 'No'}
+      //-           p XP value: {crCalcResult.details.xpValue}
+      //-           .mapping
+      //-             p XP table (CR → XP):
+      //-             ul.scrollable
+      //-               +each("crCalcResult.details.mapping as row")
+      //-                 li CR {row.cr}: {row.xp}
+      //-   .modal-footer
+      //-     button.apply-btn(on:click!="{applySuggestedCr}") Apply Suggested CR
+      //-     button.cancel-btn(on:click!="{() => showCrCalc = false}") Cancel
+
   //- Items list (generic)
   //- +if("getItemsArray(npc?.items)?.length")
   //-   h3.mt-sm Features
@@ -1037,8 +1058,6 @@
 
 <style lang="sass">
 .npc-stat-block
-  margin: 1rem 0 0 0
-  padding: 0.5em
   .details
     font-style: italic
     margin-bottom: 0.5em
@@ -1129,28 +1148,76 @@
 .mt-xxs
   margin-top: 0.25em
 
-.cr-adjust-btn
+.cr-calc-btn
   margin-left: 0.5rem
-  padding: 0.25rem 0.5rem
-  background: #007bff
-  color: white
-  border: none
-  border-radius: 3px
-  cursor: pointer
-  font-size: 0.8rem
-  transition: background-color 0.2s ease
-
-  &:hover
-    background: #0056b3
-
-  &:focus
-    outline: none
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
-
-.cr-adjuster-container
-  margin: 1rem 0
-  padding: 1rem
-  border: 1px solid #ddd
+  background: transparent
+  border: 1px solid #ccc
   border-radius: 4px
-  background: #f9f9f9
+  padding: 0 0.4rem
+  cursor: pointer
+  &:hover
+    background: rgba(0,0,0,0.05)
+
+.modal-backdrop
+  position: fixed
+  inset: 0
+  background: rgba(0,0,0,0.4)
+  z-index: 1000
+
+.modal
+  position: fixed
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
+  background: var(--app-background, #fff)
+  color: inherit
+  width: min(520px, 95vw)
+  max-height: 80vh
+  display: flex
+  flex-direction: column
+  border-radius: 8px
+  border: 1px solid var(--color-border, #888)
+  z-index: 1001
+
+  .modal-header
+    display: flex
+    justify-content: space-between
+    align-items: center
+    padding: 0.5rem 0.75rem
+    border-bottom: 1px solid var(--color-border, #888)
+
+    .close-btn
+      background: transparent
+      border: none
+      font-size: 1.2rem
+      cursor: pointer
+
+  .modal-body
+    padding: 0.75rem
+
+    .mapping
+      ul.scrollable
+        max-height: 200px
+        overflow: auto
+
+  .modal-footer
+    display: flex
+    gap: 0.5rem
+    justify-content: flex-end
+    padding: 0.5rem 0.75rem
+    border-top: 1px solid var(--color-border, #888)
+
+    .apply-btn
+      background: var(--color-accent, #2e7d32)
+      color: #fff
+      border: none
+      border-radius: 4px
+      padding: 0.35rem 0.6rem
+      cursor: pointer
+    .cancel-btn, .link-btn
+      background: transparent
+      border: 1px solid #aaa
+      border-radius: 4px
+      padding: 0.35rem 0.6rem
+      cursor: pointer
 </style>

@@ -8,6 +8,7 @@
   export let sheet;
   export let activeTab = void 0;
   export let efx = ripple();
+  export let labels = true;
 
   let initialTabs = [];
 
@@ -36,142 +37,142 @@
   
   // Subscribe to the currentProcess to know when advancements are active
   $: isAdvancementTab = activeTab === 'advancements';
+
+  // Helper to create a stable, CSS-safe class name from a component name
+  const sanitizeClass = (name) => {
+    if (!name) return '';
+    return String(name)
+      .replace(/[^a-zA-Z0-9_-]+/g, '-') // replace unsafe chars with hyphen
+      .replace(/^[^a-zA-Z]+/, '') // ensure starts with letter when possible
+      .toLowerCase();
+  }
 </script>
 
-<!--List of tabs-->
-<div class="tabs {$$restProps.class}">
-  <!--Tab List-->
-  <div class="tabs-list">
-    <!--For each tab-->
-    {#each tabs as tab, idx}
-      <button
+<template lang="pug">
+.tabs(class="{$$restProps.class}")
+  .tabs-list
+    +each("tabs as tab, idx")
+      button(
         class="{activeTab === tab.id ? 'active ' : ''}"
-        on:click={() => {
-          activeTab = tab.id;
-        }}
-        on:mousedown={preventDefault}
+        on:click|preventDefault!="{() => { activeTab = tab.id }}"
         use:efx
-      >
-        {tab.label}
-      </button>
-    {/each}
-  </div>
+        aria-label="{tab.label}"
+  data-tooltip="{tab.label}"
 
-  <!--Tab Content-->
-  <div class="tab-content">
-    {#each tabs as tab}
-      {#if tab.id === activeTab && tabComponents[tab.component]}
-        <svelte:component this={tabComponents[tab.component]} {sheet} />
-      {/if}
-    {/each}
-  </div>
-</div>
+      ) 
+        +if("labels")
+          span {tab.label}
+        +if("tab.icon")
+          i(class="{tab.icon}")
+  .tab-content
+    +each("tabs as tab")
+      +if("tab.id === activeTab && tabComponents[tab.component]")
+        // Wrap component in a container with a stable class and data attribute so it's findable in markup
+        .tab-pane(class="tab-{sanitizeClass(tab.component)}" data-component="{tab.component}")
+          svelte:component(this="{tabComponents[tab.component]}" sheet="{sheet}")
+</template>
 
-<style lang="scss">
-  @import "../../../styles/Mixins.sass";
+<style lang="sass">
+  @import "../../../styles/Mixins.sass"
 
-  .tabs {
-    @include flex-column;
-    @include flex-group-top;
-    @include border;
-    height: 100%;
-    width: 100%;
 
-    .tabs-list {
-      @include flex-row;
-      @include flex-space-evenly;
-      @include border-bottom;
-      @include panel-1;
-      list-style: none;
-      width: 100%;
-      margin: 0;
-      padding: 0.25rem;
-      height: 100%;
-      flex: 0;
+  :global(.theme-dark .tabs)
+    --tabs-list-background: rgba(0,0,0,0.8)
+  :global(.tabs)
+    --tabs-list-background: rgba(255,255,255,0.8)
 
-      button {
-        --button-border-radius: 5px;
-        --button-line-height: var(--tab-line-height);
-        --button-font-size: var(--tab-font-size);
-        @include button;
-        position: relative;
-        overflow: hidden;
-        width: 100%;
-        height: 200%;
-        margin: -10px 2px;
-        font-weight: normal;
-        font-size: larger;
-        margin-bottom: -10px;
-        padding: 10px 0;
-        align-items: end;
+  
+  :global(.gas-npc-sheet .tab-content)
+    padding: 1.6rem 0.5rem
 
-        &:not(:first-child) {
-          border-left: none;
-        }
+  .tabs
 
-        &:not(.active) {
-          &:before {
-            content: "";
-            border-top: 5px solid var(--color-border-highlight);
-            position: absolute;
-            width: 100%;
-            bottom: 5px;
-          } 
-          &:not(:hover) {
-            &:before {
-              border-top: 5px solid brown;
-            }
-          }
-        }
+    +flex-column
+    +flex-group-top
+    +border
+    height: 100%
+    width: 100%
 
-        &.active {
-          &:hover {
-            background: #f9f9f9;
-            box-shadow: none;
-          }
-          font-weight: bold;
-          background: #f9f9f9;
+    .tabs-list
+      +flex-row
+      +flex-space-evenly
+      +border-bottom
+      +panel-1
+      list-style: none
+      width: 100%
+      margin: 0
+      padding: 0.25rem
+      height: 100%
+      flex: 0
+
+      button
+        --button-border-radius: 5px
+        --button-line-height: var(--tab-line-height)
+        --button-font-size: var(--tab-font-size)
+        +button
+        text-align: center
+        position: relative
+        overflow: hidden
+        width: 100%
+        height: 200%
+        margin: -10px 2px
+        font-weight: normal
+        font-size: larger
+        margin-bottom: -10px
+        padding: 10px 0
+        align-items: end
+
+        &:not(:first-child)
+          border-left: none
+
+        &:not(.active)
+          &:before
+            content: ""
+            border-top: 5px solid var(--color-border-highlight)
+            position: absolute
+            width: 100%
+            bottom: -3px
+          &:not(:hover)
+            &:before
+              border-top: 5px ridge brown
+
+        &.active
+          &:hover
+            background: #f9f9f9
+            box-shadow: none
+          font-weight: bold
+          background: #f9f9f9
           color: var(--dnd5e-color-gold)
-        }
-      }
-    }
-  }
 
+  .tab-content
+    +flex-column
+    flex: 2
+    width: 100%
+    position: relative
 
-  .tab-content {
-    @include flex-column;
-    flex: 2;
-    width: 100%;
-    position: relative;
-  }
+  .readonly-overlay
+    position: absolute
+    top: 0
+    left: 0
+    right: 0
+    bottom: 0
+    background: rgba(0, 0, 0, 0.4)
+    z-index: 100
+    display: flex
+    align-items: center
+    justify-content: center
 
-  .readonly-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  .overlay-message
+    background: #fff
+    padding: 1rem
+    border-radius: 5px
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3)
 
-  .overlay-message {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  }
+  button.readonly
+    opacity: 0.7
+    cursor: not-allowed
 
-  button.readonly {
-    opacity: 0.7;
-    cursor: not-allowed;
-
-    &:hover {
-      box-shadow: none;
-      background: inherit;
-    }
-  }
+    &:hover
+      box-shadow: none
+      background: inherit
 </style>

@@ -6,6 +6,8 @@
   // Props
   export let showRollButton = true;
   export let showEditButton = false;
+  // Only show roll/edit controls when rendered inside a sheet. Parent components should pass a truthy `sheet` value.
+  export let sheet = false;
   export let onEdit = null;
   export let hoardMode = false;
   export let partyLevel = 5;
@@ -52,7 +54,10 @@
   
   <GoldDisplay {...$npcCurrency} />
   
-  {#if showRollButton || showEditButton}
+  // Treat sheet as a string marker; only enable controls when the parent explicitly passes a sheet identifier that includes 'sheet'
+  $: isSheet = typeof sheet === 'string' ? sheet.toLowerCase().includes('sheet') : !!sheet;
+
+  {#if (showRollButton || showEditButton) && isSheet}
     <div class="coinage-actions">
       {#if showRollButton}
         <button 

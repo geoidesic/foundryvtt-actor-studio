@@ -2,11 +2,17 @@
   --actor-studio-color-primary: #416dbe
   --actor-studio-color-secondary: rgb(241, 142, 11)
   --actor-studio-color-tertiary: rgb(165, 42, 42)
-#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, #foundryvtt-actor-studio-welcome
+
+.gas-npc-sheet
+  &.theme-dark
+    --color-shadow-primary: #416dbe
+
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, #foundryvtt-actor-studio-welcome, .gas-npc-sheet
   --size-xxs: 0.1rem
   --size-xs: 0.2rem
   --size-ms: 0.3rem
   --size-sm: 0.4rem
+  --size-ms: 0.6rem
   --size-md: 1rem
   --size-lg: 1.5rem
   --size-xl: 2rem

@@ -351,20 +351,15 @@
     if (!options || options.length === 0) {
       console.log('[NPC Features] onMount - No options found, attempting to rebuild index...');
       try {
-        // Import and call the rebuild function
-        const { buildNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js');
-        console.log('[NPC Features] onMount - buildNpcFeatureIndex imported, calling...');
-        const newIndex = await buildNpcFeatureIndex();
-        console.log('[NPC Features] onMount - Index rebuild result:', {
-          success: !!newIndex,
-          length: newIndex?.length || 0
-        });
-        
-        // Reload options after rebuild
-        if (newIndex && newIndex.length > 0) {
-          options = loadIndexOptions();
-          console.log('[NPC Features] onMount - Options reloaded after rebuild:', options.length);
-        }
+        // Import and call the initializer so the index is saved to localStorage
+        const { initializeNpcFeatureIndex, invalidateNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js');
+        console.log('[NPC Features] onMount - initializeNpcFeatureIndex imported, calling...');
+        invalidateNpcFeatureIndex();
+        initializeNpcFeatureIndex();
+        // wait briefly for async build to complete then reload options
+        await new Promise(r => setTimeout(r, 400));
+        options = loadIndexOptions();
+        console.log('[NPC Features] onMount - Options reloaded after rebuild:', options.length);
       } catch (err) {
         console.error('[NPC Features] onMount - Failed to rebuild index:', err);
       }
@@ -419,14 +414,16 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
           enableEnrichment="{true}"
         )
       .flex0
-        button.debug-button(
+        button.icon-button.mr-sm(
           type="button"
-          on:click!="{async () => { console.log('Manual rebuild clicked'); try { const { buildNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js'); const result = await buildNpcFeatureIndex(); console.log('Manual rebuild result:', result); options = loadIndexOptions(); } catch (err) { console.error('Manual rebuild failed:', err); } }}"
-          title="Debug: Rebuild NPC Index"
-        ) 🔄
+          aria-label="Refresh NPC Features Index"
+          on:click!="{async () => { console.log('Manual rebuild clicked'); try { const { initializeNpcFeatureIndex, invalidateNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js'); invalidateNpcFeatureIndex(); initializeNpcFeatureIndex(); setTimeout(() => { options = loadIndexOptions(); }, 250); } catch (err) { console.error('Manual rebuild failed:', err); } }}"
+          title="Refresh NPC Features Index"
+        )
+          i(class="fas fa-sync")
   
   div(slot="right")
-    FeatureItemList(trashable="{true}")
+    FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}")
 </template>
 
 <style lang="sass" scoped>
@@ -446,17 +443,6 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
   color: var(--color-text-dark-secondary)
   font-style: italic
 
-.debug-button
-  background: #ff6b6b
-  color: white
-  border: none
-  border-radius: 4px
-  padding: 4px 8px
-  cursor: pointer
-  font-size: 12px
-  margin-left: 8px
-  
-  &:hover
-    background: #ff5252
+// Reuse the shared icon-button look used elsewhere
 </style>
 

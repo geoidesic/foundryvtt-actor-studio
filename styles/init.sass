@@ -134,6 +134,14 @@
     margin-top: var(--size-sm)
     margin-bottom: var(--size-sm)
 
+  .my-md
+    margin-top: var(--size-md)
+    margin-bottom: var(--size-md)
+
+  .my-ms
+    margin-top: var(--size-ms)
+    margin-bottom: var(--size-ms)
+
   .mt-none
     margin-top: 0
 
@@ -228,6 +236,19 @@
   img
     border: none
 
+  warning
+    display: block
+    border: 1px solid var(--dnd5e-color-gold)
+    background: var(--color-negative)
+    color: #fff
+    margin: 1rem 0 0 0
+    padding: 0.5rem 0.3rem
+    border-radius: var(--border-radius)
+    &::before
+      content: "⚠️"
+      margin-right: 0.3rem
+      display: inline-block
+
 
   .header-control
     margin: 5px -1px !important
@@ -282,6 +303,9 @@
 
   .justify-flexrow-vertical
     align-items: center
+
+  .justify-flexrow-vertical-top
+    align-items: top
 
   .inline
     display: inline
@@ -417,6 +441,7 @@
     background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat 
     background-color: rgba(255,255,255,0.5)
     background-blend-mode: lighten
+    padding: 1rem
 
     --gas-text-header-color: #6e0000
     text-align: left
@@ -501,7 +526,7 @@ body.game #gas-settings-submenu.app.window-app
 #gas-dialog-button, #gas-dialog-npc-button
     background-color: white
     
-#foundryvtt-actor-studio-pc-sheet
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet
   table.core-class-traits
     th, td
       vertical-align: top

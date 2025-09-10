@@ -51,6 +51,7 @@ export const DEFAULT_SOURCES = {
   spells: [DEFAULT_PACKS.SPELLS],
   feats: [],
   items: [DEFAULT_PACKS.ITEMS],
+  npcFeatures: [],
 };
 
 export const INTEGRATION = {
@@ -88,4 +89,25 @@ export const STANDARD_ARRAY = {
 };
 
 export type CLASS_LEVEL = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;
+
+
+// Condition definitions used across the module. Each entry may include a compendium UUID
+// for enrichment (the dnd5e rules compendium pages for each condition).
+export const CONDITION_DEFS = [
+  { key: 'blinded', label: 'Blinded', icon: 'systems/dnd5e/icons/svg/statuses/blinded.svg', uuid: 'Compendium.dnd5e.rules.JournalEntry.w7eitkpD7QQTB6j0.JournalEntryPage.0b8N4FymGGfbZGpJ' },
+  { key: 'charmed', label: 'Charmed', icon: 'systems/dnd5e/icons/svg/statuses/charmed.svg', uuid: 'Compendium.dnd5e.rules.JournalEntry.w7eitkpD7QQTB6j0.JournalEntryPage.zZaEBrKkr66OWJvD' },
+  { key: 'deafened', label: 'Deafened', icon: 'systems/dnd5e/icons/svg/statuses/deafened.svg', uuid: 'Compendium.dnd5e.rules.JournalEntry.w7eitkpD7QQTB6j0.JournalEntryPage.6G8JSjhn701cBITY' },
+  { key: 'exhaustion', label: 'Exhaustion', icon: 'systems/dnd5e/icons/svg/statuses/exhaustion.svg', uuid: 'Compendium.dnd5e.rules.JournalEntry.w7eitkpD7QQTB6j0.JournalEntryPage.cspWveykstnu3Zcv' },
+  { key: 'frightened', label: 'Frightened', icon: 'systems/dnd5e/icons/svg/statuses/frightened.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.93uaingTESo8N1qL' },
+  { key: 'grappled', label: 'Grappled', icon: 'systems/dnd5e/icons/svg/statuses/grappled.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.KbQ1k0OIowtZeQgp' },
+  { key: 'incapacitated', label: 'Incapacitated', icon: 'systems/dnd5e/icons/svg/statuses/incapacitated.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.4i3G895hy99piand' },
+  { key: 'invisible', label: 'Invisible', icon: 'systems/dnd5e/icons/svg/statuses/invisible.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.MQIZ1zRLWRcNOtPN' },
+  { key: 'paralyzed', label: 'Paralyzed', icon: 'systems/dnd5e/icons/svg/statuses/paralyzed.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.RnxZoTglPnLc6UPb' },
+  { key: 'petrified', label: 'Petrified', icon: 'systems/dnd5e/icons/svg/statuses/petrified.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.6vtLuQT9lwZ9N299' },
+  { key: 'poisoned', label: 'Poisoned', icon: 'systems/dnd5e/icons/svg/statuses/poisoned.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.HWs8kEojffqwTSJz' },
+  { key: 'prone', label: 'Prone', icon: 'systems/dnd5e/icons/svg/statuses/prone.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.QxCrRcgMdUd3gfzz' },
+  { key: 'restrained', label: 'Restrained', icon: 'systems/dnd5e/icons/svg/statuses/restrained.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.dqLeGdpHtb8FfcxX' },
+  { key: 'stunned', label: 'Stunned', icon: 'systems/dnd5e/icons/svg/statuses/stunned.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.EjbXjvyQAMlDyANI' },
+  { key: 'unconscious', label: 'Unconscious', icon: 'systems/dnd5e/icons/svg/statuses/unconscious.svg', uuid: 'Compendium.dnd-players-handbook.content.JournalEntry.phbAppendixCRule.JournalEntryPage.fZCRaKEJd4KoQCqH' }
+];
 
