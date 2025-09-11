@@ -3,7 +3,7 @@
   import { ApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy, tick } from "svelte";
   import { derived } from 'svelte/store';
-  import { activeTab, npcTabs, resetStores, selectedNpcBase, } from "~/src/stores/index";
+  import { activeTab, npcTabs, resetStores, selectedNpcBase, actorInGame } from "~/src/stores/index";
   import { npcSelectProgress } from "~/src/stores/npc";
   import { MODULE_ID } from "~/src/helpers/constants";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
@@ -32,10 +32,25 @@
     '--tjs-app-overflow': 'visible',
   };
 
-  // Show all tabs once progress has reached 100%, and keep them visible
+  // Show tabs 2-5 (indices 0..4 in npcTabs) once select progress has reached 100%.
+  // Keep the Stats tab (npc-create) locked until the actor exists in-game (actorInGame store).
+  let filteredTabs = [$npcTabs ? $npcTabs[0] : undefined].filter(Boolean);
+
   let hasReached100Percent = false;
   $: if ($npcSelectProgress === 100) hasReached100Percent = true;
-  $: filteredTabs = hasReached100Percent ? $npcTabs : [$npcTabs[0]];
+
+  $: if (!hasReached100Percent) {
+    filteredTabs = [$npcTabs[0]]; // only show npc-select
+  } else {
+    // show first five tabs (npc-select, features, equipment, treasure, biography)
+    const firstFive = $npcTabs.slice(0, 5);
+    // append Stats tab only when actorInGame exists
+    if ($actorInGame) {
+      filteredTabs = [...firstFive, $npcTabs.find(t => t.id === 'npc-create')].filter(Boolean);
+    } else {
+      filteredTabs = firstFive;
+    }
+  }
   
   // Let the workflow handle navigation - no automatic redirects
 

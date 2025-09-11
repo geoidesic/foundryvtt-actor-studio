@@ -40,10 +40,10 @@ const initialTabs = [
 const npcTabs = [
   { label: 'NpcSelect', id: 'npc-select', component: 'NpcSelect' },
   { label: 'Features', id: 'npc-features', component: 'NpcFeatures' },
-  { label: 'Stats', id: 'npc-create', component: 'NpcCreate' },
   { label: 'Equipment', id: 'npc-equipment-shop', component: 'NpcEquipmentShop' },
   { label: 'Treasure', id: 'magic-items', component: 'MagicItems' },
   { label: 'Biography', id: 'npc-biography', component: 'NpcBiography' },
+  { label: 'Stats', id: 'npc-create', component: 'NpcCreate' },
 ];
 
 // Tabs for level up
