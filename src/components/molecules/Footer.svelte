@@ -157,12 +157,32 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = ""; // For NPC flow, default blank; PC flow still binds via value for name input
+  let npcProgress = 0; // progress value displayed for NPC flow tabs
   
   // NPC flow helpers
   $: isNpcFlow = ['npc-select', 'npc-features', 'npc-create', 'npc-equipment-shop', 'magic-items', 'npc-biography'].includes($activeTab);
-  $: npcProgress = $npcSelectProgress;
+  // Carry-over NPC creation progress: once an NPC is selected on tab 1,
+  // treat tabs 2–5 (features, create, equipment, magic items) as 100%.
+  // Note: Use selectedNpcBase directly; npcSelectProgress was 0 off-tab because it depended on activeTab.
+  $: npcSelectionComplete = !!$selectedNpcBase;
+  $: {
+    if (isNpcFlow) {
+      const carryTabs = ['npc-features', 'npc-create', 'npc-equipment-shop', 'magic-items', 'npc-biography'];
+      if ($activeTab === 'npc-select') {
+        npcProgress = npcSelectionComplete ? 100 : 0;
+      } else if (carryTabs.includes($activeTab)) {
+        npcProgress = npcSelectionComplete ? 100 : 0;
+      } else {
+        // Default within NPC flow
+        npcProgress = npcSelectionComplete ? 100 : 0;
+      }
+    } else {
+      // non-NPC flow unaffected; show 0 by default
+      npcProgress = 0;
+    }
+  }
   $: npcNamePlaceholder = $selectedNpcBase?.name || '';
-  $: shouldShowNpcFooter = isNpcFlow && $npcSelectProgress === 100;
+  $: shouldShowNpcFooter = isNpcFlow && npcSelectionComplete;
   
   // Initialize actorName when selectedNpcBase changes
   $: if ($selectedNpcBase && !actorName) {
