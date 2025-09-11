@@ -380,11 +380,12 @@
       // Show success notification
       ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
       
-      // Close the application after a short delay
-      setTimeout(() => {
-        console.log('[FOOTER] Closing NPC creation application');
-        Hooks.call("gas.close");
-      }, 1500);
+      // After creation, navigate to Stats (tab 6) where the user can open the sheet & close
+      try {
+        activeTab.set('npc-create');
+      } catch (navErr) {
+        console.warn('[FOOTER] Failed to navigate to npc-create after creation:', navErr);
+      }
       
     } catch (error) {
       console.error('[FOOTER] ====== NPC CREATION FAILED ======');
@@ -392,6 +393,28 @@
       console.error('[FOOTER] Error stack:', error.stack);
       window.GAS?.log?.e?.('[FOOTER] Failed to create NPC actor:', error);
       ui.notifications?.error(`Failed to create NPC: ${error.message}`);
+    }
+  };
+
+  //- Finalize NPC flow on Stats tab: open actor sheet & close app
+  const finalizeNpcCreation = async () => {
+    try {
+      const created = get(actorInGame);
+      if (!created) {
+        ui.notifications?.warn('NPC actor not found. Please create the NPC first.');
+        return;
+      }
+      const npcFSM = getNPCWorkflowFSM();
+      if (npcFSM) {
+        npcFSM.handle(NPC_WORKFLOW_EVENTS.NPC_CREATED, { createdActor: created });
+      } else {
+        // Fallback if FSM not available
+        try { created.sheet?.render(true); } catch (_) {}
+        setTimeout(() => { try { Hooks.call('gas.close'); } catch (_) {} }, 1500);
+      }
+    } catch (err) {
+      console.error('[FOOTER] Failed to finalize NPC creation:', err);
+      ui.notifications?.error('Failed to finalize NPC creation. See console for details.');
     }
   };
 
@@ -880,13 +903,23 @@
               .flex1
                 ProgressBar(progress="{npcProgress}")
                 .button-container
-                  button.mt-xs.wide(
-                    type="button"
-                    role="button"
-                    on:mousedown="{goToNpcEquipment}"
-                  )
-                    span {t('Footer.Next')}
-                    i.right.ml-md(class="fas fa-chevron-right")
+                  //- Show finalize (open & close) once actor exists, else guide user
+                  +if("$actorInGame")
+                    button.mt-xs.wide(
+                      type="button"
+                      role="button"
+                      on:mousedown="{finalizeNpcCreation}"
+                    )
+                      span {t('Footer.OpenSheetAndClose')}
+                      i.right.ml-md(class="fas fa-check")
+                    +else()
+                      button.mt-xs.wide(
+                        type="button"
+                        role="button"
+                        disabled
+                        title="Create the NPC on the Biography tab first"
+                      )
+                        span {t('Footer.CreateNPCFirst')}
 
         +if("$activeTab === 'npc-equipment-shop'")
           .progress-container
