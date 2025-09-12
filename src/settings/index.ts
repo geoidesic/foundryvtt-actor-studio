@@ -25,7 +25,6 @@ export function registerSettings(app: Game): void {
   // trimSubclasses();
   // custom packs
   // integrations
-  // useTokenizerIfAvailable();
   // private settings
   // lastMigration();
   // abilityScoreMethods();
@@ -57,6 +56,7 @@ export function registerSettings(app: Game): void {
   enableEquipmentPurchase();
   enableSpellSelection();
   showPackLabelInSelect();
+  useTokenizerIfAvailable(); 
   windowX();
   windowY();
   experimentalCharacterNameStyling();

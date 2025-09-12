@@ -12,15 +12,44 @@
   // Portrait data and handler (Overview-only)
   $: portraitSrc = npc?.img || npc?.prototypeToken?.texture?.src || npc?.prototypeToken?.img || '';
   $: hasPortrait = !!portraitSrc;
+  // Open portrait viewer/editor depending on edit mode and Tokenizer availability
   function openPortrait() {
     try {
-      // If tokenizer is installed and user enabled it, open tokenizer for actor
-      if (game?.modules?.has && game.modules.has('vtta-tokenizer') && game.settings?.get && game.settings.get(MODULE_ID, 'useTokenizer')) {
-        if (typeof Tokenizer !== 'undefined' && Tokenizer?.tokenizeActor) {
-          // Prefer passing the document store if available
-          try { Tokenizer.tokenizeActor($documentStore || npc); return; } catch (_) {}
+      // If in edit mode, prefer to open an editor. Use Tokenizer only for edit mode.
+      if (isEditing) {
+        // If tokenizer is installed and user enabled it, open tokenizer for actor
+        if (game?.modules?.has && game.modules.has('vtta-tokenizer') && game.settings?.get && game.settings.get(MODULE_ID, 'useTokenizer')) {
+          if (typeof Tokenizer !== 'undefined' && Tokenizer?.tokenizeActor) {
+            try { Tokenizer.tokenizeActor($documentStore || npc); return; } catch (_) {}
+          }
         }
+
+        // Tokenizer not available or failed — open the standard Image/File editor (FilePicker)
+        try {
+          // Prefer FilePicker if available (standard Foundry editor flow)
+          const current = $documentStore?.img || portraitSrc;
+          // If there is an available FilePicker API, use it to edit image
+          if (typeof FilePicker !== 'undefined') {
+            const app = getContext('#external')?.application;
+            // Create a FilePicker bound to this application position if possible
+            const fp = new FilePicker({
+              type: 'image',
+              current: current,
+              callback: (path) => { $documentStore.update?.({ img: path }); },
+              top: app?.position?.top + 40,
+              left: app?.position?.left + 10
+            });
+            return fp.browse();
+          }
+        } catch (_) {}
+
+        // Fallback: if no FilePicker, just open ImagePopout in edit mode as last resort
+        // eslint-disable-next-line no-undef
+        if (portraitSrc) new ImagePopout(portraitSrc, { title: npcName }).render(true);
+        return;
       }
+
+      // Not editing: open the standard profile viewer (ImagePopout)
       // eslint-disable-next-line no-undef
       if (portraitSrc) new ImagePopout(portraitSrc, { title: npcName }).render(true);
     } catch (_) {}
