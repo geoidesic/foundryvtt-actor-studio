@@ -1,5 +1,6 @@
 <script>
   import { getContext } from 'svelte';
+  import { MODULE_ID } from '~/src/helpers/constants';
   import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
   const documentStore = getContext('#doc');
   const editStore = getContext('#editStore');
@@ -13,6 +14,13 @@
   $: hasPortrait = !!portraitSrc;
   function openPortrait() {
     try {
+      // If tokenizer is installed and user enabled it, open tokenizer for actor
+      if (game?.modules?.has && game.modules.has('vtta-tokenizer') && game.settings?.get && game.settings.get(MODULE_ID, 'useTokenizer')) {
+        if (typeof Tokenizer !== 'undefined' && Tokenizer?.tokenizeActor) {
+          // Prefer passing the document store if available
+          try { Tokenizer.tokenizeActor($documentStore || npc); return; } catch (_) {}
+        }
+      }
       // eslint-disable-next-line no-undef
       if (portraitSrc) new ImagePopout(portraitSrc, { title: npcName }).render(true);
     } catch (_) {}
