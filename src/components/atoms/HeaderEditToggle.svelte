@@ -71,18 +71,31 @@
   border-radius: calc((var(--slide-toggle-height) * 2) / 3)
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.45)
   display: flex
-
   flex-direction: row
   justify-content: start
   padding: var(--slide-toggle-padding)
 
+:global(.gas-mode-slider[aria-label="Edit"] .slide-toggle-track)
+  background: var(--color-positive, green)
+  
+:global(.gas-mode-slider .slide-toggle-track .slide-toggle-thumb::before)
+  content: "\f0ad"
+  font-family: var(--font-awesome)
+  color: black
+  font-weight: bold
+  font-size: var(--font-size-9)
+  position: absolute
+  top: 1px
+  right: 1px
+
 :global(.gas-mode-slider .slide-toggle-thumb)
+  position: relative
   width: var(--slide-toggle-thumb-width)
   height: var(--slide-toggle-thumb-height)
   border-radius: 100%
   background: var(--slide-toggle-thumb-color, white)
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.45)
-  text-align: center
+  text-align: top
   transition: margin-left var(--slide-toggle-transition-time) ease
 :global(.dnd5e2.sheet:is(.item, .actor):where(:not(.minimized)) > header > slide-toggle.gas-mode-slider .slide-toggle-thumb::before )
   content: "\f0ad"

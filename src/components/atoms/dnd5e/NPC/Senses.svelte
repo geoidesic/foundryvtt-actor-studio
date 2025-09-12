@@ -166,6 +166,22 @@
 
 <style lang="sass" scoped>
 .senses-container
+
+  input.sense-value
+    width: 50px
+    text-align: center
+    padding: 2px 4px
+    border: 1px solid var(--color-border-highlight, #007bff)
+    border-radius: 3px
+    background: var(--color-bg-primary, white)
+    color: var(--color-text-primary, #333)
+    font-size: inherit
+    font-family: inherit
+    
+    &:focus
+      outline: none
+      border-color: var(--color-border-highlight, #007bff)
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
   .sense-item
     display: flex
     align-items: center
@@ -181,10 +197,6 @@
       width: 50px
       text-align: center
       padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
       font-size: inherit
       font-family: inherit
       
