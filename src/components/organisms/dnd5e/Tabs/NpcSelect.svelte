@@ -193,10 +193,13 @@
     if (isReadOnly) return;
     const selected = await fromUuid(option);
     window.GAS.log.p('selected NPC', selected)
-    $selectedNpc = selected;
-    selectedNpcBase.set(selected);
-    active = option;
-    if (!value) value = option;
+  // Persist selection into the provided store and the global base store
+  selectedNpc.set(selected);
+  selectedNpcBase.set(selected);
+
+  // Keep local UI state in sync so it survives component remounts
+  active = option;
+  value = option;
     await tick();
     
     // Copy NPC stats (ability scores, hit points, armor class, etc.) to the in-memory actor
@@ -224,9 +227,10 @@
   });
 
   // Keep local selection in sync with globally persisted selection
-  $: if ($selectedNpcBase?.uuid && (!$selectedNpc || $selectedNpc?.uuid !== $selectedNpcBase.uuid)) {
-    // Use handler to normalize active/value and compute richHTML; safe to re-fetch
-    selectNpcHandler($selectedNpcBase.uuid);
+  // Mirror the canonical selection into local UI state so remounts keep the dropdown value
+  $: if ($selectedNpcBase?.uuid && value !== $selectedNpcBase.uuid) {
+    value = $selectedNpcBase.uuid;
+    active = $selectedNpcBase.uuid;
   }
   $: itemsArray = getItemsArray($selectedNpc?.items);
 
@@ -301,10 +305,10 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
         .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
         .flex3
           IconSearchSelect.icon-select(
-            {options}
-            {active}
-            {placeHolder}
-            handler="{selectNpcHandler}"
+            options="{options}"
+            active="{active}"
+            placeHolder="{placeHolder}"
+            handler!="{selectNpcHandler}"
             id="npc-select"
             bind:value="{value}"
             disabled="{isReadOnly}"
