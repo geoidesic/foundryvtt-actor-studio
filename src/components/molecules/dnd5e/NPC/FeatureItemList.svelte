@@ -20,6 +20,7 @@
   export let customStyles = '--gas-item-list-height: 40px'
 
   const actor = getContext("#doc");
+  import { actorInGame } from '~/src/stores/storeDefinitions';
 
   function capitalize(s) {
     try { return s ? (s.charAt(0).toUpperCase() + s.slice(1)) : ''; } catch (_) { return s || ''; }
@@ -61,8 +62,18 @@
     await deleteActorItem($actor, id);
   }
 
-  $: displayItems = items ? items : $actor.items;
-  $: whichDisplay = items ? 'items' : 'itemsFromActor';
+  // Prefer the live in-game actor's embedded items (actor.items) when available so
+  // list entries are the actual embedded Item Documents (with Actor-prefixed UUIDs).
+  // Use actor.items.contents when present (Collection -> array of documents).
+  // Fallback to the $actor store if the context provides a store instead.
+  // Prefer the in-memory actor (actorInGame) when present during the workflow.
+  // Otherwise prefer the live actor.items.contents if available, then fall back to actor snapshots.
+  $: displayItems = items
+    ? items
+    : ($actorInGame?.items?.contents ? $actorInGame.items.contents : (actor?.items?.contents ? actor.items.contents : (actor?.items ?? $actor?.items)));
+  $: whichDisplay = items
+    ? 'items'
+    : ($actorInGame?.items?.contents ? 'itemsFromActorInMemory' : (actor?.items?.contents ? 'itemsFromActorContents' : 'itemsFromActor'));
 
   function toArray(coll) {
     try {
@@ -156,6 +167,42 @@
     return maybeSort(uniq);
   })();
   $: itemsLength = Array.isArray(listItems) ? listItems.length : 0;
+
+  // Diagnostic logging: when the list changes, report the source and a few item metadata
+  $: if (typeof window !== 'undefined' && listItems) {
+    try {
+      const logger = window?.GAS?.log?.d || console.debug || (() => {});
+      logger(`[FeatureItemList] whichDisplay=${whichDisplay} count=${listItems.length}`);
+      // Log the first 10 items with key metadata so we can see if the UUIDs are actor-prefixed
+      const toLog = listItems.slice(0, 10).map((it, i) => ({
+        idx: i,
+        name: it?.name,
+        uuid: getStableUuid(it) || it?.uuid || null,
+        id: it?._id || it?.id || null,
+        hasSheet: !!it?.sheet,
+        isEmbedded: !!it?.isEmbedded || !!(actor?.items?.get?.(it?._id || it?.id)),
+        fromActorItems: !!actor?.items?.get?.(it?._id || it?.id)
+      }));
+      const qlog = window?.GAS?.log?.q || console.dir || (() => {});
+      qlog({ component: 'FeatureItemList', items: toLog });
+    } catch (_) {}
+  }
+
+  // Per-item render logging (emit each item's uuid once)
+  const _renderedItemUuids = new Set();
+  $: if (typeof window !== 'undefined' && listItems) {
+    try {
+      const qlog = window?.GAS?.log?.q || console.dir || (() => {});
+      for (let i = 0; i < listItems.length; i++) {
+        const it = listItems[i];
+        const uuid = getStableUuid(it) || it?.uuid || null;
+        if (!uuid) continue;
+        if (_renderedItemUuids.has(uuid)) continue;
+        _renderedItemUuids.add(uuid);
+        qlog({ rendered: { idx: i, name: it?.name, uuid, id: it?._id || it?.id || null } });
+      }
+    } catch (_) {}
+  }
 
   // --- Feature actions: Send to Chat & Roll ---
   async function sendItemToChat(it) {
@@ -252,41 +299,81 @@
     }
   }
 
+  // Ensure callers receive a live embedded Item document when available
+  function getLiveEmbeddedItem(it) {
+    try {
+      // If it's already a live Document with a sheet, return it
+      if (it?.sheet && typeof it.sheet.render === 'function') return it;
+
+      // Try by _id / id on the actor
+      const id = it?._id || it?.id;
+      if (id && actor?.items?.get) {
+        const doc = actor.items.get(id);
+        if (doc) return doc;
+      }
+
+      // Try by stable source uuid or flags
+      const src = it?.flags?.[MODULE_ID]?.sourceUuid || it?.flags?.core?.sourceId || it?.system?.sourceId || it?.uuid;
+      if (src && actor?.items) {
+        // If src looks like an unprefixed embedded uuid (Item.xxx), try actor-prefixed form first
+        try {
+          if (/^Item\.[A-Za-z0-9]+$/.test(src) && actor?.uuid) {
+            const actorPref = `${actor.uuid}.${src}`;
+            const byExact = actor.items.find(i => i?.uuid === actorPref);
+            if (byExact) return byExact;
+          }
+        } catch (_) {}
+
+        const bySrc = actor.items.find(i => (i.getFlag?.(MODULE_ID, 'sourceUuid') || i.flags?.core?.sourceId || i.system?.sourceId || i.uuid) === src);
+        if (bySrc) return bySrc;
+      }
+
+      // Fallback: match by name and type
+      if (it?.name && it?.type && actor?.items) {
+        const byName = actor.items.find(i => i.name === it.name && i.type === it.type);
+        if (byName) return byName;
+      }
+    } catch (_) {}
+    return it;
+  }
+
+  // ...logging handled in reactive script; no template inline calls required
+
 </script>
 
 <template lang="pug">
 ul.icon-list(style="{customStyles}")
   +if("itemsLength")
-  +each("listItems as item, idx")
-    li.left
-      .flexrow
-      .flexrow.relative
-        +if("showImage")
-          .flex0.relative.image.mr-sm
-            img.icon(src="{item.img}" alt="{item.name}")
-        +await("enrichHTML(uuidFromFlags ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.uuid ? '@UUID['+item.uuid+']' : item.link  || item.name)")
-          +then("Html")
-            .flex2.text {@html Html}
-        // Type badge (e.g., Spell / Feat)
-        +if("typeLabelOf(item)")
-          .flex0
-            span.type-badge {typeLabelOf(item)}
-        // Feature action buttons: chat + roll (optional)
-        +if("showActions")
-          .flex0
-            button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
-              i(class="fas fa-comment")
-          .flex0
-            button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
-              i(class="fas fa-dice-d20")
-        +if("extraAction")
-          .flex0
-            button.icon-button.mr-sm(type="button" title="{extraActionTitle || ''}" on:click!="{() => extraAction(item)}" aria-label="Extra Action")
-              i(class="{extraActionIcon || 'fas fa-bolt'}")
-        +if("trashable")
-          .flex0
-            button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
-              i(class="fas fa-trash")
+    +each("listItems as item, idx")
+      li.left
+        .flexrow
+          .flexrow.relative
+            +if("showImage")
+              .flex0.relative.image.mr-sm
+                img.icon(src="{item.img}" alt="{item.name}")
+            +await("enrichHTML(uuidFromFlags ? '@UUID['+item._source?.flags?.[MODULE_ID]?.sourceUuid+']{'+item.name+'}' : item.uuid ? '@UUID['+item.uuid+']' : item.link  || item.name)")
+              +then("Html")
+                .flex2.text {@html Html}
+            // Type badge (e.g., Spell / Feat)
+            +if("typeLabelOf(item)")
+              .flex0
+                span.type-badge {typeLabelOf(item)}
+            // Feature action buttons: chat + roll (optional)
+            +if("showActions")
+              .flex0
+                button.icon-button.mr-sm(type="button" title="Send to Chat" data-tooltip="Send to Chat" on:click!="{() => sendItemToChat(item)}" aria-label="Send to Chat")
+                  i(class="fas fa-comment")
+              .flex0
+                button.icon-button.mr-sm(type="button" title="Roll Feature" data-tooltip="Roll Feature" on:click!="{(ev) => rollFeatureAsAbility(item, ev)}" aria-label="Roll Feature")
+                  i(class="fas fa-dice-d20")
+            +if("extraAction")
+              .flex0
+                button.icon-button.mr-sm(type="button" title="{extraActionTitle || ''}" on:click!="{() => extraAction(getLiveEmbeddedItem(item))}" aria-label="Extra Action")
+                  i(class="{extraActionIcon || 'fas fa-bolt'}")
+            +if("trashable")
+              .flex0
+                button.icon-button.mr-sm(type="button" on:click!="{() => handleTrash(item.id)}" aria-label="Remove")
+                  i(class="fas fa-trash")
 </template>
 
 <style lang="sass" scoped>
