@@ -39,17 +39,41 @@
   let hasReached100Percent = false;
   $: if ($npcSelectProgress === 100) hasReached100Percent = true;
 
-  $: if (!hasReached100Percent) {
-    filteredTabs = [$npcTabs[0]]; // only show npc-select
-  } else {
-    // show first five tabs (npc-select, features, equipment, treasure, biography)
-    const firstFive = $npcTabs.slice(0, 5);
-    // append Stats tab only when actorInGame exists
-    if ($actorInGame) {
-      filteredTabs = [...firstFive, $npcTabs.find(t => t.id === 'npc-create')].filter(Boolean);
+  // Compute filteredTabs reactively without mutating the canonical `npcTabs` store.
+  // Hide the 'npc-features' tab reactively when the app has advanced to the Stats tab
+  // (npc-create) so UI and reactive flows stay compatible.
+  $: {
+  try {
+    const shouldHideFeatures = $activeTab === 'npc-create' || !!$actorInGame;
+    const baseTabs = Array.isArray($npcTabs) ? $npcTabs : [];
+    const visibleNpcTabs = baseTabs.filter(t => t && (!shouldHideFeatures || t.id !== 'npc-features'));
+
+    if (!hasReached100Percent) {
+      // Prefer the explicit npc-select tab if available
+      filteredTabs = [visibleNpcTabs.find(t => t && t.id === 'npc-select') || visibleNpcTabs[0]].filter(Boolean);
     } else {
-      filteredTabs = firstFive;
+      // show first five visible tabs (npc-select, features?, equipment, treasure, biography)
+      const firstFive = visibleNpcTabs.slice(0, 5);
+      // append Stats tab only when actorInGame exists
+      if ($actorInGame) {
+        // Only append the npc-create tab if it's not already present in the firstFive slice
+        const statsTab = visibleNpcTabs.find(t => t && t.id === 'npc-create');
+        const alreadyHasStats = firstFive.some(t => t && t.id === 'npc-create');
+        filteredTabs = alreadyHasStats ? firstFive : [...firstFive, statsTab].filter(Boolean);
+      } else {
+        filteredTabs = firstFive;
+      }
     }
+
+    // Diagnostics for runtime issues: log the key lists so you can paste them if the UI goes blank.
+    // Keep logs terse but informative.
+    console.log('[NPCAPP] visibleNpcTabs ids:', visibleNpcTabs.map(t => t && t.id));
+    console.log('[NPCAPP] filteredTabs ids:', filteredTabs.map(t => t && t.id));
+  } catch (e) {
+    console.error('[NPCAPP] Error computing filteredTabs:', e);
+    // Fallback to a safe minimal tab to avoid blank UI
+    filteredTabs = [{ id: 'npc-select', label: 'NpcSelect' }];
+  }
   }
   
   // Let the workflow handle navigation - no automatic redirects
