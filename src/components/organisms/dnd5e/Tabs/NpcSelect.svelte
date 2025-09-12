@@ -185,7 +185,12 @@
   $: html = $selectedNpc?.system?.details?.biography.value || "";
   let richHTML = "";
 
+  // Read-only state for this tab
+  $: isReadOnly = $readOnlyTabs.includes('npc-select');
+  $: readOnlyClass = isReadOnly ? 'read-only' : '';
+
   const selectNpcHandler = async (option) => {
+    if (isReadOnly) return;
     const selected = await fromUuid(option);
     window.GAS.log.p('selected NPC', selected)
     $selectedNpc = selected;
@@ -225,6 +230,13 @@
   }
   $: itemsArray = getItemsArray($selectedNpc?.items);
 
+  // Ensure the dropdown reflects the persisted selection in read-only mode
+  // without invoking the heavy select handler (which is guarded when read-only)
+  $: if (isReadOnly && $selectedNpcBase?.uuid) {
+    value = $selectedNpcBase.uuid;
+    active = $selectedNpcBase.uuid;
+  }
+
 
 
 
@@ -233,81 +245,91 @@
 <template lang="pug">
 StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
   div(slot="left")
-    //- Filter controls
-    .filter-section
-      .filter-header
-        h3 Filters
-        .filter-actions
-          +if("selectedType || selectedAlignment || selectedSize")
-            button.clear-filters(on:click!="{clearFilters}")
-              i.fas.fa-times
-          button.toggle-filters(on:click!="{() => showFilters = !showFilters}")
-            +if("showFilters")
-              i.fas.fa-chevron-up
-              +else()
-              i.fas.fa-chevron-down
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      //- Filter controls
+      .filter-section
+        .filter-header
+          h3 Filters
+          .filter-actions
+            +if("selectedType || selectedAlignment || selectedSize")
+              button.clear-filters(on:click!="{clearFilters}")
+                i.fas.fa-times
+            button.toggle-filters(on:click!="{() => showFilters = !showFilters}")
+              +if("showFilters")
+                i.fas.fa-chevron-up
+                +else()
+                i.fas.fa-chevron-down
+        
+        +if("showFilters")
+          .filter-controls
+            .filter-row
+              IconSelect.icon-select(
+                options="{typeOptions}"
+                placeHolder="Type"
+                handler!="{option => selectedType = option}"
+                id="type-filter"
+                bind:value="{selectedType}"
+              )
+              IconSelect.icon-select(
+                options="{alignmentOptions}"
+                placeHolder="Alignment"
+                handler!="{option => selectedAlignment = option}"
+                id="alignment-filter"
+                bind:value="{selectedAlignment}"
+              )
+              IconSelect.icon-select(
+                options="{sizeOptions}"
+                placeHolder="Size"
+                handler!="{option => selectedSize = option}"
+                id="size-filter"
+                bind:value="{selectedSize}"
+              )
+            
+            //- Debug info
+            //- +if("selectedType || selectedAlignment || selectedSize")
+            //-   .filter-debug
+            //-     .debug-info
+            //-       span Found {filteredOptions.length} of {itemDefinitions.length} NPCs
+            //-       +if("selectedType")
+            //-         span Type: {selectedType}
+            //-       +if("selectedAlignment")
+            //-         span Alignment: {selectedAlignment}
+            //-       +if("selectedSize")
+            //-         span Size: {selectedSize}
       
-      +if("showFilters")
-        .filter-controls
-          .filter-row
-            IconSelect.icon-select(
-              options="{typeOptions}"
-              placeHolder="Type"
-              handler!="{option => selectedType = option}"
-              id="type-filter"
-              bind:value="{selectedType}"
-            )
-            IconSelect.icon-select(
-              options="{alignmentOptions}"
-              placeHolder="Alignment"
-              handler!="{option => selectedAlignment = option}"
-              id="alignment-filter"
-              bind:value="{selectedAlignment}"
-            )
-            IconSelect.icon-select(
-              options="{sizeOptions}"
-              placeHolder="Size"
-              handler!="{option => selectedSize = option}"
-              id="size-filter"
-              bind:value="{selectedSize}"
-            )
-          
-          //- Debug info
-          //- +if("selectedType || selectedAlignment || selectedSize")
-          //-   .filter-debug
-          //-     .debug-info
-          //-       span Found {filteredOptions.length} of {itemDefinitions.length} NPCs
-          //-       +if("selectedType")
-          //-         span Type: {selectedType}
-          //-       +if("selectedAlignment")
-          //-         span Alignment: {selectedAlignment}
-          //-       +if("selectedSize")
-          //-         span Size: {selectedSize}
-    
-    .flexrow
-      .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
-      .flex3
-        IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectNpcHandler}" id="npc-select" bind:value)
-    
-    +if("$selectedNpc")
-      NPCStatBlock(
-        name="{$selectedNpc.name}"
-        npc="{$selectedNpc}"
-      )
+      .flexrow
+        .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
+        .flex3
+          IconSearchSelect.icon-select(
+            {options}
+            {active}
+            {placeHolder}
+            handler="{selectNpcHandler}"
+            id="npc-select"
+            bind:value="{value}"
+            disabled="{isReadOnly}"
+          )
+      
+      +if("$selectedNpc")
+        NPCStatBlock(
+          name="{$selectedNpc.name}"
+          npc="{$selectedNpc}"
+        )
 
-      +if("itemsArray?.length")
-        h3.mt-sm Features
-        FeatureItemList(items="{itemsArray}")
+        +if("itemsArray?.length")
+          h3.mt-sm Features
+          FeatureItemList(items="{itemsArray}")
 
   div(slot="right") 
-    //- pre {$actor.items.toArray()}
-    //- FeatureItemList(trashable="{true}")
-    //- pre item count {$actor?.items.size}
-    //- +if("$actor?.items.size > 0")
-    //-   +each("$actor?.items as item")
-    //-     pre {item.name}
-    +if("$selectedNpc")
-      div {@html richHTML ||  'No biography provided'}
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      //- pre {$actor.items.toArray()}
+      //- FeatureItemList(trashable="{true}")
+      //- pre item count {$actor?.items.size}
+      //- +if("$actor?.items.size > 0")
+      //-   +each("$actor?.items as item")
+      //-     pre {item.name}
+      +if("$selectedNpc")
+        div {@html richHTML ||  'No biography provided'}
 
 </template>
 
@@ -391,6 +413,10 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
 
   .mb-0
     margin-bottom: 0
+
+  // Read-only wrapper disables pointer events without hiding content
+  .content-wrapper.read-only
+    pointer-events: none
 
 
 

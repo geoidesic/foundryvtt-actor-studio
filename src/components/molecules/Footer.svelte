@@ -376,6 +376,15 @@
       
       // Mark as created
       $isActorCreated = true;
+
+      // Lock previous NPC tabs (1–5) as read-only now that we're on Stats (tab 6)
+      try {
+        const npcReadOnly = ['npc-select', 'npc-features', 'npc-equipment-shop', 'magic-items', 'npc-biography'];
+        readOnlyTabs.update(current => Array.from(new Set([...(current || []), ...npcReadOnly])));
+        console.log('[FOOTER] Set read-only tabs for NPC flow:', get(readOnlyTabs));
+      } catch (lockErr) {
+        console.warn('[FOOTER] Failed to set read-only tabs for NPC flow:', lockErr);
+      }
       
       // Show success notification
       ui.notifications?.info(`NPC "${createdActor.name}" created successfully!`);
@@ -422,7 +431,10 @@
   const goToNpcCreation = async () => {
     try {
       // Simply set the active tab to npc-create
-      activeTab.set('npc-create');
+  activeTab.set('npc-create');
+  // Set read-only for prior NPC tabs when entering Stats tab (even if actor not yet created)
+  const npcReadOnly = ['npc-select', 'npc-features', 'npc-equipment-shop', 'magic-items', 'npc-biography'];
+  readOnlyTabs.update(current => Array.from(new Set([...(current || []), ...npcReadOnly])));
     } catch (err) {
       window.GAS?.log?.e?.('[FOOTER] Failed to advance to NPC creation tab', err);
     }
@@ -884,7 +896,7 @@
                   button.mt-xs.wide(
                     type="button"
                     role="button"
-                    on:mousedown="{goToNpcCreation}"
+                    on:mousedown="{goToNpcEquipment}"
                   )
                     span {t('Footer.Next')}
                     i.right.ml-md(class="fas fa-chevron-right")

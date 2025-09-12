@@ -7,6 +7,7 @@
   // itemsFromActor is provided by context from NPCAppShell
   import { updateSource, getItemSourcesFromActor } from "~/src/helpers/Utility";
   import { getNPCWorkflowFSM, NPC_WORKFLOW_EVENTS } from "~/src/helpers/NPC/WorkflowStateMachine";
+  import { readOnlyTabs } from "~/src/stores/index";
 
   const actor = getContext("#doc");
   const npcWorkflowFSM = getContext("#npcWorkflowFSM");
@@ -16,6 +17,10 @@
   let value = null;
   let placeHolder = "Add a Feature...";
   let rightPanelItems = [];
+
+  // Read-only state for this tab
+  $: isReadOnly = $readOnlyTabs.includes('npc-features');
+  $: readOnlyClass = isReadOnly ? 'read-only' : '';
 
   const INDEX_KEY = `${MODULE_ID}-npc-feature-index-v1`;
 
@@ -232,6 +237,7 @@
   }
 
   async function selectFeatureHandler(uuid) {
+  if (isReadOnly) return;
     try {
       const item = await fromUuid(uuid);
       if (!item) return;
@@ -402,28 +408,32 @@
 <template lang="pug">
 StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
   div(slot="left")
-    .flexrow
-      .flex3
-        IconSearchSelect.icon-select(
-          {active} 
-          {placeHolder} 
-          options="{options}"
-          handler!="{selectFeatureHandler}" 
-          id="npc-feature-select" 
-          bind:value
-          enableEnrichment="{true}"
-        )
-      .flex0
-        button.icon-button.mr-sm(
-          type="button"
-          aria-label="Refresh NPC Features Index"
-          on:click!="{async () => { console.log('Manual rebuild clicked'); try { const { initializeNpcFeatureIndex, invalidateNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js'); invalidateNpcFeatureIndex(); initializeNpcFeatureIndex(); setTimeout(() => { options = loadIndexOptions(); }, 250); } catch (err) { console.error('Manual rebuild failed:', err); } }}"
-          title="Refresh NPC Features Index"
-        )
-          i(class="fas fa-sync")
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      .flexrow
+        .flex3
+          IconSearchSelect.icon-select(
+            {active} 
+            {placeHolder} 
+            options="{options}"
+            handler!="{selectFeatureHandler}" 
+            id="npc-feature-select" 
+            bind:value
+            enableEnrichment="{true}"
+            disabled="{isReadOnly}"
+          )
+        .flex0
+          button.icon-button.mr-sm(
+            type="button"
+            aria-label="Refresh NPC Features Index"
+            on:click!="{async () => { if (isReadOnly) return; console.log('Manual rebuild clicked'); try { const { initializeNpcFeatureIndex, invalidateNpcFeatureIndex } = await import('~/src/hooks/npcIndex.js'); invalidateNpcFeatureIndex(); initializeNpcFeatureIndex(); setTimeout(() => { options = loadIndexOptions(); }, 250); } catch (err) { console.error('Manual rebuild failed:', err); } }}"
+            title="Refresh NPC Features Index"
+            disabled="{isReadOnly}"
+          )
+            i(class="fas fa-sync")
   
   div(slot="right")
-    FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}")
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      FeatureItemList(trashable="{!isReadOnly}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}")
 </template>
 
 <style lang="sass" scoped>
@@ -444,5 +454,9 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
   font-style: italic
 
 // Reuse the shared icon-button look used elsewhere
+
+// Read-only wrapper disables pointer events without hiding content
+.content-wrapper.read-only
+  pointer-events: none
 </style>
 

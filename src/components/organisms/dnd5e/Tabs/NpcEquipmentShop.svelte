@@ -20,6 +20,7 @@
   let loading = true;
 
   $: isDisabled = $readOnlyTabs.includes('npc-equipment-shop');
+  $: readOnlyClass = isDisabled ? 'read-only' : '';
 
   // Update cart items whenever shopCart changes
   $: {
@@ -173,7 +174,7 @@
   showTitle={true}
   tabName="npc-equipment-shop"
 >
-  <div slot="left" class="shop-left-panel">
+  <div slot="left" class="shop-left-panel content-wrapper {readOnlyClass}" aria-disabled={isDisabled}>
     {#if isDisabled}
       <div class="info-message">{t('Shop.ShopReadOnly')}</div>
     {/if}
@@ -214,7 +215,7 @@
     </div>
   </div>
 
-  <div slot="right" class="shop-right-panel">
+  <div slot="right" class="shop-right-panel content-wrapper {readOnlyClass}" aria-disabled={isDisabled}>
     <h3>Available Equipment</h3>
     
     <!-- Keyword Filter Input -->
@@ -297,6 +298,10 @@
     padding: 1rem
     background: rgba(0, 0, 0, 0.05)
     border-radius: var(--border-radius)
+
+  // Read-only wrapper disables pointer events without hiding content
+  .content-wrapper.read-only
+    pointer-events: none
 
   .shop-left-panel
     display: flex

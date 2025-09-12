@@ -6,6 +6,7 @@
   import NPCCurrencyDisplay from "~/src/components/molecules/dnd5e/NPC/NPCCurrencyDisplay.svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { selectedNpcBase, magicItemsState, npcCurrency } from "~/src/stores/index";
+  import { readOnlyTabs } from "~/src/stores/index";
   import { autoRollGold } from "~/src/stores/npc";
 
   const actor = getContext("#doc");
@@ -15,6 +16,8 @@
   
   // Magic item generation state
   let isGeneratingMagicItems = false;
+  $: isReadOnly = $readOnlyTabs.includes('magic-items');
+  $: readOnlyClass = isReadOnly ? 'read-only' : '';
   
   // Local party level for hoard generation - initialize from store
   let localPartyLevel = $magicItemsState.partyLevel;
@@ -51,6 +54,7 @@
 
   // Magic item generation functions
   async function generateIndividualMagicItems() {
+  if (isReadOnly) return;
     console.log('=== GENERATE INDIVIDUAL MAGIC ITEMS START ===');
     console.log('Generating individual magic items');
     console.log('Equipment packs available:', equipmentPacks.length);
@@ -128,6 +132,7 @@
   }
 
   async function generateHoardMagicItems() {
+  if (isReadOnly) return;
     console.log('Generating hoard magic items for level:', $magicItemsState.partyLevel);
     console.log('Equipment packs available:', equipmentPacks.length);
     
@@ -163,6 +168,7 @@
   }
 
   function clearGeneratedMagicItems() {
+  if (isReadOnly) return;
     $magicItemsState.generatedMagicItems = [];
   }
 
@@ -223,27 +229,30 @@
 <template lang="pug">
 StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-items")
   div(slot="left")
-    .generation-section
-      h3 Generation Type
-      
-      .generation-type-selector
-        .radio-group
-          input#hoard-type(
-            type="radio" 
-            name="generationType" 
-            value="hoard" 
-            bind:group="{$magicItemsState.generationType}"
-          )
-          label(for="hoard-type") Hoard Generation
-          
-        .radio-group
-          input#individual-type(
-            type="radio" 
-            name="generationType" 
-            value="individual" 
-            bind:group="{$magicItemsState.generationType}"
-          )
-          label(for="individual-type") Individual Monster
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      .generation-section
+        h3 Generation Type
+        
+        .generation-type-selector
+          .radio-group
+            input#hoard-type(
+              type="radio" 
+              name="generationType" 
+              value="hoard" 
+              bind:group="{$magicItemsState.generationType}"
+              disabled="{isReadOnly}"
+            )
+            label(for="hoard-type") Hoard Generation
+            
+          .radio-group
+            input#individual-type(
+              type="radio" 
+              name="generationType" 
+              value="individual" 
+              bind:group="{$magicItemsState.generationType}"
+              disabled="{isReadOnly}"
+            )
+            label(for="individual-type") Individual Monster
 
       //- Hoard Generation Controls
       +if("$magicItemsState.generationType === 'hoard'")
@@ -269,7 +278,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
             .generation-button
               button.generate-hoard-btn(
                 on:click!="{generateHoardMagicItems}"
-                disabled="{isGeneratingMagicItems || !equipmentPacks.length}"
+                disabled="{isReadOnly || isGeneratingMagicItems || !equipmentPacks.length}"
                 title="Generate magic items for levels {localPartyLevel === 1 ? '1-4' : localPartyLevel === 5 ? '5-10' : localPartyLevel === 11 ? '11-16' : '17+'} hoard"
               )
                 +if("isGeneratingMagicItems")
@@ -298,7 +307,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
               .generation-button
                 button.generate-individual-btn(
                   on:click!="{generateIndividualMagicItems}"
-                  disabled="{isGeneratingMagicItems || !equipmentPacks.length}"
+                  disabled="{isReadOnly || isGeneratingMagicItems || !equipmentPacks.length}"
                   title="Generate magic items based on {$magicItemsState.manualNpcName}'s CR"
                 )
                   +if("isGeneratingMagicItems")
@@ -339,7 +348,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
                       .generation-button
                         button.generate-manual-btn(
                           on:click!="{generateIndividualMagicItems}"
-                          disabled="{isGeneratingMagicItems || !equipmentPacks.length}"
+                          disabled="{isReadOnly || isGeneratingMagicItems || !equipmentPacks.length}"
                           title="Generate magic items for manually entered NPC"
                         )
                           +if("isGeneratingMagicItems")
@@ -349,7 +358,7 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
                           span Generate for {$magicItemsState.manualNpcName}
 
       //- Equipment Pack Status
-      .equipment-packs-status
+  .equipment-packs-status
         h4 Equipment Sources
         +if("equipmentPacks.length > 0")
           .packs-list
@@ -378,14 +387,15 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
         //-   ) Test State
 
   div(slot="right")
-    MagicItemDisplay(
-      magicItems="{$magicItemsState.generatedMagicItems}"
-      title="Magic Items"
-      showAddButtons="{true}"
-      on:regenerate="{handleRegenerate}"
-      on:itemAdded!="{handleItemAdded}"
-      on:itemRemoved!="{handleItemRemoved}"
-    )
+    .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
+      MagicItemDisplay(
+        magicItems="{$magicItemsState.generatedMagicItems}"
+        title="Magic Items"
+        showAddButtons="{!isReadOnly}"
+        on:regenerate="{handleRegenerate}"
+        on:itemAdded!="{handleItemAdded}"
+        on:itemRemoved!="{handleItemRemoved}"
+      )
 
 </template>
 
@@ -396,6 +406,9 @@ StandardTabLayout(title="Treasure Generation" showTitle="true" tabName="magic-it
     border-radius: 8px
     border: 1px solid rgba(255, 255, 255, 0.1)
 
+  // Read-only wrapper disables pointer events without hiding content
+  .content-wrapper.read-only
+    pointer-events: none
     h3
       margin-top: 0
       margin-bottom: 1.5rem

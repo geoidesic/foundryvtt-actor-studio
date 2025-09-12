@@ -6,8 +6,12 @@
   import { TreasureCategoryMapper } from "~/src/helpers/TreasureCategoryMapper";
   import ProseMirror from "~/src/components/molecules/ProseMirror.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { readOnlyTabs } from "~/src/stores/index";
 
   const actor = getContext("#doc");
+  // Read-only state for this tab
+  $: isReadOnly = $readOnlyTabs.includes('npc-biography');
+  $: readOnlyClass = isReadOnly ? 'read-only' : '';
 
   // Parent can pass a truthy `sheet` value when this component is used inside an actor sheet.
   export let sheet = false;
@@ -194,6 +198,7 @@
 
   // Update functions
   async function updateIdeal() {
+  if (isReadOnly) return;
     if ($actor) {
       console.log('updateIdeal called with:', localIdeal);
       await updateSource($actor, { 'system.details.ideal': localIdeal });
@@ -202,6 +207,7 @@
   }
 
   async function updateBond() {
+  if (isReadOnly) return;
     if ($actor) {
       console.log('updateBond called with:', localBond);
       await updateSource($actor, { 'system.details.bond': localBond });
@@ -210,6 +216,7 @@
   }
 
   async function updateFlaw() {
+  if (isReadOnly) return;
     if ($actor) {
       await updateSource($actor, { 'system.details.flaw': localFlaw });
       editingFlaw = false;
@@ -217,6 +224,7 @@
   }
 
   async function updateAlignment() {
+  if (isReadOnly) return;
     if ($actor) {
       await updateSource($actor, { 'system.details.alignment': localAlignment });
       editingAlignment = false;
@@ -224,6 +232,7 @@
   }
 
   async function updateType() {
+  if (isReadOnly) return;
     if ($actor) {
       await updateSource($actor, { 'system.details.type.value': localType });
       editingType = false;
@@ -232,6 +241,7 @@
 
 
   async function updateTreasure() {
+  if (isReadOnly) return;
     if ($actor) {
       await updateSource($actor, { 'system.details.treasure.value': Array.from(localTreasure) });
       editingTreasure = false;
@@ -239,6 +249,7 @@
   }
 
   async function updateHabitat() {
+  if (isReadOnly) return;
     if ($actor) {
       await updateSource($actor, { 'system.details.habitat.value': localHabitat });
       editingHabitat = false;
@@ -246,6 +257,7 @@
   }
 
   function toggleTreasureCategory(category) {
+  if (isReadOnly) return;
     if (localTreasure.has(category)) {
       localTreasure.delete(category);
     } else {
@@ -255,16 +267,19 @@
   }
 
   function addHabitatType() {
+  if (isReadOnly) return;
     if (localHabitat.length < 3) { // Limit to 3 habitat types
       localHabitat = [...localHabitat, { type: "forest", subtype: "" }];
     }
   }
 
   function removeHabitatType(index) {
+  if (isReadOnly) return;
     localHabitat = localHabitat.filter((_, i) => i !== index);
   }
 
   function updateHabitatType(index, field, value) {
+  if (isReadOnly) return;
     localHabitat[index][field] = value;
     localHabitat = [...localHabitat]; // Trigger reactivity
   }
@@ -297,10 +312,10 @@
 <template lang="pug">
 StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography")
   div(slot="left")
-    .biography-section
+    .biography-section.content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
       .detail-row
         label Ideal
-        +if("editingIdeal")
+        +if("editingIdeal && !isReadOnly")
           .edit-controls(bind:this="{idealContainer}")
             input(
               type="text"
@@ -309,13 +324,13 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingIdeal")
           .display-value(
-            on:click|stopPropagation!="{() => editingIdeal = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingIdeal = true; }}"
             class!="{!localIdeal ? 'empty' : ''}"
           ) {localIdeal || 'Click to add ideal'}
 
       .detail-row
         label Bond
-        +if("editingBond")
+        +if("editingBond && !isReadOnly")
           .edit-controls(bind:this="{bondContainer}")
             input(
               type="text"
@@ -324,13 +339,13 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingBond")
           .display-value(
-            on:click|stopPropagation!="{() => editingBond = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingBond = true; }}"
             class!="{!localBond ? 'empty' : ''}"
           ) {localBond || 'Click to add bond'}
 
       .detail-row
         label Flaw
-        +if("editingFlaw")
+        +if("editingFlaw && !isReadOnly")
           .edit-controls(bind:this="{flawContainer}")
             input(
               type="text"
@@ -339,13 +354,13 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
             )
         +if("!editingFlaw")
           .display-value(
-            on:click|stopPropagation!="{() => editingFlaw = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingFlaw = true; }}"
             class!="{!localFlaw ? 'empty' : ''}"
           ) {localFlaw || 'Click to add flaw'}
 
       .detail-row
         label Alignment
-        +if("editingAlignment")
+        +if("editingAlignment && !isReadOnly")
           .edit-controls(bind:this="{alignmentContainer}")
             select(
               bind:value="{localAlignment}"
@@ -363,13 +378,13 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
               option(value="Chaotic Evil") Chaotic Evil
         +if("!editingAlignment")
           .display-value(
-            on:click|stopPropagation!="{() => editingAlignment = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingAlignment = true; }}"
             class!="{!localAlignment ? 'empty' : ''}"
           ) {localAlignment || 'Click to set alignment'}
 
       .detail-row
         label Type
-        +if("editingType")
+        +if("editingType && !isReadOnly")
           .edit-controls(bind:this="{typeContainer}")
             select(
               bind:value="{localType}"
@@ -379,7 +394,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
                 option(value="{type}") {type.charAt(0).toUpperCase() + type.slice(1)}
         +if("!editingType")
           .display-value(
-            on:click|stopPropagation!="{() => editingType = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingType = true; }}"
             class!="{!localType ? 'empty' : ''}"
           ) {localType ? localType.charAt(0).toUpperCase() + localType.slice(1) : 'Click to set type'}
 
@@ -387,7 +402,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
 
       .detail-row
         label Treasure Categories
-        +if("editingTreasure")
+        +if("editingTreasure && !isReadOnly")
           .edit-controls(bind:this="{treasureContainer}")
             .treasure-checkboxes
               +each("treasureCategories as category")
@@ -402,7 +417,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
               button.save-btn(on:click!="{updateTreasure}") Save
         +if("!editingTreasure")
           .display-value(
-            on:click|stopPropagation!="{() => editingTreasure = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingTreasure = true; }}"
             class!="{localTreasure.size === 0 ? 'empty' : ''}"
           )
             +if("localTreasure.size > 0")
@@ -417,7 +432,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
 
       .detail-row
         label Habitat
-        +if("editingHabitat")
+        +if("editingHabitat && !isReadOnly")
           .edit-controls(bind:this="{habitatContainer}")
             .habitat-controls
               +each("localHabitat as habitat, index")
@@ -444,7 +459,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
               button.save-btn(on:click!="{updateHabitat}") Save
         +if("!editingHabitat")
           .display-value(
-            on:click|stopPropagation!="{() => editingHabitat = true}"
+            on:click|stopPropagation!="{() => { if (!isReadOnly) editingHabitat = true; }}"
             class!="{localHabitat.length === 0 ? 'empty' : ''}"
           )
             +if("localHabitat.length > 0")
@@ -461,48 +476,54 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
               input(
                 type="checkbox"
                 checked="{moduleFlags.enableRandomGold}"
-                on:change!="{() => { moduleFlags.enableRandomGold = !moduleFlags.enableRandomGold; saveModuleFlags(); }}"
+                on:change!="{() => { if (isReadOnly) return; moduleFlags.enableRandomGold = !moduleFlags.enableRandomGold; saveModuleFlags(); }}"
+                disabled="{isReadOnly}"
               )
               span Enable Random Gold
             label.checkbox-label
               input(
                 type="checkbox"
                 checked="{moduleFlags.enableMagicItemRoll}"
-                on:change!="{() => { moduleFlags.enableMagicItemRoll = !moduleFlags.enableMagicItemRoll; saveModuleFlags(); }}"
+                on:change!="{() => { if (isReadOnly) return; moduleFlags.enableMagicItemRoll = !moduleFlags.enableMagicItemRoll; saveModuleFlags(); }}"
+                disabled="{isReadOnly}"
               )
               span Enable Magic Item Roll
             label.checkbox-label
               input(
                 type="checkbox"
                 checked="{moduleFlags.rollHP}"
-                on:change!="{() => { moduleFlags.rollHP = !moduleFlags.rollHP; saveModuleFlags(); }}"
+                on:change!="{() => { if (isReadOnly) return; moduleFlags.rollHP = !moduleFlags.rollHP; saveModuleFlags(); }}"
+                disabled="{isReadOnly}"
               )
               span Roll HP
             label.checkbox-label
               input(
                 type="checkbox"
                 checked="{moduleFlags.randomizeArt}"
-                on:change!="{() => { moduleFlags.randomizeArt = !moduleFlags.randomizeArt; saveModuleFlags(); }}"
+                on:change!="{() => { if (isReadOnly) return; moduleFlags.randomizeArt = !moduleFlags.randomizeArt; saveModuleFlags(); }}"
+                disabled="{isReadOnly}"
               )
               span Randomize Art
             label.checkbox-label
               input(
                 type="checkbox"
                 checked="{moduleFlags.enableBioVariance}"
-                on:change!="{() => { moduleFlags.enableBioVariance = !moduleFlags.enableBioVariance; saveModuleFlags(); }}"
+                on:change!="{() => { if (isReadOnly) return; moduleFlags.enableBioVariance = !moduleFlags.enableBioVariance; saveModuleFlags(); }}"
+                disabled="{isReadOnly}"
               )
               span Enable Bio Variance
 
 
 
   div(slot="right")
-    .biography-content
+    .biography-content.content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
       .biography-section
         h3 GM Description
         ProseMirror(
           attr="system.details.biography.value"
           classes="biography-editor"
           inMemory="true"
+          editable="{!isReadOnly}"
         )
       .biography-section
         h3 Player Description
@@ -510,6 +531,7 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
           attr="system.details.biography.public"
           classes="biography-editor"
           inMemory="true"
+          editable="{!isReadOnly}"
         )
       
 </template>
@@ -725,4 +747,8 @@ StandardTabLayout(title="NPC Biography" showTitle="true" tabName="npc-biography"
   
   p
     margin-bottom: 1rem
+
+// Read-only wrapper disables pointer events without hiding content
+.content-wrapper.read-only
+  pointer-events: none
 </style>
