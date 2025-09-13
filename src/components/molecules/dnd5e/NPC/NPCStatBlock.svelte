@@ -2,7 +2,7 @@
   import { TJSDialog } from "@typhonjs-fvtt/runtime/svelte/application";
   import { getContext } from "svelte";
   import { CRCalculator } from "~/src/helpers/CRCalculator.js";
-  import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR } from "~/src/helpers/Utility";
+  import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR, localize as t } from "~/src/helpers/Utility";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
@@ -14,7 +14,6 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
   import CRCalculatorDialog from "~/src/components/molecules/dnd5e/NPC/CRCalculatorDialog.svelte";
-  import CRRetargeter from "~/src/helpers/CRRetargeter";
 
   export let name;
   export let npc; 
@@ -551,83 +550,6 @@
     return Number.isFinite(n) ? n : (npc?.system?.details?.cr ?? 0);
   }
 
-  async function updateActorCR(value) {
-    if (!$actor) return;
-    const targetCR = parseCRInput(value);
-    try {
-      // Build the TJSDialog with footer buttons (Cancel / Apply). Apply disabled until a CR is selected in content.
-      let readyPayload = null; // { targetCR, updates, hp, ac, xp, affected, summary }
-
-      const dialog = new TJSDialog({
-        title: 'Retarget Challenge Rating',
-        draggable: false,
-        minimizable: false,
-        modal: true,
-        buttons: {
-          cancel: {
-            icon: 'fas fa-times',
-            label: 'Cancel',
-            onPress: ({ application }) => { /* resolves false by default */ }
-          },
-          apply: {
-            icon: 'fas fa-check',
-            label: 'Apply',
-            disabled: true,
-            autoClose: false,
-            onPress: async ({ application }) => {
-              try {
-                if (!readyPayload) return; // nothing selected yet
-                const { updates, targetCR: newCR, hp: hpNew, ac: acNew, xp: xpNew } = readyPayload;
-                await $actor.update(updates);
-                // Sync local reactive fields
-                if (npc?.system?.details) {
-                  npc.system.details.cr = newCR;
-                  if (npc.system.details.xp) npc.system.details.xp.value = xpNew;
-                }
-                if (npc?.system?.attributes?.hp) {
-                  npc.system.attributes.hp.value = hpNew ?? npc.system.attributes.hp.value;
-                  npc.system.attributes.hp.max = hpNew ?? npc.system.attributes.hp.max;
-                }
-                if (npc?.system?.attributes?.ac) {
-                  npc.system.attributes.ac.value = acNew ?? npc.system.attributes.ac.value;
-                }
-                ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(newCR)} to actor.`);
-                application.managedPromise.resolve(true);
-                await application.close();
-              } catch (err) {
-                console.error('Failed to apply CR updates:', err);
-                ui.notifications?.error?.('Failed to apply CR changes.');
-              }
-            }
-          }
-        },
-        content: {
-          class: CRCalculatorDialog,
-          props: {
-            initialCR: CRCalculator.formatCR(targetCR),
-            hp: npc?.system?.attributes?.hp?.max ?? npc?.system?.attributes?.hp?.value ?? 0,
-            ac: npc?.system?.attributes?.ac?.value ?? 10,
-            xp: xpForCR(targetCR),
-            affected: 0,
-            summary: '',
-            updates: null,
-            onReady: ({ targetCR, updates, hp, ac, xp, affected, summary }) => {
-              readyPayload = { targetCR, updates, hp, ac, xp, affected, summary };
-              // enable Apply button when ready
-              dialog.data.set('buttons.apply.disabled', false);
-            }
-          }
-        },
-        default: 'cancel'
-      });
-
-      const tjsResult = await dialog.wait();
-      if (!tjsResult) return; // cancelled
-    } catch (error) {
-      console.error('Failed to retarget CR:', error);
-      ui.notifications?.error?.('Failed to retarget CR.');
-    }
-  }
 
   async function updateActorXP(value) {
     if ($actor) {
@@ -641,36 +563,6 @@
     }
   }
 
-  // Small helper to show a Foundry Dialog with an editable CR input and return the entered value
-  function promptForCR({ title = 'Retarget Challenge Rating', content = '', defaultCR = '', classes = [] } = {}) {
-    return new Promise(resolve => {
-      const body = `
-        <div class="gas-retarget-dialog ${classes.join(' ')}">
-          <div class="gas-retarget-content">${content}</div>
-          <div class="gas-retarget-form">
-            <label>Target CR: <input type="text" name="targetCR" value="${defaultCR}" /></label>
-          </div>
-        </div>`;
-
-      const d = new Dialog({
-        title,
-        content: body,
-        buttons: {
-          apply: { label: 'Apply changes', callback: html => {
-            const input = html.querySelector('input[name="targetCR"]');
-            const crVal = input?.value?.trim();
-            const parsed = (crVal && !isNaN(Number(crVal))) ? Number(crVal) : null;
-            resolve({ confirmed: true, cr: parsed });
-          }},
-          cancel: { label: 'Cancel', callback: () => resolve({ confirmed: false }) }
-        },
-        default: 'apply',
-        classes
-      });
-
-      d.render(true);
-    });
-  }
 
 
   async function updateActorProficiencyBonus(value) {
@@ -836,12 +728,14 @@
     }
   }
 
-  async function openCRDialog(props) {
+  async function openCRDialog(title, props) {
     const result = await TJSDialog.prompt({
-        title: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Title') : 'CR Calculator',
-        draggable: false,
+        title,
+        draggable: true,
         minimizable: false,
         modal: true,
+        label: 'Ok',
+        onOk: () => 'OK',
         content: {
           class: CRCalculatorDialog,
           props: {
@@ -868,7 +762,6 @@
             finalRule: props.finalRule
           }
         },
-        label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR'
       }, { classes: ['tjs-actor-studio'] });
       return result
   }
@@ -912,7 +805,7 @@
     // Open Svelte-based dialog with Apply button using TJSDialog.prompt
     try {
       
-      const result = await openCRDialog({
+      const result = await openCRDialog(t('CRCalculator.Title'), {
         defensive,
         offensive,
         finalCR,
