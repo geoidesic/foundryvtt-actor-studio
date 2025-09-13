@@ -14,6 +14,8 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
   import CRCalculatorDialog from "~/src/components/molecules/dnd5e/NPC/CRCalculatorDialog.svelte";
+  import CRRetargeter from "~/src/helpers/CRRetargeter";
+  import CRRetargetDialog from "~/src/components/molecules/dnd5e/NPC/CRRetargetDialog.svelte";
 
   export let name;
   export let npc; 
@@ -539,15 +541,92 @@
     }
   }
 
+  function parseCRInput(val) {
+    if (typeof val === 'number') return val;
+    const s = String(val).trim();
+    if (s.includes('/')) {
+      const [a, b] = s.split('/').map(Number);
+      if (a && b) return a / b;
+    }
+    const n = Number(s);
+    return Number.isFinite(n) ? n : (npc?.system?.details?.cr ?? 0);
+  }
+
   async function updateActorCR(value) {
-    if ($actor) {
-      try {
-        await updateSource($actor, { 'system.details.cr': value });
-        // Also update the local npc object for reactivity
-        if (npc?.system?.details) npc.system.details.cr = value;
-      } catch (error) {
-        console.error('Failed to update actor CR:', error);
-      }
+    if (!$actor) return;
+    const targetCR = parseCRInput(value);
+    try {
+      // Build the TJSDialog with footer buttons (Cancel / Apply). Apply disabled until a CR is selected in content.
+      let readyPayload = null; // { targetCR, updates, hp, ac, xp, affected, summary }
+
+      const dialog = new TJSDialog({
+        title: 'Retarget Challenge Rating',
+        draggable: false,
+        minimizable: false,
+        modal: true,
+        buttons: {
+          cancel: {
+            icon: 'fas fa-times',
+            label: 'Cancel',
+            onPress: ({ application }) => { /* resolves false by default */ }
+          },
+          apply: {
+            icon: 'fas fa-check',
+            label: 'Apply',
+            disabled: true,
+            autoClose: false,
+            onPress: async ({ application }) => {
+              try {
+                if (!readyPayload) return; // nothing selected yet
+                const { updates, targetCR: newCR, hp: hpNew, ac: acNew, xp: xpNew } = readyPayload;
+                await $actor.update(updates);
+                // Sync local reactive fields
+                if (npc?.system?.details) {
+                  npc.system.details.cr = newCR;
+                  if (npc.system.details.xp) npc.system.details.xp.value = xpNew;
+                }
+                if (npc?.system?.attributes?.hp) {
+                  npc.system.attributes.hp.value = hpNew ?? npc.system.attributes.hp.value;
+                  npc.system.attributes.hp.max = hpNew ?? npc.system.attributes.hp.max;
+                }
+                if (npc?.system?.attributes?.ac) {
+                  npc.system.attributes.ac.value = acNew ?? npc.system.attributes.ac.value;
+                }
+                ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(newCR)} to actor.`);
+                application.managedPromise.resolve(true);
+                await application.close();
+              } catch (err) {
+                console.error('Failed to apply CR updates:', err);
+                ui.notifications?.error?.('Failed to apply CR changes.');
+              }
+            }
+          }
+        },
+        content: {
+          class: CRRetargetDialog,
+          props: {
+            initialCR: CRCalculator.formatCR(targetCR),
+            hp: npc?.system?.attributes?.hp?.max ?? npc?.system?.attributes?.hp?.value ?? 0,
+            ac: npc?.system?.attributes?.ac?.value ?? 10,
+            xp: xpForCR(targetCR),
+            affected: 0,
+            summary: '',
+            updates: null,
+            onReady: ({ targetCR, updates, hp, ac, xp, affected, summary }) => {
+              readyPayload = { targetCR, updates, hp, ac, xp, affected, summary };
+              // enable Apply button when ready
+              dialog.data.set('buttons.apply.disabled', false);
+            }
+          }
+        },
+        default: 'cancel'
+      });
+
+      const tjsResult = await dialog.wait();
+      if (!tjsResult) return; // cancelled
+    } catch (error) {
+      console.error('Failed to retarget CR:', error);
+      ui.notifications?.error?.('Failed to retarget CR.');
     }
   }
 
@@ -561,6 +640,37 @@
         console.error('Failed to update actor XP:', error);
       }
     }
+  }
+
+  // Small helper to show a Foundry Dialog with an editable CR input and return the entered value
+  function promptForCR({ title = 'Retarget Challenge Rating', content = '', defaultCR = '', classes = [] } = {}) {
+    return new Promise(resolve => {
+      const body = `
+        <div class="gas-retarget-dialog ${classes.join(' ')}">
+          <div class="gas-retarget-content">${content}</div>
+          <div class="gas-retarget-form">
+            <label>Target CR: <input type="text" name="targetCR" value="${defaultCR}" /></label>
+          </div>
+        </div>`;
+
+      const d = new Dialog({
+        title,
+        content: body,
+        buttons: {
+          apply: { label: 'Apply changes', callback: html => {
+            const input = html.querySelector('input[name="targetCR"]');
+            const crVal = input?.value?.trim();
+            const parsed = (crVal && !isNaN(Number(crVal))) ? Number(crVal) : null;
+            resolve({ confirmed: true, cr: parsed });
+          }},
+          cancel: { label: 'Cancel', callback: () => resolve({ confirmed: false }) }
+        },
+        default: 'apply',
+        classes
+      });
+
+      d.render(true);
+    });
   }
 
 
@@ -901,21 +1011,22 @@
       .flex1
         .label.inline Challenge 
         .value.nowrap
-          EditableValue(
-            value="{crValue}"
-            readonly="{readonly}"
-            onSave!="{val => updateActorCR(val)}"
-            placeholder="1"
+          // When clicking the CR value, open the retarget dialog (unless readonly).
+          span.cr-click-area(
+            role="button"
+            tabindex="0"
+            on:click!="{() => { if (!readonly) updateActorCR(crValue); }}"
+            on:keydown!="{e => e.key === 'Enter' && !readonly && updateActorCR(crValue)}"
+            title="Click to retarget CR"
           )
+            EditableValue(
+              value="{crValue}"
+              readonly="{readonly}"
+              onSave!="{val => updateActorCR(val)}"
+              placeholder="1"
+            )
           span  (
-          EditableValue(
-            value="{xpValue}"
-            type="number"
-            readonly="{readonly}"
-            onSave!="{val => updateActorXP(val)}"
-            placeholder="200"
-          )
-          span  XP )
+          span {xp.toLocaleString()} XP )
       
       +if("enableCrCalculator && !readonly")
         .flex0

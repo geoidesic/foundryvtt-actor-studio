@@ -79,15 +79,18 @@
   cursor: default
   padding: 2px 4px
   border-radius: 3px
-  transition: background-color 0.2s ease
+  transition: background-color 0.2s ease, border-color 0.15s ease
   color: var(--color-text-primary, #333)
+  // Reserve border space to avoid layout shift on hover
+  border: 1px solid transparent
+  box-sizing: border-box
   
   &.editable
     cursor: pointer
     
     &:hover
       background-color: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
-      border: 1px solid var(--color-border-highlight, #007bff)
+      border-color: var(--color-border-highlight, #007bff)
 
 .editable-input
   width: 100%

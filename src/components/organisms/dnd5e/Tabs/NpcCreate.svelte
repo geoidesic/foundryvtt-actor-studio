@@ -108,10 +108,10 @@
 
 <template lang="pug">
 StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
-  div(slot="left")
+  div(slot="right")
     FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}" extraAction="{openFeatureEditor}" extraActionIcon="{'fas fa-edit'}" extraActionTitle="{'Edit Feature'}")
   
-  div(slot="right")
+  div(slot="left")
     // CR Adjustment Tool
     //- CRAdjuster(
     //-   actor="{$actor}"
@@ -119,7 +119,6 @@ StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
     //-   on:crAdjusted="{handleCRAdjusted}"
     //- )
     
-    hr.my-md
     
     // NPC Stat Block
     NPCStatBlock(
