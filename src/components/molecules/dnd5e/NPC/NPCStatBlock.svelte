@@ -15,7 +15,6 @@
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
   import CRCalculatorDialog from "~/src/components/molecules/dnd5e/NPC/CRCalculatorDialog.svelte";
   import CRRetargeter from "~/src/helpers/CRRetargeter";
-  import CRRetargetDialog from "~/src/components/molecules/dnd5e/NPC/CRRetargetDialog.svelte";
 
   export let name;
   export let npc; 
@@ -603,7 +602,7 @@
           }
         },
         content: {
-          class: CRRetargetDialog,
+          class: CRCalculatorDialog,
           props: {
             initialCR: CRCalculator.formatCR(targetCR),
             hp: npc?.system?.attributes?.hp?.max ?? npc?.system?.attributes?.hp?.value ?? 0,
@@ -837,6 +836,43 @@
     }
   }
 
+  async function openCRDialog(props) {
+    const result = await TJSDialog.prompt({
+        title: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Title') : 'CR Calculator',
+        draggable: false,
+        minimizable: false,
+        modal: true,
+        content: {
+          class: CRCalculatorDialog,
+          props: {
+            defensive: props.defensive,
+            offensive: props.offensive,
+            finalCR: props.finalCR,
+            xp: props.xp,
+            pb: props.pb,
+            hp: props.hp,
+            hpMin: props.hpMin,
+            hpMax: props.hpMax,
+            ac: props.ac,
+            expectedAC: props.expectedAC,
+            acDiff: props.acDiff,
+            dpr: props.dpr,
+            dprMin: props.dprMin,
+            dprMax: props.dprMax,
+            highestAttack: props.highestAttack,
+            expectedAttack: props.expectedAttack,
+            highestSave: props.highestSave,
+            expectedSave: props.expectedSave,
+            attackDiff: props.attackDiff,
+            saveDiff: props.saveDiff,
+            finalRule: props.finalRule
+          }
+        },
+        label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR'
+      }, { classes: ['tjs-actor-studio'] });
+      return result
+  }
+
   async function calculateCR() {
     if (!$actor) return;
     
@@ -875,39 +911,30 @@
     const finalRule = crGap >= 1 ? 'Higher CR used (difference ≥ 1)' : 'Average of defensive & offensive';
     // Open Svelte-based dialog with Apply button using TJSDialog.prompt
     try {
-      const result = await TJSDialog.prompt({
-        title: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Title') : 'CR Calculator',
-        draggable: false,
-        minimizable: false,
-        modal: true,
-        content: {
-          class: CRCalculatorDialog,
-          props: {
-            defensive,
-            offensive,
-            finalCR,
-            xp,
-            pb,
-            hp,
-            hpMin,
-            hpMax,
-            ac,
-            expectedAC,
-            acDiff,
-            dpr,
-            dprMin,
-            dprMax,
-            highestAttack,
-            expectedAttack,
-            highestSave,
-            expectedSave,
-            attackDiff,
-            saveDiff,
-            finalRule
-          }
-        },
-        label: game?.i18n?.localize ? game.i18n.localize('GAS.CRCalculator.Apply') : 'Apply CR'
-      }, { classes: ['tjs-actor-studio'] });
+      
+      const result = await openCRDialog({
+        defensive,
+        offensive,
+        finalCR,
+        xp,
+        pb,
+        hp,
+        hpMin,
+        hpMax,
+        ac,
+        expectedAC,
+        acDiff,
+        dpr,
+        dprMin,
+        dprMax,
+        highestAttack,
+        expectedAttack,
+        highestSave,
+        expectedSave,
+        attackDiff,
+        saveDiff,
+        finalRule
+      });
 
       if (result) {
         try {
