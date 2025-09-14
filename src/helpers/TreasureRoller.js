@@ -1,4 +1,5 @@
 // Treasure tables for individual treasure by CR
+import { parseCR, ensureNumberCR } from '~/src/lib/cr.js';
 
 export class TreasureRoller {
   
@@ -87,21 +88,10 @@ export class TreasureRoller {
    * @returns {number} - The challenge rating as a number
    */
   static getCRFromNPC(npc) {
-    if (!npc || !npc.system) return 0;
-    
-    const cr = npc.system.details?.cr;
-    if (!cr) return 0;
-    
-    // Handle fractional CRs
-    if (typeof cr === 'string') {
-      if (cr.includes('/')) {
-        const [num, den] = cr.split('/').map(Number);
-        return num / den;
-      }
-      return parseInt(cr) || 0;
-    }
-    
-    return Number(cr) || 0;
+  if (!npc || !npc.system) return 0;
+  const raw = npc.system.details?.cr;
+  // parseCR returns NaN for unparseable values; ensureNumberCR falls back to 0
+  return ensureNumberCR(raw, 0);
   }
 
   /**

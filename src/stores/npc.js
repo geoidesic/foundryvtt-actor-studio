@@ -2,6 +2,7 @@ import { writable, get, derived } from 'svelte/store';
 import { npcCurrency, selectedNpcBase } from './storeDefinitions.js';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab } from '~/src/stores/index';
+import { ensureNumberCR } from '~/src/lib/cr.js';
 
 // Key for localStorage persistence
 const NPC_STATE_KEY = `${MODULE_ID}-npc-state`;
@@ -237,8 +238,8 @@ export async function autoRollGold(selectedNpcBase) {
   try {
     console.log('[NPC Store] Starting autoRollGold with:', selectedNpcBase);
     
-    // Get the NPC's CR for gold calculation - the CR is stored at system.details.cr
-    const npcCR = selectedNpcBase?.system?.details?.cr ?? 0;
+  // Get the NPC's CR for gold calculation - ensure it's numeric
+  const npcCR = ensureNumberCR(selectedNpcBase?.system?.details?.cr ?? 0, 0);
     console.log('[NPC Store] NPC CR:', npcCR);
     
     // Calculate gold based on CR using Individual Treasure table

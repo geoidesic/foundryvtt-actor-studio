@@ -4,6 +4,7 @@
   import CRRetargeter from '~/src/helpers/CRRetargeter';
   import { CRCalculator } from '~/src/helpers/CRCalculator.js';
   import { onDestroy } from 'svelte';
+  import { ensureNumberCR } from '~/src/lib/cr.js';
   export let initialCR = 1;
   export let hp = 0;
   export let ac = 10;
@@ -24,7 +25,7 @@
   let displayAc = ac;
   let displayXp = xp;
   // Avoid complex expressions in template attributes
-  $: crSelectValue = String(targetCR ?? initialCR);
+  $: crSelectValue = String((typeof targetCR === 'number' && Number.isFinite(targetCR)) ? targetCR : ensureNumberCR(initialCR, 0));
 
   // actor store comes from parent app context
   const actorStore = getContext('#doc');
@@ -94,8 +95,9 @@
 
   async function onCRSelected(newCR) {
     error = '';
-    targetCR = Number(newCR);
-    if (!Number.isFinite(targetCR)) { error = 'Invalid CR'; return; }
+  // Coerce and validate CR using ensureNumberCR
+  targetCR = ensureNumberCR(newCR, NaN);
+  if (!Number.isFinite(targetCR)) { error = 'Invalid CR'; return; }
     if (!actorDoc) { error = 'No actor available'; return; }
     try {
       updates = await CRRetargeter.computeUpdates(actorDoc, targetCR);

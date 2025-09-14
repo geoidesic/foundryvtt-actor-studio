@@ -18,7 +18,10 @@
   setContext('#editStore', editStore);
 
   onMount(() => {
-    try { console.debug('[GAS] NPCSheetShell mounted for', document?.name); } catch (_) {}
+    try { 
+      console.debug('[GAS] NPCSheetShell mounted for', document?.name); 
+      window.GAS.log.g('actor', $documentStore)
+    } catch (_) {}
   });
 
   $: npc = $documentStore;

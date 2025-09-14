@@ -3,8 +3,6 @@
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import NPCStatBlock from "~/src/components/molecules/dnd5e/NPC/NPCStatBlock.svelte";
-  import CRAdjuster from "~/src/components/molecules/dnd5e/NPC/CRAdjuster.svelte";
-  import { updateSource, getItemSourcesFromActor } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const actor = getContext("#doc");
@@ -112,14 +110,6 @@ StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
     FeatureItemList(trashable="{true}" uuidFromFlags="{true}"  dedupe="{true}" sort="{true}" extraAction="{openFeatureEditor}" extraActionIcon="{'fas fa-edit'}" extraActionTitle="{'Edit Feature'}")
   
   div(slot="left")
-    // CR Adjustment Tool
-    //- CRAdjuster(
-    //-   actor="{$actor}"
-    //-   readonly="{false}"
-    //-   on:crAdjusted="{handleCRAdjusted}"
-    //- )
-    
-    
     // NPC Stat Block
     NPCStatBlock(
       name="{$actor.name || 'Unnamed NPC'}"

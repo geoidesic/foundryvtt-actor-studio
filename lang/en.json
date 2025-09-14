@@ -2,6 +2,7 @@
   "GAS": {
     "CRCalculator": {
       "Title": "CR Calculator",
+      "ApplicatorTitle": "CR applier",
       "Apply": "Apply CR"
     },
     "Error": {

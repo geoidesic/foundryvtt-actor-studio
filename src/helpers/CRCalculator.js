@@ -109,10 +109,10 @@ class CRCalculator {
   /**
    * Get the target CR based on current stats
    * @param {Object} actor - The actor to analyze
-   * @returns {Object} - Object with defensiveCR, offensiveCR, and finalCR
+   * @returns {Object} - Object with defensiveCR, offensiveCR, and calculatedCR
    */
   static async calculateCurrentCR(actor) {
-    if (!actor || !actor.system) return { defensiveCR: 0, offensiveCR: 0, finalCR: 0 };
+    if (!actor || !actor.system) return { defensiveCR: 0, offensiveCR: 0, calculatedCR: 0 };
 
     // Calculate defensive CR
     const defensiveCR = this.calculateDefensiveCR(actor);
@@ -120,24 +120,40 @@ class CRCalculator {
     // Calculate offensive CR
     const offensiveCR = await this.calculateOffensiveCR(actor);
     
-    // Calculate final CR (average of defensive and offensive)
-    const finalCR = this.calculateFinalCR(defensiveCR, offensiveCR);
-    
+    // Calculate CR (average of defensive and offensive)
+    const calculatedCR = this.calculateCR(defensiveCR, offensiveCR);
+    // Provide a semantically clearer field name `calculatedCR` while
     return {
       defensiveCR,
       offensiveCR,
-      finalCR,
-      xp: this.XP_VALUES[finalCR] || 0,
-      proficiencyBonus: this.PROFICIENCY_BONUS[finalCR] || 2
+      calculatedCR,
+      xp: this.XP_VALUES[calculatedCR] || 0,
+      proficiencyBonus: this.PROFICIENCY_BONUS[calculatedCR] || 2
     };
   }
 
   static formatCR(cr) {
+    // For debugging: fail loudly when undefined/null to trace the caller.
+    if (cr === undefined || cr === null) {
+      const msg = `[CRCalculator] formatCR called with ${cr}`;
+      try {
+        // Log stack to GAS and console to find caller
+        const err = new Error(msg);
+        window.GAS?.log?.e?.(msg, err.stack);
+        console.error(msg, err.stack);
+      } catch (e) {
+        console.error(msg);
+      }
+      // Re-throw so the caller sees the failure and we can inspect the stack in console
+      throw new TypeError('CRCalculator.formatCR requires a non-null CR value');
+    }
     if (cr === 0) return '0';
     if (cr === 0.125) return '1/8';
     if (cr === 0.25) return '1/4';
     if (cr === 0.5) return '1/2';
-    return cr.toString();
+    const t = typeof cr;
+    window.GAS?.log?.g?.('| typeof cr', t);
+    return String(cr);
   }
 
   // Format a numeric bonus with sign, e.g., +3 or -1
@@ -258,20 +274,20 @@ class CRCalculator {
   }
 
   /**
-   * Calculate final CR from defensive and offensive CRs
+   * Calculate CR from defensive and offensive CRs
    * @param {number} defensiveCR - The defensive CR
    * @param {number} offensiveCR - The offensive CR
-   * @returns {number} - The final CR
+   * @returns {number} - The calculated CR
    */
-  static calculateFinalCR(defensiveCR, offensiveCR) {
-    console.log(`[CRCalculator] Final CR calculation - Defensive: ${defensiveCR}, Offensive: ${offensiveCR}`);
+  static calculateCR(defensiveCR, offensiveCR) {
+    console.log(`[CRCalculator] CR calculation - Defensive: ${defensiveCR}, Offensive: ${offensiveCR}`);
     
     // Use the higher CR when there's a significant difference
     // This prevents a high offensive CR from being dragged down by a low defensive CR
-    let finalCR;
+    let calculatedCR;
     if (Math.abs(defensiveCR - offensiveCR) >= 1) {
-      finalCR = Math.max(defensiveCR, offensiveCR);
-      console.log(`[CRCalculator] Significant CR difference (≥1), using higher CR: ${finalCR}`);
+      calculatedCR = Math.max(defensiveCR, offensiveCR);
+      console.log(`[CRCalculator] Significant CR difference (≥1), using higher CR: ${calculatedCR}`);
     } else {
       // Use average when CRs are close
       const average = (defensiveCR + offensiveCR) / 2;
@@ -280,39 +296,39 @@ class CRCalculator {
       // For D&D CR calculation, use proper rounding rules for different CR ranges
       if (average >= 4.25) {
         // High CRs: round up when close to next CR
-        finalCR = Math.ceil(average);
-        console.log(`[CRCalculator] Average ${average} >= 4.25, rounding up to: ${finalCR}`);
+        calculatedCR = Math.ceil(average);
+        console.log(`[CRCalculator] Average ${average} >= 4.25, rounding up to: ${calculatedCR}`);
       } else if (average >= 0.25) {
         // Low CRs: round to nearest valid D&D CR value
-        if (average >= 0.375) finalCR = 0.5; // 3/8+ rounds up to 1/2
-        else finalCR = 0.25; // 1/4 to 3/8 rounds to 1/4
-        console.log(`[CRCalculator] Average ${average} >= 0.25, rounding to nearest valid CR: ${finalCR}`);
+        if (average >= 0.375) calculatedCR = 0.5; // 3/8+ rounds up to 1/2
+        else calculatedCR = 0.25; // 1/4 to 3/8 rounds to 1/4
+        console.log(`[CRCalculator] Average ${average} >= 0.25, rounding to nearest valid CR: ${calculatedCR}`);
       } else {
         // Very low CRs: round to nearest valid CR
-        if (average >= 0.1875) finalCR = 0.25; // 3/16 rounds up to 1/4
-        else if (average >= 0.0625) finalCR = 0.125; // 1/16 rounds up to 1/8
-        else finalCR = 0;
-        console.log(`[CRCalculator] Average ${average} < 0.25, rounding to nearest valid CR: ${finalCR}`);
+        if (average >= 0.1875) calculatedCR = 0.25; // 3/16 rounds up to 1/4
+        else if (average >= 0.0625) calculatedCR = 0.125; // 1/16 rounds up to 1/8
+        else calculatedCR = 0;
+        console.log(`[CRCalculator] Average ${average} < 0.25, rounding to nearest valid CR: ${calculatedCR}`);
       }
     }
     
-    console.log(`[CRCalculator] Calculated final CR: ${finalCR}`);
+    console.log(`[CRCalculator] Calculated final CR: ${calculatedCR}`);
     
     // Ensure the final CR is a valid CR
     const validCRs = Object.keys(this.XP_VALUES).map(Number).sort((a, b) => a - b);
     console.log(`[CRCalculator] Valid CRs:`, validCRs);
     
-    if (validCRs.includes(finalCR)) {
-      console.log(`[CRCalculator] Final CR: ${finalCR} (valid)`);
-      return finalCR;
+    if (validCRs.includes(calculatedCR)) {
+      console.log(`[CRCalculator] Final CR: ${calculatedCR} (valid)`);
+      return calculatedCR;
     }
     
     // If calculated CR is not valid, find the closest valid CR
     let closestCR = validCRs[0];
-    let smallestDifference = Math.abs(finalCR - closestCR);
+    let smallestDifference = Math.abs(calculatedCR - closestCR);
     
     for (const cr of validCRs) {
-      const difference = Math.abs(finalCR - cr);
+      const difference = Math.abs(calculatedCR - cr);
       console.log(`[CRCalculator] Checking CR ${cr}: difference = ${difference} (current smallest: ${smallestDifference})`);
       if (difference < smallestDifference) {
         smallestDifference = difference;

@@ -187,7 +187,7 @@
     currentCRBreakdown = { ...currentCRBreakdown };
     
     // Show the breakdown
-    ui.notifications.info(`Current CR Analysis: Defensive CR ${formatCR(currentCRBreakdown.defensiveCR)}, Offensive CR ${formatCR(currentCRBreakdown.offensiveCR)}, Final CR ${formatCR(currentCRBreakdown.finalCR)}`);
+    ui.notifications.info(`Current CR Analysis: Defensive CR ${formatCR(currentCRBreakdown.defensiveCR)}, Offensive CR ${formatCR(currentCRBreakdown.offensiveCR)}, Calculated CR ${formatCR(currentCRBreakdown.finalCR)}`);
   }
 </script>
 

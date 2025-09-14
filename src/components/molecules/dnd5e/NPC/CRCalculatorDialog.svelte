@@ -2,7 +2,7 @@
   // Props for dialog content
   export let defensive = '';
   export let offensive = '';
-  export let finalCR = '';
+  export let initialCR = '';
   export let xp = 0;
   export let pb = 2;
 
@@ -23,10 +23,40 @@
   export let attackDiff = 0;
   export let saveDiff = 0;
   export let finalRule = '';
+  export let type = 'calc';
+
+  import { ensureNumberCR } from '~/src/lib/cr.js';
+  import { CRCalculator } from '~/src/helpers/CRCalculator.js';
+  let showCRSelect = false;
+  let targetCR = null; // numeric
+  export let onTargetCRChange = null;
+  const crOptions = Array.from({ length: 31 }, (_, i) => i); // 0..30
 
   $: acDiffClass = acDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
   $: attackDiffClass = attackDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
   $: saveDiffClass = saveDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
+  $: pointerClass = !showCRSelect && type == 'apply' ? 'pointer' : ''
+  // Ensure the select value is numeric and defined
+  $: crSelectValue = Number(targetCR ?? ensureNumberCR(initialCR, 0));
+
+  function onCRSelected(newCR) {
+    // Coerce and set targetCR
+    targetCR = ensureNumberCR(newCR, NaN);
+    if (!Number.isFinite(targetCR)) return;
+    // Notify host that a target CR was selected so it can enable the Apply button
+    try {
+      if (typeof onTargetCRChange === 'function') onTargetCRChange(targetCR);
+    } catch (err) {
+      // swallow host callback errors
+    }
+  }
+
+  function CRclick() {
+  if(type == 'calc') return;
+  showCRSelect = true
+  }
+
+  // No inline apply button — host dialog chrome will provide an Apply button.
 </script>
 
 <template lang="pug">
@@ -34,9 +64,20 @@
   // Decorative title bar
   .gas-title-bar
     .gas-title-left
-      .gas-cr-badge
-        .gas-cr-number {finalCR}
-        .gas-cr-label Final CR
+        .gas-cr-badge(on:click!="{CRclick}" class="{pointerClass}")
+          +if("!showCRSelect")
+            // show selected targetCR if chosen, otherwise show initialCR
+            .gas-cr-number {CRCalculator.formatCR(targetCR ?? initialCR)}
+            +else()
+              select.gas-cr-select(
+                value="{crSelectValue}"
+                on:change!="{(e) => { showCRSelect = false; onCRSelected(Number(e.target.value)); }}"
+              )
+                +each("crOptions as c")
+                  option(value="{c}") {c}
+          +if("!showCRSelect")
+            .gas-cr-label CR
+          // Dialog chrome provides the Apply button via TJSDialog.wait; host will enable it when selection occurs
     .gas-title-center
       .gas-pb Proficiency +{pb}
     .gas-title-right
@@ -155,6 +196,7 @@ details.gas-details
   height: 86px
   min-width: 86px
   border-radius: 12px
+  transition: background 3s ease
   background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))
   display: flex
   flex-direction: column
@@ -162,6 +204,11 @@ details.gas-details
   justify-content: center
   box-shadow: 0 6px 18px rgba(0,0,0,0.45), inset 0 -4px 8px rgba(255,255,255,0.02)
   border: 1px solid rgba(255,255,255,0.06)
+
+  &.pointer
+    &:hover
+      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))
+
 
 .gas-cr-number
   font-size: 36px

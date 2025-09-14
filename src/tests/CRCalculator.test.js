@@ -68,8 +68,8 @@ describe('CRCalculator', () => {
       // Offensive CR: Multiple attacks + spellcasting should be around CR 5
       expect(result.defensiveCR).toBeGreaterThanOrEqual(4);
       expect(result.offensiveCR).toBeGreaterThanOrEqual(4);
-      expect(result.finalCR).toBeGreaterThanOrEqual(4);
-      expect(result.finalCR).toBeLessThanOrEqual(6);
+      expect(result.calculatedCR).toBeGreaterThanOrEqual(4);
+      expect(result.calculatedCR).toBeLessThanOrEqual(6);
     });
 
   it('should handle multi-attack correctly', async () => {

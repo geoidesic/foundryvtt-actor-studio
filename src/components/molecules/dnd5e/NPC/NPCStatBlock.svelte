@@ -3,6 +3,7 @@
   import { getContext } from "svelte";
   import { CRCalculator } from "~/src/helpers/CRCalculator.js";
   import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR, localize as t } from "~/src/helpers/Utility";
+  import { ensureNumberCR } from "~/src/lib/cr.js";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
   import HitPoints from "~/src/components/atoms/dnd5e/NPC/HitPoints.svelte";
@@ -148,12 +149,12 @@
   // })();
 
   // PB / XP
-  $: cr = npc?.system?.details?.cr ?? 0;
+  $: cr = ensureNumberCR(npc?.system?.details?.cr ?? 0, 0);
   $: pb = pbForCR(cr);
   $: xp = xpForCR(cr);
   
   // Challenge Rating and XP for editing
-  $: crValue = npc?.system?.details?.cr ?? 0;
+  $: crValue = ensureNumberCR(npc?.system?.details?.cr ?? 0, 0);
   $: xpValue = npc?.system?.details?.xp?.value ?? xpForCR(crValue);
 
   // Simple trait summaries (from resources)
@@ -728,7 +729,8 @@
     }
   }
 
-  async function openCRDialog(title, props) {
+
+  async function openCRPrompt(title, props) {
     const result = await TJSDialog.prompt({
         title,
         draggable: true,
@@ -741,7 +743,7 @@
           props: {
             defensive: props.defensive,
             offensive: props.offensive,
-            finalCR: props.finalCR,
+            initialCR: props.initialCR,
             xp: props.xp,
             pb: props.pb,
             hp: props.hp,
@@ -762,24 +764,87 @@
             finalRule: props.finalRule
           }
         },
-      }, { classes: ['tjs-actor-studio'] });
-      return result
+      }, { classes: ['tjs-actor-studio', 'GAS'] });
+  return result
+  }
+  async function openCRWait(title, props) {
+    // Provide an initially-disabled Apply button in the dialog chrome.
+    const result = await TJSDialog.wait({
+        title,
+        draggable: true,
+        minimizable: false,
+        modal: false,
+        buttons: {
+          apply: {
+            label: 'Apply',
+            icon: 'fas fa-check',
+            disabled: true,
+            // callback will be handled by the promise resolution - leave as default
+          },
+          cancel: {
+            label: 'Cancel',
+            icon: 'fas fa-times'
+          }
+        },
+        content: {
+          class: CRCalculatorDialog,
+          props: {
+            type: 'apply',
+            defensive: props.defensive,
+            offensive: props.offensive,
+            initialCR: props.initialCR,
+            xp: props.xp,
+            pb: props.pb,
+            hp: props.hp,
+            hpMin: props.hpMin,
+            hpMax: props.hpMax,
+            ac: props.ac,
+            expectedAC: props.expectedAC,
+            acDiff: props.acDiff,
+            dpr: props.dpr,
+            dprMin: props.dprMin,
+            dprMax: props.dprMax,
+            highestAttack: props.highestAttack,
+            expectedAttack: props.expectedAttack,
+            highestSave: props.highestSave,
+            expectedSave: props.expectedSave,
+            attackDiff: props.attackDiff,
+            saveDiff: props.saveDiff,
+            finalRule: props.finalRule,
+            onTargetCRChange: (selected) => { enableApplyButton(); }
+          }
+        },
+      }, { classes: ['tjs-actor-studio', 'GAS'] });
+  return result
   }
 
-  async function calculateCR() {
-    if (!$actor) return;
-    
-    console.log('🔄 Recalculating CR for actor:', $actor);
-    currentCRBreakdown = await CRCalculator.calculateCurrentCR($actor);
-    console.log('📊 New CR breakdown:', currentCRBreakdown);
+  function enableApplyButton() {
+    // Find the most recent TJSDialog instance in the DOM and enable its apply button.
+    try {
+      const containers = Array.from(document.querySelectorAll('.tjs-actor-studio'));
+      if (!containers.length) return;
+      const container = containers[containers.length - 1];
+      const applyBtn = container.querySelector('[data-action="apply"]');
+      if (applyBtn) applyBtn.removeAttribute('disabled');
+      else {
+        // fallback: find a button with text 'Apply'
+        const buttons = Array.from(container.querySelectorAll('button'));
+        const btn = buttons.find(b => (b.textContent || '').trim() === 'Apply');
+        if (btn) btn.removeAttribute('disabled');
+      }
+    } catch (err) {
+      // ignore DOM errors
+    }
+  }
 
-    // Force a reactive update
-    currentCRBreakdown = { ...currentCRBreakdown };
-
+  async function getCRprops(currentCRBreakdown) {
     // Build dialog props
-    const defensive = CRCalculator.formatCR(currentCRBreakdown.defensiveCR);
-    const offensive = CRCalculator.formatCR(currentCRBreakdown.offensiveCR);
-    const finalCR = CRCalculator.formatCR(currentCRBreakdown.finalCR);
+  const defensive = CRCalculator.formatCR(currentCRBreakdown.defensiveCR);
+  const offensive = CRCalculator.formatCR(currentCRBreakdown.offensiveCR);
+  // initialCR should reflect the actor's stored CR (the "initial" value before applying changes).
+  // Prefer the semantically-named `calculatedCR` from the breakdown.
+  const initialRaw = $actor?.system?.details?.cr ?? (currentCRBreakdown.calculatedCR);
+  const initialCR = ensureNumberCR(initialRaw, 0);
     const xp = currentCRBreakdown.xp ?? 0;
     const pb = currentCRBreakdown.proficiencyBonus ?? 2;
     
@@ -802,13 +867,10 @@
     const saveDiff = highestSave - expectedSave;
     const crGap = Math.abs((currentCRBreakdown.defensiveCR ?? 0) - (currentCRBreakdown.offensiveCR ?? 0));
     const finalRule = crGap >= 1 ? 'Higher CR used (difference ≥ 1)' : 'Average of defensive & offensive';
-    // Open Svelte-based dialog with Apply button using TJSDialog.prompt
-    try {
-      
-      const result = await openCRDialog(t('CRCalculator.Title'), {
+    return {
         defensive,
         offensive,
-        finalCR,
+        initialCR,
         xp,
         pb,
         hp,
@@ -827,28 +889,66 @@
         attackDiff,
         saveDiff,
         finalRule
-      });
+      }
+  }
 
-      if (result) {
+  async function handle_CR_Click(type="calc", desiredCRval) {
+    if (!$actor) return;
+    console.log('🔄 Recalculating CR for actor:', $actor);
+    currentCRBreakdown = await CRCalculator.calculateCurrentCR($actor);
+    console.log('📊 New CR breakdown:', currentCRBreakdown);
+    // Force a reactive update
+    currentCRBreakdown = { ...currentCRBreakdown };
+
+    const CRprops = await getCRprops(currentCRBreakdown);
+    let result;
+    // Open Svelte-based dialog with Apply button using TJSDialog.prompt
+    try {
+      // Prepare a one-time global listener for the dialog's 'apply' event.
+      const onApply = async (e) => {
         try {
-          const value = currentCRBreakdown.finalCR;
+          const value = ensureNumberCR(e.detail?.targetCR ?? currentCRBreakdown.calculatedCR, 0);
           await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
           if (npc?.system?.details) {
-            npc.system.details.cr = value;
+            npc.system.details.cr = ensureNumberCR(value, 0);
             if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
           }
           ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
         } catch (err) {
-          console.error('Failed to apply CR:', err);
+          console.error('Failed to apply CR via dialog apply event:', err);
           ui.notifications?.error?.('Failed to apply calculated CR.');
         }
+      };
+      window.addEventListener('apply', onApply, { once: true });
+      switch(type) {
+        case 'apply': 
+          result = await openCRWait(t('CRCalculator.ApplicatorTitle'), CRprops );
+          // const result = await 
+          break;
+        default: // 'calc'
+          result = await openCRPrompt(t('CRCalculator.Title'), CRprops );
+
+      }
+
+      if (result) {
+          try {
+            // If the user used the prompt's primary OK button, fall back to applying the calculatedCR
+            const value = currentCRBreakdown.calculatedCR;
+            await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
+            if (npc?.system?.details) {
+              npc.system.details.cr = ensureNumberCR(value, 0);
+              if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
+            }
+            ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
+          } catch (err) {
+            console.error('Failed to apply CR:', err);
+            ui.notifications?.error?.('Failed to apply calculated CR.');
+          }
       }
     } catch (e) {
       console.error('Failed opening TJSDialog:', e);
     }
   }
-
-
 
 
 </script>
@@ -928,29 +1028,23 @@
     hr.my-ms
     
     .flexrow
-      .flex1
+      .flex1.pointer(role="button"
+            tabindex="0"
+            on:click!="{() => { if (!readonly) handle_CR_Click('apply', crValue); }}"
+            on:keydown!="{e => e.key === 'Enter' && !readonly && updateActorCR(crValue)}"
+            title="Click to retarget CR")
         .label.inline Challenge 
         .value.nowrap
           // When clicking the CR value, open the retarget dialog (unless readonly).
-          span.cr-click-area(
-            role="button"
-            tabindex="0"
-            on:click!="{() => { if (!readonly) updateActorCR(crValue); }}"
-            on:keydown!="{e => e.key === 'Enter' && !readonly && updateActorCR(crValue)}"
-            title="Click to retarget CR"
-          )
-            EditableValue(
-              value="{crValue}"
-              readonly="{readonly}"
-              onSave!="{val => updateActorCR(val)}"
-              placeholder="1"
-            )
-          span  (
+          span(
+            
+          ) {crValue}
+          span.ml-sm  (
           span {xp.toLocaleString()} XP )
       
       +if("enableCrCalculator && !readonly")
         .flex0
-          button.cr-calc-btn(title="Open CR calculator" on:click!="{calculateCR}")
+          button.cr-calc-btn(title="Open CR calculator" on:click!="{() => handle_CR_Click('calc')}")
             i.fas.fa-solid.fa-calculator
 
       .flex1.ml-sm

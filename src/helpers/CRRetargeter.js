@@ -1,4 +1,5 @@
 import { CRCalculator } from '~/src/helpers/CRCalculator';
+import { ensureNumberCR } from '~/src/lib/cr.js';
 
 /**
  * CRRetargeter: computes a minimal update plan to move an actor toward a target CR.
@@ -51,8 +52,8 @@ export class CRRetargeter {
     const offense = this.planOffense(targetCR);
     if (!defense || !offense) return updates;
 
-    // Set details.cr and xp
-    updates['system.details.cr'] = targetCR;
+  // Set details.cr and xp (ensure numeric)
+  updates['system.details.cr'] = ensureNumberCR(targetCR, 0);
     updates['system.details.xp.value'] = CRCalculator.XP_VALUES[targetCR] || 0;
 
     // HP to band median
