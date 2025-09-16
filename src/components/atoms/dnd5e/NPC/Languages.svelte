@@ -43,45 +43,41 @@
     if (!languages) return [];
     
     const result = [];
+    const seenLanguages = new Set(); // Track seen languages to prevent duplicates
+    
+    // Helper function to add language if not already seen
+    const addLanguageIfUnique = (lang, type) => {
+      if (lang && lang.trim()) {
+        const trimmedLang = lang.trim();
+        if (!seenLanguages.has(trimmedLang)) {
+          seenLanguages.add(trimmedLang);
+          result.push({ key: trimmedLang, label: trimmedLang, type });
+        }
+      }
+    };
     
     // Handle different possible data structures
     if (languages.value && Array.isArray(languages.value)) {
       // Standard array structure
-      languages.value.forEach(lang => {
-        if (lang && lang.trim()) {
-          result.push({ key: lang, label: lang, type: 'standard' });
-        }
-      });
+      languages.value.forEach(lang => addLanguageIfUnique(lang, 'standard'));
     } else if (languages.labels && languages.labels.languages && Array.isArray(languages.labels.languages)) {
       // FoundryVTT 13+ structure: languages.labels.languages array
-      languages.labels.languages.forEach(lang => {
-        if (lang && lang.trim()) {
-          result.push({ key: lang, label: lang, type: 'standard' });
-        }
-      });
+      languages.labels.languages.forEach(lang => addLanguageIfUnique(lang, 'standard'));
     } else if (languages.labels && Array.isArray(languages.labels)) {
       // Fallback: labels array structure
-      languages.labels.forEach(lang => {
-        if (lang && lang.trim()) {
-          result.push({ key: lang, label: lang, type: 'standard' });
-        }
-      });
+      languages.labels.forEach(lang => addLanguageIfUnique(lang, 'standard'));
     } else if (typeof languages === 'string') {
       // Simple string structure
       const langParts = languages.split(',').map(s => s.trim()).filter(Boolean);
-      langParts.forEach(lang => {
-        result.push({ key: lang, label: lang, type: 'standard' });
-      });
+      langParts.forEach(lang => addLanguageIfUnique(lang, 'standard'));
     }
     
     // Handle ranged languages (like telepathy)
     if (languages.labels && languages.labels.ranged && Array.isArray(languages.labels.ranged)) {
       console.log('🔍 Found ranged languages:', languages.labels.ranged);
       languages.labels.ranged.forEach(lang => {
-        if (lang && lang.trim()) {
-          console.log('🔍 Adding ranged language:', lang);
-          result.push({ key: lang, label: lang, type: 'ranged' });
-        }
+        console.log('🔍 Adding ranged language:', lang);
+        addLanguageIfUnique(lang, 'ranged');
       });
     } else {
       console.log('🔍 No ranged languages found. languages.labels:', languages.labels);
@@ -91,9 +87,9 @@
     // Note: We don't display languages.value Set as it contains metadata (like "standard", "exotic")
     // not actual language names. We only show actual languages and ranged abilities.
     
-    // Add custom languages
+    // Add custom languages (only if not already seen from other sources)
     if (languages.custom && languages.custom.trim()) {
-      result.push({ key: languages.custom, label: languages.custom, type: 'custom' });
+      addLanguageIfUnique(languages.custom, 'custom');
     }
     
     return result;
