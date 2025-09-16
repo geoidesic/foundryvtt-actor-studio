@@ -116,6 +116,7 @@ StandardTabLayout(title="Create NPC" showTitle="true" tabName="npc-create")
       npc="{$actor}"
       readonly="{false}"
       enableCrCalculator="{true}"
+  persistToActor="{true}"
     )
 </template>
 

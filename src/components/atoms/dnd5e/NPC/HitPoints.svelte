@@ -31,18 +31,28 @@
   .hit-points
     .label.inline
       strong Hit Points  
-    +await("enrichHTML(`[[/r ${hp.formula}]]`)")
-      +then("Html")
+    +if("hp?.formula")
+      +await("enrichHTML(`[[/r ${hp.formula}]]`)")
+        +then("Html")
+          .value
+            EditableValue(
+              value="{hp?.max || 10}"
+              type="number"
+              readonly="{readonly}"
+              onSave!="{handleMaxHPSave}"
+              placeholder="10"
+            )
+            span {@html Html}
+      +else()
         .value
           EditableValue(
-            value="{hp.max}"
+            value="{hp?.max || 10}"
             type="number"
             readonly="{readonly}"
             onSave!="{handleMaxHPSave}"
             placeholder="10"
           )
-          span {@html Html}
-    +if("hp.temp")
+    +if("hp?.temp")
       span &nbsp;Temp: {hp.temp}/{hp.tempmax}
 </template>
 

@@ -22,13 +22,13 @@
   .armor-class
     .label AC: 
       EditableValue(
-        value="{ac.value}"
+        value="{ac?.value || 10}"
         type="number"
         readonly="{readonly}"
         onSave="{handleACSave}"
         placeholder="10"
       )
-    //- +if("ac.calc")
+    //- +if("ac?.calc")
     //-   span &nbsp;({ac.calc})
 </template>
 

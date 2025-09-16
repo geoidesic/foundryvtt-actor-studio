@@ -127,6 +127,10 @@
                     on:click!="{() => startEdit(sense)}"
                     class!="{editingSense === sense.key ? 'editing' : ''}"
                   ) {sense.value}
+                  button.remove-btn(
+                    on:click!="{() => handleRemoveSense(sense.key)}"
+                    title="Remove {getSenseLabel(sense.key)}"
+                  ) ×
             +if("readonly")
               span.sense-value {sense.value}
             span.unit ft.

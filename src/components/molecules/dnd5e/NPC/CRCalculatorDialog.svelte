@@ -24,6 +24,9 @@
   export let saveDiff = 0;
   export let finalRule = '';
   export let type = 'calc';
+  // The dialog may receive runtime data set by the host application via application.data.set
+  export let appliedChanges = null; // array of {path, from, to}
+  export let recalculatedBreakdown = null; // optional recalculated breakdown object
 
   import { ensureNumberCR } from '~/src/lib/cr.js';
   import { CRCalculator } from '~/src/helpers/CRCalculator.js';
@@ -126,6 +129,25 @@
         .gas-kv
           div Rule
           .gas-monosp {finalRule}
+  +if("appliedChanges && appliedChanges.length > 0")
+    .gas-hr
+    .gas-section
+      h4 Applied Changes
+      +each("appliedChanges as d")
+        .gas-kv
+          div {d.path}
+          .gas-monosp {String(d.from)} → {String(d.to)}
+  +if("recalculatedBreakdown")
+    .gas-hr
+    .gas-section
+      h4 Recalculated
+      .gas-kv
+        div Defensive CR
+        .gas-monosp {CRCalculator.formatCR(recalculatedBreakdown.defensiveCR)}
+        div Offensive CR
+        .gas-monosp {CRCalculator.formatCR(recalculatedBreakdown.offensiveCR)}
+        div Calculated CR
+        .gas-monosp {CRCalculator.formatCR(recalculatedBreakdown.calculatedCR)}
 </template>
 
 <style lang="sass">

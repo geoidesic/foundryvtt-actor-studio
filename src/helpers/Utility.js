@@ -609,12 +609,16 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
  * @returns {Promise<void>} A promise that resolves when the source is updated
  */
 export const updateSource = async (source, val) => {
-  window.GAS.log.p('updateSource', source, val)
-  await source.updateSource(val);
-  await tick();
-  if(source.render) {
-    source.render();
-    window.GAS.log.p('updated source', source)
+  if(source.uuid) {
+    source.update(val);
+  } else {
+    window.GAS.log.p('updateSource', source, val)
+    await source.updateSource(val);
+    await tick();
+    if(source.render) {
+      source.render();
+      window.GAS.log.p('updated source', source)
+    }
   }
 };
 

@@ -15,14 +15,13 @@
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
   import CRCalculatorDialog from "~/src/components/molecules/dnd5e/NPC/CRCalculatorDialog.svelte";
-
   export let name;
-  export let npc; 
   export let readonly = true; // Default to readonly for backward compatibility
   export let includeRollButtons = false;
   export let enableCrCalculator = false; // guard for CR calculator UI
 
   const actor = getContext("#doc");
+  $: npc = $actor;
 
   // State for inline editing
   let editingSize = false;
@@ -32,8 +31,6 @@
   let currentCRBreakdown = null;
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
-  // Reactive list of ability scores for rendering AttributeScore components
-  $: abilityScores = abilityOrder.map(abbr => ({ abbr, score: npc?.system?.abilities?.[abbr]?.value ?? 10 }));
   
   // D&D 5e size options
   const sizeOptions = [
@@ -46,11 +43,7 @@
   ];
   
   // D&D 5e creature type options
-  const typeOptions = [
-    { value: 'aberration', label: 'Aberration' },
-    { value: 'beast', label: 'Beast' },
-    { value: 'celestial', label: 'Celestial' },
-    { value: 'construct', label: 'Construct' },
+  const creatureTypeOptions = [
     { value: 'dragon', label: 'Dragon' },
     { value: 'elemental', label: 'Elemental' },
     { value: 'fey', label: 'Fey' },
@@ -92,6 +85,12 @@
   //     const save = mod + pbForCR(npc?.system?.details?.cr ?? 0);
   //     return `${abilityLabel[abbr] || abbr.toUpperCase()} ${formatBonus(save)}`;
   //   });
+
+  $: abilityScores = abilityOrder.map(abbr => ({
+    abbr: abbr.toUpperCase(),
+    score: npc?.system?.abilities?.[abbr]?.value ?? 10
+  }));
+
 
   // Skills
   const skillToLabel = {
@@ -213,164 +212,59 @@
 
   // Helper functions for async updates
   async function updateActorName(value) {
-    console.log('🔍 updateActorName called with value:', value);
-    console.log('🔍 Actor context:', actor);
-    console.log('🔍 $actor value:', $actor);
-    console.log('🔍 NPC data:', npc);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { name: value });
-        await updateSource($actor, { name: value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc) {
-          console.log('🔄 Updating local npc.name from', npc.name, 'to', value);
-          npc.name = value;
-          console.log('✅ Local npc.name updated to:', npc.name);
-        }
-        
-        console.log('🎉 Name update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor name:', error);
-        console.error('❌ Error stack:', error.stack);
-        console.error('❌ Error name:', error.name);
-        console.error('❌ Error message:', error.message);
-      }
-    } else {
-      console.error('❌ No $actor found!');
-    }
+    // Minimal logging for updates; errors still reported.
+    try {
+      await updateSource($actor, { name: value });
+      // Update local npc for immediate UI reactivity
+      if (npc) npc.name = value;
+    } catch (error) {
+      console.error('Failed to update actor name:', error?.message ?? error);
+  }
   }
 
   async function updateActorSize(value) {
-    console.log('🔍 updateActorSize called with value:', value);
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update size...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { 'system.traits.size': value });
-        await updateSource($actor, { 'system.traits.size': value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.traits) {
-          console.log('🔄 Updating local npc.system.traits.size from', npc.system.traits.size, 'to', value);
-          npc.system.traits.size = value;
-          console.log('✅ Local npc.system.traits.size updated to:', npc.system.traits.size);
-        }
-        
-        console.log('🎉 Size update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor size:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { 'system.traits.size': value });
+    } catch (error) {
+      console.error('Failed to update actor size:', error?.message ?? error);
     }
   }
 
   async function updateActorType(value) {
-    console.log('🔍 updateActorType called with value:', value);
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update type...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { 'system.details.type.value': value });
-        await updateSource($actor, { 'system.details.type.value': value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.details?.type) {
-          console.log('🔄 Updating local npc.system.details.type.value from', npc.system.details.type.value, 'to', value);
-          npc.system.details.type.value = value;
-          console.log('✅ Local npc.system.details.type.value updated to:', npc.system.details.type.value);
-        }
-        
-        console.log('🎉 Type update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor type:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { 'system.details.type.value': value });
+    } catch (error) {
+      console.error('Failed to update actor type:', error?.message ?? error);
     }
   }
 
   async function updateActorAlignment(value) {
-    console.log('🔍 updateActorAlignment called with value:', value);
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update alignment...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { 'system.details.alignment': value });
-        await updateSource($actor, { 'system.details.alignment': value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.details) {
-          console.log('🔄 Updating local npc.system.details.alignment from', npc.system.details.alignment, 'to', value);
-          npc.system.details.alignment = value;
-          console.log('✅ Local npc.system.details.alignment updated to:', npc.system.details.alignment);
-        }
-        
-        console.log('🎉 Alignment update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor alignment:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { 'system.details.alignment': value });
+    } catch (error) {
+      console.error('Failed to update actor alignment:', error?.message ?? error);
     }
   }
 
 
 
   async function updateActorSkills(skill, proficient, ability) {
-    console.log('🔍 updateActorSkills called with:', { skill, proficient, ability });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update skills...');
-      try {
-        const updateData = {
-          [`system.skills.${skill}.proficient`]: proficient,
-          [`system.skills.${skill}.ability`]: ability
-        };
-        
-        console.log('📝 Calling Utility.updateSource with:', updateData);
-        await updateSource($actor, updateData);
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.skills) {
-          if (!npc.system.skills[skill]) {
-            npc.system.skills[skill] = {};
-          }
-          npc.system.skills[skill].proficient = proficient;
-          npc.system.skills[skill].ability = ability;
-        }
-        
-        console.log('🎉 Skills update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor skills:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      const updateData = {
+        [`system.skills.${skill}.proficient`]: proficient,
+        [`system.skills.${skill}.ability`]: ability
+      };
+      await updateSource($actor, updateData);
+    } catch (error) {
+      console.error('Failed to update actor skills:', error?.message ?? error);
     }
   }
 
   async function updateActorDamageResistances(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.traits.dr': value });
+      await updateSource($actor, { 'system.traits.dr': value });
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.dr = value;
       } catch (error) {
         console.error('Failed to update actor damage resistances:', error);
       }
@@ -380,9 +274,8 @@
   async function updateActorDamageImmunities(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.traits.di': value });
+  await updateSource($actor, { 'system.traits.di': value });
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.di = value;
       } catch (error) {
         console.error('Failed to update actor damage immunities:', error);
       }
@@ -392,9 +285,8 @@
   async function updateActorDamageVulnerabilities(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.traits.dv': value });
+  await updateSource($actor, { 'system.traits.dv': value });
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.dv = value;
       } catch (error) {
         console.error('Failed to update actor damage vulnerabilities:', error);
       }
@@ -404,9 +296,8 @@
   async function updateActorConditionImmunities(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.traits.ci': value });
+            await updateSource($actor, { 'system.traits.ci': value });
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.ci = value;
       } catch (error) {
         console.error('Failed to update actor condition immunities:', error);
       }
@@ -414,41 +305,23 @@
   }
 
   async function updateActorSenses(sense, value) {
-    console.log('🔍 updateActorSenses called with:', { sense, value });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update senses...');
-      try {
-        const updateData = {
-          [`system.attributes.senses.${sense}`]: value
-        };
-        
-        console.log('📝 Calling Utility.updateSource with:', updateData);
-        await updateSource($actor, updateData);
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.attributes?.senses) {
-          npc.system.attributes.senses[sense] = value;
-        }
-        
-        console.log('🎉 Senses update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor senses:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      const updateData = { [`system.attributes.senses.${sense}`]: value };
+      await updateSource($actor, updateData);
+    } catch (error) {
+      console.error('Failed to update actor senses:', error?.message ?? error);
     }
   }
 
   async function updateActorPassivePerception(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.attributes.prof': parseInt(value) || 2 });
+        if (updateSource && $actor && typeof $actor.updateSource === 'function') {
+            await updateSource($actor, { 'system.attributes.prof': parseInt(value) || 2 });
+        } else {
+          await updateSource($actor, { 'system.attributes.prof': parseInt(value) || 2 });
+        }
         // Also update the local npc object for reactivity
-        if (npc?.system?.attributes) npc.system.attributes.prof = parseInt(value) || 10;
       } catch (error) {
         console.error('Failed to update actor passive perception:', error);
       }
@@ -463,24 +336,18 @@
       console.log('✅ $actor found, attempting to update languages...');
       try {
         const { type, language, isCustom } = updateData;
-        
+
         if (type === 'add') {
           if (isCustom) {
-            // Add custom language
+            // Add custom language - append to existing custom languages
             const currentCustom = npc?.system?.traits?.languages?.custom || '';
             const newCustom = currentCustom ? `${currentCustom}, ${language}` : language;
             await updateSource($actor, { 'system.traits.languages.custom': newCustom });
-            if (npc?.system?.traits?.languages) {
-              npc.system.traits.languages.custom = newCustom;
-            }
           } else {
-            // Add standard language
+            // Add standard language - append to existing value array
             const currentLanguages = npc?.system?.traits?.languages?.value || [];
-            const newLanguages = Array.isArray(currentLanguages) ? [...currentLanguages, language] : [language];
+            const newLanguages = [...currentLanguages, language];
             await updateSource($actor, { 'system.traits.languages.value': newLanguages });
-            if (npc?.system?.traits?.languages) {
-              npc.system.traits.languages.value = newLanguages;
-            }
           }
         } else if (type === 'remove') {
           if (isCustom) {
@@ -488,17 +355,11 @@
             const currentCustom = npc?.system?.traits?.languages?.custom || '';
             const newCustom = currentCustom.split(',').filter(lang => lang.trim() !== language).join(', ').trim();
             await updateSource($actor, { 'system.traits.languages.custom': newCustom });
-            if (npc?.system?.traits?.languages) {
-              npc.system.traits.languages.custom = newCustom;
-            }
           } else {
             // Remove standard language
             const currentLanguages = npc?.system?.traits?.languages?.value || [];
             const newLanguages = currentLanguages.filter(lang => lang !== language);
             await updateSource($actor, { 'system.traits.languages.value': newLanguages });
-            if (npc?.system?.traits?.languages) {
-              npc.system.traits.languages.value = newLanguages;
-            }
           }
         }
         
@@ -523,12 +384,10 @@
         
         if (type === 'add') {
           // Add saving throw proficiency
-          await updateSource($actor, { [`system.abilities.${ability}.proficient`]: true });
-          if (npc?.system?.abilities?.[ability]) npc.system.abilities[ability].proficient = true;
+            await updateSource($actor, { [`system.abilities.${ability}.proficient`]: true });
         } else if (type === 'remove') {
           // Remove saving throw proficiency
-          await updateSource($actor, { [`system.abilities.${ability}.proficient`]: false });
-          if (npc?.system?.abilities?.[ability]) npc.system.abilities[ability].proficient = false;
+            await updateSource($actor, { [`system.abilities.${ability}.proficient`]: false });
         }
         
         console.log('✅ Saving throws updated successfully');
@@ -555,9 +414,8 @@
   async function updateActorXP(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.details.xp.value': parseInt(value) || 200 });
+          await updateSource($actor, { 'system.details.xp.value': parseInt(value) || 200 });
         // Also update the local npc object for reactivity
-        if (npc?.system?.details?.xp) npc.system.details.xp.value = parseInt(value) || 200;
       } catch (error) {
         console.error('Failed to update actor XP:', error);
       }
@@ -569,9 +427,8 @@
   async function updateActorProficiencyBonus(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.attributes.pb': parseInt(value) || 2 });
+          await updateSource($actor, { 'system.attributes.pb': parseInt(value) || 2 });
         // Also update the local npc object for reactivity
-        if (npc?.system?.attributes) npc.system.attributes.pb = parseInt(value) || 2;
       } catch (error) {
         console.error('Failed to update actor proficiency bonus:', error);
       }
@@ -581,9 +438,8 @@
   async function updateActorLegendaryResistances(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.traits.legendaryResistances': value });
+          await updateSource($actor, { 'system.traits.legendaryResistances': value });
         // Also update the local npc object for reactivity
-        if (npc?.system?.traits) npc.system.traits.legendaryResistances = value;
       } catch (error) {
         console.error('Failed to update actor legendary resistances:', error);
       }
@@ -593,9 +449,8 @@
   async function updateActorLegendaryActions(value) {
     if ($actor) {
       try {
-        await updateSource($actor, { 'system.resources.legact.value': parseInt(value) || 3 });
+          await updateSource($actor, { 'system.resources.legact.value': parseInt(value) || 3 });
         // Also update the local npc object for reactivity
-        if (npc?.system?.resources?.legact) npc.system.resources.legact.value = parseInt(value) || 3;
       } catch (error) {
         console.error('Failed to update actor legendary actions:', error);
       }
@@ -604,128 +459,43 @@
 
   // Handle ability score updates from AttributeScore components
   async function updateActorAbilityScore(ability, value) {
-    console.log('🔍 updateActorAbilityScore called with:', { ability, value });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update ability score...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { [`system.abilities.${ability}.value`]: value });
-        await updateSource($actor, { [`system.abilities.${ability}.value`]: value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.abilities?.[ability]) {
-          console.log('🔄 Updating local npc.system.abilities', ability, 'from', npc.system.abilities[ability].value, 'to', value);
-          npc.system.abilities[ability].value = value;
-          console.log('✅ Local npc.system.abilities', ability, 'updated to:', npc.system.abilities[ability].value);
-        }
-        
-        console.log('🎉 Ability score update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor ability score:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { [`system.abilities.${ability}.value`]: value });
+    } catch (error) {
+      console.error('Failed to update actor ability score:', error?.message ?? error);
     }
   }
 
   // Handle HP updates from HitPoints component
   async function updateActorHP(type, value) {
-    console.log('🔍 updateActorHP called with:', { type, value });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update HP...');
-      try {
-        let updateData = {};
-        if (type === 'max') {
-          updateData = {
-            'system.attributes.hp.max': value,
-            'system.attributes.hp.value': value
-          };
-        } else if (type === 'formula') {
-          updateData = {
-            'system.attributes.hp.formula': value
-          };
-        }
-        
-        console.log('📝 Calling Utility.updateSource with:', updateData);
-        await updateSource($actor, updateData);
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.attributes?.hp) {
-          if (type === 'max') {
-            npc.system.attributes.hp.max = value;
-            npc.system.attributes.hp.value = value;
-          } else if (type === 'formula') {
-            npc.system.attributes.hp.formula = value;
-          }
-        }
-        
-        console.log('🎉 HP update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor HP:', error);
-        console.error('❌ Error stack:', error.stack);
+    try {
+      let updateData = {};
+      if (type === 'max') {
+        updateData = { 'system.attributes.hp.max': value, 'system.attributes.hp.value': value };
+      } else if (type === 'formula') {
+        updateData = { 'system.attributes.hp.formula': value };
       }
-    } else {
-      console.error('❌ No $actor found!');
+      await updateSource($actor, updateData);
+    } catch (error) {
+      console.error('Failed to update actor HP:', error?.message ?? error);
     }
   }
 
   // Handle Speed updates from Speed component
   async function updateActorSpeed(type, value) {
-    console.log('🔍 updateActorSpeed called with:', { type, value });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update speed...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { [`system.attributes.movement.${type}`]: value });
-        await updateSource($actor, { [`system.attributes.movement.${type}`]: value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.attributes?.movement) {
-          npc.system.attributes.movement[type] = value;
-        }
-        
-        console.log('🎉 Speed update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor speed:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { [`system.attributes.movement.${type}`]: value });
+    } catch (error) {
+      console.error('Failed to update actor speed:', error?.message ?? error);
     }
   }
 
   // Handle AC updates from ArmorClass component
   async function updateActorAC(value) {
-    console.log('🔍 updateActorAC called with:', { value });
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update AC...');
-      try {
-        console.log('📝 Calling Utility.updateSource with:', { 'system.attributes.ac.value': value });
-        await updateSource($actor, { 'system.attributes.ac.value': value });
-        console.log('✅ Utility.updateSource completed');
-        
-        // Also update the local npc object for reactivity
-        if (npc?.system?.attributes?.ac) {
-          npc.system.attributes.ac.value = value;
-        }
-        
-        console.log('🎉 AC update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor AC:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
+    try {
+      await updateSource($actor, { 'system.attributes.ac.value': value });
+    } catch (error) {
+      console.error('Failed to update actor AC:', error?.message ?? error);
     }
   }
 
@@ -779,20 +549,89 @@
             label: 'Apply',
             icon: 'fas fa-check',
             disabled: true,
-            // callback will be handled by the promise resolution - leave as default
+            autoClose: false,
+            // Keep dialog open; perform apply and surface diffs via application.data
+            onPress: async ({ application }) => {
+              try {
+                console.log('[CR Dialog] Apply button clicked - selectedTargetCR:', selectedTargetCR);
+                const value = ensureNumberCR(selectedTargetCR ?? props.calculatedCR ?? props.initialCR ?? 0, 0);
+                console.log('[CR Dialog] Resolved target CR value:', value);
+                const updates = CRCalculator.adjustActorToCR($actor, value) || {};
+                if (!updates['system.details.cr']) updates['system.details.cr'] = value;
+                if (!updates['system.details.xp.value']) updates['system.details.xp.value'] = props.xp ?? 0;
+                // Capture previous values for Undo
+                const previous = {};
+                for (const path of Object.keys(updates)) {
+                  previous[path] = getValueAt($actor, path);
+                }
+                console.log('[CR Dialog] Applying updates via updateSource:$actor, ', updates, 'previous:', previous);
+                await updateSource($actor, updates);
+                applyUpdatesToLocalNpc(updates);
+                // Build a simple diff list for dialog presentation
+                const diffs = Object.keys(updates).map(p => ({ path: p, from: previous[p], to: updates[p] }));
+                // Persist the lastApplied for Undo
+                lastApplied = { updates, previous };
+                // Push the diffs into the dialog data so content can render them, and enable Undo button
+                try { application?.data?.set?.('appliedChanges', diffs); } catch (_) {
+                  // ignore
+                }
+                try { application?.data?.set?.('buttons.undo.disabled', false); } catch (_) {}
+                // Recalculate breakdown after applying so dialog can show new calculated results
+                try {
+                  const newBreakdown = await CRCalculator.calculateCurrentCR($actor);
+                  application?.data?.set?.('recalculatedBreakdown', newBreakdown);
+                } catch (_) {}
+                ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${props.xp ?? 0}) to actor.`);
+              } catch (err) {
+                console.error('Failed to apply CR from dialog button callback:', err);
+                ui.notifications?.error?.('Failed to apply calculated CR.');
+              } finally {
+                selectedTargetCR = null;
+              }
+            }
+          },
+          undo: {
+            label: 'Undo',
+            icon: 'fas fa-undo',
+            disabled: true,
+            autoClose: false,
+            // Revert the last applied updates
+            onPress: async ({ application }) => {
+              try {
+                if (!lastApplied) return false;
+                const revert = lastApplied.previous || {};
+                console.log('[CR Dialog] Undo clicked - reverting:', revert);
+                await updateSource($actor, revert);
+                applyUpdatesToLocalNpc(revert);
+                // Clear dialog diffs and disable Undo
+                try { application?.data?.set?.('appliedChanges', null); } catch (_) {}
+                try { application?.data?.set?.('buttons.undo.disabled', true); } catch (_) {}
+                // Recalculate breakdown after revert
+                try {
+                  const newBreakdown = await CRCalculator.calculateCurrentCR($actor);
+                  application?.data?.set?.('recalculatedBreakdown', newBreakdown);
+                } catch (_) {}
+                ui.notifications?.info?.('Reverted last CR application.');
+                lastApplied = null;
+              } catch (err) {
+                console.error('Failed to undo CR application:', err);
+                ui.notifications?.error?.('Failed to undo CR application.');
+              }
+            }
           },
           cancel: {
             label: 'Cancel',
             icon: 'fas fa-times'
           }
         },
-        content: {
+  content: {
           class: CRCalculatorDialog,
           props: {
             type: 'apply',
             defensive: props.defensive,
             offensive: props.offensive,
             initialCR: props.initialCR,
+            calculatedCR: props.calculatedCR,
             xp: props.xp,
             pb: props.pb,
             hp: props.hp,
@@ -811,10 +650,10 @@
             attackDiff: props.attackDiff,
             saveDiff: props.saveDiff,
             finalRule: props.finalRule,
-            onTargetCRChange: (selected) => { enableApplyButton(); }
+            onTargetCRChange: (selected) => { selectedTargetCR = selected; enableApplyButton(); }
           }
         },
-      }, { classes: ['tjs-actor-studio', 'GAS'] });
+  }, { classes: ['tjs-actor-studio', 'GAS'], data: { appliedChanges: null, recalculatedBreakdown: null, buttons: { undo: { disabled: true } } } });
   return result
   }
 
@@ -836,6 +675,52 @@
       // ignore DOM errors
     }
   }
+
+  // Apply updates object to local `npc` for reactivity after calling updateSource
+  function applyUpdatesToLocalNpc(updates) {
+    if (!npc || !updates) return;
+    for (const [path, value] of Object.entries(updates)) {
+      const parts = path.split('.');
+      let target = npc;
+      for (let i = 0; i < parts.length; i++) {
+        const key = parts[i];
+        const isLast = i === parts.length - 1;
+        // handle numeric indices for arrays
+        const idx = Number.isFinite(Number(key)) ? Number(key) : null;
+        if (isLast) {
+          if (idx !== null && Array.isArray(target)) target[idx] = value;
+          else target[key] = value;
+        } else {
+          if (idx !== null) {
+            if (!Array.isArray(target)) break;
+            if (!target[idx]) target[idx] = {};
+            target = target[idx];
+          } else {
+            if (target[key] == null) target[key] = {};
+            target = target[key];
+          }
+        }
+      }
+    }
+  }
+
+  // Read a value from actor data using a dotted path like 'system.attributes.hp.max'
+  function getValueAt(doc, path) {
+    console.log(doc);
+    console.log(path);
+    if (!doc || !path) return undefined;
+    const parts = path.split('.');
+    let cur = doc;
+    for (const p of parts) {
+      if (cur == null) return undefined;
+      // numeric index handling
+      const idx = Number.isFinite(Number(p)) ? Number(p) : null;
+      cur = idx !== null && Array.isArray(cur) ? cur[idx] : cur[p];
+    }
+    return cur;
+  }
+
+
 
   async function getCRprops(currentCRBreakdown) {
     // Build dialog props
@@ -907,19 +792,25 @@
       // Prepare a one-time global listener for the dialog's 'apply' event.
       const onApply = async (e) => {
         try {
-          const value = ensureNumberCR(e.detail?.targetCR ?? currentCRBreakdown.calculatedCR, 0);
-          await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
-          if (npc?.system?.details) {
-            npc.system.details.cr = ensureNumberCR(value, 0);
-            if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
-          }
+          // Prefer the selected target provided by the dialog content; fall back to event.detail or calculatedCR
+          const value = ensureNumberCR(selectedTargetCR ?? e.detail?.targetCR ?? currentCRBreakdown.calculatedCR, 0);
+          const updates = CRCalculator.adjustActorToCR($actor, value) || {};
+          // Always ensure cr/xp are present as a minimum fallback
+          if (!updates['system.details.cr']) updates['system.details.cr'] = value;
+          if (!updates['system.details.xp.value']) updates['system.details.xp.value'] = currentCRBreakdown.xp ?? 0;
+                await updateSource($actor, updates);
+          // Apply updates to local npc for reactivity
+          applyUpdatesToLocalNpc(updates);
           ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
         } catch (err) {
           console.error('Failed to apply CR via dialog apply event:', err);
           ui.notifications?.error?.('Failed to apply calculated CR.');
+        } finally {
+          // reset selected target
+          selectedTargetCR = null;
         }
       };
-      window.addEventListener('apply', onApply, { once: true });
+  // Previous global apply event listener removed - dialog chrome button now invokes apply directly.
       switch(type) {
         case 'apply': 
           result = await openCRWait(t('CRCalculator.ApplicatorTitle'), CRprops );
@@ -935,10 +826,6 @@
             // If the user used the prompt's primary OK button, fall back to applying the calculatedCR
             const value = currentCRBreakdown.calculatedCR;
             await updateSource($actor, { 'system.details.cr': value, 'system.details.xp.value': currentCRBreakdown.xp ?? 0 });
-            if (npc?.system?.details) {
-              npc.system.details.cr = ensureNumberCR(value, 0);
-              if (npc.system.details.xp) npc.system.details.xp.value = currentCRBreakdown.xp ?? 0;
-            }
             ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
           } catch (err) {
             console.error('Failed to apply CR:', err);
@@ -1089,6 +976,7 @@
           abilities="{npc?.system?.abilities || {}}"
           proficiencyBonus="{pb}"
           readonly="{readonly}"
+          includeRollButtons="{includeRollButtons}"
           on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
         )
     hr.my-sm
