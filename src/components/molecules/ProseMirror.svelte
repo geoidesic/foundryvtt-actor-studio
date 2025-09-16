@@ -13,17 +13,17 @@
 
   const doc = getContext("#doc");
   
-  console.log("ProseMirror component mounting, doc:", $doc, "attr:", attr);
+  // console.log("ProseMirror component mounting, doc:", $doc, "attr:", attr);
 
   function doSomethingWithEnrichedContent(event) {
-    console.log(`! event - editor:enrichedContent - ${event.detail.enrichedContent}`)
+    // console.log(`! event - editor:enrichedContent - ${event.detail.enrichedContent}`)
   }
 
   function handleSave(event) {
     if (inMemory && $doc) {
       // For in-memory actors, use updateSource to save changes
       const newContent = event.detail.content;
-      console.log(`Saving in-memory content for ${attr}:`, newContent);
+      // console.log(`Saving in-memory content for ${attr}:`, newContent);
       
       // Update the actor's data directly using updateSource
       import("~/src/helpers/Utility").then(({ updateSource }) => {
@@ -33,7 +33,7 @@
       });
     }
     
-    console.log(`! event - editor:save - ${event.detail.content}`);
+    // console.log(`! event - editor:save - ${event.detail.content}`);
   }
 
 
