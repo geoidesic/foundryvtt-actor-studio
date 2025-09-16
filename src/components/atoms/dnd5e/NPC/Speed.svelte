@@ -142,7 +142,7 @@
                         placeholder="30"
                         autofocus
                       )
-                      button.remove-btn(
+                      button.button-remove(
                         on:click!="{() => handleRemoveMovement(movement.key)}"
                         title="Remove {getMovementLabel(movement.key)}"
                       ) ×
@@ -152,7 +152,7 @@
                           class!="{editingMovement === movement.key ? 'editing' : ''}"
                         ) {movement.value}
                         span.unit ft.
-                        button.remove-btn(
+                        button.button-remove(
                           on:click!="{() => handleRemoveMovement(movement.key)}"
                           title="Remove {getMovementLabel(movement.key)}"
                         ) ×
@@ -172,75 +172,45 @@
                   placeholder="30"
                 )
                 span.unit ft.
-                button.confirm-btn(
+                button.button-confirm(
                   on:click!="{confirmAddMovement}"
                   title="Add Movement"
                 ) ✓
-                button.cancel-btn(
+                button.button-cancel(
                   on:click!="{cancelAddMovement}"
                   title="Cancel"
                 ) ×
             +if("!showAddSelect")
               .add-movement-buttons
                 +if("availableTypes && availableTypes.length > 0")
-                  button.add-btn(
+                  button.button-confirm(
                     on:click!="{handleAddMovement}"
                     title="Add Movement"
-                  ) + Add Movement
-                button.done-btn(
+                  ) +
+                button.button-confirm(
                   on:click!="{stopEditing}"
                   title="Done editing"
-                ) ✓ Done
+                ) ✓
 </template>
 
 <style lang="sass" scoped>
+  @import "/Users/noeldacosta/code/foundryvtt-actor-studio/styles/Mixins.sass"
 .speed-container
   .movements-display
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include display-hover
   
   .no-movement
-    color: var(--color-text-secondary, #666)
-    font-style: italic
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include empty-state
   
-  .done-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-left: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .movements-edit-mode
     margin-top: 4px
   
   .add-movement-buttons
-    display: flex
-    gap: 4px
-    margin-top: 4px
+    @include button-container
   
   .movement-item
-    display: flex
-    align-items: center
-    gap: 4px
-    margin-bottom: 2px
+    @include item-list
     
     .movement-type
       font-weight: bold
@@ -273,99 +243,21 @@
       color: var(--color-text-secondary, #666)
       font-size: 0.9em
     
-    .remove-btn
-      background: var(--color-error, #dc3545)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-error-hover, #c82333)
+    .button-remove
+      @include button-remove
   
-  .add-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .add-movement-form
-    display: flex
-    align-items: center
-    gap: 4px
+    @include form-container
     margin-top: 4px
     
     .movement-type-select
+      @include form-select
       min-width: 80px
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
     
     .movement-value-input
-      width: 50px
-      text-align: center
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+      @include form-number-input
     
-    .confirm-btn
-      background: var(--color-success, #28a745)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-success-hover, #218838)
-    
-    .cancel-btn
-      background: var(--color-secondary, #6c757d)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-secondary-hover, #5a6268)
   
   .no-movement
     color: var(--color-text-secondary, #666)

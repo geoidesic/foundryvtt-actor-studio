@@ -157,7 +157,7 @@
                     placeholder="60"
                     autofocus
                   )
-                  button.remove-btn(
+                  button.button-remove(
                     on:click!="{() => handleRemoveSense(sense.key)}"
                     title="Remove {getSenseLabel(sense.key)}"
                   ) ×
@@ -167,7 +167,7 @@
                       class!="{editingSense === sense.key ? 'editing' : ''}"
                     ) {sense.value}
                     span.unit ft.
-                    button.remove-btn(
+                    button.button-remove(
                       on:click!="{() => handleRemoveSense(sense.key)}"
                       title="Remove {getSenseLabel(sense.key)}"
                     ) ×
@@ -187,90 +187,47 @@
               placeholder="60"
             )
             span.unit ft.
-            button.confirm-btn(
+            button.button-confirm(
               on:click!="{confirmAddSense}"
               title="Add Sense"
             ) ✓
-            button.cancel-btn(
+            button.button-cancel(
               on:click!="{cancelAddSense}"
               title="Cancel"
             ) ×
         +if("!showAddSelect")
           .add-sense-buttons
             +if("availableSenses && availableSenses.length > 0")
-              button.add-btn(
+              button.button-confirm(
                 on:click!="{handleAddSense}"
                 title="Add Sense"
-              ) + Add Sense
-            button.done-btn(
+              ) +
+            button.button-confirm(
               on:click!="{stopEditing}"
               title="Done editing"
-            ) ✓ Done
+            ) ✓
 </template>
 
 <style lang="sass" scoped>
+  @import "/Users/noeldacosta/code/foundryvtt-actor-studio/styles/Mixins.sass"
 .senses-container
   .senses-display
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include display-hover
   
   .no-senses
-    color: var(--color-text-secondary, #666)
-    font-style: italic
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include empty-state
   
-  .done-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-left: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .senses-edit-mode
     margin-top: 4px
   
   .add-sense-buttons
-    display: flex
-    gap: 4px
-    margin-top: 4px
+    @include button-container
 
   input.sense-value
-    width: 50px
-    text-align: center
-    padding: 2px 4px
-    border: 1px solid var(--color-border-highlight, #007bff)
-    border-radius: 3px
-    background: var(--color-bg-primary, white)
-    color: var(--color-text-primary, #333)
-    font-size: inherit
-    font-family: inherit
-    
-    &:focus
-      outline: none
-      border-color: var(--color-border-highlight, #007bff)
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+    @include form-number-input
   .sense-item
-    display: flex
-    align-items: center
-    gap: 4px
-    margin-bottom: 2px
+    @include sense-item
     
     .sense-type
       font-weight: 500
@@ -278,115 +235,27 @@
       text-transform: capitalize
     
     .sense-value
-      width: 50px
-      text-align: center
-      padding: 2px 4px
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+      @include form-number-input
     
     .unit
       color: var(--color-text-secondary, #666)
       font-size: 0.9em
     
-    .remove-btn
-      background: var(--color-error, #dc3545)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-error-hover, #c82333)
+    .button-remove
+      @include button-remove
   
-  .add-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-top: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .add-sense-form
-    display: flex
-    align-items: center
-    gap: 4px
+    @include form-container
     margin-top: 4px
     
     .sense-type-select
+      @include form-select
       min-width: 100px
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
     
     .sense-value-input
-      width: 50px
-      text-align: center
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+      @include form-number-input
     
-    .confirm-btn
-      background: var(--color-success, #28a745)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-success-hover, #218838)
-    
-    .cancel-btn
-      background: var(--color-secondary, #6c757d)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-secondary-hover, #5a6268)
   
   .no-senses
     color: var(--color-text-secondary, #666)

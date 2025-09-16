@@ -932,7 +932,7 @@
         )
     hr.my-sm
     
-    .flexrow.justify-flexrow-vertical-top
+    .flexrow.justify-flexrow-vertical-top.gap-4
 
       .flex1
         Skills(

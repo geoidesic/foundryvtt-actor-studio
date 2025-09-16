@@ -380,4 +380,320 @@
   border-color: var(--border-color)
 
 @mixin border-color-button
-  border-color: var(--button-border-color) 
+  border-color: var(--button-border-color)
+
+// ========================================
+// STANDARDIZED BUTTON MIXINS
+// ========================================
+
+// Base button mixin for consistent styling
+@mixin button-base
+  display: inline-flex
+  align-items: center
+  justify-content: center
+  text-align: center
+  border: none
+  cursor: pointer
+  font-weight: 500
+  transition: all 0.2s ease
+  text-decoration: none
+  user-select: none
+  
+  &:disabled
+    cursor: not-allowed
+    opacity: 0.6
+    
+  &:hover:not(:disabled)
+    transform: translateY(-1px)
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
+    
+  &:active:not(:disabled)
+    transform: translateY(0)
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2)
+
+// Green button variants (success/confirm actions)
+@mixin button-green
+  @include button-base
+  background: var(--color-success, #28a745)
+  color: white
+  
+  &:hover:not(:disabled)
+    background: var(--color-success-hover, #218838)
+
+// Generic button with customizable color
+@mixin button-colored($bg-color, $hover-color: null)
+  @include button-base
+  background: $bg-color
+  color: white
+  
+  &:hover:not(:disabled)
+    background: $hover-color or darken($bg-color, 10%)
+
+@mixin button-green-rectangular
+  @include button-green
+  padding: 6px 12px
+  border-radius: var(--border-radius)
+  font-size: 14px
+  font-weight: 600
+  min-height: 32px
+
+@mixin button-green-circular
+  @include button-green
+  width: 1.5rem
+  height: 1.5rem
+  border-radius: 50%
+  padding: 0
+  font-size: 0.75rem
+
+@mixin button-green-oval
+  @include button-colored(var(--color-success, #28a745), var(--color-success-hover, #218838))
+  width: 32px
+  height: 32px
+  border-radius: var(--border-radius)
+  padding: 0
+  font-size: 16px
+  font-weight: 600
+  flex-shrink: 0
+
+// Blue button variants (info/primary actions)
+@mixin button-blue
+  @include button-base
+  background: var(--color-info, #17a2b8)
+  color: white
+  
+  &:hover:not(:disabled)
+    background: var(--color-info-hover, #138496)
+
+@mixin button-blue-rectangular
+  @include button-blue
+  padding: 0.5rem 1rem
+  border-radius: var(--border-radius)
+  font-size: 0.875rem
+
+@mixin button-blue-circular
+  @include button-blue
+  width: 1.5rem
+  height: 1.5rem
+  border-radius: 50%
+  padding: 0
+  font-size: 0.75rem
+
+@mixin button-blue-oval
+  @include button-colored(var(--color-info, #17a2b8), var(--color-info-hover, #138496))
+  width: 1.5rem
+  height: 1rem
+  border-radius: var(--border-radius)
+  padding: 0
+  font-size: 0.75rem
+
+// Red button variants (danger/remove actions)
+@mixin button-red
+  @include button-base
+  background: var(--color-error, #dc3545)
+  color: white
+  
+  &:hover:not(:disabled)
+    background: var(--color-error-hover, #c82333)
+
+@mixin button-red-rectangular
+  @include button-red
+  padding: 0.5rem 1rem
+  border-radius: var(--border-radius)
+  font-size: 0.875rem
+
+@mixin button-red-circular
+  @include button-red
+  width: 20px
+  height: 20px
+  border-radius: 50%
+  padding: 0
+  font-size: 12px
+  line-height: 1
+  flex-shrink: 0
+
+@mixin button-red-oval
+  @include button-red
+  width: 1.5rem
+  height: 1rem
+  border-radius: var(--border-radius)
+  padding: 0
+  font-size: 0.75rem
+
+// Grey button variants (secondary/cancel actions)
+@mixin button-grey
+  @include button-base
+  background: var(--color-secondary, #6c757d)
+  color: white
+  
+  &:hover:not(:disabled)
+    background: var(--color-secondary-hover, #5a6268)
+
+@mixin button-grey-rectangular
+  @include button-grey
+  padding: 0.5rem 1rem
+  border-radius: var(--border-radius)
+  font-size: 0.875rem
+
+@mixin button-grey-circular
+  @include button-grey
+  width: 1.5rem
+  height: 1.5rem
+  border-radius: 50%
+  padding: 0
+  font-size: 0.75rem
+
+@mixin button-grey-oval
+  @include button-grey
+  width: 32px
+  height: 32px
+  border-radius: var(--border-radius)
+  padding: 0
+  font-size: 16px
+  font-weight: 600
+  flex-shrink: 0
+
+// Convenience mixins for common button patterns
+@mixin button-add
+  @include button-green-rectangular
+  
+@mixin button-remove
+  @include button-red-circular
+  
+@mixin button-confirm
+  @include button-green-oval
+  
+@mixin button-cancel
+  @include button-grey-oval
+  
+@mixin button-primary
+  @include button-colored(var(--color-info, #17a2b8), var(--color-info-hover, #138496))
+  padding: 6px 12px
+  border-radius: var(--border-radius)
+  font-size: 14px
+  font-weight: 600
+  min-height: 32px
+  
+@mixin button-danger
+  @include button-red-rectangular
+
+// Global button classes
+.button-confirm
+  @include button-confirm
+
+.button-remove
+  @include button-remove
+
+.button-add
+  @include button-add
+
+.button-cancel
+  @include button-cancel
+
+.button-primary
+  @include button-primary
+
+// ========================================
+// LAYOUT MIXINS FOR COMPONENTS
+// ========================================
+
+// Common item list layout
+@mixin item-list
+  display: flex
+  align-items: center
+  gap: 8px
+  margin-bottom: 3px
+  min-height: 24px
+
+// Common button container layout
+@mixin button-container
+  display: flex
+  align-items: center
+  gap: 8px
+  margin-top: 8px
+
+// Common form layout
+@mixin form-container
+  display: flex
+  align-items: center
+  gap: 8px
+  margin-top: 8px
+
+// Common text styling for item labels
+@mixin item-label
+  font-weight: 600
+  color: var(--color-text-highlight, #ffffff)
+  line-height: 20px
+
+// Common text styling for item values
+@mixin item-value
+  font-weight: 500
+  text-align: center
+  color: var(--color-text-highlight, #ffffff)
+  line-height: 20px
+
+// Common sense item layout
+@mixin sense-item
+  @include item-list
+
+// Common button positioning
+@mixin button-remove
+  margin-left: auto
+  flex-shrink: 0
+
+// Common form input styling
+@mixin form-input
+  padding: 2px 4px
+  border: 1px solid var(--color-border-highlight, #007bff)
+  border-radius: 3px
+  background: var(--color-bg-primary, white)
+  color: var(--color-text-primary, #333)
+  font-size: inherit
+  font-family: inherit
+  
+  &:focus
+    outline: none
+    border-color: var(--color-border-highlight, #007bff)
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
+
+// Common select styling
+@mixin form-select
+  @include form-input
+  min-width: 80px
+
+// Common number input styling
+@mixin form-number-input
+  @include form-input
+  width: 50px
+  text-align: center
+
+// Common display hover state
+@mixin display-hover
+  cursor: pointer
+  padding: 2px 4px
+  border-radius: 3px
+  transition: background-color 0.2s
+  
+  &.editable:hover
+    background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+
+// Common empty state styling
+@mixin empty-state
+  color: var(--color-text-secondary, #666)
+  font-style: italic
+  @include display-hover
+
+// Global layout classes
+.item-list
+  @include item-list
+
+.button-container
+  @include button-container
+
+.form-container
+  @include form-container
+
+.item-label
+  @include item-label
+
+.item-value
+  @include item-value 

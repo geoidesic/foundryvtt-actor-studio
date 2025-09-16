@@ -170,7 +170,7 @@
                 span.ability-abbr {savingThrow.abbr}
                 span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
                 +if("!readonly")
-                  button.remove-btn(
+                  button.button-remove(
                     on:click!="{() => handleRemoveSavingThrow(savingThrow.key)}"
                     title="Remove {savingThrow.label} proficiency"
                   ) ×
@@ -183,75 +183,47 @@
             )
               +each("availableAbilitiesToAdd as ability")
                 option(value="{ability.key}") {ability.label}
-            button.confirm-btn(
+            button.button-confirm(
               on:click!="{confirmAddSavingThrow}"
               title="Add Saving Throw Proficiency"
             ) ✓
-            button.cancel-btn(
+            button.button-cancel(
               on:click!="{cancelAddSavingThrow}"
               title="Cancel"
             ) ×
         +if("!showAddSelect")
           .add-saving-throw-buttons
             +if("availableAbilitiesToAdd.length > 0")
-              button.add-btn(
+              button(
+                class="button-confirm"
                 on:click!="{handleAddSavingThrow}"
                 title="Add saving throw proficiency"
-              ) + Add Proficiency
-            button.done-btn(
+              ) +
+            button(
+              class="button-confirm"
               on:click!="{stopEditing}"
               title="Done editing"
-            ) ✓ Done
+            ) ✓
 </template>
 
 <style lang="sass" scoped>
+  @import "/Users/noeldacosta/code/foundryvtt-actor-studio/styles/Mixins.sass"
 .saving-throws-container
   .saving-throws-display
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include display-hover
   
   .no-saving-throws
-    color: var(--color-text-muted, #6c757d)
-    font-style: italic
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include empty-state
   
-  .done-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-left: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .saving-throws-edit-mode
     margin-top: 4px
   
   .add-saving-throw-buttons
-    display: flex
-    gap: 4px
-    margin-top: 4px
+    @include button-container
   
   .saving-throw-item
-    display: flex
-    align-items: center
-    gap: 8px
-    margin-bottom: 3px
+    @include item-list
     
     .roll
       width: 24px
@@ -264,77 +236,26 @@
       background: rgba(0,0,0,.05)
     
     .ability-abbr
-      font-weight: 600
+      @include item-label
       min-width: 40px
-      color: var(--color-text-highlight, #ffffff)
     
     .ability-value
-      font-weight: 500
+      @include item-value
       min-width: 30px
-      text-align: center
-      color: var(--color-text-highlight, #ffffff)
     
-    .remove-btn
-      background: var(--color-error, #dc3545)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-error-hover, #c82333)
+    .button-remove
+      @include button-remove
   
-  .add-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-top: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .add-saving-throw-form
-    display: flex
-    align-items: center
-    gap: 4px
-    margin-top: 4px
+    @include form-container
     
     .ability-type-select
+      @include form-select
       min-width: 120px
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
       background: var(--color-bg-input, #2c2c2c)
       color: var(--color-text, #ffffff)
     
-    .confirm-btn,
-    .cancel-btn
-      background: var(--color-success, #28a745)
-      color: white
-      border: none
-      border-radius: 3px
-      padding: 2px 6px
-      cursor: pointer
-      font-size: 12px
-      line-height: 1
-      
-      &:hover
-        background: var(--color-success-hover, #218838)
-    
-    .cancel-btn
-      background: var(--color-secondary, #6c757d)
-      
-      &:hover
-        background: var(--color-secondary-hover, #5a6268)
   
   .no-saving-throws
     color: var(--color-text-muted, #6c757d)

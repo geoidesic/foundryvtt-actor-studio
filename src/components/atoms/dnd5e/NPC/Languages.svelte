@@ -207,7 +207,7 @@
               +each("currentLanguages as language")
                 .language-item(class!="language-{language.type}")
                   span.language-name(class!="language-type-{language.type}") {language.label}
-                  button.remove-btn(
+                  button.button-remove(
                     on:click!="{() => handleRemoveLanguage(language.key, language.type)}"
                     title="Remove {language.label}"
                   ) ×
@@ -220,11 +220,11 @@
             )
               +each("availableLanguagesToAdd as language")
                 option(value="{language.key}") {language.label}
-            button.confirm-btn(
+            button.button-confirm(
               on:click!="{confirmAddLanguage}"
               title="Add Language"
             ) ✓
-            button.cancel-btn(
+            button.button-cancel(
               on:click!="{cancelAddLanguage}"
               title="Cancel"
             ) ×
@@ -236,74 +236,46 @@
               placeholder="Enter custom language"
               on:keydown!="{e => e.key === 'Enter' && confirmAddCustomLanguage()}"
             )
-            button.confirm-btn(
+            button.button-confirm(
               on:click!="{confirmAddCustomLanguage}"
               title="Add Custom Language"
             ) ✓
-            button.cancel-btn(
+            button.button-cancel(
               on:click!="{cancelAddCustomLanguage}"
               title="Cancel"
             ) ×
         +if("!showAddSelect && !showCustomInput")
           .add-language-buttons
             +if("availableLanguagesToAdd.length > 0")
-              button.add-btn(
+              button.button-confirm(
                 on:click!="{handleAddLanguage}"
                 title="Add standard language"
-              ) + Add Language
-            button.add-custom-btn(
+              ) +
+            button.button-primary(
               on:click!="{handleAddCustomLanguage}"
               title="Add custom language"
-            ) + Add Custom
-            button.done-btn(
+            ) + Custom
+            button.button-confirm(
               on:click!="{stopEditing}"
               title="Done editing"
-            ) ✓ Done
+            ) ✓
 </template>
 
 <style lang="sass" scoped>
+  @import "/Users/noeldacosta/code/foundryvtt-actor-studio/styles/Mixins.sass"
 .languages-container
   .languages-display
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include display-hover
   
   .no-languages
-    color: var(--color-text-secondary, #666)
-    font-style: italic
-    cursor: pointer
-    padding: 2px 4px
-    border-radius: 3px
-    transition: background-color 0.2s
-    
-    &.editable:hover
-      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+    @include empty-state
   
-  .done-btn
-    background: var(--color-success, #28a745)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 4px 8px
-    cursor: pointer
-    font-size: 0.9em
-    margin-left: 4px
-    
-    &:hover
-      background: var(--color-success-hover, #218838)
   
   .languages-edit-mode
     margin-top: 4px
   
   .language-item
-    display: flex
-    align-items: center
-    gap: 6px
-    margin-bottom: 3px
+    @include item-list
     
     .language-name
       font-weight: 500
@@ -324,111 +296,26 @@
         color: var(--color-success, #28a745)
         font-style: italic
     
-    .remove-btn
-      background: var(--color-error, #dc3545)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-error-hover, #c82333)
+    .button-remove
+      @include button-remove
   
   .add-language-buttons
-    display: flex
-    gap: 8px
-    margin-top: 4px
+    @include button-container
     
-    .add-btn,
-    .add-custom-btn
-      background: var(--color-success, #28a745)
-      color: white
-      border: none
-      border-radius: 3px
-      padding: 4px 8px
-      cursor: pointer
-      font-size: 0.9em
-      
-      &:hover
-        background: var(--color-success-hover, #218838)
-    
-    .add-custom-btn
-      background: var(--color-info, #17a2b8)
-      
-      &:hover
-        background: var(--color-info-hover, #138496)
   
   .add-language-form,
   .add-custom-language-form
-    display: flex
-    align-items: center
-    gap: 4px
+    @include form-container
     margin-top: 4px
     
     .language-type-select
+      @include form-select
       min-width: 120px
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
     
     .custom-language-input
+      @include form-input
       min-width: 120px
-      padding: 2px 4px
-      border: 1px solid var(--color-border-highlight, #007bff)
-      border-radius: 3px
-      background: var(--color-bg-primary, white)
-      color: var(--color-text-primary, #333)
-      font-size: inherit
-      font-family: inherit
-      
-      &:focus
-        outline: none
-        border-color: var(--color-border-highlight, #007bff)
-        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25)
     
-    .confirm-btn
-      background: var(--color-success, #28a745)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-success-hover, #218838)
-    
-    .cancel-btn
-      background: var(--color-secondary, #6c757d)
-      color: white
-      border: none
-      border-radius: 50%
-      width: 20px
-      height: 20px
-      cursor: pointer
-      font-size: 14px
-      line-height: 1
-      padding: 0
-      
-      &:hover
-        background: var(--color-secondary-hover, #5a6268)
   
   .no-languages
     color: var(--color-text-secondary, #666)
