@@ -233,8 +233,7 @@
   async function updateActorSkills(skill, proficient, ability) {
     try {
       const updateData = {
-        [`system.skills.${skill}.proficient`]: proficient,
-        [`system.skills.${skill}.ability`]: ability
+        [`system.skills.${skill}.value`]: proficient
       };
       await updateSource($actor, updateData);
     } catch (error) {
