@@ -54,7 +54,7 @@
   // Ensure the select value is numeric and defined
   $: crSelectValue = Number($selectedTargetCR ?? ensureNumberCR(initialCR, 0));
 
-  function onCRSelected(newCR) {
+  async function onCRSelected(newCR) {
     // Coerce and set targetCR
     const newTargetCR = ensureNumberCR(newCR, NaN);
     if (!Number.isFinite(newTargetCR)) return;
@@ -64,7 +64,7 @@
     
     // Calculate proposed changes if different from current CR
     if (newTargetCR !== ensureNumberCR(initialCR, 0)) {
-      calculateProposedChanges(newTargetCR);
+      await calculateProposedChanges(newTargetCR);
       showChanges = true;
     } else {
       proposedChanges = null;
@@ -87,7 +87,7 @@
     }
   }
   
-  function calculateProposedChanges(targetCR) {
+  async function calculateProposedChanges(targetCR) {
     try {
       // Get the actor from the application context
       console.log('[CRCalculatorDialog] Actor found:', $actorInGame);
@@ -100,20 +100,86 @@
         return;
       }
       
-      // Calculate the proposed changes
-      const updates = CRRetargeter.computeUpdates($actorInGame, targetCR);
+      // Calculate the proposed changes - await the async call
+      console.log('[CRCalculatorDialog] Calling CRRetargeter.computeUpdates with:', { actor: $actorInGame, targetCR });
+      const updates = await CRRetargeter.computeUpdates($actorInGame, targetCR);
       console.log('[CRCalculatorDialog] Updates object:', updates);
+      console.log('[CRCalculatorDialog] Updates keys:', Object.keys(updates));
+      console.log('[CRCalculatorDialog] Metadata:', updates._metadata);
       
-      proposedChanges = updates._metadata?.changes || [];
+      // Extract changes from the updates object
+      proposedChanges = [];
+      
+      // Use the metadata changes if available (preferred method)
+      if (updates._metadata && updates._metadata.changes && updates._metadata.changes.length > 0) {
+        console.log('[CRCalculatorDialog] Using metadata changes:', updates._metadata.changes);
+        proposedChanges = updates._metadata.changes.map(change => ({
+          label: change.label,
+          from: change.from,
+          to: change.to,
+          type: change.type || 'unknown'
+        }));
+      } else {
+        // Fallback to manual extraction
+        console.log('[CRCalculatorDialog] No metadata changes, extracting manually');
+        
+        // Add CR change
+        if (updates['system.details.cr'] !== undefined) {
+          proposedChanges.push({
+            label: 'Challenge Rating',
+            from: ensureNumberCR(initialCR, 0),
+            to: updates['system.details.cr'],
+            type: 'cr'
+          });
+        }
+        
+        // Add HP change
+        if (updates['system.attributes.hp.max'] !== undefined) {
+          const currentHP = $actorInGame.system.attributes.hp.max;
+          proposedChanges.push({
+            label: 'Hit Points',
+            from: currentHP,
+            to: updates['system.attributes.hp.max'],
+            type: 'hp'
+          });
+        }
+        
+        // Add AC change
+        if (updates['system.attributes.ac.value'] !== undefined) {
+          const currentAC = $actorInGame.system.attributes.ac.value;
+          proposedChanges.push({
+            label: 'Armor Class',
+            from: currentAC,
+            to: updates['system.attributes.ac.value'],
+            type: 'ac'
+          });
+        }
+        
+        // Add ability score changes
+        const abilities = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+        abilities.forEach(ability => {
+          const path = `system.abilities.${ability}.value`;
+          if (updates[path] !== undefined) {
+            const currentValue = $actorInGame.system.abilities[ability].value;
+            proposedChanges.push({
+              label: ability.toUpperCase(),
+              from: currentValue,
+              to: updates[path],
+              type: 'ability'
+            });
+          }
+        });
+      }
+      
       console.log('[CRCalculatorDialog] Proposed changes:', proposedChanges);
       
       // If no changes found, create a fallback message
-      if (!proposedChanges || proposedChanges.length === 0) {
+      if (proposedChanges.length === 0) {
         proposedChanges = [{
-          label: 'CR Adjustment',
-          from: ensureNumberCR(initialCR, 0),
-          to: targetCR,
-          type: 'cr'
+          label: 'No specific changes calculated',
+          from: 'Unknown',
+          to: 'Unknown',
+          type: 'error'
         }];
       }
     } catch (err) {

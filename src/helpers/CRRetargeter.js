@@ -1,5 +1,6 @@
 import { CRCalculator } from '~/src/helpers/CRCalculator';
 import { ensureNumberCR } from '~/src/lib/cr.js';
+import { get } from 'svelte/store';
 
 /**
  * CRRetargeter: Comprehensive CR adjustment system that spreads changes across
@@ -60,6 +61,7 @@ export class CRRetargeter {
    * @returns {object} flat update object with detailed change information
    */
   static async computeUpdates(actor, targetCR, options = {}) {
+    console.log('[CRRetargeter] Computing updates for actor:', actor);
     const updates = {};
     const plan = this.planAdjustments(targetCR, options);
     if (!plan) return updates;
@@ -84,7 +86,7 @@ export class CRRetargeter {
     // Add metadata about changes
     updates._metadata = {
       targetCR,
-      changes: this.summarizeChanges(updates, currentStats, plan),
+      changes: this.summarizeChanges(updates, currentStats, plan, adjustments),
       weights: plan.weights
     };
 
@@ -95,86 +97,241 @@ export class CRRetargeter {
    * Analyze current actor stats
    */
   static async analyzeCurrentStats(actor) {
+    console.log('[CRRetargeter] Analyzing current stats for actor:', actor);
+    const actorData = get(actor);
+    console.log('[CRRetargeter] Actor data from store:', actorData);
+    console.log('[CRRetargeter] Actor system:', actorData?.system);
+    console.log('[CRRetargeter] Actor system.attributes:', actorData?.system?.attributes);
+    console.log('[CRRetargeter] Actor system.abilities:', actorData?.system?.abilities);
+    
     const currentCR = await CRCalculator.calculateCurrentCR(actor);
     const items = this.getActorItems(actor);
+    
+    const hp = actorData?.system?.attributes?.hp?.max ?? actorData?.system?.attributes?.hp?.value ?? 1;
+    const ac = actorData?.system?.attributes?.ac?.value ?? 10;
+    const abilities = {
+      str: actorData?.system?.abilities?.str?.value ?? 10,
+      dex: actorData?.system?.abilities?.dex?.value ?? 10,
+      con: actorData?.system?.abilities?.con?.value ?? 10,
+      int: actorData?.system?.abilities?.int?.value ?? 10,
+      wis: actorData?.system?.abilities?.wis?.value ?? 10,
+      cha: actorData?.system?.abilities?.cha?.value ?? 10
+    };
+    
+    console.log('[CRRetargeter] Extracted values:', { hp, ac, abilities });
     
     return {
       currentCR: currentCR.calculatedCR,
       defensiveCR: currentCR.defensiveCR,
       offensiveCR: currentCR.offensiveCR,
-      hp: actor?.system?.attributes?.hp?.max ?? actor?.system?.attributes?.hp?.value ?? 1,
-      ac: actor?.system?.attributes?.ac?.value ?? 10,
-      abilities: {
-        str: actor?.system?.abilities?.str?.value ?? 10,
-        dex: actor?.system?.abilities?.dex?.value ?? 10,
-        con: actor?.system?.abilities?.con?.value ?? 10,
-        int: actor?.system?.abilities?.int?.value ?? 10,
-        wis: actor?.system?.abilities?.wis?.value ?? 10,
-        cha: actor?.system?.abilities?.cha?.value ?? 10
-      },
+      hp,
+      ac,
+      abilities,
       items: items || [],
       dpr: await this.calculateCurrentDPR(items)
     };
   }
 
   /**
-   * Calculate what adjustments are needed
+   * Calculate what adjustments are needed - smarter approach
    */
   static calculateAdjustments(currentStats, plan) {
+    console.log('[CRRetargeter] Calculating smart adjustments for:', currentStats);
+    
+    // Analyze actor type and determine priorities
+    const actorAnalysis = this.analyzeActorType(currentStats);
+    console.log('[CRRetargeter] Actor analysis:', actorAnalysis);
+    
+    // Calculate CR deficit and distribute changes more conservatively
+    const crDeficit = plan.targetCR - currentStats.currentCR;
+    console.log('[CRRetargeter] CR deficit:', crDeficit);
+    
     const adjustments = {
-      hp: { current: currentStats.hp, target: plan.defensive.hpTarget, change: 0 },
-      ac: { current: currentStats.ac, target: plan.defensive.acTarget, change: 0 },
-      dpr: { current: currentStats.dpr, target: plan.offensive.dprTarget, change: 0 },
-      abilities: {}
+      hp: { current: currentStats.hp, target: currentStats.hp, change: 0 },
+      ac: { current: currentStats.ac, target: currentStats.ac, change: 0 },
+      dpr: { current: currentStats.dpr, target: currentStats.dpr, change: 0 },
+      abilities: {},
+      features: [],
+      resistances: [],
+      immunities: []
     };
 
-    // Calculate changes
-    adjustments.hp.change = plan.defensive.hpTarget - currentStats.hp;
-    adjustments.ac.change = plan.defensive.acTarget - currentStats.ac;
-    adjustments.dpr.change = plan.offensive.dprTarget - currentStats.dpr;
-
-    // Calculate ability adjustments based on attack/save targets
-    const targetAttack = plan.offensive.attackTarget;
-    const targetSave = plan.offensive.saveTarget;
-    const currentProf = CRCalculator.PROFICIENCY_BONUS[currentStats.currentCR] || 2;
-
-    // Find primary abilities for attack and save
-    const primaryAttackAbility = this.findPrimaryAttackAbility(currentStats.items);
-    const primarySaveAbility = this.findPrimarySaveAbility(currentStats.items);
-
-    // Calculate required ability modifiers
-    const requiredAttackMod = targetAttack - currentProf;
-    const requiredSaveMod = targetSave - 8 - currentProf;
-
-    adjustments.abilities[primaryAttackAbility] = {
-      current: currentStats.abilities[primaryAttackAbility],
-      target: Math.max(1, Math.min(30, 10 + (requiredAttackMod * 2))),
-      change: 0
-    };
-
-    adjustments.abilities[primarySaveAbility] = {
-      current: currentStats.abilities[primarySaveAbility],
-      target: Math.max(1, Math.min(30, 10 + (requiredSaveMod * 2))),
-      change: 0
-    };
-
-    // Calculate actual changes
-    for (const [ability, adj] of Object.entries(adjustments.abilities)) {
-      adj.change = adj.target - adj.current;
-    }
+    // Make conservative adjustments based on CR deficit
+    this.calculateConservativeAdjustments(adjustments, currentStats, plan, actorAnalysis, crDeficit);
 
     return adjustments;
   }
 
   /**
-   * Apply defensive adjustments (HP, AC)
+   * Calculate conservative adjustments based on CR deficit
+   */
+  static calculateConservativeAdjustments(adjustments, currentStats, plan, actorAnalysis, crDeficit) {
+    // For a 3 CR increase, make modest adjustments
+    const hpIncrease = Math.min(40, Math.floor(crDeficit * 15)); // Max 40 HP increase
+    const acIncrease = Math.min(2, Math.floor(crDeficit)); // Max 2 AC increase
+    
+    adjustments.hp.target = currentStats.hp + hpIncrease;
+    adjustments.hp.change = hpIncrease;
+    
+    adjustments.ac.target = currentStats.ac + acIncrease;
+    adjustments.ac.change = acIncrease;
+
+    // For spellcasters, boost primary casting ability modestly
+    if (actorAnalysis.isSpellcaster) {
+      const castingAbility = actorAnalysis.primaryCastingAbility;
+      const currentCasting = currentStats.abilities[castingAbility];
+      const castingIncrease = Math.min(4, Math.floor(crDeficit * 1.5)); // Max 4 point increase
+      
+      adjustments.abilities[castingAbility] = {
+        current: currentCasting,
+        target: Math.min(30, currentCasting + castingIncrease),
+        change: castingIncrease
+      };
+    }
+
+    // Consider CON for HP increases
+    if (hpIncrease > 20) {
+      const conIncrease = Math.min(2, Math.floor(hpIncrease / 30)); // 1 CON per 30 HP
+      adjustments.abilities.con = {
+        current: currentStats.abilities.con,
+        target: Math.min(30, currentStats.abilities.con + conIncrease),
+        change: conIncrease
+      };
+    }
+
+    // Analyze features and suggest appropriate additions
+    this.analyzeFeaturesForCR(adjustments, currentStats, actorAnalysis, crDeficit);
+  }
+
+  /**
+   * Analyze features and suggest CR-appropriate additions
+   */
+  static analyzeFeaturesForCR(adjustments, currentStats, actorAnalysis, crDeficit) {
+    const items = currentStats.items || [];
+    
+    // Look for existing resistances/immunities
+    const existingResistances = this.findResistances(items);
+    const existingImmunities = this.findImmunities(items);
+    
+    // Suggest new features based on CR increase
+    if (crDeficit >= 2) {
+      // For significant CR increases, suggest resistances
+      if (existingResistances.length < 2) {
+        adjustments.resistances.push('fire', 'cold'); // Common resistances
+      }
+    }
+    
+    if (crDeficit >= 3) {
+      // For major CR increases, suggest legendary actions or other features
+      adjustments.features.push('Legendary Resistance (3/day)');
+    }
+    
+    console.log('[CRRetargeter] Feature suggestions:', {
+      resistances: adjustments.resistances,
+      immunities: adjustments.immunities,
+      features: adjustments.features
+    });
+  }
+
+  /**
+   * Find existing resistances in items
+   */
+  static findResistances(items) {
+    const resistances = [];
+    for (const item of items) {
+      if (item.system?.resistance) {
+        resistances.push(item.system.resistance);
+      }
+    }
+    return resistances;
+  }
+
+  /**
+   * Find existing immunities in items
+   */
+  static findImmunities(items) {
+    const immunities = [];
+    for (const item of items) {
+      if (item.system?.immunity) {
+        immunities.push(item.system.immunity);
+      }
+    }
+    return immunities;
+  }
+
+  /**
+   * Analyze actor type and determine stat priorities
+   */
+  static analyzeActorType(currentStats) {
+    const items = currentStats.items || [];
+    const abilities = currentStats.abilities;
+    
+    // Determine primary casting ability
+    let primaryCastingAbility = 'int';
+    for (const item of items) {
+      if (item.type === 'feat' && item.name?.toLowerCase().includes('spellcasting')) {
+        const desc = item.system?.description?.value?.toLowerCase() || '';
+        if (desc.includes('charisma')) primaryCastingAbility = 'cha';
+        else if (desc.includes('intelligence')) primaryCastingAbility = 'int';
+        else if (desc.includes('wisdom')) primaryCastingAbility = 'wis';
+        break;
+      }
+    }
+
+    // Determine if it's a melee or ranged combatant
+    let combatStyle = 'ranged';
+    for (const item of items) {
+      if (item.type === 'weapon') {
+        const weaponType = item.system?.weaponType || '';
+        if (weaponType.includes('melee') || weaponType.includes('unarmed')) {
+          combatStyle = 'melee';
+          break;
+        }
+      }
+    }
+
+    // Find highest ability scores to prioritize
+    const abilityScores = Object.entries(abilities).map(([name, value]) => ({ name, value }));
+    abilityScores.sort((a, b) => b.value - a.value);
+    
+    return {
+      primaryCastingAbility,
+      combatStyle,
+      topAbilities: abilityScores.slice(0, 3).map(a => a.name),
+      isSpellcaster: items.some(item => item.type === 'feat' && item.name?.toLowerCase().includes('spellcasting')),
+      hasWeapons: items.some(item => item.type === 'weapon'),
+      hasArmor: items.some(item => item.type === 'equipment' && item.system?.armor?.type),
+      currentHP: currentStats.hp,
+      currentAC: currentStats.ac
+    };
+  }
+
+
+  /**
+   * Apply defensive adjustments (HP dice, AC)
    */
   static applyDefensiveAdjustments(updates, actor, adjustments, plan) {
-    // HP adjustment
+    // HP adjustment - use dice instead of raw HP
     if (adjustments.hp.change !== 0) {
-      const newHP = Math.max(1, adjustments.hp.target);
-      updates['system.attributes.hp.max'] = newHP;
-      updates['system.attributes.hp.value'] = newHP;
+      const actorData = get(actor);
+      const currentHD = actorData?.system?.attributes?.hp?.hd || 1;
+      const currentHDSides = actorData?.system?.attributes?.hp?.hdSides || 8;
+      
+      // Calculate new hit dice based on HP change
+      const hpPerDie = Math.floor(currentHDSides / 2) + 1; // Average HP per die
+      const additionalDice = Math.max(1, Math.ceil(adjustments.hp.change / hpPerDie));
+      const newHD = Math.max(1, currentHD + additionalDice);
+      
+      updates['system.attributes.hp.hd'] = newHD;
+      updates['system.attributes.hp.max'] = adjustments.hp.target;
+      updates['system.attributes.hp.value'] = adjustments.hp.target;
+      
+      console.log('[CRRetargeter] HP adjustment:', {
+        currentHD,
+        newHD,
+        additionalDice,
+        hpChange: adjustments.hp.change
+      });
     }
 
     // AC adjustment
@@ -368,11 +525,13 @@ export class CRRetargeter {
   /**
    * Summarize changes for preview
    */
-  static summarizeChanges(updates, currentStats, plan) {
+  static summarizeChanges(updates, currentStats, plan, adjustments = {}) {
+    console.log('[CRRetargeter] summarizeChanges called with:', { updates, currentStats, plan, adjustments });
     const changes = [];
     
     // HP changes
     if (updates['system.attributes.hp.max']) {
+      console.log('[CRRetargeter] HP change:', { from: currentStats.hp, to: updates['system.attributes.hp.max'] });
       changes.push({
         type: 'hp',
         label: 'Hit Points',
@@ -419,6 +578,27 @@ export class CRRetargeter {
         to: plan.offensive.dprTarget,
         impact: 'offensive',
         details: `${damageChanges.length} damage sources adjusted`
+      });
+    }
+
+    // Add feature changes from adjustments
+    if (adjustments.resistances && adjustments.resistances.length > 0) {
+      changes.push({
+        type: 'feature',
+        label: 'Resistances',
+        from: 'None',
+        to: adjustments.resistances.join(', '),
+        impact: 'defensive'
+      });
+    }
+
+    if (adjustments.features && adjustments.features.length > 0) {
+      changes.push({
+        type: 'feature',
+        label: 'New Features',
+        from: 'None',
+        to: adjustments.features.join(', '),
+        impact: 'offensive'
       });
     }
 
