@@ -3,6 +3,7 @@
   import { getContext } from "svelte";
   import { CRCalculator } from "~/src/helpers/CRCalculator.js";
   import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR, skillBonus, localize as t } from "~/src/helpers/Utility";
+  import { selectedTargetCR } from "~/src/stores/selectedTargetCR.js";
   import { ensureNumberCR } from "~/src/lib/cr.js";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
@@ -520,8 +521,8 @@
             // Keep dialog open; perform apply and surface diffs via application.data
             onPress: async ({ application }) => {
               try {
-                console.log('[CR Dialog] Apply button clicked - selectedTargetCR:', selectedTargetCR);
-                const value = ensureNumberCR(selectedTargetCR ?? props.calculatedCR ?? props.initialCR ?? 0, 0);
+                console.log('[CR Dialog] Apply button clicked - selectedTargetCR:', $selectedTargetCR);
+                const value = ensureNumberCR($selectedTargetCR ?? props.calculatedCR ?? props.initialCR ?? 0, 0);
                 console.log('[CR Dialog] Resolved target CR value:', value);
                 const updates = CRCalculator.adjustActorToCR($actor, value) || {};
                 if (!updates['system.details.cr']) updates['system.details.cr'] = value;
@@ -553,7 +554,7 @@
                 console.error('Failed to apply CR from dialog button callback:', err);
                 ui.notifications?.error?.('Failed to apply calculated CR.');
               } finally {
-                selectedTargetCR = null;
+                selectedTargetCR.set(null);
               }
             }
           },
@@ -617,7 +618,7 @@
             attackDiff: props.attackDiff,
             saveDiff: props.saveDiff,
             finalRule: props.finalRule,
-            onTargetCRChange: (selected) => { selectedTargetCR = selected; enableApplyButton(); }
+            onTargetCRChange: (selected) => { selectedTargetCR.set(selected); enableApplyButton(); }
           }
         },
   }, { classes: ['tjs-actor-studio', 'GAS'], data: { appliedChanges: null, recalculatedBreakdown: null, buttons: { undo: { disabled: true } } } });
@@ -760,7 +761,7 @@
       const onApply = async (e) => {
         try {
           // Prefer the selected target provided by the dialog content; fall back to event.detail or calculatedCR
-          const value = ensureNumberCR(selectedTargetCR ?? e.detail?.targetCR ?? currentCRBreakdown.calculatedCR, 0);
+          const value = ensureNumberCR($selectedTargetCR ?? e.detail?.targetCR ?? currentCRBreakdown.calculatedCR, 0);
           const updates = CRCalculator.adjustActorToCR($actor, value) || {};
           // Always ensure cr/xp are present as a minimum fallback
           if (!updates['system.details.cr']) updates['system.details.cr'] = value;
@@ -774,7 +775,7 @@
           ui.notifications?.error?.('Failed to apply calculated CR.');
         } finally {
           // reset selected target
-          selectedTargetCR = null;
+          selectedTargetCR.set(null);
         }
       };
   // Previous global apply event listener removed - dialog chrome button now invokes apply directly.

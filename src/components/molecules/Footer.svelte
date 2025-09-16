@@ -365,6 +365,8 @@
       // Create the NPC actor in the game
       console.log('[FOOTER] Calling Actor.create with:', actorData);
       const createdActor = await Actor.create(actorData);
+      actorInGame.set(createdActor);
+
       
       console.log('[FOOTER] Actor created successfully:', createdActor);
       console.log('[FOOTER] Created actor name:', createdActor.name);

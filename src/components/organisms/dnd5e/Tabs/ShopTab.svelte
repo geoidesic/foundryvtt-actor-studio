@@ -1,9 +1,9 @@
 <script>
   import { shopItems, shopCart, availableGold, cartTotalCost, remainingGold, updateCart, loadShopItems, finalizePurchase, initializeGold } from '../../../../stores/equipmentShop';
-  import { actorInGame, readOnlyTabs } from '../../../../stores/index';
-  import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
-  import StandardTabLayout from '../../../organisms/StandardTabLayout.svelte';
-  import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
+  import { actorInGame, readOnlyTabs } from '~/src/stores/index';
+  import GoldDisplay from '~/src/components/molecules/GoldDisplay.svelte';
+  import StandardTabLayout from '~/src/components/organisms/StandardTabLayout.svelte';
+  import { PurchaseHandler } from '~/src/plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { get } from 'svelte/store';

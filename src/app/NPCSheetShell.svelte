@@ -2,6 +2,7 @@
   import { ApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { getContext, setContext, onMount, onDestroy } from 'svelte';
   import Tabs from "~/src/components/molecules/Tabs.svelte";
+  import { actorInGame } from "~/src/stores/index";
   // Overview tab will render the stat block molecule
   // Other tabs are standalone components loaded by Tabs.svelte
 
@@ -14,6 +15,8 @@
 
   // Provide standard GAS contexts used by molecules
   setContext('#doc', documentStore);
+  actorInGame.set(documentStore);
+
   // Provide edit store so tab components can derive readonly
   setContext('#editStore', editStore);
 

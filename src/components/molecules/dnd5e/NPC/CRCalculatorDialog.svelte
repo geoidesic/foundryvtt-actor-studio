@@ -1,4 +1,6 @@
 <script>
+  import { getContext } from 'svelte'; 
+  import { actorInGame } from '~/src/stores/index';
   // Props for dialog content
   export let defensive = '';
   export let offensive = '';
@@ -27,30 +29,101 @@
   // The dialog may receive runtime data set by the host application via application.data.set
   export let appliedChanges = null; // array of {path, from, to}
   export let recalculatedBreakdown = null; // optional recalculated breakdown object
-
+  const application = getContext('#external').application;
+  console.log('application', application);
+  console.log('$actorInGame', $actorInGame);
   import { ensureNumberCR } from '~/src/lib/cr.js';
   import { CRCalculator } from '~/src/helpers/CRCalculator.js';
+  import { CRRetargeter } from '~/src/helpers/CRRetargeter.js';
+  import { selectedTargetCR } from '~/src/stores/selectedTargetCR.js';
+  
+  // Initialize store with current CR value when component mounts
+  selectedTargetCR.set(ensureNumberCR(initialCR, null));
   let showCRSelect = false;
-  let targetCR = null; // numeric
   export let onTargetCRChange = null;
   const crOptions = Array.from({ length: 31 }, (_, i) => i); // 0..30
+  
+  // State for proposed changes
+  let proposedChanges = null;
+  let showChanges = false;
 
   $: acDiffClass = acDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
   $: attackDiffClass = attackDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
   $: saveDiffClass = saveDiff >= 0 ? 'gas-diff-pos' : 'gas-diff-neg';
   $: pointerClass = !showCRSelect && type == 'apply' ? 'pointer' : ''
   // Ensure the select value is numeric and defined
-  $: crSelectValue = Number(targetCR ?? ensureNumberCR(initialCR, 0));
+  $: crSelectValue = Number($selectedTargetCR ?? ensureNumberCR(initialCR, 0));
 
   function onCRSelected(newCR) {
     // Coerce and set targetCR
-    targetCR = ensureNumberCR(newCR, NaN);
-    if (!Number.isFinite(targetCR)) return;
-    // Notify host that a target CR was selected so it can enable the Apply button
+    const newTargetCR = ensureNumberCR(newCR, NaN);
+    if (!Number.isFinite(newTargetCR)) return;
+    
+    // Update the store
+    selectedTargetCR.set(newTargetCR);
+    
+    // Calculate proposed changes if different from current CR
+    if (newTargetCR !== ensureNumberCR(initialCR, 0)) {
+      calculateProposedChanges(newTargetCR);
+      showChanges = true;
+    } else {
+      proposedChanges = null;
+      showChanges = false;
+    }
+    
+    // Update Apply button state via application data
+    if (application) {
+      try {
+        application.data.set('buttons.apply.disabled', !newTargetCR);
+        console.log('[CRCalculatorDialog] Apply button state updated to disabled:', !newTargetCR);
+      } catch (err) {
+        console.error('[CRCalculatorDialog] Error updating Apply button:', err);
+      }
+    }
+    
+    // Notify host that a target CR was selected
+    if (typeof onTargetCRChange === 'function') {
+      onTargetCRChange(newTargetCR);
+    }
+  }
+  
+  function calculateProposedChanges(targetCR) {
     try {
-      if (typeof onTargetCRChange === 'function') onTargetCRChange(targetCR);
+      // Get the actor from the application context
+      console.log('[CRCalculatorDialog] Actor found:', $actorInGame);
+      console.log('[CRCalculatorDialog] Target CR:', targetCR);
+      console.log('[CRCalculatorDialog] Current CR:', ensureNumberCR(initialCR, 0));
+      
+      if (!$actorInGame) {
+        console.warn('[CRCalculatorDialog] No actor found for calculating changes');
+        proposedChanges = [];
+        return;
+      }
+      
+      // Calculate the proposed changes
+      const updates = CRRetargeter.computeUpdates($actorInGame, targetCR);
+      console.log('[CRCalculatorDialog] Updates object:', updates);
+      
+      proposedChanges = updates._metadata?.changes || [];
+      console.log('[CRCalculatorDialog] Proposed changes:', proposedChanges);
+      
+      // If no changes found, create a fallback message
+      if (!proposedChanges || proposedChanges.length === 0) {
+        proposedChanges = [{
+          label: 'CR Adjustment',
+          from: ensureNumberCR(initialCR, 0),
+          to: targetCR,
+          type: 'cr'
+        }];
+      }
     } catch (err) {
-      // swallow host callback errors
+      console.error('[CRCalculatorDialog] Error calculating proposed changes:', err);
+      proposedChanges = [{
+        label: 'Error calculating changes',
+        from: 'Unknown',
+        to: 'Unknown',
+        type: 'error'
+      }];
     }
   }
 
@@ -70,7 +143,7 @@
         .gas-cr-badge(on:click!="{CRclick}" class="{pointerClass}")
           +if("!showCRSelect")
             // show selected targetCR if chosen, otherwise show initialCR
-            .gas-cr-number {CRCalculator.formatCR(targetCR ?? initialCR)}
+            .gas-cr-number {CRCalculator.formatCR($selectedTargetCR ?? initialCR)}
             +else()
               select.gas-cr-select(
                 value="{crSelectValue}"
@@ -87,13 +160,27 @@
       .gas-xp-label XP
       .gas-xp-value {xp}
 
-  .gas-grid
-    .gas-label Defensive CR
-    .gas-monosp {defensive}
-    .gas-label Offensive CR
-    .gas-monosp {offensive}
-    .gas-label Proficiency Bonus
-    .gas-monosp +{pb}
+  +if("!showChanges")
+    .gas-grid
+      .gas-label Defensive CR
+      .gas-monosp {defensive}
+      .gas-label Offensive CR
+      .gas-monosp {offensive}
+      .gas-label Proficiency Bonus
+      .gas-monosp +{pb}
+    +else()
+      .gas-changes-section
+        h4 Proposed Changes
+        +if("proposedChanges && proposedChanges.length > 0")
+          +each("proposedChanges as change")
+            .gas-change-item
+              .gas-change-label {change.label}
+              .gas-change-value
+                span.gas-change-from {change.from}
+                span.gas-change-arrow →
+                span.gas-change-to {change.to}
+          +else()
+            .gas-no-changes No changes needed for this CR
 
   details.gas-details
     summary Show detailed calculation
@@ -268,4 +355,50 @@ details.gas-details
   font-size: 20px
   font-weight: 700
   color: var(--color-accent, #ffd8a6)
+
+/* Proposed Changes Styles */
+.gas-changes-section
+  margin-top: 0.5rem
+  
+  h4
+    margin: 0 0 8px 0
+    font-size: 12px
+    color: var(--color-text-dark-secondary, #555)
+    text-transform: uppercase
+    letter-spacing: .02em
+
+.gas-change-item
+  display: grid
+  grid-template-columns: 1fr auto
+  gap: 8px 12px
+  align-items: center
+  padding: 4px 0
+  border-bottom: 1px solid var(--color-border, #9993)
+
+.gas-change-label
+  color: var(--color-text-dark-secondary, #666)
+  font-size: 13px
+
+.gas-change-value
+  display: flex
+  align-items: center
+  gap: 4px
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace
+  font-size: 13px
+
+.gas-change-from
+  color: var(--color-negative, #c62828)
+
+.gas-change-arrow
+  color: var(--color-text-dark-secondary, #666)
+
+.gas-change-to
+  color: var(--color-positive, #2e7d32)
+  font-weight: 600
+
+.gas-no-changes
+  color: var(--color-text-dark-secondary, #666)
+  font-style: italic
+  text-align: center
+  padding: 1rem
 </style>

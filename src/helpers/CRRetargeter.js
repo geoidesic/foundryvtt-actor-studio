@@ -2,9 +2,8 @@ import { CRCalculator } from '~/src/helpers/CRCalculator';
 import { ensureNumberCR } from '~/src/lib/cr.js';
 
 /**
- * CRRetargeter: computes a minimal update plan to move an actor toward a target CR.
- * Non-invasive skeleton: adjusts details.cr, HP (to band median), AC (to expected),
- * and prepares hooks for offensive scaling to be filled in next steps.
+ * CRRetargeter: Comprehensive CR adjustment system that spreads changes across
+ * multiple aspects (HP, AC, abilities, damage) to achieve target CR with minimal disruption.
  */
 export class CRRetargeter {
   /**
@@ -17,170 +16,413 @@ export class CRRetargeter {
   }
 
   /**
-   * Compute a basic defensive plan for a target CR
+   * Compute a comprehensive adjustment plan for a target CR
    * @param {number} targetCR
+   * @param {object} options Adjustment options with weights
    */
-  static planDefense(targetCR) {
+  static planAdjustments(targetCR, options = {}) {
     const def = CRCalculator.CR_TABLES.defensive[targetCR];
-    if (!def) return null;
-    const [minHP, maxHP] = def.hp;
-    const hpTarget = Math.round((minHP + maxHP) / 2);
-    return { hpTarget, acTarget: def.ac };
-  }
-
-  /**
-   * Compute a placeholder offensive plan (to be expanded): DPR target band
-   * @param {number} targetCR
-   */
-  static planOffense(targetCR) {
     const off = CRCalculator.CR_TABLES.offensive[targetCR];
-    if (!off) return null;
+    if (!def || !off) return null;
+
+    const [minHP, maxHP] = def.hp;
     const [minDPR, maxDPR] = off.dpr;
-    const dprTarget = Math.round((minDPR + maxDPR) / 2);
-    return { dprTarget, expectedAttack: off.attack, expectedSave: off.save };
+    
+    return {
+      defensive: {
+        hpTarget: Math.round((minHP + maxHP) / 2),
+        acTarget: def.ac,
+        hpRange: [minHP, maxHP],
+        acRange: [def.ac - 2, def.ac + 2]
+      },
+      offensive: {
+        dprTarget: Math.round((minDPR + maxDPR) / 2),
+        dprRange: [minDPR, maxDPR],
+        attackTarget: off.attack,
+        saveTarget: off.save,
+        attackRange: [off.attack - 2, off.attack + 2],
+        saveRange: [off.save - 2, off.save + 2]
+      },
+      weights: {
+        hp: options.hpWeight || 0.3,
+        ac: options.acWeight || 0.2,
+        abilities: options.abilitiesWeight || 0.2,
+        damage: options.damageWeight || 0.3
+      }
+    };
   }
 
   /**
-   * Produce a minimal update patch moving actor toward targetCR
+   * Compute comprehensive updates to achieve target CR
    * @param {object} actor
    * @param {number} targetCR
-   * @returns {object} flat update object
+   * @param {object} options Adjustment options
+   * @returns {object} flat update object with detailed change information
    */
-  static async computeUpdates(actor, targetCR) {
+  static async computeUpdates(actor, targetCR, options = {}) {
     const updates = {};
-    const defense = this.planDefense(targetCR);
-    const offense = this.planOffense(targetCR);
-    if (!defense || !offense) return updates;
+    const plan = this.planAdjustments(targetCR, options);
+    if (!plan) return updates;
 
-  // Set details.cr and xp (ensure numeric)
-  updates['system.details.cr'] = ensureNumberCR(targetCR, 0);
+    // Always set CR and XP
+    updates['system.details.cr'] = ensureNumberCR(targetCR, 0);
     updates['system.details.xp.value'] = CRCalculator.XP_VALUES[targetCR] || 0;
 
-    // HP to band median
-    const curHP = actor?.system?.attributes?.hp?.max ?? actor?.system?.attributes?.hp?.value;
-    if (typeof curHP === 'number' && curHP !== defense.hpTarget) {
-      updates['system.attributes.hp.max'] = defense.hpTarget;
-      updates['system.attributes.hp.value'] = defense.hpTarget;
+    // Calculate current stats
+    const currentStats = await this.analyzeCurrentStats(actor);
+    const adjustments = this.calculateAdjustments(currentStats, plan);
+
+    // Apply defensive adjustments
+    this.applyDefensiveAdjustments(updates, actor, adjustments, plan);
+
+    // Apply ability score adjustments
+    this.applyAbilityAdjustments(updates, actor, adjustments, plan);
+
+    // Apply offensive adjustments
+    await this.applyOffensiveAdjustments(updates, actor, adjustments, plan);
+
+    // Add metadata about changes
+    updates._metadata = {
+      targetCR,
+      changes: this.summarizeChanges(updates, currentStats, plan),
+      weights: plan.weights
+    };
+
+    return updates;
+  }
+
+  /**
+   * Analyze current actor stats
+   */
+  static async analyzeCurrentStats(actor) {
+    const currentCR = await CRCalculator.calculateCurrentCR(actor);
+    const items = this.getActorItems(actor);
+    
+    return {
+      currentCR: currentCR.calculatedCR,
+      defensiveCR: currentCR.defensiveCR,
+      offensiveCR: currentCR.offensiveCR,
+      hp: actor?.system?.attributes?.hp?.max ?? actor?.system?.attributes?.hp?.value ?? 1,
+      ac: actor?.system?.attributes?.ac?.value ?? 10,
+      abilities: {
+        str: actor?.system?.abilities?.str?.value ?? 10,
+        dex: actor?.system?.abilities?.dex?.value ?? 10,
+        con: actor?.system?.abilities?.con?.value ?? 10,
+        int: actor?.system?.abilities?.int?.value ?? 10,
+        wis: actor?.system?.abilities?.wis?.value ?? 10,
+        cha: actor?.system?.abilities?.cha?.value ?? 10
+      },
+      items: items || [],
+      dpr: await this.calculateCurrentDPR(items)
+    };
+  }
+
+  /**
+   * Calculate what adjustments are needed
+   */
+  static calculateAdjustments(currentStats, plan) {
+    const adjustments = {
+      hp: { current: currentStats.hp, target: plan.defensive.hpTarget, change: 0 },
+      ac: { current: currentStats.ac, target: plan.defensive.acTarget, change: 0 },
+      dpr: { current: currentStats.dpr, target: plan.offensive.dprTarget, change: 0 },
+      abilities: {}
+    };
+
+    // Calculate changes
+    adjustments.hp.change = plan.defensive.hpTarget - currentStats.hp;
+    adjustments.ac.change = plan.defensive.acTarget - currentStats.ac;
+    adjustments.dpr.change = plan.offensive.dprTarget - currentStats.dpr;
+
+    // Calculate ability adjustments based on attack/save targets
+    const targetAttack = plan.offensive.attackTarget;
+    const targetSave = plan.offensive.saveTarget;
+    const currentProf = CRCalculator.PROFICIENCY_BONUS[currentStats.currentCR] || 2;
+
+    // Find primary abilities for attack and save
+    const primaryAttackAbility = this.findPrimaryAttackAbility(currentStats.items);
+    const primarySaveAbility = this.findPrimarySaveAbility(currentStats.items);
+
+    // Calculate required ability modifiers
+    const requiredAttackMod = targetAttack - currentProf;
+    const requiredSaveMod = targetSave - 8 - currentProf;
+
+    adjustments.abilities[primaryAttackAbility] = {
+      current: currentStats.abilities[primaryAttackAbility],
+      target: Math.max(1, Math.min(30, 10 + (requiredAttackMod * 2))),
+      change: 0
+    };
+
+    adjustments.abilities[primarySaveAbility] = {
+      current: currentStats.abilities[primarySaveAbility],
+      target: Math.max(1, Math.min(30, 10 + (requiredSaveMod * 2))),
+      change: 0
+    };
+
+    // Calculate actual changes
+    for (const [ability, adj] of Object.entries(adjustments.abilities)) {
+      adj.change = adj.target - adj.current;
     }
 
-    // AC to expected (if present)
-    const curAC = actor?.system?.attributes?.ac?.value;
-    if (typeof curAC === 'number' && curAC !== defense.acTarget) {
-      updates['system.attributes.ac.value'] = defense.acTarget;
+    return adjustments;
+  }
+
+  /**
+   * Apply defensive adjustments (HP, AC)
+   */
+  static applyDefensiveAdjustments(updates, actor, adjustments, plan) {
+    // HP adjustment
+    if (adjustments.hp.change !== 0) {
+      const newHP = Math.max(1, adjustments.hp.target);
+      updates['system.attributes.hp.max'] = newHP;
+      updates['system.attributes.hp.value'] = newHP;
     }
 
-    // Offensive adjustments will be implemented in the next steps.
-    // First adapter: scale new-style weapon damage (system.damage.base)
-    try {
-      const items = Array.isArray(actor?.items) ? actor.items : [];
-      // Build candidate list (any item that presents damage fields: weapons, spells, features, etc.)
-      const candidates = [];
-      for (let i = 0; i < items.length; i++) {
-        const it = items[i];
-        if (!it || !it.system) continue;
-        // Exclude obvious non-damaging utility items unless they expose damage shapes
-        // limited-use detection (downweight later)
-        const usesPer = it.system?.uses?.per;
-        const limited = !!usesPer && usesPer !== 'none';
-        // base
-        if (it.system.damage?.base) {
-          const base = it.system.damage.base;
-          const denom = Number(base.denomination || 6);
-          const bonus = Number(base.bonus || 0);
-          const number = Number(base.number || 1);
-          candidates.push({ kind: 'base', index: i, denom, bonus, number, limited });
-          continue;
-        }
-        // legacy parts
-  const parts = it.system.damage?.parts;
-        const first = Array.isArray(parts) && parts[0];
-        const formula = Array.isArray(first) ? first[0] : undefined;
-        const m = typeof formula === 'string' && formula.match(/^(\d+)d(\d+)([+-]\d+)?$/);
-        if (m) {
-          candidates.push({ kind: 'parts', index: i, denom: Number(m[2]), bonus: m[3] ? Number(m[3]) : 0, number: Number(m[1]), limited });
-          continue;
-        }
-        // activities
-        const activities = it.system.activities;
-        if (activities && typeof activities === 'object') {
-          for (const [key, act] of Object.entries(activities)) {
-            const dparts = act?.damage?.parts;
-            if (Array.isArray(dparts) && dparts[0] && typeof dparts[0] === 'object') {
-              const dp = dparts[0];
-              candidates.push({ kind: 'activity', index: i, actKey: key, denom: Number(dp.denomination || 6), bonus: Number(dp.bonus || 0), number: Number(dp.number || 1), limited });
-              break;
+    // AC adjustment
+    if (adjustments.ac.change !== 0) {
+      updates['system.attributes.ac.value'] = adjustments.ac.target;
+    }
+  }
+
+  /**
+   * Apply ability score adjustments
+   */
+  static applyAbilityAdjustments(updates, actor, adjustments, plan) {
+    for (const [ability, adj] of Object.entries(adjustments.abilities)) {
+      if (adj.change !== 0) {
+        updates[`system.abilities.${ability}.value`] = adj.target;
+      }
+    }
+  }
+
+  /**
+   * Apply offensive adjustments (damage scaling)
+   */
+  static async applyOffensiveAdjustments(updates, actor, adjustments, plan) {
+    if (adjustments.dpr.change === 0) return;
+
+    const items = this.getActorItems(actor);
+    const damageCandidates = this.findDamageCandidates(items);
+    
+    if (damageCandidates.length === 0) return;
+
+    // Calculate scaling factor
+    const currentDPR = adjustments.dpr.current;
+    const targetDPR = adjustments.dpr.target;
+    const scaleFactor = currentDPR > 0 ? targetDPR / currentDPR : 1;
+
+    // Apply scaling to each damage source
+    for (const candidate of damageCandidates) {
+      const newDamage = this.scaleDamage(candidate, scaleFactor);
+      this.applyDamageUpdate(updates, candidate, newDamage);
+    }
+  }
+
+  /**
+   * Find all damage-dealing items
+   */
+  static findDamageCandidates(items) {
+    const candidates = [];
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item?.system) continue;
+
+      // Check for weapon damage
+      if (item.type === 'weapon' && item.system.damage?.base) {
+        const base = item.system.damage.base;
+        candidates.push({
+          type: 'weapon',
+          index: i,
+          path: 'system.damage.base',
+          current: {
+            number: base.number || 1,
+            denomination: base.denomination || 6,
+            bonus: base.bonus || 0
+          }
+        });
+        continue;
+      }
+
+      // Check for feature damage in activities
+      if (item.type === 'feat' && item.system.activities) {
+        for (const [activityKey, activity] of Object.entries(item.system.activities)) {
+          if (activity.damage?.parts) {
+            for (let j = 0; j < activity.damage.parts.length; j++) {
+              const part = activity.damage.parts[j];
+              if (part.number && part.denomination) {
+                candidates.push({
+                  type: 'activity',
+                  index: i,
+                  activityKey,
+                  partIndex: j,
+                  path: `system.activities.${activityKey}.damage.parts.${j}`,
+                  current: {
+                    number: part.number,
+                    denomination: part.denomination,
+                    bonus: part.bonus || 0
+                  }
+                });
+              }
             }
           }
         }
       }
-
-      if (candidates.length > 0) {
-        // Weights based on current damage; fallback to uniform; apply heuristics
-        const currentDamages = candidates.map(c => c.number * ((c.denom + 1) / 2) + c.bonus);
-        const weightSum = currentDamages.reduce((a, b) => a + (isFinite(b) ? b : 0), 0);
-        let weights = (weightSum > 0 ? currentDamages : candidates.map(_ => 1)).slice();
-        // Multiattack heuristic: presence of a feat named Multiattack → boost strongest by 2x
-        const hasMultiattack = items.some(it => it?.type === 'feat' && /multiattack/i.test(it?.name || ''));
-        if (hasMultiattack && currentDamages.length > 0) {
-          const maxVal = Math.max(...currentDamages);
-          const idx = currentDamages.indexOf(maxVal);
-          if (idx >= 0) weights[idx] *= 2;
-        }
-        // Downweight limited-use items
-        weights = weights.map((w, i) => w * (candidates[i].limited ? 0.2 : 1));
-        const totalWeight = weights.reduce((a, b) => a + b, 0) || 1;
-
-        const targetDPR = Math.max(1, offense.dprTarget);
-
-        // Initial assignment
-        let assigned = candidates.map((c, idx) => {
-          const share = weights[idx] / totalWeight;
-          const tgt = share * targetDPR;
-          const dieAvg = (c.denom + 1) / 2;
-          let num = Math.round((tgt - c.bonus) / dieAvg);
-          if (!Number.isFinite(num) || num < 1) num = 1;
-          num = Math.min(num, 30);
-          return { ...c, newNumber: num };
-        });
-
-        const predictTotal = arr => arr.reduce((sum, c) => sum + (c.newNumber * ((c.denom + 1) / 2) + c.bonus), 0);
-
-        // Convergence: up to 3 iterations with damping
-        for (let iter = 0; iter < 3; iter++) {
-          const predicted = predictTotal(assigned);
-          const ratio = targetDPR / Math.max(1, predicted);
-          if (Math.abs(predicted - targetDPR) <= 2) break;
-          const damped = Math.max(0.85, Math.min(1.15, ratio));
-          assigned = assigned.map(c => {
-            let num = Math.round(c.newNumber * damped);
-            if (num < 1) num = 1;
-            if (num > 30) num = 30;
-            return { ...c, newNumber: num };
-          });
-        }
-
-        // Emit updates
-        for (const c of assigned) {
-          if (c.kind === 'base') {
-            updates[`items.${c.index}.system.damage.base.number`] = c.newNumber;
-            updates[`items.${c.index}.system.damage.base.denomination`] = c.denom;
-            updates[`items.${c.index}.system.damage.base.bonus`] = c.bonus;
-          } else if (c.kind === 'parts') {
-            const bonusStr = c.bonus ? (c.bonus > 0 ? `+${c.bonus}` : `${c.bonus}`) : '';
-            const newFormula = `${c.newNumber}d${c.denom}${bonusStr}`;
-            updates[`items.${c.index}.system.damage.parts.0.0`] = newFormula;
-          } else if (c.kind === 'activity') {
-            updates[`items.${c.index}.system.activities.${c.actKey}.damage.parts.0.number`] = c.newNumber;
-            updates[`items.${c.index}.system.activities.${c.actKey}.damage.parts.0.denomination`] = c.denom;
-            updates[`items.${c.index}.system.activities.${c.actKey}.damage.parts.0.bonus`] = c.bonus;
-          }
-        }
-      }
-    } catch (_) {
-      // Ignore offensive rewrite errors in early stage
     }
 
-    return updates;
+    return candidates;
+  }
+
+  /**
+   * Scale damage based on factor
+   */
+  static scaleDamage(candidate, scaleFactor) {
+    const { current } = candidate;
+    const newNumber = Math.max(1, Math.round(current.number * scaleFactor));
+    const newDenomination = current.denomination;
+    const newBonus = Math.round(current.bonus * scaleFactor);
+
+    return {
+      number: Math.min(newNumber, 30), // Cap at 30 dice
+      denomination: newDenomination,
+      bonus: newBonus
+    };
+  }
+
+  /**
+   * Apply damage update to the updates object
+   */
+  static applyDamageUpdate(updates, candidate, newDamage) {
+    const { path } = candidate;
+    
+    if (candidate.type === 'weapon') {
+      updates[`items.${candidate.index}.${path}.number`] = newDamage.number;
+      updates[`items.${candidate.index}.${path}.denomination`] = newDamage.denomination;
+      updates[`items.${candidate.index}.${path}.bonus`] = newDamage.bonus;
+    } else if (candidate.type === 'activity') {
+      updates[`items.${candidate.index}.${path}.number`] = newDamage.number;
+      updates[`items.${candidate.index}.${path}.denomination`] = newDamage.denomination;
+      updates[`items.${candidate.index}.${path}.bonus`] = newDamage.bonus;
+    }
+  }
+
+  /**
+   * Calculate current DPR from items
+   */
+  static async calculateCurrentDPR(items) {
+    if (!items || items.length === 0) return 0;
+    
+    let totalDPR = 0;
+    for (const item of items) {
+      const damage = await CRCalculator.calculateItemDamage(item);
+      totalDPR += damage;
+    }
+    
+    return Math.round(totalDPR);
+  }
+
+  /**
+   * Find primary attack ability
+   */
+  static findPrimaryAttackAbility(items) {
+    // Look for weapons to determine primary attack ability
+    for (const item of items) {
+      if (item.type === 'weapon' && item.system?.attack?.ability) {
+        return item.system.attack.ability;
+      }
+    }
+    return 'str'; // Default to strength
+  }
+
+  /**
+   * Find primary save ability
+   */
+  static findPrimarySaveAbility(items) {
+    // Look for spellcasting features to determine primary save ability
+    for (const item of items) {
+      if (item.type === 'feat' && item.name?.toLowerCase().includes('spellcasting')) {
+        // Check for common spellcasting ability indicators
+        const desc = item.system?.description?.value?.toLowerCase() || '';
+        if (desc.includes('charisma')) return 'cha';
+        if (desc.includes('intelligence')) return 'int';
+        if (desc.includes('wisdom')) return 'wis';
+      }
+    }
+    return 'cha'; // Default to charisma
+  }
+
+  /**
+   * Get actor items using various methods
+   */
+  static getActorItems(actor) {
+    if (actor?.system?.items) return actor.system.items;
+    if (actor?.items) return actor.items;
+    if (typeof actor?.getEmbeddedCollection === 'function') {
+      const itemsCollection = actor.getEmbeddedCollection("Item");
+      if (itemsCollection && itemsCollection.size > 0) {
+        return Array.from(itemsCollection.values());
+      }
+    }
+    return [];
+  }
+
+  /**
+   * Summarize changes for preview
+   */
+  static summarizeChanges(updates, currentStats, plan) {
+    const changes = [];
+    
+    // HP changes
+    if (updates['system.attributes.hp.max']) {
+      changes.push({
+        type: 'hp',
+        label: 'Hit Points',
+        from: currentStats.hp,
+        to: updates['system.attributes.hp.max'],
+        impact: 'defensive'
+      });
+    }
+
+    // AC changes
+    if (updates['system.attributes.ac.value']) {
+      changes.push({
+        type: 'ac',
+        label: 'Armor Class',
+        from: currentStats.ac,
+        to: updates['system.attributes.ac.value'],
+        impact: 'defensive'
+      });
+    }
+
+    // Ability changes
+    for (const [ability, value] of Object.entries(updates)) {
+      if (ability.startsWith('system.abilities.') && ability.endsWith('.value')) {
+        const abilityName = ability.split('.')[2];
+        changes.push({
+          type: 'ability',
+          label: abilityName.toUpperCase(),
+          from: currentStats.abilities[abilityName],
+          to: value,
+          impact: 'offensive'
+        });
+      }
+    }
+
+    // Damage changes
+    const damageChanges = Object.keys(updates).filter(k => 
+      k.includes('damage') && (k.includes('number') || k.includes('bonus'))
+    );
+    if (damageChanges.length > 0) {
+      changes.push({
+        type: 'damage',
+        label: 'Damage Output',
+        from: currentStats.dpr,
+        to: plan.offensive.dprTarget,
+        impact: 'offensive',
+        details: `${damageChanges.length} damage sources adjusted`
+      });
+    }
+
+    return changes;
   }
 }
 
