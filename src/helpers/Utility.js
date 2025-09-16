@@ -64,6 +64,25 @@ export function dnd5eModCalc(score) {
   return Math.floor((score - 10) / 2);
 }
 
+/**
+ * Calculates the D&D 5e skill bonus for a given skill key.
+ *
+ * @param {object} actor - The actor document object.
+ * @param {string} key - The abbreviation of the skill (e.g., 'acr', 'ath').
+ * @returns {number|null} The calculated skill bonus, or null if the skill data is not found.
+ */
+export function skillBonus(actor, key) {
+  const skill = actor?.system?.skills?.[key];
+  if (!skill) return null;
+  const ability = skill.ability || 'int';
+  const abilityScore = actor?.system?.abilities?.[ability]?.value ?? 10;
+  const mod = dnd5eModCalc(abilityScore);
+  const tier = Number(skill.value) || 0; // 0/1/2
+  const pb = pbForCR(actor?.system?.details?.cr ?? 0);
+  return mod + (tier * pb);
+}
+
+
 // Standard D&D 5e size display map
 export const SIZES = { tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan' };
 
@@ -599,6 +618,7 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
   }
   return item;
 }
+
 
 /** 
  * There are differences in how in-memory documents can be updated between versions of FoundryVTTv12 and v13

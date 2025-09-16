@@ -22,12 +22,16 @@
   
   $: availableTypes = movementTypes.filter(type => !movement || !movement[type.key] || movement[type.key] <= 0);
   
+  // Comma-separated display for non-edit mode
+  $: commaSeparatedMovements = currentMovements.map(m => `${getMovementLabel(m.key)} ${m.value} ft.`).join(', ');
+  
   // State for inline editing
   let editingMovement = null;
   let editValue = '';
   let showAddSelect = false;
   let newMovementType = '';
   let newMovementValue = 30;
+  let isEditing = false;
   
   // Helper function to get movement label
   function getMovementLabel(key) {
@@ -66,6 +70,18 @@
     }
   }
   
+  function startEditing() {
+    if (!readonly) {
+      isEditing = true;
+    }
+  }
+  
+  function stopEditing() {
+    isEditing = false;
+    showAddSelect = false;
+    editingMovement = null;
+  }
+  
   function confirmAddMovement() {
     if (newMovementType && newMovementValue > 0) {
       dispatch('speedUpdate', { type: newMovementType, value: newMovementValue });
@@ -97,14 +113,30 @@
         .label.inline Speed
       .flex4
         .value
-          +if("currentMovements && currentMovements.length > 0")
-            +each("currentMovements as movement")
-              .movement-item
-                span.movement-type {getMovementLabel(movement.key)}
-                +if("readonly")
-                  span.movement-value {movement.value}
-                  span.unit ft.
-                  +else()
+          +if("!isEditing")
+            +if("currentMovements && currentMovements.length > 0")
+              span.movements-display(
+                on:click!="{startEditing}"
+                class!="{readonly ? '' : 'editable'}"
+                title!="{readonly ? '' : 'Click to edit movement'}"
+              ) {commaSeparatedMovements}
+              +else()
+                span.no-movement(
+                  on:click!="{startEditing}"
+                  class!="{readonly ? '' : 'editable'}"
+                  title!="{readonly ? '' : 'Click to add movement'}"
+                ) (no movement)
+            +if("!readonly")
+              button.edit-btn(
+                on:click!="{startEditing}"
+                title="Edit Movement"
+              ) ✏️
+          +if("isEditing")
+            .movements-edit-mode
+              +if("currentMovements && currentMovements.length > 0")
+                +each("currentMovements as movement")
+                  .movement-item
+                    span.movement-type {getMovementLabel(movement.key)}
                     +if("editingMovement === movement.key")
                       input.movement-input(
                         type="number"
@@ -125,8 +157,12 @@
                           class!="{editingMovement === movement.key ? 'editing' : ''}"
                         ) {movement.value}
                         span.unit ft.
+                        button.remove-btn(
+                          on:click!="{() => handleRemoveMovement(movement.key)}"
+                          title="Remove {getMovementLabel(movement.key)}"
+                        ) ×
           
-          +if("!readonly && availableTypes && availableTypes.length > 0")
+          +if("isEditing && !readonly")
             +if("showAddSelect")
               .add-movement-form
                 select.movement-type-select(
@@ -149,18 +185,75 @@
                   on:click!="{cancelAddMovement}"
                   title="Cancel"
                 ) ×
-              +else()
-                button.add-btn(
-                  on:click!="{handleAddMovement}"
-                  title="Add Movement"
-                ) + Add Movement
-          
-          +if("!currentMovements || currentMovements.length === 0")
-            span.no-movement (no movement)
+            +if("!showAddSelect")
+              .add-movement-buttons
+                +if("availableTypes && availableTypes.length > 0")
+                  button.add-btn(
+                    on:click!="{handleAddMovement}"
+                    title="Add Movement"
+                  ) + Add Movement
+                button.done-btn(
+                  on:click!="{stopEditing}"
+                  title="Done editing"
+                ) ✓ Done
 </template>
 
 <style lang="sass" scoped>
 .speed-container
+  .movements-display
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .no-movement
+    color: var(--color-text-secondary, #666)
+    font-style: italic
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .edit-btn
+    background: var(--color-border-highlight, #007bff)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 2px 6px
+    cursor: pointer
+    font-size: 0.8em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-border-highlight-hover, #0056b3)
+  
+  .done-btn
+    background: var(--color-success, #28a745)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 4px 8px
+    cursor: pointer
+    font-size: 0.9em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-success-hover, #218838)
+  
+  .movements-edit-mode
+    margin-top: 4px
+  
+  .add-movement-buttons
+    display: flex
+    gap: 4px
+    margin-top: 4px
+  
   .movement-item
     display: flex
     align-items: center

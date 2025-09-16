@@ -123,6 +123,10 @@
     border-radius: 4px
     background: rgba(0,0,0,.05)
 
-// Removed unused CSS selector
+  //- This forces all the stats to wrap responsively at the same width, which looks tidier
+  .ability-check
+    &+ span
+      display: inline-block
+      min-width: 35px
 
 </style>

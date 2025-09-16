@@ -2,7 +2,7 @@
   import { TJSDialog } from "@typhonjs-fvtt/runtime/svelte/application";
   import { getContext } from "svelte";
   import { CRCalculator } from "~/src/helpers/CRCalculator.js";
-  import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR, localize as t } from "~/src/helpers/Utility";
+  import { ucfirst, getItemsArray, updateSource, dnd5eModCalc, normalizeList, SIZES, pbForCR, xpForCR, skillBonus, localize as t } from "~/src/helpers/Utility";
   import { ensureNumberCR } from "~/src/lib/cr.js";
   import AttributeScore from "~/src/components/atoms/dnd5e/NPC/AttributeScore.svelte";
   import ArmorClass from "~/src/components/atoms/dnd5e/NPC/ArmorClass.svelte";
@@ -100,18 +100,6 @@
     slt: 'Sleight of Hand', ste: 'Stealth', sur: 'Survival'
   };
 
-  // Use dnd5eModCalc from Utility
-
-  function skillBonus(key) {
-    const skill = npc?.system?.skills?.[key];
-    if (!skill) return null;
-    const ability = skill.ability || 'int';
-    const abilityScore = npc?.system?.abilities?.[ability]?.value ?? 10;
-  const mod = dnd5eModCalc(abilityScore);
-    const tier = Number(skill.value) || 0; // 0/1/2
-    const pb = pbForCR(npc?.system?.details?.cr ?? 0);
-    return mod + (tier * pb);
-  }
 
   $: skillsList = Object.keys(npc?.system?.skills || {})
     .filter(k => (npc?.system?.skills?.[k]?.value || 0) > 0)
@@ -127,12 +115,6 @@
     if (s.truesight) parts.push(`truesight ${s.truesight} ft.`);
     return parts.join(', ');
   }
-  $: passivePerception = (() => {
-    const prc = npc?.system?.skills?.prc;
-    if (!prc) return 10;
-    const bonus = skillBonus('prc') || 0;
-    return 10 + bonus;
-  })();
 
   // Traits
   $: di = normalizeList(npc?.system?.traits?.di?.value).join(', ');
@@ -313,20 +295,6 @@
     }
   }
 
-  async function updateActorPassivePerception(value) {
-    if ($actor) {
-      try {
-        if (updateSource && $actor && typeof $actor.updateSource === 'function') {
-            await updateSource($actor, { 'system.attributes.prof': parseInt(value) || 2 });
-        } else {
-          await updateSource($actor, { 'system.attributes.prof': parseInt(value) || 2 });
-        }
-        // Also update the local npc object for reactivity
-      } catch (error) {
-        console.error('Failed to update actor passive perception:', error);
-      }
-    }
-  }
 
   async function updateActorLanguages(updateData) {
     console.log('🔍 updateActorLanguages called with:', updateData);
@@ -1026,15 +994,7 @@
         readonly="{readonly}"
         on:senseUpdate!="{e => updateActorSenses(e.detail.sense, e.detail.value)}"
       )
-      span  ( Passive Perception 
-      EditableValue(
-        value="{passivePerception}"
-        type="number"
-        readonly="{readonly}"
-        onSave!="{val => updateActorPassivePerception(val)}"
-        placeholder="10"
-      )
-      span )
+    hr.my-sm
     .mt-xxs
       Languages(
         languages="{npc?.system?.traits?.languages || {}}"

@@ -1,5 +1,6 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
+  import { skillBonus } from "~/src/helpers/Utility";
   
   export let senses = {};
   export let readonly = false;
@@ -28,6 +29,14 @@
   $: availableSenses = senseTypes.filter(sense => 
     !currentSenses.some(s => s.key === sense.key)
   );
+
+
+  $: passivePerception = (() => {
+    const prc = $actor?.system?.skills?.prc;
+    if (!prc) return 10;
+    const bonus = skillBonus($actor,'prc') || 0;
+    return 10 + bonus;
+  })();
   
   // Helper functions
   function getSenseLabel(key) {
@@ -101,7 +110,7 @@
 
 <template lang="pug">
   .senses-container
-    .label.inline Senses
+    .label.inline Senses ( Passive {passivePerception} )
     .value
       +if("currentSenses && currentSenses.length > 0")
         +each("currentSenses as sense")

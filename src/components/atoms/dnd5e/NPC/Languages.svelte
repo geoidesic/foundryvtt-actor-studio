@@ -104,6 +104,9 @@
     !currentLanguages.some(selected => selected.key === lang.key)
   );
   
+  // Comma-separated display for non-edit mode
+  $: commaSeparatedLanguages = currentLanguages.map(lang => lang.label).join(', ');
+  
   // Helper functions
   function getLanguageLabel(key) {
     return availableLanguages.find(l => l.key === key)?.label || key;
@@ -114,6 +117,7 @@
   let newLanguageType = '';
   let newCustomLanguage = '';
   let showCustomInput = false;
+  let isEditing = false;
   
   function handleAddLanguage() {
     if (availableLanguagesToAdd.length > 0) {
@@ -127,6 +131,18 @@
     showCustomInput = true;
     showAddSelect = false;
     newCustomLanguage = '';
+  }
+  
+  function startEditing() {
+    if (!readonly) {
+      isEditing = true;
+    }
+  }
+  
+  function stopEditing() {
+    isEditing = false;
+    showAddSelect = false;
+    showCustomInput = false;
   }
   
   function confirmAddLanguage() {
@@ -173,20 +189,39 @@
 </script>
 
 <template lang="pug">
-  .languages-container
-    .label.inline Languages
-    .value
-      +if("currentLanguages && currentLanguages.length > 0")
-        +each("currentLanguages as language")
-          .language-item(class!="language-{language.type}")
-            span.language-name(class!="language-type-{language.type}") {language.label}
-            +if("!readonly")
-              button.remove-btn(
-                on:click!="{() => handleRemoveLanguage(language.key, language.type)}"
-                title="Remove {language.label}"
-              ) ×
+    .languages-container
+      .label.inline Languages
+      .value
+        +if("!isEditing")
+          +if("currentLanguages && currentLanguages.length > 0")
+            span.languages-display(
+              on:click!="{startEditing}"
+              class!="{readonly ? '' : 'editable'}"
+              title!="{readonly ? '' : 'Click to edit languages'}"
+            ) {commaSeparatedLanguages}
+            +else()
+              span.no-languages(
+                on:click!="{startEditing}"
+                class!="{readonly ? '' : 'editable'}"
+                title!="{readonly ? '' : 'Click to add languages'}"
+              ) (no languages)
+          +if("!readonly")
+            button.edit-btn(
+              on:click!="{startEditing}"
+              title="Edit Languages"
+            ) ✏️
+        +if("isEditing")
+          .languages-edit-mode
+            +if("currentLanguages && currentLanguages.length > 0")
+              +each("currentLanguages as language")
+                .language-item(class!="language-{language.type}")
+                  span.language-name(class!="language-type-{language.type}") {language.label}
+                  button.remove-btn(
+                    on:click!="{() => handleRemoveLanguage(language.key, language.type)}"
+                    title="Remove {language.label}"
+                  ) ×
       
-      +if("!readonly")
+      +if("isEditing && !readonly")
         +if("showAddSelect")
           .add-language-form
             select.language-type-select(
@@ -229,13 +264,63 @@
               on:click!="{handleAddCustomLanguage}"
               title="Add custom language"
             ) + Add Custom
-      
-      +if("!currentLanguages || currentLanguages.length === 0")
-        span.no-languages (no languages)
+            button.done-btn(
+              on:click!="{stopEditing}"
+              title="Done editing"
+            ) ✓ Done
 </template>
 
 <style lang="sass" scoped>
 .languages-container
+  .languages-display
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .no-languages
+    color: var(--color-text-secondary, #666)
+    font-style: italic
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .edit-btn
+    background: var(--color-border-highlight, #007bff)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 2px 6px
+    cursor: pointer
+    font-size: 0.8em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-border-highlight-hover, #0056b3)
+  
+  .done-btn
+    background: var(--color-success, #28a745)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 4px 8px
+    cursor: pointer
+    font-size: 0.9em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-success-hover, #218838)
+  
+  .languages-edit-mode
+    margin-top: 4px
+  
   .language-item
     display: flex
     align-items: center
