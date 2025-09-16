@@ -933,13 +933,14 @@
     hr.my-sm
     
     .flexrow.justify-flexrow-vertical-top
+
       .flex1
         Skills(
           skills="{npc?.system?.skills || {}}"
           readonly="{readonly}"
           on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
         )
-      .flex1.ml-sm
+      .flex1
         SavingThrows(
           abilities="{npc?.system?.abilities || {}}"
           proficiencyBonus="{pb}"

@@ -63,6 +63,9 @@
     !currentSavingThrows.some(selected => selected.key === ability.key)
   );
   
+  // Comma-separated display for non-edit mode
+  $: commaSeparatedSavingThrows = currentSavingThrows.map(s => `${s.abbr} ${s.saveModifier >= 0 ? '+' : ''}${s.saveModifier}`).join(', ');
+  
   // Helper functions
   function getAbilityLabel(key) {
     return availableAbilities.find(a => a.key === key)?.label || key;
@@ -71,12 +74,24 @@
   // State for adding new saving throw proficiencies
   let showAddSelect = false;
   let newAbilityType = '';
+  let isEditing = false;
   
   function handleAddSavingThrow() {
     if (availableAbilitiesToAdd.length > 0) {
       showAddSelect = true;
       newAbilityType = availableAbilitiesToAdd[0].key;
     }
+  }
+  
+  function startEditing() {
+    if (!readonly) {
+      isEditing = true;
+    }
+  }
+  
+  function stopEditing() {
+    isEditing = false;
+    showAddSelect = false;
   }
   
   function confirmAddSavingThrow() {
@@ -124,28 +139,43 @@
 
 <template lang="pug">
   .saving-throws-container
-    .label.inline Saving Throw Proficiencies
+    .label.inline Saving Throws
     .value
-      +if("currentSavingThrows && currentSavingThrows.length > 0")
-        +each("currentSavingThrows as savingThrow")
-          .saving-throw-item
-            +if("includeRollButtons")
-              button.roll.rollable.ability-save(
-                title="Roll {savingThrow.label} Save"
-                data-ability="{savingThrow.key}"
-                aria-label="{savingThrow.label} save"
-                on:click!="{(e) => rollSave(savingThrow.key, e)}"
-              )
-                i.fas.fa-shield-alt
-            span.ability-abbr {savingThrow.abbr}
-            span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
-            +if("!readonly")
-              button.remove-btn(
-                on:click!="{() => handleRemoveSavingThrow(savingThrow.key)}"
-                title="Remove {savingThrow.label} proficiency"
-              ) ×
+      +if("!isEditing")
+        +if("currentSavingThrows && currentSavingThrows.length > 0")
+          span.saving-throws-display(
+            on:click!="{startEditing}"
+            class!="{readonly ? '' : 'editable'}"
+            title!="{readonly ? '' : 'Click to edit saving throw proficiencies'}"
+          ) {commaSeparatedSavingThrows}
+          +else()
+            span.no-saving-throws(
+              on:click!="{startEditing}"
+              class!="{readonly ? '' : 'editable'}"
+              title!="{readonly ? '' : 'Click to add saving throw proficiencies'}"
+            ) (no proficiencies)
+      +if("isEditing")
+        .saving-throws-edit-mode
+          +if("currentSavingThrows && currentSavingThrows.length > 0")
+            +each("currentSavingThrows as savingThrow")
+              .saving-throw-item
+                +if("includeRollButtons")
+                  button.roll.rollable.ability-save(
+                    title="Roll {savingThrow.label} Save"
+                    data-ability="{savingThrow.key}"
+                    aria-label="{savingThrow.label} save"
+                    on:click!="{(e) => rollSave(savingThrow.key, e)}"
+                  )
+                    i.fas.fa-shield-alt
+                span.ability-abbr {savingThrow.abbr}
+                span.ability-value {savingThrow.saveModifier >= 0 ? '+' : ''}{savingThrow.saveModifier}
+                +if("!readonly")
+                  button.remove-btn(
+                    on:click!="{() => handleRemoveSavingThrow(savingThrow.key)}"
+                    title="Remove {savingThrow.label} proficiency"
+                  ) ×
       
-      +if("!readonly")
+      +if("isEditing && !readonly")
         +if("showAddSelect")
           .add-saving-throw-form
             select.ability-type-select(
@@ -162,18 +192,61 @@
               title="Cancel"
             ) ×
         +if("!showAddSelect")
-          +if("availableAbilitiesToAdd.length > 0")
-            button.add-btn(
-              on:click!="{handleAddSavingThrow}"
-              title="Add saving throw proficiency"
-            ) + Add Proficiency
-      
-      +if("!currentSavingThrows || currentSavingThrows.length === 0")
-        span.no-saving-throws (no proficiencies)
+          .add-saving-throw-buttons
+            +if("availableAbilitiesToAdd.length > 0")
+              button.add-btn(
+                on:click!="{handleAddSavingThrow}"
+                title="Add saving throw proficiency"
+              ) + Add Proficiency
+            button.done-btn(
+              on:click!="{stopEditing}"
+              title="Done editing"
+            ) ✓ Done
 </template>
 
 <style lang="sass" scoped>
 .saving-throws-container
+  .saving-throws-display
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .no-saving-throws
+    color: var(--color-text-muted, #6c757d)
+    font-style: italic
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .done-btn
+    background: var(--color-success, #28a745)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 4px 8px
+    cursor: pointer
+    font-size: 0.9em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-success-hover, #218838)
+  
+  .saving-throws-edit-mode
+    margin-top: 4px
+  
+  .add-saving-throw-buttons
+    display: flex
+    gap: 4px
+    margin-top: 4px
+  
   .saving-throw-item
     display: flex
     align-items: center

@@ -126,11 +126,6 @@
                   class!="{readonly ? '' : 'editable'}"
                   title!="{readonly ? '' : 'Click to add movement'}"
                 ) (no movement)
-            +if("!readonly")
-              button.edit-btn(
-                on:click!="{startEditing}"
-                title="Edit Movement"
-              ) ✏️
           +if("isEditing")
             .movements-edit-mode
               +if("currentMovements && currentMovements.length > 0")
@@ -219,19 +214,6 @@
     
     &.editable:hover
       background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
-  
-  .edit-btn
-    background: var(--color-border-highlight, #007bff)
-    color: white
-    border: none
-    border-radius: 3px
-    padding: 2px 6px
-    cursor: pointer
-    font-size: 0.8em
-    margin-left: 4px
-    
-    &:hover
-      background: var(--color-border-highlight-hover, #0056b3)
   
   .done-btn
     background: var(--color-success, #28a745)

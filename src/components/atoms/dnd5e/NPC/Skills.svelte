@@ -45,6 +45,9 @@
     !currentSkills.some(s => s.key === skill.key)
   );
   
+  // Comma-separated display for non-edit mode
+  $: commaSeparatedSkills = currentSkills.map(s => s.label).join(', ');
+  
   // Helper functions
   function getSkillLabel(key) {
     return availableSkills.find(s => s.key === key)?.label || key;
@@ -69,6 +72,7 @@
   // State for adding new skills
   let showAddSelect = false;
   let newSkillType = '';
+  let isEditing = false;
   
   function handleSkillToggle(skillKey, currentProficient) {
     // Toggle between 0 (not proficient) and 1 (proficient)
@@ -85,6 +89,17 @@
       showAddSelect = true;
       newSkillType = availableSkillsToAdd[0].key;
     }
+  }
+  
+  function startEditing() {
+    if (!readonly) {
+      isEditing = true;
+    }
+  }
+  
+  function stopEditing() {
+    isEditing = false;
+    showAddSelect = false;
   }
   
   function confirmAddSkill() {
@@ -120,21 +135,36 @@
 
 <template lang="pug">
   .skills-container
-    .label.inline Skill Proficiencies
+    .label.inline Skills
     .value
-      +if("currentSkills && currentSkills.length > 0")
-        +each("currentSkills as skill")
-          .skill-item
-            span.skill-name {getSkillLabel(skill.key)}
-            +if("!readonly")
-              button.remove-btn(
-                on:click!="{() => handleRemoveSkill(skill.key)}"
-                title="Remove {getSkillLabel(skill.key)}"
-              ) ×
-            +if("readonly")
-              span ({getSkillMod(skill.key)})
+      +if("!isEditing")
+        +if("currentSkills && currentSkills.length > 0")
+          span.skills-display(
+            on:click!="{startEditing}"
+            class!="{readonly ? '' : 'editable'}"
+            title!="{readonly ? '' : 'Click to edit skills'}"
+          ) {commaSeparatedSkills}
+          +else()
+            span.no-skills(
+              on:click!="{startEditing}"
+              class!="{readonly ? '' : 'editable'}"
+              title!="{readonly ? '' : 'Click to add skills'}"
+            ) (no skills)
+      +if("isEditing")
+        .skills-edit-mode
+          +if("currentSkills && currentSkills.length > 0")
+            +each("currentSkills as skill")
+              .skill-item
+                span.skill-name {getSkillLabel(skill.key)}
+                +if("!readonly")
+                  button.remove-btn(
+                    on:click!="{() => handleRemoveSkill(skill.key)}"
+                    title="Remove {getSkillLabel(skill.key)}"
+                  ) ×
+                +if("readonly")
+                  span ({getSkillMod(skill.key)})
       
-      +if("!readonly && availableSkillsToAdd && availableSkillsToAdd.length > 0")
+      +if("isEditing && !readonly")
         +if("showAddSelect")
           .add-skill-form
             select.skill-type-select(
@@ -150,18 +180,62 @@
               on:click!="{cancelAddSkill}"
               title="Cancel"
             ) ×
-          +else()
-            button.add-btn(
-              on:click!="{handleAddSkill}"
-              title="Add skill"
-            ) + Add Skill
-      
-      +if("!currentSkills || currentSkills.length === 0")
-        span.no-skills (no skills)
+        +if("!showAddSelect")
+          .add-skill-buttons
+            +if("availableSkillsToAdd && availableSkillsToAdd.length > 0")
+              button.add-btn(
+                on:click!="{handleAddSkill}"
+                title="Add skill"
+              ) + Add Skill
+            button.done-btn(
+              on:click!="{stopEditing}"
+              title="Done editing"
+            ) ✓ Done
 </template>
 
 <style lang="sass" scoped>
 .skills-container
+  .skills-display
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .no-skills
+    color: var(--color-text-secondary, #666)
+    font-style: italic
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .done-btn
+    background: var(--color-success, #28a745)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 4px 8px
+    cursor: pointer
+    font-size: 0.9em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-success-hover, #218838)
+  
+  .skills-edit-mode
+    margin-top: 4px
+  
+  .add-skill-buttons
+    display: flex
+    gap: 4px
+    margin-top: 4px
+  
   .skill-item
     display: flex
     align-items: center

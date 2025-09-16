@@ -47,7 +47,8 @@
       "SelectBaseNPC": "Select Base NPC",
       "CreateNPC": "Create NPC",
       "Continue": "Continue",
-      "Next": "Next"
+      "Next": "Next",
+      "OpenSheetAndClose": "Complete"
     },
     "Name": "Name",
     "NPCStatblockSheet": "Actor Studio Stat Block",

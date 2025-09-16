@@ -29,6 +29,9 @@
   $: availableSenses = senseTypes.filter(sense => 
     !currentSenses.some(s => s.key === sense.key)
   );
+  
+  // Comma-separated display for non-edit mode
+  $: commaSeparatedSenses = currentSenses.map(s => `${getSenseLabel(s.key)} ${s.value} ft.`).join(', ');
 
 
   $: passivePerception = (() => {
@@ -49,6 +52,7 @@
   let showAddSelect = false;
   let newSenseType = '';
   let newSenseValue = 60;
+  let isEditing = false;
   
   function startEdit(sense) {
     if (readonly) return;
@@ -84,6 +88,18 @@
     }
   }
   
+  function startEditing() {
+    if (!readonly) {
+      isEditing = true;
+    }
+  }
+  
+  function stopEditing() {
+    isEditing = false;
+    showAddSelect = false;
+    editingSense = null;
+  }
+  
   function confirmAddSense() {
     if (newSenseType && newSenseValue > 0) {
       dispatch('senseUpdate', { sense: newSenseType, value: newSenseValue });
@@ -112,39 +128,51 @@
   .senses-container
     .label.inline Senses ( Passive {passivePerception} )
     .value
-      +if("currentSenses && currentSenses.length > 0")
-        +each("currentSenses as sense")
-          .sense-item
-            span.sense-type {getSenseLabel(sense.key)}
-            +if("!readonly")
-              +if("editingSense === sense.key")
-                input.sense-value(
-                  type="number"
-                  bind:value="{editValue}"
-                  min="0"
-                  on:blur!="{() => handleSenseSave(sense.key)}"
-                  on:keydown!="{e => handleKeydown(e, sense.key)}"
-                  placeholder="60"
-                  autofocus
-                )
-                button.remove-btn(
-                  on:click!="{() => handleRemoveSense(sense.key)}"
-                  title="Remove {getSenseLabel(sense.key)}"
-                ) ×
-                +else()
-                  span.sense-value.sense-editable(
-                    on:click!="{() => startEdit(sense)}"
-                    class!="{editingSense === sense.key ? 'editing' : ''}"
-                  ) {sense.value}
+      +if("!isEditing")
+        +if("currentSenses && currentSenses.length > 0")
+          span.senses-display(
+            on:click!="{startEditing}"
+            class!="{readonly ? '' : 'editable'}"
+            title!="{readonly ? '' : 'Click to edit senses'}"
+          ) {commaSeparatedSenses}
+          +else()
+            span.no-senses(
+              on:click!="{startEditing}"
+              class!="{readonly ? '' : 'editable'}"
+              title!="{readonly ? '' : 'Click to add senses'}"
+            ) (no senses)
+      +if("isEditing")
+        .senses-edit-mode
+          +if("currentSenses && currentSenses.length > 0")
+            +each("currentSenses as sense")
+              .sense-item
+                span.sense-type {getSenseLabel(sense.key)}
+                +if("editingSense === sense.key")
+                  input.sense-value(
+                    type="number"
+                    bind:value="{editValue}"
+                    min="0"
+                    on:blur!="{() => handleSenseSave(sense.key)}"
+                    on:keydown!="{e => handleKeydown(e, sense.key)}"
+                    placeholder="60"
+                    autofocus
+                  )
                   button.remove-btn(
                     on:click!="{() => handleRemoveSense(sense.key)}"
                     title="Remove {getSenseLabel(sense.key)}"
                   ) ×
-            +if("readonly")
-              span.sense-value {sense.value}
-            span.unit ft.
+                  +else()
+                    span.sense-value.sense-editable(
+                      on:click!="{() => startEdit(sense)}"
+                      class!="{editingSense === sense.key ? 'editing' : ''}"
+                    ) {sense.value}
+                    span.unit ft.
+                    button.remove-btn(
+                      on:click!="{() => handleRemoveSense(sense.key)}"
+                      title="Remove {getSenseLabel(sense.key)}"
+                    ) ×
       
-      +if("!readonly && availableSenses && availableSenses.length > 0")
+      +if("isEditing && !readonly")
         +if("showAddSelect")
           .add-sense-form
             select.sense-type-select(
@@ -167,18 +195,61 @@
               on:click!="{cancelAddSense}"
               title="Cancel"
             ) ×
-          +else()
-            button.add-btn(
-              on:click!="{handleAddSense}"
-              title="Add Sense"
-            ) + Add Sense
-      
-      +if("!currentSenses || currentSenses.length === 0")
-        span.no-senses (no senses)
+        +if("!showAddSelect")
+          .add-sense-buttons
+            +if("availableSenses && availableSenses.length > 0")
+              button.add-btn(
+                on:click!="{handleAddSense}"
+                title="Add Sense"
+              ) + Add Sense
+            button.done-btn(
+              on:click!="{stopEditing}"
+              title="Done editing"
+            ) ✓ Done
 </template>
 
 <style lang="sass" scoped>
 .senses-container
+  .senses-display
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .no-senses
+    color: var(--color-text-secondary, #666)
+    font-style: italic
+    cursor: pointer
+    padding: 2px 4px
+    border-radius: 3px
+    transition: background-color 0.2s
+    
+    &.editable:hover
+      background: var(--color-border-highlight-50, rgba(0, 123, 255, 0.1))
+  
+  .done-btn
+    background: var(--color-success, #28a745)
+    color: white
+    border: none
+    border-radius: 3px
+    padding: 4px 8px
+    cursor: pointer
+    font-size: 0.9em
+    margin-left: 4px
+    
+    &:hover
+      background: var(--color-success-hover, #218838)
+  
+  .senses-edit-mode
+    margin-top: 4px
+  
+  .add-sense-buttons
+    display: flex
+    gap: 4px
+    margin-top: 4px
 
   input.sense-value
     width: 50px
