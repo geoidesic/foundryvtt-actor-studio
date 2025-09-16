@@ -25,6 +25,7 @@
 
     let isOpen = false;
     let searchInput;
+    let highlightedIndex = -1; // Track the currently highlighted option index
     
     export let handleSelect = (option) => {
       if (handler) {
@@ -52,20 +53,53 @@
             return;
           }
           isOpen = !isOpen;
-          // reset search when opening dropdown
+          // reset search and highlight when opening dropdown
           if (isOpen) {
             searchTerm = '';
+            highlightedIndex = -1;
           }
     }
 
     function handleKeydown(event) {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        if (event.currentTarget.getAttribute('role') === 'option') {
-          this.handleSelect(event.currentTarget.option);
-        } else {
-          this.toggleDropdown();
+      // Only handle keyboard navigation when dropdown is open
+      if (!isOpen) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          toggleDropdown();
         }
+        return;
+      }
+
+      // Handle keyboard navigation when dropdown is open
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (navigableOptions.length > 0) {
+            highlightedIndex = highlightedIndex < navigableOptions.length - 1 ? highlightedIndex + 1 : 0;
+          }
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          if (navigableOptions.length > 0) {
+            highlightedIndex = highlightedIndex > 0 ? highlightedIndex - 1 : navigableOptions.length - 1;
+          }
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (highlightedIndex >= 0 && highlightedIndex < navigableOptions.length) {
+            handleSelect(navigableOptions[highlightedIndex]);
+          }
+          break;
+        case 'Escape':
+          event.preventDefault();
+          isOpen = false;
+          highlightedIndex = -1;
+          break;
+        case 'Tab':
+          // Allow tab to work normally for accessibility
+          isOpen = false;
+          highlightedIndex = -1;
+          break;
       }
     }
 
@@ -148,10 +182,25 @@
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Reset highlighted index when navigable options change
+    $: if (navigableOptions.length > 0 && highlightedIndex >= navigableOptions.length) {
+      highlightedIndex = navigableOptions.length - 1;
+    } else if (navigableOptions.length === 0) {
+      highlightedIndex = -1;
+    }
+
+    // Create a filtered list that excludes the currently selected option for keyboard navigation
+    $: navigableOptions = filteredOptions.filter(option => option?.value !== value);
+
+    // Focus search input when dropdown opens
+    $: if (isOpen && searchInput) {
+      searchInput.focus();
+    }
+
   </script>
 
 <template lang="pug">
-div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0")
+div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0" on:keydown="{handleKeydown}")
   div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
@@ -170,10 +219,18 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
   +if("isOpen")
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
-      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus)
+      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus bind:this="{searchInput}")
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option"  on:click|stopPropagation|preventDefault!="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(
+            role="option"  
+            on:click|stopPropagation|preventDefault!="{handleSelect(option)}" 
+            on:keydown="{handleKeydown}" 
+            tabindex="0"
+            class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+            data-index="{navigableOptions.indexOf(option)}"
+            aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+          )
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
@@ -264,9 +321,15 @@ img
   color: #212529
   cursor: pointer
 
-
   &:hover
     background-color: var(--select-option-highlight-color)
+
+  &.highlighted
+    background-color: rgba(0, 0, 0, 0.3)
+    color: var(--gas-color-text)
+
+    &:hover
+      background-color: rgba(0, 0, 0, 0.4)
 
 .search-input
   width: calc(100% - 8px)
@@ -281,4 +344,11 @@ img
   &:focus
     outline: none
     border-color: #80bdff
+
+:global(.theme-dark) .option.highlighted
+  background-color: rgba(255, 255, 255, 0.3)
+  color: var(--gas-color-text)
+
+  &:hover
+    background-color: rgba(255, 255, 255, 0.4)
 </style>
