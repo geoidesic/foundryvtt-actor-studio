@@ -66,9 +66,13 @@
           i(class="{tab.icon}")
   .tab-content
     +each("tabs as tab")
-      +if("tab.id === activeTab && tabComponents[tab.component]")
+      +if("tabComponents[tab.component]")
         // Wrap component in a container with a stable class and data attribute so it's findable in markup
-        .tab-pane(class="tab-{sanitizeClass(tab.component)}" data-component="{tab.component}")
+        .tab-pane(
+          class="tab-{sanitizeClass(tab.component)} {tab.id === activeTab ? 'active' : 'inactive'}"
+          data-component="{tab.component}"
+          style="display: {tab.id === activeTab ? 'block' : 'none'}"
+        )
           svelte:component(this="{tabComponents[tab.component]}" sheet="{sheet}")
 </template>
 
@@ -149,6 +153,16 @@
     flex: 2
     width: 100%
     position: relative
+
+    .tab-pane
+      width: 100%
+      height: 100%
+
+      &.inactive
+        display: none !important
+
+      &.active
+        display: block !important
 
   .readonly-overlay
     position: absolute
