@@ -30,6 +30,7 @@
   let editingAlignment = false;
   let editingName = false;
   let currentCRBreakdown = null;
+  let lastApplied = null;
 
   const abilityOrder = ["str","dex","con","int","wis","cha"];
   
@@ -296,50 +297,6 @@
   }
 
 
-  async function updateActorLanguages(updateData) {
-    console.log('🔍 updateActorLanguages called with:', updateData);
-    console.log('🔍 $actor value:', $actor);
-    
-    if ($actor) {
-      console.log('✅ $actor found, attempting to update languages...');
-      try {
-        const { type, language, isCustom } = updateData;
-
-        if (type === 'add') {
-          if (isCustom) {
-            // Add custom language - append to existing custom languages
-            const currentCustom = npc?.system?.traits?.languages?.custom || '';
-            const newCustom = currentCustom ? `${currentCustom}, ${language}` : language;
-            await updateSource($actor, { 'system.traits.languages.custom': newCustom });
-          } else {
-            // Add standard language - append to existing value array
-            const currentLanguages = npc?.system?.traits?.languages?.value || [];
-            const newLanguages = [...currentLanguages, language];
-            await updateSource($actor, { 'system.traits.languages.value': newLanguages });
-          }
-        } else if (type === 'remove') {
-          if (isCustom) {
-            // Remove custom language
-            const currentCustom = npc?.system?.traits?.languages?.custom || '';
-            const newCustom = currentCustom.split(',').filter(lang => lang.trim() !== language).join(', ').trim();
-            await updateSource($actor, { 'system.traits.languages.custom': newCustom });
-          } else {
-            // Remove standard language
-            const currentLanguages = npc?.system?.traits?.languages?.value || [];
-            const newLanguages = currentLanguages.filter(lang => lang !== language);
-            await updateSource($actor, { 'system.traits.languages.value': newLanguages });
-          }
-        }
-        
-        console.log('🎉 Languages update completed successfully');
-      } catch (error) {
-        console.error('❌ Failed to update actor languages:', error);
-        console.error('❌ Error stack:', error.stack);
-      }
-    } else {
-      console.error('❌ No $actor found!');
-    }
-  }
   
   async function updateActorSavingThrows(updateData) {
     console.log('🔍 updateActorSavingThrows called with:', updateData);
@@ -527,23 +484,41 @@
                 const updates = CRCalculator.adjustActorToCR($actor, value) || {};
                 if (!updates['system.details.cr']) updates['system.details.cr'] = value;
                 if (!updates['system.details.xp.value']) updates['system.details.xp.value'] = props.xp ?? 0;
+                // Filter out metadata and other non-actor properties for updateSource
+                const actorUpdates = {};
+                for (const [path, value] of Object.entries(updates)) {
+                  // Skip metadata and other non-actor properties
+                  if (path.startsWith('_metadata') || path.startsWith('_') || path === 'id' || path === '_id') {
+                    continue;
+                  }
+                  actorUpdates[path] = value;
+                }
+                
                 // Capture previous values for Undo
                 const previous = {};
-                for (const path of Object.keys(updates)) {
+                for (const path of Object.keys(actorUpdates)) {
                   previous[path] = getValueAt($actor, path);
                 }
-                console.log('[CR Dialog] Applying updates via updateSource:$actor, ', updates, 'previous:', previous);
-                await updateSource($actor, updates);
-                applyUpdatesToLocalNpc(updates);
+                console.log('[CR Dialog] Applying updates via updateSource:$actor, ', actorUpdates, 'previous:', previous);
+                await updateSource($actor, actorUpdates);
                 // Build a simple diff list for dialog presentation
-                const diffs = Object.keys(updates).map(p => ({ path: p, from: previous[p], to: updates[p] }));
+                const diffs = Object.keys(actorUpdates).map(p => ({ path: p, from: previous[p], to: actorUpdates[p] }));
                 // Persist the lastApplied for Undo
-                lastApplied = { updates, previous };
+                console.log('[NPCStatBlock] Setting lastApplied:', { updates: actorUpdates, previous });
+                lastApplied = { updates: actorUpdates, previous };
                 // Push the diffs into the dialog data so content can render them, and enable Undo button
                 try { application?.data?.set?.('appliedChanges', diffs); } catch (_) {
                   // ignore
                 }
-                try { application?.data?.set?.('buttons.undo.disabled', false); } catch (_) {}
+                try { 
+                  // Try setting the entire buttons object
+                  const currentData = application?.data?.get?.() || {};
+                  const newData = { ...currentData, buttons: { ...currentData.buttons, undo: { disabled: false } } };
+                  application?.data?.set?.(newData);
+                  console.log('[NPCStatBlock] Enabled UNDO button');
+                } catch (err) {
+                  console.log('[NPCStatBlock] Failed to enable UNDO button:', err);
+                }
                 // Recalculate breakdown after applying so dialog can show new calculated results
                 try {
                   const newBreakdown = await CRCalculator.calculateCurrentCR($actor);
@@ -568,12 +543,30 @@
               try {
                 if (!lastApplied) return false;
                 const revert = lastApplied.previous || {};
-                console.log('[CR Dialog] Undo clicked - reverting:', revert);
-                await updateSource($actor, revert);
-                applyUpdatesToLocalNpc(revert);
+                
+                // Filter out metadata and other non-actor properties for revert
+                const actorRevert = {};
+                for (const [path, value] of Object.entries(revert)) {
+                  // Skip metadata and other non-actor properties
+                  if (path.startsWith('_metadata') || path.startsWith('_') || path === 'id' || path === '_id') {
+                    continue;
+                  }
+                  actorRevert[path] = value;
+                }
+                
+                console.log('[CR Dialog] Undo clicked - reverting:', actorRevert);
+                await updateSource($actor, actorRevert);
                 // Clear dialog diffs and disable Undo
                 try { application?.data?.set?.('appliedChanges', null); } catch (_) {}
-                try { application?.data?.set?.('buttons.undo.disabled', true); } catch (_) {}
+                try { 
+                  // Try setting the entire buttons object
+                  const currentData = application?.data?.get?.() || {};
+                  const newData = { ...currentData, buttons: { ...currentData.buttons, undo: { disabled: true } } };
+                  application?.data?.set?.(newData);
+                  console.log('[NPCStatBlock] Disabled UNDO button');
+                } catch (err) {
+                  console.log('[NPCStatBlock] Failed to disable UNDO button:', err);
+                }
                 // Recalculate breakdown after revert
                 try {
                   const newBreakdown = await CRCalculator.calculateCurrentCR($actor);
@@ -644,33 +637,6 @@
     }
   }
 
-  // Apply updates object to local `npc` for reactivity after calling updateSource
-  function applyUpdatesToLocalNpc(updates) {
-    if (!npc || !updates) return;
-    for (const [path, value] of Object.entries(updates)) {
-      const parts = path.split('.');
-      let target = npc;
-      for (let i = 0; i < parts.length; i++) {
-        const key = parts[i];
-        const isLast = i === parts.length - 1;
-        // handle numeric indices for arrays
-        const idx = Number.isFinite(Number(key)) ? Number(key) : null;
-        if (isLast) {
-          if (idx !== null && Array.isArray(target)) target[idx] = value;
-          else target[key] = value;
-        } else {
-          if (idx !== null) {
-            if (!Array.isArray(target)) break;
-            if (!target[idx]) target[idx] = {};
-            target = target[idx];
-          } else {
-            if (target[key] == null) target[key] = {};
-            target = target[key];
-          }
-        }
-      }
-    }
-  }
 
   // Read a value from actor data using a dotted path like 'system.attributes.hp.max'
   function getValueAt(doc, path) {
@@ -746,6 +712,8 @@
   }
 
   async function handle_CR_Click(type="calc", desiredCRval) {
+    return; // deprecated as it doesn't work
+    
     if (!$actor) return;
     console.log('🔄 Recalculating CR for actor:', $actor);
     currentCRBreakdown = await CRCalculator.calculateCurrentCR($actor);
@@ -766,9 +734,18 @@
           // Always ensure cr/xp are present as a minimum fallback
           if (!updates['system.details.cr']) updates['system.details.cr'] = value;
           if (!updates['system.details.xp.value']) updates['system.details.xp.value'] = currentCRBreakdown.xp ?? 0;
-                await updateSource($actor, updates);
-          // Apply updates to local npc for reactivity
-          applyUpdatesToLocalNpc(updates);
+          
+          // Filter out metadata and other non-actor properties for updateSource
+          const actorUpdates = {};
+          for (const [path, value] of Object.entries(updates)) {
+            // Skip metadata and other non-actor properties
+            if (path.startsWith('_metadata') || path.startsWith('_') || path === 'id' || path === '_id') {
+              continue;
+            }
+            actorUpdates[path] = value;
+          }
+          
+          await updateSource($actor, actorUpdates);
           ui.notifications?.info?.(`Applied CR ${CRCalculator.formatCR(value)} (XP ${currentCRBreakdown.xp ?? 0}) to actor.`);
         } catch (err) {
           console.error('Failed to apply CR via dialog apply event:', err);
@@ -910,22 +887,19 @@
     
     .value
       ArmorClass(
-        ac="{npc?.system?.attributes?.ac}"
         readonly="{readonly}"
         on:acUpdate!="{e => updateActorAC(e.detail.value)}"
       )
     HitPoints(
-      hp="{npc?.system?.attributes?.hp}" 
       readonly="{readonly}"
       on:hpUpdate!="{e => updateActorHP(e.detail.type, e.detail.value)}"
     )
-    Speed(movement="{npc?.system?.attributes?.movement}" readonly="{readonly}" on:speedUpdate!="{e => updateActorSpeed(e.detail.type, e.detail.value)}")
+    Speed(readonly="{readonly}" on:speedUpdate!="{e => updateActorSpeed(e.detail.type, e.detail.value)}")
     hr.my-sm
     .abilities
       +each("abilityScores as ab")
         AttributeScore(
           abbreviation="{ab.abbr}" 
-          score="{ab.score}" 
           readonly="{readonly}"
           includeRollButtons="{includeRollButtons}"
           on:scoreUpdate!="{e => updateActorAbilityScore(e.detail.ability, e.detail.value)}"
@@ -936,14 +910,11 @@
 
       .flex1
         Skills(
-          skills="{npc?.system?.skills || {}}"
           readonly="{readonly}"
           on:skillUpdate!="{e => updateActorSkills(e.detail.skill, e.detail.proficient, e.detail.ability)}"
         )
       .flex1
         SavingThrows(
-          abilities="{npc?.system?.abilities || {}}"
-          proficiencyBonus="{pb}"
           readonly="{readonly}"
           includeRollButtons="{includeRollButtons}"
           on:savingThrowUpdate!="{e => updateActorSavingThrows(e.detail)}"
@@ -991,16 +962,13 @@
           )
     .mt-xxs
       Senses(
-        senses="{npc?.system?.attributes?.senses || {}}"
         readonly="{readonly}"
         on:senseUpdate!="{e => updateActorSenses(e.detail.sense, e.detail.value)}"
       )
     hr.my-sm
     .mt-xxs
       Languages(
-        languages="{npc?.system?.traits?.languages || {}}"
         readonly="{readonly}"
-        on:languageUpdate!="{e => updateActorLanguages(e.detail)}"
       )
     
     //- Traits (summary)

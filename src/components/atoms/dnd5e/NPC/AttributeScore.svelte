@@ -1,17 +1,18 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
+  import { updateSource } from "~/src/helpers/Utility";
   import EditableValue from "~/src/components/atoms/EditableValue.svelte";
   
   export let abbreviation;
-  export let score;
   export let readonly = false;
   export let includeRollButtons = false
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
   
-  const mod = Math.floor((score - 10) / 2);
-  const modString = mod >= 0 ? `+${mod}` : `${mod}`;
+  $: score = $actor?.system?.abilities?.[abbreviation?.toLowerCase()]?.value ?? 10;
+  $: mod = Math.floor((score - 10) / 2);
+  $: modString = mod >= 0 ? `+${mod}` : `${mod}`;
 
   // Roll an ability check: prefer 5e v4 (actor.rollAbilityCheck), fallback to 5e v3 (actor.rollAbilityTest)
   async function rollAbility(event) {
@@ -59,18 +60,22 @@
     }
   }
   
-  function handleScoreSave(newValue) {
+  async function handleScoreSave(newValue) {
     console.log('AttributeScore - handleScoreSave called with:', newValue);
     const numValue = parseInt(newValue);
     if (!isNaN(numValue) && numValue >= 1 && numValue <= 30) {
-      console.log('AttributeScore - Dispatching scoreUpdate event:', { ability: abbreviation, value: numValue });
-      // Dispatch an event to let the parent component handle the update
-      dispatch('scoreUpdate', {
-        ability: abbreviation,
-        value: numValue
-      });
+      try {
+        await updateSource($actor, { [`system.abilities.${abbreviation.toLowerCase()}.value`]: numValue });
+        console.log('AttributeScore - Successfully updated ability score:', { ability: abbreviation, value: numValue });
+        dispatch('scoreUpdate', {
+          ability: abbreviation,
+          value: numValue
+        });
+      } catch (error) {
+        console.error('Failed to update ability score:', error);
+      }
     } else {
-      console.log('AttributeScore - Invalid value, not dispatching:', newValue);
+      console.log('AttributeScore - Invalid value, not updating:', newValue);
     }
   }
 </script>

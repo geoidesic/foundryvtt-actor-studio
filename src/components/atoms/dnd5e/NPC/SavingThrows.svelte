@@ -1,13 +1,15 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
+  import { updateSource } from "~/src/helpers/Utility";
   
-  export let abilities = {};
   export let readonly = false;
-  export let proficiencyBonus = 2; // Default to +2
   export let includeRollButtons = false;
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
+  
+  $: abilities = $actor?.system?.abilities || {};
+  $: proficiencyBonus = $actor?.system?.attributes?.pb || 2;
   
   // Available ability scores for saving throws
   const availableAbilities = [
@@ -94,14 +96,19 @@
     showAddSelect = false;
   }
   
-  function confirmAddSavingThrow() {
+  async function confirmAddSavingThrow() {
     if (newAbilityType) {
-      dispatch('savingThrowUpdate', { 
-        type: 'add',
-        ability: newAbilityType
-      });
-      showAddSelect = false;
-      newAbilityType = '';
+      try {
+        await updateSource($actor, { [`system.abilities.${newAbilityType}.proficient`]: true });
+        dispatch('savingThrowUpdate', { 
+          type: 'add',
+          ability: newAbilityType
+        });
+        showAddSelect = false;
+        newAbilityType = '';
+      } catch (error) {
+        console.error('Failed to add saving throw proficiency:', error);
+      }
     }
   }
   
@@ -110,11 +117,16 @@
     newAbilityType = '';
   }
   
-  function handleRemoveSavingThrow(abilityKey) {
-    dispatch('savingThrowUpdate', { 
-      type: 'remove',
-      ability: abilityKey
-    });
+  async function handleRemoveSavingThrow(abilityKey) {
+    try {
+      await updateSource($actor, { [`system.abilities.${abilityKey}.proficient`]: false });
+      dispatch('savingThrowUpdate', { 
+        type: 'remove',
+        ability: abilityKey
+      });
+    } catch (error) {
+      console.error('Failed to remove saving throw proficiency:', error);
+    }
   }
 
   async function rollSave(key, event) {

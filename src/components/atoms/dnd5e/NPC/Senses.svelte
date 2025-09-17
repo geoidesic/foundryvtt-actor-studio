@@ -1,12 +1,13 @@
 <script>
   import { getContext, createEventDispatcher } from "svelte";
-  import { skillBonus } from "~/src/helpers/Utility";
+  import { updateSource, skillBonus } from "~/src/helpers/Utility";
   
-  export let senses = {};
   export let readonly = false;
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
+  
+  $: senses = $actor?.system?.attributes?.senses || {};
   
   // Available sense types
   const senseTypes = [
@@ -60,15 +61,23 @@
     editValue = sense.value.toString();
   }
   
-  function handleSenseSave(senseKey) {
+  async function handleSenseSave(senseKey) {
     if (editingSense === senseKey) {
       const numValue = parseInt(editValue);
       if (!isNaN(numValue) && numValue >= 0) {
-        if (numValue > 0) {
-          dispatch('senseUpdate', { sense: senseKey, value: numValue });
-        } else {
-          // If value is 0 or negative, remove the sense
-          dispatch('senseUpdate', { sense: senseKey, value: null });
+        try {
+          if (numValue > 0) {
+            await updateSource($actor, { [`system.attributes.senses.${senseKey}`]: numValue });
+            dispatch('senseUpdate', { sense: senseKey, value: numValue });
+          } else {
+            // If value is 0 or negative, remove the sense
+            const currentSenses = { ...senses };
+            delete currentSenses[senseKey];
+            await updateSource($actor, { 'system.attributes.senses': currentSenses });
+            dispatch('senseUpdate', { sense: senseKey, value: null });
+          }
+        } catch (error) {
+          console.error('Failed to update sense:', error);
         }
       }
       editingSense = null;
@@ -76,8 +85,15 @@
     }
   }
   
-  function handleRemoveSense(senseKey) {
-    dispatch('senseUpdate', { sense: senseKey, value: null });
+  async function handleRemoveSense(senseKey) {
+    try {
+      const currentSenses = { ...senses };
+      delete currentSenses[senseKey];
+      await updateSource($actor, { 'system.attributes.senses': currentSenses });
+      dispatch('senseUpdate', { sense: senseKey, value: null });
+    } catch (error) {
+      console.error('Failed to remove sense:', error);
+    }
   }
   
   function handleAddSense() {
@@ -100,12 +116,17 @@
     editingSense = null;
   }
   
-  function confirmAddSense() {
+  async function confirmAddSense() {
     if (newSenseType && newSenseValue > 0) {
-      dispatch('senseUpdate', { sense: newSenseType, value: newSenseValue });
-      showAddSelect = false;
-      newSenseType = '';
-      newSenseValue = 60;
+      try {
+        await updateSource($actor, { [`system.attributes.senses.${newSenseType}`]: newSenseValue });
+        dispatch('senseUpdate', { sense: newSenseType, value: newSenseValue });
+        showAddSelect = false;
+        newSenseType = '';
+        newSenseValue = 60;
+      } catch (error) {
+        console.error('Failed to add sense:', error);
+      }
     }
   }
   

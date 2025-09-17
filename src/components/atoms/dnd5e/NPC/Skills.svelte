@@ -1,11 +1,13 @@
 <script>
   import { getContext, createEventDispatcher, onMount } from "svelte";
+  import { updateSource } from "~/src/helpers/Utility";
   
-  export let skills = {};
   export let readonly = false;
   
   const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
+  
+  $: skills = $actor?.system?.skills || {};
   
   // Available skills with their ability modifiers
   const availableSkills = [
@@ -74,14 +76,19 @@
   let newSkillType = '';
   let isEditing = false;
   
-  function handleSkillToggle(skillKey, currentProficient) {
+  async function handleSkillToggle(skillKey, currentProficient) {
     // Toggle between 0 (not proficient) and 1 (proficient)
     const newProficient = currentProficient > 0 ? 0 : 1;
-    dispatch('skillUpdate', { 
-      skill: skillKey, 
-      proficient: newProficient,
-      ability: getSkillAbility(skillKey)
-    });
+    try {
+      await updateSource($actor, { [`system.skills.${skillKey}.value`]: newProficient });
+      dispatch('skillUpdate', { 
+        skill: skillKey, 
+        proficient: newProficient,
+        ability: getSkillAbility(skillKey)
+      });
+    } catch (error) {
+      console.error('Failed to update skill:', error);
+    }
   }
   
   function handleAddSkill() {
@@ -100,6 +107,20 @@
   function stopEditing() {
     isEditing = false;
     showAddSelect = false;
+  }
+  
+  // Open the built-in dnd5e skills configuration dialog
+  function openSkillsConfig() {
+    if (readonly || !$actor) return;
+    
+    try {
+      // Use the built-in dnd5e SkillsConfig
+      // eslint-disable-next-line no-undef
+      new dnd5e.applications.actor.SkillsConfig({ document: $actor }).render({ force: true });
+    } catch (error) {
+      console.error('Failed to open skills configuration:', error);
+      ui.notifications?.error?.('Failed to open skills configuration dialog');
+    }
   }
   
   function confirmAddSkill() {
@@ -137,60 +158,68 @@
   .skills-container
     .label.inline Skills
     .value
-      +if("!isEditing")
-        +if("currentSkills && currentSkills.length > 0")
-          span.skills-display(
-            on:click!="{startEditing}"
-            class!="{readonly ? '' : 'editable'}"
-            title!="{readonly ? '' : 'Click to edit skills'}"
-          ) {commaSeparatedSkills}
-          +else()
-            span.no-skills(
-              on:click!="{startEditing}"
-              class!="{readonly ? '' : 'editable'}"
-              title!="{readonly ? '' : 'Click to add skills'}"
-            ) (no skills)
-      +if("isEditing")
-        .skills-edit-mode
-          +if("currentSkills && currentSkills.length > 0")
-            +each("currentSkills as skill")
-              .skill-item
-                span.skill-name {getSkillLabel(skill.key)}
-                +if("!readonly")
-                  button.button-remove(
-                    on:click!="{() => handleRemoveSkill(skill.key)}"
-                    title="Remove {getSkillLabel(skill.key)}"
-                  ) ×
-                +if("readonly")
-                  span ({getSkillMod(skill.key)})
-      
-      +if("isEditing && !readonly")
-        +if("showAddSelect")
-          .add-skill-form
-            select.skill-type-select(
-              bind:value="{newSkillType}"
+      +if("currentSkills && currentSkills.length > 0")
+        span.skills-display {commaSeparatedSkills}
+        +if("!readonly")
+          button.skills-config-btn(
+            on:click!="{openSkillsConfig}"
+            title="Configure Skills"
+            aria-label="Configure Skills"
+          )
+            i.fas.fa-cog
+        +else()
+          span.no-skills (no skills)
+          +if("!readonly")
+            button.skills-config-btn(
+              on:click!="{openSkillsConfig}"
+              title="Configure Skills"
+              aria-label="Configure Skills"
             )
-              +each("availableSkillsToAdd as skill")
-                option(value="{skill.key}") {skill.label}
-            button.button-confirm(
-              on:click!="{confirmAddSkill}"
-              title="Add Skill"
-            ) ✓
-            button.button-cancel(
-              on:click!="{cancelAddSkill}"
-              title="Cancel"
-            ) ×
-        +if("!showAddSelect")
-          .add-skill-buttons
-            +if("availableSkillsToAdd && availableSkillsToAdd.length > 0")
+              i.fas.fa-cog
+      
+      //- Hidden editing interface (preserved but not displayed)
+      +if("false")
+        +if("isEditing")
+          .skills-edit-mode
+            +if("currentSkills && currentSkills.length > 0")
+              +each("currentSkills as skill")
+                .skill-item
+                  span.skill-name {getSkillLabel(skill.key)}
+                  +if("!readonly")
+                    button.button-remove(
+                      on:click!="{() => handleRemoveSkill(skill.key)}"
+                      title="Remove {getSkillLabel(skill.key)}"
+                    ) ×
+                  +if("readonly")
+                    span ({getSkillMod(skill.key)})
+        
+        +if("isEditing && !readonly")
+          +if("showAddSelect")
+            .add-skill-form
+              select.skill-type-select(
+                bind:value="{newSkillType}"
+              )
+                +each("availableSkillsToAdd as skill")
+                  option(value="{skill.key}") {skill.label}
               button.button-confirm(
-                on:click!="{handleAddSkill}"
-                title="Add skill"
-              ) +
-            button.button-confirm(
-              on:click!="{stopEditing}"
-              title="Done editing"
-            ) ✓
+                on:click!="{confirmAddSkill}"
+                title="Add Skill"
+              ) ✓
+              button.button-cancel(
+                on:click!="{cancelAddSkill}"
+                title="Cancel"
+              ) ×
+          +if("!showAddSelect")
+            .add-skill-buttons
+              +if("availableSkillsToAdd && availableSkillsToAdd.length > 0")
+                button.button-confirm(
+                  on:click!="{handleAddSkill}"
+                  title="Add skill"
+                ) +
+              button.button-confirm(
+                on:click!="{stopEditing}"
+                title="Done editing"
+              ) ✓
 </template>
 
 <style lang="sass" scoped>
@@ -201,6 +230,9 @@
   
   .no-skills
     @include empty-state
+  
+  .skills-config-btn
+    @include config-cog-btn
   
   
   .skills-edit-mode

@@ -1,10 +1,13 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
+  import { getContext, createEventDispatcher } from 'svelte';
+  import { updateSource } from "~/src/helpers/Utility";
   
-  export let movement = {};
   export let readonly = false;
   
+  const actor = getContext("#doc");
   const dispatch = createEventDispatcher();
+  
+  $: movement = $actor?.system?.attributes?.movement || {};
   
   // Available movement types
   const movementTypes = [
@@ -44,22 +47,37 @@
     editValue = movementItem.value;
   }
   
-  function handleSpeedSave(movementKey) {
+  async function handleSpeedSave(movementKey) {
     if (editingMovement === movementKey) {
       const newValue = parseInt(editValue) || 0;
-      if (newValue > 0) {
-        dispatch('speedUpdate', { type: movementKey, value: newValue });
-      } else {
-        // If value is 0 or negative, remove the movement
-        dispatch('speedUpdate', { type: movementKey, value: null });
+      try {
+        if (newValue > 0) {
+          await updateSource($actor, { [`system.attributes.movement.${movementKey}`]: newValue });
+          dispatch('speedUpdate', { type: movementKey, value: newValue });
+        } else {
+          // If value is 0 or negative, remove the movement
+          const currentMovement = { ...movement };
+          delete currentMovement[movementKey];
+          await updateSource($actor, { 'system.attributes.movement': currentMovement });
+          dispatch('speedUpdate', { type: movementKey, value: null });
+        }
+      } catch (error) {
+        console.error('Failed to update movement:', error);
       }
       editingMovement = null;
       editValue = '';
     }
   }
   
-  function handleRemoveMovement(movementKey) {
-    dispatch('speedUpdate', { type: movementKey, value: null });
+  async function handleRemoveMovement(movementKey) {
+    try {
+      const currentMovement = { ...movement };
+      delete currentMovement[movementKey];
+      await updateSource($actor, { 'system.attributes.movement': currentMovement });
+      dispatch('speedUpdate', { type: movementKey, value: null });
+    } catch (error) {
+      console.error('Failed to remove movement:', error);
+    }
   }
   
   function handleAddMovement() {
@@ -82,12 +100,17 @@
     editingMovement = null;
   }
   
-  function confirmAddMovement() {
+  async function confirmAddMovement() {
     if (newMovementType && newMovementValue > 0) {
-      dispatch('speedUpdate', { type: newMovementType, value: newMovementValue });
-      showAddSelect = false;
-      newMovementType = '';
-      newMovementValue = 30;
+      try {
+        await updateSource($actor, { [`system.attributes.movement.${newMovementType}`]: newMovementValue });
+        dispatch('speedUpdate', { type: newMovementType, value: newMovementValue });
+        showAddSelect = false;
+        newMovementType = '';
+        newMovementValue = 30;
+      } catch (error) {
+        console.error('Failed to add movement:', error);
+      }
     }
   }
   
