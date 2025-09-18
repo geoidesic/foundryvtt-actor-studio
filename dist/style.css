@@ -334,7 +334,17 @@
   color: var(--color-highlight);
 }
 .GAS {
+  /* Correct advancement dropdowns color in dark mode*/
+  /* Correct advancement dropdowns color in light mode*/
   color: var(--gas-color-text);
+}
+.GAS.theme-dark select, .GAS.theme-dark select option, .GAS.theme-dark select optgroup {
+  color: #fff !important;
+  background-color: #222 !important;
+}
+.GAS.theme-light select, .GAS.theme-light select option, .GAS.theme-light select optgroup {
+  color: #000 !important;
+  background-color: #f0f0f0 !important;
 }
 .GAS.theme-dark {
   color: var(--gas-color-text);
