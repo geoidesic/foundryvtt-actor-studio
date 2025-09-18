@@ -18,9 +18,9 @@
   export let levelUp = false;
 
   //- register hooks
-  console.log('[PCAPP] Registering gas.close hook (once)');
+  // console.log('[PCAPP] Registering gas.close hook (once)');
   Hooks.once("gas.close", gasClose);
-  console.log('[PCAPP] Registering gas.equipmentSelection hook (persistent)');
+  // console.log('[PCAPP] Registering gas.equipmentSelection hook (persistent)');
   Hooks.on("gas.equipmentSelection", handleEquipmentSelection);
   
 
@@ -32,9 +32,9 @@
   $activeTab = levelUp ? $levelUpTabs[0].id : $tabs[0].id
 
   $: {
-    console.log('[PCAPP] Reactive filteredTabs changed:', filteredTabs);
-    console.log('[PCAPP] Current activeTab:', $activeTab);
-    console.log('[PCAPP] Tab with id "equipment" exists:', filteredTabs.find(t => t.id === 'equipment'));
+    // console.log('[PCAPP] Reactive filteredTabs changed:', filteredTabs);
+    // console.log('[PCAPP] Current activeTab:', $activeTab);
+    // console.log('[PCAPP] Tab with id "equipment" exists:', filteredTabs.find(t => t.id === 'equipment'));
   }
 
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
@@ -74,13 +74,13 @@
       
       // Reset FSM to idle if it's in any state other than 'idle'
       if (currentState !== 'idle') {
-        window.GAS.log.d('[PCAPP] Resetting FSM from state:', currentState, 'to idle');
+        // window.GAS.log.d('[PCAPP] Resetting FSM from state:', currentState, 'to idle');
         levelUpFSM.handle(LEVELUP_EVENTS.RESET);
       }
       
       // Now start the level-up workflow
       levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
-      window.GAS.log.d('[PCAPP] Started LevelUp workflow');
+      // window.GAS.log.d('[PCAPP] Started LevelUp workflow');
     } else {
       // Character creation workflow
       getWorkflowFSM()
@@ -94,30 +94,30 @@
   });
 
   onDestroy(() => {
-    console.log('[PCAPP] onDestroy called - cleaning up');
+    // console.log('[PCAPP] onDestroy called - cleaning up');
     // Don't reset stores here - let gasClose handle it
-    console.log('[PCAPP] Unregistering gas.close hook');
+    // console.log('[PCAPP] Unregistering gas.close hook');
     Hooks.off("gas.close", gasClose);
-    console.log('[PCAPP] Unregistering gas.equipmentSelection hook');
+    // console.log('[PCAPP] Unregistering gas.equipmentSelection hook');
     Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
-    console.log('[PCAPP] onDestroy complete');
+    // console.log('[PCAPP] onDestroy complete');
   });
 
   /**
    * Handle workflow state changes and update tabs accordingly
    */
   function handleWorkflowStateChange(state) {
-    console.log('[PCAPP] ====== handleWorkflowStateChange CALLED ======');
-    console.log('[PCAPP] New workflow state:', state);
-    console.log('[PCAPP] Current tabs:', $tabs);
-    console.log('[PCAPP] Current active tab:', $activeTab);
+    // console.log('[PCAPP] ====== handleWorkflowStateChange CALLED ======');
+    // console.log('[PCAPP] New workflow state:', state);
+    // console.log('[PCAPP] Current tabs:', $tabs);
+    // console.log('[PCAPP] Current active tab:', $activeTab);
 
     // Remove Advancements tab when workflow moves past processing_advancements
     if (state !== 'processing_advancements' && state !== 'creating_character') {
       const hasAdvancementsTab = $tabs.find(x => x.id === "advancements");
       
       if (hasAdvancementsTab) {
-        console.log('[PCAPP] Removing advancements tab - workflow has moved past processing_advancements');
+        // console.log('[PCAPP] Removing advancements tab - workflow has moved past processing_advancements');
         tabs.update(t => {
           const filteredTabs = t.filter(x => x.id !== "advancements");
           console.log('[PCAPP] Tabs after removing advancements:', filteredTabs);
@@ -128,7 +128,7 @@
         if ($activeTab === "advancements") {
           const remainingTabs = $tabs.filter(x => x.id !== "advancements");
           if (remainingTabs.length > 0) {
-            console.log('[PCAPP] Setting active tab to:', remainingTabs[0].id);
+            // console.log('[PCAPP] Setting active tab to:', remainingTabs[0].id);
             activeTab.set(remainingTabs[0].id);
           }
         }
@@ -143,7 +143,7 @@
   }
 
   function gasClose() {
-    console.log('[PCAPP] ====== gasClose CALLED ======');
+    // console.log('[PCAPP] ====== gasClose CALLED ======');
     window.GAS.log.d('gas.close')
     window.GAS.log.d($actorInGame);
     
@@ -158,21 +158,21 @@
       console.log('[PCAPP] No actor in game - skipping sheet render');
     }
     
-    console.log('[PCAPP] Resetting stores and workflow state machine');
+    // console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
     
     // Reset workflow state machine to idle, with error handling
     try {
       const currentState = getWorkflowFSM().getCurrentState();
-      console.log('[PCAPP] Current workflow state before reset:', currentState);
+      // console.log('[PCAPP] Current workflow state before reset:', currentState);
       
       // Only send reset if not in a state that can't handle it
       if (currentState !== 'processing_advancements') {
         getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET);
-        console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
+        // console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
       } else {
         // For processing_advancements, we'll let it complete naturally or force stop
-        console.log('[PCAPP] Skipping reset for processing_advancements state - will be handled naturally');
+        // console.log('[PCAPP] Skipping reset for processing_advancements state - will be handled naturally');
         // Force the processing flag to false to allow cleanup
         if (workflowFSMContext?.isProcessing) {
           workflowFSMContext.isProcessing.set(false);
@@ -189,16 +189,16 @@
     // Set flag to indicate we're closing from the gas hook
     if (application && typeof application.setClosingFromGasHook === 'function') {
       application.setClosingFromGasHook(true);
-      console.log('[PCAPP] setClosingFromGasHook called on application instance');
+      // console.log('[PCAPP] setClosingFromGasHook called on application instance');
     } else {
-      console.warn('[PCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
+      // console.warn('[PCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
       // Fallback: try to close directly if possible
       if (application && typeof application.close === 'function') {
         application.close();
       }
     }
     application.close();
-    console.log('[PCAPP] ====== gasClose COMPLETE ======');
+    // console.log('[PCAPP] ====== gasClose COMPLETE ======');
   }
 
   /**
@@ -207,37 +207,37 @@
    * @todo: logic for those proficiency dependencies are not yet implemented
    */
   function handleEquipmentSelection() {
-    console.log('[PCAPP] ====== handleEquipmentSelection CALLED ======');
-    window.GAS.log.d('[PCAPP] handleEquipmentSelection called');
-    window.GAS.log.d('[PCAPP] Current tabs before update:', $tabs);
+    // console.log('[PCAPP] ====== handleEquipmentSelection CALLED ======');
+    // window.GAS.log.d('[PCAPP] handleEquipmentSelection called');
+    // window.GAS.log.d('[PCAPP] Current tabs before update:', $tabs);
     
     // Add Equipment tab
     if(!$tabs.find(x => x.id === "equipment")) {
-      console.log('[PCAPP] Adding equipment tab - tab does not exist');
-      window.GAS.log.d('[PCAPP] adding equipment tab')
+      // console.log('[PCAPP] Adding equipment tab - tab does not exist');
+      // window.GAS.log.d('[PCAPP] adding equipment tab')
       tabs.update(t => {
         const newTabs = [...t, { label: "Equipment", id: "equipment", component: "Equipment" }];
-        console.log('[PCAPP] New tabs after adding equipment:', newTabs);
+        // console.log('[PCAPP] New tabs after adding equipment:', newTabs);
         return newTabs;
       });
     } else {
-      console.log('[PCAPP] Equipment tab already exists');
+      // console.log('[PCAPP] Equipment tab already exists');
     }
 
     // Note: Advancements tab removal is handled by handleWorkflowStateChange
     // Don't remove it here to avoid conflicts
 
     // Set active tab to equipment
-    console.log('[PCAPP] Setting active tab to equipment');
+    // console.log('[PCAPP] Setting active tab to equipment');
     activeTab.set("equipment");
-    console.log('[PCAPP] Active tab set to:', $activeTab);
+    // console.log('[PCAPP] Active tab set to:', $activeTab);
 
     // Set read-only state for other tabs
-    console.log('[PCAPP] Setting read-only tabs');
+    // console.log('[PCAPP] Setting read-only tabs');
     readOnlyTabs.set(["race", "background", "abilities", "class"]);
-    console.log('[PCAPP] Read-only tabs set to:', $readOnlyTabs);
+    // console.log('[PCAPP] Read-only tabs set to:', $readOnlyTabs);
     
-    console.log('[PCAPP] ====== handleEquipmentSelection COMPLETE ======');
+    // console.log('[PCAPP] ====== handleEquipmentSelection COMPLETE ======');
   }
 
 </script>

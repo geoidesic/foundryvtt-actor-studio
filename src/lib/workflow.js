@@ -354,15 +354,33 @@ export async function updateActorLevelUpWorkflow({
     }
     
     // Start the level-up workflow: idle -> selecting_class_level -> processing_advancements
-    const finalState = levelUpFSM.getCurrentState();
+    let finalState = levelUpFSM.getCurrentState();
     if (finalState === 'idle') {
       window.GAS.log.d('[LEVELUP WORKFLOW] Starting level-up from idle state');
       levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
       levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
     } else {
       window.GAS.log.w('[LEVELUP WORKFLOW] FSM not in idle state after reset:', finalState);
-      // Fallback: try to send class_level_selected anyway
-      levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+      // If the FSM is in any non-idle state (including processing_advancements),
+      // reset it to a known idle state before starting the level-up flow. This
+      // prevents sending the `class_level_selected` event into a state that
+      // doesn't handle it (e.g. processing_advancements) which caused an
+      // unhandled event error.
+      try {
+        levelUpFSM.handle(LEVELUP_EVENTS.RESET);
+        finalState = levelUpFSM.getCurrentState();
+        window.GAS.log.d('[LEVELUP WORKFLOW] FSM state after RESET:', finalState);
+      } catch (err) {
+        window.GAS.log.e('[LEVELUP WORKFLOW] Error resetting LevelUp FSM:', err);
+      }
+
+      // Now attempt to start the flow from idle
+      if (finalState === 'idle') {
+        levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
+        levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+      } else {
+        window.GAS.log.e('[LEVELUP WORKFLOW] Unable to reset LevelUp FSM to idle. Current state:', finalState);
+      }
     }
     
     window.GAS.log.d('[LEVELUP WORKFLOW] LevelUp workflow initiated');

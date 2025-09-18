@@ -114,6 +114,23 @@
 :global(.gas-advancements .step ul)
   padding: 0
 
+:global(.gas-advancements .step .pill-lg)
+  margin: 0.5rem 0
+  border: 1px solid var(--dnd5e-color-gold)
+  padding: 0.5rem 1rem
+  cursor: pointer
+  background-color: #000
+  border-radius: var(--border-radius)
+  color: var(--dnd5e-color-gold)
+  display: flex
+  justify-content: space-between
+  align-items: center
+  
+:global(.gas-advancements .step .pill-lg img)
+  max-height: 30px
+:global(.gas-advancements .step .pill-lg[data-action="browse"]:after)
+  content: ">"
+
 // Fighting style specific styles
 :global(.gas-advancements form[data-type="ItemChoice"] ol),
 :global(.gas-advancements .advancement[data-type="ItemChoice"] ul.icon-list)
