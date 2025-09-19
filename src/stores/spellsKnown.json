@@ -17,7 +17,7 @@
       "Druid": "2 / All",
       "Sorcerer": "4 / 3",
       "Warlock": "2 / 3",
-      "Wizard": "3 / 7",
+      "Wizard": "3 / 8",
       "Artificer": "2 / All"
     },
     {
@@ -27,7 +27,7 @@
       "Druid": "2 / All",
       "Sorcerer": "4 / 4",
       "Warlock": "2 / 4",
-      "Wizard": "3 / 8",
+      "Wizard": "3 / 10",
       "Artificer": "2 / All"
     },
     {
@@ -37,7 +37,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 5",
       "Warlock": "3 / 5",
-      "Wizard": "4 / 9",
+      "Wizard": "4 / 12",
       "Artificer": "3 / All"
     },
     {
@@ -47,7 +47,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 6",
       "Warlock": "3 / 6",
-      "Wizard": "4 / 10",
+      "Wizard": "4 / 14",
       "Artificer": "3 / All"
     },
     {
@@ -57,7 +57,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 7",
       "Warlock": "3 / 7",
-      "Wizard": "4 / 11",
+      "Wizard": "4 / 16",
       "Artificer": "3 / All"
     },
     {
@@ -67,7 +67,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 8",
       "Warlock": "3 / 8",
-      "Wizard": "4 / 12",
+      "Wizard": "4 / 18",
       "Artificer": "3 / All"
     },
     {
@@ -77,7 +77,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 9",
       "Warlock": "3 / 9",
-      "Wizard": "4 / 14",
+      "Wizard": "4 / 20",
       "Artificer": "3 / All"
     },
     {
@@ -87,7 +87,7 @@
       "Druid": "3 / All",
       "Sorcerer": "5 / 10",
       "Warlock": "3 / 10",
-      "Wizard": "4 / 16",
+      "Wizard": "4 / 22",
       "Artificer": "3 / All"
     },
     {
@@ -97,7 +97,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 11",
       "Warlock": "3 / 10",
-      "Wizard": "4 / 18",
+      "Wizard": "4 / 24",
       "Artificer": "4 / All"
     },
     {
@@ -107,7 +107,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 12",
       "Warlock": "3 / 11",
-      "Wizard": "4 / 20",
+      "Wizard": "4 / 26",
       "Artificer": "4 / All"
     },
     {
@@ -117,7 +117,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 12",
       "Warlock": "3 / 11",
-      "Wizard": "4 / 22",
+      "Wizard": "4 / 28",
       "Artificer": "4 / All"
     },
     {
@@ -127,7 +127,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 13",
       "Warlock": "3 / 12",
-      "Wizard": "4 / 24",
+      "Wizard": "4 / 30",
       "Artificer": "4 / All"
     },
     {
@@ -137,7 +137,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 13",
       "Warlock": "3 / 12",
-      "Wizard": "4 / 26",
+      "Wizard": "4 / 32",
       "Artificer": "4 / All"
     },
     {
@@ -147,7 +147,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 14",
       "Warlock": "3 / 13",
-      "Wizard": "4 / 28",
+      "Wizard": "4 / 34",
       "Artificer": "4 / All"
     },
     {
@@ -157,7 +157,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 14",
       "Warlock": "3 / 13",
-      "Wizard": "4 / 30",
+      "Wizard": "4 / 36",
       "Artificer": "4 / All"
     },
     {
@@ -167,7 +167,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 15",
       "Warlock": "4 / 14",
-      "Wizard": "4 / 32",
+      "Wizard": "4 / 38",
       "Artificer": "4 / All"
     },
     {
@@ -177,7 +177,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 15",
       "Warlock": "4 / 14",
-      "Wizard": "4 / 34",
+      "Wizard": "4 / 40",
       "Artificer": "4 / All"
     },
     {
@@ -187,7 +187,7 @@
       "Druid": "4 / All",
       "Sorcerer": "5 / 15",
       "Warlock": "4 / 15",
-      "Wizard": "4 / 36",
+      "Wizard": "4 / 42",
       "Artificer": "4 / All"
     },
     {
@@ -197,7 +197,108 @@
       "Druid": "4 / All",
       "Sorcerer": "6 / 15",
       "Warlock": "4 / 15",
-      "Wizard": "5 / 44",
+      "Wizard": "6 / 44",
+      "Artificer": "4 / All"
+    }
+    ,
+    {
+      "level": 21,
+      "Bard": "4 / 24",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 17",
+      "Warlock": "4 / 16",
+      "Wizard": "6 / 46",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 22,
+      "Bard": "4 / 26",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 19",
+      "Warlock": "4 / 17",
+      "Wizard": "6 / 48",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 23,
+      "Bard": "4 / 28",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 21",
+      "Warlock": "4 / 18",
+      "Wizard": "6 / 50",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 24,
+      "Bard": "4 / 30",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 23",
+      "Warlock": "4 / 19",
+      "Wizard": "6 / 52",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 25,
+      "Bard": "4 / 32",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 25",
+      "Warlock": "4 / 20",
+      "Wizard": "6 / 54",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 26,
+      "Bard": "4 / 34",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 27",
+      "Warlock": "4 / 21",
+      "Wizard": "6 / 56",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 27,
+      "Bard": "4 / 36",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 29",
+      "Warlock": "4 / 22",
+      "Wizard": "6 / 58",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 28,
+      "Bard": "4 / 38",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 31",
+      "Warlock": "4 / 23",
+      "Wizard": "6 / 60",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 29,
+      "Bard": "4 / 40",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 33",
+      "Warlock": "4 / 24",
+      "Wizard": "6 / 62",
+      "Artificer": "4 / All"
+    },
+    {
+      "level": 30,
+      "Bard": "4 / 42",
+      "Cleric": "5 / All",
+      "Druid": "4 / All",
+      "Sorcerer": "6 / 35",
+      "Warlock": "4 / 25",
+      "Wizard": "6 / 64",
       "Artificer": "4 / All"
     }
   ]
