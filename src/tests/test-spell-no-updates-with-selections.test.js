@@ -35,9 +35,15 @@ describe('FinalizeSpells regression: no updates but selections exist', () => {
     const workflowFSMMock = { handle: fsmHandle, getCurrentState: vi.fn(() => 'selecting_spells') };
     vi.doMock('~/src/helpers/WorkflowStateMachine', () => ({
       getWorkflowFSM: vi.fn(() => workflowFSMMock),
-      getLevelUpFSM: vi.fn(() => ({ handle: vi.fn(), getCurrentState: vi.fn(() => 'selecting_spells') })),
       WORKFLOW_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error' },
       LEVELUP_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error' }
+    }));
+
+    // Also mock the dedicated LevelUpStateMachine module used by workflow.js
+    vi.doMock('~/src/helpers/LevelUpStateMachine', () => ({
+      getLevelUpFSM: vi.fn(() => ({ handle: vi.fn(), getCurrentState: vi.fn(() => 'selecting_spells') })),
+      levelUpFSMContext: {},
+      LEVELUP_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error', RESET: 'reset' }
     }));
 
     // Mock spell selection module exports with identifiable store objects
@@ -100,9 +106,14 @@ describe('FinalizeSpells regression: no updates but selections exist', () => {
     const levelUpFSMMock = { handle: levelUpHandle, getCurrentState: vi.fn(() => 'selecting_spells') };
     vi.doMock('~/src/helpers/WorkflowStateMachine', () => ({
       getWorkflowFSM: vi.fn(() => ({ handle: vi.fn(), getCurrentState: vi.fn(() => 'selecting_spells') })),
+      WORKFLOW_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error' }
+    }));
+
+    // Mock the LevelUpStateMachine module that workflow.js actually imports from
+    vi.doMock('~/src/helpers/LevelUpStateMachine', () => ({
       getLevelUpFSM: vi.fn(() => levelUpFSMMock),
-      WORKFLOW_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error' },
-      LEVELUP_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error' }
+      levelUpFSMContext: {},
+      LEVELUP_EVENTS: { SPELLS_COMPLETE: 'spells_complete', ERROR: 'error', RESET: 'reset' }
     }));
 
     // Mock spell selection module exports with identifiable store objects
