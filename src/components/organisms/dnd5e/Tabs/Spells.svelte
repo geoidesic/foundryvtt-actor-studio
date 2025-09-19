@@ -189,6 +189,9 @@
       }));
     }
   }
+  $: actorSpells = $actor.items.filter(item => item.type === 'spell');
+
+  $: window.GAS.log.g(actorSpells);
 
   // Filter spells by keyword and character class
   $: filteredSpells = $availableSpells.filter(spell => {
@@ -196,11 +199,12 @@
     const spellLevel = spell.system?.level || 0;
     const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
     const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
+    const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
 
   // NOTE: class availability is already resolved by `loadAvailableSpells()` and
   // embedded in the `availableSpells` store. The UI should not re-run class
   // filtering here to avoid accidental double-filtering or divergent logic.
-  return matchesKeyword && withinCharacterLevel && !alreadySelected;
+  return matchesKeyword && withinCharacterLevel && !alreadySelected && !alreadyKnown
   });
 
   // Group spells by level
