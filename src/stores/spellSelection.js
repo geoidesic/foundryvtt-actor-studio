@@ -707,26 +707,71 @@ export async function finalizeSpellSelection(actor) {
 
     // Check for existing spells and handle duplicates similar to shop
     const itemsToCreate = [];
-    const itemsToUpdate = [];
+
+    // Resolve various actor shapes: Actor Document with .items Collection/Array/Map or a plain POJO
+    const resolveActorItems = (act) => {
+      // If actor has Collection-like .items with .find, return as-is
+      if (act.items && typeof act.items.find === 'function') return act.items;
+      // If items is a Map or an object, convert to array
+      if (act.items && typeof act.items === 'object') return Array.isArray(act.items) ? act.items : Object.values(act.items);
+      // If actor appears to be a lightweight data object, try to locate live Actor document by id
+      if (act.id && typeof game?.actors?.get === 'function') {
+        const live = game.actors.get(act.id);
+        if (live) return live.items;
+      }
+      // Fallback: empty array
+      return [];
+    };
+
+    const actorItems = resolveActorItems(actor);
 
     for (const spellItem of spellItems) {
-      // Check if actor already has this spell by name
-      const existingSpell = actor.items.find(i => i.name === spellItem.name && i.type === "spell");
+      // Normalize lookup against different item shapes
+      let existingSpell = null;
+      try {
+        if (actorItems && typeof actorItems.find === 'function') {
+          existingSpell = actorItems.find(i => i.name === spellItem.name && i.type === "spell");
+        } else if (Array.isArray(actorItems)) {
+          existingSpell = actorItems.find(i => i.name === spellItem.name && i.type === "spell");
+        }
+      } catch (e) {
+        window.GAS.log.w('[SPELLS] Error while searching actor items for duplicates:', e);
+      }
 
       if (existingSpell) {
         window.GAS.log.d('[SPELLS] Found existing spell, skipping:', spellItem.name);
-        // For spells, we typically don't update quantities, just skip duplicates
         continue;
-      } else {
-        window.GAS.log.d('[SPELLS] New spell, will create:', spellItem.name);
-        itemsToCreate.push(spellItem);
       }
+
+      window.GAS.log.d('[SPELLS] New spell, will create:', spellItem.name);
+      itemsToCreate.push(spellItem);
     }
 
-    // Create new spells in a single batch
+    // Create new spells in a single batch if possible
     if (itemsToCreate.length > 0) {
-      const createdSpells = await actor.createEmbeddedDocuments("Item", itemsToCreate);
-      window.GAS.log.d('[SPELLS] Created spells:', createdSpells.length);
+      try {
+        if (typeof actor.createEmbeddedDocuments === 'function') {
+          const createdSpells = await actor.createEmbeddedDocuments("Item", itemsToCreate);
+          window.GAS.log.d('[SPELLS] Created spells via createEmbeddedDocuments:', createdSpells?.length ?? itemsToCreate.length);
+        } else if (typeof Item === 'function' && typeof Item.create === 'function') {
+          // Fallback: create each item with Item.create({ parent: actor })
+          const created = [];
+          for (const data of itemsToCreate) {
+            try {
+              const createdItem = await Item.create(data, { parent: actor });
+              created.push(createdItem);
+            } catch (e) {
+              window.GAS.log.w('[SPELLS] Failed to create item via Item.create:', data.name, e);
+            }
+          }
+          window.GAS.log.d('[SPELLS] Created spells via Item.create fallback:', created.length);
+        } else {
+          window.GAS.log.w('[SPELLS] No API available to create embedded items on actor');
+        }
+      } catch (e) {
+        window.GAS.log.e('[SPELLS] Error creating spell items:', e);
+        throw e;
+      }
     }
 
     // Clear the selection
