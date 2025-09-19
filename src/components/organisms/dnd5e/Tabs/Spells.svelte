@@ -881,13 +881,14 @@ spells-tab-container(clas:readonlys="{isDisabled}")
     display: grid
     grid-template-columns: 1fr 0.4fr 1fr 0.4fr
     grid-template-rows: repeat(2, auto)
-    padding: 0.3rem 0.1rem
+    padding: 0.6rem 1.3rem 0.3rem 1.1rem
     gap: 4px
-    margin-bottom: 1.5rem
+    margin-bottom: 0
     align-items: center
     background-color: var(--li-background-color)
     border-radius: var(--border-radius)
     border-collapse: none
+    justify-content: space-evenly
     .label
       font-size: 0.95em
       color: var(--dnd5e-color-gold)
