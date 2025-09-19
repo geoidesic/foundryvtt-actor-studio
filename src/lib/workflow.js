@@ -18,6 +18,7 @@ import { totalGoldFromChoices } from '../stores/goldChoices';
 import { tabs, activeTab, readOnlyTabs } from '../stores/index.js';
 import { finalizeSpellSelection } from '../stores/spellSelection.js';
 import { spellProgress } from '../stores/spellSelection.js';
+import { selectedSpells } from '../stores/spellSelection.js';
 
 /**
  * Handles creating container contents for a container item
@@ -779,6 +780,44 @@ export async function handleFinalizeSpells({
 
     // If no updates are needed (e.g., level-up gained no new spells), just complete the workflow
     if (progress?.noUpdatesNeeded || ((progress?.limits?.cantrips || 0) + (progress?.limits?.spells || 0)) === 0) {
+      // NEW: If the user actually selected spells, we still need to create them.
+      let selectionCount = 0;
+      try {
+        const sel = get(selectedSpells);
+        selectionCount = sel && typeof sel.size === 'number' ? sel.size : 0;
+      } catch {}
+
+      if (selectionCount > 0) {
+        // Proceed with finalization to add the selected spells
+        const success = await finalizeSpellSelection($actorInGame);
+        if (success) {
+          ui.notifications.info("Spells added successfully");
+          if ($isLevelUp) {
+            const levelUpFSM = getLevelUpFSM();
+            const currentState = levelUpFSM.getCurrentState();
+            window.GAS.log.d('[LEVELUP WORKFLOW] Current state before spells_complete:', currentState);
+            window.GAS.log.d('[LEVELUP WORKFLOW] Event to handle:', LEVELUP_EVENTS.SPELLS_COMPLETE);
+            if (currentState !== 'completed') {
+              levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+            } else {
+              window.GAS.log.d('[LEVELUP WORKFLOW] FSM already in completed state, skipping spells_complete event');
+            }
+          } else {
+            const fsm = getWorkflowFSM();
+            const currentState = fsm.getCurrentState();
+            window.GAS.log.d('[WORKFLOW] Current state before spells_complete:', currentState);
+            window.GAS.log.d('[WORKFLOW] Event to handle:', WORKFLOW_EVENTS.SPELLS_COMPLETE);
+            fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
+          }
+          if (setProcessing) setProcessing(false);
+          return;
+        } else {
+          // finalizeSpellSelection already warned the user (e.g., no spells selected)
+          if (setProcessing) setProcessing(false);
+          return;
+        }
+      }
+
       // Make the spells tab readonly
       readOnlyTabs.update(tabs => tabs.includes('spells') ? tabs : [...tabs, 'spells']);
 
