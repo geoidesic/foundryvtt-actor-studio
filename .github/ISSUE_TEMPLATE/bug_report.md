@@ -8,6 +8,7 @@ assignees: ''
 ---
 
 **Versions (please complete the following information – it's fine if these are all part of the screenshot):**
+- Actor Studio version:
  - FoundryVTT version: 
  - dnd5e system version: 
  - dnd5e rules [2014 / 2024]: 
