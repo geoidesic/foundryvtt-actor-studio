@@ -28,6 +28,8 @@ beforeEach(() => {
 
 describe('FinalizeSpells regression: no updates but selections exist', () => {
   it('should still finalize and add spells when noUpdatesNeeded=true (creation workflow)', async () => {
+    // Ensure fresh module graph so our mocks apply to imports in this test
+    vi.resetModules();
     // Mocks specific to this test
     const fsmHandle = vi.fn();
     const workflowFSMMock = { handle: fsmHandle, getCurrentState: vi.fn(() => 'selecting_spells') };
@@ -91,6 +93,8 @@ describe('FinalizeSpells regression: no updates but selections exist', () => {
   });
 
   it('should still finalize and add spells when noUpdatesNeeded=true (level-up workflow)', async () => {
+    // Ensure fresh module graph so our mocks apply to imports in this test
+    vi.resetModules();
     // Mocks specific to this test
     const levelUpHandle = vi.fn();
     const levelUpFSMMock = { handle: levelUpHandle, getCurrentState: vi.fn(() => 'selecting_spells') };
