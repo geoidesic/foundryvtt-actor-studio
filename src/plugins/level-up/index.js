@@ -81,14 +81,30 @@ export function dnd5eSheet2UI(app, html, data) {
 }
 
 export function tidy5eSheetUI(app, element, data) {
-  console.log(app, element, data)
-  console.log('$(element)', $(element).find('[data-tidy-sheet-part="sheet-header-actions-container"]'))
-  console.log(arguments)
+  // Defensive logging for debugging
+  console.log(app, element, data);
   if (game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
-  const tidy5eApi = game.modules.get("tidy5e-sheet").api;
-  window.GAS.log.g('tidy5eapi', tidy5eApi)
 
-  if (!tidy5eApi.isTidy5eCharacterSheet(app)) {
+  // Safer tidy5e module/api detection to support older tidy5e versions
+  const tidyModule = game.modules.get("tidy5e-sheet") || game.modules.get("tidy5e");
+  const tidy5eApi = tidyModule?.api;
+  window.GAS.log.g('tidy5eapi', tidy5eApi);
+
+  // Prefer the tidy5e API check when available; fall back to a constructor/name heuristic
+  let isTidy = false;
+  try {
+    if (tidy5eApi && typeof tidy5eApi.isTidy5eCharacterSheet === 'function') {
+      isTidy = tidy5eApi.isTidy5eCharacterSheet(app);
+    } else {
+      // Older versions might not expose an API; detect by class/name as a last resort
+      isTidy = /tidy5e/i.test(app?.constructor?.name || '') || /tidy5e/i.test(app?.form?.id || '') || /tidy5e/i.test(String(app?.name || ''));
+    }
+  } catch (err) {
+    window.GAS.log.w('[GAS] tidy5eSheetUI: tidy5e detection threw', err);
+    isTidy = false;
+  }
+
+  if (!isTidy) {
     return;
   }
 
@@ -127,10 +143,18 @@ export function tidy5eSheetUI(app, element, data) {
 
   if (!actorHasClasses || (!isMilestoneLeveling && actorHasLevellingXP)) return;
   // Find the new Tidy5e header actions container
+  // Primary selector for modern tidy5e
   let actionsContainer = $(element).find('[data-tidy-sheet-part="sheet-header-actions-container"]');
-  // Fallback for older markup that may not include the data attribute
+  // Backwards-compatible fallbacks for older tidy5e markups
   if (!actionsContainer || actionsContainer.length === 0) {
     actionsContainer = $(element).find('.sheet-header-actions');
+  }
+  if (!actionsContainer || actionsContainer.length === 0) {
+    // Older tidy5e or other sheet shapes used .sheet-header-buttons
+    actionsContainer = $(element).find('.sheet-header-buttons');
+  }
+  if (!actionsContainer || actionsContainer.length === 0) {
+    actionsContainer = $(element).find('.sheet-header .sheet-header-buttons');
   }
   if (!actionsContainer || actionsContainer.length === 0) {
     window.GAS?.log?.w?.('[GAS] tidy5eSheetUI: header actions container not found; skipping button injection.');
