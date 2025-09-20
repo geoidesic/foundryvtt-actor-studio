@@ -137,6 +137,20 @@ export function createWorkflowStateMachine() {
         window.GAS.log.d('[WORKFLOW] Entered PROCESSING_ADVANCEMENTS state');
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
+        // After queue completes, restore the actor's original sheetClass if we set a temporary one
+        try {
+          const actor = workflowFSMContext.actor;
+          if (actor) {
+            const originalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
+            if (originalSheet !== undefined) {
+              await actor.setFlag('core', 'sheetClass', originalSheet);
+              // Clear our module flag to avoid future confusion
+              await actor.unsetFlag(MODULE_ID, 'originalSheetClass');
+            }
+          }
+        } catch (e) {
+          window.GAS?.log?.w?.('[WORKFLOW] Failed to restore original sheetClass after queue', e);
+        }
       })
         .onSuccess()
           .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())

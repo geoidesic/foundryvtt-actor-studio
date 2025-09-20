@@ -99,6 +99,19 @@ export async function createActorInGameAndEmbedItems({
   // Set the actor in the workflow FSM context
   workflowFSMContext.actor = createdActor;
 
+  // Simple sheet override during drop processing:
+  // 1) Record the current sheet class
+  // 2) Switch to dnd5e.CharacterActorSheet so drops use core dnd5e handlers
+  // 3) Restoration occurs after the queue completes in WorkflowStateMachine
+  try {
+    const originalSheet = createdActor.getFlag('core', 'sheetClass') ?? '';
+    await createdActor.setFlag(MODULE_ID, 'originalSheetClass', originalSheet);
+    await createdActor.setFlag('core', 'sheetClass', 'dnd5e.CharacterActorSheet');
+  } catch (e) {
+    // Non-fatal: if we can't set the flag, proceed normally
+    window.GAS?.log?.w?.('[WORKFLOW] Failed to set temporary sheetClass; continuing', e);
+  }
+
   const $race = get(race);
   const $subRace = get(subRace);
   const $background = get(background);

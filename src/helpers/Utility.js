@@ -436,6 +436,161 @@ export const getCompendiumSource = (item) => {
 }
 
 /**
+ * Resolve the sheet id for the core dnd5e character sheet in the current environment.
+ * Returns something like `dnd5e.CharacterActorSheet` (v13/v4) or `dnd5e.ActorSheet5eCharacter2`/`dnd5e.ActorSheet5eCharacter` (older).
+ * Falls back to the default registered sheet if a dnd5e sheet is not found.
+ * @param {Actor} actor
+ * @returns {string|undefined}
+ */
+function resolveDnd5eCoreCharacterSheetId(actor) {
+  try {
+    // We only care about character actors for this utility.
+    const type = actor?.type ?? 'character';
+    const config = CONFIG?.Actor?.sheetClasses?.[type] ?? {};
+    const entries = Object.entries(config);
+    if (!entries.length) return undefined;
+
+    // Prefer V2 sheet first, then the newer V1, then legacy.
+    const priority = [
+      'dnd5e.CharacterActorSheet',
+      'dnd5e.ActorSheet5eCharacter2',
+      'dnd5e.ActorSheet5eCharacter'
+    ];
+    for (const id of priority) {
+      if (config[id]) return id;
+    }
+
+    // Fallback: any sheet whose scope is dnd5e.
+    const dnd5eEntry = entries.find(([id]) => id.startsWith('dnd5e.'));
+    if (dnd5eEntry) return dnd5eEntry[0];
+
+    // Last resort: current default sheet id for this subtype.
+    const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+    if (DSC) {
+      const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+      return defaultClass;
+    }
+  } catch (e) {
+    window.GAS?.log?.w('resolveDnd5eCoreCharacterSheetId failed', e);
+  }
+  return undefined;
+}
+
+/**
+ * Wait for the actor to have a sheet instance of a particular registered sheet id.
+ * @param {Actor} actor
+ * @param {string} sheetId
+ * @param {number} [timeoutMs=1500]
+ */
+async function waitForSheetClass(actor, sheetId, timeoutMs = 1500) {
+  const type = actor?.type ?? 'character';
+  const cfg = CONFIG?.Actor?.sheetClasses?.[type]?.[sheetId];
+  const Expected = cfg?.cls;
+  if (!Expected) return;
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    // Accessor ensures an instance exists
+    const sheet = actor.sheet;
+    if (sheet && sheet instanceof Expected) return;
+    await delay(50);
+  }
+}
+
+/**
+ * Determine the actor's current effective sheet id: per-actor flag or default.
+ * @param {Actor} actor
+ * @returns {string|undefined}
+ */
+function getCurrentEffectiveSheetId(actor) {
+  try {
+    const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+    const type = actor?.type ?? 'character';
+    const currentFlag = actor.getFlag('core', 'sheetClass');
+    if (currentFlag) return currentFlag;
+    if (DSC) {
+      const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+      return defaultClass;
+    }
+  } catch (e) {
+    window.GAS?.log?.w('getCurrentEffectiveSheetId failed', e);
+  }
+}
+
+/**
+ * Temporarily switch an Actor's sheet to a target sheet id, then provide a restore function to revert.
+ * Uses the same mechanism as the UI: sets the `core.sheetClass` flag on the document.
+ * If the current sheet is already the target, no change is made.
+ * @param {Actor} actor
+ * @param {string|undefined} targetSheetId
+ * @returns {Promise<{currentSheetId:string, restore: function(): Promise<void>}>}
+ */
+async function switchActorSheetTemporarily(actor, targetSheetId) {
+  const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+  const type = actor?.type ?? 'character';
+  const currentFlag = actor.getFlag('core', 'sheetClass');
+  const wasOpen = !!actor.sheet?.rendered;
+  let currentSheetId = currentFlag ?? '';
+  if (!currentSheetId && DSC) {
+    const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+    currentSheetId = defaultClass;
+  }
+
+  // If no valid target or already on target, do nothing.
+  if (!targetSheetId || targetSheetId === currentSheetId) {
+    return {
+      currentSheetId,
+      restore: async () => {}
+    };
+  }
+
+  // Apply the override to switch sheets, mirroring UI behavior (use blank string to clear; concrete id to set).
+  await actor.setFlag('core', 'sheetClass', targetSheetId);
+  // Force a sheet refresh to immediately instantiate the new class
+  if (typeof actor._onSheetChange === 'function') {
+    await actor._onSheetChange({ sheetOpen: wasOpen });
+  }
+  await waitForSheetClass(actor, targetSheetId);
+
+  // Provide a restore function to revert the override.
+  return {
+    currentSheetId,
+    restore: async () => {
+      const revertTo = currentFlag ?? '';
+      // wait briefly for any sheet changes scheduled by the drop handler to complete
+      await delay(100);
+      await actor.setFlag('core', 'sheetClass', revertTo);
+      if (typeof actor._onSheetChange === 'function') {
+        await actor._onSheetChange({ sheetOpen: wasOpen });
+      }
+      if (revertTo) {
+        await waitForSheetClass(actor, revertTo);
+      } else if (DSC) {
+        // If we cleared the override, wait for the default class to settle
+        const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+        if (defaultClass) await waitForSheetClass(actor, defaultClass);
+      }
+
+      // Verify restoration; if not correct, retry once more.
+      const expectedId = revertTo || (DSC ? DSC.getSheetClassesForSubType('Actor', type).defaultClass : undefined);
+      const effectiveId = getCurrentEffectiveSheetId(actor);
+      if (expectedId && effectiveId !== expectedId) {
+        window.GAS?.log?.w('[UTILITY] Sheet restore mismatch; retrying', { expectedId, effectiveId });
+        await delay(150);
+        await actor.setFlag('core', 'sheetClass', revertTo);
+        if (typeof actor._onSheetChange === 'function') {
+          await actor._onSheetChange({ sheetOpen: wasOpen });
+        }
+        if (revertTo) await waitForSheetClass(actor, revertTo);
+        else if (DSC) {
+          const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+          if (defaultClass) await waitForSheetClass(actor, defaultClass);
+        }
+      }
+    }
+  };
+}
+
+/**
  * Prepares an item for dropping onto an actor by creating a new Item instance from the provided data.
  * Handles both level-up and initial character creation scenarios differently:
  * - For level-up with multi-class: Uses the direct UUID of the item
@@ -500,39 +655,46 @@ export const dropItemOnCharacter = async (actor, item) => {
     window.GAS.log.e('Error updating actor flags for dropped item:', error);
   }
 
-  // Proceed with adding the item to the actor
-  if (game.version < 13) {
-    // Use the older _onDropItemCreate for v11/v12
-    // window.GAS.log.d('[UTILITY] Using _onDropItemCreate for v < 13');
-    return await actor.sheet._onDropItemCreate(item);
-  } else {
-    // For v13+, simulate the drop event by calling _onDropItem
-    // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
+  window.GAS.log.g('actor.sheet', actor.sheet)
 
-    // Prepare a mock event object with a target
-    // Use the sheet's main DOM element as the target
-    const mockEvent = {
-      preventDefault: () => {},
-      stopPropagation: () => {}, // Add stopPropagation as it's often used in event handlers
-      target: {
-        closest: () => false
-      }, // The actual DOM element
-      // Add other properties if specific sheet implementations require them
-      // For example, some might check clientX/clientY, but start minimal.
-    };
-    // window.GAS.log.d('[UTILITY] Prepared mockEvent for _onDropItem:', mockEvent);
+  // Ensure we are using the core dnd5e character sheet for drop handlers, then restore.
+  const desiredSheetId = resolveDnd5eCoreCharacterSheetId(actor);
+  const { currentSheetId, restore } = await switchActorSheetTemporarily(actor, desiredSheetId);
 
-    try {
-      // window.GAS.log.d(`[UTILITY] Calling ${actor.id}.sheet._onDropItem with mock event and data:`, mockEvent, dropData);
-      // Note: _onDropItem often handles the creation internally and might not return the created item(s).
-      // We return true to indicate the simulation was attempted.
+  try {
+    // Proceed with adding the item to the actor using the active sheet's drop handlers
+    if (game.version < 13) {
+      // Use the older _onDropItemCreate for v11/v12
+      // window.GAS.log.d('[UTILITY] Using _onDropItemCreate for v < 13');
+      return await actor.sheet._onDropItemCreate(item);
+    } else {
+      // For v13+, simulate the drop event by calling _onDropItem
+      // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
+
+      // Prepare a minimal mock event object
+      const mockEvent = {
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        target: { closest: () => false }
+      };
+
       await actor.sheet._onDropItem(mockEvent, item);
-      // window.GAS.log.d(`[UTILITY] Call to _onDropItem completed for item ${item.uuid} on actor ${actor.id}`);
       return true; // Indicate successful simulation attempt
-    } catch (error) {
-      window.GAS.log.e(`[UTILITY] Error calling _onDropItem for actor ${actor.id} and item ${item.uuid}:`, error);
-      ui.notifications.error(`Error adding item ${item.name} via simulated drop.`);
-      return false; // Indicate failure
+    }
+  } catch (error) {
+    window.GAS.log.e(`[UTILITY] Error calling sheet drop handler for actor ${actor.id} and item ${item.uuid}:`, error);
+    ui.notifications.error(`Error adding item ${item.name} via simulated drop.`);
+    return false; // Indicate failure
+  } finally {
+    // Always restore the original sheet (if it was different)
+    try {
+      await restore();
+    } catch (restoreErr) {
+      window.GAS.log.w('[UTILITY] Failed to restore original sheet class', {
+        original: currentSheetId,
+        attempted: desiredSheetId,
+        error: restoreErr
+      });
     }
   }
 }
