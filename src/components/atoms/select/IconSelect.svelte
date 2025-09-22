@@ -23,6 +23,8 @@
     export let truncateWidth = 20;
     export let enableEnrichment = false;
     export let searchable = true
+    // groupBy: false (no grouping) or a string path into the option object (e.g. "packLabel" or "pack.name")
+    export let groupBy = false;
 
     let isOpen = false;
     let searchInput;
@@ -42,7 +44,7 @@
     const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
 
     function getLabel(option) {
-      if (showPackLabelInSelect && option.packLabel) {
+      if (!groupBy && showPackLabelInSelect && option.packLabel) {
         return `[${option.packLabel}] ${option.label}`;
       }
       return option.label;
@@ -182,6 +184,68 @@
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    // Helper to get nested value by a path like "pack.name"
+    function getValueAtPath(obj, path) {
+      if (!path || !obj) return undefined;
+      return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, obj);
+    }
+
+    // Resolve group key. `groupBy` may be a string path or an array of string paths.
+    function getGroupKey(option, groupBySpec) {
+      if (!groupBySpec) return undefined;
+      if (Array.isArray(groupBySpec)) {
+        const parts = groupBySpec.map(p => {
+          const v = getValueAtPath(option, p);
+          return (v === undefined || v === null) ? '' : String(v).trim();
+        }).filter(Boolean);
+        return parts.length ? parts.join(' ') : undefined;
+      }
+      const v = getValueAtPath(option, groupBySpec);
+      return (v === undefined || v === null) ? undefined : String(v);
+    }
+
+    // Grouping state
+    let groupedOptions = {};
+    let groupedOptionKeys = [];
+
+    // When groupBy is provided, build groupedOptions and keys sorted alphabetically
+    $: if (groupBy) {
+      const map = {};
+      for (const opt of filteredOptions) {
+        const raw = getGroupKey(opt, groupBy);
+        const key = (raw === undefined || raw === null || raw === '') ? 'Other' : String(raw);
+        if (!map[key]) map[key] = [];
+        map[key].push(opt);
+      }
+      // sort options in each group
+      for (const k of Object.keys(map)) {
+        map[k].sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+      }
+      const keys = Object.keys(map).sort((a, b) => a.localeCompare(b));
+      const sorted = {};
+      for (const k of keys) sorted[k] = map[k];
+      groupedOptions = sorted;
+      groupedOptionKeys = keys;
+    } else {
+      groupedOptions = {};
+      groupedOptionKeys = [];
+    }
+
+    // Flattened display list used by template. When grouping is enabled, insert group header objects
+    let displayOptions = [];
+    $: {
+      if (groupBy && groupedOptionKeys.length > 0) {
+        const arr = [];
+        for (const key of groupedOptionKeys) {
+          arr.push({ __group: true, label: key });
+          for (const opt of groupedOptions[key]) arr.push(opt);
+        }
+        displayOptions = arr;
+      } else {
+        displayOptions = filteredOptions.slice();
+      }
+    }
+
     // Reset highlighted index when navigable options change
     $: if (navigableOptions.length > 0 && highlightedIndex >= navigableOptions.length) {
       highlightedIndex = navigableOptions.length - 1;
@@ -220,28 +284,53 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
       +if("searchable")
-        input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus bind:this="{searchInput}")
-      +each("filteredOptions as option, index")
-        +if("option && option?.value !== value")
-          div.option(
-            role="option"  
-            on:click|stopPropagation|preventDefault!="{handleSelect(option)}" 
-            tabindex="0"
-            class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
-            data-index="{navigableOptions.indexOf(option)}"
-            aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
-          )
-            +if("!textOnly(option) && shrinkIfNoIcon")
-              div.option-icon(class="{option.img ? option.img : ''}")
-                +if("option.icon != undefined")
-                  i(class="{option.icon}")
+        input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." bind:this="{searchInput}")
+
+      // Grouped rendering
+      +if("groupBy")
+        +each("groupedOptionKeys as groupName")
+          div.group-label {groupName}
+          +each("groupedOptions[groupName] as option")
+            +if("option && option?.value !== value")
+              div.option(
+                role="option"
+                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
+                tabindex="0"
+                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                data-index="{navigableOptions.indexOf(option)}"
+                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+              )
+                +if("!textOnly(option) && shrinkIfNoIcon")
+                  div.option-icon(class="{option.img ? option.img : ''}")
+                    +if("option.icon != undefined")
+                      i(class="{option.icon}")
+                      +else
+                        img(src="{option.img}" alt="{option.label}")
+                +if("enableEnrichment")
+                  div.option-label {@html option.enrichedLabel}
                   +else
-                    img(src="{option.img}" alt="{option.label}")
-            
-            +if("enableEnrichment")
-              div.option-label {@html option.enrichedLabel}
-              +else
-                div.option-label {getLabel(option)}
+                    div.option-label {getLabel(option)}
+        +else
+          +each("filteredOptions as option")
+            +if("option && option?.value !== value")
+              div.option(
+                role="option"
+                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
+                tabindex="0"
+                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                data-index="{navigableOptions.indexOf(option)}"
+                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+              )
+                +if("!textOnly(option) && shrinkIfNoIcon")
+                  div.option-icon(class="{option.img ? option.img : ''}")
+                    +if("option.icon != undefined")
+                      i(class="{option.icon}")
+                      +else
+                        img(src="{option.img}" alt="{option.label}")
+                +if("enableEnrichment")
+                  div.option-label {@html option.enrichedLabel}
+                  +else
+                    div.option-label {getLabel(option)}
 </template>
 
 <style lang="sass">
@@ -311,6 +400,15 @@ img
   overflow: hidden
   z-index: 999
 
+.group-label
+  margin-top: 1rem
+  color: var(--gas-color-text)
+  align-items: left
+  text-align: left
+  padding: 4px
+  font-weight: bold
+  font-size: 2rem
+  font-family: var(--dnd5e-font-modesto)
 .option
   display: flex
   align-items: left

@@ -190,6 +190,10 @@
         "Name": "Advancement Capture Timer Threshold",
         "Hint": "Set the threshold for the advancement capture timer. If you find that Race or Background or Class is not being captured for new Actors, make this number higher. This represents the number of milliseconds to wait before the advancement capture is considered to have failed."
       },
+      "AssignSeparateNpcFeatureSources": {
+        "Name": "Assign features separately from NPCs ",
+        "Hint": "Determines whether NPC features are handled separately from NPCs themselves. When this setting is enabled, the module will treat NPC features as distinct entities, allowing for more granular control over how features are indexed and displayed. This can be useful for managing features that may not be directly tied to specific NPCs."
+      },
       "debug": {
         "Name": "Enable debug mode",
         "Hint": "Provides additional logging for debugging purposes"
