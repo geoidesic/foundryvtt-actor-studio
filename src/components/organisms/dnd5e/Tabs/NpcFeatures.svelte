@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount, onDestroy } from "svelte";
-  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
+  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
@@ -89,7 +89,7 @@
             uuid: item.uuid,
             description: description,
             hasDescription: hasDescription,
-            // Store the enriched data for the IconSearchSelect
+            // Store the enriched data for the IconSelect
             enrichedLabel: enrichedLabel
           };
         }
@@ -411,7 +411,7 @@ StandardTabLayout(title="NPC Features" showTitle="true" tabName="npc-features")
     .content-wrapper(class="{readOnlyClass}" aria-disabled="{isReadOnly}")
       .flexrow
         .flex3
-          IconSearchSelect.icon-select(
+          IconSelect.icon-select(
             {active} 
             {placeHolder} 
             options="{options}"

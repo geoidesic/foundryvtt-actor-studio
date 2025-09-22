@@ -6,7 +6,6 @@
   import { writable } from "svelte/store";
   import { activeTab, npcTabs, selectedNpcBase, readOnlyTabs } from "~/src/stores/index";
   import { autoRollGold } from "~/src/stores/npc";
-  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import FeatureItemList from "~/src/components/molecules/dnd5e/NPC/FeatureItemList.svelte";
@@ -304,7 +303,7 @@ StandardTabLayout(title="NPC Select" showTitle="true" tabName="npc-select")
       .flexrow
         .flex0.required(class="{$selectedNpc ? '' : 'active'}") *
         .flex3
-          IconSearchSelect.icon-select(
+          IconSelect.icon-select(
             options="{options}"
             active="{active}"
             placeHolder="{placeHolder}"
