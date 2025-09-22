@@ -22,6 +22,7 @@
     export let noImg = false;
     export let truncateWidth = 20;
     export let enableEnrichment = false;
+    export let searchable = true
 
     let isOpen = false;
     let searchInput;
@@ -75,15 +76,15 @@
         case 'ArrowDown':
           event.preventDefault();
           if (navigableOptions.length > 0) {
-            highlightedIndex = highlightedIndex < navigableOptions.length - 1 ? highlightedIndex + 1 : 0;
+            highlightedIndex = highlightedIndex >= 0 ? highlightedIndex + 1 : 0;
           }
           break;
         case 'ArrowUp':
-          event.preventDefault();
-          if (navigableOptions.length > 0) {
-            highlightedIndex = highlightedIndex > 0 ? highlightedIndex - 1 : navigableOptions.length - 1;
-          }
-          break;
+            event.preventDefault();
+            if (navigableOptions.length > 0) {
+              highlightedIndex = highlightedIndex > 0 ? highlightedIndex - 1 : navigableOptions.length - 1;
+            }
+            break;
         case 'Enter':
           event.preventDefault();
           if (highlightedIndex >= 0 && highlightedIndex < navigableOptions.length) {
@@ -91,7 +92,6 @@
           }
           break;
         case 'Escape':
-          event.preventDefault();
           isOpen = false;
           highlightedIndex = -1;
           break;
@@ -201,7 +201,7 @@
 
 <template lang="pug">
 div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0" on:keydown="{handleKeydown}")
-  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
+  div.selected-option(on:click="{toggleDropdown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
     +each("options as option, index")
@@ -219,13 +219,13 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
   +if("isOpen")
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
-      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus bind:this="{searchInput}")
+      +if("searchable")
+        input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus bind:this="{searchInput}")
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
           div.option(
             role="option"  
             on:click|stopPropagation|preventDefault!="{handleSelect(option)}" 
-            on:keydown="{handleKeydown}" 
             tabindex="0"
             class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
             data-index="{navigableOptions.indexOf(option)}"
