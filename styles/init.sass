@@ -5,9 +5,11 @@
 @import 'Fonts.sass'
 @import 'Mixins.sass'
 @import 'Animations.sass'
+@import '_buttons.sass'
 
 // Features
 @import 'features/equipment-purchase.sass'
+@import 'features/npc-index-loading.sass'
 
 // Base
 /**
@@ -152,6 +154,14 @@
     margin-top: var(--size-sm)
     margin-bottom: var(--size-sm)
 
+  .my-md
+    margin-top: var(--size-md)
+    margin-bottom: var(--size-md)
+
+  .my-ms
+    margin-top: var(--size-ms)
+    margin-bottom: var(--size-ms)
+
   .mt-none
     margin-top: 0
 
@@ -240,10 +250,29 @@
   .wide
     width: 100%
 
+  .tall
+    height: 100%
+
+  a.button, button
+    padding: 0 0.4rem
+
   img
     border: none
 
-  
+  warning
+    display: block
+    border: 1px solid var(--dnd5e-color-gold)
+    background: var(--color-negative)
+    color: #fff
+    margin: 1rem 0 0 0
+    padding: 0.5rem 0.3rem
+    border-radius: var(--border-radius)
+    &::before
+      content: "⚠️"
+      margin-right: 0.3rem
+      display: inline-block
+
+
   .header-control
     margin: 5px -1px !important
     &::before
@@ -298,7 +327,16 @@
   .justify-flexrow-vertical
     align-items: center
 
+  .justify-flexrow-vertical-top
+    align-items: top
 
+  .inline
+    display: inline
+
+  .small
+    font-size: small
+  .smaller
+    font-size: smaller
   
   .tabs-list
     padding: 0.25rem 1.5rem !important
@@ -408,8 +446,6 @@
     .icon-list
       .advancement
         color: var(--gas-color-text)
-
-    
   
   .tab-content ul.icon-list 
     .image
@@ -424,25 +460,96 @@
     .advancement
       background-color: var(--tabs-content-background)
 
+  .npc-stat-block
+    background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat 
+    background-color: rgba(255,255,255,0.5)
+    background-blend-mode: lighten
+    padding: 1rem
+
+    --gas-text-header-color: #6e0000
+    text-align: left
+    background-position-x: initial
+    background-position-y: initial
+    background-size: initial
+    background-repeat: repeat
+    background-attachment: initial
+    background-origin: initial
+    background-clip: initial
+    border-top: 5px ridge #c27e17
+    border-bottom: 5px ridge #c27e17
+
+    h2
+      color: var(--gas-text-header-color)
+      // letter-spacing: 1px
+      font-kerning: 1px
+      font-variant: small-caps
+    
+    .label
+      color: var(--actor-studio-color-tertiary)
+      font-weight: bold
+
+    .value
+      display: inline
+      
+    hr
+      background-image: linear-gradient(90deg, #8f1010 0%, transparent 100%)
+      height: 4px
+
+  &.theme-dark
+    .npc-stat-block
+      --gas-text-header-color: var(--dnd5e-color-gold)
+      background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
+      h2, .label
+        color: var(--dnd5e-color-gold) !important
+      hr
+        background-image: linear-gradient(90deg, var(--dnd5e-color-gold) 0%, transparent 100%)
+      
+    .icon-select
+      background-color: #000
+      border: none
+      .selected-option
+        background-color: #000
+        border: 1px solid #000
+        margin-top: 2px
+        margin-bottom: 2px
+        color: var(--dnd5e-color-gold)
+      .options-dropdown
+        background-color: #111
+        border: 1px solid #000
+
+        .option
+          color: var(--dnd5e-color-gold)
+          &:hover
+            background-color: #000
+            color:  var(--gas-color-text)
+
 body.game #gas-settings-submenu.app.window-app
   .flexrow, .flexcol
     .flex0
       flex: 0
-#gas-sidebar-button
-  display: flex 
-  align-items: center
-  justify-content: center
-  background-color: white
-  padding: 0
-  margin: 0
-  height: 40px
-  &.v13
-    margin: 0.2rem 0.5rem
 
-#gas-dialog-button
-  background-color: white
+#gas-sidebar-button, #gas-sidebar-npc-button
+  &.gas-sidebar-button
 
-#foundryvtt-actor-studio-pc-sheet
+    font-size: 2rem
+    color: var(--actor-studio-color-secondary)
+
+    display: flex 
+    align-items: center
+    justify-content: center
+    background-color: white
+    padding: 0
+    margin: 0
+    height: 40px
+    &.v13
+      margin: 0.2rem 0.5rem
+
+
+
+#gas-dialog-button, #gas-dialog-npc-button
+    background-color: white
+    
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet, .GAS
   table.core-class-traits
     th, td
       vertical-align: top
@@ -475,7 +582,7 @@ body.game #gas-settings-submenu.app.window-app
   h5
     font-size: 1.15rem
   .border-right
-    border-right: 4px ridge var(--color-highlight)
+    border-right: 6px ridge var(--color-highlight)
 
   .right-border-gradient-mask
     mask-image: linear-gradient(0deg, transparent 0%, black 100%)
