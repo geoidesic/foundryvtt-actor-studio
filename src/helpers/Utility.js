@@ -291,6 +291,7 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       packType: pack.metadata.type,
       packPath: pack.metadata.path,
       packSystem: pack.metadata.system,
+      sourceBook: pack.metadata?.flags?.dnd5e?.sourceBook || null
     }));
     // window.GAS.log.d('packItems', packItems)
     items.push(...packItems);

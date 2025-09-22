@@ -334,6 +334,8 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
 </template>
 
 <style lang="sass">
+
+
 .custom-select
   position: relative
   display: inline-block

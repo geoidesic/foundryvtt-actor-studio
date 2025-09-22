@@ -162,7 +162,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
       .flex3 
-        IconSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value)
+        IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
       +if("source")
         //- h3.left {t('Source')}
