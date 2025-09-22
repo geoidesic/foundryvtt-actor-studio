@@ -969,7 +969,7 @@
 body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-settings-submenu.app.window-app .flexcol .flex0 {
   flex: 0;
 }
-#gas-sidebar-button.gas-sidebar-button, #gas-sidebar-npc-button.gas-sidebar-button {
+#gas-sidebar-button, #gas-sidebar-npc-button {
   font-size: 2rem;
   color: var(--actor-studio-color-secondary);
   display: flex;
@@ -980,7 +980,7 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
   margin: 0;
   height: 40px;
 }
-#gas-sidebar-button.gas-sidebar-button.v13, #gas-sidebar-npc-button.gas-sidebar-button.v13 {
+#gas-sidebar-button.v13, #gas-sidebar-npc-button.v13 {
   margin: 0.2rem 0.5rem;
 }
 #gas-dialog-button, #gas-dialog-npc-button {
