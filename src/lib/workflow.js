@@ -17,6 +17,8 @@ import { goldRoll } from '../stores/storeDefinitions';
 import { totalGoldFromChoices } from '../stores/goldChoices';
 import { tabs, activeTab, readOnlyTabs } from '../stores/index.js';
 import { finalizeSpellSelection } from '../stores/spellSelection.js';
+import { spellProgress } from '../stores/spellSelection.js';
+import { selectedSpells } from '../stores/spellSelection.js';
 
 /**
  * Handles creating container contents for a container item
@@ -96,6 +98,19 @@ export async function createActorInGameAndEmbedItems({
   
   // Set the actor in the workflow FSM context
   workflowFSMContext.actor = createdActor;
+
+  // Simple sheet override during drop processing:
+  // 1) Record the current sheet class
+  // 2) Switch to dnd5e.CharacterActorSheet so drops use core dnd5e handlers
+  // 3) Restoration occurs after the queue completes in WorkflowStateMachine
+  try {
+    const originalSheet = createdActor.getFlag('core', 'sheetClass') ?? '';
+    await createdActor.setFlag(MODULE_ID, 'originalSheetClass', originalSheet);
+    await createdActor.setFlag('core', 'sheetClass', 'dnd5e.CharacterActorSheet');
+  } catch (e) {
+    // Non-fatal: if we can't set the flag, proceed normally
+    window.GAS?.log?.w?.('[WORKFLOW] Failed to set temporary sheetClass; continuing', e);
+  }
 
   const $race = get(race);
   const $subRace = get(subRace);
@@ -354,15 +369,33 @@ export async function updateActorLevelUpWorkflow({
     }
     
     // Start the level-up workflow: idle -> selecting_class_level -> processing_advancements
-    const finalState = levelUpFSM.getCurrentState();
+    let finalState = levelUpFSM.getCurrentState();
     if (finalState === 'idle') {
       window.GAS.log.d('[LEVELUP WORKFLOW] Starting level-up from idle state');
       levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
       levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
     } else {
       window.GAS.log.w('[LEVELUP WORKFLOW] FSM not in idle state after reset:', finalState);
-      // Fallback: try to send class_level_selected anyway
-      levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+      // If the FSM is in any non-idle state (including processing_advancements),
+      // reset it to a known idle state before starting the level-up flow. This
+      // prevents sending the `class_level_selected` event into a state that
+      // doesn't handle it (e.g. processing_advancements) which caused an
+      // unhandled event error.
+      try {
+        levelUpFSM.handle(LEVELUP_EVENTS.RESET);
+        finalState = levelUpFSM.getCurrentState();
+        window.GAS.log.d('[LEVELUP WORKFLOW] FSM state after RESET:', finalState);
+      } catch (err) {
+        window.GAS.log.e('[LEVELUP WORKFLOW] Error resetting LevelUp FSM:', err);
+      }
+
+      // Now attempt to start the flow from idle
+      if (finalState === 'idle') {
+        levelUpFSM.handle(LEVELUP_EVENTS.START_LEVEL_UP);
+        levelUpFSM.handle(LEVELUP_EVENTS.CLASS_LEVEL_SELECTED);
+      } else {
+        window.GAS.log.e('[LEVELUP WORKFLOW] Unable to reset LevelUp FSM to idle. Current state:', finalState);
+      }
     }
     
     window.GAS.log.d('[LEVELUP WORKFLOW] LevelUp workflow initiated');
@@ -737,6 +770,7 @@ export async function handleFinalizeSpells({
 
   const $actorInGame = get(actorInGame);
   const $isLevelUp = get(isLevelUp);
+  const progress = get(spellProgress);
 
   // Prevent multiple clicks
   if (setProcessing) {
@@ -750,6 +784,72 @@ export async function handleFinalizeSpells({
   }
 
   try {
+    // Guard: if selection isn't complete, do not advance or error the FSM
+    if (!progress?.isComplete) {
+      ui.notifications.warn("Please complete your spell selection before finalizing");
+      if (setProcessing) setProcessing(false);
+      return;
+    }
+
+    // If no updates are needed (e.g., level-up gained no new spells), just complete the workflow
+    if (progress?.noUpdatesNeeded || ((progress?.limits?.cantrips || 0) + (progress?.limits?.spells || 0)) === 0) {
+      // NEW: If the user actually selected spells, we still need to create them.
+      let selectionCount = 0;
+      try {
+        const sel = get(selectedSpells);
+        selectionCount = sel && typeof sel.size === 'number' ? sel.size : 0;
+      } catch {}
+
+      if (selectionCount > 0) {
+        // Proceed with finalization to add the selected spells
+        const success = await finalizeSpellSelection($actorInGame);
+        if (success) {
+          ui.notifications.info("Spells added successfully");
+          if ($isLevelUp) {
+            const levelUpFSM = getLevelUpFSM();
+            const currentState = levelUpFSM.getCurrentState();
+            window.GAS.log.d('[LEVELUP WORKFLOW] Current state before spells_complete:', currentState);
+            window.GAS.log.d('[LEVELUP WORKFLOW] Event to handle:', LEVELUP_EVENTS.SPELLS_COMPLETE);
+            if (currentState !== 'completed') {
+              levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+            } else {
+              window.GAS.log.d('[LEVELUP WORKFLOW] FSM already in completed state, skipping spells_complete event');
+            }
+          } else {
+            const fsm = getWorkflowFSM();
+            const currentState = fsm.getCurrentState();
+            window.GAS.log.d('[WORKFLOW] Current state before spells_complete:', currentState);
+            window.GAS.log.d('[WORKFLOW] Event to handle:', WORKFLOW_EVENTS.SPELLS_COMPLETE);
+            fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
+          }
+          if (setProcessing) setProcessing(false);
+          return;
+        } else {
+          // finalizeSpellSelection already warned the user (e.g., no spells selected)
+          if (setProcessing) setProcessing(false);
+          return;
+        }
+      }
+
+      // Make the spells tab readonly
+      readOnlyTabs.update(tabs => tabs.includes('spells') ? tabs : [...tabs, 'spells']);
+
+      // Advance the appropriate FSM without attempting to add spells
+      if ($isLevelUp) {
+        const levelUpFSM = getLevelUpFSM();
+        const currentState = levelUpFSM.getCurrentState();
+        window.GAS.log.d('[LEVELUP WORKFLOW] FinalizeSpells: no updates needed. Current state:', currentState);
+        if (currentState !== 'completed') levelUpFSM.handle(LEVELUP_EVENTS.SPELLS_COMPLETE);
+      } else {
+        const fsm = getWorkflowFSM();
+        window.GAS.log.d('[WORKFLOW] FinalizeSpells: no updates needed. Current state:', fsm.getCurrentState());
+        fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
+      }
+      ui.notifications.info("Spell selection complete");
+      if (setProcessing) setProcessing(false);
+      return;
+    }
+
     // Use the imported spell finalization function
     const success = await finalizeSpellSelection($actorInGame);
     
@@ -780,16 +880,10 @@ export async function handleFinalizeSpells({
         fsm.handle(WORKFLOW_EVENTS.SPELLS_COMPLETE);
       }
     } else {
-      ui.notifications.error("Failed to add spells");
-      if ($isLevelUp) {
-        const levelUpFSM = getLevelUpFSM();
-        const currentState = levelUpFSM.getCurrentState();
-        if (currentState !== 'error' && currentState !== 'completed') {
-          levelUpFSM.handle(LEVELUP_EVENTS.ERROR);
-        }
-      } else {
-        getWorkflowFSM().handle(WORKFLOW_EVENTS.ERROR);
-      }
+      // Do not push the FSM into an error state for validation failures like "No spells selected".
+      // finalizeSpellSelection already surfaced a user-facing message when appropriate.
+      if (setProcessing) setProcessing(false);
+      return;
     }
   } catch (error) {
     console.error("Error during spell finalization:", error);

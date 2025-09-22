@@ -44,6 +44,26 @@
   color: var(--color-highlight)
 
 .GAS
+  /* integration with popout module */
+  .popout-module-button
+    display: none
+    align-self: right
+    flex: 0
+
+  /* Correct advancement dropdowns color in dark mode*/
+  &.theme-dark select,
+  &.theme-dark select option,
+  &.theme-dark select optgroup 
+    color: #fff !important
+    background-color: #222 !important
+  
+  /* Correct advancement dropdowns color in light mode*/
+  &.theme-light select,
+  &.theme-light select option,
+  &.theme-light select optgroup 
+    color: #000 !important
+    background-color: #f0f0f0 !important
+
   color: var(--gas-color-text)
 
   &.theme-dark

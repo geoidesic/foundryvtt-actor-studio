@@ -25,13 +25,21 @@ beforeEach(() => {
     derived: vi.fn()
   }));
 
-  // Mock workflow FSM
+  // Mock the workflow FSM
   vi.doMock('~/src/helpers/WorkflowStateMachine', () => ({
     getWorkflowFSM: vi.fn(() => ({
       handle: vi.fn(),
       getCurrentState: vi.fn(() => 'selecting_spells')
     })),
+    getLevelUpFSM: vi.fn(() => ({
+      handle: vi.fn(),
+      getCurrentState: vi.fn(() => 'selecting_spells')
+    })),
     WORKFLOW_EVENTS: {
+      SPELLS_COMPLETE: 'spells_complete',
+      ERROR: 'error'
+    },
+    LEVELUP_EVENTS: {
       SPELLS_COMPLETE: 'spells_complete',
       ERROR: 'error'
     }
@@ -69,6 +77,22 @@ beforeEach(() => {
 
 describe('Workflow Spell Import', () => {
   it('should successfully import and use finalizeSpellSelection in workflow', async () => {
+    // Mock spell progress as complete - this is crucial for the workflow
+    const mockSpellProgress = {
+      isComplete: true,
+      totalRequired: 1,
+      totalSelected: 1,
+      limits: { cantrips: 0, spells: 1 },
+      hasAllSpells: false
+    };
+
+    // Mock the spell selection module
+    vi.doMock('~/src/stores/spellSelection.js', () => ({
+      spellProgress: { subscribe: vi.fn() },
+      selectedSpells: { subscribe: vi.fn() },
+      finalizeSpellSelection: vi.fn(() => Promise.resolve(true))
+    }));
+
     // Mock actor with proper items structure
     const mockActor = {
       id: 'actor-123',
@@ -91,7 +115,10 @@ describe('Workflow Spell Import', () => {
         subscribe: vi.fn(),
         set: vi.fn(),
         update: vi.fn() 
-      } 
+      },
+      isLevelUp: {
+        subscribe: vi.fn()
+      }
     };
     const setProcessing = vi.fn();
 
@@ -105,22 +132,34 @@ describe('Workflow Spell Import', () => {
       })
     };
 
+    const selectedSpellsMap = new Map([
+      ['fireball', { 
+        itemData: mockSpellItem
+      }]
+    ]);
+
+    // Mock get function to return appropriate values for each store
     get.mockImplementation((store) => {
       if (store === stores.actorInGame) {
         return mockActor;
       }
-      // Mock spell selection store
-      return new Map([
-        ['fireball', { 
-          itemData: mockSpellItem
-        }]
-      ]);
+      if (store === stores.isLevelUp) {
+        return false; // Character creation mode
+      }
+      // For spellProgress store access
+      if (store.subscribe) {
+        return mockSpellProgress;
+      }
+      // For selectedSpells store access
+      return selectedSpellsMap;
     });
 
     // Test handleFinalizeSpells
     await handleFinalizeSpells({ stores, setProcessing });
 
-    expect(mockActor.createEmbeddedDocuments).toHaveBeenCalled();
+    // Verify that finalizeSpellSelection was called
+    const { finalizeSpellSelection } = await import('~/src/stores/spellSelection.js');
+    expect(finalizeSpellSelection).toHaveBeenCalledWith(mockActor);
     expect(global.ui.notifications.info).toHaveBeenCalledWith("Spells added successfully");
   });
 });

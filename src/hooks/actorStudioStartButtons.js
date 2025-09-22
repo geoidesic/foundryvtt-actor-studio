@@ -131,7 +131,7 @@ export const renderActorStudioSidebarButton = (app) => {
   
   if (hasButton) return;
 
-  const gasButton = getActorStudioButton('gas-sidebar-button', ['gas-sidebar-button']);
+  const gasButton = getActorStudioButton('gas-sidebar-button');
   if (game.version >= 13) {
     gasButton.classList.add('v13');
     const headerActions = element.querySelector('header.directory-header .header-actions');
@@ -189,8 +189,7 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           $('#document-create .form-fields select', html).prop('disabled', true);
         }
         if (!$('#gas-dialog-button', html).length) {
-          const gasButton = getActorStudioButton('gas-dialog-button', ['gas-sidebar-button']);
-          console.log(gasButton);
+          const gasButton = getActorStudioButton('gas-dialog-button');
           if(game.version < 13) {
             $(gasButton).css('line-height', 'unset')
           }

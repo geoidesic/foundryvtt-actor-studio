@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { ucfirst } from "~/src/helpers/Utility.js";
-
+  import { readOnlyTabs } from "~/src/stores/index"
   export let src = false;
   export let oldLevel = false;
   export let newLevel = false;
@@ -21,8 +21,9 @@
       .flex3.left.pa-xs {ucfirst(classKey)} 
       .center.mr-sm(class="{newLevel ? 'flex2' : 'flex0'}")
         .lozenge.pa-xs {oldLevel} {newLevel ? '→ ' + newLevel : ''} 
-      .flex0.right.pr-md.py-xs
-        i(class="{iconClass}")
+      +if("!$readOnlyTabs.includes('level-up')")
+        .flex0.right.pr-md.py-xs
+          i(class="{iconClass}")
 </template>
 
 <style lang="sass">
