@@ -124,18 +124,18 @@
     : [];
 
   // Debug logs
-  $: window.GAS.log.d("Race component:", { 
-    race: $race, 
-    active, 
-    value, 
-    readOnlyTabs: $readOnlyTabs,
-    richHTML: richHTML ? richHTML.substring(0, 50) + "..." : "", // truncate for logging
-    advancementArray: advancementArray?.length || 0
-  });
+  // $: window.GAS.log.d("Race component:", { 
+  //   race: $race, 
+  //   active, 
+  //   value, 
+  //   readOnlyTabs: $readOnlyTabs,
+  //   richHTML: richHTML ? richHTML.substring(0, 50) + "..." : "", // truncate for logging
+  //   advancementArray: advancementArray?.length || 0
+  // });
 
   onMount(async () => {
     // Log mount
-    window.GAS.log.d("Race tab mounted");
+    // window.GAS.log.d("Race tab mounted");
     
     let raceUuid;
     if (window.GAS.debug) {
