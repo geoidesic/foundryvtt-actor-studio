@@ -239,7 +239,6 @@ img
   border: 1px solid #ced4da
   border-radius: 0.25rem
   overflow: hidden
-  z-index: 999
 
 .option
   display: flex
