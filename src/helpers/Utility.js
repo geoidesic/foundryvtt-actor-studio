@@ -2,6 +2,38 @@ import { LOG_PREFIX, MODULE_ID, MODULE_CODE, LOG_PREFIX_COLOR, LOG_STYLES} from 
 import DTPlugin from "~/src/plugins/donation-tracker";
 import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
+import { tick } from "svelte";
+
+/**
+ * Converts various collection types into a standard array
+ * @param {Array|Collection|Set|Map|Object} collection - The collection to convert. Can be:
+ *   - Array: returned as-is
+ *   - Collection: contents property is returned if present
+ *   - Set/Map/Object: converted to array via Array.from()
+ * @returns {Array} The collection contents as a standard array
+ */
+export function getItemsArray(collection) {
+  if (!collection) return [];
+  if (Array.isArray(collection)) return collection;
+  if (collection.contents) return collection.contents;
+  try { return Array.from(collection); } catch (e) { return []; }
+}
+
+  /**
+   * Get the current items from the actor in the correct format
+   */
+  export function getItemSourcesFromActor(doc) {
+    try {
+      const itemsCollection = doc?.items;
+      if (!itemsCollection) return [];
+      const list = Array.isArray(itemsCollection)
+        ? itemsCollection
+        : (itemsCollection.contents || Array.from(itemsCollection));
+      return list.map((itemDoc) => itemDoc?.toObject ? itemDoc.toObject() : itemDoc);
+    } catch (_) {
+      return [];
+    }
+  }
 
 
 export async function illuminatedDescription(html, store) {
@@ -30,6 +62,63 @@ export async function illuminatedDescription(html, store) {
 
 export function dnd5eModCalc(score) {
   return Math.floor((score - 10) / 2);
+}
+
+/**
+ * Calculates the D&D 5e skill bonus for a given skill key.
+ *
+ * @param {object} actor - The actor document object.
+ * @param {string} key - The abbreviation of the skill (e.g., 'acr', 'ath').
+ * @returns {number|null} The calculated skill bonus, or null if the skill data is not found.
+ */
+export function skillBonus(actor, key) {
+  const skill = actor?.system?.skills?.[key];
+  if (!skill) return null;
+  const ability = skill.ability || 'int';
+  const abilityScore = actor?.system?.abilities?.[ability]?.value ?? 10;
+  const mod = dnd5eModCalc(abilityScore);
+  const tier = Number(skill.value) || 0; // 0/1/2
+  const pb = pbForCR(actor?.system?.details?.cr ?? 0);
+  return mod + (tier * pb);
+}
+
+
+// Standard D&D 5e size display map
+export const SIZES = { tiny: 'Tiny', sm: 'Small', med: 'Medium', lg: 'Large', huge: 'Huge', grg: 'Gargantuan' };
+
+// Normalize arrays that may sometimes be strings, Sets, or objects
+export function normalizeList(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (val instanceof Set) return Array.from(val);
+  if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+  if (typeof val === 'object') return Object.keys(val).filter(k => !!val[k]);
+  return [];
+}
+
+// Utility proficiency bonus by CR (fallback for UI; prefer CRCalculator when available)
+export function pbForCR(cr) {
+  const n = Number(cr) ?? 0;
+  if (n <= 4) return 2;
+  if (n <= 8) return 3;
+  if (n <= 12) return 4;
+  if (n <= 16) return 5;
+  if (n <= 20) return 6;
+  if (n <= 24) return 7;
+  if (n <= 28) return 8;
+  return 9;
+}
+
+// Utility XP by CR (fallback for UI; prefer CRCalculator when available)
+export function xpForCR(cr) {
+  const table = {
+    0: 10, 1: 200, 2: 450, 3: 700, 4: 1100, 5: 1800, 6: 2300, 7: 2900, 8: 3900,
+    9: 5000, 10: 5900, 11: 7200, 12: 8400, 13: 10000, 14: 11500, 15: 13000,
+    16: 15000, 17: 18000, 18: 20000, 19: 22000, 20: 25000, 21: 33000, 22: 41000,
+    23: 50000, 24: 62000, 25: 75000, 26: 90000, 27: 105000, 28: 120000, 29: 135000, 30: 155000
+  };
+  const n = Number(cr) ?? 0;
+  return table[n] ?? 0;
 }
 
 
@@ -220,7 +309,7 @@ export function extractItemsFromPacksSync(packs, keys) {
     // window.GAS.log.d('entries', entries);
     // @todo if DonationTracker enabled then https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     entries = filterPackForDTPackItems(pack, entries);
-    // window.GAS.log.d('entries post', entries);
+    window.GAS.log.d('entries post', entries);
     let packItems = extractMapIteratorObjectProperties(entries, keys);
     packItems = packItems.map(item => ({
       ...item,
@@ -232,6 +321,7 @@ export function extractItemsFromPacksSync(packs, keys) {
       packType: pack.metadata.type,
       packPath: pack.metadata.path,
       packSystem: pack.metadata.system,
+      sourceBook: pack.metadata?.flags?.dnd5e?.sourceBook || null
     }));
     // window.GAS.log.d('packItems', packItems);
     items.push(...packItems);
@@ -273,16 +363,27 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       ui.notifications.error(game.i18n.localize('GAS.Error.PackIndexNotFound'));
     }
 
-    window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
-    window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
-    window.GAS.log.d('extractItemsFromPacks pack', pack);
-    window.GAS.log.d('extractItemsFromPacks packindex', index);
+    // window.GAS.log.d('extractItemsFromPacks pack.metadata', pack.metadata);
+    // window.GAS.log.d('extractItemsFromPacks pack.name', pack.metadata.name);
+    // window.GAS.log.d('extractItemsFromPacks pack', pack);
+    // window.GAS.log.d('extractItemsFromPacks packindex', index);
     let entries = index.entries()
-    window.GAS.log.d('extractItemsFromPacks entries', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries', entries);
     entries = filterPackForDTPackItems(pack, entries);
-    window.GAS.log.d('extractItemsFromPacks entries post', entries);
+    // window.GAS.log.d('extractItemsFromPacks entries post', entries);
 
     let packItems = extractMapIteratorObjectProperties(entries, [...keys, ...nonIndexKeys]);
+    
+    // Debug: Log the first few items to see the data structure
+    if (packItems.length > 0) {
+      // console.log('Enhanced index data structure sample:', {
+      //   packName: pack.metadata.name,
+      //   firstItem: packItems[0],
+      //   keys: [...keys, ...nonIndexKeys],
+      //   hasSystemFields: nonIndexKeys.some(key => key.startsWith('system.'))
+      // });
+    }
+    
     packItems = packItems.map(item => ({
       ...item,
       packName: pack.metadata.name,
@@ -291,7 +392,6 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
       packType: pack.metadata.type,
       packPath: pack.metadata.path,
       packSystem: pack.metadata.system,
-      sourceBook: pack.metadata?.flags?.dnd5e?.sourceBook || null
     }));
     // window.GAS.log.d('packItems', packItems)
     items.push(...packItems);
@@ -309,13 +409,43 @@ export async function extractItemsFromPacksAsync(packs, keys, nonIndexKeys = fal
 export function extractMapIteratorObjectProperties(mapIterator, keys) {
   const newArray = [];
   for (const [key, data] of mapIterator) {
+    // window.GAS.log.b('extractMapIteratorObjectProperties', key, data);
     const newObj = {};
+    
+    // Debug: Log the first item to see the data structure
+    if (newArray.length === 0) {
+      // console.log('extractMapIteratorObjectProperties - First item data:', {
+      //   key,
+      //   data,
+      //   keys,
+      //   dataKeys: Object.keys(data),
+      //   hasSystemFields: keys.some(k => k.startsWith('system.'))
+      // });
+    }
+    
     keys.forEach((k) => {
       if (k.includes('->')) {
         const split = k.split('->');
         newObj[split[1]] = data[split[0]];
       } else if (k.includes('.')) {
-        setNestedProperty(newObj, k, getNestedProperty(data, k))
+        // For enhanced index data, the system fields are returned as flat properties
+        // Check if the field exists directly in the data
+        if (data.hasOwnProperty(k)) {
+          newObj[k] = data[k];
+        } else {
+          // Fallback to nested property extraction for backward compatibility
+          const value = getNestedProperty(data, k);
+          setNestedProperty(newObj, k, value);
+        }
+        
+        // Debug: Log system field extraction
+        if (k.startsWith('system.')) {
+          // console.log(`System field extraction: ${k} = ${newObj[k]}`, {
+          //   sourceData: data,
+          //   extractedValue: newObj[k],
+          //   hasDirectProperty: data.hasOwnProperty(k)
+          // });
+        }
       } else {
         newObj[k] = data[k];
       }
@@ -374,7 +504,17 @@ export const getPacksFromSettings = (type) => {
   // Update settings if any packs were removed
   if (filteredPackNames.length !== settings[type].length) {
     settings[type] = filteredPackNames;
-    game.settings.set(MODULE_ID, 'compendiumSources', settings);
+    // Only persist the settings after the game is ready; otherwise defer
+    if (game.ready) {
+      game.settings.set(MODULE_ID, 'compendiumSources', settings);
+    } else {
+      try {
+        // Defer the write to the first 'ready' tick
+        globalThis.Hooks?.once?.('ready', () => {
+          try { game.settings.set(MODULE_ID, 'compendiumSources', settings); } catch (_) {}
+        });
+      } catch (_) {}
+    }
   }
 
   return packs;
@@ -635,6 +775,191 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
   return item;
 }
 
+
+/** 
+ * There are differences in how in-memory documents can be updated between versions of FoundryVTTv12 and v13
+ * This function handles the differences and ensures the source is updated correctly.
+ * THis is necessary because the TRL library doesn't support innate reactivity to the in-memory documents.
+ * @param {Object} source - The source object to update
+ * @param {Object} val - The value to update the source with
+ * @returns {Promise<void>} A promise that resolves when the source is updated
+ */
+export const updateSource = async (source, val) => {
+  if(source.uuid) {
+    source.update(val);
+  } else {
+    window.GAS.log.p('updateSource', source, val)
+    await source.updateSource(val);
+    await tick();
+    if(source.render) {
+      source.render();
+      window.GAS.log.p('updated source', source)
+    }
+  }
+};
+
+export const deleteSource = async (source, key) => {
+  for(const item of source[key]) {
+    await source.items.delete(item.id);
+  }
+  await tick();
+  if(source.render) {
+    source.render();
+  }
+}
+
+/**
+ * This function is used to get the items from the selected NPC and set them on the in-memory actor.
+ * This requires a degree of mapping and flagging because item uuids in the compendium are not 
+ * the same as the uuids in the in-memory actor.
+ * @param {Object} selectedNpcBase - The base NPC object from the compendium
+ * @param {Object} actor - The in-memory actor object
+ * @param {string} actorName - The name of the actor
+ * @returns {Promise<void>} A promise that resolves when the items are set on the in-memory actor
+ */
+export const getAndSetActorItems = async (selectedNpcBase, actor, actorName) => {
+  if (selectedNpcBase && actor) {
+    // Convert embedded items to plain data for source update
+    const items = [];
+    try {
+      const arr = selectedNpcBase.items && (selectedNpcBase.items.contents || Array.from(selectedNpcBase.items) || []);
+      for (const it of arr) {
+        if (!it) continue;
+        const data = it.toObject();
+        // Ensure a fresh ID is generated on the in-memory actor
+        if (data && data._id) delete data._id;
+        // Persist the original compendium UUID under our module namespace so later tabs can reference it
+        try {
+          const srcUuid = it?.uuid || it?.flags?.core?.sourceId || it?.system?.sourceId || null;
+          if (srcUuid) {
+            const fu = (globalThis?.foundry && globalThis.foundry.utils) ? globalThis.foundry.utils : undefined;
+            if (fu?.setProperty) {
+              fu.setProperty(data, `flags.${MODULE_ID}.sourceUuid`, srcUuid);
+            } else {
+              data.flags = data.flags || {};
+              data.flags[MODULE_ID] = { ...(data.flags[MODULE_ID] || {}), sourceUuid: srcUuid };
+            }
+          }
+        } catch (_) {}
+        items.push(data);
+      }
+    } catch (_) {
+      // no-op; fallback to empty items
+    }
+    // Update the in-memory actor source with type, name and items
+    await deleteSource(actor, 'items');
+    await updateSource(actor, {
+      type: 'npc',
+      name: actorName || selectedNpcBase.name,
+      items
+    });
+    // Also update store used by NPC Features list
+    try { itemsFromActor.set(items); } catch (_) {}
+    // After source update, set module flags on the embedded Item documents as well
+    try {
+      const sourceUuidsByNameType = new Map(items.map(d => [`${d.name}::${d.type}`, d?.flags?.[MODULE_ID]?.sourceUuid]));
+      const setFlags = [];
+      actor.items?.forEach?.((doc) => {
+        const key = `${doc?.name}::${doc?.type}`;
+        const src = sourceUuidsByNameType.get(key);
+        if (src && !doc.getFlag?.(MODULE_ID, 'sourceUuid')) {
+          setFlags.push(doc.setFlag(MODULE_ID, 'sourceUuid', src));
+        }
+      });
+      if (setFlags.length > 0) await Promise.allSettled(setFlags);
+    } catch (_) {}
+  }
+}
+
+/**
+ * Copies NPC stats (ability scores, hit points, armor class, etc.) from the selected NPC base to the in-memory actor
+ * @param {Object} selectedNpcBase - The selected NPC base document
+ * @param {Object} actor - The in-memory actor object
+ * @returns {Promise<void>} A promise that resolves when the stats are copied
+ */
+export const copyNpcStatsToActor = async (selectedNpcBase, actor) => {
+  if (selectedNpcBase && actor) {
+    try {
+      // Get the NPC base data
+      const npcData = selectedNpcBase.toObject();
+      
+      // Copy the core stats that should be preserved
+      const statsToCopy = {
+        system: {
+          abilities: npcData.system?.abilities || {},
+          attributes: npcData.system?.attributes || {},
+          details: npcData.system?.details || {},
+          traits: npcData.system?.traits || {},
+          skills: npcData.system?.skills || {},
+          resources: npcData.system?.resources || {},
+          currency: npcData.system?.currency || {},
+          inventory: npcData.system?.inventory || {},
+          spells: npcData.system?.spells || {},
+          effects: npcData.system?.effects || {},
+          modifiers: npcData.system?.modifiers || {},
+          profs: npcData.system?.profs || {},
+          bonuses: npcData.system?.bonuses || {},
+          saves: npcData.system?.saves || {},
+          attributes: npcData.system?.attributes || {},
+          ac: npcData.system?.ac || {},
+          hp: npcData.system?.hp || {},
+          speed: npcData.system?.speed || {},
+          spellcasting: npcData.system?.spellcasting || {},
+          level: npcData.system?.level || {},
+          cr: npcData.system?.cr || {},
+          xp: npcData.system?.xp || {},
+          alignment: npcData.system?.alignment || {},
+          size: npcData.system?.size || {},
+          type: npcData.system?.type || {},
+          subtype: npcData.system?.subtype || {},
+          senses: npcData.system?.senses || {},
+          languages: npcData.system?.languages || {},
+          damage: npcData.system?.damage || {},
+          resistances: npcData.system?.resistances || {},
+          immunities: npcData.system?.immunities || {},
+          vulnerabilities: npcData.system?.vulnerabilities || {},
+          conditionImmunities: npcData.system?.conditionImmunities || {},
+          legendary: npcData.system?.legendary || {},
+          legendaryActions: npcData.system?.legendaryActions || {},
+          lair: npcData.system?.lair || {},
+          lairActions: npcData.system?.lairActions || {},
+          regionalEffects: npcData.system?.regionalEffects || {},
+          regionalEffectsEnd: npcData.system?.regionalEffectsEnd || {},
+          environment: npcData.system?.environment || {},
+          source: npcData.system?.source || {},
+          page: npcData.system?.page || {},
+          otherSources: npcData.system?.otherSources || {},
+          additionalSources: npcData.system?.additionalSources || {},
+          additionalSources2: npcData.system?.additionalSources2 || {},
+          additionalSources3: npcData.system?.additionalSources3 || {},
+          additionalSources4: npcData.system?.additionalSources4 || {},
+          additionalSources5: npcData.system?.additionalSources5 || {},
+          additionalSources6: npcData.system?.additionalSources6 || {},
+          additionalSources7: npcData.system?.additionalSources7 || {},
+          additionalSources8: npcData.system?.additionalSources8 || {},
+          additionalSources9: npcData.system?.additionalSources9 || {},
+          additionalSources10: npcData.system?.additionalSources10 || {}
+        },
+        flags: npcData.flags || {},
+        img: npcData.img || '',
+        token: npcData.token || {}
+      };
+      
+      // Update the in-memory actor with the copied stats
+      await updateSource(actor, statsToCopy);
+      
+      // Helpful debug output
+      if (window?.GAS?.log?.g) {
+        window.GAS.log.g('[NPC] In-memory actor stats copied from base NPC', actor);
+      } else {
+        console.log('[NPC] In-memory actor stats copied from base NPC', actor);
+      }
+    } catch (error) {
+      window.GAS.log.e('[NPC] Error copying NPC stats to actor:', error);
+    }
+  }
+};
+
 //- used by dropItemRegistry
 export const dropItemOnCharacter = async (actor, item) => {
   // window.GAS.log.d('dropItemOnCharacter');
@@ -834,5 +1159,80 @@ export function getTextEditorAPI() {
  */
 export async function enrichHTML(content, options = {}) {
   const textEditor = getTextEditorAPI();
-  return await textEditor.enrichHTML(content, options);
+  const enriched = await textEditor.enrichHTML(content, options);
+
+  try {
+    // Post-process the enriched HTML string to add a tooltip for broken links
+    // that reference the Player's Handbook compendium. We operate on the
+    // HTML string to avoid relying on the current document DOM.
+    if (typeof enriched === 'string' && enriched.length) {
+      // Create a temporary container to query and mutate elements
+      const wrapper = document?.createElement ? document.createElement('div') : null;
+      if (wrapper) {
+        wrapper.innerHTML = enriched;
+
+        // Find elements that are marked as broken content links.
+        // In templates they may be rendered with class "content-link broken" or simply "broken".
+        const brokenEls = wrapper.querySelectorAll('.content-link.broken, .broken');
+        brokenEls.forEach(el => {
+          // Search attributes and inner text for a Compendium UUID that includes the players handbook id
+          // Commonly the uuid may appear in attributes like 'data-uuid', 'href', or inside the element text.
+          const attrs = ['data-uuid', 'href', 'data-encoded-uuid', 'data-link'];
+          let found = false;
+          for (const a of attrs) {
+            const val = el.getAttribute?.(a);
+            if (val && val.includes && val.includes('Compendium.dnd-players-handbook')) { found = true; break; }
+          }
+          if (!found) {
+            const txt = el.textContent || '';
+            if (txt.includes && txt.includes('Compendium.dnd-players-handbook')) found = true;
+          }
+          if (found) {
+            el.setAttribute('data-tooltip', "Requires D&D Player's Handbook module to be installed");
+          }
+        });
+
+        return wrapper.innerHTML;
+      }
+    }
+  } catch (err) {
+    console.warn('enrichHTML post-process failed', err);
+  }
+
+  return enriched;
 }
+
+/**
+ * Delete an item from an actor by ID
+ * @param {Object} actor - The actor to delete the item from
+ * @param {string} itemId - The ID of the item to delete
+ * @returns {Promise<boolean>} - True if deletion was successful, false otherwise
+ */
+export const deleteActorItem = async (actor, itemId) => {
+  try {
+    if (!actor?.items?.delete) {
+      console.error('Actor does not support item deletion');
+      return false;
+    }
+
+    await actor.items.delete(itemId);
+    
+    // Force a refresh of the reactive statement
+    await tick();
+    if (actor.render) {
+      actor.render();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting item from actor:', error);
+    return false;
+  }
+};
+
+/**
+ * Update a source object with new values
+ * @param {Object} source - The source object to update
+ * @param {Object} val - The value to update the source with
+ * @returns {Promise<void>} A promise that resolves when the source is updated
+ */
