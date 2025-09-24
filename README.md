@@ -1,5 +1,8 @@
 # [foundryvtt-actor-studio](https://foundryvtt.com/packages/foundryvtt-actor-studio)
-A FoundryVTT module for creating Actors. Join the community on [Discord](https://discord.gg/sQgVnSGRUj).
+A FoundryVTT module for creating Actors. The best character creator for dnd5e. Makes creating and levelling PCs super-easy and fun! 
+Select Spells and Equipment / Gold. Includes an Equipment Shop for spending starting gold.
+
+Join the community on [Discord](https://discord.gg/sQgVnSGRUj).
 
 ## New feature donations
 There are [features waiting for funding](https://github.com/geoidesic/foundryvtt-actor-studio/milestone/6).
