@@ -1,6 +1,6 @@
 <script>
   import SvelteSelect from "svelte-select";
-  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
+  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     getFoldersFromMultiplePacks,
@@ -124,18 +124,18 @@
     : [];
 
   // Debug logs
-  $: window.GAS.log.d("Race component:", { 
-    race: $race, 
-    active, 
-    value, 
-    readOnlyTabs: $readOnlyTabs,
-    richHTML: richHTML ? richHTML.substring(0, 50) + "..." : "", // truncate for logging
-    advancementArray: advancementArray?.length || 0
-  });
+  // $: window.GAS.log.d("Race component:", { 
+  //   race: $race, 
+  //   active, 
+  //   value, 
+  //   readOnlyTabs: $readOnlyTabs,
+  //   richHTML: richHTML ? richHTML.substring(0, 50) + "..." : "", // truncate for logging
+  //   advancementArray: advancementArray?.length || 0
+  // });
 
   onMount(async () => {
     // Log mount
-    window.GAS.log.d("Race tab mounted");
+    // window.GAS.log.d("Race tab mounted");
     
     let raceUuid;
     if (window.GAS.debug) {
@@ -162,7 +162,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
       .flex3 
-        IconSearchSelect.mb-md.icon-select({options} {active} {placeHolder} handler="{selectRaceHandler}" id="race-select" bind:value)
+        IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
       +if("source")
         //- h3.left {t('Source')}

@@ -683,8 +683,8 @@
         +if("$isLevelUp && $activeTab === 'level-up'")
           .progress-container
             ProgressBar(progress="{levelUpProgress}")
-            +if("$levelUpProgress === 100")
-              .button-container
+            +if("$levelUpProgress === 100 && !$readOnlyTabs.includes('level-up')")
+              .button-container.mt-xs
                 button(
                   disabled="{!$classUuidForLevelUp}"
                   type="button"

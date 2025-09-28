@@ -23,6 +23,8 @@
   $: cartCurrency = PurchaseHandler.formatCurrency($cartTotalCost);
   $: remainingCurrency = PurchaseHandler.formatCurrency($remainingGold);
 
+
+
   // Update cart items whenever shopCart changes (shopItems no longer needed here)
   $: {
     if ($shopCart) {
@@ -121,6 +123,7 @@
   // Filter and group items by category, applying keyword filter first
   $: filteredItems = $shopItems.filter(item => 
     item.name.toLowerCase().includes(keywordFilter.toLowerCase())
+    && PurchaseHandler.getItemCopperValue(item, 1) <= $remainingGold 
   );
 
   $: categoryGroups = filteredItems.reduce((acc, item) => {

@@ -56,7 +56,6 @@ export function registerSettings(app: Game): void {
   enableEquipmentSelection();
   enableEquipmentPurchase();
   enableSpellSelection();
-  showPackLabelInSelect();
   windowX();
   windowY();
   experimentalCharacterNameStyling();
@@ -211,7 +210,7 @@ function showPackLabelInSelect() {
     hint: game.i18n.localize('GAS.Setting.ShowPackLabelInSelect.Hint'),
     scope: 'world',
     config: true,
-    default: false,
+    default: true,
     type: Boolean,
   });
 }

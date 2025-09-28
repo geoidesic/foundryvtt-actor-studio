@@ -22,6 +22,7 @@ import {
   levelUpRichSubClassHTML,
   levelUpPreAdvancementSelections
 } from "~/src/stores";
+import { readOnlyTabs } from "~/src/stores";
 
 import {
   extractItemsFromPacksSync,
@@ -161,6 +162,7 @@ const eventHandlers = {
    * @param {string} classKey - The key identifier for the character class
    */
   clickAddLevel: async (classKey) => {
+    if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
     if ($isNewMultiClassSelected) return;
     const isUnset = Boolean($selectedMultiClassUUID) && Boolean($newLevelValueForExistingClass);
     if(isUnset) return;
@@ -197,6 +199,7 @@ const eventHandlers = {
    * Resets all class and subclass related state
    */
   clickCancel: async () => {
+    if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
     $selectedMultiClassUUID = false
     classValue = null
     $subClassUuidForLevelUp = null
@@ -214,6 +217,7 @@ const eventHandlers = {
    */
   handleRowActivation: (classKey) => {
     return () => {
+      if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
       const nameOfClickedClass = getters.getCharacterClass(classKey).name;
       const isMultiClassMode = $classUuidForLevelUp && nameOfClickedClass == $levelUpClassObject.name;
 
@@ -226,6 +230,7 @@ const eventHandlers = {
   },
   handleRowDeactivation: (classKey) => {
     return () => {
+      if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
       eventHandlers.clickCancel();
     };
   },
@@ -235,6 +240,7 @@ const eventHandlers = {
    * @param {string} option - The UUID of the selected class
    */
   selectMultiClassHandler: async (option) => {
+    if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
     $subClassUuidForLevelUp = null;
     $levelUpSubClassObject = null;
     subclassValue = null;
@@ -265,6 +271,7 @@ const eventHandlers = {
    * @param {string} option - The UUID of the selected subclass
    */
   selectSubClassHandler: async (option) => {
+    if ($readOnlyTabs.includes('level-up')) return; // Freeze interactions when read-only
     $subClassUuidForLevelUp = option.value ?? option ?? null;
     $levelUpSubClassObject = await fromUuid($subClassUuidForLevelUp);
     subclassValue = $subClassUuidForLevelUp;
@@ -449,7 +456,7 @@ onDestroy(() => {
         +if("($isLevelUpAdvancementInProgress || subclasses.length) && $levelUpClassGetsSubclassThisLevel")  
           h3.left.mt-md {t('LevelUp.Subclass')}
           +if("window.GAS.debug")
-            pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+            //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
           IconSelect.icon-select(
             active="{subClassProp}" 
             options="{subclasses}"  

@@ -9,10 +9,8 @@
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
-    import { enrichHTML } from "~/src/helpers/Utility.js";
-    import { derived } from 'svelte/store';
 
-    export let options = []; //- {value, label, link, icon || img}
+    export let options = []; //- {value, label, icon || img}
     export let value = ""; //- the currently selected uuid
     export let disabled = false;
     export let handler = void 0;
@@ -21,11 +19,8 @@
     export let id = void 0;
     export let noImg = false;
     export let truncateWidth = 20;
-    export let enableEnrichment = false;
 
     let isOpen = false;
-    let searchInput;
-    
     export let handleSelect = (option) => {
       if (handler) {
         if (handler(option.value)) {
@@ -68,7 +63,6 @@
         }
       }
     }
-
 
     function isClickOutsideContainer(event, containerElement) {
       try {
@@ -118,14 +112,12 @@
       }
     }
 
-
     onMount(() => {
       window.addEventListener("click", handleClickOutside);
     });
     onDestroy(() => {
       window.removeEventListener("click", handleClickOutside);
     });
-
 
     let textOnly = (option) => {
       return option.icon || option.img ? false : true;
@@ -141,13 +133,12 @@
         searchTerm = val;
       }, 300);
     }
-
-    let filteredOptions = [];
     // Filter options by search term
     $: filteredOptions = options.filter(option =>
       option.label.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    
   </script>
 
 <template lang="pug">
@@ -170,21 +161,17 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
   +if("isOpen")
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
       // search input for filtering options
-      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." autofocus)
+      input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search...")
       +each("filteredOptions as option, index")
         +if("option && option?.value !== value")
-          div.option(role="option"  on:click|stopPropagation|preventDefault!="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
+          div.option(role="option"  on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
             +if("!textOnly(option) && shrinkIfNoIcon")
               div.option-icon(class="{option.img ? option.img : ''}")
                 +if("option.icon != undefined")
                   i(class="{option.icon}")
                   +else
                     img(src="{option.img}" alt="{option.label}")
-            
-            +if("enableEnrichment")
-              div.option-label {@html option.enrichedLabel}
-              +else
-                div.option-label {getLabel(option)}
+            div.option-label {getLabel(option)}
 </template>
 
 <style lang="sass">
@@ -252,7 +239,6 @@ img
   border: 1px solid #ced4da
   border-radius: 0.25rem
   overflow: hidden
-  z-index: 999
 
 .option
   display: flex

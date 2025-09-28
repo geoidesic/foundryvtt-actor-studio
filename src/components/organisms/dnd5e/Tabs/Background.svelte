@@ -1,6 +1,6 @@
 <script>
   import SvelteSelect from "svelte-select";
-  import IconSearchSelect from "~/src/components/atoms/select/IconSearchSelect.svelte";
+  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     getFoldersFromMultiplePacks,
@@ -99,7 +99,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
-        IconSearchSelect.icon-select({options} {active} {placeHolder} handler="{selectBackgroundHandler}" id="background-select" bind:value)
+        IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value)
     +if("advancementArray.length")
       h2.left {t('Advancements')}
       ul.icon-list

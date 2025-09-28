@@ -153,6 +153,17 @@ export function createLevelUpStateMachine() {
         } catch (error) {
           window.GAS.log.e('[LEVELUP] Error destroying advancement managers:', error);
         }
+
+        // Freeze the Level Up tab to prevent further changes after advancements
+        try {
+          const currentReadOnly = get(readOnlyTabs) || [];
+          if (!currentReadOnly.includes('level-up')) {
+            readOnlyTabs.update(t => [...t, 'level-up']);
+            window.GAS.log.d('[LEVELUP] Marked level-up tab as read-only');
+          }
+        } catch (e) {
+          window.GAS.log.w('[LEVELUP] Unable to set level-up tab read-only:', e);
+        }
         
         // Initialize spell selection for the level-up actor
         const actor = levelUpFSMContext.actor || get(actorInGame);

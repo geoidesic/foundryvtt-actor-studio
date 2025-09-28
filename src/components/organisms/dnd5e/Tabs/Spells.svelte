@@ -189,16 +189,22 @@
       }));
     }
   }
+  $: actorSpells = $actor.items.filter(item => item.type === 'spell');
+
+  $: window.GAS.log.g(actorSpells);
 
   // Filter spells by keyword and character class
   $: filteredSpells = $availableSpells.filter(spell => {
     const matchesKeyword = spell.name.toLowerCase().includes(keywordFilter.toLowerCase());
     const spellLevel = spell.system?.level || 0;
     const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
+    const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
+    const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
+
   // NOTE: class availability is already resolved by `loadAvailableSpells()` and
   // embedded in the `availableSpells` store. The UI should not re-run class
   // filtering here to avoid accidental double-filtering or divergent logic.
-  return matchesKeyword && withinCharacterLevel;
+  return matchesKeyword && withinCharacterLevel && !alreadySelected && !alreadyKnown
   });
 
   // Group spells by level
@@ -324,14 +330,12 @@
       : 'Unknown';
   }
 
-  const containerClasses = {readonly: isDisabled};
-  const gridClasses = {hidden: scrolled}
-  const spellCountCss = {"at-limit": $currentSpellCounts.cantrips >= $spellLimits.cantrips}
-  const spellLimitsCss = {"at-limit": $currentSpellCounts.spells >= $spellLimits.spells}
+  $: cantripCountCss = $currentSpellCounts.cantrips >= $spellLimits.cantrips
+  $: spellCountCss = $currentSpellCounts.spells >= $spellLimits.spells
 </script>
 
 <template lang="pug">
-spells-tab-container(class="{containerClasses}")
+spells-tab-container(clas:readonlys="{isDisabled}")
  
   +if("isDisabled")
     .info-message {t('Spells.SpellsReadOnly')}
@@ -363,16 +367,16 @@ spells-tab-container(class="{containerClasses}")
   .sticky-header(class:hidden="{!scrolled}")
     .panel-header-grid
       .grid-item.label {t('Spells.Cantrips')}:
-      .grid-item.value(class="{spellCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+      .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
       .grid-item.label {t('Spells.Spells')}:
-      .grid-item.value(class="{spellLimitsCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+      .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
   .spells-tab
     .left-panel(bind:this="{spellContainer}")
       .panel-header-grid(class:hidden="{scrolled}")
         .grid-item.label {t('Spells.Cantrips')}:
-        .grid-item.value(class="{spellCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+        .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
         .grid-item.label {t('Spells.Spells')}:
-        .grid-item.value(class="{spellLimitsCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+        .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
       h3 {t('Spells.SelectedSpells')}
 
       .selected-spells
@@ -414,47 +418,52 @@ spells-tab-container(class="{containerClasses}")
             p {keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}
           +else()
             +each("spellLevels as spellLevel")
+              +if("(spellLevel == 'Cantrips' && !cantripCountCss) || (spellLevel != 'Cantrips' && !spellCountCss)")
+                .spell-level-group
+                  h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
+                    .flex0.mr-xs
+                      +if("expandedLevels[spellLevel]")
+                        span [-]
+                        +else()
+                          span [+]
+                    .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
 
-              .spell-level-group
-                h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
-                  .flex0.mr-xs
-                    +if("expandedLevels[spellLevel]")
-                      span [-]
-                      +else()
-                        span [+]
-                  .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+                  +if("expandedLevels[spellLevel]")
+                    ul.blank
+                      +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
+                        li.flexrow.spell-row.justify-flexrow-vertical
+                          .flex0.spell-details
+                            img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
 
-                +if("expandedLevels[spellLevel]")
-                  ul.blank
-                    +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
-                      li.flexrow.spell-row.justify-flexrow-vertical
-                        .flex0.spell-details
-                          img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
-
-                        .flex1.spell-info
-                          .flexrow
-                            .flex1.left.spell-name.gold
-                              +await("getEnrichedName(spell)")
-                                span {spell.name}
-                                +then("Html")
-                                  span {@html Html}
-                                +catch("error")
+                          .flex1.spell-info
+                            .flexrow
+                              .flex1.left.spell-name.gold
+                                +await("getEnrichedName(spell)")
                                   span {spell.name}
-                          .flexrow.smalltext
+                                  +then("Html")
+                                    span {@html Html}
+                                  +catch("error")
+                                    span {spell.name}
+                            .flexrow.smalltext
 
-                            .flex1.left.spell-meta
-                              +if("getSchoolName(spell, true)")
-                                .flexrow.gap-10
-                                  .flex2.flexrow
-                                    div School:
-                                    .badge {getSchoolName(spell, true)}
-                                  .flex2.flexrow 
-                                    div Activation
-                                    .badge {getCastingTimeDisplay(spell)}
+                              .flex1.left.spell-meta
+                                +if("getSchoolName(spell, true)")
+                                  .flexrow.gap-10
+                                    .flex2.flexrow
+                                      div School:
+                                      .badge {getSchoolName(spell, true)}
+                                    .flex2.flexrow 
+                                      div Activation
+                                      .badge {getCastingTimeDisplay(spell)}
 
-                        .spell-actions.mx-sm
-                          button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
-                            i.fas.fa-plus
+                          .spell-actions.mx-sm
+                            button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
+                              i.fas.fa-plus
+                +else()
+                  .spell-level-group
+                    p.left.mt-sm.flexrow.positive 
+                      i.fa.fa-check.getParentClasses
+                      | {spellLevel} selection completed
 </template>
 
 <style lang="sass">
@@ -872,13 +881,14 @@ spells-tab-container(class="{containerClasses}")
     display: grid
     grid-template-columns: 1fr 0.4fr 1fr 0.4fr
     grid-template-rows: repeat(2, auto)
-    padding: 0.3rem 0.1rem
+    padding: 0.6rem 1.3rem 0.3rem 1.1rem
     gap: 4px
-    margin-bottom: 1.5rem
+    margin-bottom: 0
     align-items: center
     background-color: var(--li-background-color)
     border-radius: var(--border-radius)
     border-collapse: none
+    justify-content: space-evenly
     .label
       font-size: 0.95em
       color: var(--dnd5e-color-gold)

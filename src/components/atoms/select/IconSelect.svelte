@@ -9,8 +9,10 @@
     import { onMount, onDestroy } from "svelte";
     import { truncate } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
+    import { enrichHTML } from "~/src/helpers/Utility.js";
+    import { derived } from 'svelte/store';
 
-    export let options = []; //- {value, label, icon || img}
+    export let options = []; //- {value, label, link, icon || img}
     export let value = ""; //- the currently selected uuid
     export let disabled = false;
     export let handler = void 0;
@@ -19,8 +21,15 @@
     export let id = void 0;
     export let noImg = false;
     export let truncateWidth = 20;
+    export let enableEnrichment = false;
+    export let searchable = true
+    // groupBy: false (no grouping) or a string path into the option object (e.g. "packLabel" or "pack.name")
+    export let groupBy = false;
 
     let isOpen = false;
+    let searchInput;
+    let highlightedIndex = -1; // Track the currently highlighted option index
+    
     export let handleSelect = (option) => {
       if (handler) {
         if (handler(option.value)) {
@@ -35,30 +44,67 @@
     const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
 
     function getLabel(option) {
-      if (showPackLabelInSelect && option.packLabel) {
+      if (!groupBy && showPackLabelInSelect && option.packLabel) {
         return `[${option.packLabel}] ${option.label}`;
       }
       return option.label;
     }
 
     function toggleDropdown() {
-      if (disabled) {
-        isOpen = false;
-        return;
-      }
-      isOpen = !isOpen;
+          if (disabled) {
+            isOpen = false;
+            return;
+          }
+          isOpen = !isOpen;
+          // reset search and highlight when opening dropdown
+          if (isOpen) {
+            searchTerm = '';
+            highlightedIndex = -1;
+          }
     }
 
     function handleKeydown(event) {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        if (event.currentTarget.getAttribute('role') === 'option') {
-          this.handleSelect(event.currentTarget.option);
-        } else {
-          this.toggleDropdown();
+      // Only handle keyboard navigation when dropdown is open
+      if (!isOpen) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+          event.preventDefault();
+          toggleDropdown();
         }
+        return;
+      }
+
+      // Handle keyboard navigation when dropdown is open
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (navigableOptions.length > 0) {
+            highlightedIndex = highlightedIndex >= 0 ? highlightedIndex + 1 : 0;
+          }
+          break;
+        case 'ArrowUp':
+            event.preventDefault();
+            if (navigableOptions.length > 0) {
+              highlightedIndex = highlightedIndex > 0 ? highlightedIndex - 1 : navigableOptions.length - 1;
+            }
+            break;
+        case 'Enter':
+          event.preventDefault();
+          if (highlightedIndex >= 0 && highlightedIndex < navigableOptions.length) {
+            handleSelect(navigableOptions[highlightedIndex]);
+          }
+          break;
+        case 'Escape':
+          isOpen = false;
+          highlightedIndex = -1;
+          break;
+        case 'Tab':
+          // Allow tab to work normally for accessibility
+          isOpen = false;
+          highlightedIndex = -1;
+          break;
       }
     }
+
 
     function isClickOutsideContainer(event, containerElement) {
       try {
@@ -108,6 +154,7 @@
       }
     }
 
+
     onMount(() => {
       window.addEventListener("click", handleClickOutside);
     });
@@ -115,16 +162,110 @@
       window.removeEventListener("click", handleClickOutside);
     });
 
+
     let textOnly = (option) => {
       return option.icon || option.img ? false : true;
     }
+    // Autocomplete state
+    let searchTerm = '';
+    let debounceTimeout;
+    // Debounced input handler
+    function handleInput(event) {
+      clearTimeout(debounceTimeout);
+      const val = event.target.value;
+      debounceTimeout = setTimeout(() => {
+        searchTerm = val;
+      }, 300);
+    }
 
-    
+    let filteredOptions = [];
+    // Filter options by search term
+    $: filteredOptions = options.filter(option =>
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Helper to get nested value by a path like "pack.name"
+    function getValueAtPath(obj, path) {
+      if (!path || !obj) return undefined;
+      return path.split('.').reduce((acc, part) => (acc && acc[part] !== undefined) ? acc[part] : undefined, obj);
+    }
+
+    // Resolve group key. `groupBy` may be a string path or an array of string paths.
+    function getGroupKey(option, groupBySpec) {
+      if (!groupBySpec) return undefined;
+      if (Array.isArray(groupBySpec)) {
+        const parts = groupBySpec.map(p => {
+          const v = getValueAtPath(option, p);
+          return (v === undefined || v === null) ? '' : String(v).trim();
+        }).filter(Boolean);
+        return parts.length ? parts.join(' ') : undefined;
+      }
+      const v = getValueAtPath(option, groupBySpec);
+      return (v === undefined || v === null) ? undefined : String(v);
+    }
+
+    // Grouping state
+    let groupedOptions = {};
+    let groupedOptionKeys = [];
+
+    // When groupBy is provided, build groupedOptions and keys sorted alphabetically
+    $: if (groupBy) {
+      const map = {};
+      for (const opt of filteredOptions) {
+        const raw = getGroupKey(opt, groupBy);
+        const key = (raw === undefined || raw === null || raw === '') ? 'Other' : String(raw);
+        if (!map[key]) map[key] = [];
+        map[key].push(opt);
+      }
+      // sort options in each group
+      for (const k of Object.keys(map)) {
+        map[k].sort((a, b) => (a.label || '').localeCompare(b.label || ''));
+      }
+      const keys = Object.keys(map).sort((a, b) => a.localeCompare(b));
+      const sorted = {};
+      for (const k of keys) sorted[k] = map[k];
+      groupedOptions = sorted;
+      groupedOptionKeys = keys;
+    } else {
+      groupedOptions = {};
+      groupedOptionKeys = [];
+    }
+
+    // Flattened display list used by template. When grouping is enabled, insert group header objects
+    let displayOptions = [];
+    $: {
+      if (groupBy && groupedOptionKeys.length > 0) {
+        const arr = [];
+        for (const key of groupedOptionKeys) {
+          arr.push({ __group: true, label: key });
+          for (const opt of groupedOptions[key]) arr.push(opt);
+        }
+        displayOptions = arr;
+      } else {
+        displayOptions = filteredOptions.slice();
+      }
+    }
+
+    // Reset highlighted index when navigable options change
+    $: if (navigableOptions.length > 0 && highlightedIndex >= navigableOptions.length) {
+      highlightedIndex = navigableOptions.length - 1;
+    } else if (navigableOptions.length === 0) {
+      highlightedIndex = -1;
+    }
+
+    // Create a filtered list that excludes the currently selected option for keyboard navigation
+    $: navigableOptions = filteredOptions.filter(option => option?.value !== value);
+
+    // Focus search input when dropdown opens
+    $: if (isOpen && searchInput) {
+      searchInput.focus();
+    }
+
   </script>
 
 <template lang="pug">
-div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0")
-  div.selected-option(on:click="{toggleDropdown}" on:keydown="{handleKeydown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
+div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0" on:keydown="{handleKeydown}")
+  div.selected-option(on:click="{toggleDropdown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
     +each("options as option, index")
@@ -141,19 +282,60 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
 
   +if("isOpen")
     div.options-dropdown.dropshadow(id="options-list" role="listbox")
-      +each("options as option, index")
-        +if("option && option?.value !== value")
-          div.option(role="option"  on:click="{handleSelect(option)}" on:keydown="{handleKeydown}" tabindex="0")
-            +if("!textOnly(option) && shrinkIfNoIcon")
-              div.option-icon(class="{option.img ? option.img : ''}")
-                +if("option.icon != undefined")
-                  i(class="{option.icon}")
+      // search input for filtering options
+      +if("searchable")
+        input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." bind:this="{searchInput}")
+
+      // Grouped rendering
+      +if("groupBy")
+        +each("groupedOptionKeys as groupName")
+          div.group-label {groupName}
+          +each("groupedOptions[groupName] as option")
+            +if("option && option?.value !== value")
+              div.option(
+                role="option"
+                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
+                tabindex="0"
+                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                data-index="{navigableOptions.indexOf(option)}"
+                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+              )
+                +if("!textOnly(option) && shrinkIfNoIcon")
+                  div.option-icon(class="{option.img ? option.img : ''}")
+                    +if("option.icon != undefined")
+                      i(class="{option.icon}")
+                      +else
+                        img(src="{option.img}" alt="{option.label}")
+                +if("enableEnrichment")
+                  div.option-label {@html option.enrichedLabel}
                   +else
-                    img(src="{option.img}" alt="{option.label}")
-            div.option-label {getLabel(option)}
+                    div.option-label {getLabel(option)}
+        +else
+          +each("filteredOptions as option")
+            +if("option && option?.value !== value")
+              div.option(
+                role="option"
+                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
+                tabindex="0"
+                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                data-index="{navigableOptions.indexOf(option)}"
+                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+              )
+                +if("!textOnly(option) && shrinkIfNoIcon")
+                  div.option-icon(class="{option.img ? option.img : ''}")
+                    +if("option.icon != undefined")
+                      i(class="{option.icon}")
+                      +else
+                        img(src="{option.img}" alt="{option.label}")
+                +if("enableEnrichment")
+                  div.option-label {@html option.enrichedLabel}
+                  +else
+                    div.option-label {getLabel(option)}
 </template>
 
 <style lang="sass">
+
+
 .custom-select
   position: relative
   display: inline-block
@@ -220,6 +402,15 @@ img
   overflow: hidden
   z-index: 999
 
+.group-label
+  margin-top: 1rem
+  color: var(--gas-color-text)
+  align-items: left
+  text-align: left
+  padding: 4px
+  font-weight: bold
+  font-size: 2rem
+  font-family: var(--dnd5e-font-modesto)
 .option
   display: flex
   align-items: left
@@ -230,7 +421,34 @@ img
   color: #212529
   cursor: pointer
 
-
   &:hover
     background-color: var(--select-option-highlight-color)
+
+  &.highlighted
+    background-color: rgba(0, 0, 0, 0.3)
+    color: var(--gas-color-text)
+
+    &:hover
+      background-color: rgba(0, 0, 0, 0.4)
+
+.search-input
+  width: calc(100% - 8px)
+  padding: 4px 4px 4px 8px
+  font-size: 0.875rem
+  border: 1px solid #ced4da
+  border-radius: 0.25rem
+  margin: 4px
+  box-shadow: none
+  transition: border-color 0.2s
+
+  &:focus
+    outline: none
+    border-color: #80bdff
+
+:global(.theme-dark) .option.highlighted
+  background-color: rgba(255, 255, 255, 0.3)
+  color: var(--gas-color-text)
+
+  &:hover
+    background-color: rgba(255, 255, 255, 0.4)
 </style>

@@ -19,31 +19,31 @@
  * Vite / Rollup includes style files by importing them; see: `./src/index.js`.
  */
 
-.tjs-essential-svelte-esm
-  // Instead of the browser default outline for manually focused components define your own.
-  // Note that this is just for TRL / svelte-standard components as there are several normal elements still used in the
-  // demo code thus will have default styles of either Foundry or the browser.
-  --tjs-default-outline-focus-visible: 4px dotted orange
-
-  // Optional transition parameters for all components when manually focused / navigated by keyboard.
-  //--tjs-default-transition-focus-visible: box-shadow 0.1s ease-in-out, outline 0.1s ease-in-out;
-
-  // -----------------------------------------------------------------------------------------------------------------
-
-  // Other useful default CSS variables that widely apply across TRL / svelte-standard.
-  // Please note that the default values are provided. There are many more default and more specific CSS variables to
-  // target subsections of components that will be further discussed once they are represented in the demos.
-
-  // --tjs-default-text-shadow-focus-hover: 0 0 8px red;
-
-  // You can opt to use box shadow for manually focused / navigated components. In this case remove the outline above.
-  // --tjs-default-box-shadow-focus-visible: undefined
-
 .gas-settings-h4
   font-size: 1.1em
   color: var(--color-highlight)
 
 .GAS
+  /* integration with popout module */
+  .popout-module-button
+    display: none
+    align-self: right
+    flex: 0
+
+  /* Correct advancement dropdowns color in dark mode*/
+  &.theme-dark select,
+  &.theme-dark select option,
+  &.theme-dark select optgroup 
+    color: #fff !important
+    background-color: #222 !important
+  
+  /* Correct advancement dropdowns color in light mode*/
+  &.theme-light select,
+  &.theme-light select option,
+  &.theme-light select optgroup 
+    color: #000 !important
+    background-color: #f0f0f0 !important
+
   color: var(--gas-color-text)
 
   &.theme-dark
@@ -232,6 +232,9 @@
 
   .tall
     height: 100%
+
+  a.button, button
+    padding: 0 0.4rem
 
   img
     border: none
@@ -506,7 +509,7 @@ body.game #gas-settings-submenu.app.window-app
       flex: 0
 
 #gas-sidebar-button, #gas-sidebar-npc-button
-  &.gas-sidebar-button
+  
 
     font-size: 2rem
     color: var(--actor-studio-color-secondary)
@@ -526,7 +529,7 @@ body.game #gas-settings-submenu.app.window-app
 #gas-dialog-button, #gas-dialog-npc-button
     background-color: white
     
-#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet
+#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet, .GAS
   table.core-class-traits
     th, td
       vertical-align: top
