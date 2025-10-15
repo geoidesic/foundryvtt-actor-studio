@@ -125,6 +125,7 @@ export const spellLimits = derived(
     }
 
     const className = $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
+    const rulesVersion = window.GAS?.dnd5eRules || '2014';
 
     // For level-up scenarios, calculate the difference between old and new levels
     if ($isLevelUp && $newLevelValueForExistingClass) {
@@ -139,14 +140,18 @@ export const spellLimits = derived(
         return { cantrips: 0, spells: 0 };
       }
 
+      // Get version-specific data
+      const oldClassData = oldLevelData[className][rulesVersion] || oldLevelData[className];
+      const newClassData = newLevelData[className][rulesVersion] || newLevelData[className];
+
       // Parse old level limits
-      const [oldCantrips, oldSpells] = oldLevelData[className].split(' / ');
+      const [oldCantrips, oldSpells] = oldClassData.split(' / ');
       const oldCantripCount = parseInt(oldCantrips) || 0;
       const oldSpellCount = parseInt(oldSpells) || 0;
       const oldHasAllSpells = oldSpells === 'All';
 
       // Parse new level limits
-      const [newCantrips, newSpells] = newLevelData[className].split(' / ');
+      const [newCantrips, newSpells] = newClassData.split(' / ');
       const newCantripCount = parseInt(newCantrips) || 0;
       const newSpellCount = parseInt(newSpells) || 0;
       const newHasAllSpells = newSpells === 'All';
@@ -167,7 +172,10 @@ export const spellLimits = derived(
         return { cantrips: 0, spells: 0 };
       }
 
-      const [cantrips, spells] = levelData[className].split(' / ');
+      // Get version-specific data
+      const classData = levelData[className][rulesVersion] || levelData[className];
+
+      const [cantrips, spells] = classData.split(' / ');
       return {
         cantrips: parseInt(cantrips) || 0,
         spells: parseInt(spells) || 0,
