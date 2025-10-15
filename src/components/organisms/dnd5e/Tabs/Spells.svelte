@@ -197,7 +197,13 @@
   $: filteredSpells = $availableSpells.filter(spell => {
     const matchesKeyword = spell.name.toLowerCase().includes(keywordFilter.toLowerCase());
     const spellLevel = spell.system?.level || 0;
-    const withinCharacterLevel = spellLevel <= effectiveMaxSpellLevel;
+    
+    // Allow cantrips always, and allow spells up to the character's max spell level
+    // OR allow level 1 spells if the character has spell slots available (fixes Ranger 2024 issue)
+    const withinCharacterLevel = spellLevel === 0 || 
+      spellLevel <= effectiveMaxSpellLevel || 
+      (spellLevel === 1 && $spellLimits.spells > 0);
+    
     const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
     const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
 
