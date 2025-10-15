@@ -124,7 +124,7 @@ export const spellLimits = derived(
       return { cantrips: 0, spells: 0 };
     }
 
-    const className = $characterClass.name || $characterClass.label || $characterClass;
+    const className = $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
 
     // For level-up scenarios, calculate the difference between old and new levels
     if ($isLevelUp && $newLevelValueForExistingClass) {
