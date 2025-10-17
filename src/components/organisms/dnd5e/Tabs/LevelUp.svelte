@@ -55,6 +55,11 @@ let
   mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys)
 ;
 
+window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
+window.GAS.log.d('[DEBUG] compendiumSources settings:', game.settings.get(MODULE_ID, 'compendiumSources'));
+
+window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
+
 /** CONTEXT VARIABLES */
 const actor = getContext("#doc");
 
@@ -74,19 +79,26 @@ const decorators = {
 /** FILTERS*/
 const filters = {
   getFilteredSubclassIndex: async () => {
+    window.GAS.log.d('[DEBUG] getFilteredSubclassIndex called');
     let mappedSubClassIndex = await extractItemsFromPacksAsync(
       subClassesPacks,
       ["name->label", "img", "type", "folder", "uuid->value", "_id"],
       ["system.classIdentifier"],
     );
+    window.GAS.log.d('[DEBUG] mappedSubClassIndex before filtering:', mappedSubClassIndex);
+    window.GAS.log.d('[DEBUG] levelUpClassObject:', $levelUpClassObject);
+    window.GAS.log.d('[DEBUG] levelUpClassObject?.system?.identifier:', $levelUpClassObject?.system?.identifier);
 
     mappedSubClassIndex = mappedSubClassIndex.filter((x) => {
-      return x.system?.classIdentifier == $levelUpClassObject?.system?.identifier;
+      const matches = x.system?.classIdentifier == $levelUpClassObject?.system?.identifier;
+      window.GAS.log.d('[DEBUG] Checking subclass:', x.label, 'classIdentifier:', x.system?.classIdentifier, 'matches:', matches);
+      return matches;
     });
 
     const output = mappedSubClassIndex
       .flat()
       .sort((a, b) => a.label.localeCompare(b.label));
+    window.GAS.log.d('[DEBUG] Final filtered subclasses:', output);
     return output;
   }
 }
@@ -190,6 +202,7 @@ const eventHandlers = {
     
     await tick();
     subClassesIndex = await filters.getFilteredSubclassIndex();
+    window.GAS.log.d('[DEBUG] Loaded subclasses for existing class:', subClassesIndex);
     await tick();
     importers.importClassAdvancements();
     $levelUpRichHTML = await illuminatedDescription(html, $levelUpClassObject);
@@ -257,6 +270,7 @@ const eventHandlers = {
     
     await tick();
     subClassesIndex = await filters.getFilteredSubclassIndex();
+    window.GAS.log.d('[DEBUG] Loaded subclasses for multiclass:', subClassesIndex);
     await tick();
     importers.importClassAdvancements();
     $levelUpRichHTML = await illuminatedDescription(html, $levelUpClassObject);
@@ -333,8 +347,10 @@ $: if($classUuidForLevelUp) {
  */
    $: if(subClassesIndex?.length) {
     subclasses = subClassesIndex.flat().sort((a, b) => a.label.localeCompare(b.label));
+    window.GAS.log.d('[DEBUG] subclasses set from subClassesIndex:', subclasses);
   } else {
     subclasses = [];
+    window.GAS.log.d('[DEBUG] subclasses set to empty array');
   }
 /**
  * Filters class advancements for the current level
@@ -440,7 +456,7 @@ onDestroy(() => {
         //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
         //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
         //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
-        //- +if("selectedMultiClassUUID")
+        +if("selectedMultiClassUUID")
 
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
@@ -467,12 +483,10 @@ onDestroy(() => {
             truncateWidth="17"
             disabled="{$isLevelUpAdvancementInProgress}"
           )
-          +else
-            
-
-            p
-              i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
-              | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
+        +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+          p
+            i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
+            | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
 
       
     .flex0.border-right.right-border-gradient-mask 
