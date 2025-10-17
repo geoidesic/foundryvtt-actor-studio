@@ -72,28 +72,79 @@ export const workflowFSMContext = {
     }
     
     if (!actorForDecision) return false;
+    
+    // Check for spellcasting in multiple ways:
+    // 1. Class-based spellcasting (base classes like Wizard, Cleric)
+    // 2. Actor system spellcasting (granted through advancements like Eldritch Knight)
+    // 3. Known spellcasting subclasses (fallback for hardcoded detection)
+    
     const classes = actorForDecision.classes || {};
     const classKeys = Object.keys(classes);
-    if (!classKeys.length) {
-      // Only fallback to preCreationActor if we have no classes and we're using postCreationActor
-      if (actorForDecision === this?.postCreationActor && this?.preCreationActor) {
-        return workflowFSMContext._shouldShowSpellSelection(this.preCreationActor);
-      }
-      return false;
-    }
+    
+    // Method 1: Check class-based spellcasting progression
     const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
       const progression = classData?.system?.spellcasting?.progression;
       return { className, progression, isSpellcaster: progression && progression !== "none" };
     });
-    const isSpellcaster = spellcastingInfo.some(info => info.isSpellcaster);
-    if (!isSpellcaster) {
-      const knownSpellcastingClasses = [
-        'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-        'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
-      ];
-      const hasKnownSpellcastingClass = classKeys.some(className => knownSpellcastingClasses.includes(className.toLowerCase()));
-      if (hasKnownSpellcastingClass) return true;
-    }
+    
+    const hasClassSpellcasting = spellcastingInfo.some(info => info.isSpellcaster);
+    
+    // Method 2: Check actor system spellcasting (granted through advancements)
+    const actorData = actorForDecision.system || actorForDecision.data?.data;
+    
+    // Check for traditional spellcasting system
+    const hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+    
+    // Check for spell slots added by advancements (like Eldritch Knight)
+    const hasSpellSlots = actorData?.spells && Object.values(actorData.spells).some(slot => 
+      slot.type === 'spell' && slot.max > 0
+    );
+    
+    // Check for pact magic slots
+    const hasPactMagic = actorData?.spells && Object.values(actorData.spells).some(slot => 
+      slot.type === 'pact'
+    );
+    
+    const hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    
+    // Method 3: Fallback check for known spellcasting classes/subclasses
+    const knownSpellcastingClasses = [
+      'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
+      'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+    ];
+    const hasKnownSpellcastingClass = classKeys.some(className => 
+      knownSpellcastingClasses.includes(className.toLowerCase())
+    );
+    
+    // Method 4: Check for subclass spellcasting that might be granted through advancements
+    // This is a more aggressive check for cases where the actor system hasn't been updated yet
+    const hasSubclassSpellcasting = classKeys.some(className => {
+      const lowerClassName = className.toLowerCase();
+      // Check for known spellcasting subclasses
+      return ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(lowerClassName);
+    });
+    
+    // Method 5: Check for subclass in the class data itself (e.g., fighter with eldritchknight subclass)
+    const hasSubclassInClassData = Object.values(classes).some(classData => {
+      const subclass = classData?.system?.subclass;
+      return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclass.toLowerCase());
+    });
+    
+    const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
+    
+    window.GAS.log.d('[WORKFLOW] Spellcasting detection:', {
+      hasClassSpellcasting,
+      hasTraditionalSpellcasting,
+      hasSpellSlots,
+      hasPactMagic,
+      hasActorSpellcasting,
+      hasKnownSpellcastingClass,
+      hasSubclassSpellcasting,
+      hasSubclassInClassData,
+      isSpellcaster,
+      actorName: actorForDecision.name
+    });
+    
     return isSpellcaster;
   },
   _shouldShowShopping: function () {

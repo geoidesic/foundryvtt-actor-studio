@@ -2,6 +2,7 @@ import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
 import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
+import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
 
 // Import spellsKnown data for determining spell limits
 import spellsKnownData from './spellsKnown.json';
@@ -78,8 +79,29 @@ export const isSpellcaster = derived(
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
     if (!actorData) return false;
 
-    // Check for spellcasting in the actor system
-    return actorData.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+    // Method 1: Check actor.system.spells (D&D 5e standard structure)
+    if (actorData.spells) {
+      const hasSpellSlots = Object.keys(actorData.spells).some(slotKey => {
+        if (slotKey.startsWith('spell') && actorData.spells[slotKey]) {
+          return actorData.spells[slotKey].max > 0;
+        }
+        return false;
+      });
+      
+      if (hasSpellSlots) {
+        window.GAS.log.d('[SPELLS] isSpellcaster: true (from actor.system.spells)');
+        return true;
+      }
+    }
+
+    // Method 2: Fallback to old spellcasting structure
+    if (actorData.spellcasting && Object.keys(actorData.spellcasting).length > 0) {
+      window.GAS.log.d('[SPELLS] isSpellcaster: true (from actor.system.spellcasting)');
+      return true;
+    }
+
+    window.GAS.log.d('[SPELLS] isSpellcaster: false (no spell slots found)');
+    return false;
   }
 );
 
@@ -90,29 +112,309 @@ export const maxSpellLevel = derived(
     if (!$currentCharacter) return 0;
 
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
-    if (!actorData?.spellcasting) return 0;
+    if (!actorData) return 0;
 
-    // Find the highest spell level available based on spellcasting progression
-    let maxLevel = 0;
-    Object.values(actorData.spellcasting).forEach(spellcastingData => {
-      if (spellcastingData.slots) {
-        Object.keys(spellcastingData.slots).forEach(slot => {
-          const slotLevel = parseInt(slot.replace('spell', ''));
-          if (slotLevel > maxLevel && spellcastingData.slots[slot].max > 0) {
+    // Method 1: Check actor.system.spells (D&D 5e standard structure)
+    if (actorData.spells) {
+      let maxLevel = 0;
+      Object.keys(actorData.spells).forEach(slotKey => {
+        if (slotKey.startsWith('spell') && actorData.spells[slotKey]) {
+          const slotLevel = parseInt(slotKey.replace('spell', ''));
+          const slotData = actorData.spells[slotKey];
+          // Check if this spell level has any available slots
+          if (slotLevel > maxLevel && slotData.max > 0) {
             maxLevel = slotLevel;
           }
-        });
+        }
+      });
+      
+      if (maxLevel > 0) {
+        window.GAS.log.d('[SPELLS] maxSpellLevel from actor.system.spells:', maxLevel);
+        return maxLevel;
       }
-    });
+    }
 
-    return maxLevel;
+    // Method 2: Fallback to old spellcasting structure
+    if (actorData.spellcasting) {
+      let maxLevel = 0;
+      Object.values(actorData.spellcasting).forEach(spellcastingData => {
+        if (spellcastingData.slots) {
+          Object.keys(spellcastingData.slots).forEach(slot => {
+            const slotLevel = parseInt(slot.replace('spell', ''));
+            if (slotLevel > maxLevel && spellcastingData.slots[slot].max > 0) {
+              maxLevel = slotLevel;
+            }
+          });
+        }
+      });
+      
+      if (maxLevel > 0) {
+        window.GAS.log.d('[SPELLS] maxSpellLevel from actor.system.spellcasting:', maxLevel);
+        return maxLevel;
+      }
+    }
+
+    window.GAS.log.d('[SPELLS] maxSpellLevel: No spell slots found, returning 0');
+    return 0;
   }
 );
 
+// Helper function to get spell limits from subclass advancement data
+function getSpellLimitsFromSubclassAdvancement(actor, level) {
+  if (!actor) {
+    window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: No actor provided');
+    return null;
+  }
+
+  window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Starting with actor:', actor.name, 'level:', level);
+
+  // Method 1: Check for subclass spellcasting via module flags (dropped items)
+  const droppedItems = actor.getFlag(MODULE_ID, 'droppedItems');
+  window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: droppedItems flag:', droppedItems);
+  
+  // Handle both array and object formats
+  let subclassItems = [];
+  if (Array.isArray(droppedItems)) {
+    subclassItems = droppedItems.filter(item => item.type === 'subclass');
+    window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Found', subclassItems.length, 'subclass items from array format');
+  } else if (droppedItems && typeof droppedItems === 'object' && droppedItems.subclass) {
+    subclassItems = Array.isArray(droppedItems.subclass) ? droppedItems.subclass : [droppedItems.subclass];
+    window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Found', subclassItems.length, 'subclass items from object format');
+  } else {
+    window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: No subclass items found in droppedItems');
+  }
+  
+  for (const item of subclassItems) {
+    const subclassUuid = item.uuid;
+    window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Processing subclass item:', item.name, 'uuid:', subclassUuid);
+    if (subclassUuid) {
+      try {
+        const subclassItem = fromUuidSync(subclassUuid);
+        if (subclassItem) {
+          window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Successfully loaded subclass item:', subclassItem.name);
+          window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Subclass item structure:', {
+            hasDocument: !!subclassItem.document,
+            hasAdvancement: !!subclassItem.document?.advancement,
+            hasByLevel: !!subclassItem.document?.advancement?.byLevel,
+            byLevelKeys: subclassItem.document?.advancement?.byLevel ? Object.keys(subclassItem.document.advancement.byLevel) : 'none',
+            // Also check direct properties
+            hasDirectAdvancement: !!subclassItem.advancement,
+            hasDirectByLevel: !!subclassItem.advancement?.byLevel,
+            directByLevelKeys: subclassItem.advancement?.byLevel ? Object.keys(subclassItem.advancement.byLevel) : 'none',
+            // Check system properties
+            hasSystemAdvancement: !!subclassItem.system?.advancement,
+            systemAdvancementType: typeof subclassItem.system?.advancement,
+            // Log the full structure for debugging
+            fullStructure: {
+              keys: Object.keys(subclassItem),
+              hasDocument: !!subclassItem.document,
+              documentKeys: subclassItem.document ? Object.keys(subclassItem.document) : 'no document',
+              hasAdvancement: !!subclassItem.advancement,
+              advancementKeys: subclassItem.advancement ? Object.keys(subclassItem.advancement) : 'no advancement',
+              hasSystem: !!subclassItem.system,
+              systemKeys: subclassItem.system ? Object.keys(subclassItem.system) : 'no system'
+            }
+          });
+          const limits = parseSpellLimitsFromAdvancement(subclassItem, level);
+          if (limits) {
+            window.GAS.log.d('[SPELLS] Found spell limits from subclass advancement:', limits);
+            return limits;
+          } else {
+            window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: parseSpellLimitsFromAdvancement returned null for', subclassItem.name);
+          }
+        } else {
+          window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: fromUuidSync returned null for uuid:', subclassUuid);
+        }
+      } catch (error) {
+        window.GAS.log.w('[SPELLS] Error parsing subclass advancement:', error);
+      }
+    }
+  }
+  
+  // Method 2: Check for subclass items on the actor
+  const actorItems = actor.items || [];
+  window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Checking', actorItems.length, 'actor items for subclass type');
+  for (const item of actorItems) {
+    if (item.type === 'subclass') {
+      window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: Found subclass item on actor:', item.name);
+      const limits = parseSpellLimitsFromAdvancement(item, level);
+      if (limits) {
+        window.GAS.log.d('[SPELLS] Found spell limits from actor subclass item:', limits);
+        return limits;
+      } else {
+        window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: parseSpellLimitsFromAdvancement returned null for actor subclass item:', item.name);
+      }
+    }
+  }
+  
+  window.GAS.log.d('[SPELLS] getSpellLimitsFromSubclassAdvancement: No spell limits found, returning null');
+  return null;
+}
+
+// Helper function to parse spell limits from advancement data
+function parseSpellLimitsFromAdvancement(subclassItem, level) {
+  if (!subclassItem) {
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: No subclassItem provided');
+    return null;
+  }
+  
+  window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Starting with subclassItem:', subclassItem.name, 'level:', level);
+  
+  // Try multiple possible locations for the advancement data
+  let byLevel = null;
+  let levelAdvancements = null;
+  
+  // Method 1: Check document.advancement.byLevel (new D&D 5e structure)
+  if (subclassItem.document?.advancement?.byLevel) {
+    byLevel = subclassItem.document.advancement.byLevel;
+    levelAdvancements = byLevel[level];
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found advancement in document.advancement.byLevel');
+  }
+  // Method 2: Check direct advancement.byLevel (alternative structure)
+  else if (subclassItem.advancement?.byLevel) {
+    byLevel = subclassItem.advancement.byLevel;
+    levelAdvancements = byLevel[level];
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found advancement in direct advancement.byLevel');
+  }
+  // Method 3: Check system.advancement.byLevel (system structure)
+  else if (subclassItem.system?.advancement?.byLevel) {
+    byLevel = subclassItem.system.advancement.byLevel;
+    levelAdvancements = byLevel[level];
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found advancement in system.advancement.byLevel');
+  }
+  
+  if (byLevel && levelAdvancements !== undefined) {
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found byLevel structure:', {
+      byLevelKeys: Object.keys(byLevel),
+      levelAdvancements: levelAdvancements,
+      isArray: Array.isArray(levelAdvancements)
+    });
+    
+    if (Array.isArray(levelAdvancements)) {
+      let cantrips = 0;
+      let spells = 0;
+      
+      window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Processing', levelAdvancements.length, 'advancements for level', level);
+      
+      for (const advancement of levelAdvancements) {
+        window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Processing advancement:', {
+          type: advancement.type,
+          title: advancement.title,
+          value: advancement.value,
+          fullAdvancement: JSON.stringify(advancement, null, 2)
+        });
+        
+        if (advancement.type === 'ScaleValue' && advancement.title) {
+          const title = advancement.title.toLowerCase();
+          
+          if (title.includes('cantrip')) {
+            // For cantrips, it's usually a fixed value, not a scale
+            cantrips = parseInt(advancement.value) || 0;
+            window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found cantrips:', cantrips);
+          } else if (title.includes('prepared spell')) {
+            // For prepared spells, it's a scale value array
+            window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found Prepared Spells advancement:', {
+              type: advancement.type,
+              title: advancement.title,
+              value: advancement.value,
+              hasLevels: advancement.levels,
+              levelsType: typeof advancement.levels,
+              levelsIsArray: Array.isArray(advancement.levels),
+              levelsLength: advancement.levels?.length,
+              fullAdvancementStructure: JSON.stringify(advancement, null, 2)
+            });
+            
+            if (advancement.levels && Array.isArray(advancement.levels)) {
+              // The levels array is 0-indexed, so level 3 (first level of spellcasting) is index 0
+              const levelIndex = level - 3; // Eldritch Knight starts at level 3
+              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells levels array:', advancement.levels, 'levelIndex:', levelIndex);
+              if (levelIndex >= 0 && levelIndex < advancement.levels.length) {
+                spells = advancement.levels[levelIndex];
+                window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found prepared spells:', spells);
+              } else {
+                window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: levelIndex out of range:', levelIndex, 'array length:', advancement.levels.length);
+              }
+            } else {
+              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells advancement has no levels array:', advancement.levels);
+            }
+          }
+        }
+      }
+      
+      // Fallback for cantrips if not found in advancement data
+      // Eldritch Knight gets 2 cantrips at level 3 according to the description
+      if (cantrips === 0 && level >= 3) {
+        cantrips = 2;
+        window.GAS.log.d('[SPELLS] Using fallback cantrip count for Eldritch Knight:', cantrips);
+      }
+      
+      window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Final values:', { cantrips, spells, level });
+      
+      if (cantrips > 0 || spells > 0) {
+        window.GAS.log.d('[SPELLS] Parsed from D&D 5e advancement structure:', { cantrips, spells, level });
+        return { cantrips, spells, hasAllSpells: false };
+      } else {
+        window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: No valid cantrips or spells found in advancement data');
+      }
+    } else {
+      window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: levelAdvancements is not an array:', levelAdvancements);
+    }
+  } else {
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: No advancement.byLevel found in any location');
+  }
+  
+  // Fallback to old advancement table structure
+  if (subclassItem.system?.advancement) {
+    const advancement = subclassItem.system.advancement;
+    if (!Array.isArray(advancement)) {
+      return null;
+    }
+    
+    // Find the advancement entry for the current level
+    const levelAdvancement = advancement.find(adv => adv.level === level);
+    if (!levelAdvancement || !levelAdvancement.entries) {
+      return null;
+    }
+    
+    let cantrips = 0;
+    let spells = 0;
+    
+    // Parse the advancement entries to find cantrips and prepared spells
+    for (const entry of levelAdvancement.entries) {
+      if (entry.type === 'entries' && Array.isArray(entry.entries)) {
+        for (const subEntry of entry.entries) {
+          if (subEntry.type === 'table' && subEntry.rows) {
+            // Parse table rows to find cantrips and prepared spells
+            for (const row of subEntry.rows) {
+              if (Array.isArray(row) && row.length >= 2) {
+                const description = row[0]?.toLowerCase() || '';
+                const value = row[1];
+                
+                if (description.includes('cantrip')) {
+                  cantrips = parseInt(value) || 0;
+                } else if (description.includes('prepared spell') || description.includes('spells prepared')) {
+                  spells = parseInt(value) || 0;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    if (cantrips > 0 || spells > 0) {
+      window.GAS.log.d('[SPELLS] Parsed from old advancement table structure:', { cantrips, spells, level });
+      return { cantrips, spells, hasAllSpells: false };
+    }
+  }
+  
+  return null;
+}
+
 // Derived store for spell limits based on character class and level
 export const spellLimits = derived(
-  [characterClass, isLevelUp, newLevelValueForExistingClass],
-  ([$characterClass, $isLevelUp, $newLevelValueForExistingClass]) => {
+  [characterClass, isLevelUp, newLevelValueForExistingClass, currentCharacter],
+  ([$characterClass, $isLevelUp, $newLevelValueForExistingClass, $currentCharacter]) => {
     // Calculate the effective character level for spell selection
     // For character creation: Always use level 1
     // For level-up: Use the new level value
@@ -124,9 +426,19 @@ export const spellLimits = derived(
       return { cantrips: 0, spells: 0 };
     }
 
-    const className = $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
+    // Determine the correct spell list class (handles subclasses)
+    const spellListClass = determineSpellListClass($currentCharacter);
+    const className = spellListClass || $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
 
+    // First, try to get spell limits from subclass advancement data
+    const subclassLimits = getSpellLimitsFromSubclassAdvancement($currentCharacter, effectiveCharacterLevel);
+    if (subclassLimits) {
+      window.GAS.log.d('[SPELLS] Using subclass advancement limits:', subclassLimits);
+      return subclassLimits;
+    }
+
+    // Fallback to base class data from spellsKnown.json
     // For level-up scenarios, calculate the difference between old and new levels
     if ($isLevelUp && $newLevelValueForExistingClass) {
       const oldLevel = $newLevelValueForExistingClass - 1; // Current level is new level - 1
@@ -137,6 +449,7 @@ export const spellLimits = derived(
       const newLevelData = spellsKnownData.levels.find(l => l.level === newLevel);
 
       if (!oldLevelData || !newLevelData || !oldLevelData[className] || !newLevelData[className]) {
+        window.GAS.log.w('[SPELLS] No spell data found for class:', className, 'at levels:', oldLevel, newLevel);
         return { cantrips: 0, spells: 0 };
       }
 
@@ -160,6 +473,13 @@ export const spellLimits = derived(
       const cantripDifference = Math.max(0, newCantripCount - oldCantripCount);
       const spellDifference = oldHasAllSpells || newHasAllSpells ? 0 : Math.max(0, newSpellCount - oldSpellCount);
 
+      window.GAS.log.d('[SPELLS] Using base class limits (level-up):', {
+        oldLevel, newLevel, className,
+        oldCantrips: oldCantripCount, oldSpells: oldSpellCount,
+        newCantrips: newCantripCount, newSpells: newSpellCount,
+        cantripDifference, spellDifference
+      });
+
       return {
         cantrips: cantripDifference,
         spells: spellDifference,
@@ -169,6 +489,7 @@ export const spellLimits = derived(
       // Character creation scenario - use total spells for level 1
       const levelData = spellsKnownData.levels.find(l => l.level === 1);
       if (!levelData || !levelData[className]) {
+        window.GAS.log.w('[SPELLS] No spell data found for class:', className, 'at level 1');
         return { cantrips: 0, spells: 0 };
       }
 
@@ -176,11 +497,14 @@ export const spellLimits = derived(
       const classData = levelData[className][rulesVersion] || levelData[className];
 
       const [cantrips, spells] = classData.split(' / ');
-      return {
+      const result = {
         cantrips: parseInt(cantrips) || 0,
         spells: parseInt(spells) || 0,
         hasAllSpells: spells === 'All'
       };
+      
+      window.GAS.log.d('[SPELLS] Using base class limits (character creation):', result);
+      return result;
     }
   }
 );
@@ -215,11 +539,57 @@ export const spellProgress = derived(
       const className = $characterClass.name || $characterClass.label || $characterClass;
 
       // Calculate max spell levels for old and new levels
-      const getMaxSpellLevelForClass = (level, className) => {
+      const getMaxSpellLevelForClass = (level, className, actor = null) => {
         // Get the current D&D rules version
         const rulesVersion = window.GAS?.dnd5eRules || '2014';
         const is2024Rules = rulesVersion === '2024';
         
+        // If we have an actor, try to determine spellcasting progression from actor's spellcasting system
+        if (actor) {
+          const actorData = actor.system || actor.data?.data;
+          if (actorData?.spellcasting) {
+            // Check if this is subclass spellcasting (like Eldritch Knight)
+            const spellcastingEntries = Object.values(actorData.spellcasting);
+            for (const entry of spellcastingEntries) {
+              if (entry.progression) {
+                // Use the progression from the actor's spellcasting system
+                return getMaxSpellLevelByProgression(level, entry.progression, is2024Rules);
+              }
+            }
+          }
+        }
+        
+        // Fallback to class-based detection
+        return getMaxSpellLevelByClassName(level, className, is2024Rules);
+      };
+
+      // Helper function to calculate max spell level by progression type
+      const getMaxSpellLevelByProgression = (level, progression, is2024Rules) => {
+        switch (progression) {
+          case 'full':
+            return Math.min(9, Math.ceil(level / 2));
+          case 'half':
+            if (is2024Rules) {
+              return Math.min(5, Math.ceil(level / 4));
+            } else {
+              return Math.min(5, Math.ceil((level - 1) / 4));
+            }
+          case 'third':
+            return Math.min(4, Math.ceil((level - 2) / 6));
+          case 'pact':
+            // Warlock progression
+            if (level >= 17) return 5;
+            if (level >= 11) return 3;
+            if (level >= 7) return 2;
+            if (level >= 1) return 1;
+            return 0;
+          default:
+            return 0;
+        }
+      };
+
+      // Helper function to calculate max spell level by class name (fallback)
+      const getMaxSpellLevelByClassName = (level, className, is2024Rules) => {
         const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
         const halfCasters = ['Paladin', 'Ranger'];
         const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
@@ -258,8 +628,10 @@ export const spellProgress = derived(
         return 0;
       };
 
-      const oldMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, className);
-      const newMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass, className);
+      // Get the current character for spellcasting detection
+      const currentActor = get(currentCharacter);
+      const oldMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, className, currentActor);
+      const newMaxSpellLevel = getMaxSpellLevelForClass($newLevelValueForExistingClass, className, currentActor);
 
       // If no new spell levels gained AND no new cantrips to select, mark as complete automatically
       if (newMaxSpellLevel <= oldMaxSpellLevel && $spellLimits.cantrips === 0) {
@@ -316,6 +688,16 @@ export const spellProgress = derived(
   }
 );
 
+// Helper to safely get fromUuidSync
+const fromUuidSync = (uuid) => {
+  try {
+    return foundry.utils?.fromUuidSync?.(uuid) || null;
+  } catch (error) {
+    window.GAS.log.w('[SPELLS] Error in fromUuidSync:', error);
+    return null;
+  }
+};
+
 // Function to initialize character data for spell selection
 export function initializeSpellSelection(actor) {
   try {
@@ -352,13 +734,13 @@ export async function loadAvailableSpells(characterClassName = null) {
     // Get spell compendium sources from settings
     const packs = getPacksFromSettings("spells");
 
-    // window.GAS.log.d('[SPELLS DEBUG] loadAvailableSpells called:', {
-    //   characterClassName,
-    //   packsFound: packs?.length || 0,
-    //   packs: packs?.map(p => p.collection) || 'No packs',
-    //   dnd5eVersion: window.GAS?.dnd5eVersion,
-    //   willUseClassFiltering: window.GAS?.dnd5eVersion >= 4 && characterClassName
-    // });
+    window.GAS.log.d('[SPELLS DEBUG] loadAvailableSpells called:', {
+      characterClassName,
+      packsFound: packs?.length || 0,
+      packs: packs?.map(p => p.collection) || 'No packs',
+      dnd5eVersion: window.GAS?.dnd5eVersion,
+      willUseClassFiltering: window.GAS?.dnd5eVersion >= 4 && characterClassName
+    });
 
     if (!packs || packs.length === 0) {
       availableSpells.set([]);
@@ -487,7 +869,7 @@ export async function loadAvailableSpells(characterClassName = null) {
               }
 
               if (availableToClass) {
-                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
+                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
                 // Create spell object with enhanced data
                 // Avoid accessing the deprecated SpellData#preparation getter. Prefer new
                 // fields `method` and `prepared` when present, otherwise fall back to
@@ -525,21 +907,21 @@ export async function loadAvailableSpells(characterClassName = null) {
                 };
                 filteredSpells.push(spellObj);
               } else {
-                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
+                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
                 // Detailed diagnostic for why this spell was filtered out
                 try {
-                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
-                  //   pack: pack.collection,
-                  //   uuid: doc.uuid,
-                  //   name: doc.name,
-                  //   level: doc.system?.level,
-                  //   itemClasses: doc.labels.classes,
-                  //   available: availableToClass,
-                  //   characterClassName: characterClassName, 
-                  // });
+                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
+                    pack: pack.collection,
+                    uuid: doc.uuid,
+                    name: doc.name,
+                    level: doc.system?.level,
+                    itemClasses: doc.labels.classes,
+                    available: availableToClass,
+                    characterClassName: characterClassName, 
+                  });
                 } catch (e) {
                   // Fallback to simple log if structured logging fails
-                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
+                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
                 }
               }
             } else {
@@ -652,8 +1034,8 @@ export async function loadAvailableSpells(characterClassName = null) {
 
     // Update the store with spells
     availableSpells.set(uniqueSpells);
-    // window.GAS.log.d('[SPELLS] Final loaded spells:', uniqueSpells.length);
-    // window.GAS.log.d('[SPELLS DEBUG] FINAL RESULT: Set availableSpells store with', uniqueSpells.length, 'spells');
+    window.GAS.log.d('[SPELLS] Final loaded spells:', uniqueSpells.length);
+    window.GAS.log.d('[SPELLS DEBUG] FINAL RESULT: Set availableSpells store with', uniqueSpells.length, 'spells for class:', characterClassName);
     if (uniqueSpells.length === 0) {
       // When no spells survive filtering, dump helpful state
       try {

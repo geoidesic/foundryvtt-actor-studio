@@ -9,6 +9,8 @@
     spellLimits, currentSpellCounts, spellProgress, autoPopulateAllSpells
   } from '~/src/stores/spellSelection';
   import spellsKnownData from '~/src/stores/spellsKnown.json';
+  import { MODULE_ID } from '~/src/helpers/constants';
+  import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
   
   const actor = getContext("#doc");
   
@@ -24,7 +26,20 @@
   $: actorObject = $actor.toObject();
 
   // Get character class name for spell filtering and limits
-  $: characterClassName = $characterClass?.name || 'Bard'; // Default to Bard for testing
+  $: characterClassName = determineSpellListClass($actor) || $characterClass?.name || 'Bard'; // Default to Bard for testing
+  
+  // Debug the character class name calculation and reload spells when it changes
+  $: {
+    try {
+      window.GAS.log.d('[SPELLS] characterClassName updated:', characterClassName, 'actor:', $actor?.name);
+      // Reload spells when character class name changes (for level-up scenarios)
+      if (characterClassName && $isLevelUp) {
+        loadAvailableSpells(characterClassName);
+      }
+    } catch (error) {
+      window.GAS.log.e('[SPELLS] Error in characterClassName reactive statement:', error);
+    }
+  }
   
   // Calculate the effective character level for spell calculations
   // For character creation: Always use level 1
@@ -37,11 +52,11 @@
   $: hasAllSpellsAccess = $spellLimits.hasAllSpells;
   
   // Calculate max spell level based on character class and the effective level
-  $: calculatedMaxSpellLevel = getMaxSpellLevelForClass(effectiveCharacterLevel, characterClassName);
+  $: calculatedMaxSpellLevel = getMaxSpellLevelForClass(effectiveCharacterLevel, characterClassName, $actor);
   
   // For level-up scenarios, use the new level for spell level calculations
   $: levelUpAwareMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
-    ? getMaxSpellLevelForClass($newLevelValueForExistingClass, characterClassName)
+    ? getMaxSpellLevelForClass($newLevelValueForExistingClass, characterClassName, $actor)
     : calculatedMaxSpellLevel;
   
   // Use our calculated max spell level if the store returns 0 (during character creation)
@@ -49,7 +64,7 @@
   
   // Calculate old max spell level for level-up scenarios
   $: oldMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
-    ? getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, characterClassName)
+    ? getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, characterClassName, $actor)
     : 0;
   
   // Determine if auto-populate should be offered
@@ -81,6 +96,16 @@
   // Cache for enriched spell names
   let enrichedNames = {};
 
+  // Helper to safely get fromUuidSync
+  const fromUuidSync = (uuid) => {
+    try {
+      return foundry.utils?.fromUuidSync?.(uuid) || null;
+    } catch (error) {
+      window.GAS.log.w('[SPELLS] Error in fromUuidSync:', error);
+      return null;
+    }
+  };
+
   // Helper to get enriched HTML for spell name
   async function getEnrichedName(spell) {
     const key = spell.uuid || spell._id || spell.id;
@@ -98,11 +123,57 @@
   }
 
   // Calculate max spell level based on class and character level
-  function getMaxSpellLevelForClass(level, className) {
+  function getMaxSpellLevelForClass(level, className, actor = null) {
     // Get the current D&D rules version
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
     const is2024Rules = rulesVersion === '2024';
     
+    // If we have an actor, try to determine spellcasting progression from actor's spellcasting system
+    if (actor) {
+      const actorData = actor.system || actor.data?.data;
+      if (actorData?.spellcasting) {
+        // Check if this is subclass spellcasting (like Eldritch Knight)
+        const spellcastingEntries = Object.values(actorData.spellcasting);
+        for (const entry of spellcastingEntries) {
+          if (entry.progression) {
+            // Use the progression from the actor's spellcasting system
+            return getMaxSpellLevelByProgression(level, entry.progression, is2024Rules);
+          }
+        }
+      }
+    }
+    
+    // Fallback to class-based detection
+    return getMaxSpellLevelByClassName(level, className, is2024Rules);
+  }
+
+  // Helper function to calculate max spell level by progression type
+  function getMaxSpellLevelByProgression(level, progression, is2024Rules) {
+    switch (progression) {
+      case 'full':
+        return Math.min(9, Math.ceil(level / 2));
+      case 'half':
+        if (is2024Rules) {
+          return Math.min(5, Math.ceil(level / 4));
+        } else {
+          return Math.min(5, Math.ceil((level - 1) / 4));
+        }
+      case 'third':
+        return Math.min(4, Math.ceil((level - 2) / 6));
+      case 'pact':
+        // Warlock progression
+        if (level >= 17) return 5;
+        if (level >= 11) return 3;
+        if (level >= 7) return 2;
+        if (level >= 1) return 1;
+        return 0;
+      default:
+        return 0;
+    }
+  }
+
+  // Helper function to calculate max spell level by class name (fallback)
+  function getMaxSpellLevelByClassName(level, className, is2024Rules) {
     // Standard D&D 5e spellcasting progression for full casters
     const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
     const halfCasters = ['Paladin', 'Ranger'];
@@ -155,6 +226,7 @@
     initializeSpellSelection($actor);
     
     // Load available spells with character class filtering
+    // Note: This might be overridden by LevelUpStateMachine, but we need it for character creation
     await loadAvailableSpells(characterClassName);
     
     // Debug logging
@@ -174,6 +246,7 @@
     // });
     
     loading = false;
+    window.GAS.log.d('[SPELLS] Component mounted, loading set to false, availableSpells count:', $availableSpells.length);
 
     // Find the actual scrolling container (section.a from PCAppShell)
     const scrollingContainer = document.querySelector('#foundryvtt-actor-studio-pc-sheet section.a');
@@ -223,11 +296,14 @@
     const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
     const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
 
-  // NOTE: class availability is already resolved by `loadAvailableSpells()` and
-  // embedded in the `availableSpells` store. The UI should not re-run class
-  // filtering here to avoid accidental double-filtering or divergent logic.
-  return matchesKeyword && withinCharacterLevel && !alreadySelected && !alreadyKnown
+    // NOTE: class availability is already resolved by `loadAvailableSpells()` and
+    // embedded in the `availableSpells` store. The UI should not re-run class
+    // filtering here to avoid accidental double-filtering or divergent logic.
+    return matchesKeyword && withinCharacterLevel && !alreadySelected && !alreadyKnown
   });
+  
+  // Debug filtered spells
+  $: window.GAS.log.d('[SPELLS] Filtered spells count:', filteredSpells.length, 'from available:', $availableSpells.length);
 
   // Group spells by level
   $: spellsByLevel = filteredSpells.reduce((acc, spell) => {

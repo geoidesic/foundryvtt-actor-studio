@@ -6,6 +6,16 @@ import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
 import Finity from 'finity';
 
+// Helper to safely get fromUuidSync
+const fromUuidSync = (uuid) => {
+  try {
+    return foundry.utils?.fromUuidSync?.(uuid) || null;
+  } catch (error) {
+    window.GAS.log.w('[LEVELUP] Error in fromUuidSync:', error);
+    return null;
+  }
+};
+
 /**
  * LevelUp workflow states
  */
@@ -32,6 +42,173 @@ export const LEVELUP_EVENTS = {
 };
 
 /**
+ * Determines the correct spell list class for a character, handling subclasses
+ * @param {Actor} actor - The actor to analyze
+ * @returns {string|null} - The class name to use for spell filtering, or null if no spellcasting
+ */
+function determineSpellListClass(actor) {
+  if (!actor) return null;
+  
+  const actorData = actor.system || actor.data?.data;
+  if (!actorData) return null;
+  
+  window.GAS.log.d('[LEVELUP] determineSpellListClass called for actor:', actor.name);
+  
+  // Method 1: Check for subclass spellcasting via module flags (dropped items)
+  const droppedItems = actor.getFlag(MODULE_ID, 'droppedItems');
+  window.GAS.log.d('[LEVELUP] droppedItems flag:', droppedItems, 'isArray:', Array.isArray(droppedItems));
+  
+  // Handle both array and object formats
+  let subclassItems = [];
+  if (Array.isArray(droppedItems)) {
+    subclassItems = droppedItems.filter(item => item.type === 'subclass');
+  } else if (droppedItems && typeof droppedItems === 'object' && droppedItems.subclass) {
+    subclassItems = Array.isArray(droppedItems.subclass) ? droppedItems.subclass : [droppedItems.subclass];
+  }
+  
+  for (const item of subclassItems) {
+    const subclassUuid = item.uuid;
+    if (subclassUuid) {
+      try {
+        // Try to get the subclass item to parse its description
+        const subclassItem = fromUuidSync(subclassUuid);
+        if (subclassItem) {
+          const spellListClass = parseSpellcastingFromDescription(subclassItem);
+          if (spellListClass) {
+            window.GAS.log.d('[LEVELUP] Found subclass spellcasting via droppedItems:', subclassItem.name, '->', spellListClass);
+            return spellListClass;
+          }
+        }
+      } catch (error) {
+        window.GAS.log.w('[LEVELUP] Error parsing subclass from droppedItems:', error);
+      }
+    }
+  }
+  
+  // Method 2: Check for subclass items on the actor
+  const actorItems = actor.items || [];
+  window.GAS.log.d('[LEVELUP] Checking actor items:', actorItems.map(i => ({ name: i.name, type: i.type })));
+  for (const item of actorItems) {
+    if (item.type === 'subclass') {
+      window.GAS.log.d('[LEVELUP] Found subclass item:', item.name, 'identifier:', item.system?.identifier);
+      const spellListClass = parseSpellcastingFromDescription(item);
+      if (spellListClass) {
+        window.GAS.log.d('[LEVELUP] Found subclass spellcasting via actor items:', item.name, '->', spellListClass);
+        return spellListClass;
+      }
+      
+      // Also check by identifier for known subclasses
+      const identifier = item.system?.identifier?.toLowerCase();
+      if (identifier === 'eldritch-knight' || identifier === 'eldritchknight') {
+        window.GAS.log.d('[LEVELUP] Found Eldritch Knight by identifier -> Wizard');
+        return 'Wizard';
+      } else if (identifier === 'arcane-trickster' || identifier === 'arcanetrickster') {
+        window.GAS.log.d('[LEVELUP] Found Arcane Trickster by identifier -> Wizard');
+        return 'Wizard';
+      } else if (identifier === 'aberrant-mind' || identifier === 'aberrantmind') {
+        window.GAS.log.d('[LEVELUP] Found Aberrant Mind by identifier -> Sorcerer');
+        return 'Sorcerer';
+      }
+    }
+  }
+  
+  // Method 3: Check for subclass in class data
+  const classes = actorData.classes || {};
+  window.GAS.log.d('[LEVELUP] actor classes:', Object.keys(classes));
+  window.GAS.log.d('[LEVELUP] actorData structure:', {
+    classes: classes,
+    hasClasses: !!classes,
+    classesKeys: Object.keys(classes),
+    actorItems: actor.items?.map(i => ({ name: i.name, type: i.type })) || []
+  });
+  
+  for (const [className, classData] of Object.entries(classes)) {
+    const subclass = classData?.system?.subclass;
+    window.GAS.log.d('[LEVELUP] class', className, 'subclass:', subclass);
+    if (subclass) {
+      // Check if this is a known spellcasting subclass
+      const subclassLower = subclass.toLowerCase();
+      if (['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclassLower)) {
+        // These subclasses use specific spell lists
+        if (subclassLower === 'eldritchknight' || subclassLower === 'arcanetrickster') {
+          window.GAS.log.d('[LEVELUP] Found subclass in class data:', subclass, '-> Wizard');
+          return 'Wizard';
+        } else if (subclassLower === 'aberrantmind') {
+          window.GAS.log.d('[LEVELUP] Found subclass in class data:', subclass, '-> Sorcerer');
+          return 'Sorcerer';
+        }
+      }
+    }
+  }
+  
+  // Method 4: Fallback to base class spellcasting
+  const classKeys = Object.keys(classes);
+  if (classKeys.length > 0) {
+    const baseClass = classKeys[0];
+    window.GAS.log.d('[LEVELUP] Using base class for spell list:', baseClass);
+    return baseClass;
+  }
+  
+  window.GAS.log.d('[LEVELUP] No spellcasting class found, returning null');
+  return null;
+}
+
+/**
+ * Parses spellcasting feature description to determine spell list class
+ * @param {Item} item - The subclass item to analyze
+ * @returns {string|null} - The spell list class, or null if not found
+ */
+function parseSpellcastingFromDescription(item) {
+  if (!item) return null;
+  
+  const description = item.system?.description?.value || item.description?.value || '';
+  if (!description) return null;
+  
+  // Look for patterns like "Wizard spell list" in the description
+  const wizardMatch = description.match(/wizard\s+spell\s+list/i);
+  if (wizardMatch) {
+    return 'Wizard';
+  }
+  
+  const sorcererMatch = description.match(/sorcerer\s+spell\s+list/i);
+  if (sorcererMatch) {
+    return 'Sorcerer';
+  }
+  
+  const bardMatch = description.match(/bard\s+spell\s+list/i);
+  if (bardMatch) {
+    return 'Bard';
+  }
+  
+  const clericMatch = description.match(/cleric\s+spell\s+list/i);
+  if (clericMatch) {
+    return 'Cleric';
+  }
+  
+  const druidMatch = description.match(/druid\s+spell\s+list/i);
+  if (druidMatch) {
+    return 'Druid';
+  }
+  
+  const paladinMatch = description.match(/paladin\s+spell\s+list/i);
+  if (paladinMatch) {
+    return 'Paladin';
+  }
+  
+  const rangerMatch = description.match(/ranger\s+spell\s+list/i);
+  if (rangerMatch) {
+    return 'Ranger';
+  }
+  
+  const warlockMatch = description.match(/warlock\s+spell\s+list/i);
+  if (warlockMatch) {
+    return 'Warlock';
+  }
+  
+  return null;
+}
+
+/**
  * LevelUp workflow context
  */
 export const levelUpFSMContext = {
@@ -52,29 +229,81 @@ export const levelUpFSMContext = {
       actor = storeActor;
     }
     
+    // Check for spellcasting in multiple ways:
+    // 1. Class-based spellcasting (base classes like Wizard, Cleric)
+    // 2. Actor system spellcasting (granted through advancements like Eldritch Knight)
+    // 3. Known spellcasting subclasses (fallback for hardcoded detection)
+    
     const classes = actor.classes || {};
     const classKeys = Object.keys(classes);
-    if (!classKeys.length) return false;
     
-    // Check for spellcasting progression
+    // Method 1: Check class-based spellcasting progression
     const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
       const progression = classData?.system?.spellcasting?.progression;
       return { className, progression, isSpellcaster: progression && progression !== "none" };
     });
     
-    const isSpellcaster = spellcastingInfo.some(info => info.isSpellcaster);
+    const hasClassSpellcasting = spellcastingInfo.some(info => info.isSpellcaster);
     
-    if (!isSpellcaster) {
-      // Fallback check for known spellcasting classes
-      const knownSpellcastingClasses = [
-        'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-        'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
-      ];
-      const hasKnownSpellcastingClass = classKeys.some(className => 
-        knownSpellcastingClasses.includes(className.toLowerCase())
-      );
-      return hasKnownSpellcastingClass;
-    }
+    // Method 2: Check actor system spellcasting (granted through advancements)
+    const actorData = actor.system || actor.data?.data;
+    
+    // Check for traditional spellcasting system
+    const hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+    
+    // Check for spell slots added by advancements (like Eldritch Knight)
+    const hasSpellSlots = actorData?.spells && Object.values(actorData.spells).some(slot => 
+      slot.type === 'spell' && slot.max > 0
+    );
+    
+    // Check for pact magic slots
+    const hasPactMagic = actorData?.spells && Object.values(actorData.spells).some(slot => 
+      slot.type === 'pact'
+    );
+    
+    const hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    
+    // Method 3: Fallback check for known spellcasting classes/subclasses
+    const knownSpellcastingClasses = [
+      'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
+      'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+    ];
+    const hasKnownSpellcastingClass = classKeys.some(className => 
+      knownSpellcastingClasses.includes(className.toLowerCase())
+    );
+    
+    // Method 4: Check for subclass spellcasting that might be granted through advancements
+    // This is a more aggressive check for cases where the actor system hasn't been updated yet
+    const hasSubclassSpellcasting = classKeys.some(className => {
+      const lowerClassName = className.toLowerCase();
+      // Check for known spellcasting subclasses
+      return ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(lowerClassName);
+    });
+    
+    // Method 5: Check for subclass in the class data itself (e.g., fighter with eldritchknight subclass)
+    const hasSubclassInClassData = Object.values(classes).some(classData => {
+      const subclass = classData?.system?.subclass;
+      return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclass.toLowerCase());
+    });
+    
+    const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
+    
+    window.GAS.log.d('[LEVELUP] Spellcasting detection:', {
+      hasClassSpellcasting,
+      hasTraditionalSpellcasting,
+      hasSpellSlots,
+      hasPactMagic,
+      hasActorSpellcasting,
+      hasKnownSpellcastingClass,
+      hasSubclassSpellcasting,
+      hasSubclassInClassData,
+      isSpellcaster,
+      actorName: actor.name,
+      actorSpellcasting: actorData?.spellcasting,
+      actorSpells: actorData?.spells,
+      actorSpellcastingKeys: actorData?.spellcasting ? Object.keys(actorData.spellcasting) : [],
+      classSpellcastingInfo: spellcastingInfo
+    });
     
     return isSpellcaster;
   }
@@ -125,12 +354,28 @@ export function createLevelUpStateMachine() {
         
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
+        
+        // Add a longer delay to ensure actor is fully updated after advancements
+        // Advancements might update the actor's spellcasting system asynchronously
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        window.GAS.log.d('[LEVELUP] Advancement queue completed, checking for spellcasting...');
       })
         .onSuccess()
           .transitionTo('selecting_spells').withCondition((context) => {
             const actor = levelUpFSMContext.actor || get(actorInGame);
             const shouldShow = levelUpFSMContext._shouldShowSpellSelection(actor);
             window.GAS.log.d('[LEVELUP] advancements_complete -> selecting_spells condition:', shouldShow);
+            window.GAS.log.d('[LEVELUP] Actor spellcasting data:', {
+              actorName: actor?.name,
+              classes: Object.keys(actor?.classes || {}),
+              actorSpellcasting: actor?.system?.spellcasting,
+              actorSpells: actor?.system?.spells,
+              hasActorSpellcasting: actor?.system?.spellcasting && Object.keys(actor.system.spellcasting).length > 0,
+              hasSpellSlots: actor?.system?.spells && Object.values(actor.system.spells).some(slot => 
+                slot.type === 'spell' && slot.max > 0
+              )
+            });
             return shouldShow;
           })
           .transitionTo('completed') // Default fallback - no spell selection needed
@@ -174,11 +419,11 @@ export function createLevelUpStateMachine() {
               window.GAS.log.d('[LEVELUP] Initializing spell selection for actor:', actor.name);
               initializeSpellSelection(actor);
               
-              // Load available spells for the character's class
-              const characterClass = Object.keys(actor.classes || {})[0];
-              if (characterClass) {
-                loadAvailableSpells(characterClass);
-                window.GAS.log.d('[LEVELUP] Loading spells for class:', characterClass);
+              // Determine the correct spell list for this character
+              const spellListClass = determineSpellListClass(actor);
+              if (spellListClass) {
+                loadAvailableSpells(spellListClass);
+                window.GAS.log.d('[LEVELUP] Loading spells for spell list class:', spellListClass);
               }
             });
           } catch (error) {
@@ -275,3 +520,6 @@ export default {
   LEVELUP_STATES,
   LEVELUP_EVENTS
 };
+
+// Export the helper functions for use in other components
+export { determineSpellListClass, parseSpellcastingFromDescription };
