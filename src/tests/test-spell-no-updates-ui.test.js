@@ -144,8 +144,9 @@ describe('Spell Level-Up No Updates Logic', () => {
   it('should calculate max spell levels correctly for different classes', () => {
     console.log('🧪 TESTING: Max spell level calculations');
     
-    // Helper function to calculate max spell level (copied from the logic)
-    const getMaxSpellLevelForClass = (level, className) => {
+    // Helper function to calculate max spell level (updated to use rules-aware logic)
+    const getMaxSpellLevelForClass = (level, className, rulesVersion = '2014') => {
+      const is2024Rules = rulesVersion === '2024';
       const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
       const halfCasters = ['Paladin', 'Ranger'];
       const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
@@ -154,7 +155,14 @@ describe('Spell Level-Up No Updates Logic', () => {
       if (fullCasters.includes(className)) {
         return Math.min(9, Math.ceil(level / 2));
       } else if (halfCasters.includes(className)) {
-        return Math.min(5, Math.ceil((level - 1) / 4));
+        // Half casters: Different progression for 2014 vs 2024 rules
+        if (is2024Rules) {
+          // 2024 rules: Half casters start spellcasting at level 1
+          return Math.min(5, Math.ceil(level / 4));
+        } else {
+          // 2014 rules: Half casters start spellcasting at level 2
+          return Math.min(5, Math.ceil((level - 1) / 4));
+        }
       } else if (thirdCasters.includes(className)) {
         return Math.min(4, Math.ceil((level - 2) / 6));
       } else if (warlockProgression.includes(className)) {
@@ -164,33 +172,56 @@ describe('Spell Level-Up No Updates Logic', () => {
         if (level >= 1) return 1;
         return 0;
       } else if (className === 'Artificer') {
-        if (level < 2) return 0;
-        return Math.min(5, Math.ceil((level - 1) / 4));
+        // Artificers: Different progression for 2014 vs 2024 rules
+        if (is2024Rules) {
+          // 2024 rules: Artificers start spellcasting at level 1
+          return Math.min(5, Math.ceil(level / 4));
+        } else {
+          // 2014 rules: Artificers start spellcasting at level 2
+          if (level < 2) return 0;
+          return Math.min(5, Math.ceil((level - 1) / 4));
+        }
       }
       return 0;
     };
     
     console.log('');
-    console.log('📊 CLERIC PROGRESSION (Full Caster):');
+    console.log('📊 CLERIC PROGRESSION (Full Caster - 2014 Rules):');
     for (let level = 1; level <= 10; level++) {
-      const maxSpellLevel = getMaxSpellLevelForClass(level, 'Cleric');
-      const prevMaxSpellLevel = level > 1 ? getMaxSpellLevelForClass(level - 1, 'Cleric') : 0;
+      const maxSpellLevel = getMaxSpellLevelForClass(level, 'Cleric', '2014');
+      const prevMaxSpellLevel = level > 1 ? getMaxSpellLevelForClass(level - 1, 'Cleric', '2014') : 0;
       const hasIncrease = maxSpellLevel > prevMaxSpellLevel;
       console.log(`   Level ${level}: Max spell level ${maxSpellLevel} ${hasIncrease ? '⬆️ NEW' : ''}`);
     }
     
     console.log('');
-    console.log('📊 PALADIN PROGRESSION (Half Caster):');
+    console.log('📊 PALADIN PROGRESSION (Half Caster - 2014 Rules):');
     for (let level = 1; level <= 10; level++) {
-      const maxSpellLevel = getMaxSpellLevelForClass(level, 'Paladin');
-      const prevMaxSpellLevel = level > 1 ? getMaxSpellLevelForClass(level - 1, 'Paladin') : 0;
+      const maxSpellLevel = getMaxSpellLevelForClass(level, 'Paladin', '2014');
+      const prevMaxSpellLevel = level > 1 ? getMaxSpellLevelForClass(level - 1, 'Paladin', '2014') : 0;
       const hasIncrease = maxSpellLevel > prevMaxSpellLevel;
       console.log(`   Level ${level}: Max spell level ${maxSpellLevel} ${hasIncrease ? '⬆️ NEW' : ''}`);
     }
     
-    expect(getMaxSpellLevelForClass(3, 'Cleric')).toBe(2);
-    expect(getMaxSpellLevelForClass(4, 'Cleric')).toBe(2);
-    expect(getMaxSpellLevelForClass(5, 'Cleric')).toBe(3);
+    console.log('');
+    console.log('📊 PALADIN PROGRESSION (Half Caster - 2024 Rules):');
+    for (let level = 1; level <= 10; level++) {
+      const maxSpellLevel = getMaxSpellLevelForClass(level, 'Paladin', '2024');
+      const prevMaxSpellLevel = level > 1 ? getMaxSpellLevelForClass(level - 1, 'Paladin', '2024') : 0;
+      const hasIncrease = maxSpellLevel > prevMaxSpellLevel;
+      console.log(`   Level ${level}: Max spell level ${maxSpellLevel} ${hasIncrease ? '⬆️ NEW' : ''}`);
+    }
+    
+    // Test 2014 rules expectations
+    expect(getMaxSpellLevelForClass(3, 'Cleric', '2014')).toBe(2);
+    expect(getMaxSpellLevelForClass(4, 'Cleric', '2014')).toBe(2);
+    expect(getMaxSpellLevelForClass(5, 'Cleric', '2014')).toBe(3);
+    
+    // Test 2024 rules expectations for half-casters
+    expect(getMaxSpellLevelForClass(1, 'Paladin', '2024')).toBe(1); // 2024: Level 1 gets 1st level spells
+    expect(getMaxSpellLevelForClass(1, 'Paladin', '2014')).toBe(0); // 2014: Level 1 gets no spells
+    expect(getMaxSpellLevelForClass(2, 'Paladin', '2024')).toBe(1); // 2024: Level 2 still 1st level
+    expect(getMaxSpellLevelForClass(2, 'Paladin', '2014')).toBe(1); // 2014: Level 2 gets 1st level spells
   });
 
   it('should demonstrate the complete spell tab messaging system', () => {

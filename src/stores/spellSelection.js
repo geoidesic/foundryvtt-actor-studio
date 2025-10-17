@@ -216,6 +216,10 @@ export const spellProgress = derived(
 
       // Calculate max spell levels for old and new levels
       const getMaxSpellLevelForClass = (level, className) => {
+        // Get the current D&D rules version
+        const rulesVersion = window.GAS?.dnd5eRules || '2014';
+        const is2024Rules = rulesVersion === '2024';
+        
         const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
         const halfCasters = ['Paladin', 'Ranger'];
         const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
@@ -224,7 +228,14 @@ export const spellProgress = derived(
         if (fullCasters.includes(className)) {
           return Math.min(9, Math.ceil(level / 2));
         } else if (halfCasters.includes(className)) {
-          return Math.min(5, Math.ceil((level - 1) / 4));
+          // Half casters: Different progression for 2014 vs 2024 rules
+          if (is2024Rules) {
+            // 2024 rules: Half casters start spellcasting at level 1
+            return Math.min(5, Math.ceil(level / 4));
+          } else {
+            // 2014 rules: Half casters start spellcasting at level 2
+            return Math.min(5, Math.ceil((level - 1) / 4));
+          }
         } else if (thirdCasters.includes(className)) {
           return Math.min(4, Math.ceil((level - 2) / 6));
         } else if (warlockProgression.includes(className)) {
@@ -234,8 +245,15 @@ export const spellProgress = derived(
           if (level >= 1) return 1;
           return 0;
         } else if (className === 'Artificer') {
-          if (level < 2) return 0;
-          return Math.min(5, Math.ceil((level - 1) / 4));
+          // Artificers: Different progression for 2014 vs 2024 rules
+          if (is2024Rules) {
+            // 2024 rules: Artificers start spellcasting at level 1
+            return Math.min(5, Math.ceil(level / 4));
+          } else {
+            // 2014 rules: Artificers start spellcasting at level 2
+            if (level < 2) return 0;
+            return Math.min(5, Math.ceil((level - 1) / 4));
+          }
         }
         return 0;
       };

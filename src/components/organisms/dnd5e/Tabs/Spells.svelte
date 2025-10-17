@@ -99,6 +99,10 @@
 
   // Calculate max spell level based on class and character level
   function getMaxSpellLevelForClass(level, className) {
+    // Get the current D&D rules version
+    const rulesVersion = window.GAS?.dnd5eRules || '2014';
+    const is2024Rules = rulesVersion === '2024';
+    
     // Standard D&D 5e spellcasting progression for full casters
     const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
     const halfCasters = ['Paladin', 'Ranger'];
@@ -109,8 +113,14 @@
       // Full casters: spell level = Math.ceil(character level / 2), max 9
       return Math.min(9, Math.ceil(level / 2));
     } else if (halfCasters.includes(className)) {
-      // Half casters: spell level = Math.ceil((character level - 1) / 4), max 5
-      return Math.min(5, Math.ceil((level - 1) / 4));
+      // Half casters: Different progression for 2014 vs 2024 rules
+      if (is2024Rules) {
+        // 2024 rules: Half casters start spellcasting at level 1
+        return Math.min(5, Math.ceil(level / 4));
+      } else {
+        // 2014 rules: Half casters start spellcasting at level 2
+        return Math.min(5, Math.ceil((level - 1) / 4));
+      }
     } else if (thirdCasters.includes(className)) {
       // Third casters: spell level = Math.ceil((character level - 2) / 6), max 4
       return Math.min(4, Math.ceil((level - 2) / 6));
@@ -122,9 +132,15 @@
       if (level >= 1) return 1;
       return 0;
     } else if (className === 'Artificer') {
-      // Artificers are half casters but start at level 2
-      if (level < 2) return 0;
-      return Math.min(5, Math.ceil((level - 1) / 4));
+      // Artificers: Different progression for 2014 vs 2024 rules
+      if (is2024Rules) {
+        // 2024 rules: Artificers start spellcasting at level 1
+        return Math.min(5, Math.ceil(level / 4));
+      } else {
+        // 2014 rules: Artificers start spellcasting at level 2
+        if (level < 2) return 0;
+        return Math.min(5, Math.ceil((level - 1) / 4));
+      }
     }
     
     // Non-spellcasting classes
