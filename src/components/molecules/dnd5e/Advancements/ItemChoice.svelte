@@ -10,6 +10,38 @@
       : advancement.configuration.choices[0]
     : '-';
 
+  // Helper function to extract compendium name from UUID
+  function getCompendiumNameFromUuid(uuid) {
+    try {
+      // UUID format: Compendium.{packName}.{entityType}.{entityId}
+      const parts = uuid.split('.');
+      if (parts.length >= 2 && parts[0] === 'Compendium') {
+        return parts[1];
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  // Helper function to check if compendium is available
+  function isCompendiumAvailable(uuid) {
+    const compendiumName = getCompendiumNameFromUuid(uuid);
+    if (!compendiumName) return false;
+    
+    const pack = game.packs.get(`Compendium.${compendiumName}`);
+    return pack && pack.visible;
+  }
+
+  // Helper function to get user-friendly error message
+  function getErrorMessage(uuid) {
+    const compendiumName = getCompendiumNameFromUuid(uuid);
+    if (compendiumName) {
+      return `Compendium "${compendiumName}" is missing.`;
+    }
+    return `Error loading item: ${uuid}`;
+  }
+
   onMount(async () => {
   
   });
@@ -31,11 +63,24 @@
           +each("advancement.configuration.pool as pool")
             +await("fromUuid(pool.uuid)")
               +then("item")
-                li.left
+                +if("item")
+                  li.left
+                    .flexrow
+                      .flex0.relative.image
+                        img.icon(src="{item.img}" alt="{item.name}")
+                      .flex2 {item.name}
+                  +else()
+                    li.left.error-item
+                      .flexrow
+                        .flex0.relative.image
+                          i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;")
+                        .flex2 {getErrorMessage(pool.uuid)}
+              +catch("error")
+                li.left.error-item
                   .flexrow
                     .flex0.relative.image
-                      img.icon(src="{item.img}" alt="{item.name}")
-                    .flex2 {item.name}
+                      i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;")
+                    .flex2 {getErrorMessage(pool.uuid)}
 
 </template>
 
@@ -86,4 +131,13 @@
     flex-grow: 1
     height: 100%
     font-size: 0.9rem
+    
+  .icon-list li.error-item
+    border-color: #ff6b6b
+    background-color: rgba(255, 107, 107, 0.1)
+    
+  .icon-list li.error-item .flex2
+    color: #ff6b6b
+    font-style: italic
+    font-size: 0.8rem
 </style>

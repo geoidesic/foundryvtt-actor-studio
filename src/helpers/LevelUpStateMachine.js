@@ -4,6 +4,11 @@ import { readOnlyTabs, tabs, activeTab, levelUpTabs } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
+// Import PrivateSettingKeys from the TypeScript file
+const PrivateSettingKeys = {
+  LAST_MIGRATION: 'lastMigration',
+  LEVEL_UP_IN_PROGRESS: 'levelUpInProgress',
+};
 import Finity from 'finity';
 
 // Helper to safely get fromUuidSync
@@ -13,6 +18,42 @@ const fromUuidSync = (uuid) => {
   } catch (error) {
     window.GAS.log.w('[LEVELUP] Error in fromUuidSync:', error);
     return null;
+  }
+};
+
+// Helper to suppress Tidy5e auto-reopen during level up
+const suppressTidy5eAutoReopen = (suppress = true) => {
+  try {
+    const tidy5eModule = game.modules.get("tidy5e-sheet");
+    if (tidy5eModule?.active) {
+      // Set level up in progress flag
+      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+      
+      if (suppress) {
+        window.GAS.log.d('[LEVELUP] Suppressing Tidy5e auto-reopen during level up');
+        // Only suppress if we have a valid API method
+        if (tidy5eModule.api?.setAutoReopen) {
+          tidy5eModule.api.setAutoReopen(false);
+        }
+      } else {
+        window.GAS.log.d('[LEVELUP] Restoring Tidy5e auto-reopen after level up');
+        // Only restore if we have a valid API method
+        if (tidy5eModule.api?.setAutoReopen) {
+          tidy5eModule.api.setAutoReopen(true);
+        }
+      }
+    } else {
+      // Even if Tidy5e is not active, set the flag for the hook
+      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+    }
+  } catch (error) {
+    window.GAS.log.w('[LEVELUP] Error managing Tidy5e auto-reopen:', error);
+    // Still set the flag even if there's an error
+    try {
+      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+    } catch (e) {
+      window.GAS.log.w('[LEVELUP] Error setting level up flag:', e);
+    }
   }
 };
 
@@ -331,6 +372,9 @@ export function createLevelUpStateMachine() {
         } catch (error) {
           window.GAS.log.e('[LEVELUP] Error destroying advancement managers on idle:', error);
         }
+        
+        // Restore Tidy5e auto-reopen when returning to idle
+        suppressTidy5eAutoReopen(false);
       })
     
     // SELECTING CLASS/LEVEL STATE
@@ -341,6 +385,9 @@ export function createLevelUpStateMachine() {
       .onEnter((context) => {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(false);
         window.GAS.log.d('[LEVELUP] Entered SELECTING_CLASS_LEVEL state');
+        
+        // Suppress Tidy5e auto-reopen during level up
+        suppressTidy5eAutoReopen(true);
         
         // Ensure we're on the level-up tab
         activeTab.set('level-up');
@@ -471,6 +518,9 @@ export function createLevelUpStateMachine() {
         } catch (error) {
           window.GAS.log.e('[LEVELUP] Error destroying advancement managers on completed:', error);
         }
+        
+        // Restore Tidy5e auto-reopen before opening actor sheet
+        suppressTidy5eAutoReopen(false);
         
         const actor = levelUpFSMContext.actor || get(actorInGame);
         if (actor) {

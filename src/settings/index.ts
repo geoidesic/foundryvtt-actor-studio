@@ -5,6 +5,7 @@ import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
   LAST_MIGRATION = 'lastMigration',
+  LEVEL_UP_IN_PROGRESS = 'levelUpInProgress',
 }
 
 export function registerSettings(app: Game): void {
@@ -27,7 +28,8 @@ export function registerSettings(app: Game): void {
   // integrations
   // useTokenizerIfAvailable();
   // private settings
-  // lastMigration();
+  lastMigration();
+  levelUpInProgress();
   // abilityScoreMethods();
   
   
@@ -564,6 +566,15 @@ function lastMigration() {
     config: false,
     default: 0,
     type: Number,
+  });
+}
+
+function levelUpInProgress() {
+  game.settings.register(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, {
+    scope: 'world',
+    config: false,
+    default: false,
+    type: Boolean,
   });
 }
 

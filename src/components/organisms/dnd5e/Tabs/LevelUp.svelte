@@ -453,7 +453,7 @@ onDestroy(() => {
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
                 .flex2 {t('SubClass')}
         
-        +if("($isLevelUpAdvancementInProgress || subclasses.length) && $levelUpClassGetsSubclassThisLevel")  
+        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
           h3.left.mt-md {t('LevelUp.Subclass')}
           +if("window.GAS.debug")
             //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
@@ -467,6 +467,12 @@ onDestroy(() => {
             truncateWidth="17"
             disabled="{$isLevelUpAdvancementInProgress}"
           )
+          +else
+            
+
+            p
+              i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
+              | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
 
       
     .flex0.border-right.right-border-gradient-mask 
