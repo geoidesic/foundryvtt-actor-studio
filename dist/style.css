@@ -1,4 +1,4 @@
-@charset "UTF-8";#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome {
+@charset "UTF-8";#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container {
   --size-xxs: 0.1rem;
   --size-xs: 0.2rem;
   --size-ms: 0.3rem;
@@ -41,7 +41,7 @@
   --color-border-dark: #426dbe;
   --color-border-light: #ccc;
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark {
+#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
   --tabs-list-background: transparent;
   --tabs-content-background:rgba(24,24,24, 1);
   --li-background-color: var(--dnd5e-color-sc-1);

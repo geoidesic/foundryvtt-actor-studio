@@ -560,7 +560,23 @@ describe('Feat Selector Integration', () => {
 
       const flow = createMockFlow('feat-adv-id', 'feat');
 
+      const mockActor = {
+        system: {
+          details: { level: 3 },
+          abilities: {
+            str: { value: 14 },
+            dex: { value: 12 },
+            con: { value: 13 },
+            int: { value: 10 },
+            wis: { value: 11 },
+            cha: { value: 8 }
+          }
+        },
+        items: []
+      };
+
       const mockAdvancementManager = {
+        actor: mockActor,
         step: { flow },
         render: vi.fn()
       };

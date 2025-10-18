@@ -191,10 +191,20 @@ export const showFeatSelector = async (formElement, currentProcess) => {
     const advancementId = formElement.attr('data-advancement-id') || formElement.attr('data-id');
     const level = parseInt(formElement.attr('data-level')) || 1;
 
+    // Get the actor from the advancement manager
+    const actor = currentProcess?.app?.actor;
+    const currentActorLevel = actor?.system?.details?.level ?? 1;
+    
+    // During level-up, the character is advancing TO the next level
+    // so they should be able to select feats for that target level
+    const targetLevel = currentActorLevel + 1;
+
     // Create the feat selector instance
     const featSelector = new FeatSelector({
       target: container,
       props: {
+        actor: actor,
+        characterLevel: targetLevel,
         onSelect: (selectedFeat) => {
           handleFeatSelection(selectedFeat, currentProcess);
         },

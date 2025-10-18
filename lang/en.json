@@ -417,7 +417,8 @@
       "Loading": "Loading feats...",
       "NoFeats": "No feats available. Check your compendium sources in settings.",
       "Select": "Select Feat",
-      "Cancel": "Cancel"
+      "Cancel": "Cancel",
+      "ShowIneligible": "Show ineligible feats"
     },
     "SpellSchool": {
       "abj": "Abjuration",

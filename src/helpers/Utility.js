@@ -1263,6 +1263,8 @@ export async function getFilteredFeats() {
     // Define keys that are likely NOT in the index and need async loading
     const nonIndexKeys = [
       "system.prerequisites.level",
+      "system.prerequisites.abilities",
+      "system.prerequisites.features",
       "system.description.value"
     ];
 
