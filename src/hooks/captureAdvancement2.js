@@ -73,28 +73,55 @@ const findAdvancementFlow = (currentProcess, advancementId) => {
   return null;
 };
 
-const ADVANCEMENT_FEAT_PATHS = [
-  ['type'],
-  ['slug'],
-  ['identifier'],
-  ['itemType'],
-  ['configuration', 'type'],
-  ['configuration', 'itemType'],
-  ['configuration', 'types'],
-  ['configuration', 'choices'],
-  ['configuration', 'filters'],
-  ['definition', 'type'],
-  ['definition', 'itemType'],
-  ['definition', 'types'],
-  ['definition', 'choices'],
-  ['definition', 'filters']
-];
-
 const isFeatAdvancementFlow = (flow) => {
   if (!flow) return false;
 
   const advancement = flow.advancement ?? {};
-  return ADVANCEMENT_FEAT_PATHS.some((path) => containsFeat(readPath(advancement, path)));
+  
+  // Primary check: AbilityScoreImprovement is the main feat advancement type
+  if (advancement.type === 'AbilityScoreImprovement') {
+    window.GAS.log.d('[isFeatAdvancementFlow] Detected AbilityScoreImprovement (ASI/Feat choice)');
+    return true;
+  }
+  
+  // Secondary check: ItemChoice that is SPECIFICALLY restricted to feats only
+  // This is different from ItemChoice for Fighting Styles, Spells, etc.
+  if (advancement.type === 'ItemChoice') {
+    // Check if the restriction explicitly specifies feat type
+    const restrictionType = advancement.configuration?.restriction?.type 
+                         || advancement.restriction?.type;
+    
+    const isFeatRestriction = restrictionType === 'feat';
+    
+    window.GAS.log.d('[isFeatAdvancementFlow] ItemChoice advancement:', {
+      restrictionType,
+      isFeatRestriction,
+      title: advancement.title,
+      hint: advancement.hint
+    });
+    
+    return isFeatRestriction;
+  }
+  
+  // For backwards compatibility, check if "feat" appears in specific paths
+  // but only for non-ItemChoice types to avoid false positives
+  if (advancement.type !== 'ItemChoice' && advancement.type !== 'ItemGrant') {
+    const ADVANCEMENT_FEAT_PATHS = [
+      ['type'],
+      ['slug'],
+      ['identifier']
+    ];
+    
+    const hasFeaInPath = ADVANCEMENT_FEAT_PATHS.some((path) => containsFeat(readPath(advancement, path)));
+    
+    if (hasFeaInPath) {
+      window.GAS.log.d('[isFeatAdvancementFlow] Detected feat in advancement path (legacy check)');
+    }
+    
+    return hasFeaInPath;
+  }
+  
+  return false;
 };
 
 const isFeatChoiceForm = (formElement, currentProcess) => {
