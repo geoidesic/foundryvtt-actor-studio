@@ -287,10 +287,13 @@
     const matchesKeyword = spell.name.toLowerCase().includes(keywordFilter.toLowerCase());
     const spellLevel = spell.system?.level || 0;
     
-    // Allow cantrips always, and allow spells up to the character's max spell level
+    // Only show cantrips if character can learn them (cantrip limit > 0)
+    // This fixes Rangers 2014 who get 0 cantrips but were still seeing cantrips in the list
+    // Allow spells up to the character's max spell level
     // OR allow level 1 spells if the character has spell slots available (fixes Ranger 2024 issue)
-    const withinCharacterLevel = spellLevel === 0 || 
-      spellLevel <= effectiveMaxSpellLevel || 
+    const withinCharacterLevel = 
+      (spellLevel === 0 && $spellLimits.cantrips > 0) || 
+      (spellLevel > 0 && spellLevel <= effectiveMaxSpellLevel) || 
       (spellLevel === 1 && $spellLimits.spells > 0);
     
     const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);

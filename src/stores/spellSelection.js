@@ -260,6 +260,24 @@ function parseSpellLimitsFromAdvancement(subclassItem, level) {
   
   window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Starting with subclassItem:', subclassItem.name, 'level:', level);
   
+  // Check if this subclass actually grants spellcasting
+  // Only certain subclasses grant spellcasting (e.g., Eldritch Knight, Arcane Trickster)
+  // Most subclasses (e.g., Hunter Ranger, Champion Fighter) do NOT grant spellcasting
+  const spellcasting = subclassItem.system?.spellcasting;
+  const hasSpellcastingProgression = spellcasting && 
+    (spellcasting.progression === 'third' || spellcasting.progression === 'half' || spellcasting.progression === 'full');
+  
+  window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Spellcasting check:', {
+    hasSpellcasting: !!spellcasting,
+    progression: spellcasting?.progression,
+    hasSpellcastingProgression
+  });
+  
+  if (!hasSpellcastingProgression) {
+    window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Subclass does NOT grant spellcasting, returning null');
+    return null;
+  }
+  
   // Try multiple possible locations for the advancement data
   let byLevel = null;
   let levelAdvancements = null;
@@ -429,13 +447,70 @@ export const spellLimits = derived(
     // Determine the correct spell list class (handles subclasses)
     const spellListClass = determineSpellListClass($currentCharacter);
     const className = spellListClass || $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
+    // Normalize className to lowercase to match spellsKnown.json keys
+    const classNameLower = typeof className === 'string' ? className.toLowerCase() : className;
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
 
     // First, try to get spell limits from subclass advancement data
+    // For level-up scenarios, we need to calculate the difference between old and new levels
+    window.GAS.log.d('🔍 [spellLimits] CHECKING SUBCLASS ADVANCEMENT:', {
+      isLevelUp: $isLevelUp,
+      effectiveCharacterLevel,
+      newLevelValue: $newLevelValueForExistingClass,
+      hasCharacter: !!$currentCharacter,
+      currentCharacterType: typeof $currentCharacter,
+      currentCharacterKeys: $currentCharacter ? Object.keys($currentCharacter).slice(0, 10) : 'null',
+      currentCharacterName: $currentCharacter?.name || 'no name'
+    });
+
     const subclassLimits = getSpellLimitsFromSubclassAdvancement($currentCharacter, effectiveCharacterLevel);
+    
+    window.GAS.log.d('🔍 [spellLimits] SUBCLASS LIMITS RESULT:', subclassLimits);
+    
     if (subclassLimits) {
-      window.GAS.log.d('[SPELLS] Using subclass advancement limits:', subclassLimits);
-      return subclassLimits;
+      // If this is a level-up, we need to calculate the difference
+      if ($isLevelUp && $newLevelValueForExistingClass) {
+        const oldLevel = $newLevelValueForExistingClass - 1;
+        
+        window.GAS.log.d('📈 [spellLimits] LEVEL-UP DETECTED, calculating difference:', {
+          oldLevel,
+          newLevel: $newLevelValueForExistingClass
+        });
+        
+        const oldSubclassLimits = getSpellLimitsFromSubclassAdvancement($currentCharacter, oldLevel);
+        
+        window.GAS.log.d('📊 [spellLimits] OLD LEVEL LIMITS:', oldSubclassLimits);
+        
+        if (oldSubclassLimits) {
+          // Calculate the difference (what's NEW at this level)
+          const cantripDifference = Math.max(0, subclassLimits.cantrips - oldSubclassLimits.cantrips);
+          const spellDifference = Math.max(0, subclassLimits.spells - oldSubclassLimits.spells);
+          
+          const result = {
+            cantrips: cantripDifference,
+            spells: spellDifference,
+            hasAllSpells: subclassLimits.hasAllSpells
+          };
+          
+          window.GAS.log.d('✅ [spellLimits] USING SUBCLASS ADVANCEMENT (DIFFERENCE):', {
+            oldLevel, 
+            newLevel: $newLevelValueForExistingClass,
+            oldLimits: oldSubclassLimits,
+            newLimits: subclassLimits,
+            result
+          });
+          
+          return result;
+        } else {
+          window.GAS.log.w('⚠️ [spellLimits] Could not get old level limits, falling through to base class calculation');
+        }
+      } else {
+        // For character creation or if we couldn't get old limits, use the total
+        window.GAS.log.d('✅ [spellLimits] USING SUBCLASS ADVANCEMENT (TOTAL - character creation):', subclassLimits);
+        return subclassLimits;
+      }
+    } else {
+      window.GAS.log.d('⏭️ [spellLimits] No subclass limits found, falling back to BASE CLASS calculation');
     }
 
     // Fallback to base class data from spellsKnown.json
@@ -444,18 +519,37 @@ export const spellLimits = derived(
       const oldLevel = $newLevelValueForExistingClass - 1; // Current level is new level - 1
       const newLevel = $newLevelValueForExistingClass;
 
+      window.GAS.log.d('📚 [spellLimits] BASE CLASS CALCULATION (level-up):', {
+        classNameLower,
+        rulesVersion,
+        oldLevel,
+        newLevel
+      });
+
       // Get spell data for both levels
       const oldLevelData = spellsKnownData.levels.find(l => l.level === oldLevel);
       const newLevelData = spellsKnownData.levels.find(l => l.level === newLevel);
 
-      if (!oldLevelData || !newLevelData || !oldLevelData[className] || !newLevelData[className]) {
-        window.GAS.log.w('[SPELLS] No spell data found for class:', className, 'at levels:', oldLevel, newLevel);
+      window.GAS.log.d('📚 [spellLimits] Level data found:', {
+        hasOldData: !!oldLevelData,
+        hasNewData: !!newLevelData,
+        oldDataHasClass: oldLevelData ? !!oldLevelData[classNameLower] : false,
+        newDataHasClass: newLevelData ? !!newLevelData[classNameLower] : false
+      });
+
+      if (!oldLevelData || !newLevelData || !oldLevelData[classNameLower] || !newLevelData[classNameLower]) {
+        window.GAS.log.w('⚠️ [spellLimits] No spell data found for class:', classNameLower, 'at levels:', oldLevel, newLevel);
         return { cantrips: 0, spells: 0 };
       }
 
       // Get version-specific data
-      const oldClassData = oldLevelData[className][rulesVersion] || oldLevelData[className];
-      const newClassData = newLevelData[className][rulesVersion] || newLevelData[className];
+      const oldClassData = oldLevelData[classNameLower][rulesVersion] || oldLevelData[classNameLower];
+      const newClassData = newLevelData[classNameLower][rulesVersion] || newLevelData[classNameLower];
+
+      window.GAS.log.d('📊 [spellLimits] Raw class data:', {
+        oldClassData,
+        newClassData
+      });
 
       // Parse old level limits
       const [oldCantrips, oldSpells] = oldClassData.split(' / ');
@@ -469,32 +563,41 @@ export const spellLimits = derived(
       const newSpellCount = parseInt(newSpells) || 0;
       const newHasAllSpells = newSpells === 'All';
 
+      window.GAS.log.d('🔢 [spellLimits] Parsed values:', {
+        oldParsed: { cantrips: oldCantripCount, spells: oldSpellCount, hasAll: oldHasAllSpells },
+        newParsed: { cantrips: newCantripCount, spells: newSpellCount, hasAll: newHasAllSpells }
+      });
+
       // Calculate the difference (new spells gained on level up)
       const cantripDifference = Math.max(0, newCantripCount - oldCantripCount);
       const spellDifference = oldHasAllSpells || newHasAllSpells ? 0 : Math.max(0, newSpellCount - oldSpellCount);
 
-      window.GAS.log.d('[SPELLS] Using base class limits (level-up):', {
-        oldLevel, newLevel, className,
-        oldCantrips: oldCantripCount, oldSpells: oldSpellCount,
-        newCantrips: newCantripCount, newSpells: newSpellCount,
-        cantripDifference, spellDifference
-      });
-
-      return {
+      const result = {
         cantrips: cantripDifference,
         spells: spellDifference,
         hasAllSpells: newHasAllSpells
       };
+
+      window.GAS.log.d('✅ [spellLimits] BASE CLASS CALCULATION RESULT (level-up difference):', {
+        oldLevel, 
+        newLevel, 
+        className: classNameLower,
+        oldValues: { cantrips: oldCantripCount, spells: oldSpellCount },
+        newValues: { cantrips: newCantripCount, spells: newSpellCount },
+        result
+      });
+
+      return result;
     } else {
       // Character creation scenario - use total spells for level 1
       const levelData = spellsKnownData.levels.find(l => l.level === 1);
-      if (!levelData || !levelData[className]) {
-        window.GAS.log.w('[SPELLS] No spell data found for class:', className, 'at level 1');
+      if (!levelData || !levelData[classNameLower]) {
+        window.GAS.log.w('[SPELLS] No spell data found for class:', classNameLower, 'at level 1');
         return { cantrips: 0, spells: 0 };
       }
 
       // Get version-specific data
-      const classData = levelData[className][rulesVersion] || levelData[className];
+      const classData = levelData[classNameLower][rulesVersion] || levelData[classNameLower];
 
       const [cantrips, spells] = classData.split(' / ');
       const result = {
@@ -864,12 +967,12 @@ export async function loadAvailableSpells(characterClassName = null) {
                     // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] _lazy.classes resolved: ${spellClasses}, availableToClass=${availableToClass}`);
                   }
                 } catch (e) {
-                  window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Error inspecting _lazy.classes: ${e}`);
+                  // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Error inspecting _lazy.classes: ${e}`);
                 }
               }
 
               if (availableToClass) {
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
+                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is available to class: ${characterClassName}`);
                 // Create spell object with enhanced data
                 // Avoid accessing the deprecated SpellData#preparation getter. Prefer new
                 // fields `method` and `prepared` when present, otherwise fall back to
@@ -907,21 +1010,21 @@ export async function loadAvailableSpells(characterClassName = null) {
                 };
                 filteredSpells.push(spellObj);
               } else {
-                window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
+                // window.GAS.log.d(`[SPELLS DEBUG] [${doc.name}] Spell is NOT available to class: ${characterClassName}`);
                 // Detailed diagnostic for why this spell was filtered out
                 try {
-                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
-                    pack: pack.collection,
-                    uuid: doc.uuid,
-                    name: doc.name,
-                    level: doc.system?.level,
-                    itemClasses: doc.labels.classes,
-                    available: availableToClass,
-                    characterClassName: characterClassName, 
-                  });
+                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name}`, {
+                  //   pack: pack.collection,
+                  //   uuid: doc.uuid,
+                  //   name: doc.name,
+                  //   level: doc.system?.level,
+                  //   itemClasses: doc.labels.classes,
+                  //   available: availableToClass,
+                  //   characterClassName: characterClassName, 
+                  // });
                 } catch (e) {
                   // Fallback to simple log if structured logging fails
-                  window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
+                  // window.GAS.log.p(`[SPELLS DEBUG] [FILTERED] ${doc.name} pack=${pack.collection} uuid=${doc.uuid} level=${doc.system?.level} labels=${String(doc.labels?.classes)} system=${String(doc.system?.classes)} available=${availableToClass}`);
                 }
               }
             } else {
