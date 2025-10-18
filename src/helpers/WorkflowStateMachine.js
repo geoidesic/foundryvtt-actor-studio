@@ -209,6 +209,8 @@ export function createWorkflowStateMachine() {
           .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
           .transitionTo('completed') // Default fallback - no other features enabled
         .onFailure().transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .on('error').transitionTo('error')
     .state('selecting_equipment')
     .on('equipment_complete')
       .transitionTo('shopping').withCondition((context) => {

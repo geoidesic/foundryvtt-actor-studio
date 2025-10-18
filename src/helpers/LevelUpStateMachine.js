@@ -427,6 +427,8 @@ export function createLevelUpStateMachine() {
           })
           .transitionTo('completed') // Default fallback - no spell selection needed
         .onFailure().transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .on('error').transitionTo('error')
     
     // SELECTING SPELLS STATE
     .state('selecting_spells')

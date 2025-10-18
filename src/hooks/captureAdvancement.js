@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
+import FeatSelector from '~/src/components/molecules/dnd5e/Feats/FeatSelector.svelte';
 
 const BROWSE_TARGET_SELECTOR = [
   '[data-action="browse"]',
@@ -179,17 +180,55 @@ export const interceptFeatBrowseButtons = (element, currentProcess) => {
 // Show the custom feat selector overlay
 export const showFeatSelector = async (formElement, currentProcess) => {
   try {
-    // Import the FeatSelector component dynamically
-    const { default: FeatSelector } = await import('../components/molecules/dnd5e/Feats/FeatSelector.svelte');
+    window.GAS.log.d('[showFeatSelector] Starting feat selector...');
+
+    // Get the advancement flow instance from the form
+    const advancementId = formElement.attr('data-advancement-id') || formElement.attr('data-id');
+    const level = parseInt(formElement.attr('data-level')) || 1;
+
+    // Try to get the flow to check current selections (optional validation)
+    const flow = findAdvancementFlow(currentProcess, advancementId);
+    
+    if (flow) {
+      // Only validate if we successfully found the flow
+      const advancement = flow.advancement;
+      const choices = advancement?.configuration?.choices;
+      window.GAS.log.d('[showFeatSelector] Advancement choices config:', choices);
+
+      // Get the maximum number of selections allowed
+      let maxSelections = 1; // Default to 1
+      if (choices && Array.isArray(choices) && choices.length > 0) {
+        const firstChoice = choices[0];
+        maxSelections = typeof firstChoice === 'object' ? (firstChoice.count || 1) : firstChoice;
+      }
+
+      // Count current selections
+      const currentSelections = flow.selected?.size || 0;
+      
+      window.GAS.log.d('[showFeatSelector] Selection validation:', {
+        maxSelections,
+        currentSelections,
+        canSelect: currentSelections < maxSelections
+      });
+
+      // Validate that we can add more selections
+      if (currentSelections >= maxSelections) {
+        ui.notifications.warn('No additional items can be selected, uncheck items before selecting more.');
+        window.GAS.log.w('[showFeatSelector] Maximum selections reached', {
+          max: maxSelections,
+          current: currentSelections
+        });
+        return;
+      }
+    } else {
+      // If we can't find the flow, log a warning but continue anyway
+      window.GAS.log.w('[showFeatSelector] Could not find advancement flow for validation, proceeding without validation');
+    }
 
     // Create a temporary container for the Svelte component
     const container = document.createElement('div');
     container.id = 'gas-feat-selector-container';
     document.body.appendChild(container);
-
-    // Get the advancement flow instance from the form
-    const advancementId = formElement.attr('data-advancement-id') || formElement.attr('data-id');
-    const level = parseInt(formElement.attr('data-level')) || 1;
 
     // Get the actor from the advancement manager
     const actor = currentProcess?.app?.actor;

@@ -227,7 +227,7 @@ function advancementCaptureTimerThreshold() {
     hint: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Hint'),
     scope: 'world',
     config: true,
-    default: 250,
+    default: 300,
     type: Number,
   });
 }

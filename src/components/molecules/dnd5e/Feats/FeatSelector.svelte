@@ -437,6 +437,7 @@
 
   .confirm-button, .cancel-button
     padding: 0.35rem 0.75rem
+    margin-left: 1rem
     border-radius: 3px
     cursor: pointer
     font-weight: normal
