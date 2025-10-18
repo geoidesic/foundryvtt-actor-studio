@@ -25,6 +25,13 @@ export const renderAdvancementManager = async (app, html, data) => {
         return;
       }
       dropItemRegistry.updateCurrentProcess({ app, html, data })
+      
+      // Set the global advancement manager for feat selection
+      // Try to get flows from various possible locations
+      let flows = app.flows || app._flows || app.advancementFlows;
+      window.GAS.advancementManager = { app, flows };
+      window.GAS.log.d('[renderAdvancementManager] Set global advancementManager with flows:', flows);
+      
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
       // console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {

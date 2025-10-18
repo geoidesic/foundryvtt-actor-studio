@@ -1236,3 +1236,47 @@ export const deleteActorItem = async (actor, itemId) => {
  * @param {Object} val - The value to update the source with
  * @returns {Promise<void>} A promise that resolves when the source is updated
  */
+
+/**
+ * Get filtered feats from configured compendium sources
+ * @returns {Promise<Array>} Array of feat items with metadata
+ */
+export async function getFilteredFeats() {
+  try {
+    // Get feat compendium sources from settings
+    const packs = getPacksFromSettings("feats");
+
+    if (!packs || packs.length === 0) {
+      window.GAS.log.d('[getFilteredFeats] No feat compendiums configured in settings');
+      return [];
+    }
+
+    // Define the basic keys available in the default index
+    const indexKeys = [
+      "_id",
+      "name",
+      "img",
+      "type",
+      "uuid"
+    ];
+
+    // Define keys that are likely NOT in the index and need async loading
+    const nonIndexKeys = [
+      "system.prerequisites.level",
+      "system.description.value"
+    ];
+
+    // Extract feat data using extractItemsFromPacksAsync
+    let lightweightItems = await extractItemsFromPacksAsync(packs, indexKeys, nonIndexKeys);
+
+    // Filter for feats only
+    const feats = lightweightItems.filter(item => item.type === "feat");
+
+    window.GAS.log.d(`[getFilteredFeats] Loaded ${feats.length} feats from ${packs.length} packs`);
+    return feats;
+
+  } catch (error) {
+    window.GAS.log.e('[getFilteredFeats] Error loading feats:', error);
+    return [];
+  }
+}

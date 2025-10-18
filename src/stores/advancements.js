@@ -59,6 +59,12 @@ export const advancementQueueStore = () => {
   // Create the advancement manager after storeObj is defined
   const advancementManager = new AdvancementManager(storeObj, inProcess);
 
+  // Expose the advancement manager globally for hooks to access
+  if (typeof window !== 'undefined') {
+    window.GAS = window.GAS || {};
+    window.GAS.advancementManager = advancementManager;
+  }
+
   /**
    * Advances the queue to the next item
    * Will open the Advancements tab if it's required and not already open

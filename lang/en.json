@@ -411,6 +411,14 @@
       "AvailableSpells":"Available Spells",
       "NoSpellsSelected": "No spells selected"
     },
+    "FeatSelector": {
+      "Title": "Select a Feat",
+      "Search": "Search feats...",
+      "Loading": "Loading feats...",
+      "NoFeats": "No feats available. Check your compendium sources in settings.",
+      "Select": "Select Feat",
+      "Cancel": "Cancel"
+    },
     "SpellSchool": {
       "abj": "Abjuration",
       "con": "Conjuration", 

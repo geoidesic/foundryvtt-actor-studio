@@ -36,6 +36,7 @@ export const enum DEFAULT_PACKS {
   SPELLS = 'dnd5e.spells',
   RULES = 'dnd5e.rules',
   BACKGROUNDS = 'dnd5e.backgrounds',
+  FEATS = 'dnd5e.feats24',
 }
 
 export const sessionConstants = {
@@ -49,7 +50,7 @@ export const DEFAULT_SOURCES = {
   subclasses: [DEFAULT_PACKS.SUBCLASSES],
   backgrounds: [DEFAULT_PACKS.BACKGROUNDS],
   spells: [DEFAULT_PACKS.SPELLS],
-  feats: [],
+  feats: [DEFAULT_PACKS.FEATS],
   items: [DEFAULT_PACKS.ITEMS],
 };
 

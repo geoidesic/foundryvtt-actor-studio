@@ -81,6 +81,10 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         spells: {
           label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'),
           compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'spells', ['spell'])
+        },
+        feats: {
+          label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'feats', ['feat'])
         }
       }
     };

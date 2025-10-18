@@ -16,7 +16,14 @@
 **Frontend Stack**:
 - **CRITICAL**: ALL Svelte components MUST use Pug templates with `<template lang="pug">` - NEVER use standard HTML markup
 - Pug templates with Svelte preprocessing (NOT standard Pug - see `.cursor/rules/`)
-- Conditional logic must be properly nested: `+else()` indented one level deeper than `+if()`
+- **Pug Syntax Rules**:
+  - Conditionals: `+if("condition")` with condition in double quotes
+  - Else blocks: `+else` (no parentheses), indented one level deeper than `+if`
+  - Else-if logic: Use nested `+if`/`+else` blocks (no `+elseif`)
+  - Loops: `+each("array as item")` with expression in double quotes
+  - Attributes: Use `!=` for complex expressions, e.g., `class:selected!="{isSelected(item)}"`
+  - Text content: Inline with elements, e.g., `button(type="button") Text`
+  - Indentation: `+else` indented under its corresponding `+if`
 - Avoid long expressions in attributes - extract to script functions
 - ESM-only project - never use `require()`, always `import`
 

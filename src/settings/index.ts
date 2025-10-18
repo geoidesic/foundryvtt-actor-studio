@@ -65,6 +65,7 @@ export function registerSettings(app: Game): void {
   debugHooksSetting();
   disableAdvancementCapture();
   advancementCaptureTimerThreshold();
+  enableCustomFeatSelector();
   usageTracking();
   /** User settings */
   dontShowWelcome();
@@ -201,6 +202,17 @@ function disableAdvancementCapture() {
   game.settings.register(MODULE_ID, 'disableAdvancementCapture', {
     name: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Name'),
     hint: game.i18n.localize('GAS.Setting.disableAdvancementCapture.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+}
+
+function enableCustomFeatSelector() {
+  game.settings.register(MODULE_ID, 'enableCustomFeatSelector', {
+    name: 'Enable Custom Feat Selector',
+    hint: 'Replace the default dnd5e compendium browser with a custom feat selector modal for ItemChoice feat advancements.',
     scope: 'world',
     config: true,
     type: Boolean,

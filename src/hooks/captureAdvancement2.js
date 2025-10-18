@@ -121,25 +121,21 @@ const isFeatChoiceForm = (formElement, currentProcess) => {
 
 // Intercept browse buttons for feat selections in captured advancement forms
 export const interceptFeatBrowseButtons = (element, currentProcess) => {
-  try {
-    if (!element?.length) {
-      return;
-    }
+  if (!element?.length) {
+    return;
+  }
 
-    // Check if custom feat selector is enabled
-    const customFeatSelectorEnabled = game.settings.get('foundryvtt-actor-studio', 'enableCustomFeatSelector');
-    window.GAS.log.d('[interceptFeatBrowseButtons] Setting enabled:', customFeatSelectorEnabled);
-    
-    if (!customFeatSelectorEnabled) {
-      return;
-    }
+  // Check if custom feat selector is enabled
+  if (!game.settings.get('foundryvtt-actor-studio', 'enableCustomFeatSelector')) {
+    return;
+  }
 
-    // Remove any existing handler
-    if (element[0].gasFeatInterceptHandler) {
-      element[0].removeEventListener('click', element[0].gasFeatInterceptHandler, true);
-    }
+  // Remove any existing handler
+  if (element[0].gasFeatInterceptHandler) {
+    element[0].removeEventListener('click', element[0].gasFeatInterceptHandler, { capture: true });
+  }
 
-    // Add new handler in capture phase
+  // Add new handler in capture phase
     element[0].gasFeatInterceptHandler = (event) => {
     const target = $(event.target).closest(BROWSE_TARGET_SELECTOR);
     if (!target.length) {
@@ -151,10 +147,7 @@ export const interceptFeatBrowseButtons = (element, currentProcess) => {
       return;
     }
 
-    const isFeat = isFeatChoiceForm(formElement, currentProcess);
-    window.GAS.log.d('[interceptFeatBrowseButtons] Browse button clicked, isFeat:', isFeat, 'formElement:', formElement);
-    
-    if (!isFeat) {
+    if (!isFeatChoiceForm(formElement, currentProcess)) {
       return;
     }
 
@@ -170,10 +163,7 @@ export const interceptFeatBrowseButtons = (element, currentProcess) => {
     return false;
   };
 
-  element[0].addEventListener('click', element[0].gasFeatInterceptHandler, true);
-  } catch (error) {
-    window.GAS.log.e('[interceptFeatBrowseButtons] Error setting up feat interception:', error);
-  }
+  element[0].addEventListener('click', element[0].gasFeatInterceptHandler, { capture: true });
 };
 
 // Show the custom feat selector overlay
@@ -226,38 +216,18 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
 
     const advancementManager = currentProcess.app;
     const flow = advancementManager.step?.flow;
+    throw new Error('flow: ' + flow);
     if (!flow) {
       window.GAS.log.w('[handleFeatSelection] No current flow available on advancement manager');
       ui.notifications.warn('Failed to find current advancement flow. Please try again.');
       return;
     }
 
-    const item = await fromUuid(selectedFeat.uuid);
-    
-    // Check if this is an AbilityScoreImprovement flow (uses `feat` property)
-    // or an ItemChoice flow (uses `selected` Set)
-    if (flow.advancement?.type === 'AbilityScoreImprovement') {
-      // ASI flow - set the feat property directly
-      flow.feat = item;
-      window.GAS.log.d('[handleFeatSelection] Set feat property for ASI advancement');
-    } else {
-      // ItemChoice flow - add to selected set
-      flow.selected ??= new Set();
-      flow.selected.add(selectedFeat.uuid);
-      window.GAS.log.d('[handleFeatSelection] Added feat to selected set:', Array.from(flow.selected));
-
-      // If the item is not in the pool, add it to dropped (only if pool exists)
-      if (flow.pool && !flow.pool.find(i => i.uuid === selectedFeat.uuid)) {
-        flow.dropped ??= [];
-        flow.dropped.push(item);
-        item.dropped = true;
-        window.GAS.log.d('[handleFeatSelection] Added feat to dropped items');
-      }
-    }
-
-    // Re-render the advancement form to show the selected feat
-    await advancementManager.render();
-    window.GAS.log.d('[handleFeatSelection] Re-rendered advancement manager to show selection');
+    // For ItemChoice flows, add to selected set
+    flow.selected.add(selectedFeat.uuid);
+    throw new Error('add called');
+    flow.render();
+    window.GAS.log.d('[handleFeatSelection] Added feat to selected set and re-rendered flow');
 
   } catch (error) {
     window.GAS.log.e('[handleFeatSelection] Error handling feat selection:', error);
@@ -298,24 +268,15 @@ export const captureAdvancement = (initial = false) => {
       window.GAS.log.d(currentProcess);
       const element = getAdvancementElement(currentProcess);
       if(element) {
-        window.GAS.log.d('[gas.captureAdvancement] Got element, appending to panel');
         element.removeClass(); // Remove all classes from the root element itself
         element.addClass('gas-advancements')
         element.attr('gas-appid', currentProcess.id);
         element.appendTo(panelElement);
-        window.GAS.log.d('[gas.captureAdvancement] Element appended successfully');
 
         // Intercept browse buttons for feat selections
         interceptFeatBrowseButtons(element, currentProcess);
-        window.GAS.log.d('[gas.captureAdvancement] interceptFeatBrowseButtons completed');
-      } else {
-        window.GAS.log.w('[gas.captureAdvancement] No element found from getAdvancementElement');
       }
-    } else {
-      window.GAS.log.d('[gas.captureAdvancement] Element already appended for', currentProcess.id);
     }
-  } else {
-    window.GAS.log.w('[gas.captureAdvancement] No currentProcess available');
   }
 }
 
