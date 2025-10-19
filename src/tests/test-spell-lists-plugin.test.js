@@ -102,28 +102,28 @@ describe('SpellListsPlugin', () => {
     });
 
     it('should store single spell list', async () => {
-      const spellLists = ['Wizard'];
-      await SpellListsPlugin.setSpellLists(mockItem, spellLists);
+      const data = { level: 1, lists: ['Wizard'] };
+      await SpellListsPlugin.setSpellListsData(mockItem, data);
       
-      expect(mockItem.setFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists', spellLists);
+      expect(mockItem.setFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists', data);
     });
 
     it('should store multiple spell lists', async () => {
-      const spellLists = ['Cleric', 'Druid'];
-      await SpellListsPlugin.setSpellLists(mockItem, spellLists);
+      const data = { level: 3, lists: ['Cleric', 'Druid'] };
+      await SpellListsPlugin.setSpellListsData(mockItem, data);
       
-      expect(mockItem.setFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists', spellLists);
+      expect(mockItem.setFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists', data);
     });
 
     it('should remove flag when empty array provided', async () => {
-      await SpellListsPlugin.setSpellLists(mockItem, []);
+      await SpellListsPlugin.setSpellListsData(mockItem, { level: 1, lists: [] });
       
       expect(mockItem.unsetFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists');
       expect(mockItem.setFlag).not.toHaveBeenCalled();
     });
 
     it('should remove flag when null provided', async () => {
-      await SpellListsPlugin.setSpellLists(mockItem, null);
+      await SpellListsPlugin.setSpellListsData(mockItem, null);
       
       expect(mockItem.unsetFlag).toHaveBeenCalledWith(MODULE_ID, 'spellLists');
       expect(mockItem.setFlag).not.toHaveBeenCalled();
@@ -132,32 +132,41 @@ describe('SpellListsPlugin', () => {
 
   describe('Custom spell lists integration', () => {
     it('should retrieve custom spell lists from class item', () => {
-      const customSpellLists = ['Wizard', 'Sorcerer'];
-      mockItem.getFlag = vi.fn((moduleId, key) => {
-        if (moduleId === MODULE_ID && key === 'spellLists') {
-          return customSpellLists;
-        }
-        return null;
-      });
+      const customSpellListsData = { level: 1, lists: ['Wizard', 'Sorcerer'] };
+      
+      // Mock item with custom spell lists flag
+      const mockItem = {
+        type: 'class',
+        name: 'Custom Spell Class',
+        getFlag: vi.fn((module, key) => {
+          if (module === MODULE_ID && key === 'spellLists') {
+            return customSpellListsData;
+          }
+          return null;
+        })
+      };
 
       const result = SpellListsPlugin.getSpellLists(mockItem);
-      expect(result).toEqual(customSpellLists);
+      expect(result).toEqual(customSpellListsData.lists);
     });
 
     it('should retrieve custom spell lists from subclass item', () => {
+      const customSpellListsData = { level: 3, lists: ['Bard'] };
+      
+      // Mock subclass with custom spell lists
       const subclassItem = {
-        name: 'Test Subclass',
         type: 'subclass',
-        getFlag: vi.fn((moduleId, key) => {
-          if (moduleId === MODULE_ID && key === 'spellLists') {
-            return ['Bard'];
+        name: 'Custom Subclass',
+        getFlag: vi.fn((module, key) => {
+          if (module === MODULE_ID && key === 'spellLists') {
+            return customSpellListsData;
           }
           return null;
         })
       };
 
       const result = SpellListsPlugin.getSpellLists(subclassItem);
-      expect(result).toEqual(['Bard']);
+      expect(result).toEqual(customSpellListsData.lists);
     });
   });
 });
