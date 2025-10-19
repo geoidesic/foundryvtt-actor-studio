@@ -4,6 +4,7 @@ import { registerSettings } from '~/src/settings';
 import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase'; 
 import { log, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
+import SpellListsPlugin from '~/src/plugins/spell-lists';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
 import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
 import packageJson from '../../package.json';
@@ -101,8 +102,9 @@ export const ready = (app, html, data) => {
 
   Hooks.call("gas.readyIsComplete");
 
-  // Initialize the subclass level plugin
+  // Initialize plugins
   SubclassLevelPlugin.init();
+  SpellListsPlugin.init();
 }
 
 export default {

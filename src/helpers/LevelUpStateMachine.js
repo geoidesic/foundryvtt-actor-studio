@@ -85,7 +85,8 @@ export const LEVELUP_EVENTS = {
 /**
  * Determines the correct spell list class for a character, handling subclasses
  * @param {Actor} actor - The actor to analyze
- * @returns {string|null} - The class name to use for spell filtering, or null if no spellcasting
+ * @returns {string|string[]|null} - The class name(s) to use for spell filtering, or null if no spellcasting
+ *                                    Can return a string for single list or array for multiple lists (custom classes)
  */
 function determineSpellListClass(actor) {
   if (!actor) return null;
@@ -95,8 +96,72 @@ function determineSpellListClass(actor) {
   
   window.GAS.log.d('[LEVELUP] determineSpellListClass called for actor:', actor.name);
   
-  // Method 1: Check for subclass spellcasting via module flags (dropped items)
+  // ============================================================================
+  // Method 0: Check for CUSTOM spell lists advancement flag
+  // This is ONLY for custom/homebrew classes that have been explicitly configured
+  // Standard D&D classes will NOT have this flag and will use existing logic below
+  // ============================================================================
   const droppedItems = actor.getFlag(MODULE_ID, 'droppedItems');
+  
+  if (droppedItems) {
+    // Check subclass first (subclass spell lists override class spell lists)
+    let subclassItems = [];
+    if (Array.isArray(droppedItems)) {
+      subclassItems = droppedItems.filter(item => item.type === 'subclass');
+    } else if (typeof droppedItems === 'object' && droppedItems.subclass) {
+      subclassItems = Array.isArray(droppedItems.subclass) ? droppedItems.subclass : [droppedItems.subclass];
+    }
+    
+    for (const item of subclassItems) {
+      const subclassUuid = item.uuid;
+      if (subclassUuid) {
+        try {
+          const subclassItem = fromUuidSync(subclassUuid);
+          if (subclassItem) {
+            const customSpellLists = subclassItem.getFlag(MODULE_ID, 'spellLists');
+            if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
+              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on subclass:', subclassItem.name, '->', customSpellLists);
+              return customSpellLists; // Return array of spell lists for custom subclasses
+            }
+          }
+        } catch (error) {
+          window.GAS.log.w('[LEVELUP] Error checking custom spell lists on subclass:', error);
+        }
+      }
+    }
+    
+    // Check class
+    let classItems = [];
+    if (Array.isArray(droppedItems)) {
+      classItems = droppedItems.filter(item => item.type === 'class');
+    } else if (typeof droppedItems === 'object' && droppedItems.class) {
+      classItems = Array.isArray(droppedItems.class) ? droppedItems.class : [droppedItems.class];
+    }
+    
+    for (const item of classItems) {
+      const classUuid = item.uuid;
+      if (classUuid) {
+        try {
+          const classItem = fromUuidSync(classUuid);
+          if (classItem) {
+            const customSpellLists = classItem.getFlag(MODULE_ID, 'spellLists');
+            if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
+              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on class:', classItem.name, '->', customSpellLists);
+              return customSpellLists; // Return array of spell lists for custom classes
+            }
+          }
+        } catch (error) {
+          window.GAS.log.w('[LEVELUP] Error checking custom spell lists on class:', error);
+        }
+      }
+    }
+  }
+  
+  // ============================================================================
+  // EXISTING LOGIC FOR STANDARD D&D CLASSES - UNCHANGED
+  // Method 1: Check for subclass spellcasting via module flags (dropped items)
+  // ============================================================================
+  window.GAS.log.d('[LEVELUP] droppedItems flag:', droppedItems, 'isArray:', Array.isArray(droppedItems));
   window.GAS.log.d('[LEVELUP] droppedItems flag:', droppedItems, 'isArray:', Array.isArray(droppedItems));
   
   // Handle both array and object formats
