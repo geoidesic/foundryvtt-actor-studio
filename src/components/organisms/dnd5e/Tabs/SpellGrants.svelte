@@ -1,110 +1,114 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
-  import { characterClass, characterSubClass } from '~/src/stores/storeDefinitions';
+  import { readOnlyTabs } from '~/src/stores/index';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { availableSpells, selectedSpells, maxSpellLevel, 
-    initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
-    spellLimits, currentSpellCounts, spellProgress, autoPopulateAllSpells
-  } from '~/src/stores/spellSelection';
-  import spellsKnownData from '~/src/stores/spellsKnown.json';
+  import { loadAvailableSpells, availableSpells } from '~/src/stores/spellSelection';
+  import { activeSpellGrants, spellGrantSelections, addSpellGrantSelection, removeSpellGrantSelection } from '~/src/stores/spellGrants';
   import { MODULE_ID } from '~/src/helpers/constants';
-  import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
+  
+  export let sheet; // Passed from Tabs component
   
   const actor = getContext("#doc");
   
   let loading = true;
   let keywordFilter = '';
   let expandedLevels = {};
-  let selectedSpellsList = [];
   let scrolled = false;
   let spellContainer;
-  let cleanup;
-
-  $: isDisabled = $readOnlyTabs.includes('spells');
-  $: actorObject = $actor.toObject();
-
-  // Get character class name for spell filtering and limits
-  $: characterClassName = determineSpellListClass($actor) || $characterClass?.name || 'Bard'; // Default to Bard for testing
   
-  // Debug the character class name calculation and reload spells when it changes
+  // Local state for spell grants
+  let grantSpells = [];
+  let selectedSpellsList = [];
+  let currentGrant = null;
+
+  $: isDisabled = $readOnlyTabs.includes('spell-grants');
+  
+  // Get the first active grant (for now, we'll handle one at a time)
   $: {
-    try {
-      window.GAS.log.d('[SPELLS] characterClassName updated:', characterClassName, 'actor:', $actor?.name);
-      // Reload spells when character class name changes (for level-up scenarios)
-      if (characterClassName && $isLevelUp) {
-        loadAvailableSpells(characterClassName);
-      }
-    } catch (error) {
-      window.GAS.log.e('[SPELLS] Error in characterClassName reactive statement:', error);
+    if ($activeSpellGrants && $activeSpellGrants.length > 0) {
+      currentGrant = $activeSpellGrants[0];
+      window.GAS.log.d('[SPELL GRANTS] Current grant:', {
+        grant: currentGrant,
+        spellList: currentGrant.configuration?.restriction?.spellList,
+        breakdown: currentGrant.configuration?.breakdown,
+        levelRestriction: currentGrant.configuration?.restriction?.level
+      });
+    } else {
+      currentGrant = null;
     }
   }
   
-  // Calculate the effective character level for spell calculations
-  // For character creation: Always use level 1
-  // For level-up: Use the new level value
-  $: effectiveCharacterLevel = $isLevelUp && $newLevelValueForExistingClass 
-    ? $newLevelValueForExistingClass 
-    : 1; // Character creation is always level 1
+  // Get grant name for display
+  $: characterClassName = currentGrant ? 
+    (currentGrant.itemName || 'Unknown Grant') : 
+    'No Active Grant';
   
-  // Check if character class gets access to all spells
-  $: hasAllSpellsAccess = $spellLimits.hasAllSpells;
+  // Load spell selections for current grant
+  $: {
+    if (currentGrant) {
+      const selections = $spellGrantSelections.get(currentGrant.advancementId);
+      selectedSpellsList = selections?.selections || [];
+      window.GAS.log.d('[SPELL GRANTS] Selected spells for grant:', selectedSpellsList);
+    } else {
+      selectedSpellsList = [];
+    }
+  }
   
-  // Calculate max spell level based on character class and the effective level
-  $: calculatedMaxSpellLevel = getMaxSpellLevelForClass(effectiveCharacterLevel, characterClassName, $actor);
+  // Calculate spell limits from grant breakdown (e.g., Magic Initiate: 2 cantrips + 1 spell)
+  $: {
+    if (currentGrant?.configuration?.breakdown) {
+      // Grant has breakdown (e.g., Magic Initiate: separate cantrip and spell counts)
+      const breakdown = currentGrant.configuration.breakdown;
+      
+      // Find cantrip breakdown
+      const cantripBreakdown = breakdown.find(b => b.maxLevel === 0);
+      cantripLimit = cantripBreakdown?.count || 0;
+      
+      // Find spell breakdown (minLevel > 0)
+      const spellBreakdown = breakdown.find(b => b.minLevel && b.minLevel > 0);
+      spellLimit = spellBreakdown?.count || 0;
+      
+      window.GAS.log.d('[SPELL GRANTS] Breakdown limits:', { cantripLimit, spellLimit, breakdown });
+    } else if (currentGrant) {
+      // Simple grant (e.g., fighting style: 2 cantrips)
+      if (currentGrant.maxLevel === 0) {
+        cantripLimit = currentGrant.count;
+        spellLimit = 0;
+      } else if (currentGrant.minLevel > 0) {
+        cantripLimit = 0;
+        spellLimit = currentGrant.count;
+      } else {
+        cantripLimit = 0;
+        spellLimit = currentGrant.count;
+      }
+    } else {
+      cantripLimit = 0;
+      spellLimit = 0;
+    }
+  }
   
-  // For level-up scenarios, use the new level for spell level calculations
-  $: levelUpAwareMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
-    ? getMaxSpellLevelForClass($newLevelValueForExistingClass, characterClassName, $actor)
-    : calculatedMaxSpellLevel;
+  // Calculate CSS classes for limits
+  $: cantripCountCss = cantripLimit > 0 && cantripCount >= cantripLimit ? 'at-limit' : '';
+  $: spellCountCss = spellLimit > 0 && spellCount >= spellLimit ? 'at-limit' : '';
   
-  // Use our calculated max spell level if the store returns 0 (during character creation)
-  $: effectiveMaxSpellLevel = $maxSpellLevel > 0 ? $maxSpellLevel : levelUpAwareMaxSpellLevel;
+  // Get counts for display
+  $: cantripCount = selectedSpellsList.filter(s => s.system?.level === 0).length;
+  $: spellCount = selectedSpellsList.filter(s => s.system?.level > 0).length;
   
-  // Calculate old max spell level for level-up scenarios
-  $: oldMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
-    ? getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, characterClassName, $actor)
-    : 0;
+  // Reactive variable declarations (must be let, not const in reactive statements)
+  let cantripLimit = 0;
+  let spellLimit = 0;
   
-  // Determine if auto-populate should be offered
-  $: shouldOfferAutoPopulate = hasAllSpellsAccess && (
-    !$isLevelUp || // Always offer during character creation
-    (effectiveMaxSpellLevel > oldMaxSpellLevel) // Only offer during level-up if max spell level increased
-  );
+  // Determine available spell levels
+  $: effectiveMaxSpellLevel = currentGrant?.maxLevel || 0;
   
-  // Check if this is a level-up with no new spell access
-  $: isLevelUpWithNoSpellUpdates = $isLevelUp && hasAllSpellsAccess && effectiveMaxSpellLevel <= oldMaxSpellLevel;
-  
-  // Debug logging for character data
-  // $: {
-  //   window.GAS.log.d(`[SPELLS DEBUG] Character data:`, {
-  //     characterClass: $characterClass,
-  //     characterClassName,
-  //     effectiveCharacterLevel,
-  //     newLevelValueForExistingClass: $newLevelValueForExistingClass,
-  //     isLevelUp: $isLevelUp,
-  //     storeMaxSpellLevel: $maxSpellLevel,
-  //     calculatedMaxSpellLevel,
-  //     levelUpAwareMaxSpellLevel,
-  //     effectiveMaxSpellLevel,
-  //     spellLimits: $spellLimits,
-  //     progress: $spellProgress
-  //   });
-  // }
+  // These conditions don't apply to spell grants
+  $: shouldOfferAutoPopulate = false;
+  $: isLevelUpWithNoSpellUpdates = false;
   
   // Cache for enriched spell names
   let enrichedNames = {};
-
-  // Helper to safely get fromUuidSync
-  const fromUuidSync = (uuid) => {
-    try {
-      return foundry.utils?.fromUuidSync?.(uuid) || null;
-    } catch (error) {
-      window.GAS.log.w('[SPELLS] Error in fromUuidSync:', error);
-      return null;
-    }
-  };
 
   // Helper to get enriched HTML for spell name
   async function getEnrichedName(spell) {
@@ -122,132 +126,13 @@
     return enrichedNames[key];
   }
 
-  // Calculate max spell level based on class and character level
-  function getMaxSpellLevelForClass(level, className, actor = null) {
-    // Get the current D&D rules version
-    const rulesVersion = window.GAS?.dnd5eRules || '2014';
-    const is2024Rules = rulesVersion === '2024';
-    
-    // If we have an actor, try to determine spellcasting progression from actor's spellcasting system
-    if (actor) {
-      const actorData = actor.system || actor.data?.data;
-      if (actorData?.spellcasting) {
-        // Check if this is subclass spellcasting (like Eldritch Knight)
-        const spellcastingEntries = Object.values(actorData.spellcasting);
-        for (const entry of spellcastingEntries) {
-          if (entry.progression) {
-            // Use the progression from the actor's spellcasting system
-            return getMaxSpellLevelByProgression(level, entry.progression, is2024Rules);
-          }
-        }
-      }
-    }
-    
-    // Fallback to class-based detection
-    return getMaxSpellLevelByClassName(level, className, is2024Rules);
-  }
+  // Store scroll handler reference for cleanup
+  let scrollCleanup = null;
 
-  // Helper function to calculate max spell level by progression type
-  function getMaxSpellLevelByProgression(level, progression, is2024Rules) {
-    switch (progression) {
-      case 'full':
-        return Math.min(9, Math.ceil(level / 2));
-      case 'half':
-        if (is2024Rules) {
-          return Math.min(5, Math.ceil(level / 4));
-        } else {
-          return Math.min(5, Math.ceil((level - 1) / 4));
-        }
-      case 'third':
-        return Math.min(4, Math.ceil((level - 2) / 6));
-      case 'pact':
-        // Warlock progression
-        if (level >= 17) return 5;
-        if (level >= 11) return 3;
-        if (level >= 7) return 2;
-        if (level >= 1) return 1;
-        return 0;
-      default:
-        return 0;
-    }
-  }
-
-  // Helper function to calculate max spell level by class name (fallback)
-  function getMaxSpellLevelByClassName(level, className, is2024Rules) {
-    // Standard D&D 5e spellcasting progression for full casters
-    const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
-    const halfCasters = ['Paladin', 'Ranger'];
-    const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
-    const warlockProgression = ['Warlock'];
-    
-    if (fullCasters.includes(className)) {
-      // Full casters: spell level = Math.ceil(character level / 2), max 9
-      return Math.min(9, Math.ceil(level / 2));
-    } else if (halfCasters.includes(className)) {
-      // Half casters: Different progression for 2014 vs 2024 rules
-      if (is2024Rules) {
-        // 2024 rules: Half casters start spellcasting at level 1
-        return Math.min(5, Math.ceil(level / 4));
-      } else {
-        // 2014 rules: Half casters start spellcasting at level 2
-        return Math.min(5, Math.ceil((level - 1) / 4));
-      }
-    } else if (thirdCasters.includes(className)) {
-      // Third casters: spell level = Math.ceil((character level - 2) / 6), max 4
-      return Math.min(4, Math.ceil((level - 2) / 6));
-    } else if (warlockProgression.includes(className)) {
-      // Warlocks have their own progression
-      if (level >= 17) return 5;
-      if (level >= 11) return 3;
-      if (level >= 7) return 2;
-      if (level >= 1) return 1;
-      return 0;
-    } else if (className === 'Artificer') {
-      // Artificers: Different progression for 2014 vs 2024 rules
-      if (is2024Rules) {
-        // 2024 rules: Artificers start spellcasting at level 1
-        return Math.min(5, Math.ceil(level / 4));
-      } else {
-        // 2014 rules: Artificers start spellcasting at level 2
-        if (level < 2) return 0;
-        return Math.min(5, Math.ceil((level - 1) / 4));
-      }
-    }
-    
-    // Non-spellcasting classes
-    return 0;
-  }
-
-  // Fetch spells when component mounts
+  // Fetch spells when component mounts or grant changes
   onMount(async () => {
-    loading = true;
+    await loadGrantSpells();
     
-    // Initialize spell selection with current actor
-    initializeSpellSelection($actor);
-    
-    // Load available spells with character class filtering
-    // Note: This might be overridden by LevelUpStateMachine, but we need it for character creation
-    await loadAvailableSpells(characterClassName);
-    
-    // Debug logging
-    // window.GAS.log.d(`[SPELLS DEBUG] Loaded spells:`, {
-    //   totalSpells: $availableSpells.length,
-    //   effectiveCharacterLevel,
-    //   storeMaxSpellLevel: $maxSpellLevel,
-    //   calculatedMaxSpellLevel,
-    //   effectiveMaxSpellLevel,
-    //   characterClassName,
-    //   spellLimits,
-    //   sampleSpells: $availableSpells.slice(0, 5).map(s => ({
-    //     name: s.name,
-    //     level: s.system?.level,
-    //     classes: s.labels?.classes || []
-    //   }))
-    // });
-    
-    loading = false;
-    window.GAS.log.d('[SPELLS] Component mounted, loading set to false, availableSpells count:', $availableSpells.length);
-
     // Find the actual scrolling container (section.a from PCAppShell)
     const scrollingContainer = document.querySelector('#foundryvtt-actor-studio-pc-sheet section.a');
     if (scrollingContainer) {
@@ -256,57 +141,91 @@
       };
       scrollingContainer.addEventListener('scroll', handleScroll);
       
-      // Cleanup on destroy
-      cleanup = () => {
+      // Store cleanup function
+      scrollCleanup = () => {
         scrollingContainer.removeEventListener('scroll', handleScroll);
       };
     }
   });
-
+  
+  // Cleanup on component destroy
   onDestroy(() => {
-    if (cleanup) {
-      cleanup();
+    if (scrollCleanup) {
+      scrollCleanup();
     }
-  });
-
-  // Update selected spells list when selectedSpells changes
-  $: {
-    if ($selectedSpells) {
-      selectedSpellsList = Array.from($selectedSpells.entries()).map(([spellId, { itemData }]) => ({
-        id: spellId,
-        spell: itemData
-      }));
-    }
-  }
-  $: actorSpells = $actor.items.filter(item => item.type === 'spell');
-
-  $: window.GAS.log.g(actorSpells);
-
-  // Filter spells by keyword and character class
-  $: filteredSpells = $availableSpells.filter(spell => {
-    const matchesKeyword = spell.name.toLowerCase().includes(keywordFilter.toLowerCase());
-    const spellLevel = spell.system?.level || 0;
-    
-    // Only show cantrips if character can learn them (cantrip limit > 0)
-    // This fixes Rangers 2014 who get 0 cantrips but were still seeing cantrips in the list
-    // Allow spells up to the character's max spell level
-    // OR allow level 1 spells if the character has spell slots available (fixes Ranger 2024 issue)
-    const withinCharacterLevel = 
-      (spellLevel === 0 && $spellLimits.cantrips > 0) || 
-      (spellLevel > 0 && spellLevel <= effectiveMaxSpellLevel) || 
-      (spellLevel === 1 && $spellLimits.spells > 0);
-    
-    const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
-    const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
-
-    // NOTE: class availability is already resolved by `loadAvailableSpells()` and
-    // embedded in the `availableSpells` store. The UI should not re-run class
-    // filtering here to avoid accidental double-filtering or divergent logic.
-    return matchesKeyword && withinCharacterLevel && !alreadySelected && !alreadyKnown
   });
   
-  // Debug filtered spells
-  $: window.GAS.log.d('[SPELLS] Filtered spells count:', filteredSpells.length, 'from available:', $availableSpells.length);
+  // Reload spells when current grant changes
+  $: {
+    if (currentGrant) {
+      loadGrantSpells();
+    }
+  }
+  
+  async function loadGrantSpells() {
+    if (!currentGrant) return;
+    
+    loading = true;
+    
+    // Load spells from the grant's spell list(s)
+    // spellList is in configuration.restriction.spellList
+    const spellList = currentGrant.configuration?.restriction?.spellList;
+    const spellLists = Array.isArray(spellList) ? spellList : [spellList];
+      
+    window.GAS.log.d('[SPELL GRANTS] Loading spells for grant:', {
+      grantName: currentGrant.itemName,
+      spellLists,
+      grant: currentGrant
+    });
+    
+    await loadAvailableSpells(spellLists);
+    
+    loading = false;
+  }
+  
+  // Subscribe to availableSpells and apply grant-specific filtering
+  $: {
+    if ($availableSpells && currentGrant) {
+      // Filter spells by grant's level requirements
+      grantSpells = $availableSpells.filter(spell => {
+        const spellLevel = spell.system?.level || 0;
+        
+        // Get level restrictions from configuration
+        const levelRestriction = currentGrant.configuration?.restriction?.level;
+        const minLevel = levelRestriction?.min ?? 0;
+        const maxLevel = levelRestriction?.max ?? 9;
+        
+        // Check if spell level is within grant's min/max range
+        if (spellLevel < minLevel || spellLevel > maxLevel) {
+          return false;
+        }
+        
+        // Check school restriction if specified
+        const school = currentGrant.configuration?.restriction?.school;
+        if (school && spell.system?.school !== school) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      window.GAS.log.d('[SPELL GRANTS] Filtered spells:', {
+        totalAvailable: $availableSpells.length,
+        afterFiltering: grantSpells.length,
+        levelRestriction: currentGrant.configuration?.restriction?.level
+      });
+    } else {
+      grantSpells = [];
+    }
+  }
+
+  // Filter spells by keyword
+  $: filteredSpells = keywordFilter 
+    ? grantSpells.filter(spell => 
+        spell.name.toLowerCase().includes(keywordFilter.toLowerCase()) ||
+        spell.system?.school?.toLowerCase().includes(keywordFilter.toLowerCase())
+      )
+    : grantSpells;
 
   // Group spells by level
   $: spellsByLevel = filteredSpells.reduce((acc, spell) => {
@@ -319,20 +238,6 @@
     return acc;
   }, {});
 
-  // Debug logging for spell grouping
-  // $: {
-  //   if (Object.keys(spellsByLevel).length > 0) {
-  //     window.GAS.log.d(`[SPELLS DEBUG] Spells by level:`, {
-  //       totalFiltered: filteredSpells.length,
-  //       groupedByLevel: Object.keys(spellsByLevel).map(level => ({
-  //         level,
-  //         count: spellsByLevel[level].length,
-  //         samples: spellsByLevel[level].slice(0, 3).map(s => s.name)
-  //       }))
-  //     });
-  //   }
-  // }
-
   $: spellLevels = Object.keys(spellsByLevel).sort((a, b) => {
     if (a === 'Cantrips') return -1;
     if (b === 'Cantrips') return 1;
@@ -341,70 +246,60 @@
     return levelA - levelB;
   });
 
+  // Initialize expanded levels when spells load
+  $: if (spellLevels.length > 0 && Object.keys(expandedLevels).length === 0) {
+    expandedLevels = spellLevels.reduce((acc, level) => {
+      acc[level] = true;
+      return acc;
+    }, {});
+  }
+
   // Toggle spell level expansion
   function toggleSpellLevel(level) {
     expandedLevels[level] = !expandedLevels[level];
     expandedLevels = { ...expandedLevels };
   }
 
-  // Add spell to selection
+  // Add spell to grant selection
   async function addToSelection(spell) {
-    // Always get the latest store values to avoid stale cap checks
-    await tick();
-    const spellLevel = spell.system?.level || 0;
-    const isCantrip = spellLevel === 0;
-    const counts = get(currentSpellCounts);
-    const limits = get(spellLimits);
-
-    // Strict enforcement: check if adding this spell would exceed limits
-    if (isCantrip && counts.cantrips >= limits.cantrips) {
-      ui.notifications?.warn(t('Spells.CantripLimitReached'));
-      return;
-    }
-    if (!isCantrip && counts.spells >= limits.spells) {
-      ui.notifications?.warn(t('Spells.SpellLimitReached'));
-      return;
-    }
+    if (!currentGrant) return;
     
-    // Double-check that we're not adding duplicates
     const spellId = spell.id || spell._id;
-    const currentSelections = get(selectedSpells);
-    if (currentSelections.has(spellId)) {
+    
+    // Check if already selected
+    if (selectedSpellsList.some(s => (s.id || s._id) === spellId)) {
       ui.notifications?.warn('Spell already selected');
       return;
     }
     
-    await addSpell(spell);
+    // Check limits based on spell level
+    const spellLevel = spell.system?.level || 0;
+    if (spellLevel === 0 && cantripLimit > 0) {
+      const currentCantrips = selectedSpellsList.filter(s => s.system?.level === 0).length;
+      if (currentCantrips >= cantripLimit) {
+        ui.notifications?.warn(`You can only select ${cantripLimit} cantrip(s) from this grant`);
+        return;
+      }
+    } else if (spellLevel > 0 && spellLimit > 0) {
+      const currentSpells = selectedSpellsList.filter(s => s.system?.level > 0).length;
+      if (currentSpells >= spellLimit) {
+        ui.notifications?.warn(`You can only select ${spellLimit} spell(s) from this grant`);
+        return;
+      }
+    }
+    
+    // Add to grant selections - add this spell to existing selections
+    const currentSelections = $spellGrantSelections.get(currentGrant.advancementId)?.selections || [];
+    const updatedSelections = [...currentSelections, spell];
+    addSpellGrantSelection(currentGrant.advancementId, currentGrant, updatedSelections);
   }
 
   // Remove spell from selection
   function removeFromSelection(spellId) {
-    removeSpell(spellId);
-  }
-
-  // Auto-populate all spells for classes that get all spells
-  async function autoPopulateSpells() {
-    if (!hasAllSpellsAccess) {
-      ui.notifications?.warn('This class does not have access to all spells');
-      return;
-    }
-    
-    try {
-      const success = await autoPopulateAllSpells(
-        characterClassName, 
-        effectiveMaxSpellLevel, 
-        $actor, 
-        $isLevelUp, 
-        oldMaxSpellLevel
-      );
-      if (success) {
-        // Refresh the selected spells list
-        await tick();
-      }
-    } catch (error) {
-      console.error('Error auto-populating spells:', error);
-      ui.notifications?.error('Failed to auto-populate spells');
-    }
+    if (!currentGrant) return;
+    const currentSelections = $spellGrantSelections.get(currentGrant.advancementId)?.selections || [];
+    const updatedSelections = currentSelections.filter(s => s.id !== spellId);
+    addSpellGrantSelection(currentGrant.advancementId, currentGrant, updatedSelections);
   }
 
   // Get spell school display name
@@ -430,55 +325,32 @@
         : spell.system?.activation?.type ? spell.system?.activation?.type
       : 'Unknown';
   }
-
-  $: cantripCountCss = $currentSpellCounts.cantrips >= $spellLimits.cantrips
-  $: spellCountCss = $currentSpellCounts.spells >= $spellLimits.spells
 </script>
 
 <template lang="pug">
-spells-tab-container(clas:readonlys="{isDisabled}")
+spells-tab-container(class:readonly="{isDisabled}")
  
   +if("isDisabled")
     .info-message {t('Spells.SpellsReadOnly')}
-    +elseif("isLevelUpWithNoSpellUpdates")
-      .info-message.no-updates-notice
-        p 
-          strong No spell updates needed for this level-up
-        p 
-          | {characterClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
-        p 
-          em Your spell selection is complete - no changes needed.
-    +elseif("shouldOfferAutoPopulate")
-      .info-message.all-spells-notice
-        p 
-          strong {characterClassName}s 
-          | have access to all spells of appropriate level. You only need to select the cantrips you want to know - all other spells can be prepared during gameplay.
-        p 
-          em Note: You still need to select your cantrips as they cannot be changed later.
-        .auto-populate-section
-          button.auto-populate-btn(
-            on:click!="{ () => autoPopulateSpells() }" 
-            disabled="{isDisabled || loading}"
-          )
-            i.fas.fa-magic
-            +if("$isLevelUp && effectiveMaxSpellLevel > oldMaxSpellLevel")
-              span Auto-populate New Level {effectiveMaxSpellLevel} Spells
-              +else()
-                span Auto-populate All Spells (Levels 1-{effectiveMaxSpellLevel})
+
   .sticky-header(class:hidden="{!scrolled}")
     .panel-header-grid
-      .grid-item.label {t('Spells.Cantrips')}:
-      .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-      .grid-item.label {t('Spells.Spells')}:
-      .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+      +if("cantripLimit > 0")
+        .grid-item.label {t('Spells.Cantrips')}:
+        .grid-item.value(class:at-limit="{cantripCountCss}") {cantripCount}/{cantripLimit}
+      +if("spellLimit > 0")
+        .grid-item.label {t('Spells.Spells')}:
+        .grid-item.value(class:at-limit="{spellCountCss}") {spellCount}/{spellLimit}
   
   .spells-tab
     .left-panel(bind:this="{spellContainer}")
       .panel-header-grid(class:hidden="{scrolled}")
-        .grid-item.label {t('Spells.Cantrips')}:
-        .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-        .grid-item.label {t('Spells.Spells')}:
-        .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+        +if("cantripLimit > 0")
+          .grid-item.label {t('Spells.Cantrips')}:
+          .grid-item.value(class:at-limit="{cantripCountCss}") {cantripCount}/{cantripLimit}
+        +if("spellLimit > 0")
+          .grid-item.label {t('Spells.Spells')}:
+          .grid-item.value(class:at-limit="{spellCountCss}") {spellCount}/{spellLimit}
       h3 {t('Spells.SelectedSpells')}
 
       .selected-spells
@@ -490,23 +362,23 @@ spells-tab-container(clas:readonlys="{isDisabled}")
             +each("selectedSpellsList as selectedSpell")
               .selected-spell
                 .spell-col1
-                  img.spell-icon( alt="{selectedSpell.spell.name}" src="{selectedSpell.spell.img}")
+                  img.spell-icon( alt="{selectedSpell.name}" src="{selectedSpell.img}")
                 .spell-col2.left            
                   .spell-name
-                    +await("getEnrichedName(selectedSpell.spell)")
-                      span {selectedSpell.spell.name}
+                    +await("getEnrichedName(selectedSpell)")
+                      span {selectedSpell.name}
                       +then("Html")
                         span {@html Html}
                       +catch("error")
-                        span {selectedSpell.spell.name}
+                        span {selectedSpell.name}
 
 
                   .spell-subdetails
-                    span.spell-level {getSpellLevelDisplay(selectedSpell.spell)}
-                    span.spell-school {getSchoolName(selectedSpell.spell)}
+                    span.spell-level {getSpellLevelDisplay(selectedSpell)}
+                    span.spell-school {getSchoolName(selectedSpell)}
 
                 .spell-col3
-                  button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id) }" disabled="{isDisabled}")
+                  button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id || selectedSpell._id) }" disabled="{isDisabled}")
                     i.fas.fa-trash
 
     .right-panel.spell-list

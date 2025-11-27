@@ -1,7 +1,9 @@
-# Feat Integration Plan for Actor Studio
+# Feat-Granted Spell Support Implementation
+
+## ✅ STATUS: COMPLETE
 
 ## Overview
-This plan outlines the implementation of custom feat selection in Actor Studio's advancement capture system. The goal is to replace the dnd5e system's stock compendium browser for feat choices with a curated, settings-driven Svelte component that integrates seamlessly into the Actor Studio workflow.
+This implementation adds support for spell/cantrip choices granted by feats and fighting styles (Magic Initiate, Druidic Warrior, Blessed Warrior, etc.) in Actor Studio's character creation and level-up workflow.
 
 ## Implementation Strategy
 The implementation follows a phased approach to maintain compatibility with dnd5e's advancement system while providing a better UX:

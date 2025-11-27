@@ -1,0 +1,229 @@
+<script>
+  import { onMount } from 'svelte';
+  import { activeSpellGrants, spellGrantSelections, addSpellGrantSelection } from '~/src/stores/spellGrants.js';
+  import SpellGrantSelector from '~/src/components/molecules/dnd5e/SpellGrantSelector.svelte';
+  import { loadAvailableSpells, availableSpells } from '~/src/stores/spellSelection.js';
+  import { SpellGrantDetection } from '~/src/helpers/SpellGrantDetection.js';
+  
+  let grantSpells = []; // Spells loaded specifically for spell grants
+  let loading = true;
+  
+  // Get all unique spell lists required by active grants
+  $: requiredSpellLists = getRequiredSpellLists($activeSpellGrants);
+  
+  // Check if all grants are complete
+  $: allGrantsComplete = checkAllGrantsComplete($activeSpellGrants, $spellGrantSelections);
+  
+  function getRequiredSpellLists(grants) {
+    const lists = new Set();
+    
+    grants.forEach(grant => {
+      const spellList = grant.configuration?.restriction?.spellList;
+      if (spellList) {
+        if (Array.isArray(spellList)) {
+          spellList.forEach(list => lists.add(list));
+        } else {
+          lists.add(spellList);
+        }
+      }
+    });
+    
+    return Array.from(lists);
+  }
+  
+  function checkAllGrantsComplete(grants, selections) {
+    if (grants.length === 0) return true;
+    
+    return grants.every(grant => {
+      const selection = selections.get(grant.advancementId);
+      if (!selection) return false;
+      
+      const validation = SpellGrantDetection.validateSpellSelection(grant, selection.selections);
+      return validation.valid;
+    });
+  }
+  
+  // Load spells for all required spell lists
+  async function loadGrantSpells(spellLists) {
+    if (spellLists.length === 0) {
+      grantSpells = [];
+      loading = false;
+      return;
+    }
+    
+    loading = true;
+    
+    if (typeof window !== 'undefined' && window.GAS?.log) {
+      window.GAS.log.d('[SpellGrants Tab] Loading spells for lists:', spellLists);
+    }
+    
+    // loadAvailableSpells already supports arrays of class names!
+    // Pass all spell lists at once instead of loading one at a time
+    await loadAvailableSpells(spellLists);
+    
+    // Get the loaded spells from the store
+    const unsubscribe = availableSpells.subscribe(spells => {
+      grantSpells = spells || [];
+    });
+    unsubscribe();
+    
+    loading = false;
+    
+    if (typeof window !== 'undefined' && window.GAS?.log) {
+      window.GAS.log.d('[SpellGrants Tab] Loaded grant spells:', {
+        spellLists,
+        totalSpells: grantSpells.length
+      });
+    }
+  }
+  
+  // Reload spells when required lists change
+  $: if (requiredSpellLists.length > 0) {
+    loadGrantSpells(requiredSpellLists);
+  }
+  
+  function handleSpellChange(grantInfo, spells) {
+    addSpellGrantSelection(grantInfo.advancementId, grantInfo, spells);
+  }
+  
+  function getSelectionsForGrant(advancementId) {
+    return $spellGrantSelections.get(advancementId)?.selections || [];
+  }
+  
+  onMount(() => {
+    if (typeof window !== 'undefined' && window.GAS?.log) {
+      window.GAS.log.d('[SpellGrants Tab] Mounted with grants:', $activeSpellGrants.length);
+    }
+  });
+</script>
+
+<template lang="pug">
+.spell-grants-tab
+  .tab-header
+    h1.tab-title Feat & Fighting Style Spell Grants
+  +if("loading")
+    .loading-container
+      .loading-spinner
+      p.loading-text Loading available spells...
+    +else
+      +if("$activeSpellGrants.length === 0")
+        .no-grants-message
+          p No spell grants available at this time.
+        +else
+          .grants-container
+            +each("$activeSpellGrants as grant")
+              .grant-wrapper
+                SpellGrantSelector(
+                  grantInfo!="{grant}"
+                  selectedSpells!="{getSelectionsForGrant(grant.advancementId)}"
+                  allSpells!="{grantSpells}"
+                  on:change!="{(e) => handleSpellChange(grant, e.detail)}"
+              )
+        
+        .completion-status
+          +if("allGrantsComplete")
+            .status-complete
+              i.fas.fa-check-circle
+              span All spell grants completed! You can proceed to the next step.
+            +else
+              .status-incomplete
+                i.fas.fa-exclamation-circle
+                span Please complete all spell grant selections before proceeding.
+</template>
+
+<style lang="sass">
+  .spell-grants-tab
+    padding: 1.5rem
+    max-width: 1200px
+    margin: 0 auto
+
+  .tab-header
+    margin-bottom: 2rem
+    text-align: center
+    
+    .tab-title
+      margin: 0 0 0.5rem 0
+      font-size: 2rem
+      font-weight: 700
+      color: var(--color-text-dark-primary, #000)
+    
+    .tab-description
+      margin: 0
+      font-size: 1rem
+      color: var(--color-text-dark-5, rgba(0, 0, 0, 0.6))
+
+  .loading-container
+    display: flex
+    flex-direction: column
+    align-items: center
+    justify-content: center
+    padding: 4rem 2rem
+    
+    .loading-spinner
+      width: 48px
+      height: 48px
+      border: 4px solid rgba(0, 0, 0, 0.1)
+      border-top-color: var(--color-primary, #4a90e2)
+      border-radius: 50%
+      animation: spin 1s linear infinite
+    
+    .loading-text
+      margin-top: 1rem
+      font-style: italic
+      color: var(--color-text-dark-5, rgba(0, 0, 0, 0.6))
+
+  @keyframes spin
+    to
+      transform: rotate(360deg)
+
+  .no-grants-message
+    padding: 3rem 2rem
+    text-align: center
+    background: rgba(0, 0, 0, 0.03)
+    border-radius: 8px
+    
+    p
+      margin: 0
+      font-size: 1.1rem
+      color: var(--color-text-dark-5, rgba(0, 0, 0, 0.6))
+
+  .grants-container
+    display: flex
+    flex-direction: column
+    gap: 2rem
+    margin-bottom: 2rem
+  
+  .grant-wrapper
+    background: rgba(0, 0, 0, 0.02)
+    border: 1px solid rgba(0, 0, 0, 0.1)
+    border-radius: 8px
+    padding: 1.5rem
+
+  .completion-status
+    margin-top: 2rem
+    padding: 1rem 1.5rem
+    border-radius: 8px
+    font-size: 1rem
+    
+    .status-complete
+      display: flex
+      align-items: center
+      gap: 0.75rem
+      background: rgba(76, 175, 80, 0.1)
+      border: 1px solid rgba(76, 175, 80, 0.3)
+      color: #2e7d32
+      
+      i
+        font-size: 1.25rem
+    
+    .status-incomplete
+      display: flex
+      align-items: center
+      gap: 0.75rem
+      background: rgba(255, 152, 0, 0.1)
+      border: 1px solid rgba(255, 152, 0, 0.3)
+      color: #e65100
+      
+      i
+        font-size: 1.25rem
+</style>

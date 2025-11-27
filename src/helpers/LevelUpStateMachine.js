@@ -117,7 +117,7 @@ function determineSpellListClass(actor) {
       if (subclassUuid) {
         try {
           const subclassItem = fromUuidSync(subclassUuid);
-          if (subclassItem) {
+          if (subclassItem && typeof subclassItem.getFlag === 'function') {
             const customSpellLists = subclassItem.getFlag(MODULE_ID, 'spellLists');
             if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
               window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on subclass:', subclassItem.name, '->', customSpellLists);
@@ -143,7 +143,7 @@ function determineSpellListClass(actor) {
       if (classUuid) {
         try {
           const classItem = fromUuidSync(classUuid);
-          if (classItem) {
+          if (classItem && typeof classItem.getFlag === 'function') {
             const customSpellLists = classItem.getFlag(MODULE_ID, 'spellLists');
             if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
               window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on class:', classItem.name, '->', customSpellLists);
@@ -501,7 +501,7 @@ export function createLevelUpStateMachine() {
       .on('skip_spells').transitionTo('completed')
       .on('error').transitionTo('error')
       .on('reset').transitionTo('idle')
-      .onEnter((context) => {
+      .onEnter(async (context) => {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(false);
         window.GAS.log.d('[LEVELUP] Entered SELECTING_SPELLS state');
         
@@ -529,23 +529,29 @@ export function createLevelUpStateMachine() {
         if (actor) {
           try {
             // Import spell selection functions
-            import('~/src/stores/spellSelection').then(({ initializeSpellSelection, loadAvailableSpells }) => {
-              window.GAS.log.d('[LEVELUP] Initializing spell selection for actor:', actor.name);
-              initializeSpellSelection(actor);
-              
-              // Determine the correct spell list for this character
-              const spellListClass = determineSpellListClass(actor);
-              if (spellListClass) {
-                loadAvailableSpells(spellListClass);
-                window.GAS.log.d('[LEVELUP] Loading spells for spell list class:', spellListClass);
-              }
-            });
+            const { initializeSpellSelection, loadAvailableSpells } = await import('~/src/stores/spellSelection');
+            window.GAS.log.d('[LEVELUP] Initializing spell selection for actor:', actor.name);
+            initializeSpellSelection(actor);
+            
+            // Determine the correct spell list for this character
+            const spellListClass = determineSpellListClass(actor);
+            if (spellListClass) {
+              loadAvailableSpells(spellListClass);
+              window.GAS.log.d('[LEVELUP] Loading spells for spell list class:', spellListClass);
+            }
           } catch (error) {
             window.GAS.log.e('[LEVELUP] Error initializing spell selection:', error);
           }
         }
         
-        // Force remove advancement tab and add spells tab
+        // Check for spell grants AFTER loading the store
+        const { activeSpellGrants } = await import('~/src/stores/spellGrants');
+        const grants = get(activeSpellGrants);
+        const hasSpellGrants = grants && grants.length > 0;
+        
+        window.GAS.log.d('[LEVELUP] Spell grants check:', { hasSpellGrants, grantCount: grants?.length, grants });
+        
+        // Force remove advancement tab and add spell tabs
         levelUpTabs.update(t => {
           window.GAS.log.d('[LEVELUP] Current levelUpTabs before filtering:', t);
           
@@ -558,6 +564,13 @@ export function createLevelUpStateMachine() {
             return shouldKeep;
           });
           
+          // Add spell grants tab FIRST if there are active grants
+          if (hasSpellGrants && !filteredTabs.find(tab => tab.id === "spell-grants")) {
+            const spellGrantsTab = { label: "Feat Spells", id: "spell-grants", component: "SpellGrants" };
+            filteredTabs.push(spellGrantsTab);
+            window.GAS.log.d('[LEVELUP] Added spell grants tab:', spellGrantsTab);
+          }
+          
           // Add spells tab if not present
           if (!filteredTabs.find(tab => tab.id === "spells")) {
             const spellsTab = { label: "Spells", id: "spells", component: "Spells" };
@@ -568,8 +581,15 @@ export function createLevelUpStateMachine() {
           window.GAS.log.d('[LEVELUP] Final levelUpTabs after filtering:', filteredTabs);
           return filteredTabs;
         });
-        activeTab.set("spells");
-        window.GAS.log.d('[LEVELUP] Set active tab to spells');
+        
+        // Set active tab based on whether spell grants exist
+        if (hasSpellGrants) {
+          window.GAS.log.d('[LEVELUP] Setting active tab to spell-grants');
+          activeTab.set("spell-grants");
+        } else {
+          window.GAS.log.d('[LEVELUP] Setting active tab to spells');
+          activeTab.set("spells");
+        }
       })
     
     // COMPLETED STATE

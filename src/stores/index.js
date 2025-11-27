@@ -24,6 +24,29 @@ export {
 } from '~/src/stores/equipmentGold';
 // Import spell selection store to ensure it gets loaded
 import '~/src/stores/spellSelection';
+// Import and re-export spell grants stores
+import { 
+  activeSpellGrants, 
+  spellGrantSelections, 
+  spellGrantsComplete,
+  spellGrantProgress,
+  spellGrantValidationErrors,
+  addSpellGrantSelection,
+  removeSpellGrantSelection,
+  clearSpellGrantSelections,
+  getSelectionsForGrant
+} from '~/src/stores/spellGrants';
+export { 
+  activeSpellGrants, 
+  spellGrantSelections, 
+  spellGrantsComplete,
+  spellGrantProgress,
+  spellGrantValidationErrors,
+  addSpellGrantSelection,
+  removeSpellGrantSelection,
+  clearSpellGrantSelections,
+  getSelectionsForGrant
+} from '~/src/stores/spellGrants';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -233,6 +256,7 @@ export function resetStores() {
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
+  clearSpellGrantSelections(); //- void - Clear spell grant selections
   
   // Clear spell selection stores
   try {
