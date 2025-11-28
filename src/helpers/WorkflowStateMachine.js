@@ -79,53 +79,113 @@ export const workflowFSMContext = {
     // 3. Known spellcasting subclasses (fallback for hardcoded detection)
     
     const classes = actorForDecision.classes || {};
-    const classKeys = Object.keys(classes);
+    const preSelections = get(preAdvancementSelections);
+    let classEntries = Object.entries(classes);
+    
+    // Fallback to the cached compendium class selection when the actor isn't created yet
+    if (!classEntries.length && preSelections?.class) {
+      classEntries = [[preSelections.class.system?.identifier || preSelections.class.name || 'selected-class', preSelections.class]];
+    }
+    
+    if (!classEntries.length) {
+      window.GAS.log.d('[WORKFLOW] No classes available (actor or pre-selection), returning false for spellcaster check');
+      return false;
+    }
+    
+    const classDataList = classEntries.map(([, classData]) => classData).filter(Boolean);
+    const classNamesLower = classDataList
+      .map((classData) => (classData?.system?.identifier || classData?.name || '').toLowerCase())
+      .filter(Boolean);
     
     // Method 1: Check class-based spellcasting progression
-    const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
+    // This is the PRIMARY check - if any class has spellcasting progression, the actor is a spellcaster
+    const spellcastingInfo = classDataList.map((classData) => {
       const progression = classData?.system?.spellcasting?.progression;
-      return { className, progression, isSpellcaster: progression && progression !== "none" };
+      return { 
+        className: classData?.name || classData?.system?.identifier || 'unknown-class',
+        identifier: classData?.system?.identifier,
+        progression,
+        isSpellcaster: progression && progression !== "none"
+      };
     });
     
     const hasClassSpellcasting = spellcastingInfo.some(info => info.isSpellcaster);
     
+    // Check if ANY class explicitly has progression: "none" - if so, skip actor-level checks entirely
+    const hasExplicitNonSpellcaster = spellcastingInfo.some(info => info.progression === "none");
+    
+    // DEBUG: Log spellcasting info to understand what we're detecting
+    window.GAS.log.d('[WORKFLOW] Spellcasting info check:', {
+      spellcastingInfo,
+      hasClassSpellcasting,
+      hasExplicitNonSpellcaster,
+      classNamesLower
+    });
+    
     // Method 2: Check actor system spellcasting (granted through advancements)
+    // Only check this if:
+    // 1. NO class has spellcasting progression, AND
+    // 2. NO class explicitly has progression: "none" (for cases like Eldritch Knight where Fighter has no progression but subclass grants it)
     const actorData = actorForDecision.system || actorForDecision.data?.data;
     
-    // Check for traditional spellcasting system
-    const hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+    let hasActorSpellcasting = false;
+    let hasTraditionalSpellcasting = false;
+    let hasSpellSlots = false;
+    let hasPactMagic = false;
     
-    // Check for spell slots added by advancements (like Eldritch Knight)
-    const hasSpellSlots = actorData?.spells && Object.values(actorData.spells).some(slot => 
-      slot.type === 'spell' && slot.max > 0
-    );
-    
-    // Check for pact magic slots
-    const hasPactMagic = actorData?.spells && Object.values(actorData.spells).some(slot => 
-      slot.type === 'pact'
-    );
-    
-    const hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    // Only check actor-level spellcasting if no class has spellcasting AND no class explicitly says "none"
+    // This prevents false positives where non-spellcasters have empty/default spell slot structures
+    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+      // Check for traditional spellcasting system
+      hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+      
+      // Check for spell slots added by advancements (like Eldritch Knight)
+      hasSpellSlots = actorData?.spells && Object.values(actorData.spells || {}).some(slot => 
+        slot && slot.type === 'spell' && slot.max > 0
+      );
+      
+      // Check for pact magic slots (only count if they have max > 0 and actor has Warlock class)
+      // DEBUG: Log what we're actually checking to understand why hasPactMagic might be true
+      window.GAS.log.d('[WORKFLOW] Checking for pact magic:', {
+        hasSpells: !!actorData?.spells,
+        spellsType: typeof actorData?.spells,
+        spellsIsArray: Array.isArray(actorData?.spells),
+        spellsValue: actorData?.spells,
+        spellsKeys: actorData?.spells && typeof actorData.spells === 'object' ? Object.keys(actorData.spells) : 'N/A',
+        spellsValues: actorData?.spells && typeof actorData.spells === 'object' ? Object.values(actorData.spells) : 'N/A',
+        classNamesLower,
+        hasWarlock: classNamesLower.includes('warlock')
+      });
+      
+      hasPactMagic = actorData?.spells && 
+        typeof actorData.spells === 'object' && 
+        !Array.isArray(actorData.spells) &&
+        Object.values(actorData.spells).some(slot => 
+          slot && typeof slot === 'object' && slot.type === 'pact' && slot.max > 0
+        ) && 
+        classNamesLower.includes('warlock');
+      
+      hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    }
     
     // Method 3: Fallback check for known spellcasting classes/subclasses
     const knownSpellcastingClasses = [
       'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
       'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
     ];
-    const hasKnownSpellcastingClass = classKeys.some(className => 
-      knownSpellcastingClasses.includes(className.toLowerCase())
+    const hasKnownSpellcastingClass = classNamesLower.some(className => 
+      knownSpellcastingClasses.includes(className)
     );
     
     // Method 4: Check for subclass spellcasting that might be granted through advancements
     // This is a more aggressive check for cases where the actor system hasn't been updated yet
-    const hasSubclassSpellcasting = classKeys.some(className => {
-      const lowerClassName = className.toLowerCase();
+    const hasSubclassSpellcasting = classNamesLower.some(lowerClassName => {
       // Check for known spellcasting subclasses
       return ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(lowerClassName);
     });
     
     // Method 5: Check for subclass in the class data itself (e.g., fighter with eldritchknight subclass)
-    const hasSubclassInClassData = Object.values(classes).some(classData => {
+    const hasSubclassInClassData = classDataList.some(classData => {
       const subclass = classData?.system?.subclass;
       return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclass.toLowerCase());
     });
@@ -133,7 +193,10 @@ export const workflowFSMContext = {
     const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
     
     window.GAS.log.d('[WORKFLOW] Spellcasting detection:', {
+      spellcastingInfo,
+      classNamesLower,
       hasClassSpellcasting,
+      hasExplicitNonSpellcaster,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,
@@ -142,7 +205,10 @@ export const workflowFSMContext = {
       hasSubclassSpellcasting,
       hasSubclassInClassData,
       isSpellcaster,
-      actorName: actorForDecision.name
+      actorName: actorForDecision.name,
+      actorDataSpells: actorData?.spells,
+      actorDataSpellsType: typeof actorData?.spells,
+      actorDataSpellsExists: !!actorData?.spells
     });
     
     return isSpellcaster;
@@ -318,11 +384,24 @@ export function createWorkflowStateMachine() {
     .onEnter((context) => {
       if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
       window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
-      const currentTabs = get(tabs);
-      if (!currentTabs.find(t => t.id === "spells")) {
-        tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
+      
+      // Double-check that actor is actually a spellcaster before adding spell tab
+      const actor = workflowFSMContext.actor || get(actorInGame);
+      const isSpellcaster = workflowFSMContext._shouldShowSpellSelection(actor);
+      window.GAS.log.d('[WORKFLOW] Verifying spellcaster status in onEnter:', { isSpellcaster, actorName: actor?.name });
+      
+      if (isSpellcaster) {
+        const currentTabs = get(tabs);
+        if (!currentTabs.find(t => t.id === "spells")) {
+          tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
+        }
+        activeTab.set("spells");
+      } else {
+        window.GAS.log.w('[WORKFLOW] Actor is not a spellcaster but entered selecting_spells state - transitioning to completed');
+        // If we somehow entered this state for a non-spellcaster, immediately skip to completed
+        const fsm = getWorkflowFSM();
+        fsm.handle(WORKFLOW_EVENTS.SKIP_SPELLS);
       }
-      activeTab.set("spells");
     })
     .state('completed')
     .on('reset').transitionTo('idle')

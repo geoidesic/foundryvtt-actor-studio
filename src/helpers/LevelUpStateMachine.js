@@ -341,53 +341,101 @@ export const levelUpFSMContext = {
     // 3. Known spellcasting subclasses (fallback for hardcoded detection)
     
     const classes = actor.classes || {};
-    const classKeys = Object.keys(classes);
+    const preSelections = get(levelUpPreAdvancementSelections);
+    let classEntries = Object.entries(classes);
+    
+    if (!classEntries.length && preSelections?.characterClass) {
+      classEntries = [[preSelections.characterClass.system?.identifier || preSelections.characterClass.name || 'selected-class', preSelections.characterClass]];
+    }
+    
+    if (!classEntries.length) {
+      window.GAS.log.d('[LEVELUP] No classes found (actor or pre-selection), returning false for spellcaster check');
+      return false;
+    }
+    
+    const classDataList = classEntries.map(([, classData]) => classData).filter(Boolean);
+    const classNamesLower = classDataList
+      .map((classData) => (classData?.system?.identifier || classData?.name || '').toLowerCase())
+      .filter(Boolean);
     
     // Method 1: Check class-based spellcasting progression
-    const spellcastingInfo = Object.entries(classes).map(([className, classData]) => {
+    // This is the PRIMARY check - if any class has spellcasting progression, the actor is a spellcaster
+    const spellcastingInfo = classDataList.map((classData) => {
       const progression = classData?.system?.spellcasting?.progression;
-      return { className, progression, isSpellcaster: progression && progression !== "none" };
+      return { 
+        className: classData?.name || classData?.system?.identifier || 'unknown-class',
+        identifier: classData?.system?.identifier,
+        progression,
+        isSpellcaster: progression && progression !== "none"
+      };
     });
     
     const hasClassSpellcasting = spellcastingInfo.some(info => info.isSpellcaster);
     
+    // Check if ANY class explicitly has progression: "none" - if so, skip actor-level checks entirely
+    const hasExplicitNonSpellcaster = spellcastingInfo.some(info => info.progression === "none");
+    
     // Method 2: Check actor system spellcasting (granted through advancements)
+    // Only check this if:
+    // 1. NO class has spellcasting progression, AND
+    // 2. NO class explicitly has progression: "none" (for cases like Eldritch Knight where Fighter has no progression but subclass grants it)
     const actorData = actor.system || actor.data?.data;
     
-    // Check for traditional spellcasting system
-    const hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+    let hasActorSpellcasting = false;
+    let hasTraditionalSpellcasting = false;
+    let hasSpellSlots = false;
+    let hasPactMagic = false;
     
-    // Check for spell slots added by advancements (like Eldritch Knight)
-    const hasSpellSlots = actorData?.spells && Object.values(actorData.spells).some(slot => 
-      slot.type === 'spell' && slot.max > 0
-    );
-    
-    // Check for pact magic slots
-    const hasPactMagic = actorData?.spells && Object.values(actorData.spells).some(slot => 
-      slot.type === 'pact'
-    );
-    
-    const hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    // Only check actor-level spellcasting if no class has spellcasting AND no class explicitly says "none"
+    // This prevents false positives where non-spellcasters have empty/default spell slot structures
+    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+      // Check for traditional spellcasting system
+      hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
+      
+      // Check for spell slots added by advancements (like Eldritch Knight)
+      hasSpellSlots = actorData?.spells && Object.values(actorData.spells || {}).some(slot => 
+        slot && slot.type === 'spell' && slot.max > 0
+      );
+      
+      // Check for pact magic slots (only count if they have max > 0 and actor has Warlock class)
+      // DEBUG: Log what we're actually checking
+      window.GAS.log.d('[LEVELUP] Checking for pact magic:', {
+        hasSpells: !!actorData?.spells,
+        spellsType: typeof actorData?.spells,
+        spellsValue: actorData?.spells,
+        spellsKeys: actorData?.spells ? Object.keys(actorData.spells) : [],
+        spellsValues: actorData?.spells ? Object.values(actorData.spells) : [],
+        classNamesLower
+      });
+      
+      hasPactMagic = actorData?.spells && 
+        typeof actorData.spells === 'object' && 
+        Object.values(actorData.spells).some(slot => 
+          slot && typeof slot === 'object' && slot.type === 'pact' && slot.max > 0
+        ) && 
+        classNamesLower.includes('warlock');
+      
+      hasActorSpellcasting = hasTraditionalSpellcasting || hasSpellSlots || hasPactMagic;
+    }
     
     // Method 3: Fallback check for known spellcasting classes/subclasses
     const knownSpellcastingClasses = [
       'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
       'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
     ];
-    const hasKnownSpellcastingClass = classKeys.some(className => 
-      knownSpellcastingClasses.includes(className.toLowerCase())
+    const hasKnownSpellcastingClass = classNamesLower.some(className => 
+      knownSpellcastingClasses.includes(className)
     );
     
     // Method 4: Check for subclass spellcasting that might be granted through advancements
     // This is a more aggressive check for cases where the actor system hasn't been updated yet
-    const hasSubclassSpellcasting = classKeys.some(className => {
-      const lowerClassName = className.toLowerCase();
+    const hasSubclassSpellcasting = classNamesLower.some(lowerClassName => {
       // Check for known spellcasting subclasses
       return ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(lowerClassName);
     });
     
     // Method 5: Check for subclass in the class data itself (e.g., fighter with eldritchknight subclass)
-    const hasSubclassInClassData = Object.values(classes).some(classData => {
+    const hasSubclassInClassData = classDataList.some(classData => {
       const subclass = classData?.system?.subclass;
       return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclass.toLowerCase());
     });
@@ -395,7 +443,10 @@ export const levelUpFSMContext = {
     const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
     
     window.GAS.log.d('[LEVELUP] Spellcasting detection:', {
+      spellcastingInfo,
+      classNamesLower,
       hasClassSpellcasting,
+      hasExplicitNonSpellcaster,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,
@@ -545,31 +596,42 @@ export function createLevelUpStateMachine() {
           }
         }
         
-        // Force remove advancement tab and add spells tab
-        levelUpTabs.update(t => {
-          window.GAS.log.d('[LEVELUP] Current levelUpTabs before filtering:', t);
-          
-          // Remove advancement tab if present
-          const filteredTabs = t.filter(tab => {
-            const shouldKeep = tab.id !== "advancements";
-            if (!shouldKeep) {
-              window.GAS.log.d('[LEVELUP] Removing advancement tab:', tab);
+        // Double-check that actor is actually a spellcaster before adding spell tab
+        const isSpellcaster = levelUpFSMContext._shouldShowSpellSelection(actor);
+        window.GAS.log.d('[LEVELUP] Verifying spellcaster status in onEnter:', { isSpellcaster, actorName: actor?.name });
+        
+        if (isSpellcaster) {
+          // Force remove advancement tab and add spells tab
+          levelUpTabs.update(t => {
+            window.GAS.log.d('[LEVELUP] Current levelUpTabs before filtering:', t);
+            
+            // Remove advancement tab if present
+            const filteredTabs = t.filter(tab => {
+              const shouldKeep = tab.id !== "advancements";
+              if (!shouldKeep) {
+                window.GAS.log.d('[LEVELUP] Removing advancement tab:', tab);
+              }
+              return shouldKeep;
+            });
+            
+            // Add spells tab if not present
+            if (!filteredTabs.find(tab => tab.id === "spells")) {
+              const spellsTab = { label: "Spells", id: "spells", component: "Spells" };
+              filteredTabs.push(spellsTab);
+              window.GAS.log.d('[LEVELUP] Added spells tab:', spellsTab);
             }
-            return shouldKeep;
+            
+            window.GAS.log.d('[LEVELUP] Final levelUpTabs after filtering:', filteredTabs);
+            return filteredTabs;
           });
-          
-          // Add spells tab if not present
-          if (!filteredTabs.find(tab => tab.id === "spells")) {
-            const spellsTab = { label: "Spells", id: "spells", component: "Spells" };
-            filteredTabs.push(spellsTab);
-            window.GAS.log.d('[LEVELUP] Added spells tab:', spellsTab);
-          }
-          
-          window.GAS.log.d('[LEVELUP] Final levelUpTabs after filtering:', filteredTabs);
-          return filteredTabs;
-        });
-        activeTab.set("spells");
-        window.GAS.log.d('[LEVELUP] Set active tab to spells');
+          activeTab.set("spells");
+          window.GAS.log.d('[LEVELUP] Set active tab to spells');
+        } else {
+          window.GAS.log.w('[LEVELUP] Actor is not a spellcaster but entered selecting_spells state - transitioning to completed');
+          // If we somehow entered this state for a non-spellcaster, immediately skip to completed
+          const levelUpFSM = getLevelUpFSM();
+          levelUpFSM.handle(LEVELUP_EVENTS.SKIP_SPELLS);
+        }
       })
     
     // COMPLETED STATE
