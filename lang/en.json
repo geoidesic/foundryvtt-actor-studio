@@ -82,6 +82,7 @@
         "FilterByLevel": "Explore Advancements by Level",
         "Placeholder": "Classes",
         "SubclassPlaceholder": "Subclasses",
+        "LevelPreview": "Level Preview",
         "Level": "Level"
       },
       "Background": {
@@ -322,6 +323,10 @@
       "EnableSpellSelection": {
         "Name": "Enable Spell Selection",
         "Hint": "Allows players to select their spells during character creation. If disabled, spells will need to be added manually after creation."
+      },
+      "ShowLevelPreviewDropdown": {
+        "Name": "Show Level Preview Dropdown",
+        "Hint": "If enabled, shows a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
       }
     },
     "Equipment": {

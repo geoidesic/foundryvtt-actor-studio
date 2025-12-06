@@ -63,6 +63,11 @@
     "showPackLabelInSelect",
   );
 
+  const showLevelPreviewDropdown = game.settings.get(
+    MODULE_ID,
+    "showLevelPreviewDropdown",
+  );
+
   filteredClassIndex = mappedClassIndex
     .filter((i) => {
       return i.type == "class";
@@ -300,24 +305,24 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
           .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
           .flex3
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17")
-      +if("!$readOnlyTabs.includes('class')")
-        h2.left {t('Tabs.Classes.FilterByLevel')}
-        .flexrow
-          .flex2.left
-            TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
+      
       +if("classAdvancementArrayFiltered")
         h3.left.mt-sm.flexrow
           .flex0(on:click="{toggleClassAdvancements}")
             +if("classAdvancementExpanded")
-              span [-]
+              span [-]&nbsp;
             +if("!classAdvancementExpanded")
-              span [+]
-          .flex {t('Tabs.Classes.Class')} {t('Advancements')}
-          .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
+              span [+]&nbsp;
+          .flex {t('Tabs.Classes.LevelPreview')}
         ul.icon-list
+          +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
+            li.flexrow
+              .flex2.left
+                TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
           +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
             li.left {t('NoAdvancements')}
           +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
+            li.badge.left.inset.ml-sm.mb-xs {t('Level')} {$level}
             li.left 
               .flexrow
                 .flex0.relative.image

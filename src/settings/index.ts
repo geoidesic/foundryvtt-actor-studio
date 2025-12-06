@@ -67,6 +67,7 @@ export function registerSettings(app: Game): void {
   advancementCaptureTimerThreshold();
   enableCustomFeatSelector();
   usageTracking();
+  showLevelPreviewDropdown();
   /** User settings */
   dontShowWelcome();
 }
@@ -673,7 +674,7 @@ function usageTracking() {
       if (!value) {
         Dialog.confirm({
           title: 'Disable Usage Tracking?',
-          content: `<p>Disabling usage tracking means we won’t know which languages or features are most important to our users. This anonymous data helps us improve Actor Studio for everyone. Are you sure you want to disable it?</p>`,
+          content: `<p>Disabling usage tracking means we won't know which languages or features are most important to our users. This anonymous data helps us improve Actor Studio for everyone. Are you sure you want to disable it?</p>`,
           yes: () => {
             if (window.GASUsageTracker) window.GASUsageTracker.consentGranted = false;
           },
@@ -692,5 +693,16 @@ function usageTracking() {
         }
       }
     }
+  });
+}
+
+function showLevelPreviewDropdown() {
+  game.settings.register(MODULE_ID, 'showLevelPreviewDropdown', {
+    name: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name'),
+    hint: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
   });
 }
