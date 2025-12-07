@@ -5,7 +5,7 @@ import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
   LAST_MIGRATION = 'lastMigration',
-  LEVEL_UP_IN_PROGRESS = 'levelUpInProgress',
+  // LEVEL_UP_IN_PROGRESS is now a Svelte store in src/stores/index.js
 }
 
 export function registerSettings(app: Game): void {
@@ -29,7 +29,7 @@ export function registerSettings(app: Game): void {
   // useTokenizerIfAvailable();
   // private settings
   lastMigration();
-  levelUpInProgress();
+  // levelUpInProgress() - now using Svelte store instead (no permission requirements)
   // abilityScoreMethods();
   
   
@@ -582,14 +582,9 @@ function lastMigration() {
   });
 }
 
-function levelUpInProgress() {
-  game.settings.register(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, {
-    scope: 'world',
-    config: false,
-    default: false,
-    type: Boolean,
-  });
-}
+// NOTE: levelUpInProgress is now a Svelte store in src/stores/index.js
+// This allows players to level up without requiring 'Modify Configuration Settings' permission
+// The store is ephemeral and won't cause data corruption like a world setting could
 
 function enableEquipmentSelection() {
   game.settings.register(MODULE_ID, 'enableEquipmentSelection', {

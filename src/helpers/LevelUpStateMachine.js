@@ -1,14 +1,9 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections } from '~/src/stores/index';
+import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections, levelUpInProgress } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
-// Import PrivateSettingKeys from the TypeScript file
-const PrivateSettingKeys = {
-  LAST_MIGRATION: 'lastMigration',
-  LEVEL_UP_IN_PROGRESS: 'levelUpInProgress',
-};
 import Finity from 'finity';
 
 // Helper to safely get fromUuidSync
@@ -26,8 +21,8 @@ const suppressTidy5eAutoReopen = (suppress = true) => {
   try {
     const tidy5eModule = game.modules.get("tidy5e-sheet");
     if (tidy5eModule?.active) {
-      // Set level up in progress flag
-      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+      // Update the level up in progress store
+      levelUpInProgress.set(suppress);
       
       if (suppress) {
         window.GAS.log.d('[LEVELUP] Suppressing Tidy5e auto-reopen during level up');
@@ -43,16 +38,16 @@ const suppressTidy5eAutoReopen = (suppress = true) => {
         }
       }
     } else {
-      // Even if Tidy5e is not active, set the flag for the hook
-      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+      // Even if Tidy5e is not active, update the store
+      levelUpInProgress.set(suppress);
     }
   } catch (error) {
     window.GAS.log.w('[LEVELUP] Error managing Tidy5e auto-reopen:', error);
-    // Still set the flag even if there's an error
+    // Still update the store even if there's an error
     try {
-      game.settings.set(MODULE_ID, PrivateSettingKeys.LEVEL_UP_IN_PROGRESS, suppress);
+      levelUpInProgress.set(suppress);
     } catch (e) {
-      window.GAS.log.w('[LEVELUP] Error setting level up flag:', e);
+      window.GAS.log.w('[LEVELUP] Error setting level up in progress store:', e);
     }
   }
 };

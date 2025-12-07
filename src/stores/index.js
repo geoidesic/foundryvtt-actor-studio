@@ -134,6 +134,10 @@ preAdvancementSelections.name = 'preAdvancementSelections';
 export const levelUpPreAdvancementSelections = writable({});
 levelUpPreAdvancementSelections.name = 'levelUpPreAdvancementSelections';
 
+// Runtime state store for tracking level-up in progress (no permission requirements)
+export const levelUpInProgress = writable(false);
+levelUpInProgress.name = 'levelUpInProgress';
+
 // Derived store to track changes from initial state
 export const hasCharacterCreationChanges = derived(
   [storeDefinitions.race, storeDefinitions.background, storeDefinitions.characterClass, storeDefinitions.characterSubClass, preAdvancementSelections],
@@ -228,6 +232,7 @@ export function resetStores() {
   storeDefinitions.levelUpRichSubClassHTML.set(''); //- string
   preAdvancementSelections.set({}); //- void
   levelUpPreAdvancementSelections.set({}); //- void
+  levelUpInProgress.set(false); //- boolean
   dropItemRegistry.removeAll(); //- void
   clearGoldChoices(); //- void
   clearEquipmentSelections(); //- void
