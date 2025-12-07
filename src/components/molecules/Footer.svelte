@@ -386,11 +386,13 @@
       : '';
   }
 
+  // Store handler references for cleanup (must be at top level)
+  let signHandlers = [];
+
   onMount(() => {
     // Only apply experimental animations if enabled
     if (experimentalStylingEnabled) {
       const signs = document.querySelectorAll('.x-sign')
-      const backgrounds = document.querySelectorAll('.x-background')
       const randomIn = (min, max) => (
         Math.floor(Math.random() * (max - min + 1) + min)
       )
@@ -401,7 +403,7 @@
       }
 
       // Store handler references for cleanup
-      const signHandlers = [];
+      signHandlers = [];
       signs.forEach(el => {
         mixupInterval(el, 2000, 3000)
         const handler = () => {
@@ -410,22 +412,16 @@
         el.addEventListener('webkitAnimationIteration', handler);
         signHandlers.push({ el, handler });
       })
-      // backgrounds.forEach(el => {
-      //   mixupInterval(el, 10000, 10001)
-      //   el.addEventListener('webkitAnimationIteration', () => {
-      //     mixupInterval(el, 10000, 10001)
-      //   })
-      // })
 
       randomize(); // Call randomize on mount
-
-      // Cleanup listeners on destroy
-      onDestroy(() => {
-        signHandlers.forEach(({ el, handler }) => {
-          el.removeEventListener('webkitAnimationIteration', handler);
-        });
-      });
     }
+  });
+
+  // Cleanup listeners on destroy - MUST be at top level
+  onDestroy(() => {
+    signHandlers.forEach(({ el, handler }) => {
+      el.removeEventListener('webkitAnimationIteration', handler);
+    });
   });
 </script>
 
