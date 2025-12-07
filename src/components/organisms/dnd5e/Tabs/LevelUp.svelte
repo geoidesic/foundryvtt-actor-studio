@@ -449,31 +449,14 @@ onDestroy(() => {
         IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{t('LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectMultiClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
 
       +if("$classUuidForLevelUp")
+        
         h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
 
-        //- pre subclasses {subclasses.length}
-        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
-        //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
-        //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
-        +if("selectedMultiClassUUID")
-
-        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
-        
-        //- Subclass selection section
-        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
-          ul.icon-list
-            li.left
-              .flexrow
-                .flex0.relative.image
-                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
-                .flex2 {t('SubClass')}
-        
         +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
           h3.left.mt-md {t('LevelUp.Subclass')}
           +if("window.GAS.debug")
             //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-          IconSelect.icon-select(
+          IconSelect.icon-select.mb-md(
             active="{subClassProp}" 
             options="{subclasses}"  
             placeHolder="{subclassesPlaceholder}" 
@@ -487,6 +470,25 @@ onDestroy(() => {
           p
             i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
             | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
+
+
+        //- pre subclasses {subclasses.length}
+        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+        //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
+        //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
+        //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
+        //- +if("selectedMultiClassUUID")
+
+        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
+        
+        //- Subclass selection section
+        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
+          ul.icon-list
+            li.left
+              .flexrow
+                .flex0.relative.image
+                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
+                .flex2 {t('SubClass')}
 
       
     .flex0.border-right.right-border-gradient-mask 
