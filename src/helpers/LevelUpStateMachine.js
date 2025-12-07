@@ -518,6 +518,22 @@ export function createLevelUpStateMachine() {
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
         
+        // After queue completes, restore the actor's original sheetClass if we set a temporary one
+        try {
+          const actor = levelUpFSMContext.actor || get(actorInGame);
+          if (actor) {
+            const originalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
+            if (originalSheet !== undefined) {
+              await actor.setFlag('core', 'sheetClass', originalSheet);
+              // Clear our module flag to avoid future confusion
+              await actor.unsetFlag(MODULE_ID, 'originalSheetClass');
+              window.GAS.log.d('[LEVELUP] Restored original sheet type after advancement queue:', originalSheet);
+            }
+          }
+        } catch (e) {
+          window.GAS?.log?.w?.('[LEVELUP] Failed to restore original sheetClass after queue', e);
+        }
+        
         // Add a longer delay to ensure actor is fully updated after advancements
         // Advancements might update the actor's spellcasting system asynchronously
         await new Promise(resolve => setTimeout(resolve, 500));

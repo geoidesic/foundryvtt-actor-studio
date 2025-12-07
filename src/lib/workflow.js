@@ -318,6 +318,27 @@ export async function updateActorLevelUpWorkflow({
     // Set the actor in the LevelUp FSM context
     levelUpFSMContext.actor = get(actor);
     
+    // Store original sheet type and switch to standard 5e sheet for item drops
+    // This ensures drops use core dnd5e handlers (same pattern as character creation)
+    // BUT: Only do this if the sheet is NOT currently open, to avoid it popping up over Actor Studio
+    try {
+      const actorSheet = get(actor).sheet;
+      const isSheetOpen = actorSheet?.rendered || false;
+      
+      if (!isSheetOpen) {
+        // Only switch sheet type if sheet is not open
+        const originalSheet = get(actor).getFlag('core', 'sheetClass') ?? '';
+        await get(actor).setFlag(MODULE_ID, 'originalSheetClass', originalSheet);
+        await get(actor).setFlag('core', 'sheetClass', 'dnd5e.CharacterActorSheet');
+        window.GAS.log.d('[LEVELUP WORKFLOW] Stored original sheet and switched to standard 5e for drops:', originalSheet);
+      } else {
+        window.GAS.log.d('[LEVELUP WORKFLOW] Sheet is open, skipping sheet type switch to avoid popup over Actor Studio');
+      }
+    } catch (e) {
+      // Non-fatal: if we can't set the flag, proceed normally
+      window.GAS?.log?.w?.('[LEVELUP WORKFLOW] Failed to set temporary sheetClass; continuing', e);
+    }
+    
     const $classUuidForLevelUp = get(classUuidForLevelUp);
     const $subClassUuidForLevelUp = get(subClassUuidForLevelUp);
     const $levelUpClassObject = get(levelUpClassObject);
