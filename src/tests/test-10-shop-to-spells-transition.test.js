@@ -79,7 +79,7 @@ describe('Shop to Spells Transition for Bard User Journey', () => {
       if (store.toString && store.toString().includes('readOnlyTabs')) return [];
       if (store.toString && store.toString().includes('activeTab')) return 'shop';
       if (store.toString && store.toString().includes('totalGoldFromChoices')) return 100;
-      return value || {};
+      return {};
     });
 
     vi.doMock('svelte/store', () => ({ 
