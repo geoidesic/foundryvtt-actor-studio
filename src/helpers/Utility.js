@@ -197,6 +197,43 @@ export const getDndRulesVersion = () => {
   return game.settings.get('dnd5e', 'rulesVersion') === 'modern' ? '2024' : '2014';
 };
 
+/**
+ * Checks if an actor was imported from D&D Beyond using the DDB Importer module
+ * @param {Actor} actor - The actor to check
+ * @returns {boolean} True if the actor was imported from D&D Beyond
+ */
+export function isDDBImportedCharacter(actor) {
+  return actor?.flags?.ddbimporter?.dndbeyond?.characterId !== undefined 
+    || 'ddbimporter' in (actor?.flags || {});
+}
+
+/**
+ * Shows a warning dialog for DDB Importer characters and returns user's choice
+ * @param {Actor} actor - The actor being leveled up
+ * @returns {Promise<boolean>} True if user wants to proceed, false otherwise
+ */
+export async function showDDBImporterWarning(actor) {
+  const characterId = actor?.flags?.ddbimporter?.dndbeyond?.characterId;
+  const idText = characterId ? ` (Character ID: ${characterId})` : '';
+  
+  return Dialog.confirm({
+    title: "D&D Beyond Imported Character Detected",
+    content: `<p><strong>Warning:</strong> This character was imported from D&D Beyond using the DDB Importer module${idText}.</p>
+              <p>Characters created with the DDB Importer may have incompatibilities with Actor Studio's advancement system, particularly around:</p>
+              <ul>
+                <li>Feature advancements and choices</li>
+                <li>Spell selections</li>
+                <li>Equipment assignments</li>
+                <li>Class features and options</li>
+              </ul>
+              <p>It is recommended to use the DDB Importer's own level-up system for these characters.</p>
+              <p><strong>Do you want to proceed with Actor Studio anyway?</strong></p>`,
+    yes: () => true,
+    no: () => false,
+    defaultYes: false
+  });
+}
+
 export function getLevelByDropType(actor, droppedItem) {
   // window.GAS.log.d('getLevelByDropType', droppedItem);
   // window.GAS.log.d('actor', actor);

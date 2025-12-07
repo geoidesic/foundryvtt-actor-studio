@@ -34,3 +34,6 @@ Clicking the button initiates a guided process, often involving Advancements:
 **Important:** Just like with initial creation, your GM must have the dnd5e system setting "Disable Level Up Automation" **unchecked** for the level-up advancements to work correctly.
 
 Once you have completed all the prompts, your character sheet will be updated to reflect your new level and abilities.
+
+## Known Issues
+Please note that the Beyond DND importer (https://github.com/MrPrimate/ddb-importer) is not compatible with Actor Studio (and many other modules) as it doesn't use actual WoTC content. Thus you cannot use Actor Studio to Level Up actors created by the Beyond importer. 
