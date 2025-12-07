@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { readOnlyTabs, tabs, activeTab, levelUpTabs } from '~/src/stores/index';
+import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
@@ -515,6 +515,21 @@ export function createLevelUpStateMachine() {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(true);
         window.GAS.log.d('[LEVELUP] Entered PROCESSING_ADVANCEMENTS state');
         
+        // Switch to standard 5e sheet for drop processing
+        // (original sheet was already saved by the level up button handler)
+        const actor = levelUpFSMContext.actor || get(actorInGame);
+        if (actor) {
+          try {
+            const hasOriginalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
+            if (hasOriginalSheet !== undefined) {
+              await actor.setFlag('core', 'sheetClass', 'dnd5e.CharacterActorSheet');
+              window.GAS.log.d('[LEVELUP] Switched to standard 5e sheet for advancement processing');
+            }
+          } catch (e) {
+            window.GAS?.log?.w?.('[LEVELUP] Failed to set temporary sheetClass; continuing', e);
+          }
+        }
+        
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
         
@@ -669,14 +684,35 @@ export function createLevelUpStateMachine() {
         
         const actor = levelUpFSMContext.actor || get(actorInGame);
         if (actor) {
-          window.GAS.log.d('[LEVELUP] Opening actor sheet for:', actor.name);
-          actor.sheet.render(true);
+          // Restore the original sheet class (e.g., Tidy5e) before opening the sheet
+          // This is done asynchronously but we don't await it in onEnter
+          (async () => {
+            try {
+              const originalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
+              if (originalSheet !== undefined) {
+                await actor.setFlag('core', 'sheetClass', originalSheet);
+                await actor.unsetFlag(MODULE_ID, 'originalSheetClass');
+                window.GAS.log.d('[LEVELUP] Restored original sheet class:', originalSheet);
+              }
+            } catch (error) {
+              window.GAS.log.w('[LEVELUP] Error restoring original sheet class:', error);
+            }
+            
+            window.GAS.log.d('[LEVELUP] Opening actor sheet for:', actor.name);
+            actor.sheet.render(true);
+            
+            setTimeout(() => {
+              window.GAS.log.d('[LEVELUP] Closing Actor Studio');
+              Hooks.call("gas.close");
+            }, 1500);
+          })();
+        } else {
+          // No actor, just close Actor Studio
+          setTimeout(() => {
+            window.GAS.log.d('[LEVELUP] Closing Actor Studio (no actor)');
+            Hooks.call("gas.close");
+          }, 1500);
         }
-        
-        setTimeout(() => {
-          window.GAS.log.d('[LEVELUP] Closing Actor Studio');
-          Hooks.call("gas.close");
-        }, 1500);
       })
     
     // ERROR STATE

@@ -80,8 +80,29 @@ Hooks.on('renderCompendium', (pack, html, data ) => {
 Hooks.on("renderFolderConfig", (app, html, folder) => {
   window.GAS.log.d("folder", folder);
 })
+
+/**
+ * Prevent actor sheet from reopening during level up
+ * This handles the case where clicking "Add Character Level" would normally trigger the sheet to reopen
+ */
 Hooks.on("renderActorSheet", (app, html, actor) => {
   window.GAS.log.d("actor", actor);
+  
+  // Check if Actor Studio is open for level up
+  const actorStudioIsOpen = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+  if (!actorStudioIsOpen) return;
+  
+  // Check if this actor has level up in progress
+  const actorDoc = app.actor || app.document;
+  if (!actorDoc) return;
+  
+  const hasOriginalSheetClass = actorDoc.getFlag(MODULE_ID, 'originalSheetClass');
+  if (hasOriginalSheetClass !== undefined) {
+    window.GAS.log.d('[GAS] Preventing actor sheet from opening during level up');
+    // Close the sheet immediately to prevent it from displaying
+    setTimeout(() => app.close(), 0);
+    return false;
+  }
 })
 Hooks.on("renderItemSheet5e", (app, html, item) => {
   window.GAS.log.d("item", item);
