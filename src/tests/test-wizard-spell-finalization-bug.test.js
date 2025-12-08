@@ -35,7 +35,10 @@ describe('Wizard Level-Up Spell Finalization Bug', () => {
       readOnlyTabs: { update: vi.fn() },
       isLevelUp: { subscribe: vi.fn() },
       characterClass: { subscribe: vi.fn() },
-      newLevelValueForExistingClass: { subscribe: vi.fn() }
+      newLevelValueForExistingClass: { subscribe: vi.fn() },
+      levelUpClassObject: { subscribe: vi.fn() },
+      classUuidForLevelUp: { subscribe: vi.fn() },
+      currentCharacter: { subscribe: vi.fn() }
     }));
 
     vi.doMock('~/src/helpers/constants', () => ({

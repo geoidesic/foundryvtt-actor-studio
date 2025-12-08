@@ -32,7 +32,10 @@ vi.mock('~/src/stores/index', () => ({
   characterClass: mockWritable({}),
   level: mockWritable(1),
   isLevelUp: mockWritable(false),
-  newLevelValueForExistingClass: mockWritable(false)
+  newLevelValueForExistingClass: mockWritable(false),
+  levelUpClassObject: mockWritable(null),
+  classUuidForLevelUp: mockWritable(null),
+  currentCharacter: mockWritable(null)
 }));
 
 vi.mock('~/src/stores/startingEquipment', () => ({

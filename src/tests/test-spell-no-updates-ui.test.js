@@ -80,7 +80,10 @@ vi.mock('~/src/stores/index', () => ({
   characterClass: mockWritable({ name: 'Cleric' }),
   level: mockWritable(4),
   isLevelUp: mockWritable(true),
-  newLevelValueForExistingClass: mockWritable(4)
+  newLevelValueForExistingClass: mockWritable(4),
+  levelUpClassObject: mockWritable(null),
+  classUuidForLevelUp: mockWritable(null),
+  currentCharacter: mockWritable(null)
 }));
 
 vi.mock('./spellsKnown.json', () => ({
