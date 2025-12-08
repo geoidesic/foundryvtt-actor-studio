@@ -114,17 +114,26 @@ export const maxSpellLevel = derived(
     const actorData = $currentCharacter.system || $currentCharacter.data?.data;
     if (!actorData) return 0;
 
+    let hasPactMagic = false;
+
     // Method 1: Check actor.system.spells (D&D 5e standard structure)
     if (actorData.spells) {
       let maxLevel = 0;
       Object.keys(actorData.spells).forEach(slotKey => {
-        if (slotKey.startsWith('spell') && actorData.spells[slotKey]) {
+        const slotData = actorData.spells[slotKey];
+        
+        // Handle regular spell slots (spell1, spell2, etc.)
+        if (slotKey.startsWith('spell') && slotData) {
           const slotLevel = parseInt(slotKey.replace('spell', ''));
-          const slotData = actorData.spells[slotKey];
           // Check if this spell level has any available slots
           if (slotLevel > maxLevel && slotData.max > 0) {
             maxLevel = slotLevel;
           }
+        }
+        
+        // Handle warlock pact magic slots (pact)
+        if (slotKey === 'pact' && slotData && slotData.max > 0) {
+          hasPactMagic = true;
         }
       });
       
@@ -140,9 +149,16 @@ export const maxSpellLevel = derived(
       Object.values(actorData.spellcasting).forEach(spellcastingData => {
         if (spellcastingData.slots) {
           Object.keys(spellcastingData.slots).forEach(slot => {
-            const slotLevel = parseInt(slot.replace('spell', ''));
-            if (slotLevel > maxLevel && spellcastingData.slots[slot].max > 0) {
-              maxLevel = slotLevel;
+            // Handle regular spell slots
+            if (slot.startsWith('spell')) {
+              const slotLevel = parseInt(slot.replace('spell', ''));
+              if (slotLevel > maxLevel && spellcastingData.slots[slot].max > 0) {
+                maxLevel = slotLevel;
+              }
+            }
+            // Handle pact magic
+            if (slot === 'pact' && spellcastingData.slots[slot].max > 0) {
+              hasPactMagic = true;
             }
           });
         }
@@ -151,6 +167,36 @@ export const maxSpellLevel = derived(
       if (maxLevel > 0) {
         window.GAS.log.d('[SPELLS] maxSpellLevel from actor.system.spellcasting:', maxLevel);
         return maxLevel;
+      }
+    }
+
+    // Method 3: If we found pact magic, calculate warlock spell level from class level
+    if (hasPactMagic) {
+      // Get the character's level
+      let characterLevel = 1;
+      if (actorData.details?.level) {
+        characterLevel = actorData.details.level;
+      } else if ($isLevelUp && $newLevelValueForExistingClass) {
+        characterLevel = $newLevelValueForExistingClass;
+      } else if (actorData.classes) {
+        // Sum up all class levels
+        characterLevel = Object.values(actorData.classes).reduce((total, cls) => {
+          return total + (cls.levels || cls.system?.levels || 0);
+        }, 0);
+      }
+
+      // Warlock spell level progression (2014 rules - standard for Pact Magic)
+      // Based on D&D 5e warlock table: spell levels increase at 3, 5, 7, and 9
+      let warlockSpellLevel = 0;
+      if (characterLevel >= 9) warlockSpellLevel = 5;
+      else if (characterLevel >= 7) warlockSpellLevel = 4;
+      else if (characterLevel >= 5) warlockSpellLevel = 3;
+      else if (characterLevel >= 3) warlockSpellLevel = 2;
+      else if (characterLevel >= 1) warlockSpellLevel = 1;
+
+      if (warlockSpellLevel > 0) {
+        window.GAS.log.d('[SPELLS] maxSpellLevel from warlock pact magic calculation:', warlockSpellLevel, 'at level:', characterLevel);
+        return warlockSpellLevel;
       }
     }
 
@@ -712,9 +758,12 @@ export const spellProgress = derived(
         } else if (thirdCasters.includes(className)) {
           return Math.min(4, Math.ceil((level - 2) / 6));
         } else if (warlockProgression.includes(className)) {
-          if (level >= 17) return 5;
-          if (level >= 11) return 3;
-          if (level >= 7) return 2;
+          // Warlocks have their own progression based on D&D 5e warlock table
+          // Spell levels increase at 3, 5, 7, and 9
+          if (level >= 9) return 5;
+          if (level >= 7) return 4;
+          if (level >= 5) return 3;
+          if (level >= 3) return 2;
           if (level >= 1) return 1;
           return 0;
         } else if (className === 'Artificer') {

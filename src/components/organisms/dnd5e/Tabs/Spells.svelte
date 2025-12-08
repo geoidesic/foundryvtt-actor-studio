@@ -196,10 +196,12 @@
       // Third casters: spell level = Math.ceil((character level - 2) / 6), max 4
       return Math.min(4, Math.ceil((level - 2) / 6));
     } else if (warlockProgression.includes(className)) {
-      // Warlocks have their own progression
-      if (level >= 17) return 5;
-      if (level >= 11) return 3;
-      if (level >= 7) return 2;
+      // Warlocks have their own progression based on D&D 5e warlock table
+      // Spell levels increase at 3, 5, 7, and 9
+      if (level >= 9) return 5;
+      if (level >= 7) return 4;
+      if (level >= 5) return 3;
+      if (level >= 3) return 2;
       if (level >= 1) return 1;
       return 0;
     } else if (className === 'Artificer') {
