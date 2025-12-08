@@ -375,9 +375,9 @@ function parseSpellLimitsFromAdvancement(subclassItem, level) {
             // For cantrips, it's usually a fixed value, not a scale
             cantrips = parseInt(advancement.value) || 0;
             window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found cantrips:', cantrips);
-          } else if (title.includes('prepared spell')) {
-            // For prepared spells, it's a scale value array
-            window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found Prepared Spells advancement:', {
+          } else if (title.includes('spell')) {
+            // For spells (prepared or known), it's a scale value array
+            window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found Spells advancement:', {
               type: advancement.type,
               title: advancement.title,
               value: advancement.value,
@@ -391,15 +391,15 @@ function parseSpellLimitsFromAdvancement(subclassItem, level) {
             if (advancement.levels && Array.isArray(advancement.levels)) {
               // The levels array is 0-indexed, so level 3 (first level of spellcasting) is index 0
               const levelIndex = level - 3; // Eldritch Knight starts at level 3
-              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells levels array:', advancement.levels, 'levelIndex:', levelIndex);
+              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Spells levels array:', advancement.levels, 'levelIndex:', levelIndex);
               if (levelIndex >= 0 && levelIndex < advancement.levels.length) {
                 spells = advancement.levels[levelIndex];
-                window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found prepared spells:', spells);
+                window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Found spells:', spells);
               } else {
                 window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: levelIndex out of range:', levelIndex, 'array length:', advancement.levels.length);
               }
             } else {
-              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells advancement has no levels array:', advancement.levels);
+              window.GAS.log.d('[SPELLS] parseSpellLimitsFromAdvancement: Spells advancement has no levels array:', advancement.levels);
             }
           }
         }
