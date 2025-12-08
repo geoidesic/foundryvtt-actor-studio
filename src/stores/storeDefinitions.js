@@ -21,6 +21,7 @@ export const actorInGame = writable(null); //- tracks the actor in game
 export const abilityGenerationMethod = writable(null); //- tracks the ability generation method
 export const subClassesForClass = writable([]); //- tracks the subclasses for the class
 export const goldRoll = writable(0); //- tracks the gold roll
+export const startingWealthChoice = writable(null); //- tracks wealth choice for 2014 rules ('equipment' or 'gold')
 export const readOnlyTabs = writable([]); //- tracks the read only tabs
 //- level-up store definitions
 export const isLevelUp = writable(false); //- tracks if the character is in level up mode

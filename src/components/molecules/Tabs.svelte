@@ -17,7 +17,14 @@
   $: if(initialTabs !== tabs) {
     initialTabs = tabs;
     for (const tab of tabs) {
-      import(`~/src/components/organisms/dnd5e/Tabs/${tab.component}.svelte`).then(module => {
+      // Special handling for StartingWealthChoice component (it's in molecules, not organisms)
+      let importPath;
+      if (tab.component === 'StartingWealthChoice') {
+        importPath = './dnd5e/StartingWealthChoice.svelte';
+      } else {
+        importPath = `../organisms/dnd5e/Tabs/${tab.component}.svelte`;
+      }
+      import(importPath).then(module => {
         tabComponents[tab.component] = module.default;
       });
     }
@@ -26,7 +33,14 @@
   onMount(async () => {
     initialTabs = tabs;
     for (const tab of tabs) {
-      const module = await import(`~/src/components/organisms/dnd5e/Tabs/${tab.component}.svelte`);
+      // Special handling for StartingWealthChoice component (it's in molecules, not organisms)
+      let importPath;
+      if (tab.component === 'StartingWealthChoice') {
+        importPath = './dnd5e/StartingWealthChoice.svelte';
+      } else {
+        importPath = `../organisms/dnd5e/Tabs/${tab.component}.svelte`;
+      }
+      const module = await import(importPath);
       tabComponents[tab.component] = module.default;
     }
   });
@@ -58,7 +72,11 @@
   <div class="tab-content">
     {#each tabs as tab}
       {#if tab.id === activeTab && tabComponents[tab.component]}
-        <svelte:component this={tabComponents[tab.component]} {sheet} />
+        {#if tab.component === 'StartingWealthChoice'}
+          <svelte:component this={tabComponents[tab.component]} on:confirm on:edit />
+        {:else}
+          <svelte:component this={tabComponents[tab.component]} {sheet} />
+        {/if}
       {/if}
     {/each}
   </div>

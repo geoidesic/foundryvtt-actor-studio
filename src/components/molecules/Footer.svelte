@@ -53,7 +53,7 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
-  import { goldRoll } from "~/src/stores/storeDefinitions";
+  import { goldRoll, startingWealthChoice } from "~/src/stores/storeDefinitions";
   
 
   // Import workflow functions
@@ -231,9 +231,21 @@
   };
 
   // Derive whether equipment section is complete
-  $: isEquipmentComplete = window.GAS.dnd5eVersion >= 4 
-    ? ($progress === 100 && $areGoldChoicesComplete) 
-    : ($progress === 100 && $goldRoll > 0);
+  $: isEquipmentComplete = (() => {
+    if (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024") {
+      return $progress === 100 && $areGoldChoicesComplete;
+    }
+    
+    // For 2014 rules
+    if (window.GAS.dnd5eRules === "2014") {
+      // Progress is 100 when wealth choice is made, but for gold selection,
+      // we also need goldRoll > 0 before equipment is actually complete
+      return $progress === 100 && $goldRoll > 0;
+    }
+    
+    // For v3 (pre-2024)
+    return $progress === 100 && $goldRoll > 0;
+  })();
   
   // Debug log for button visibility condition
   $: {

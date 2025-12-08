@@ -12,7 +12,7 @@ import {
   subClassesForClass,
   activeTab,
 } from './index';
-import { goldRoll } from './storeDefinitions';
+import { goldRoll, startingWealthChoice } from './storeDefinitions';
 import { equipmentSelections } from './equipmentSelections';
 import { areGoldChoicesComplete } from './goldChoices';
 import { spellProgress } from './spellSelection';
@@ -148,21 +148,71 @@ const progressCalculators = {
     return progress;
   },
 
-  equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete }) => {
+  equipment: ({ equipmentSelections, goldRoll, areGoldChoicesComplete, startingWealthChoice }) => {
     const groups = Object.values(equipmentSelections);
     window.GAS.log.d("[PROGRESS] goldRoll", goldRoll);
     window.GAS.log.d("[PROGRESS] equipmentSelections", equipmentSelections);
+    window.GAS.log.d("[PROGRESS] startingWealthChoice", startingWealthChoice);
     
-    // Handle v4 gold choices
-    if (window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024") {
-      if (!areGoldChoicesComplete) return 0; // Choices not made
-      if (groups.length === 0) return 100; // No equipment to select, but choices made
+    // Handle 2014 rules with wealth choice
+    if (window.GAS.dnd5eRules === "2014") {
+      if (!startingWealthChoice) return 0; // Choice not made yet
       
-      // Equipment is complete when all groups are complete AND choices are made
+      // If chose gold: 100% complete once gold is rolled
+      if (startingWealthChoice === 'gold') {
+        return goldRoll > 0 ? 100 : 0;
+      }
+      
+      // If chose equipment: need to actually make equipment selections
+      if (startingWealthChoice === 'equipment') {
+        if (groups.length === 0) return 100; // No equipment selections needed
+        
+        // Equipment is complete when all groups are complete
+        const completedGroups = groups.filter(group => group.completed).length;
+        if (completedGroups === groups.length) return 100;
+        return Math.round((completedGroups / groups.length) * 100);
+      }
+      
+      return 0; // Shouldn't reach here
+    }
+    
+    // Handle v4 gold choices (2024 rules)
+    if (window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024") {
+      // Calculate progress based on gold choices and equipment selection progress
+      
+      // Count total groups and how many have selections or are completed
+      const totalGroups = groups.length;
+      const groupsWithSelections = groups.filter(g => g.selectedItemId || g.completed).length;
       const completedGroups = groups.filter(group => group.completed).length;
-      // Force 100% if all groups are completed
-      if (completedGroups === groups.length) return 100;
-      return Math.round((completedGroups / groups.length) * 100);
+      
+      // If no groups exist, we just need gold choices complete
+      if (totalGroups === 0) {
+        return areGoldChoicesComplete ? 100 : 0;
+      }
+      
+      // Calculate progress: 50% for gold choices, 50% for equipment selections
+      let progressPercentage = 0;
+      
+      // 50% comes from gold choices being complete
+      if (areGoldChoicesComplete) {
+        progressPercentage = 50;
+      } else {
+        // Partial credit for some selections being made (even before gold choices complete)
+        progressPercentage = (groupsWithSelections / totalGroups) * 25;
+      }
+      
+      // Remaining 50% comes from equipment selections (or 50% if no gold choices yet)
+      if (areGoldChoicesComplete && totalGroups > 0) {
+        const equipmentProgress = (completedGroups / totalGroups) * 50;
+        progressPercentage = 50 + equipmentProgress;
+      }
+      
+      // If all groups are completed and choices are complete, 100%
+      if (completedGroups === totalGroups && areGoldChoicesComplete) {
+        return 100;
+      }
+      
+      return Math.round(progressPercentage);
     }
     
     // Handle v3 gold roll
@@ -243,7 +293,8 @@ export const progress = derived(
     pointBuyScoreTotal,
     pointBuyLimit,
     isStandardArrayValues,
-    spellProgress
+    spellProgress,
+    startingWealthChoice
   ],
   ([
     $race,
@@ -260,7 +311,8 @@ export const progress = derived(
     $pointBuyScoreTotal,
     $pointBuyLimit,
     $isStandardArrayValues,
-    $spellProgress
+    $spellProgress,
+    $startingWealthChoice
   ]) => {
     // window.GAS.log.d('[PROGRESS] progress store update triggered', {
     //   activeTab: $activeTab,
@@ -291,6 +343,7 @@ export const progress = derived(
       equipmentSelections: $equipmentSelections,
       goldRoll: $goldRoll,
       areGoldChoicesComplete: $areGoldChoicesComplete,
+      startingWealthChoice: $startingWealthChoice,
       pointBuyScoreTotal: $pointBuyScoreTotal,
       pointBuyLimit: $pointBuyLimit,
       abilityRolls: $abilityRolls,

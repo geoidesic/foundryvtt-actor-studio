@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte";
-  import { goldRoll } from "~/src/stores/storeDefinitions";
+  import { goldRoll, startingWealthChoice } from "~/src/stores/storeDefinitions";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getContext } from "svelte";
@@ -34,10 +34,20 @@
     (($parsedEquipmentGold.fromClass.hasVariableGold && $goldChoices.fromClass.choice === 'equipment') ||
      ($parsedEquipmentGold.fromBackground.hasVariableGold && $goldChoices.fromBackground.choice === 'equipment'));
   
-  // Equipment should show when user chose equipment AND (choices complete OR variable gold needs selection)
+  // 2014 rules: check user's wealth choice
+  $: is2014Rules = window.GAS.dnd5eRules === "2014";
+  $: userChose2014Equipment = is2014Rules && $startingWealthChoice === 'equipment';
+  $: userChose2014Gold = is2014Rules && $startingWealthChoice === 'gold';
+  
+  // Show gold roller for 2014 when they chose gold, or for pre-2024 when no choice made yet
+  $: shouldShowGoldRoller = is2014Rules ? userChose2014Gold : true;
+  
+  // Equipment should show when:
+  // - 2024 rules: user chose equipment AND (choices complete OR variable gold needs selection)
+  // - 2014 rules: user chose equipment (not gold)
   $: shouldShowEquipment = window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024" ? 
     (userChoseEquipment && ($areGoldChoicesComplete || hasVariableGoldNeedingSelection)) :
-    ($goldRoll > 0);
+    (is2014Rules ? userChose2014Equipment : $goldRoll > 0);
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
@@ -64,12 +74,10 @@
       destroyAdvancementManagers();
     }
     
-    // For 2014 rules ONLY, reset gold roll to show choice interface
-    // Don't reset for 2024 rules as they use goldChoices store
-    if (window.GAS.dnd5eVersion < 4 || (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2014")) {
-      window.GAS.log.d('[EQUIPMENT] Resetting gold roll for 2014 rules to show choice interface');
-      goldRoll.set(0);
-    }
+    // For 2014 rules: Don't automatically reset gold roll in onMount
+    // Gold can only be rolled once - preserve existing value if present
+    // The value will only be reset when the user changes their wealth choice (not just re-confirms it)
+    window.GAS.log.d('[EQUIPMENT] onMount - preserving gold roll:', $goldRoll);
   });
 
 </script>
@@ -84,11 +92,18 @@ StandardTabLayout(tabName="equipment")
       .info-message {t('Equipment.EquipmentReadOnly')}
     
     section.equipment-flow(class="{isDisabled ? 'readonly' : ''}")        
+      //- 2024 rules: show v4 gold component
       +if("window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === '2024'")
         StartingGoldv4(characterClass="{$characterClass}" background="{$background}")
-        +else()
-          StartingGold(characterClass="{$characterClass}")
-      +if("shouldShowEquipment || isDisabled")
+      //- 2014 rules: show gold roller only if they chose gold
+      +if("is2014Rules && shouldShowGoldRoller")
+        StartingGold(characterClass="{$characterClass}")
+      //- Pre-2024 without 2014 choice system: show gold roller
+      +if("!is2014Rules && window.GAS.dnd5eRules !== '2024'")
+        StartingGold(characterClass="{$characterClass}")
+      
+      //- Show equipment if conditions are met (but not for 2014 rules when user chose gold)
+      +if("(shouldShowEquipment || isDisabled) && !(is2014Rules && userChose2014Gold)")
         StartingEquipment(
           startingEquipment="{$compatibleStartingEquipment}" 
           classEquipment="{$classStartingEquipment}"
@@ -101,8 +116,9 @@ StandardTabLayout(tabName="equipment")
           equipmentGoldOptions="{$equipmentGoldOptions}"
         )
   div(slot="right")
-    PlannedInventory
-    EquipmentSelectorDetail
+    +if("!(is2014Rules && userChose2014Gold)")
+      PlannedInventory
+      EquipmentSelectorDetail
 </template>
 
 <style lang="sass">

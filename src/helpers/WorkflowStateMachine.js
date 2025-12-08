@@ -3,7 +3,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
-import { actorInGame } from '~/src/stores/storeDefinitions';
+import { actorInGame, startingWealthChoice } from '~/src/stores/storeDefinitions';
 import { handleAdvancementCompletion } from '~/src/lib/workflow.js';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import Finity from 'finity';
@@ -29,6 +29,7 @@ export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
+  WEALTH_CHOICE_MADE: 'wealth_choice_made',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
   SHOPPING_COMPLETE: 'shopping_complete',
@@ -270,6 +271,13 @@ export function createWorkflowStateMachine() {
         }
       })
         .onSuccess()
+          .transitionTo('choosing_starting_wealth').withCondition((context) => {
+            // 2014 rules need to choose between equipment or gold
+            const is2014Rules = window.GAS?.dnd5eRules === '2014';
+            const shouldShowEquipment = workflowFSMContext._shouldShowEquipmentSelection();
+            window.GAS.log.d('[FSM] Checking wealth choice transition:', { is2014Rules, shouldShowEquipment });
+            return is2014Rules && shouldShowEquipment;
+          })
           .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())
           .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
           .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
@@ -277,9 +285,41 @@ export function createWorkflowStateMachine() {
         .onFailure().transitionTo('error')
       .on('reset').transitionTo('idle')
       .on('error').transitionTo('error')
+    .state('choosing_starting_wealth')
+      .on('wealth_choice_made')
+        .transitionTo('selecting_equipment').withCondition((context) => {
+          const choice = get(startingWealthChoice);
+          window.GAS.log.d('[FSM] Wealth choice made:', choice, '-> selecting_equipment (for gold roll or equipment selection)');
+          // For 2014 rules, both 'equipment' and 'gold' choices go to equipment tab
+          // Equipment tab will show either the gold roller or equipment selector based on the choice
+          return true;
+        })
+      .on('reset').transitionTo('idle')
+      .on('error').transitionTo('error')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered CHOOSING_STARTING_WEALTH state');
+        startingWealthChoice.set(null); // Reset choice
+        // Fire hook for UI to respond
+        Hooks.call('gas.choosingStartingWealth');
+      })
     .state('selecting_equipment')
+    .on('wealth_choice_made')
+      .transitionTo('selecting_equipment').withCondition((context) => {
+        const choice = get(startingWealthChoice);
+        window.GAS.log.d('[FSM] Wealth choice re-confirmed in selecting_equipment:', choice, '-> stay in selecting_equipment');
+        // Stay in selecting_equipment; the UI will update based on the new choice
+        return true;
+      })
     .on('equipment_complete')
       .transitionTo('shopping').withCondition((context) => {
+        // 2014 rules: if they chose equipment, skip shopping
+        const choice = get(startingWealthChoice);
+        const is2014 = window.GAS?.dnd5eRules === '2014';
+        if (is2014 && choice === 'equipment') {
+          window.GAS.log.d('[FSM] 2014 rules + equipment choice -> skip shopping');
+          return false;
+        }
         const shouldShow = workflowFSMContext._shouldShowShopping();
         window.GAS.log.d('[FSM] equipment_complete -> shopping condition:', shouldShow);
         return shouldShow;
@@ -324,6 +364,13 @@ export function createWorkflowStateMachine() {
       Hooks.call('gas.equipmentSelection', workflowFSMContext.actor);
     })
     .state('shopping')
+    .on('wealth_choice_made')
+      .transitionTo('selecting_equipment').withCondition((context) => {
+        const choice = get(startingWealthChoice);
+        window.GAS.log.d('[FSM] Wealth choice re-confirmed from shopping:', choice, '-> back to selecting_equipment');
+        // Go back to selecting_equipment to reset workflow from that point
+        return true;
+      })
     .on('shopping_complete')
       .transitionTo('selecting_spells').withCondition((context) => {
         // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
@@ -377,6 +424,13 @@ export function createWorkflowStateMachine() {
       }
     })
     .state('selecting_spells')
+    .on('wealth_choice_made')
+      .transitionTo('selecting_equipment').withCondition((context) => {
+        const choice = get(startingWealthChoice);
+        window.GAS.log.d('[FSM] Wealth choice re-confirmed from selecting_spells:', choice, '-> back to selecting_equipment');
+        // Go back to selecting_equipment to reset workflow from that point
+        return true;
+      })
     .on('spells_complete').transitionTo('completed')
     .on('skip_spells').transitionTo('completed')
     .on('error').transitionTo('error')

@@ -250,7 +250,7 @@ section
             IconSelect.mb-md.icon-select(
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.parentGroup.granularSelections?.children?.[group.id === group.parentGroup.id ? group.selectedItem._id : group.id]?.selections?.[0]}"
-              placeHolder="{t('Equipment.SelectType', {type: group.selectedItem.type})}"
+              placeHolder="{t('Equipment.SelectType')} {group.selectedItem.type}"
               handler="{createSelectionHandler(group.id === group.parentGroup.id ? group.selectedItem._id : group.id, group.parentGroup)}"
               id="equipment-select-{group.selectedItem._id}"
             )
@@ -258,7 +258,7 @@ section
             IconSelect.mb-md.icon-select(
               options="{equipmentByType[group.selectedItem.type] || []}"
               active="{group.granularSelections?.self?.[0]}"
-              placeHolder="{t('Equipment.SelectType', {type: group.selectedItem.type})}"
+              placeHolder="{t('Equipment.SelectType')} {group.selectedItem.type}"
               handler="{createSelectionHandler(group.id)}"
               id="equipment-select-{group.selectedItem._id}"
             )
@@ -301,7 +301,6 @@ section
 .name
   font-size: 1.1em
   line-height: 32px
-  color: var(--color-text-dark-primary)
 
 // Configuration section styles
 .tool-config,

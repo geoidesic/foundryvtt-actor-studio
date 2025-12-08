@@ -2,6 +2,7 @@
   import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
   import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs } from "~/src/stores/index"
+  import { goldRoll, startingWealthChoice } from "~/src/stores/storeDefinitions";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
   import dnd5e from "~/config/systems/dnd5e.json"
@@ -22,6 +23,7 @@
   Hooks.once("gas.close", gasClose);
   // console.log('[PCAPP] Registering gas.equipmentSelection hook (persistent)');
   Hooks.on("gas.equipmentSelection", handleEquipmentSelection);
+  Hooks.on("gas.choosingStartingWealth", handleStartingWealthChoice);
   
 
   setContext("#doc", documentStore);
@@ -98,6 +100,7 @@
     // Don't reset stores here - let gasClose handle it
     // console.log('[PCAPP] Unregistering gas.close hook');
     Hooks.off("gas.close", gasClose);
+    Hooks.off("gas.choosingStartingWealth", handleStartingWealthChoice);
     // console.log('[PCAPP] Unregistering gas.equipmentSelection hook');
     Hooks.off("gas.equipmentSelection", handleEquipmentSelection);
     // console.log('[PCAPP] onDestroy complete');
@@ -202,6 +205,28 @@
   }
 
   /**
+   * Handle starting wealth choice for 2014 rules
+   */
+  function handleStartingWealthChoice() {
+    window.GAS.log.d('[PCAPP] handleStartingWealthChoice called');
+    
+    // Add wealth choice tab
+    if(!$tabs.find(x => x.id === "wealth-choice")) {
+      tabs.update(t => {
+        const newTabs = [...t, { label: "Starting Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
+        window.GAS.log.d('[PCAPP] Added wealth choice tab:', newTabs);
+        return newTabs;
+      });
+    }
+
+    // Set active tab to wealth choice
+    activeTab.set("wealth-choice");
+    
+    // Set read-only state for other tabs
+    readOnlyTabs.set(["race", "background", "abilities", "class"]);
+  }
+
+  /**
    * NB: this is called after advancements because some equipment selection
    * is dependent on the proficiencies selected
    * @todo: logic for those proficiency dependencies are not yet implemented
@@ -211,17 +236,30 @@
     // window.GAS.log.d('[PCAPP] handleEquipmentSelection called');
     // window.GAS.log.d('[PCAPP] Current tabs before update:', $tabs);
     
+    // Determine tab label based on 2014 rules wealth choice
+    let tabLabel = "Equipment";
+    if (window.GAS.dnd5eRules === "2014" && $startingWealthChoice === "gold") {
+      tabLabel = "Gold";
+    }
+    
     // Add Equipment tab
     if(!$tabs.find(x => x.id === "equipment")) {
       // console.log('[PCAPP] Adding equipment tab - tab does not exist');
       // window.GAS.log.d('[PCAPP] adding equipment tab')
       tabs.update(t => {
-        const newTabs = [...t, { label: "Equipment", id: "equipment", component: "Equipment" }];
+        const newTabs = [...t, { label: tabLabel, id: "equipment", component: "Equipment" }];
         // console.log('[PCAPP] New tabs after adding equipment:', newTabs);
         return newTabs;
       });
     } else {
-      // console.log('[PCAPP] Equipment tab already exists');
+      // Update existing tab label if it changed
+      tabs.update(t => {
+        const equipmentTab = t.find(x => x.id === "equipment");
+        if (equipmentTab && equipmentTab.label !== tabLabel) {
+          equipmentTab.label = tabLabel;
+        }
+        return t;
+      });
     }
 
     // Note: Advancements tab removal is handled by handleWorkflowStateChange
@@ -232,12 +270,79 @@
     activeTab.set("equipment");
     // console.log('[PCAPP] Active tab set to:', $activeTab);
 
-    // Set read-only state for other tabs
-    // console.log('[PCAPP] Setting read-only tabs');
-    readOnlyTabs.set(["race", "background", "abilities", "class"]);
-    // console.log('[PCAPP] Read-only tabs set to:', $readOnlyTabs);
+    // Set read-only state for other tabs while preserving existing locked tabs (including wealth-choice)
+    readOnlyTabs.update(ro => {
+      const base = ["race", "background", "abilities", "class"];
+      const preserved = ro.includes("wealth-choice") ? ["wealth-choice"] : [];
+      return Array.from(new Set([...base, ...preserved]));
+    });
     
     // console.log('[PCAPP] ====== handleEquipmentSelection COMPLETE ======');
+  }
+  
+  /**
+   * Handle wealth choice confirmation from user
+   */
+  function handleWealthChoiceConfirm(event) {
+    const { choice } = event.detail;
+    window.GAS.log.d('[PCAPP] Wealth choice confirmed:', choice);
+    
+    // CRITICAL: Never reset gold roll once it's been rolled
+    // Once rolled, the value is immutable for this character
+    const hasAlreadyRolled = $goldRoll > 0;
+    if (hasAlreadyRolled) {
+      window.GAS.log.d('[PCAPP] Gold already rolled:', $goldRoll, '- preserving value (can only roll once)');
+    }
+    
+    // Store the choice FIRST so that equipment tab setup uses the correct choice
+    startingWealthChoice.set(choice);
+    
+    // Keep the wealth choice tab but make it readonly
+    readOnlyTabs.update(ro => {
+      if (!ro.includes("wealth-choice")) {
+        return [...ro, "wealth-choice"];
+      }
+      return ro;
+    });
+    
+    // Re-run equipment tab setup so the destination tab reflects the new choice and resets its state
+    handleEquipmentSelection();
+    
+    // Trigger workflow FSM event
+    const workflowFSM = getWorkflowFSM();
+    workflowFSM.handle(WORKFLOW_EVENTS.WEALTH_CHOICE_MADE);
+  }
+
+  /**
+   * Handle edit button click from Starting Wealth tab
+   */
+  function handleWealthChoiceEdit(event) {
+    window.GAS.log.d('[PCAPP] Wealth choice edit requested');
+    
+    // Remove wealth-choice from readonly tabs
+    readOnlyTabs.update(ro => {
+      return ro.filter(tab => tab !== "wealth-choice");
+    });
+    
+    // Remove downstream tabs that may no longer be appropriate (equipment/gold, shop, spells)
+    tabs.update(t => {
+      const filtered = t.filter(tab => tab.id !== 'equipment' && tab.id !== 'shop' && tab.id !== 'spells');
+      window.GAS.log.d('[PCAPP] Removed equipment/gold/shop/spells tabs, remaining:', filtered);
+      return filtered;
+    });
+    
+    // Switch to wealth-choice tab
+    activeTab.set('wealth-choice');
+    
+    // Transition state machine back to choosing_starting_wealth
+    const workflowFSM = getWorkflowFSM();
+    const currentState = workflowFSM.getCurrentState();
+    window.GAS.log.d('[PCAPP] Current FSM state before reset:', currentState);
+    
+    // Reset the choice in the store
+    startingWealthChoice.set(null);
+    
+    // Note: Don't reset goldRoll here - preserve it if already rolled (can only roll once)
   }
 
 </script>
@@ -252,7 +357,7 @@
   ApplicationShell(bind:elementRoot bind:stylesApp)
     main
       section.a
-        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC")
+        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC" on:confirm!="{handleWealthChoiceConfirm}" on:edit!="{handleWealthChoiceEdit}")
 
       section.b
         Footer

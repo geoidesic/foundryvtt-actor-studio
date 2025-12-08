@@ -18,12 +18,25 @@
 - Pug templates with Svelte preprocessing (NOT standard Pug - see `.cursor/rules/`)
 - **Pug Syntax Rules**:
   - Conditionals: `+if("condition")` with condition in double quotes
-  - Else blocks: `+else` (no parentheses), indented one level deeper than `+if`
+  - Else blocks: `+else()` or `+else` - **MUST be indented one level deeper than `+if`** (as a child block, not sibling)
+  - **CRITICAL**: `+else` indentation:
+    ```pug
+    +if("condition")
+      p Content if true
+      +else()
+        p Content if false
+    ```
+    NOT:
+    ```pug
+    +if("condition")
+      p Content if true
+    +else()
+      p Content if false
+    ```
   - Else-if logic: Use nested `+if`/`+else` blocks (no `+elseif`)
   - Loops: `+each("array as item")` with expression in double quotes
   - Attributes: Use `!=` for complex expressions, e.g., `class:selected!="{isSelected(item)}"`
   - Text content: Inline with elements, e.g., `button(type="button") Text`
-  - Indentation: `+else` indented under its corresponding `+if`
 - Avoid long expressions in attributes - extract to script functions
 - ESM-only project - never use `require()`, always `import`
 

@@ -354,7 +354,7 @@
       "NoItemsSelected": "No items selected",
       "Weight": "Weight",
       "Quantity": "Quantity",
-      "SelectType": "Select {type}"
+      "SelectType": "Select"
     },
     "Shop": {
       "AvailableGold": "Available",
