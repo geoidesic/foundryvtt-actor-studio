@@ -1,6 +1,6 @@
 <script>
   import { get } from 'svelte/store';
-  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
+  import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
   import { characterClass, characterSubClass } from '~/src/stores/storeDefinitions';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -26,7 +26,20 @@
   $: actorObject = $actor.toObject();
 
   // Get character class name for spell filtering and limits
-  $: characterClassName = determineSpellListClass($actor) || $characterClass?.name || 'Bard'; // Default to Bard for testing
+  // During level-up, prefer the class the user selected to level (levelUpClassObject)
+  $: characterClassName = ($isLevelUp && $levelUpClassObject)
+    ? ($levelUpClassObject.system?.identifier || $levelUpClassObject.name || $levelUpClassObject.label)
+    : (determineSpellListClass($actor) || $characterClass?.name || 'Bard'); // Default to Bard for testing
+
+  // Debug: log which class we think is being used for spell selection
+  $: window.GAS?.log?.d?.('[SPELLS] selected class for spell tab:', {
+    isLevelUp: $isLevelUp,
+    characterClassName,
+    characterClassStore: $characterClass,
+    levelUpClassObject: $levelUpClassObject,
+    classUuidForLevelUp: $classUuidForLevelUp,
+    actorName: $actor?.name
+  });
   
   // Debug the character class name calculation and reload spells when it changes
   $: {

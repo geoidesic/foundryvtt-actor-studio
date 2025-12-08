@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
-import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass } from '~/src/stores/index';
+import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
 
 // Import spellsKnown data for determining spell limits
@@ -477,8 +477,8 @@ function parseSpellLimitsFromAdvancement(subclassItem, level) {
 
 // Derived store for spell limits based on character class and level
 export const spellLimits = derived(
-  [characterClass, isLevelUp, newLevelValueForExistingClass, currentCharacter],
-  ([$characterClass, $isLevelUp, $newLevelValueForExistingClass, $currentCharacter]) => {
+  [characterClass, levelUpClassObject, classUuidForLevelUp, isLevelUp, newLevelValueForExistingClass, currentCharacter],
+  ([$characterClass, $levelUpClassObject, $classUuidForLevelUp, $isLevelUp, $newLevelValueForExistingClass, $currentCharacter]) => {
     // Calculate the effective character level for spell selection
     // For character creation: Always use level 1
     // For level-up: Use the new level value
@@ -486,15 +486,28 @@ export const spellLimits = derived(
       ? $newLevelValueForExistingClass
       : 1; // Character creation is always level 1
 
-    if (!$characterClass || !effectiveCharacterLevel) {
+    // Determine the correct spell list class (handles subclasses)
+    // During level-up, prefer the class the user selected to level (levelUpClassObject)
+    const spellListClass = ($isLevelUp && $levelUpClassObject)
+      ? ($levelUpClassObject.system?.identifier || $levelUpClassObject.name || $levelUpClassObject.label)
+      : determineSpellListClass($currentCharacter);
+
+    const className = spellListClass
+      || $characterClass?.system?.identifier
+      || $characterClass?.name
+      || $characterClass?.label
+      || $characterClass;
+
+    // If we still don't have a class name during level-up, try the classUuidForLevelUp as a last resort
+    // (helps when store wiring is incomplete)
+    const resolvedClassName = className || $classUuidForLevelUp;
+
+    if (!resolvedClassName || !effectiveCharacterLevel) {
       return { cantrips: 0, spells: 0 };
     }
 
-    // Determine the correct spell list class (handles subclasses)
-    const spellListClass = determineSpellListClass($currentCharacter);
-    const className = spellListClass || $characterClass.system?.identifier || $characterClass.name || $characterClass.label || $characterClass;
     // Normalize className to lowercase to match spellsKnown.json keys
-    const classNameLower = typeof className === 'string' ? className.toLowerCase() : className;
+    const classNameLower = typeof resolvedClassName === 'string' ? resolvedClassName.toLowerCase() : resolvedClassName;
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
 
     // First, try to get spell limits from subclass advancement data
