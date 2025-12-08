@@ -3412,6 +3412,23 @@ function determineSpellListClass(actor) {
 }
 function parseSpellcastingFromDescription(item) {
   if (!item) return null;
+  const subclassSpellcasting = item.system?.spellcasting;
+  if (subclassSpellcasting && subclassSpellcasting.ability) {
+    const ability = subclassSpellcasting.ability.toLowerCase();
+    window.GAS.log.d("[LEVELUP] Found spellcasting ability on subclass:", item.name, "ability:", ability);
+    switch (ability) {
+      case "int":
+        return "Wizard";
+      case "wis":
+        return "Cleric";
+      case "cha":
+        const description2 = item.system?.description?.value || item.description?.value || "";
+        if (description2.match(/warlock/i)) {
+          return "Warlock";
+        }
+        return "Sorcerer";
+    }
+  }
   const description = item.system?.description?.value || item.description?.value || "";
   if (!description) return null;
   const wizardMatch = description.match(/wizard\s+spell\s+list/i);
@@ -3485,12 +3502,20 @@ const levelUpFSMContext = {
     });
     const hasClassSpellcasting = spellcastingInfo.some((info) => info.isSpellcaster);
     const hasExplicitNonSpellcaster = spellcastingInfo.some((info) => info.progression === "none");
+    const actorItems = actor.items || [];
+    const hasSubclassWithSpellcasting = actorItems.some((item) => {
+      if (item.type === "subclass" && item.system?.spellcasting) {
+        const subclassProgression = item.system.spellcasting.progression;
+        return subclassProgression && subclassProgression !== "none";
+      }
+      return false;
+    });
     const actorData = actor.system || actor.data?.data;
     let hasActorSpellcasting = false;
     let hasTraditionalSpellcasting = false;
     let hasSpellSlots = false;
     let hasPactMagic = false;
-    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+    if (!hasClassSpellcasting && (!hasExplicitNonSpellcaster || hasSubclassWithSpellcasting)) {
       hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
       hasSpellSlots = actorData?.spells && Object.values(actorData.spells || {}).some(
         (slot) => slot && slot.type === "spell" && slot.max > 0
@@ -3538,6 +3563,7 @@ const levelUpFSMContext = {
       classNamesLower,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,
@@ -6704,10 +6730,19 @@ const workflowFSMContext = {
     });
     const hasClassSpellcasting = spellcastingInfo.some((info) => info.isSpellcaster);
     const hasExplicitNonSpellcaster = spellcastingInfo.some((info) => info.progression === "none");
+    const actorItems = actorForDecision.items || [];
+    const hasSubclassWithSpellcasting = actorItems.some((item) => {
+      if (item.type === "subclass" && item.system?.spellcasting) {
+        const subclassProgression = item.system.spellcasting.progression;
+        return subclassProgression && subclassProgression !== "none";
+      }
+      return false;
+    });
     window.GAS.log.d("[WORKFLOW] Spellcasting info check:", {
       spellcastingInfo,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       classNamesLower
     });
     const actorData = actorForDecision.system || actorForDecision.data?.data;
@@ -6715,7 +6750,7 @@ const workflowFSMContext = {
     let hasTraditionalSpellcasting = false;
     let hasSpellSlots = false;
     let hasPactMagic = false;
-    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+    if (!hasClassSpellcasting && (!hasExplicitNonSpellcaster || hasSubclassWithSpellcasting)) {
       hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
       hasSpellSlots = actorData?.spells && Object.values(actorData.spells || {}).some(
         (slot) => slot && slot.type === "spell" && slot.max > 0
@@ -6765,6 +6800,7 @@ const workflowFSMContext = {
       classNamesLower,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,
@@ -8230,7 +8266,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
   }
 }
 const DonationTrackerGameSettings$1 = new DonationTrackerGameSettings();
-const version$1 = "2.2.10";
+const version$1 = "2.2.11";
 const packageJson = {
   version: version$1
 };
@@ -29999,7 +30035,7 @@ class TJSDocument {
     }
   }
 }
-const version = "2.2.10";
+const version = "2.2.11";
 const manifestJson = {
   version
 };
