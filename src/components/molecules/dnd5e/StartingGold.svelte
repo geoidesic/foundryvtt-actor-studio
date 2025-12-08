@@ -10,12 +10,64 @@
 
   let formula = "";
 
+  // D&D 2014 starting wealth formulas by class
+  // Used when system.wealth doesn't contain a formula (e.g., in dnd5e v4 with 2014 rules)
+  const CLASS_WEALTH_FORMULAS_2014 = {
+    'Barbarian': '2d4 * 10',
+    'Bard': '5d4 * 10',
+    'Cleric': '5d4 * 10',
+    'Druid': '2d4 * 10',
+    'Fighter': '5d4 * 10',
+    'Monk': '5d4',
+    'Paladin': '5d4 * 10',
+    'Ranger': '5d4 * 10',
+    'Rogue': '4d4 * 10',
+    'Sorcerer': '3d4 * 10',
+    'Warlock': '4d4 * 10',
+    'Wizard': '4d4 * 10',
+    'Artificer': '5d4 * 10' // Tasha's Cauldron
+  };
+
   $: {
     if (characterClass?.system?.wealth) {
-      formula = characterClass.system.wealth;
-      // If formula doesn't contain 'd', set goldRoll directly
+      const wealthValue = characterClass.system.wealth;
+      
+      window.GAS.log.d('[StartingGold] Wealth data:', {
+        wealthValue,
+        type: typeof wealthValue,
+        isObject: typeof wealthValue === 'object',
+        hasFormula: wealthValue?.formula,
+        hasValue: wealthValue?.value,
+        className: characterClass.name,
+        dnd5eVersion: window.GAS.dnd5eVersion,
+        dnd5eRules: window.GAS.dnd5eRules
+      });
+      
+      // In dnd5e v4 with 2014 rules, wealth might be stored in .formula or .value property
+      // Try to access formula first, then fall back to the value itself
+      if (typeof wealthValue === 'object' && wealthValue.formula) {
+        formula = wealthValue.formula;
+      } else if (typeof wealthValue === 'object' && wealthValue.value) {
+        formula = wealthValue.value;
+      } else {
+        formula = String(wealthValue);
+      }
+      
+      // If the formula doesn't contain 'd' (no dice), it's a fixed value
+      // In 2014 rules, we need a dice formula, so look it up from our table
       if (!formula.includes('d')) {
-        $goldRoll = parseInt(formula) || 0;
+        const className = characterClass.name;
+        const formula2014 = CLASS_WEALTH_FORMULAS_2014[className];
+        
+        if (formula2014 && (window.GAS.dnd5eRules === '2014' || window.GAS.dnd5eVersion < 4)) {
+          // Use the 2014 dice formula for this class
+          formula = formula2014;
+          window.GAS.log.d('[StartingGold] Using 2014 formula lookup for', className, ':', formula);
+        } else {
+          // For 2024 rules or unknown classes, use the fixed value
+          $goldRoll = parseInt(formula) || 0;
+          window.GAS.log.d('[StartingGold] Using fixed gold value (2024):', $goldRoll);
+        }
       }
     } else {
       // Use default gold dice from settings if no class-specific formula
