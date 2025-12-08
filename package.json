@@ -4,7 +4,7 @@
     "private": false,
     "version": "2.2.10",
     "type": "module",
-    "debug": false,
+    "debug": true,
     "authors": [
         {
             "name": "Noel da Costa",
@@ -92,5 +92,5 @@
             "script": "Standard JavaScript"
         }
     },
-    "env": "production"
+    "env": "dev"
 }

@@ -262,6 +262,33 @@ function determineSpellListClass(actor) {
 function parseSpellcastingFromDescription(item) {
   if (!item) return null;
   
+  // Method 1: Check subclass spellcasting.ability field first (most reliable)
+  // This is set on the subclass item itself
+  const subclassSpellcasting = item.system?.spellcasting;
+  if (subclassSpellcasting && subclassSpellcasting.ability) {
+    const ability = subclassSpellcasting.ability.toLowerCase();
+    window.GAS.log.d('[LEVELUP] Found spellcasting ability on subclass:', item.name, 'ability:', ability);
+    
+    // Map ability modifiers to spell list classes
+    switch (ability) {
+      case 'int':
+        return 'Wizard'; // Intelligence = Wizard spells (Eldritch Knight, Arcane Trickster)
+      case 'wis':
+        return 'Cleric'; // Wisdom = Cleric spells (or Druid, but default to Cleric for subclasses)
+      case 'cha':
+        // Charisma could be Sorcerer, Warlock, or Bard - check description for clues
+        const description = item.system?.description?.value || item.description?.value || '';
+        if (description.match(/warlock/i)) {
+          return 'Warlock';
+        }
+        // Default to Sorcerer for charisma-based subclasses (like Aberrant Mind)
+        return 'Sorcerer';
+      default:
+        break; // Fall through to description parsing
+    }
+  }
+  
+  // Method 2: Check description for spell list mentions (fallback)
   const description = item.system?.description?.value || item.description?.value || '';
   if (!description) return null;
   
@@ -370,10 +397,21 @@ export const levelUpFSMContext = {
     // Check if ANY class explicitly has progression: "none" - if so, skip actor-level checks entirely
     const hasExplicitNonSpellcaster = spellcastingInfo.some(info => info.progression === "none");
     
+    // CRITICAL: Check if actor has subclass items that grant spellcasting (e.g., Eldritch Knight)
+    // This must be checked BEFORE deciding to skip actor-level spellcasting checks
+    const actorItems = actor.items || [];
+    const hasSubclassWithSpellcasting = actorItems.some(item => {
+      if (item.type === 'subclass' && item.system?.spellcasting) {
+        const subclassProgression = item.system.spellcasting.progression;
+        return subclassProgression && subclassProgression !== 'none';
+      }
+      return false;
+    });
+    
     // Method 2: Check actor system spellcasting (granted through advancements)
     // Only check this if:
     // 1. NO class has spellcasting progression, AND
-    // 2. NO class explicitly has progression: "none" (for cases like Eldritch Knight where Fighter has no progression but subclass grants it)
+    // 2. Either: (a) NO class explicitly has progression: "none", OR (b) a subclass grants spellcasting
     const actorData = actor.system || actor.data?.data;
     
     let hasActorSpellcasting = false;
@@ -381,9 +419,10 @@ export const levelUpFSMContext = {
     let hasSpellSlots = false;
     let hasPactMagic = false;
     
-    // Only check actor-level spellcasting if no class has spellcasting AND no class explicitly says "none"
-    // This prevents false positives where non-spellcasters have empty/default spell slot structures
-    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+    // Check actor-level spellcasting if:
+    // - No class has spellcasting AND no class explicitly says "none", OR
+    // - A subclass grants spellcasting (overrides the "none" check)
+    if (!hasClassSpellcasting && (!hasExplicitNonSpellcaster || hasSubclassWithSpellcasting)) {
       // Check for traditional spellcasting system
       hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
       
@@ -442,6 +481,7 @@ export const levelUpFSMContext = {
       classNamesLower,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,

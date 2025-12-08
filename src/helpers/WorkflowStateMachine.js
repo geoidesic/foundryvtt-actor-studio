@@ -115,18 +115,30 @@ export const workflowFSMContext = {
     // Check if ANY class explicitly has progression: "none" - if so, skip actor-level checks entirely
     const hasExplicitNonSpellcaster = spellcastingInfo.some(info => info.progression === "none");
     
+    // CRITICAL: Check if actor has subclass items that grant spellcasting (e.g., Eldritch Knight)
+    // This must be checked BEFORE deciding to skip actor-level spellcasting checks
+    const actorItems = actorForDecision.items || [];
+    const hasSubclassWithSpellcasting = actorItems.some(item => {
+      if (item.type === 'subclass' && item.system?.spellcasting) {
+        const subclassProgression = item.system.spellcasting.progression;
+        return subclassProgression && subclassProgression !== 'none';
+      }
+      return false;
+    });
+    
     // DEBUG: Log spellcasting info to understand what we're detecting
     window.GAS.log.d('[WORKFLOW] Spellcasting info check:', {
       spellcastingInfo,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       classNamesLower
     });
     
     // Method 2: Check actor system spellcasting (granted through advancements)
     // Only check this if:
     // 1. NO class has spellcasting progression, AND
-    // 2. NO class explicitly has progression: "none" (for cases like Eldritch Knight where Fighter has no progression but subclass grants it)
+    // 2. Either: (a) NO class explicitly has progression: "none", OR (b) a subclass grants spellcasting
     const actorData = actorForDecision.system || actorForDecision.data?.data;
     
     let hasActorSpellcasting = false;
@@ -134,9 +146,10 @@ export const workflowFSMContext = {
     let hasSpellSlots = false;
     let hasPactMagic = false;
     
-    // Only check actor-level spellcasting if no class has spellcasting AND no class explicitly says "none"
-    // This prevents false positives where non-spellcasters have empty/default spell slot structures
-    if (!hasClassSpellcasting && !hasExplicitNonSpellcaster) {
+    // Check actor-level spellcasting if:
+    // - No class has spellcasting AND no class explicitly says "none", OR
+    // - A subclass grants spellcasting (overrides the "none" check)
+    if (!hasClassSpellcasting && (!hasExplicitNonSpellcaster || hasSubclassWithSpellcasting)) {
       // Check for traditional spellcasting system
       hasTraditionalSpellcasting = actorData?.spellcasting && Object.keys(actorData.spellcasting).length > 0;
       
@@ -198,6 +211,7 @@ export const workflowFSMContext = {
       classNamesLower,
       hasClassSpellcasting,
       hasExplicitNonSpellcaster,
+      hasSubclassWithSpellcasting,
       hasTraditionalSpellcasting,
       hasSpellSlots,
       hasPactMagic,

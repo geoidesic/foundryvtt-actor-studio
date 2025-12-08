@@ -26,10 +26,30 @@
   $: actorObject = $actor.toObject();
 
   // Get character class name for spell filtering and limits
-  // During level-up, prefer the class the user selected to level (levelUpClassObject)
-  $: characterClassName = ($isLevelUp && $levelUpClassObject)
-    ? ($levelUpClassObject.system?.identifier || $levelUpClassObject.name || $levelUpClassObject.label)
-    : (determineSpellListClass($actor) || $characterClass?.name || 'Bard'); // Default to Bard for testing
+  // CRITICAL: During level-up, first check if the character has subclass spellcasting (e.g., Eldritch Knight)
+  // Only use levelUpClassObject if it actually grants spellcasting
+  $: characterClassName = (() => {
+    if ($isLevelUp && $actor) {
+      // First, try to determine spell list from subclass/features
+      const spellListFromActor = determineSpellListClass($actor);
+      if (spellListFromActor && typeof spellListFromActor === 'string') {
+        window.GAS?.log?.d?.('[SPELLS] Using spell list from subclass/features:', spellListFromActor);
+        return spellListFromActor;
+      }
+      
+      // If levelUpClassObject has spellcasting, use it
+      if ($levelUpClassObject) {
+        const levelUpProgress = $levelUpClassObject.system?.spellcasting?.progression;
+        if (levelUpProgress && levelUpProgress !== 'none') {
+          window.GAS?.log?.d?.('[SPELLS] Using spell list from levelUpClassObject:', $levelUpClassObject.system?.identifier || $levelUpClassObject.name);
+          return $levelUpClassObject.system?.identifier || $levelUpClassObject.name;
+        }
+      }
+    }
+    
+    // Fallback: use determineSpellListClass for non-level-up or when no class spellcasting
+    return determineSpellListClass($actor) || $characterClass?.name || 'Bard';
+  })();
 
   // Debug: log which class we think is being used for spell selection
   $: window.GAS?.log?.d?.('[SPELLS] selected class for spell tab:', {
