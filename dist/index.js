@@ -5179,8 +5179,8 @@ function parseSpellLimitsFromAdvancement(subclassItem, level2) {
           if (title.includes("cantrip")) {
             cantrips = parseInt(advancement.value) || 0;
             window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Found cantrips:", cantrips);
-          } else if (title.includes("prepared spell")) {
-            window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Found Prepared Spells advancement:", {
+          } else if (title.includes("spell")) {
+            window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Found Spells advancement:", {
               type: advancement.type,
               title: advancement.title,
               value: advancement.value,
@@ -5192,15 +5192,15 @@ function parseSpellLimitsFromAdvancement(subclassItem, level2) {
             });
             if (advancement.levels && Array.isArray(advancement.levels)) {
               const levelIndex = level2 - 3;
-              window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells levels array:", advancement.levels, "levelIndex:", levelIndex);
+              window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Spells levels array:", advancement.levels, "levelIndex:", levelIndex);
               if (levelIndex >= 0 && levelIndex < advancement.levels.length) {
                 spells2 = advancement.levels[levelIndex];
-                window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Found prepared spells:", spells2);
+                window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Found spells:", spells2);
               } else {
                 window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: levelIndex out of range:", levelIndex, "array length:", advancement.levels.length);
               }
             } else {
-              window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Prepared spells advancement has no levels array:", advancement.levels);
+              window.GAS.log.d("[SPELLS] parseSpellLimitsFromAdvancement: Spells advancement has no levels array:", advancement.levels);
             }
           }
         }
@@ -8266,7 +8266,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
   }
 }
 const DonationTrackerGameSettings$1 = new DonationTrackerGameSettings();
-const version$1 = "2.2.11";
+const version$1 = "2.2.12";
 const packageJson = {
   version: version$1
 };
@@ -30035,7 +30035,7 @@ class TJSDocument {
     }
   }
 }
-const version = "2.2.11";
+const version = "2.2.12";
 const manifestJson = {
   version
 };
