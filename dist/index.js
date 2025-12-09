@@ -2248,9 +2248,148 @@ if (typeof window !== "undefined") {
   window.GAS.totalGoldFromChoices = totalGoldFromChoices;
   window.GAS.goldRoll = goldRoll;
 }
+function generateEquipmentLabel(entry, allEquipment) {
+  if (!entry) return "";
+  if (entry.label) return entry.label;
+  const count = entry.count || 1;
+  const type = entry.type;
+  const key = entry.key;
+  let label = "";
+  switch (type) {
+    case "AND":
+    case "OR":
+      return "";
+    case "currency":
+      const currencyConfig = CONFIG?.DND5E?.currencies?.[key];
+      if (currencyConfig) {
+        label = `${count} ${currencyConfig.abbreviation.toUpperCase()}`;
+      }
+      break;
+    case "linked":
+      label = "";
+      break;
+    case "weapon":
+      const weaponTypes = CONFIG?.DND5E?.weaponTypes || {};
+      const weaponProficiencies = CONFIG?.DND5E?.weaponProficiencies || {};
+      let weaponLabel = weaponTypes[key] || weaponProficiencies[key];
+      if (weaponLabel && typeof weaponLabel === "object") {
+        weaponLabel = weaponLabel.label || weaponLabel;
+      }
+      if (weaponLabel) {
+        label = weaponLabel;
+      } else {
+        label = key;
+      }
+      break;
+    case "armor":
+      const armorTypes = CONFIG?.DND5E?.armorTypes || {};
+      const armorProficiencies = CONFIG?.DND5E?.armorProficiencies || {};
+      let armorLabel = armorTypes[key] || armorProficiencies[key];
+      if (armorLabel && typeof armorLabel === "object") {
+        armorLabel = armorLabel.label || armorLabel;
+      }
+      if (armorLabel) {
+        label = armorLabel;
+      } else {
+        label = key;
+      }
+      break;
+    case "tool":
+      const toolTypes = CONFIG?.DND5E?.toolTypes || {};
+      const toolProficiencies = CONFIG?.DND5E?.toolProficiencies || {};
+      let toolLabel = toolTypes[key] || toolProficiencies[key];
+      if (toolLabel && typeof toolLabel === "object") {
+        toolLabel = toolLabel.label || toolLabel;
+      }
+      if (toolLabel) {
+        label = toolLabel;
+      } else {
+        label = key;
+      }
+      break;
+    case "focus":
+      const focusTypes = CONFIG?.DND5E?.focusTypes || {};
+      let focusLabel = focusTypes[key];
+      if (focusLabel && typeof focusLabel === "object") {
+        focusLabel = focusLabel.label || focusLabel;
+      }
+      if (focusLabel) {
+        label = focusLabel;
+      } else {
+        label = key;
+      }
+      break;
+    default:
+      label = key || type;
+      break;
+  }
+  if (label && type !== "currency" && type !== "linked") {
+    if (count > 1) {
+      label = `${count}× ${label}`;
+    } else {
+      label = game.i18n.format("DND5E.TraitConfigChooseAnyUncounted", { type: label });
+    }
+  }
+  if (type === "linked" && entry.requiresProficiency && label) {
+    label += ` (${game.i18n.localize("DND5E.StartingEquipment.IfProficient").toLowerCase()})`;
+  }
+  return label;
+}
+function enrichEquipmentWithLabels(equipment) {
+  if (!Array.isArray(equipment)) return equipment;
+  return equipment.map((entry) => {
+    if (!entry.label && entry.type !== "AND" && entry.type !== "OR") {
+      const label = generateEquipmentLabel(entry);
+      return { ...entry, label };
+    }
+    return entry;
+  });
+}
+function flattenRedundantContainers(equipment) {
+  if (!Array.isArray(equipment) || equipment.length === 0) return equipment;
+  const result = [];
+  const processedIds = /* @__PURE__ */ new Set();
+  equipment.forEach((entry) => {
+    if (processedIds.has(entry._id)) return;
+    if ((entry.type === "AND" || entry.type === "OR") && !entry.group) {
+      const children2 = equipment.filter((item) => item.group === entry._id);
+      if (children2.length === 1 && (children2[0].type === "AND" || children2[0].type === "OR")) {
+        processedIds.add(entry._id);
+        const promotedChild = { ...children2[0], group: entry.group || "" };
+        result.push(promotedChild);
+        const grandchildren = equipment.filter((item) => item.group === children2[0]._id);
+        grandchildren.forEach((grandchild) => {
+          processedIds.add(grandchild._id);
+          result.push(grandchild);
+        });
+        window.GAS.log.d("[StartingEquipment] Flattened redundant container", {
+          removedContainer: entry._id,
+          promotedChild: children2[0]._id,
+          grandchildrenCount: grandchildren.length
+        });
+      } else {
+        result.push(entry);
+        children2.forEach((child) => {
+          processedIds.add(child._id);
+          result.push(child);
+          const grandchildren = equipment.filter((item) => item.group === child._id);
+          grandchildren.forEach((grandchild) => {
+            processedIds.add(grandchild._id);
+            result.push(grandchild);
+          });
+        });
+      }
+    } else if (!processedIds.has(entry._id)) {
+      result.push(entry);
+    }
+  });
+  return result;
+}
 function cleanEquipmentStructure(equipment) {
   if (!Array.isArray(equipment)) return equipment;
-  return equipment;
+  let enriched = enrichEquipmentWithLabels(equipment);
+  enriched = flattenRedundantContainers(enriched);
+  return enriched;
 }
 const startingEquipment = derived(
   [characterClass, background],
@@ -7327,6 +7466,16 @@ const flattenedSelections = derived(equipmentSelections, ($equipmentSelections) 
               key: item.key
             });
           }
+        } else if (GRANULAR_TYPES.includes(item.type)) {
+          if (group.selectedItemId === item._id) {
+            const itemSelections = group.granularSelections?.self || [];
+            itemSelections.filter(Boolean).forEach((uuid) => {
+              selections.push({
+                type: item.type,
+                key: uuid
+              });
+            });
+          }
         }
       });
       window.GAS.log.d("[FlattenedSelections] Standalone group selections", {
@@ -7347,7 +7496,7 @@ const flattenedSelections = derived(equipmentSelections, ($equipmentSelections) 
         } else {
           granularSelections = group.granularSelections?.self || [];
         }
-        granularSelections.forEach((uuid) => {
+        granularSelections.filter(Boolean).forEach((uuid) => {
           selections.push({
             type: group.selectedItem.type,
             key: uuid
@@ -8266,7 +8415,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
   }
 }
 const DonationTrackerGameSettings$1 = new DonationTrackerGameSettings();
-const version$1 = "2.2.12";
+const version$1 = "2.2.13";
 const packageJson = {
   version: version$1
 };
@@ -30035,7 +30184,7 @@ class TJSDocument {
     }
   }
 }
-const version = "2.2.12";
+const version = "2.2.13";
 const manifestJson = {
   version
 };
