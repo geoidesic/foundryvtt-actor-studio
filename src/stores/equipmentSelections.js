@@ -81,15 +81,19 @@ export function handleSelection(disabled, groupId, item) {
     itemType: item?.type,
     itemLabel: item?.label,
     groupType: selections[groupId]?.type,
-    isChoiceGroup: selections[groupId]?.type === 'choice'
+    isChoiceGroup: selections[groupId]?.type === 'choice',
+    isGranularType: GRANULAR_TYPES.includes(item?.type)
   });
 
   if (disabled || !item) {
     return;
   }
 
+  // Get group once for all checks
+  const group = selections[groupId];
+
   // Handle choice groups
-  if (selections[groupId]?.type === 'choice') {
+  if (group?.type === 'choice') {
     window.GAS.log.d('[handleSelection] Processing choice group selection', {
       groupId,
       selectedItemType: item.type,
@@ -97,6 +101,23 @@ export function handleSelection(disabled, groupId, item) {
       isToolType: item.type === 'tool'
     });
     
+    selectEquipment(groupId, item._id);
+    return;
+  }
+
+  // Handle standalone groups with direct granular items (weapon, armor, tool, focus)
+  // BUT NOT children of AND items (those are handled by the AND group logic below)
+  if (group?.type === 'standalone' && GRANULAR_TYPES.includes(item.type) && group.items[0]?.type !== 'AND') {
+    window.GAS.log.d('[handleSelection] Standalone group with granular item clicked', {
+      groupId,
+      itemType: item.type,
+      itemLabel: item.label,
+      itemKey: item.key,
+      itemCount: item.count,
+      willCallSelectEquipment: true
+    });
+    
+    // Select the granular item, which will trigger the equipment selector
     selectEquipment(groupId, item._id);
     return;
   }
@@ -111,11 +132,11 @@ export function handleSelection(disabled, groupId, item) {
       fullItem: item
     },
     groupState: {
-      type: selections[groupId]?.type,
-      inProgress: selections[groupId]?.inProgress,
-      completed: selections[groupId]?.completed,
-      selectedItem: selections[groupId]?.selectedItem,
-      items: selections[groupId]?.items?.map(i => ({
+      type: group?.type,
+      inProgress: group?.inProgress,
+      completed: group?.completed,
+      selectedItem: group?.selectedItem,
+      items: group?.items?.map(i => ({
         id: i._id,
         type: i.type,
         key: i.key,
@@ -131,8 +152,6 @@ export function handleSelection(disabled, groupId, item) {
     window.GAS.log.d('[StartingEquipment] Selection disabled, returning early');
     return;
   }
-
-  const group = selections[groupId];
 
   if (!group) {
     window.GAS.log.d('[StartingEquipment] No group found for groupId:', groupId);
@@ -496,6 +515,18 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
                 key: item.key
               });
             }
+          } else if (GRANULAR_TYPES.includes(item.type)) {
+            // Handle direct granular items in standalone groups
+            // Check if this item has been selected as the group's selectedItem
+            if (group.selectedItemId === item._id) {
+              const itemSelections = group.granularSelections?.self || [];
+              itemSelections.filter(Boolean).forEach(uuid => {
+                selections.push({
+                  type: item.type,
+                  key: uuid
+                });
+              });
+            }
           }
         });
 
@@ -525,7 +556,8 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
             granularSelections = group.granularSelections?.self || [];
           }
           
-          granularSelections.forEach(uuid => {
+          // Filter out undefined/null values before processing
+          granularSelections.filter(Boolean).forEach(uuid => {
             selections.push({
               type: group.selectedItem.type,
               key: uuid
@@ -581,7 +613,7 @@ export const flattenedSelections = derived(equipmentSelections, ($equipmentSelec
 });
 
 // Add granular selection for special types
-export function addGranularSelection(groupId, uuid) {
+export function addGranularSelection(groupId, uuid, index = null) {
   equipmentSelections.update(selections => {
     const group = selections[groupId];
     if (!group?.selectedItem) return selections;
@@ -589,18 +621,30 @@ export function addGranularSelection(groupId, uuid) {
     // Initialize granularSelections if it doesn't exist
     const currentGranularSelections = group.granularSelections || { self: [], children: {} };
 
+    let updatedSelfArray;
+    if (index !== null) {
+      // Update at specific index
+      updatedSelfArray = [...(currentGranularSelections.self || [])];
+      updatedSelfArray[index] = uuid;
+    } else {
+      // Append to array (legacy behavior)
+      updatedSelfArray = [...(currentGranularSelections.self || []), uuid];
+    }
+
     const updatedSelections = {
       ...currentGranularSelections,
-      self: [...(currentGranularSelections.self || []), uuid]
+      self: updatedSelfArray
     };
 
-    const isComplete = updatedSelections.self.length >= getRequiredSelectionsCount(group.selectedItem);
+    const isComplete = updatedSelections.self.filter(Boolean).length >= getRequiredSelectionsCount(group.selectedItem);
 
     window.GAS.log.d('[addGranularSelection] Adding granular selection', {
       groupId,
       uuid,
+      index,
       groupType: group.type,
       requiredCount: getRequiredSelectionsCount(group.selectedItem),
+      currentCount: updatedSelections.self.filter(Boolean).length,
       isComplete
     });
 

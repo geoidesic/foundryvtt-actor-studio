@@ -170,11 +170,12 @@ $: if(configurableSelections.length > 0) {
   }, 100); // Adjust the delay as necessary
 }
 
-function handleSelection(groupId, option, parentGroup) {
+function handleSelection(groupId, option, parentGroup, index = null) {
   window.GAS.log.d('[EquipmentSelectorDetail] handleSelection called', {
     groupId,
     groupIdType: typeof groupId,
     option,
+    index,
     parentGroup: parentGroup ? {
       id: parentGroup.id,
       type: parentGroup.type
@@ -195,9 +196,10 @@ function handleSelection(groupId, option, parentGroup) {
   } else {
     window.GAS.log.d('[EquipmentSelectorDetail] Calling addGranularSelection', {
       groupId,
-      value
+      value,
+      index
     });
-    addGranularSelection(groupId, value);
+    addGranularSelection(groupId, value, index);
   }
 }
 
@@ -209,14 +211,15 @@ function handleSelection(groupId, option, parentGroup) {
  * Then once selected, the handler is called with the selected value and the group details are included
  * @param {string} groupId - The id of the group
  * @param {object} parentGroup - The parent group
+ * @param {number} index - The index in the selections array (for multiple selections)
  * @returns {function} - The selection handler
  */
-function createSelectionHandler(groupId, parentGroup) {
+function createSelectionHandler(groupId, parentGroup, index = null) {
   
   
   return function selectionHandler(option) {
     
-    handleSelection(groupId, option, parentGroup);
+    handleSelection(groupId, option, parentGroup, index);
   }
 }
 
@@ -239,7 +242,7 @@ section
               alt="{group.selectedItem.type}"
             )
           .flex2.left.name.ml-sm
-            span {group.selectedItem.label}
+            span {@html group.selectedItem.label}
           +if("!isDisabled")
             .flex0.right
               button.cancel-button(on:click!="{handleCancelSelection(group)}")
@@ -255,13 +258,15 @@ section
               id="equipment-select-{group.selectedItem._id}"
             )
           +if("!group.parentGroup")
-            IconSelect.mb-md.icon-select(
-              options="{equipmentByType[group.selectedItem.type] || []}"
-              active="{group.granularSelections?.self?.[0]}"
-              placeHolder="{t('Equipment.SelectType')} {group.selectedItem.type}"
-              handler="{createSelectionHandler(group.id)}"
-              id="equipment-select-{group.selectedItem._id}"
-            )
+            +each("Array.from({length: getRequiredSelectionsCount(group.selectedItem)}) as _, index")
+              +if("!group.granularSelections?.self?.[index]")
+                IconSelect.mb-md.icon-select(
+                  options="{equipmentByType[group.selectedItem.type] || []}"
+                  active="{group.granularSelections?.self?.[index]}"
+                  placeHolder="{t('Equipment.SelectType')} {group.selectedItem.type} #{index + 1}"
+                  handler="{createSelectionHandler(group.id, null, index)}"
+                  id="equipment-select-{group.selectedItem._id}-{index}"
+                )
 </template>
 
 <style lang="sass">
