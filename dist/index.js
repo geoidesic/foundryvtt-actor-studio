@@ -8325,8 +8325,58 @@ async function getFilteredFeats() {
     return [];
   }
 }
+function hasSourcesAssigned() {
+  const settings = game.settings.get(MODULE_ID, "compendiumSources");
+  if (!settings) return false;
+  return Object.values(settings).some((packArray) => Array.isArray(packArray) && packArray.length > 0);
+}
+function autoAssignSources() {
+  const allItemPacks = game.packs.filter((p) => p.documentName === "Item");
+  const filterByName = game.settings.get(MODULE_ID, "filterPackSourcesAppropriatelyByName");
+  const sourceConfigs = {
+    races: { inclusions: ["race"], exclusions: [] },
+    racialFeatures: { inclusions: ["race"], exclusions: [] },
+    classes: { inclusions: ["class"], exclusions: ["subclass"] },
+    subclasses: { inclusions: ["subclass"], exclusions: [] },
+    backgrounds: { inclusions: ["background"], exclusions: [] },
+    equipment: { inclusions: ["item", "equipment"], exclusions: [] },
+    spells: { inclusions: ["spell"], exclusions: [] },
+    feats: { inclusions: ["feat"], exclusions: [] },
+    items: { inclusions: ["item", "equipment"], exclusions: [] }
+  };
+  const autoAssigned = {};
+  for (const [sourceType, config] of Object.entries(sourceConfigs)) {
+    autoAssigned[sourceType] = [];
+    for (const pack of allItemPacks) {
+      const hasMatch = config.inclusions.some(
+        (inclusion) => pack.metadata.id.toLowerCase().includes(inclusion.toLowerCase()) || pack.metadata.name.toLowerCase().includes(inclusion.toLowerCase()) || pack.metadata.path.toLowerCase().includes(inclusion.toLowerCase()) || pack.metadata.label.toLowerCase().includes(inclusion.toLowerCase())
+      );
+      const hasExclusion = config.exclusions.some(
+        (exclusion) => pack.metadata.id.toLowerCase().includes(exclusion.toLowerCase()) || pack.metadata.name.toLowerCase().includes(exclusion.toLowerCase()) || pack.metadata.path.toLowerCase().includes(exclusion.toLowerCase()) || pack.metadata.label.toLowerCase().includes(exclusion.toLowerCase())
+      );
+      if (filterByName) {
+        if (hasMatch && !hasExclusion) {
+          autoAssigned[sourceType].push(pack.collection);
+        }
+      } else {
+        if (sourceType === "classes" && hasExclusion) {
+          continue;
+        }
+        if (sourceType === "subclasses" && !hasMatch) {
+          continue;
+        }
+        if (config.inclusions.length === 0 || hasMatch) {
+          autoAssigned[sourceType].push(pack.collection);
+        }
+      }
+    }
+  }
+  window.GAS.log.d("[autoAssignSources] Auto-assigned sources:", autoAssigned);
+  return autoAssigned;
+}
 const Utility = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
+  autoAssignSources,
   camelCaseToTitleCase,
   delay,
   dropItemOnCharacter,
@@ -8345,6 +8395,7 @@ const Utility = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePrope
   getPacksFromSettings,
   getSubclassLevel,
   getTextEditorAPI,
+  hasSourcesAssigned,
   isAdvancementsForLevelInItem,
   isDDBImportedCharacter,
   itemHasAdvancementChoices,
@@ -8415,7 +8466,7 @@ class DonationTrackerGameSettings extends TJSGameSettings {
   }
 }
 const DonationTrackerGameSettings$1 = new DonationTrackerGameSettings();
-const version$1 = "2.2.13";
+const version$1 = "2.2.14";
 const packageJson = {
   version: version$1
 };
@@ -30184,7 +30235,7 @@ class TJSDocument {
     }
   }
 }
-const version = "2.2.13";
+const version = "2.2.14";
 const manifestJson = {
   version
 };
@@ -31418,7 +31469,7 @@ function disableOtherActorCreationOptionsForPlayers() {
     scope: "world",
     config: true,
     type: Boolean,
-    default: false
+    default: true
   });
 }
 function disableAdvancementCapture() {
@@ -31611,7 +31662,7 @@ function showButtonInSideBar(app) {
     hint: game.i18n.localize("GAS.Setting.showButtonInSideBar.Hint"),
     scope: "world",
     config: true,
-    default: false,
+    default: true,
     type: Boolean
   });
 }
@@ -32735,6 +32786,21 @@ const ready = (app, html, data) => {
     }
   } else {
     new WelcomeApplication().render(true, { focus: true });
+  }
+  if (game.user.isGM && !hasSourcesAssigned()) {
+    Dialog.confirm({
+      title: game.i18n.localize("GAS.Dialog.AutoAssignSources.Title"),
+      content: `<p>${game.i18n.localize("GAS.Dialog.AutoAssignSources.Content")}</p>`,
+      yes: () => {
+        const autoAssigned = autoAssignSources();
+        game.settings.set(MODULE_ID, "compendiumSources", autoAssigned);
+        ui.notifications.info(game.i18n.localize("GAS.Dialog.AutoAssignSources.Success"));
+      },
+      no: () => {
+        ui.notifications.warn(game.i18n.localize("GAS.Dialog.AutoAssignSources.Skipped"));
+      },
+      defaultYes: true
+    });
   }
   if (game.settings.settings.has(`${MODULE_ID}.forceDnd5eLevelUpAutomation`)) {
     if (game.settings.get(MODULE_ID, "forceDnd5eLevelUpAutomation")) {
