@@ -4,49 +4,52 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { dropItemRegistry } from "~/src/stores/index";
 
+  // Import all tab components statically
+  import Race from "~/src/components/organisms/dnd5e/Tabs/Race.svelte";
+  import Class from "~/src/components/organisms/dnd5e/Tabs/Class.svelte";
+  import Background from "~/src/components/organisms/dnd5e/Tabs/Background.svelte";
+  import Abilities from "~/src/components/organisms/dnd5e/Tabs/Abilities.svelte";
+  import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
+  import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
+  import Advancements from "~/src/components/organisms/dnd5e/Tabs/Advancements.svelte";
+  import LevelUp from "~/src/components/organisms/dnd5e/Tabs/LevelUp.svelte";
+  import ShopTab from "~/src/components/organisms/dnd5e/Tabs/ShopTab.svelte";
+  import StartingWealthChoice from "~/src/components/molecules/dnd5e/StartingWealthChoice.svelte";
+
   export let tabs = [];
   export let sheet;
   export let activeTab = void 0;
   export let efx = ripple();
 
+  // Map component names to their imported classes
+  const componentMap = {
+    Race,
+    Class,
+    Background,
+    Abilities,
+    Equipment,
+    Spells,
+    Advancements,
+    LevelUp,
+    ShopTab,
+    StartingWealthChoice
+  };
+
   let initialTabs = [];
+  let tabComponents = {};
 
-  $: tabComponents = {}
-
-  // if the tabs change, load the new components
+  // Load tab components from the static map
   $: if(initialTabs !== tabs) {
     initialTabs = tabs;
     for (const tab of tabs) {
-      // Special handling for StartingWealthChoice component (it's in molecules, not organisms)
-      let importPath;
-      if (tab.component === 'StartingWealthChoice') {
-        importPath = './dnd5e/StartingWealthChoice.svelte';
+      const Component = componentMap[tab.component];
+      if (Component) {
+        tabComponents[tab.component] = Component;
       } else {
-        importPath = `../organisms/dnd5e/Tabs/${tab.component}.svelte`;
+        window.GAS?.log?.w(`Tab component ${tab.component} not found in componentMap`);
       }
-      import(importPath).then(module => {
-        tabComponents[tab.component] = module.default;
-      });
     }
   }
-
-  onMount(async () => {
-    initialTabs = tabs;
-    for (const tab of tabs) {
-      // Special handling for StartingWealthChoice component (it's in molecules, not organisms)
-      let importPath;
-      if (tab.component === 'StartingWealthChoice') {
-        importPath = './dnd5e/StartingWealthChoice.svelte';
-      } else {
-        importPath = `../organisms/dnd5e/Tabs/${tab.component}.svelte`;
-      }
-      const module = await import(importPath);
-      tabComponents[tab.component] = module.default;
-    }
-  });
-  
-  // Subscribe to the currentProcess to know when advancements are active
-  $: isAdvancementTab = activeTab === 'advancements';
 </script>
 
 <!--List of tabs-->
