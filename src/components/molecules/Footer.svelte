@@ -238,8 +238,12 @@
     
     // For 2014 rules
     if (window.GAS.dnd5eRules === "2014") {
-      // Progress is 100 when wealth choice is made, but for gold selection,
-      // we also need goldRoll > 0 before equipment is actually complete
+      // If they chose gold, need progress 100 and goldRoll > 0
+      // If they chose equipment, need progress 100 only (gold not rolled in this case)
+      if ($startingWealthChoice === 'equipment') {
+        return $progress === 100;
+      }
+      // Gold choice or no choice yet
       return $progress === 100 && $goldRoll > 0;
     }
     
