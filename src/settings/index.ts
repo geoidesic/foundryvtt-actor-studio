@@ -195,7 +195,7 @@ function disableOtherActorCreationOptionsForPlayers() {
     scope: 'world',
     config: true,
     type: Boolean,
-    default: false
+    default: true
   });
 }
 
@@ -507,7 +507,7 @@ function showButtonInSideBar(app) {
     hint: game.i18n.localize('GAS.Setting.showButtonInSideBar.Hint'),
     scope: 'world',
     config: true,
-    default: false,
+    default: true,
     type: Boolean,
   });
 }

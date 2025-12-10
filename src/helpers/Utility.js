@@ -1319,3 +1319,85 @@ export async function getFilteredFeats() {
     return [];
   }
 }
+
+/**
+ * Check if any sources are currently assigned in the compendium settings
+ * @returns {boolean} True if any sources are assigned, false otherwise
+ */
+export function hasSourcesAssigned() {
+  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  if (!settings) return false;
+  
+  // Check if any source type has packs assigned
+  return Object.values(settings).some(packArray => Array.isArray(packArray) && packArray.length > 0);
+}
+
+/**
+ * Auto-assign compendium packs to source categories based on their content types
+ * Uses the same filtering logic as CompendiumSourcesSubmenu
+ * @returns {Object} The auto-assigned sources object
+ */
+export function autoAssignSources() {
+  const allItemPacks = game.packs.filter((p) => p.documentName === 'Item');
+  const filterByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
+  
+  // Define the source type configurations with their inclusion/exclusion keywords
+  const sourceConfigs = {
+    races: { inclusions: ['race'], exclusions: [] },
+    racialFeatures: { inclusions: ['race'], exclusions: [] },
+    classes: { inclusions: ['class'], exclusions: ['subclass'] },
+    subclasses: { inclusions: ['subclass'], exclusions: [] },
+    backgrounds: { inclusions: ['background'], exclusions: [] },
+    equipment: { inclusions: ['item', 'equipment'], exclusions: [] },
+    spells: { inclusions: ['spell'], exclusions: [] },
+    feats: { inclusions: ['feat'], exclusions: [] },
+    items: { inclusions: ['item', 'equipment'], exclusions: [] },
+  };
+
+  const autoAssigned = {};
+
+  // Process each source type
+  for (const [sourceType, config] of Object.entries(sourceConfigs)) {
+    autoAssigned[sourceType] = [];
+
+    for (const pack of allItemPacks) {
+      // Check inclusions
+      const hasMatch = config.inclusions.some(inclusion =>
+        pack.metadata.id.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.name.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.path.toLowerCase().includes(inclusion.toLowerCase()) ||
+        pack.metadata.label.toLowerCase().includes(inclusion.toLowerCase())
+      );
+
+      // Check exclusions
+      const hasExclusion = config.exclusions.some(exclusion =>
+        pack.metadata.id.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.name.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.path.toLowerCase().includes(exclusion.toLowerCase()) ||
+        pack.metadata.label.toLowerCase().includes(exclusion.toLowerCase())
+      );
+
+      // Only apply filtering by name if the setting is enabled
+      if (filterByName) {
+        if (hasMatch && !hasExclusion) {
+          autoAssigned[sourceType].push(pack.collection);
+        }
+      } else {
+        // If filtering is disabled, add all packs (but still respect exclusions for classes)
+        if (sourceType === 'classes' && hasExclusion) {
+          continue; // Skip subclasses when assigning to classes
+        }
+        if (sourceType === 'subclasses' && !hasMatch) {
+          continue; // Only include subclass packs in subclasses
+        }
+        // For other types without filtering, include all Item packs
+        if (config.inclusions.length === 0 || hasMatch) {
+          autoAssigned[sourceType].push(pack.collection);
+        }
+      }
+    }
+  }
+
+  window.GAS.log.d('[autoAssignSources] Auto-assigned sources:', autoAssigned);
+  return autoAssigned;
+}

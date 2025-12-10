@@ -10,7 +10,13 @@
     "Cancel": "Cancel",
     "Dialog": {
       "ReloadRequiredTitle": "Reload Required",
-      "ReloadRequiredContent": "This settings change requires Foundry to reload. Would you like to reload now?"
+      "ReloadRequiredContent": "This settings change requires Foundry to reload. Would you like to reload now?",
+      "AutoAssignSources": {
+        "Title": "Configure Actor Studio Sources",
+        "Content": "No Actor Studio sources have been assigned. Would you like to auto-assign sources? (You can always amend these later in settings – you will need some sources assigned for Actor Studio to work)",
+        "Success": "Sources auto-assigned successfully. You can modify them in the Actor Studio settings if needed.",
+        "Skipped": "Sources not auto-assigned. You can configure them manually in the Actor Studio settings when ready."
+      }
     },
     "Disabled": "Disabled",
     "AbilityScores": "Ability Scores",

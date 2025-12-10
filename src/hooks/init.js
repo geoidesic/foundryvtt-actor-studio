@@ -2,7 +2,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { initLevelup } from '~/src/plugins/level-up';
 import { registerSettings } from '~/src/settings';
 import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase'; 
-import { log, getDnd5eVersion, getDndRulesVersion } from '~/src/helpers/Utility'
+import { log, getDnd5eVersion, getDndRulesVersion, hasSourcesAssigned, autoAssignSources } from '~/src/helpers/Utility'
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import SpellListsPlugin from '~/src/plugins/spell-lists';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
@@ -92,6 +92,23 @@ export const ready = (app, html, data) => {
   } else {
     // Setting not registered yet, show welcome by default
     new WelcomeApplication().render(true, { focus: true });
+  }
+
+  // Show auto-assign sources dialog for GM if no sources are configured
+  if (game.user.isGM && !hasSourcesAssigned()) {
+    Dialog.confirm({
+      title: game.i18n.localize('GAS.Dialog.AutoAssignSources.Title'),
+      content: `<p>${game.i18n.localize('GAS.Dialog.AutoAssignSources.Content')}</p>`,
+      yes: () => {
+        const autoAssigned = autoAssignSources();
+        game.settings.set(MODULE_ID, 'compendiumSources', autoAssigned);
+        ui.notifications.info(game.i18n.localize('GAS.Dialog.AutoAssignSources.Success'));
+      },
+      no: () => {
+        ui.notifications.warn(game.i18n.localize('GAS.Dialog.AutoAssignSources.Skipped'));
+      },
+      defaultYes: true
+    });
   }
 
   if (game.settings.settings.has(`${MODULE_ID}.forceDnd5eLevelUpAutomation`)) {
