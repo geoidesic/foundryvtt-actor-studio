@@ -292,8 +292,12 @@ try {
     const currentBranch = execSync('git branch --show-current').toString().trim();
     console.log(`📍 Current branch: ${currentBranch}`);
     if (isTestRelease) {
-        // For pre/draft releases: ensure next branch has latest main changes
-        if (currentBranch !== 'next') {
+        // For pre/draft releases: ensure next branch exists and has latest main changes
+        const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
+        if (!branches.includes('next')) {
+            console.log('🔄 Creating next branch...');
+            execSync('git checkout -b next');
+        } else if (currentBranch !== 'next') {
             console.log('🔄 Switching to next branch...');
             execSync('git checkout next');
         }
@@ -306,18 +310,23 @@ try {
             process.exit(1);
         }
     } else {
-        // For production releases: merge next into main
+        // For production releases: merge next into main if next exists
         if (currentBranch !== 'main') {
             console.log('🔄 Switching to main branch...');
             execSync('git checkout main');
         }
-        console.log('📥 Merging next branch into main...');
-        try {
-            execSync('git merge next');
-            console.log('✅ Successfully merged next into main');
-        } catch (error) {
-            console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
-            process.exit(1);
+        const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
+        if (branches.includes('next')) {
+            console.log('📥 Merging next branch into main...');
+            try {
+                execSync('git merge next');
+                console.log('✅ Successfully merged next into main');
+            } catch (error) {
+                console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
+                process.exit(1);
+            }
+        } else {
+            console.log('📍 Next branch does not exist, skipping merge.');
         }
     }
 } catch (error) {
@@ -353,6 +362,10 @@ if (!isDraft) {
         console.log(`✅ Version ${newVersion} is available`);
     }
     
+    // Save original versions for potential revert
+    const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    const originalModuleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+    
     // Update files and build for published releases only
     packageJson.version = newVersion;
     if (packageJson.debug !== undefined) {
@@ -371,19 +384,23 @@ if (!isDraft) {
     }
     fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
 
-    // Build after version update so the new version is included in the build
-    console.log('🔨 Building project...');
     try {
+        // Build after version update so the new version is included in the build
+        console.log('🔨 Building project...');
         execSync('npm run build', { stdio: 'inherit' });
+
+        // Commit changes
+        console.log('💾 Committing changes...');
+        execSync('git add .');
+        execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
     } catch (error) {
-        console.error('❌ Build failed:', error.message);
+        console.error('❌ Build or commit failed:', error.message);
+        // Revert version changes
+        fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
+        fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
+        console.log('Reverted version changes due to error.');
         process.exit(1);
     }
-
-    // Commit changes
-    console.log('💾 Committing changes...');
-    execSync('git add .');
-    execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
 } else {
     console.log(`✅ Draft release - no file changes or build needed`);
 }
