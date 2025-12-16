@@ -15,18 +15,21 @@ async function checkForRunningServer() {
   const packsDir = path.join(MODULE_ID, 'packs');
 
   // Check for running FoundryVTT processes
-  try {
-    const result = execSync('pgrep -f FoundryVTT', { encoding: 'utf8', stdio: 'pipe' });
-    if (result.trim()) {
-      console.error(`ERROR: FoundryVTT server appears to be running!`);
-      console.error(`Found processes: ${result.trim()}`);
-      console.error(`Please stop the FoundryVTT server before running this script.`);
-      process.exit(1);
-    }
-  } catch (error) {
-    // pgrep returns non-zero if no matches, which is fine
-    if (error.status !== 1) {
-      console.warn('Could not check for running processes, proceeding with caution.');
+  const isCI = process.env.GITHUB_ACTIONS === 'true' || process.env.CI === 'true';
+  if (!isCI) {
+    try {
+      const result = execSync('pgrep -f "FoundryVTT|main.js --dataPath"', { encoding: 'utf8', stdio: 'pipe' });
+      if (result.trim()) {
+        console.error(`ERROR: FoundryVTT server appears to be running!`);
+        console.error(`Found processes: ${result.trim()}`);
+        console.error(`Please stop the FoundryVTT server before running this script.`);
+        process.exit(1);
+      }
+    } catch (error) {
+      // pgrep returns non-zero if no matches, which is fine
+      if (error.status !== 1) {
+        console.warn('Could not check for running processes, proceeding with caution.');
+      }
     }
   }
 
