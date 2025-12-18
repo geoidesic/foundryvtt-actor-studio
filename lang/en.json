@@ -333,6 +333,26 @@
       "ShowLevelPreviewDropdown": {
         "Name": "Show Level Preview Dropdown",
         "Hint": "If enabled, shows a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
+      },
+      "EnableLLMNameGeneration": {
+        "Name": "Enable LLM Name Generation",
+        "Hint": "If enabled, adds a ChatGPT button next to the character name input that generates fantasy-appropriate names based on the selected race."
+      },
+      "EnableLicenseTracker": {
+        "Name": "Enable License Tracker",
+        "Hint": "If enabled, requires a license key for LLM name generation. The license key must be entered below."
+      },
+      "AardvarkLicenseCode": {
+        "Name": "Aardvark License Code",
+        "Hint": "Enter your Aardvark license code for LLM name generation. This is required when license tracking is enabled."
+      },
+      "LLMApiKey": {
+        "Name": "LLM API Key",
+        "Hint": "API key for the LLM service. Leave as default for OpenAI (built-in service). For Claude, enter your Anthropic API key. For OpenRouter, enter your OpenRouter API key."
+      },
+      "LLMProvider": {
+        "Name": "LLM Provider",
+        "Hint": "Select which LLM provider to use for name generation. OpenAI uses the built-in service (no API key needed). Claude requires an Anthropic API key. OpenRouter requires an OpenRouter API key."
       }
     },
     "Equipment": {

@@ -92,5 +92,5 @@
             "script": "Standard JavaScript"
         }
     },
-    "env": "production"
+    "env": "dev"
 }

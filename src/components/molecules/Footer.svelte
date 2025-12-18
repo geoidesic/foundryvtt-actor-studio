@@ -45,9 +45,11 @@
     getLevelByDropType,
     itemHasAdvancementChoices,
     isAdvancementsForLevelInItem,
-    dropItemOnCharacter
+    dropItemOnCharacter,
+    updateSource
   } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
+  import LLM from "~/src/plugins/llm";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
   import { localize as t } from "~/src/helpers/Utility";
@@ -69,8 +71,11 @@
     handleSkipSpellsLevelUp
   } from "~/src/lib/workflow";
 
-  // Add a flag to track if equipment has been added during this session
-  let hasAddedEquipmentThisSession = false;
+  // Derived store for LLM button visibility
+  const showLLMButton = derived([race], ([$race]) => {
+    const settingEnabled = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    return !!$race && settingEnabled;
+  });
   
   // Debug logging for button visibility
   // $: {
@@ -140,6 +145,7 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
+  const browserLanguage = navigator.language || 'en';
 
   // Derived store to check if actor has items in inventory
   const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
@@ -439,6 +445,18 @@
       el.removeEventListener('webkitAnimationIteration', handler);
     });
   });
+
+  const generateName = async (race) => {
+    try {
+      const name = await LLM.generateName(race + ' lang: ' + browserLanguage + ' avoiding patterns or common starting letters. Ensure the name is different with each request.');
+      actorName = name;
+      // Update the actor source with the generated name
+      await updateSource($actor, { name: name });
+    } catch (error) {
+      console.error('Failed to generate name:', error);
+      ui.notifications.error('Failed to generate character name');
+    }
+  };
 </script>
 
 <template lang="pug">
@@ -467,6 +485,9 @@
                     on:input="{handleNameInput}"
                     disabled="{$isActorCreated}"
                   )
+                  +if("$showLLMButton")
+                    .flex.pointer(on:click="{generateName($race.name)}")
+                      img(src="modules/foundryvtt-actor-studio/assets/ChatGPT_logo.svg" alt="Generate name via ChatGPT" style="height: 100%; max-height: 30px; border: none; width: auto;")
       
       //- Progress and buttons section
       .flex1
