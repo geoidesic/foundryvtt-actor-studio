@@ -1,4 +1,4 @@
-import { MODULE_ID } from "~/src/helpers/constants";
+import { MODULE_ID } from '~/src/helpers/constants';
 
 class LLM {
 
@@ -10,7 +10,7 @@ class LLM {
   constructor() {
   }
 
-  getBaseUrl() {
+  static getBaseUrl() {
     const provider = this.getProvider();
     switch (provider) {
       case 'openrouter':
@@ -22,7 +22,7 @@ class LLM {
     }
   }
 
-  getApiKey() {
+  static getApiKey() {
     try {
       const settingKey = game?.settings?.get ? game.settings.get(MODULE_ID, 'llmApiKey') : this.apiKey;
       console.log('[LLM] getApiKey:', { settingKey: settingKey ? '***' + settingKey.slice(-4) : 'none', fallback: this.apiKey });
@@ -33,7 +33,7 @@ class LLM {
     }
   }
 
-  getLicenseKey() {
+  static getLicenseKey() {
     try {
       return game?.settings?.get ? game.settings.get(MODULE_ID, 'AardvarkLicenseCode') : '';
     } catch (error) {
@@ -42,7 +42,7 @@ class LLM {
     }
   }
 
-  getProvider() {
+  static getProvider() {
     try {
       const provider = game?.settings?.get ? game.settings.get(MODULE_ID, 'llmProvider') : 'openai';
       console.log('[LLM] getProvider:', { provider });
@@ -53,10 +53,10 @@ class LLM {
     }
   }
 
-  async generateName(race) {
-    const provider = this.getProvider();
-    const baseUrl = this.getBaseUrl();
-    const apiKey = this.getApiKey();
+  static async generateName(race) {
+    const provider = LLM.getProvider();
+    const baseUrl = LLM.getBaseUrl();
+    const apiKey = LLM.getApiKey();
 
     console.log('[LLM] Generate name request:', { provider, baseUrl, apiKey: apiKey ? '***' + apiKey.slice(-4) : 'none', race });
 
@@ -77,7 +77,7 @@ class LLM {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getApiKey()}`,
+            'Authorization': `Bearer ${LLM.getApiKey()}`,
           },
           body: JSON.stringify({
             model: model,
@@ -107,7 +107,7 @@ class LLM {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': this.getApiKey(),
+            'x-api-key': LLM.getApiKey(),
             'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
@@ -138,7 +138,7 @@ class LLM {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getApiKey()}`,
+            'Authorization': `Bearer ${LLM.getApiKey()}`,
           },
           body: JSON.stringify(
             {
@@ -158,6 +158,200 @@ class LLM {
       throw error;
     }
   }
+
+  static async generateBiography({ race, characterClass, level, elements }) {
+    const provider = LLM.getProvider();
+    const baseUrl = LLM.getBaseUrl();
+    const apiKey = LLM.getApiKey();
+
+    console.log('[LLM] Generate biography request:', { provider, baseUrl, apiKey: apiKey ? '***' + apiKey.slice(-4) : 'none', race, characterClass, level, elements });
+
+    // Check if API key is required for this provider
+    if ((provider === 'openrouter' || provider === 'claude') && (!apiKey || apiKey === 'actor-studio-gpt-beta' || apiKey.length < 10)) {
+      throw new Error(`API key required for ${provider}. Please set your ${provider === 'claude' ? 'Anthropic' : 'OpenRouter'} API key in Actor Studio settings.`);
+    }
+
+    try {
+      // Build the prompt based on selected elements
+      const elementPrompts = {
+        ideals: 'ideals (core beliefs and principles)',
+        flaws: 'flaws (character weaknesses or vices)',
+        bonds: 'bonds (connections to people, places, or things)',
+        personalityTraits: 'personality traits (distinctive personality characteristics)',
+        appearance: 'physical appearance (detailed description of looks)',
+        biography: 'background biography (personal history and life story)'
+      };
+
+      const selectedPrompts = elements.map(element => elementPrompts[element]).filter(Boolean);
+      const prompt = `Generate biography elements for a level ${level} ${characterClass} ${race} in a fantasy RPG setting. Provide the following elements in TOON format: ${selectedPrompts.join(', ')}.
+
+Return the response in the following structured format:
+TOON
+ideals: [content]
+flaws: [content]
+bonds: [content]
+personalityTraits: [content]
+appearance: [content]
+biography: [content]
+ENDTOON
+
+Only include the elements that were requested. Make each element detailed but concise (2-4 sentences). Ensure the content fits a D&D 5e character.`;
+
+      let response;
+      let data;
+      let content;
+
+      if (provider === 'openrouter') {
+        // OpenRouter API format
+        const model = 'openai/gpt-4o-mini';
+
+        response = await fetch(`${baseUrl}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${LLM.getApiKey()}`,
+          },
+          body: JSON.stringify({
+            model: model,
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            max_tokens: 1000,
+            temperature: 0.8
+          })
+        });
+
+        data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(`OpenRouter API error: ${data.error?.message || 'Unknown error'}`);
+        }
+
+        window.GAS.log.d("Generated biography via OpenRouter", data);
+        content = data.choices[0]?.message?.content?.trim() || '';
+
+      } else if (provider === 'claude') {
+        // Direct Claude API format
+        response = await fetch(`${baseUrl}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': LLM.getApiKey(),
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 1000,
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.8
+          })
+        });
+
+        data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(`Claude API error: ${data.error?.message || 'Unknown error'}`);
+        }
+
+        window.GAS.log.d("Generated biography via Claude Direct", data);
+        content = data.content[0]?.text?.trim() || '';
+
+      } else {
+        // Default actor-studio service format
+        response = await fetch(`${baseUrl}/generateBiography`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${LLM.getApiKey()}`,
+          },
+          body: JSON.stringify({
+            licenseKey: LLM.getLicenseKey(),
+            race,
+            characterClass,
+            level,
+            elements
+          })
+        });
+
+        data = await response.json();
+
+        window.GAS.log.d("Generated biography via default service", data);
+        content = data.object.biography;
+      }
+
+      // Parse TOON format response
+      return LLM.parseToonBiography(content);
+
+    } catch (error) {
+      console.error('LLM: Failed to generate biography', error);
+      throw error;
+    }
+  }
+
+  static parseToonBiography(content) {
+    const result = {
+      ideals: '',
+      flaws: '',
+      bonds: '',
+      personalityTraits: '',
+      appearance: '',
+      biography: ''
+    };
+
+    // Extract content between TOON and ENDTOON
+    const toonMatch = content.match(/TOON\s*\n?(.*?)\s*ENDTOON/s);
+    if (!toonMatch) {
+      console.warn('LLM: Could not parse TOON format, using raw content');
+      return result;
+    }
+
+    const toonContent = toonMatch[1];
+
+    // Parse each line
+    const lines = toonContent.split('\n');
+    let currentKey = null;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      // Check if this is a key line (ends with colon)
+      const keyMatch = trimmed.match(/^(\w+):\s*(.*)$/);
+      if (keyMatch) {
+        const key = keyMatch[1];
+        const value = keyMatch[2];
+
+        // Map keys to our result object
+        const keyMap = {
+          ideals: 'ideals',
+          flaws: 'flaws',
+          bonds: 'bonds',
+          personalityTraits: 'personalityTraits',
+          appearance: 'appearance',
+          biography: 'biography'
+        };
+
+        if (keyMap[key]) {
+          currentKey = keyMap[key];
+          result[currentKey] = value;
+        }
+      } else if (currentKey && trimmed) {
+        // Continuation of previous key
+        result[currentKey] += ' ' + trimmed;
+      }
+    }
+
+    return result;
+  }
+
 }
 
-export default new LLM();
+export default LLM;

@@ -15,6 +15,7 @@
   import LevelUp from "~/src/components/organisms/dnd5e/Tabs/LevelUp.svelte";
   import ShopTab from "~/src/components/organisms/dnd5e/Tabs/ShopTab.svelte";
   import StartingWealthChoice from "~/src/components/molecules/dnd5e/StartingWealthChoice.svelte";
+  import Biography from "~/src/components/organisms/dnd5e/Tabs/Biography.svelte";
 
   export let tabs = [];
   export let sheet;
@@ -32,7 +33,8 @@
     Advancements,
     LevelUp,
     ShopTab,
-    StartingWealthChoice
+    StartingWealthChoice,
+    Biography
   };
 
   let initialTabs = [];

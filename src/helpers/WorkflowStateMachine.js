@@ -15,6 +15,7 @@ export const WORKFLOW_STATES = {
   IDLE: 'idle',
   CREATING_CHARACTER: 'creating_character',
   PROCESSING_ADVANCEMENTS: 'processing_advancements',
+  BIOGRAPHY: 'biography',
   SELECTING_EQUIPMENT: 'selecting_equipment',
   SELECTING_SPELLS: 'selecting_spells',
   SHOPPING: 'shopping',
@@ -29,6 +30,7 @@ export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
+  BIOGRAPHY_COMPLETE: 'biography_complete',
   WEALTH_CHOICE_MADE: 'wealth_choice_made',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
@@ -232,6 +234,10 @@ export const workflowFSMContext = {
     const enableShopping = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
     return enableShopping;
   },
+  _shouldShowBiography: function () {
+    const enableLLM = game.settings.get(MODULE_ID, 'EnableLLMNameGeneration');
+    return enableLLM;
+  },
   actor: undefined,
 };
 
@@ -256,7 +262,9 @@ export function createWorkflowStateMachine() {
       }
     })
     .state('creating_character')
-    .on('character_created').transitionTo('processing_advancements')
+    .on('character_created')
+      .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
+      .transitionTo('processing_advancements')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
@@ -285,6 +293,7 @@ export function createWorkflowStateMachine() {
         }
       })
         .onSuccess()
+          .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
           .transitionTo('choosing_starting_wealth').withCondition((context) => {
             // 2014 rules need to choose between equipment or gold
             const is2014Rules = window.GAS?.dnd5eRules === '2014';
@@ -299,6 +308,21 @@ export function createWorkflowStateMachine() {
         .onFailure().transitionTo('error')
       .on('reset').transitionTo('idle')
       .on('error').transitionTo('error')
+    .state('biography')
+    .on('biography_complete').transitionTo('processing_advancements')
+    .on('reset').transitionTo('idle')
+    .on('error').transitionTo('error')
+    .onEnter((context) => {
+      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+      window.GAS.log.d('[WORKFLOW] Entered BIOGRAPHY state');
+      
+      // Add biography tab and switch to it
+      const currentTabs = get(tabs);
+      if (!currentTabs.find(t => t.id === "biography")) {
+        tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
+      }
+      activeTab.set("biography");
+    })
     .state('choosing_starting_wealth')
       .on('wealth_choice_made')
         .transitionTo('selecting_equipment').withCondition((context) => {

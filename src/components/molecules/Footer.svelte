@@ -97,6 +97,9 @@
   // Add state for processing feat spells
   const isProcessingFeatSpells = writable(false);
 
+  // Add state for tracking if equipment has been added this session
+  const hasAddedEquipmentThisSession = writable(false);
+
   // Store references for workflow functions
   const storeRefs = {
     race,
@@ -230,7 +233,7 @@
       stores: storeRefs,
       actorInGame,
       onEquipmentAdded: () => {
-        hasAddedEquipmentThisSession = true;
+        hasAddedEquipmentThisSession.set(true);
         window.GAS.log.d('[FOOTER] Equipment added to actor');
       }
     });
@@ -272,7 +275,7 @@
   // Check actor inventory when actorInGame changes and set completion state
   $: if ($actorInGame) {
     // If equipment has already been added this session, don't change the flag
-    if (!hasAddedEquipmentThisSession) {
+    if (!$hasAddedEquipmentThisSession) {
               if (checkInventory($actorInGame)) {
           // Actor already has inventory items
           window.GAS.log.d('[FOOTER] Actor already has inventory items');
