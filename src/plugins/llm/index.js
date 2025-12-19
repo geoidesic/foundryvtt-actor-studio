@@ -53,17 +53,55 @@ class LLM {
     }
   }
 
-  static async generateName(race) {
+  static async generateName(race, context = {}) {
     const provider = LLM.getProvider();
     const baseUrl = LLM.getBaseUrl();
     const apiKey = LLM.getApiKey();
 
-    console.log('[LLM] Generate name request:', { provider, baseUrl, apiKey: apiKey ? '***' + apiKey.slice(-4) : 'none', race });
+    console.log('[LLM] Generate name request:', { provider, baseUrl, apiKey: apiKey ? '***' + apiKey.slice(-4) : 'none', race, context });
 
     // Check if API key is required for this provider
     if ((provider === 'openrouter' || provider === 'claude') && (!apiKey || apiKey === 'actor-studio-gpt-beta' || apiKey.length < 10)) {
       throw new Error(`API key required for ${provider}. Please set your ${provider === 'claude' ? 'Anthropic' : 'OpenRouter'} API key in Actor Studio settings.`);
     }
+
+    // Build enhanced prompt with context if available
+    let prompt = `Generate a single fantasy RPG character name for a ${race}`;
+    
+    if (context.characterClass || context.background || context.abilityScores || context.characterDetails) {
+      prompt += ' character';
+      
+      if (context.characterClass) {
+        prompt += ` who is a ${context.characterClass}`;
+      }
+      
+      if (context.background) {
+        prompt += ` with a ${context.background} background`;
+      }
+      
+      if (context.abilityScores && Object.keys(context.abilityScores).length > 0) {
+        const notableScores = [];
+        const abilityNames = { str: 'strong', dex: 'agile', con: 'resilient', int: 'intelligent', wis: 'wise', cha: 'charismatic' };
+        Object.entries(context.abilityScores).forEach(([key, value]) => {
+          if (value >= 15 && abilityNames[key]) {
+            notableScores.push(abilityNames[key]);
+          }
+        });
+        if (notableScores.length > 0) {
+          prompt += ` who is particularly ${notableScores.join(' and ')}`;
+        }
+      }
+      
+      if (context.characterDetails && context.characterDetails.age) {
+        const age = parseInt(context.characterDetails.age);
+        if (age < 50) prompt += ' and young';
+        else if (age > 200) prompt += ' and ancient';
+      }
+      
+      prompt += '.';
+    }
+    
+    prompt += ' Return only the name, nothing else.';
 
     try {
       let response;
@@ -84,7 +122,7 @@ class LLM {
             messages: [
               {
                 role: 'user',
-                content: `Generate a single fantasy RPG character name for a ${race}. Return only the name, nothing else.`
+                content: prompt
               }
             ],
             max_tokens: 50,
@@ -116,7 +154,7 @@ class LLM {
             messages: [
               {
                 role: 'user',
-                content: `Generate a single fantasy RPG character name for a ${race}. Return only the name, nothing else.`
+                content: prompt
               }
             ],
             temperature: 0.7
@@ -143,7 +181,7 @@ class LLM {
           body: JSON.stringify(
             {
               licenseKey: this.getLicenseKey(),
-              prompt: `Generate a fantasy RPG name for an ${race}`,
+              prompt: prompt,
             }
           )
         });
@@ -157,6 +195,11 @@ class LLM {
       console.error('LLM: Failed to generate name', error);
       throw error;
     }
+  }
+
+  // Legacy method for backward compatibility
+  static async generateNameSimple(race) {
+    return LLM.generateName(race);
   }
 
   static async generateBiography({ race, characterClass, level, background, abilityScores, characterDetails, elements }) {
@@ -174,6 +217,7 @@ class LLM {
     try {
       // Build the prompt based on selected elements
       const elementPrompts = {
+        name: 'name (a single fantasy RPG character name)',
         ideals: 'ideals (core beliefs and principles)',
         flaws: 'flaws (character weaknesses or vices)',
         bonds: 'bonds (connections to people, places, or things)',
@@ -227,6 +271,7 @@ Use these ability score insights to inform the biography generation, especially 
 
 Return the response in the following structured format:
 TOON
+name: [content]
 ideals: [content]
 flaws: [content]
 bonds: [content]
@@ -235,7 +280,7 @@ appearance: [content]
 biography: [content]
 ENDTOON
 
-Only include the elements that were requested. Make each element detailed but concise (2-4 sentences). Ensure the content fits a D&D 5e character and is consistent with the provided character details and ability scores.`;
+Only include the elements that were requested. Make each element detailed but concise (2-4 sentences). For the name, return only the name without any additional text. Ensure the content fits a D&D 5e character and is consistent with the provided character details and ability scores.`;
 
       let response;
       let data;
@@ -521,6 +566,7 @@ Only include the elements that were requested. Make each element detailed but co
 
   static parseToonBiography(content) {
     const result = {
+      name: '',
       ideals: '',
       flaws: '',
       bonds: '',
@@ -554,6 +600,7 @@ Only include the elements that were requested. Make each element detailed but co
 
         // Map keys to our result object
         const keyMap = {
+          name: 'name',
           ideals: 'ideals',
           flaws: 'flaws',
           bonds: 'bonds',

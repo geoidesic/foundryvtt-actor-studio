@@ -77,11 +77,11 @@ export async function generateBiography(actor = null) {
   try {
     // Build the prompt based on selected options
     const selectedElements = Object.entries(get(biographyOptions))
-      .filter(([key, selected]) => selected && key !== 'name') // Exclude name from biography elements
+      .filter(([key, selected]) => selected)
       .map(([key, _]) => key);
 
-    if (selectedElements.length === 0 && !get(biographyOptions).name) {
-      ui.notifications.warn('Please select at least one biography element or name to generate.');
+    if (selectedElements.length === 0) {
+      ui.notifications.warn('Please select at least one biography element to generate.');
       return;
     }
 
@@ -110,22 +110,7 @@ export async function generateBiography(actor = null) {
     const abilities = actorForData?.system?.abilities || {};
     const details = get(characterDetails) || {};
 
-    // Generate name if selected
-    if (get(biographyOptions).name) {
-      try {
-        const namePrompt = raceName + ' lang: en avoiding patterns or common starting letters. Ensure the name is different with each request.';
-        window.GAS.log.d('Name Generation LLM Request:', { prompt: namePrompt });
-        const name = await LLM.generateName(namePrompt);
-        // Update the biography content store
-        biographyContent.update(content => ({ ...content, name: name }));
-        ui.notifications.info('Character name generated successfully!');
-      } catch (nameError) {
-        console.error('Failed to generate name:', nameError);
-        ui.notifications.error('Failed to generate character name');
-      }
-    }
-
-    // Generate biography elements if any are selected
+    // Generate biography elements including name if selected
     if (selectedElements.length > 0) {
       // Log the data being sent to LLM for debugging
       const llmParams = {

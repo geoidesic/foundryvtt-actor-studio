@@ -39,6 +39,8 @@
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { isGenerating } from '~/src/stores/biography';
+  import { biographyContent } from '~/src/stores/biography';
+  import { updateSource } from '~/src/helpers/Utility';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
@@ -377,6 +379,44 @@
           dropItemRegistry
         });
         $isActorCreated = true;
+      }
+      
+      // Apply biography content to the created actor
+      const $biographyContent = get(biographyContent);
+      const $actorInGame = get(actorInGame);
+      if ($actorInGame && Object.values($biographyContent).some(val => val && val.trim())) {
+        window.GAS.log.d('[FOOTER] Applying biography content to actor');
+        const updates = {};
+        
+        // Apply name to actor name
+        if ($biographyContent.name && $biographyContent.name.trim()) {
+          updates.name = $biographyContent.name.trim();
+        }
+        
+        // Apply biography fields to actor system.details
+        if ($biographyContent.ideals && $biographyContent.ideals.trim()) {
+          updates['system.details.ideals'] = $biographyContent.ideals.trim();
+        }
+        if ($biographyContent.flaws && $biographyContent.flaws.trim()) {
+          updates['system.details.flaws'] = $biographyContent.flaws.trim();
+        }
+        if ($biographyContent.bonds && $biographyContent.bonds.trim()) {
+          updates['system.details.bonds'] = $biographyContent.bonds.trim();
+        }
+        if ($biographyContent.personalityTraits && $biographyContent.personalityTraits.trim()) {
+          updates['system.details.trait'] = $biographyContent.personalityTraits.trim();
+        }
+        if ($biographyContent.appearance && $biographyContent.appearance.trim()) {
+          updates['system.details.appearance'] = $biographyContent.appearance.trim();
+        }
+        if ($biographyContent.biography && $biographyContent.biography.trim()) {
+          updates['system.details.biography'] = { value: $biographyContent.biography.trim() };
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await updateSource($actorInGame, updates);
+          window.GAS.log.d('[FOOTER] Biography content applied successfully');
+        }
       }
       
       const workflowFSM = getWorkflowFSM();
