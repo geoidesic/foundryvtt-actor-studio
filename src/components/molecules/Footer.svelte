@@ -47,6 +47,7 @@
   import LLM from "~/src/plugins/llm";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
+
   import { localize as t } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
@@ -145,50 +146,66 @@
   let actorName = $actor?.name || "";
   const browserLanguage = navigator.language || 'en';
 
-  // Derived store to check if actor has items in inventory
-  const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
-    if (!$actorInGame) return false;
-    
-    // Check if the actor has any items
-    // In Foundry VTT, items is a Collection that has methods like filter and size
-    const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
-    
-    // First check if items collection exists and has any items
-    if (!$actorInGame.items || $actorInGame.items.size === 0) {
-      // window.GAS.log.d('[FOOTER] No items found on actor');
-      return false;
+  // Initialize biography content with actor name if available
+  onMount(() => {
+    if ($actor?.name && !$biographyContent.name) {
+      biographyContent.update(content => ({ ...content, name: $actor.name }));
     }
-    
-    // Use the Foundry Collection's filter method
-    const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
-    const hasItems = inventoryItems.size > 0;
-    
-    // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
-    //   actorId: $actorInGame.id,
-    //   totalItems: $actorInGame.items.size,
-    //   inventoryItems: inventoryItems,
-    //   inventoryItemCount: inventoryItems.size,
-    //   hasItems: hasItems
-    // });
-    
-    return hasItems;
   });
 
-  const handleNameInput = (e) => {
-    if ($isLevelUp) {
-      //- @why: for existing actors, we need to update the actor object in the database
-      actorName = e.target.value;
-    } else {
-      //- @why: for new actors, we need to update the actor source object in memory,
-      $actor.updateSource({ name: e.target.value });
+  // Sync actor name when biography content changes
+  $: if ($biographyContent.name && $actor && $biographyContent.name !== $actor.name) {
+    $actor.updateSource({ name: $biographyContent.name });
+  }
+
+  // Derived store to check if actor has items in inventory
+  const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
+    try {
+      if (!$actorInGame || !$actorInGame.items) return false;
+      
+      // Check if the actor has any items
+      // In Foundry VTT, items is a Collection that has methods like filter and size
+      const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
+      
+      // First check if items collection exists and has any items
+      if (!$actorInGame.items || $actorInGame.items.size === 0) {
+        // window.GAS.log.d('[FOOTER] No items found on actor');
+        return false;
+      }
+      
+      // Use the Foundry Collection's filter method
+      const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
+      const hasItems = inventoryItems.size > 0;
+      
+      // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
+      //   actorId: $actorInGame.id,
+      //   totalItems: $actorInGame.items.size,
+      //   inventoryItems: inventoryItems,
+      //   inventoryItemCount: inventoryItems.size,
+      //   hasItems: hasItems
+      // });
+      
+      return hasItems;
+    } catch (error) {
+      // If there's any error accessing the actor, return false
+      console.warn('[FOOTER] Error checking inventory items:', error);
+      return false;
     }
-  };
+  });
+
+  // Temporary simple store for hasInventoryItems
+  // const hasInventoryItems = writable(false);
+
   const handleTokenNameInput = (e) => {
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
   };
   //- Create Actor
   const clickCreateHandler = async () => {
+    // Initialize workflow state machine for character creation
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    
     // Check if biography generation is enabled
     const enableLLM = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
     
@@ -204,10 +221,6 @@
       
       // Switch to biography tab
       activeTab.set("biography");
-      
-      // Initialize workflow state machine for deferred creation
-      const fsm = getWorkflowFSM();
-      fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
       
       // Don't set isActorCreated = true yet - actor creation is deferred
       return;
@@ -240,8 +253,7 @@
     });
   };
 
-  $: value = $actor?.name || "";
-  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
+  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || $biographyContent.name;
 
   // Define valid tabs for footer visibility
   const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells', 'biography'];
@@ -293,15 +305,16 @@
   }
 
   // Check actor inventory when actorInGame changes and set completion state
-  $: if ($actorInGame) {
-    // If equipment has already been added this session, don't change the flag
-    if (!$hasAddedEquipmentThisSession) {
-              if (checkInventory($actorInGame)) {
-          // Actor already has inventory items
-          window.GAS.log.d('[FOOTER] Actor already has inventory items');
-        }
-    }
-  }
+  // Temporarily disabled to avoid temporal dead zone issues
+  // $: if (isMounted && $actorInGame) {
+  //   // If equipment has already been added this session, don't change the flag
+  //   if (!$hasAddedEquipmentThisSession) {
+  //             if (checkInventory($actorInGame)) {
+  //         // Actor already has inventory items
+  //         window.GAS.log.d('[FOOTER] Actor already has inventory items');
+  //       }
+  //   }
+  // }
 
   // Handle finalizing purchases in the shop
   async function handleFinalizePurchase() {
@@ -371,7 +384,13 @@
   async function handleCompleteBiography() {
     try {
       // If actor hasn't been created yet (deferred creation for biography), create it now
-      if (!$isActorCreated) {
+      let currentActorInGame;
+      try {
+        currentActorInGame = get(actorInGame);
+      } catch (e) {
+        currentActorInGame = null;
+      }
+      if (!currentActorInGame) {
         window.GAS.log.d('[FOOTER] Creating deferred actor before completing biography');
         await createActorWorkflow({
           actor,
@@ -379,12 +398,22 @@
           dropItemRegistry
         });
         $isActorCreated = true;
+        // Get the actor again after creation
+        try {
+          currentActorInGame = get(actorInGame);
+        } catch (e) {
+          currentActorInGame = null;
+        }
       }
       
       // Apply biography content to the created actor
-      const $biographyContent = get(biographyContent);
-      const $actorInGame = get(actorInGame);
-      if ($actorInGame && Object.values($biographyContent).some(val => val && val.trim())) {
+      let $biographyContent;
+      try {
+        $biographyContent = get(biographyContent);
+      } catch (e) {
+        $biographyContent = {};
+      }
+      if (currentActorInGame && Object.values($biographyContent).some(val => val && val.trim())) {
         window.GAS.log.d('[FOOTER] Applying biography content to actor');
         const updates = {};
         
@@ -395,13 +424,13 @@
         
         // Apply biography fields to actor system.details
         if ($biographyContent.ideals && $biographyContent.ideals.trim()) {
-          updates['system.details.ideals'] = $biographyContent.ideals.trim();
+          updates['system.details.ideal'] = $biographyContent.ideals.trim();
         }
         if ($biographyContent.flaws && $biographyContent.flaws.trim()) {
-          updates['system.details.flaws'] = $biographyContent.flaws.trim();
+          updates['system.details.flaw'] = $biographyContent.flaws.trim();
         }
         if ($biographyContent.bonds && $biographyContent.bonds.trim()) {
-          updates['system.details.bonds'] = $biographyContent.bonds.trim();
+          updates['system.details.bond'] = $biographyContent.bonds.trim();
         }
         if ($biographyContent.personalityTraits && $biographyContent.personalityTraits.trim()) {
           updates['system.details.trait'] = $biographyContent.personalityTraits.trim();
@@ -412,12 +441,45 @@
         if ($biographyContent.biography && $biographyContent.biography.trim()) {
           updates['system.details.biography'] = { value: $biographyContent.biography.trim() };
         }
+        if ($biographyContent.height && $biographyContent.height.trim()) {
+          updates['system.details.height'] = $biographyContent.height.trim();
+        }
+        if ($biographyContent.weight && $biographyContent.weight.trim()) {
+          updates['system.details.weight'] = $biographyContent.weight.trim();
+        }
+        if ($biographyContent.age && $biographyContent.age.trim()) {
+          updates['system.details.age'] = $biographyContent.age.trim();
+        }
+        if ($biographyContent.eyes && $biographyContent.eyes.trim()) {
+          updates['system.details.eyes'] = $biographyContent.eyes.trim();
+        }
+        if ($biographyContent.hair && $biographyContent.hair.trim()) {
+          updates['system.details.hair'] = $biographyContent.hair.trim();
+        }
+        if ($biographyContent.skin && $biographyContent.skin.trim()) {
+          updates['system.details.skin'] = $biographyContent.skin.trim();
+        }
+        if ($biographyContent.gender && $biographyContent.gender.trim()) {
+          updates['system.details.gender'] = $biographyContent.gender.trim();
+        }
+        if ($biographyContent.faith && $biographyContent.faith.trim()) {
+          updates['system.details.faith'] = $biographyContent.faith.trim();
+        }
+        if ($biographyContent.alignment && $biographyContent.alignment.trim()) {
+          updates['system.details.alignment'] = $biographyContent.alignment.trim();
+        }
         
         if (Object.keys(updates).length > 0) {
-          await updateSource($actorInGame, updates);
+          await updateSource(currentActorInGame, updates);
           window.GAS.log.d('[FOOTER] Biography content applied successfully');
         }
       }
+      
+      // Mark previous tabs as read-only when biography is completed
+      readOnlyTabs.update(tabs => {
+        const previousTabs = ['abilities', 'race', 'background', 'class'];
+        return [...new Set([...tabs, ...previousTabs])];
+      });
       
       const workflowFSM = getWorkflowFSM();
       workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
@@ -539,7 +601,8 @@
     try {
       const name = await LLM.generateName(race + ' lang: ' + browserLanguage + ' avoiding patterns or common starting letters. Ensure the name is different with each request.');
       actorName = name;
-      // Update the actor source with the generated name
+      // Update biography content and actor
+      biographyContent.update(content => ({ ...content, name: name }));
       await updateSource($actor, { name: name });
     } catch (error) {
       console.error('Failed to generate name:', error);
@@ -570,9 +633,8 @@
                   input.left.character-name-input(
                     class:x-sign="{experimentalStylingEnabled}"
                     type="text" 
-                    value="{value}" 
-                    on:input="{handleNameInput}"
-                    disabled="{$isActorCreated}"
+                    bind:value="{$biographyContent.name}"
+                    disabled="{$isLevelUp}"
                   )
                   +if("$showLLMButton")
                     .flex.pointer(on:click="{generateName($race.name)}")

@@ -265,6 +265,8 @@ export function createWorkflowStateMachine() {
     .on('character_created')
       .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
       .transitionTo('processing_advancements')
+    .on('biography_complete')
+      .transitionTo('processing_advancements') // Handle biography completion from creating_character state
     .on('start_character_creation').transitionTo('creating_character')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
@@ -276,9 +278,17 @@ export function createWorkflowStateMachine() {
       .do(async (state, context) => {
         if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(true);
         window.GAS.log.d('[WORKFLOW] Entered PROCESSING_ADVANCEMENTS state');
+        
+        // Ensure the actor sheet is rendered so drop handlers work properly
+        if (workflowFSMContext.actor) {
+          await workflowFSMContext.actor.sheet.render();
+          await workflowFSMContext.actor.sheet.bringToFront();
+        }
+        
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
-        // After queue completes, restore the actor's original sheetClass if we set a temporary one
+        
+        // After queue completes, restore the actor's original sheetClass
         try {
           const actor = workflowFSMContext.actor;
           if (actor) {
@@ -310,7 +320,8 @@ export function createWorkflowStateMachine() {
       .on('reset').transitionTo('idle')
       .on('error').transitionTo('error')
     .state('biography')
-    .on('biography_complete').transitionTo('processing_advancements')
+    .on('biography_complete')
+      .transitionTo('processing_advancements') // Always go to processing_advancements after biography to handle advancement capture
     .on('reset').transitionTo('idle')
     .on('error').transitionTo('error')
     .onEnter((context) => {

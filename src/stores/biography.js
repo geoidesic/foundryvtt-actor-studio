@@ -37,7 +37,16 @@ export const biographyContent = writable({
   bonds: '',
   personalityTraits: '',
   appearance: '',
-  biography: ''
+  biography: '',
+  height: '',
+  weight: '',
+  age: '',
+  eyes: '',
+  hair: '',
+  skin: '',
+  gender: '',
+  faith: '',
+  alignment: ''
 });
 
 // Character details (optional fields for enhanced biography generation)
@@ -58,13 +67,22 @@ actorInGame.subscribe(($actor) => {
   if ($actor) {
     biographyContent.update(content => ({
       ...content,
-      name: $actor.name || content.name || '',
-      ideals: $actor.system?.details?.ideals || content.ideals || '',
-      flaws: $actor.system?.details?.flaws || content.flaws || '',
-      bonds: $actor.system?.details?.bonds || content.bonds || '',
-      personalityTraits: $actor.system?.details?.trait || content.personalityTraits || '',
-      appearance: $actor.system?.details?.appearance || content.appearance || '',
-      biography: $actor.system?.details?.biography?.value || content.biography || ''
+      name: content.name || $actor.name || '',
+      ideals: content.ideals || $actor.system?.details?.ideal || '',
+      flaws: content.flaws || $actor.system?.details?.flaw || '',
+      bonds: content.bonds || $actor.system?.details?.bond || '',
+      personalityTraits: content.personalityTraits || $actor.system?.details?.trait || '',
+      appearance: content.appearance || $actor.system?.details?.appearance || '',
+      biography: content.biography || $actor.system?.details?.biography?.value || '',
+      height: content.height || $actor.system?.details?.height || '',
+      weight: content.weight || $actor.system?.details?.weight || '',
+      age: content.age || $actor.system?.details?.age || '',
+      eyes: content.eyes || $actor.system?.details?.eyes || '',
+      hair: content.hair || $actor.system?.details?.hair || '',
+      skin: content.skin || $actor.system?.details?.skin || '',
+      gender: content.gender || $actor.system?.details?.gender || '',
+      faith: content.faith || $actor.system?.details?.faith || '',
+      alignment: content.alignment || $actor.system?.details?.alignment || ''
     }));
   }
 });

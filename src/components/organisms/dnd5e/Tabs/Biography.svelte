@@ -1,6 +1,6 @@
 <script>
   import { getContext } from "svelte";
-  import { writable } from "svelte/store";
+  import { writable, derived } from "svelte/store";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { biographyOptions, isGenerating, biographyContent, generateBiography, requestTokens, responseTokens, characterDetails } from '~/src/stores/biography';
@@ -9,27 +9,27 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
 
+  // Store for actor name to make it reactive
+  const actorNameStore = writable($biographyContent.name || $actor?.name || "");
+  $: actorNameStore.set($biographyContent.name || $actor?.name || "");
+
+  // Sync biographyContent.name with actor name changes
+  $: if ($actorNameStore && $actorNameStore !== $biographyContent.name) {
+    biographyContent.update(content => ({ ...content, name: $actorNameStore }));
+    if ($actor && $actorNameStore !== $actor.name) {
+      updateSource($actor, { name: $actorNameStore });
+    }
+  }
+
   // Local loading state for UI feedback
   let isGeneratingLocal = false;
 
   async function handleGenerateBiography() {
-    if (isGeneratingLocal) return;
-    
     isGeneratingLocal = true;
     try {
-      await generateBiography();
-    } catch (error) {
-      console.error('Biography generation failed:', error);
+      await generateBiography($actor);
     } finally {
       isGeneratingLocal = false;
-    }
-  }
-
-  async function handleNameInput(event) {
-    const newName = event.target.value;
-    // Update the actor name immediately when user types
-    if ($actor && newName !== $actor.name) {
-      await updateSource($actor, { name: newName });
     }
   }
 
@@ -180,8 +180,7 @@
         input.name-input(
           type="text"
           placeholder="Enter character name..."
-          value="{$biographyContent.name}"
-          on:input="{handleNameInput}"
+          bind:value="{$actorNameStore}"
         )
 
       .biography-card
@@ -253,6 +252,17 @@
           bind:value="{$biographyContent.biography}"
           rows="4"
         )
+
+  .biography-actions
+    .action-buttons
+      button.generate-btn(
+        type="button"
+        disabled="{$isGenerating || isGeneratingLocal}"
+        on:click="{handleGenerateBiography}"
+      )
+        +if("$isGenerating || isGeneratingLocal")
+          i.fas.fa-spinner.fa-spin
+        span Generate Biography
 
   // Loading overlay
   +if("isGeneratingLocal")

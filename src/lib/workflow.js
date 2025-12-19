@@ -88,10 +88,6 @@ export async function createActorInGameAndEmbedItems({
     activeTab
   } = stores;
 
-  // Initialize the workflow state machine for character creation
-  const fsm = getWorkflowFSM();
-  fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
-
   // Create Actor
   const createdActor = await Actor.create(get(actor).toObject());
   actorInGame.set(createdActor);
@@ -200,8 +196,6 @@ export async function createActorInGameAndEmbedItems({
     });
     preAdvancementSelections.update(prev => ({ ...prev, subclass: $characterSubClass }));
   }
-
-  fsm.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
 }
 
 /**

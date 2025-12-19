@@ -227,7 +227,6 @@ export class AdvancementManager {
   async advanceQueue() {
     window.GAS.log.d('[ADVANCEMENT MANAGER] advancing queue of length', get(this.store).length);
     try {
-      
       // Process all items in the queue
       while (get(this.store).length > 0) {
         const currentStore = get(this.store);

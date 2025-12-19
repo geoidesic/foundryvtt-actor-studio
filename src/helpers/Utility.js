@@ -729,10 +729,21 @@ async function switchActorSheetTemporarily(actor, targetSheetId) {
   }
   await waitForSheetClass(actor, targetSheetId);
 
+  // Temporarily render the sheet if it's not already rendered, as drop handlers may require it
+  let renderedForDrop = false;
+  if (!actor.sheet.rendered) {
+    await actor.sheet.render();
+    renderedForDrop = true;
+  }
+
   // Provide a restore function to revert the override.
   return {
     currentSheetId,
     restore: async () => {
+      // Close the sheet if we rendered it temporarily
+      if (renderedForDrop && actor.sheet.rendered) {
+        await actor.sheet.close();
+      }
       const revertTo = currentFlag ?? '';
       // wait briefly for any sheet changes scheduled by the drop handler to complete
       await delay(100);
@@ -1034,14 +1045,21 @@ export const dropItemOnCharacter = async (actor, item) => {
       // For v13+, simulate the drop event by calling _onDropItem
       // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
 
-      // Prepare a minimal mock event object
+      // Prepare a more realistic mock event object that mimics a real drop
       const mockEvent = {
         preventDefault: () => {},
         stopPropagation: () => {},
+        dataTransfer: {
+          getData: (type) => {
+            if (type === 'text/plain') return item.uuid;
+            return '';
+          },
+          types: ['text/plain']
+        },
         target: { closest: () => false }
       };
 
-      await actor.sheet._onDropItem(mockEvent, item);
+      await actor.sheet._onDropItem(mockEvent);
       return true; // Indicate successful simulation attempt
     }
   } catch (error) {
