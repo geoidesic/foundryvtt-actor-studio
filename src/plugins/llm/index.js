@@ -191,7 +191,10 @@ class LLM {
         characterDescription += ` with a ${background} background`;
       }
       
+      // Analyze ability scores for correlations and outliers
+      let abilityAnalysis = '';
       if (abilityScores && Object.keys(abilityScores).length > 0) {
+        abilityAnalysis = LLM.analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails);
         const abilityList = [];
         const abilityNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
         Object.entries(abilityScores).forEach(([key, value]) => {
@@ -217,6 +220,10 @@ class LLM {
       }
       
       const prompt = `Generate biography elements for ${characterDescription} in a fantasy RPG setting. Provide the following elements in TOON format: ${selectedPrompts.join(', ')}.
+
+${abilityAnalysis ? `ABILITY SCORE ANALYSIS: ${abilityAnalysis}
+
+Use these ability score insights to inform the biography generation, especially any unusual or notable traits that should be reflected in the character's background, personality, or appearance.` : ''}
 
 Return the response in the following structured format:
 TOON
@@ -330,6 +337,186 @@ Only include the elements that were requested. Make each element detailed but co
       console.error('LLM: Failed to generate biography', error);
       throw error;
     }
+  }
+
+  static analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails) {
+    const insights = [];
+    
+    // Extract physical attributes
+    const height = characterDetails?.height;
+    const weight = characterDetails?.weight;
+    const age = characterDetails?.age;
+    
+    // Parse height and weight for analysis
+    let heightInches = 0;
+    let weightLbs = 0;
+    
+    if (height) {
+      // Parse height like "5'10\"" or "3'5\""
+      const heightMatch = height.match(/(\d+)'(\d+)"/);
+      if (heightMatch) {
+        heightInches = parseInt(heightMatch[1]) * 12 + parseInt(heightMatch[2]);
+      }
+    }
+    
+    if (weight) {
+      // Parse weight, removing "lb" or "lbs" if present
+      const weightMatch = weight.match(/(\d+)/);
+      if (weightMatch) {
+        weightLbs = parseInt(weightMatch[1]);
+      }
+    }
+    
+    // Race-based expectations (rough generalizations for D&D 5e)
+    const raceExpectations = {
+      'dwarf': { 
+        expectedHeight: 48, // ~4' average
+        expectedWeight: 150,
+        typicalStrength: 'high',
+        typicalConstitution: 'high',
+        size: 'small'
+      },
+      'elf': { 
+        expectedHeight: 66, // ~5'6" average
+        expectedWeight: 130,
+        typicalDexterity: 'high',
+        size: 'medium'
+      },
+      'halfling': { 
+        expectedHeight: 36, // ~3' average
+        expectedWeight: 40,
+        typicalDexterity: 'high',
+        size: 'small'
+      },
+      'gnome': { 
+        expectedHeight: 36, // ~3' average
+        expectedWeight: 40,
+        typicalIntelligence: 'high',
+        size: 'small'
+      },
+      'human': { 
+        expectedHeight: 68, // ~5'8" average
+        expectedWeight: 170,
+        size: 'medium'
+      },
+      'half-elf': { 
+        expectedHeight: 66,
+        expectedWeight: 150,
+        typicalCharisma: 'high',
+        size: 'medium'
+      },
+      'half-orc': { 
+        expectedHeight: 72,
+        expectedWeight: 200,
+        typicalStrength: 'high',
+        size: 'medium'
+      },
+      'dragonborn': { 
+        expectedHeight: 74,
+        expectedWeight: 220,
+        typicalStrength: 'high',
+        typicalCharisma: 'high',
+        size: 'medium'
+      },
+      'tiefling': { 
+        expectedHeight: 68,
+        expectedWeight: 160,
+        typicalCharisma: 'high',
+        typicalIntelligence: 'high',
+        size: 'medium'
+      }
+    };
+    
+    // Normalize race name for lookup
+    const raceKey = race.toLowerCase().replace(/\s+/g, '-');
+    const raceData = raceExpectations[raceKey] || raceExpectations[race.split(' ')[0]?.toLowerCase()] || {};
+    
+    // Analyze ability scores
+    const str = abilityScores?.str || 0;
+    const dex = abilityScores?.dex || 0;
+    const con = abilityScores?.con || 0;
+    const int = abilityScores?.int || 0;
+    const wis = abilityScores?.wis || 0;
+    const cha = abilityScores?.cha || 0;
+    
+    // Check for exceptional scores (15+ is notable, 18+ is exceptional)
+    if (str >= 18) {
+      if (raceData.size === 'small' || raceData.typicalStrength !== 'high') {
+        insights.push(`Exceptional Strength (${str}) for a ${race} - this character's physical power is remarkable and likely plays a significant role in their background`);
+      } else {
+        insights.push(`Exceptional Strength (${str}) - this character is unusually powerful even for their race`);
+      }
+    } else if (str >= 15 && raceData.size === 'small') {
+      insights.push(`Notable Strength (${str}) for a small ${race} - this character's physical capability stands out among their diminutive kin`);
+    }
+    
+    if (dex >= 18) {
+      insights.push(`Exceptional Dexterity (${dex}) - this character's agility and reflexes are extraordinary`);
+    }
+    
+    if (con >= 18) {
+      insights.push(`Exceptional Constitution (${con}) - this character has remarkable physical resilience and endurance`);
+    }
+    
+    if (int >= 18) {
+      insights.push(`Exceptional Intelligence (${int}) - this character possesses genius-level intellect`);
+    }
+    
+    if (wis >= 18) {
+      insights.push(`Exceptional Wisdom (${wis}) - this character has profound insight and perception`);
+    }
+    
+    if (cha >= 18) {
+      insights.push(`Exceptional Charisma (${cha}) - this character has extraordinary personal magnetism and presence`);
+    }
+    
+    // Check for unusual combinations with physical attributes
+    if (heightInches > 0 && weightLbs > 0) {
+      // Calculate rough BMI-like ratio (weight in lbs / height in inches squared * 703)
+      const bmi = (weightLbs / (heightInches * heightInches)) * 703;
+      
+      if (bmi < 15 && heightInches > 60) { // Very underweight for height
+        insights.push(`Unusually light (${weightLbs} lbs) for height (${height}) - this character's slender build is striking and may be due to magical influence, illness, or unique physiology`);
+      } else if (bmi > 25 && heightInches < 50) { // Overweight for small stature
+        insights.push(`Unusually heavy (${weightLbs} lbs) for small stature (${height}) - this character's build is atypical and noteworthy`);
+      }
+    }
+    
+    // Check for strength vs size correlations
+    if (str >= 15 && heightInches > 0 && heightInches < 50) { // Strong but very short
+      insights.push(`Impressive Strength (${str}) despite small stature (${height}) - this character's physical power defies expectations for their size`);
+    }
+    
+    if (str <= 8 && heightInches > 70) { // Weak but very tall
+      insights.push(`Surprisingly low Strength (${str}) for great height (${height}) - this character's physical weakness contrasts with their imposing stature`);
+    }
+    
+    // Age correlations
+    if (age) {
+      const ageNum = parseInt(age);
+      if (ageNum && ageNum < 50 && (wis >= 16 || int >= 16)) {
+        insights.push(`Unusually wise/intelligent (${Math.max(wis, int)}) for young age (${age}) - this character's maturity and insight exceed their years`);
+      }
+      if (ageNum && ageNum > 200 && (str >= 15 || dex >= 15)) {
+        insights.push(`Remarkable physical capability (${Math.max(str, dex)}) despite advanced age (${age}) - this character's vitality defies the passage of time`);
+      }
+    }
+    
+    // Race-specific insights
+    if (race.toLowerCase().includes('gnome') && str >= 15) {
+      insights.push(`Unusually strong (${str}) for a gnome - this gnomish character's physical power is exceptional among their typically weaker kin`);
+    }
+    
+    if (race.toLowerCase().includes('halfling') && str >= 15) {
+      insights.push(`Notable strength (${str}) for a halfling - this character's physical power stands out among their generally weaker people`);
+    }
+    
+    if (race.toLowerCase().includes('elf') && con <= 10) {
+      insights.push(`Lower Constitution (${con}) for an elf - this character's relative physical frailty may be a point of insecurity or adaptation`);
+    }
+    
+    // Return formatted insights
+    return insights.length > 0 ? insights.join('. ') + '.' : '';
   }
 
   static parseToonBiography(content) {

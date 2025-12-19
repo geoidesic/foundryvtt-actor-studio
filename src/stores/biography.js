@@ -70,7 +70,7 @@ actorInGame.subscribe(($actor) => {
 });
 
 // Generate biography function
-export async function generateBiography() {
+export async function generateBiography(actor = null) {
   if (get(isGenerating)) return;
 
   isGenerating.set(true);
@@ -86,13 +86,28 @@ export async function generateBiography() {
     }
 
     // Get race and class info for context
-    const actor = get(actorInGame);
+    const actorForData = actor || get(actorInGame);
     const selectedRace = get(race);
-    const raceName = selectedRace?.name || actor?.system?.details?.race || 'human';
-    const characterClassName = get(characterClass)?.name || actor?.classes ? Object.keys(actor.classes)[0] : 'adventurer';
-    const characterLevel = get(level) || actor?.system?.details?.level || 1;
+    const raceName = selectedRace?.name || actorForData?.system?.details?.race || 'human';
+    
+    // Get class name from actor data directly, since the UI store may not be populated
+    let characterClassName = 'adventurer'; // default fallback
+    if (actorForData?.classes && Object.keys(actorForData.classes).length > 0) {
+      // Get the first (or only) class from the actor
+      const firstClassKey = Object.keys(actorForData.classes)[0];
+      const firstClass = actorForData.classes[firstClassKey];
+      characterClassName = firstClass?.name || firstClassKey || 'adventurer';
+    }
+    
+    // Also try the UI store as a fallback (for when class was selected in UI)
+    const selectedCharacterClass = get(characterClass);
+    if (!characterClassName || characterClassName === 'adventurer') {
+      characterClassName = selectedCharacterClass?.name || characterClassName;
+    }
+    
+    const characterLevel = get(level) || actorForData?.system?.details?.level || 1;
     const characterBackground = get(background)?.name || '';
-    const abilities = actor?.system?.abilities || {};
+    const abilities = actorForData?.system?.abilities || {};
     const details = get(characterDetails) || {};
 
     // Generate name if selected
@@ -101,8 +116,6 @@ export async function generateBiography() {
         const namePrompt = raceName + ' lang: en avoiding patterns or common starting letters. Ensure the name is different with each request.';
         window.GAS.log.d('Name Generation LLM Request:', { prompt: namePrompt });
         const name = await LLM.generateName(namePrompt);
-        // Update the actor name
-        await updateSource(actor, { name: name });
         // Update the biography content store
         biographyContent.update(content => ({ ...content, name: name }));
         ui.notifications.info('Character name generated successfully!');
@@ -124,6 +137,8 @@ export async function generateBiography() {
         characterDetails: details,
         elements: selectedElements
       };
+      window.GAS.log.d('Biography LLM Request - full params:', JSON.stringify(llmParams, null, 2));
+      window.GAS.log.d('Biography LLM Request - characterClass value:', characterClassName);
       window.GAS.log.d('Biography LLM Request:', llmParams);
 
       // Generate biography using LLM with comprehensive character data
@@ -131,6 +146,8 @@ export async function generateBiography() {
 
       // Update editable content with generated results
       biographyContent.set({ ...get(biographyContent), ...result });
+
+      // Note: Actor updates are deferred until actor creation
 
       // Estimate response tokens (rough calculation)
       const responseText = Object.values(result).join(' ');

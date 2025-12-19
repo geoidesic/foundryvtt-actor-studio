@@ -124,6 +124,15 @@
   };
 
   const handleSelectClass = async (option) => {
+    // Reset workflow state when class changes
+    const fsm = window.GAS?.workflowFSM;
+    if (fsm) {
+      const currentState = fsm.getCurrentState();
+      if (currentState === 'creating_character') {
+        fsm.handle('reset');
+      }
+    }
+
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;

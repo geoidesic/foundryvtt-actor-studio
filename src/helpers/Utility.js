@@ -823,7 +823,7 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
  */
 export const updateSource = async (source, val) => {
   if(source.uuid) {
-    source.update(val);
+    await source.update(val);
   } else {
     window.GAS.log.p('updateSource', source, val)
     await source.updateSource(val);

@@ -40,7 +40,7 @@
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { isGenerating } from '~/src/stores/biography';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
-  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
+  import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import LLM from "~/src/plugins/llm";
   import { abilityGenerationMethod } from "~/src/stores/index";
@@ -187,6 +187,31 @@
   };
   //- Create Actor
   const clickCreateHandler = async () => {
+    // Check if biography generation is enabled
+    const enableLLM = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    
+    if (enableLLM) {
+      // Biography is enabled - defer actor creation and go to biography tab
+      window.GAS.log.d('[FOOTER] Biography enabled - deferring actor creation and switching to biography tab');
+      
+      // Add biography tab if not already present
+      const currentTabs = get(tabs);
+      if (!currentTabs.find(t => t.id === "biography")) {
+        tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
+      }
+      
+      // Switch to biography tab
+      activeTab.set("biography");
+      
+      // Initialize workflow state machine for deferred creation
+      const fsm = getWorkflowFSM();
+      fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+      
+      // Don't set isActorCreated = true yet - actor creation is deferred
+      return;
+    }
+    
+    // Biography not enabled - create actor immediately as before
     await createActorWorkflow({
       actor,
       stores: storeRefs,
@@ -343,6 +368,17 @@
   // Handle biography completion
   async function handleCompleteBiography() {
     try {
+      // If actor hasn't been created yet (deferred creation for biography), create it now
+      if (!$isActorCreated) {
+        window.GAS.log.d('[FOOTER] Creating deferred actor before completing biography');
+        await createActorWorkflow({
+          actor,
+          stores: storeRefs,
+          dropItemRegistry
+        });
+        $isActorCreated = true;
+      }
+      
       const workflowFSM = getWorkflowFSM();
       workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
     } catch (err) {
@@ -354,7 +390,7 @@
   // Handle biography generation
   async function handleGenerateBiography() {
     const { generateBiography } = await import('~/src/stores/biography');
-    await generateBiography();
+    await generateBiography(actor);
   }
 
   // Function to generate a random color
@@ -627,7 +663,7 @@
                 ProgressBar(progress="{progress}")
                 +if("$progress === 100")
                   .button-container
-                    +if("!$isActorCreated")
+                    +if("!$isActorCreated && $activeTab !== 'biography'")
                       button.mt-xs.wide(
                         type="button"
                         role="button"

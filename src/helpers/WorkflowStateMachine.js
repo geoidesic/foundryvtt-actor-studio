@@ -265,6 +265,7 @@ export function createWorkflowStateMachine() {
     .on('character_created')
       .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
       .transitionTo('processing_advancements')
+    .on('start_character_creation').transitionTo('creating_character')
     .on('error').transitionTo('error')
     .on('reset').transitionTo('idle')
     .onEnter((context) => {
