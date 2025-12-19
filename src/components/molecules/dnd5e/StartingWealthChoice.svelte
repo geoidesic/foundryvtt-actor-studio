@@ -32,7 +32,7 @@
 
 <template lang="pug">
 .starting-wealth-choice(class:readonly!="{isReadOnly}")
-  h2 Starting Wealth
+  h2  Wealth
   +if("isReadOnly")
     p.readonly-message Your choice has been saved. You can change it by clicking the buttons below.
     +else()

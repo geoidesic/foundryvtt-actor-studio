@@ -213,7 +213,7 @@
     // Add wealth choice tab
     if(!$tabs.find(x => x.id === "wealth-choice")) {
       tabs.update(t => {
-        const newTabs = [...t, { label: "Starting Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
+        const newTabs = [...t, { label: "Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
         window.GAS.log.d('[PCAPP] Added wealth choice tab:', newTabs);
         return newTabs;
       });
