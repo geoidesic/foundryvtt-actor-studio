@@ -1051,7 +1051,7 @@ export const dropItemOnCharacter = async (actor, item) => {
         stopPropagation: () => {},
         dataTransfer: {
           getData: (type) => {
-            if (type === 'text/plain') return item.uuid;
+            if (type === 'text/plain') return JSON.stringify(item);
             return '';
           },
           types: ['text/plain']
@@ -1059,7 +1059,7 @@ export const dropItemOnCharacter = async (actor, item) => {
         target: { closest: () => false }
       };
 
-      await actor.sheet._onDropItem(mockEvent);
+      await actor.sheet._onDropItem(mockEvent, item);
       return true; // Indicate successful simulation attempt
     }
   } catch (error) {

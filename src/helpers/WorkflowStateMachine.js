@@ -282,7 +282,6 @@ export function createWorkflowStateMachine() {
         // Ensure the actor sheet is rendered so drop handlers work properly
         if (workflowFSMContext.actor) {
           await workflowFSMContext.actor.sheet.render();
-          await workflowFSMContext.actor.sheet.bringToFront();
         }
         
         // Process advancement queue asynchronously
@@ -532,6 +531,7 @@ export function createWorkflowStateMachine() {
     })
     .state('error')
     .on('reset').transitionTo('idle')
+    .on('biography_complete').transitionTo('processing_advancements')
     .onEnter((context) => {
       if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
       window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
