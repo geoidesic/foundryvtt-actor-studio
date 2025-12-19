@@ -38,16 +38,9 @@
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
+  import { isGenerating } from '~/src/stores/biography';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
-  
-  import {
-    getLevelByDropType,
-    itemHasAdvancementChoices,
-    isAdvancementsForLevelInItem,
-    dropItemOnCharacter,
-    updateSource
-  } from "~/src/helpers/Utility";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
   import LLM from "~/src/plugins/llm";
   import { abilityGenerationMethod } from "~/src/stores/index";
@@ -224,8 +217,8 @@
   $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells'];
-  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells', 'biography'];
+  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities', 'biography'];
 
   // Handle adding equipment to the actor
   const handleAddEquipment = async () => {
@@ -345,6 +338,23 @@
       const workflowFSM = getWorkflowFSM();
       workflowFSM.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
     }
+  }
+
+  // Handle biography completion
+  async function handleCompleteBiography() {
+    try {
+      const workflowFSM = getWorkflowFSM();
+      workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+    } catch (err) {
+      window.GAS.log.e('[FOOTER] Error completing biography:', err);
+      ui.notifications?.error(err.message);
+    }
+  }
+
+  // Handle biography generation
+  async function handleGenerateBiography() {
+    const { generateBiography } = await import('~/src/stores/biography');
+    await generateBiography();
   }
 
   // Function to generate a random color
@@ -588,6 +598,26 @@
                 )
                   span {t('Skip')}
                   i.right.ml-md(class="fas fa-chevron-right")
+              
+        +if("$activeTab === 'biography'")
+          .progress-container
+            .button-container
+              button.mt-xs.secondary(
+                type="button"
+                role="button"
+                on:mousedown="{handleGenerateBiography}"
+                disabled="{$isGenerating}"
+              )
+                span {$isGenerating ? 'Generating...' : 'Generate Biography'}
+                i.right.ml-md(class="fas fa-magic")
+              button.mt-xs(
+                type="button"
+                role="button"
+                on:mousedown="{handleCompleteBiography}"
+                disabled="{$isGenerating}"
+              )
+                span Continue
+                i.right.ml-md(class="fas fa-chevron-right")
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container

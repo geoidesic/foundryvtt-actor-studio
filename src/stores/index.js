@@ -24,6 +24,7 @@ export {
 } from '~/src/stores/equipmentGold';
 // Import spell selection store to ensure it gets loaded
 import '~/src/stores/spellSelection';
+import { biographyOptions, isGenerating, biographyContent, generateBiography } from '~/src/stores/biography';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel } from '~/src/helpers/Utility';
 
@@ -282,10 +283,4 @@ const levelUpTabUpdater = derived(
   }
 );
 
-// Auto-subscribe to activate the level progression updates (safely)
-try {
-  levelUpTabUpdater.subscribe(() => {});
-} catch (error) {
-  // Ignore initialization errors - the subscription will work when stores are ready
-  console.debug('Level up tab updater subscription deferred');
-}
+export { biographyOptions, isGenerating, biographyContent, generateBiography, requestTokens, responseTokens } from '~/src/stores/biography';
