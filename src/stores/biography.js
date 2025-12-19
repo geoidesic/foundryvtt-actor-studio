@@ -1,6 +1,6 @@
 import { writable, get, derived } from 'svelte/store';
 import LLM from '~/src/plugins/llm';
-import { actorInGame, race } from '~/src/stores/storeDefinitions';
+import { actorInGame, race, characterClass, level, background } from '~/src/stores/storeDefinitions';
 import { updateSource } from '~/src/helpers/Utility';
 
 // Biography generation options
@@ -40,6 +40,19 @@ export const biographyContent = writable({
   biography: ''
 });
 
+// Character details (optional fields for enhanced biography generation)
+export const characterDetails = writable({
+  height: '',
+  weight: '',
+  age: '',
+  eyes: '',
+  hair: '',
+  skin: '',
+  gender: '',
+  faith: '',
+  alignment: ''
+});
+
 // Sync biography content with actor data
 actorInGame.subscribe(($actor) => {
   if ($actor) {
@@ -76,13 +89,18 @@ export async function generateBiography() {
     const actor = get(actorInGame);
     const selectedRace = get(race);
     const raceName = selectedRace?.name || actor?.system?.details?.race || 'human';
-    const characterClass = actor?.classes ? Object.keys(actor.classes)[0] : 'adventurer';
-    const level = actor?.system?.details?.level || 1;
+    const characterClassName = get(characterClass)?.name || actor?.classes ? Object.keys(actor.classes)[0] : 'adventurer';
+    const characterLevel = get(level) || actor?.system?.details?.level || 1;
+    const characterBackground = get(background)?.name || '';
+    const abilities = actor?.system?.abilities || {};
+    const details = get(characterDetails) || {};
 
     // Generate name if selected
     if (get(biographyOptions).name) {
       try {
-        const name = await LLM.generateName(raceName + ' lang: en avoiding patterns or common starting letters. Ensure the name is different with each request.');
+        const namePrompt = raceName + ' lang: en avoiding patterns or common starting letters. Ensure the name is different with each request.';
+        window.GAS.log.d('Name Generation LLM Request:', { prompt: namePrompt });
+        const name = await LLM.generateName(namePrompt);
         // Update the actor name
         await updateSource(actor, { name: name });
         // Update the biography content store
@@ -96,13 +114,20 @@ export async function generateBiography() {
 
     // Generate biography elements if any are selected
     if (selectedElements.length > 0) {
-      // Generate biography using LLM
-      const result = await LLM.generateBiography({
+      // Log the data being sent to LLM for debugging
+      const llmParams = {
         race: raceName,
-        characterClass,
-        level,
+        characterClass: characterClassName,
+        level: characterLevel,
+        background: characterBackground,
+        abilityScores: abilities,
+        characterDetails: details,
         elements: selectedElements
-      });
+      };
+      window.GAS.log.d('Biography LLM Request:', llmParams);
+
+      // Generate biography using LLM with comprehensive character data
+      const result = await LLM.generateBiography(llmParams);
 
       // Update editable content with generated results
       biographyContent.set({ ...get(biographyContent), ...result });

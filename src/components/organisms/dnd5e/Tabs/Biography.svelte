@@ -3,7 +3,7 @@
   import { writable } from "svelte/store";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
-  import { biographyOptions, isGenerating, biographyContent, generateBiography, requestTokens, responseTokens } from '~/src/stores/biography';
+  import { biographyOptions, isGenerating, biographyContent, generateBiography, requestTokens, responseTokens, characterDetails } from '~/src/stores/biography';
   import { updateSource } from '~/src/helpers/Utility';
 
   const actor = getContext("#doc");
@@ -71,6 +71,93 @@
 
 <template lang="pug">
 .biography-tab
+
+  .character-details-section
+    h4 Character Details (Optional)
+    p Provide additional details to enhance biography generation. These will be included in AI prompts for more personalized content.
+
+    .character-details-grid
+      .detail-field
+        label(for="height") Height
+        input.detail-input(
+          id="height"
+          type="text"
+          placeholder="e.g., 5'10\""
+          bind:value="{$characterDetails.height}"
+        )
+
+      .detail-field
+        label(for="weight") Weight
+        input.detail-input(
+          id="weight"
+          type="text"
+          placeholder="e.g., 180 lbs"
+          bind:value="{$characterDetails.weight}"
+        )
+
+      .detail-field
+        label(for="age") Age
+        input.detail-input(
+          id="age"
+          type="text"
+          placeholder="e.g., 25"
+          bind:value="{$characterDetails.age}"
+        )
+
+      .detail-field
+        label(for="eyes") Eyes
+        input.detail-input(
+          id="eyes"
+          type="text"
+          placeholder="e.g., blue"
+          bind:value="{$characterDetails.eyes}"
+        )
+
+      .detail-field
+        label(for="hair") Hair
+        input.detail-input(
+          id="hair"
+          type="text"
+          placeholder="e.g., brown"
+          bind:value="{$characterDetails.hair}"
+        )
+
+      .detail-field
+        label(for="skin") Skin
+        input.detail-input(
+          id="skin"
+          type="text"
+          placeholder="e.g., fair"
+          bind:value="{$characterDetails.skin}"
+        )
+
+      .detail-field
+        label(for="gender") Gender
+        input.detail-input(
+          id="gender"
+          type="text"
+          placeholder="e.g., male"
+          bind:value="{$characterDetails.gender}"
+        )
+
+      .detail-field
+        label(for="faith") Faith
+        input.detail-input(
+          id="faith"
+          type="text"
+          placeholder="e.g., follower of Tempus"
+          bind:value="{$characterDetails.faith}"
+        )
+
+      .detail-field
+        label(for="alignment") Alignment
+        input.detail-input(
+          id="alignment"
+          type="text"
+          placeholder="e.g., chaotic good"
+          bind:value="{$characterDetails.alignment}"
+        )
+
   .biography-header
     h3 Biography Generation
     p Generate detailed character biography elements using AI. Check the boxes for elements you want to generate.
@@ -166,16 +253,6 @@
           bind:value="{$biographyContent.biography}"
           rows="4"
         )
-
-  .biography-actions
-    .action-buttons
-      button.generate-btn(
-        type="button"
-        on:click="{handleGenerateBiography}"
-        disabled="{isGeneratingLocal}"
-      )
-        i.fas(class="{isGeneratingLocal ? 'fa-spinner fa-spin' : 'fa-magic'}")
-        span {isGeneratingLocal ? 'Generating...' : 'Generate Biography'}
 
   // Loading overlay
   +if("isGeneratingLocal")
@@ -291,6 +368,44 @@
         .name-input
           width: 100%
           padding: 0.75rem
+          border: 1px solid var(--color-border-light)
+          border-radius: 4px
+          font-family: inherit
+          font-size: 0.9rem
+
+          &:focus
+            outline: none
+            border-color: var(--color-primary)
+            box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2)
+
+  .character-details-section
+    margin-bottom: 1.5rem
+
+    h4
+      margin: 0 0 0.5rem 0
+      color: var(--color-text-dark-primary)
+
+    p
+      margin: 0 0 1rem 0
+      color: var(--color-text-dark-secondary)
+      font-size: 0.9rem
+
+    .character-details-grid
+      display: grid
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))
+      gap: 1rem
+
+      .detail-field
+        display: flex
+        flex-direction: column
+
+        label
+          margin-bottom: 0.25rem
+          font-weight: 600
+          font-size: 0.85rem
+
+        .detail-input
+          padding: 0.5rem
           border: 1px solid var(--color-border-light)
           border-radius: 4px
           font-family: inherit

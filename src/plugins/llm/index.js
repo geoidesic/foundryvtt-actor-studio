@@ -159,7 +159,7 @@ class LLM {
     }
   }
 
-  static async generateBiography({ race, characterClass, level, elements }) {
+  static async generateBiography({ race, characterClass, level, background, abilityScores, characterDetails, elements }) {
     const provider = LLM.getProvider();
     const baseUrl = LLM.getBaseUrl();
     const apiKey = LLM.getApiKey();
@@ -183,7 +183,40 @@ class LLM {
       };
 
       const selectedPrompts = elements.map(element => elementPrompts[element]).filter(Boolean);
-      const prompt = `Generate biography elements for a level ${level} ${characterClass} ${race} in a fantasy RPG setting. Provide the following elements in TOON format: ${selectedPrompts.join(', ')}.
+      
+      // Build character description with available data
+      let characterDescription = `a level ${level} ${characterClass} ${race}`;
+      
+      if (background) {
+        characterDescription += ` with a ${background} background`;
+      }
+      
+      if (abilityScores && Object.keys(abilityScores).length > 0) {
+        const abilityList = [];
+        const abilityNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
+        Object.entries(abilityScores).forEach(([key, value]) => {
+          if (value && abilityNames[key]) {
+            abilityList.push(`${abilityNames[key]} ${value}`);
+          }
+        });
+        if (abilityList.length > 0) {
+          characterDescription += ` (Ability Scores: ${abilityList.join(', ')})`;
+        }
+      }
+      
+      if (characterDetails && Object.values(characterDetails).some(val => val && val.trim())) {
+        const detailList = [];
+        Object.entries(characterDetails).forEach(([key, value]) => {
+          if (value && value.trim()) {
+            detailList.push(`${key}: ${value.trim()}`);
+          }
+        });
+        if (detailList.length > 0) {
+          characterDescription += ` (Details: ${detailList.join(', ')})`;
+        }
+      }
+      
+      const prompt = `Generate biography elements for ${characterDescription} in a fantasy RPG setting. Provide the following elements in TOON format: ${selectedPrompts.join(', ')}.
 
 Return the response in the following structured format:
 TOON
@@ -195,7 +228,7 @@ appearance: [content]
 biography: [content]
 ENDTOON
 
-Only include the elements that were requested. Make each element detailed but concise (2-4 sentences). Ensure the content fits a D&D 5e character.`;
+Only include the elements that were requested. Make each element detailed but concise (2-4 sentences). Ensure the content fits a D&D 5e character and is consistent with the provided character details and ability scores.`;
 
       let response;
       let data;
@@ -277,6 +310,9 @@ Only include the elements that were requested. Make each element detailed but co
             race,
             characterClass,
             level,
+            background,
+            abilityScores,
+            characterDetails,
             elements
           })
         });
