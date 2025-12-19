@@ -40,11 +40,6 @@ global.Actor = {
 };
 global.window.GAS = { log: { d: vi.fn(), w: vi.fn(), e: vi.fn() } };
 
-// Mock the module constants
-vi.mock('~/src/helpers/constants', () => ({
-  MODULE_ID: 'foundryvtt-actor-studio'
-}));
-
 // Mock stores
 const mockWritable = (value) => {
   const store = {
@@ -218,6 +213,12 @@ vi.mock('~/src/helpers/Utility', () => ({
 }));
 
 describe('Advancement Managers Destruction', () => {
+  let destroyAdvancementManagersModule;
+
+  beforeAll(async () => {
+    destroyAdvancementManagersModule = await import('~/src/helpers/AdvancementManager.js');
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     currentState = 'idle';
@@ -225,7 +226,7 @@ describe('Advancement Managers Destruction', () => {
     stateHandlers.clear();
     
     // Reset mock advancement dialogs
-    mockAdvancementDialogs.length = 0;
+    mockAdvancementDialogs.splice(0);
     
     // Initialize window.GAS
     global.window.GAS = {
@@ -239,16 +240,14 @@ describe('Advancement Managers Destruction', () => {
     };
   });
 
-  it('should call destroyAdvancementManagers when advancement capture is disabled', async () => {
-    const { destroyAdvancementManagers } = await import('~/src/helpers/AdvancementManager.js');
-    
+  it('should call destroyAdvancementManagers when advancement capture is disabled', () => {
     // Set up some mock advancement dialogs
     const mockDialog1 = { remove: vi.fn() };
     const mockDialog2 = { remove: vi.fn() };
     mockAdvancementDialogs.push(mockDialog1, mockDialog2);
     
     // Call the function
-    destroyAdvancementManagers();
+    destroyAdvancementManagersModule.destroyAdvancementManagers();
     
     // Verify that querySelectorAll was called with the correct selector
     expect(global.document.querySelectorAll).toHaveBeenCalledWith('.application.dnd5e2.advancement.manager');
@@ -258,14 +257,12 @@ describe('Advancement Managers Destruction', () => {
     expect(mockDialog2.remove).toHaveBeenCalled();
   });
 
-  it('should handle case when no advancement dialogs exist', async () => {
-    const { destroyAdvancementManagers } = await import('~/src/helpers/AdvancementManager.js');
-    
+  it('should handle case when no advancement dialogs exist', () => {
     // No advancement dialogs in the array
     expect(mockAdvancementDialogs.length).toBe(0);
     
     // Call the function - should not throw
-    expect(() => destroyAdvancementManagers()).not.toThrow();
+    expect(() => destroyAdvancementManagersModule.destroyAdvancementManagers()).not.toThrow();
     
     // Verify that querySelectorAll was still called
     expect(global.document.querySelectorAll).toHaveBeenCalledWith('.application.dnd5e2.advancement.manager');
@@ -291,7 +288,7 @@ describe('Advancement Managers Destruction', () => {
     
     // The Equipment component should check this setting in onMount and call destroyAdvancementManagers
     // Since the setting is true, the function should be called
-    const { destroyAdvancementManagers } = await import('~/src/helpers/AdvancementManager.js');
+    const { destroyAdvancementManagers } = destroyAdvancementManagersModule;
     
     // Test that the function exists and is callable
     expect(typeof destroyAdvancementManagers).toBe('function');

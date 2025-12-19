@@ -116,12 +116,20 @@
 
       .detail-field
         label(for="alignment") Alignment
-        input.detail-input(
+        select.detail-input(
           id="alignment"
-          type="text"
-          placeholder="e.g., chaotic good"
           bind:value="{$characterDetails.alignment}"
         )
+          option(value="") Select alignment...
+          option(value="lawful good") Lawful Good
+          option(value="neutral good") Neutral Good
+          option(value="chaotic good") Chaotic Good
+          option(value="lawful neutral") Lawful Neutral
+          option(value="neutral") Neutral
+          option(value="chaotic neutral") Chaotic Neutral
+          option(value="lawful evil") Lawful Evil
+          option(value="neutral evil") Neutral Evil
+          option(value="chaotic evil") Chaotic Evil
 
   .biography-header
     h3 Biography Generation
