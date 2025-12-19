@@ -15,6 +15,7 @@ export class AdvancementManager {
     this.store = store;
     this.inProcessStore = inProcessStore;
     this.monitoringPromise = null;
+    this.stopAutoAdvance = false;
     // Allow injection of a custom DOM query function for testability
     this._getPanel = getPanel || (() => {
       if (typeof $ !== 'function') return null;
@@ -54,7 +55,9 @@ export class AdvancementManager {
       if (window.GAS?.debug) {
         this.autoAdvanceSteps();
       }
-      setTimeout(() => this.checkTabContent(resolve, tabName, timeout), timeout);
+      if (!this.stopAutoAdvance) {
+        setTimeout(() => this.checkTabContent(resolve, tabName, timeout), timeout);
+      }
     }
   };
 
@@ -123,6 +126,9 @@ export class AdvancementManager {
       return this.monitoringPromise;
     }
 
+    // Reset auto-advance flag when starting monitoring
+    this.stopAutoAdvance = false;
+
     // Create new monitoring promise
     this.monitoringPromise = new Promise(resolve => {
       this.checkTabContent(() => {
@@ -152,6 +158,12 @@ export class AdvancementManager {
       await this.waitForEmptyTab('advancements');
       window.GAS.log.d('[ADVANCEMENT MANAGER] advancements tab is empty');
       
+      // Stop auto-advance to prevent clicking on closing dialogs
+      this.stopAutoAdvance = true;
+      
+      // Add a delay before removing the tab to allow dialogs to properly close
+      await delay(500);
+      
       // Remove the advancement tab after it becomes empty
       this.removeAdvancementTab();
       
@@ -175,15 +187,8 @@ export class AdvancementManager {
         // Remove the advancement tab
         tabs.update(tabArray => tabArray.filter(tab => tab.id !== 'advancements'));
         
-        // If advancement tab was active, switch to the first available tab
-        const currentActiveTab = get(activeTab);
-        if (currentActiveTab === 'advancements') {
-          const updatedTabs = get(tabs);
-          if (updatedTabs.length > 0) {
-            activeTab.set(updatedTabs[0].id);
-            window.GAS.log.d('[ADVANCEMENT MANAGER] switched active tab to', updatedTabs[0].id);
-          }
-        }
+        // Don't change the active tab - let the workflow state machine handle it
+        // The workflow will transition to the next appropriate state and set the correct active tab
       }
     } catch (error) {
       window.GAS.log.e('[ADVANCEMENT MANAGER] error removing advancement tab:', error);

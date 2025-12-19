@@ -1,5 +1,6 @@
 <script>
   import { readOnlyTabs } from "~/src/stores/index";
+  import { setContext } from "svelte";
   
   // Props for customizing the layout
   export let title = "";
@@ -11,6 +12,9 @@
 
   // Check if this tab is readonly
   $: isDisabled = tabName && $readOnlyTabs.includes(tabName);
+  
+  // Provide isDisabled to child components
+  setContext('isDisabled', isDisabled);
 </script>
 
 <template lang="pug">

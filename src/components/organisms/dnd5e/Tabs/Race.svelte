@@ -14,6 +14,8 @@
   import { race, subRace, readOnlyTabs } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
 
+  const isDisabled = getContext('isDisabled') || false;
+
   let active = null,
     value = null,
     placeHolder = t('Tabs.Races.Placeholder'),
@@ -162,7 +164,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
       .flex3 
-        IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
+        IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value disabled="{isDisabled}")
     +if("value")
       +if("source")
         //- h3.left {t('Source')}

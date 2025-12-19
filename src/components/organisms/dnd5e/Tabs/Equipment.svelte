@@ -19,6 +19,8 @@
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   const doc = getContext("#doc");
 
+  const isDisabled = getContext('isDisabled') || false;
+
   // Get equipment selection setting
   $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
 
@@ -51,9 +53,6 @@
 
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
-
-  // Check if equipment tab is readonly
-  $: isDisabled = $readOnlyTabs.includes("equipment");
 
   $: window.GAS.log.d("Equipment goldChoices", $goldChoices);
 

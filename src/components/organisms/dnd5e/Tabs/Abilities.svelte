@@ -17,13 +17,13 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
 
+  const isDisabled = getContext('isDisabled') || false;
+
   const actor = getContext("#doc");
   const ruleConfig = {
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
-
-  $: isDisabled = $readOnlyTabs.includes("abilities");
 
   const importAdvancements = async () => {
     // window.GAS.log.d('options',options)
