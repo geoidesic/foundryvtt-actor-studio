@@ -84,6 +84,20 @@ actorInGame.subscribe(($actor) => {
       faith: content.faith || $actor.system?.details?.faith || '',
       alignment: content.alignment || $actor.system?.details?.alignment || ''
     }));
+
+    // Also sync characterDetails store
+    characterDetails.update(details => ({
+      ...details,
+      height: details.height || $actor.system?.details?.height || '',
+      weight: details.weight || $actor.system?.details?.weight || '',
+      age: details.age || $actor.system?.details?.age || '',
+      eyes: details.eyes || $actor.system?.details?.eyes || '',
+      hair: details.hair || $actor.system?.details?.hair || '',
+      skin: details.skin || $actor.system?.details?.skin || '',
+      gender: details.gender || $actor.system?.details?.gender || '',
+      faith: details.faith || $actor.system?.details?.faith || '',
+      alignment: details.alignment || $actor.system?.details?.alignment || ''
+    }));
   }
 });
 

@@ -32,41 +32,6 @@
       isGeneratingLocal = false;
     }
   }
-
-  function completeBiography() {
-    // Save the biography content to the actor
-    const updates = {};
-
-    if ($biographyContent.name) {
-      updates['name'] = $biographyContent.name;
-    }
-    if ($biographyContent.ideals) {
-      updates['system.details.ideals'] = $biographyContent.ideals;
-    }
-    if ($biographyContent.flaws) {
-      updates['system.details.flaws'] = $biographyContent.flaws;
-    }
-    if ($biographyContent.bonds) {
-      updates['system.details.bonds'] = $biographyContent.bonds;
-    }
-    if ($biographyContent.personalityTraits) {
-      updates['system.details.trait'] = $biographyContent.personalityTraits;
-    }
-    if ($biographyContent.appearance) {
-      updates['system.details.appearance'] = $biographyContent.appearance;
-    }
-    if ($biographyContent.biography) {
-      updates['system.details.biography.value'] = $biographyContent.biography;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      updateSource($actor, updates);
-    }
-
-    // Transition to next workflow state
-    const fsm = getWorkflowFSM();
-    fsm.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
-  }
 </script>
 
 <template lang="pug">

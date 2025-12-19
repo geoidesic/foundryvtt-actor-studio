@@ -39,7 +39,7 @@
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { isGenerating } from '~/src/stores/biography';
-  import { biographyContent } from '~/src/stores/biography';
+  import { biographyContent, characterDetails } from '~/src/stores/biography';
   import { updateSource } from '~/src/helpers/Utility';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
@@ -408,12 +408,15 @@
       
       // Apply biography content to the created actor
       let $biographyContent;
+      let $characterDetails;
       try {
         $biographyContent = get(biographyContent);
+        $characterDetails = get(characterDetails);
       } catch (e) {
         $biographyContent = {};
+        $characterDetails = {};
       }
-      if (currentActorInGame && Object.values($biographyContent).some(val => val && val.trim())) {
+      if (currentActorInGame && (Object.values($biographyContent).some(val => val && val.trim()) || Object.values($characterDetails).some(val => val && val.trim()))) {
         window.GAS.log.d('[FOOTER] Applying biography content to actor');
         const updates = {};
         
@@ -441,32 +444,34 @@
         if ($biographyContent.biography && $biographyContent.biography.trim()) {
           updates['system.details.biography'] = { value: $biographyContent.biography.trim() };
         }
-        if ($biographyContent.height && $biographyContent.height.trim()) {
-          updates['system.details.height'] = $biographyContent.height.trim();
+        
+        // Apply character details from characterDetails store
+        if ($characterDetails.height && $characterDetails.height.trim()) {
+          updates['system.details.height'] = $characterDetails.height.trim();
         }
-        if ($biographyContent.weight && $biographyContent.weight.trim()) {
-          updates['system.details.weight'] = $biographyContent.weight.trim();
+        if ($characterDetails.weight && $characterDetails.weight.trim()) {
+          updates['system.details.weight'] = $characterDetails.weight.trim();
         }
-        if ($biographyContent.age && $biographyContent.age.trim()) {
-          updates['system.details.age'] = $biographyContent.age.trim();
+        if ($characterDetails.age && $characterDetails.age.trim()) {
+          updates['system.details.age'] = $characterDetails.age.trim();
         }
-        if ($biographyContent.eyes && $biographyContent.eyes.trim()) {
-          updates['system.details.eyes'] = $biographyContent.eyes.trim();
+        if ($characterDetails.eyes && $characterDetails.eyes.trim()) {
+          updates['system.details.eyes'] = $characterDetails.eyes.trim();
         }
-        if ($biographyContent.hair && $biographyContent.hair.trim()) {
-          updates['system.details.hair'] = $biographyContent.hair.trim();
+        if ($characterDetails.hair && $characterDetails.hair.trim()) {
+          updates['system.details.hair'] = $characterDetails.hair.trim();
         }
-        if ($biographyContent.skin && $biographyContent.skin.trim()) {
-          updates['system.details.skin'] = $biographyContent.skin.trim();
+        if ($characterDetails.skin && $characterDetails.skin.trim()) {
+          updates['system.details.skin'] = $characterDetails.skin.trim();
         }
-        if ($biographyContent.gender && $biographyContent.gender.trim()) {
-          updates['system.details.gender'] = $biographyContent.gender.trim();
+        if ($characterDetails.gender && $characterDetails.gender.trim()) {
+          updates['system.details.gender'] = $characterDetails.gender.trim();
         }
-        if ($biographyContent.faith && $biographyContent.faith.trim()) {
-          updates['system.details.faith'] = $biographyContent.faith.trim();
+        if ($characterDetails.faith && $characterDetails.faith.trim()) {
+          updates['system.details.faith'] = $characterDetails.faith.trim();
         }
-        if ($biographyContent.alignment && $biographyContent.alignment.trim()) {
-          updates['system.details.alignment'] = $biographyContent.alignment.trim();
+        if ($characterDetails.alignment && $characterDetails.alignment.trim()) {
+          updates['system.details.alignment'] = $characterDetails.alignment.trim();
         }
         
         if (Object.keys(updates).length > 0) {
