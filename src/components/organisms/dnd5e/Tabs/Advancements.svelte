@@ -33,7 +33,7 @@
     Hooks.call("gas.captureAdvancement", true);
     
     // Set read-only state for other tabs
-    readOnlyTabs.set(["race", "background", "abilities", "class"]);
+    readOnlyTabs.set(["race", "background", "abilities", "class", "biography"]);
   });
 </script>
 
