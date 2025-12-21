@@ -226,16 +226,6 @@
           rows="4"
         )
 
-  .biography-actions
-    .action-buttons
-      button.generate-btn(
-        type="button"
-        disabled="{$isGenerating || isGeneratingLocal}"
-        on:click="{handleGenerateBiography}"
-      )
-        +if("$isGenerating || isGeneratingLocal")
-          i.fas.fa-spinner.fa-spin
-        span Generate Biography
 
   // Loading overlay
   +if("isGeneratingLocal")

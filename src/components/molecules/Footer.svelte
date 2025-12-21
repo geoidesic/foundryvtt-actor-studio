@@ -487,7 +487,30 @@
       });
       
       const workflowFSM = getWorkflowFSM();
-      workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+      // Guard: ensure FSM is in an appropriate state before firing biography_complete
+      try {
+        const currentState = workflowFSM.getCurrentState && workflowFSM.getCurrentState();
+        if (currentState === 'idle') {
+          window.GAS.log.w('[FOOTER] FSM is in idle when completing biography; attempting to restart workflow');
+          // Kick off the workflow safely
+          workflowFSM.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+          // If actor was just created, signal CHARACTER_CREATED so FSM can progress to biography/processing
+          if (currentActorInGame) {
+            workflowFSM.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+          }
+        }
+      } catch (fsmErr) {
+        window.GAS.log.e('[FOOTER] Error checking/advancing FSM before biography_complete:', fsmErr);
+      }
+
+      // Finally, signal biography completion
+      try {
+        workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+      } catch (e) {
+        // If the FSM still rejects the event, log it but avoid throwing (UI already handled)
+        window.GAS.log.e('[FOOTER] Error dispatching BIOGRAPHY_COMPLETE event:', e);
+        ui.notifications?.error(e.message || 'Failed to complete biography workflow');
+      }
     } catch (err) {
       window.GAS.log.e('[FOOTER] Error completing biography:', err);
       ui.notifications?.error(err.message);

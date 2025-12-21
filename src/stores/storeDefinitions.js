@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 
 // Basic store definitions without dependencies
 export const race = writable(false); //- tracks race selection
@@ -13,16 +13,21 @@ export const pointBuyLimit = writable(27); //- tracks the point buy limit
 export const abilityRolls = writable(false); //- tracks ability rolls
 export const isStandardArrayValues = writable(false); //- tracks if the character is using standard array values
 export const level = writable(1); //- tracks the current level of the character
-export const activeTab = writable(''); //- tracks the active tab
 export const isActorCreated = writable(false); //- tracks if the actor has been created
 export const tabs = writable([]); //- tracks the tabs
+export const activeTab = writable(''); //- tracks the active tab
+export const readOnlyTabs = writable([]); //- tracks the read only tabs
+export const tabDisabled = derived(
+  [activeTab, readOnlyTabs],
+  ([$activeTab, $readOnlyTabs]) => {
+    return $readOnlyTabs.includes($activeTab)
+});
 export const levelUpTabs = writable([]); //- tracks the level up tabs
 export const actorInGame = writable(null); //- tracks the actor in game
 export const abilityGenerationMethod = writable(null); //- tracks the ability generation method
 export const subClassesForClass = writable([]); //- tracks the subclasses for the class
 export const goldRoll = writable(0); //- tracks the gold roll
 export const startingWealthChoice = writable(null); //- tracks wealth choice for 2014 rules ('equipment' or 'gold')
-export const readOnlyTabs = writable([]); //- tracks the read only tabs
 //- level-up store definitions
 export const isLevelUp = writable(false); //- tracks if the character is in level up mode
 export const classUuidForLevelUp = writable(null); //- tracks the class uuid for level up
