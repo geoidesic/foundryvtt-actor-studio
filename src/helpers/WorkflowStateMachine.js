@@ -250,6 +250,9 @@ export function createWorkflowStateMachine() {
     .initialState('idle')
     .state('idle')
       .on('start_character_creation').transitionTo('creating_character')
+      .on('biography_complete')
+        .transitionTo('processing_advancements').withCondition((context) => !!workflowFSMContext.actor)
+        .transitionTo('creating_character') // Fallback - start creation when no actor is present
       .on('reset').transitionTo('idle')
       .onEnter((context) => {
         if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
@@ -532,8 +535,28 @@ export function createWorkflowStateMachine() {
         window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
         if (context.error) ui.notifications.error(context.error);
       })
-      .start();
-  return fsm;
+    // Start the FSM
+    const startedFsm = fsm.start();
+
+    // Wrap the handle method for safe, lightweight debugging/tracing without relying on
+    // Finity's optional global() API (which isn't present in our test mock).
+    try {
+      const originalHandle = startedFsm.handle;
+      startedFsm.handle = function(eventName, context) {
+        try {
+          const current = startedFsm.getCurrentState && startedFsm.getCurrentState();
+          window.GAS.log && window.GAS.log.d && window.GAS.log.d('[FSM] handle event:', { event: eventName, currentState: current });
+        } catch (e) {
+          // swallow in environments without window.GAS
+        }
+        return originalHandle.call(this, eventName, context);
+      };
+    } catch (e) {
+      // If wrapping fails, don't block FSM creation.
+      try { window.GAS.log && window.GAS.log.w && window.GAS.log.w('[FSM] Failed to attach debug wrapper', e); } catch (err) {}
+    }
+
+    return startedFsm;
 }
 
 // Provide a getter for the singleton FSM instance
