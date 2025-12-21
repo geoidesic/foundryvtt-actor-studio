@@ -45,11 +45,10 @@ div.content(class="{contentClass}")
     left: 0
     right: 0
     bottom: 0
-    background-color: rgba(200, 200, 200, 0.3)
     pointer-events: all
     cursor: not-allowed
     z-index: 100
     transition: background-color 0.2s ease
     &:hover
-      background-color: rgba(200, 200, 200, 0.4)
+      background-color: rgba(200, 200, 200, 0.1)
 </style>
