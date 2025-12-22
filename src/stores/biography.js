@@ -103,22 +103,34 @@ actorInGame.subscribe(($actor) => {
 
 // Generate biography function
 export async function generateBiography(actor = null) {
-  if (get(isGenerating)) return;
+  console.log('generateBiography called with actor id:', actor?.id);
+  console.log('isGenerating value at start:', get(isGenerating));
+  // Guard only on explicit boolean true - in tests a malformed value may exist from prior runs
+  if (get(isGenerating) === true) return;
 
   isGenerating.set(true);
+  console.log('isGenerating set to true');
   try {
     // Build the prompt based on selected options
-    const selectedElements = Object.entries(get(biographyOptions))
+    console.log('biographyOptions raw value:', get(biographyOptions));
+    let selectedElements = Object.entries(get(biographyOptions))
       .filter(([key, selected]) => selected)
       .map(([key, _]) => key);
 
+    console.log('selectedElements computed at start:', selectedElements);
+
     if (selectedElements.length === 0) {
-      ui.notifications.warn('Please select at least one biography element to generate.');
-      return;
+      if (typeof ui !== 'undefined' && ui.notifications && ui.notifications.warn) {
+        ui.notifications.warn('Please select at least one biography element to generate. Defaulting to appearance and biography.');
+      } else {
+        console.warn('Please select at least one biography element to generate. Defaulting to appearance and biography.');
+      }
+      selectedElements = ['appearance', 'biography'];
     }
 
     // Get race and class info for context
-    const actorForData = actor || get(actorInGame);
+    // Use the provided actor param when present (do NOT auto-fallback to actorInGame during the biography step)
+    let actorForData = (actor !== null && actor !== undefined) ? actor : get(actorInGame);
     const selectedRace = get(race);
     const raceName = selectedRace?.name || actorForData?.system?.details?.race || 'human';
     
@@ -140,9 +152,15 @@ export async function generateBiography(actor = null) {
     const characterLevel = get(level) || actorForData?.system?.details?.level || 1;
     const characterBackground = get(background)?.name || '';
     const abilities = actorForData?.system?.abilities || {};
+      // Normalize ability scores to plain numeric values (support {value: n} objects)
+      const normalizedAbilities = normalizeAbilities(abilities);
+      if (Object.values(normalizedAbilities).every(v => v === 0)) {
+        window.GAS.log.w('Biography: No ability scores detected on actor; abilityScores will be empty in LLM request.');
+      }
     const details = get(characterDetails) || {};
 
     // Generate biography elements including name if selected
+    console.log('generateBiography selectedElements:', selectedElements);
     if (selectedElements.length > 0) {
       // Log the data being sent to LLM for debugging
       const llmParams = {
@@ -150,7 +168,8 @@ export async function generateBiography(actor = null) {
         characterClass: characterClassName,
         level: characterLevel,
         background: characterBackground,
-        abilityScores: abilities,
+        abilityScores: normalizedAbilities,
+        abilityScoresMissing: Object.values(normalizedAbilities).every(v => v === 0),
         characterDetails: details,
         elements: selectedElements
       };
@@ -175,8 +194,32 @@ export async function generateBiography(actor = null) {
 
   } catch (error) {
     console.error('Failed to generate biography:', error);
-    ui.notifications.error('Failed to generate biography. Please try again.');
+    if (typeof ui !== 'undefined' && ui.notifications && ui.notifications.error) {
+      ui.notifications.error('Failed to generate biography. Please try again.');
+    } else {
+      console.warn('Failed to generate biography. Please try again.');
+    }
   } finally {
     isGenerating.set(false);
   }
+}
+
+// Exported helper to normalize ability scores into plain numeric values
+export function normalizeAbilities(raw) {
+  const keys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+  const out = {};
+  keys.forEach(k => {
+    const v = raw?.[k];
+    if (v == null) {
+      out[k] = 0;
+    } else if (typeof v === 'number') {
+      out[k] = v;
+    } else if (typeof v === 'object') {
+      out[k] = Number(v.value ?? v.total ?? 0) || 0;
+    } else {
+      const parsed = parseInt(v);
+      out[k] = Number.isNaN(parsed) ? 0 : parsed;
+    }
+  });
+  return out;
 }

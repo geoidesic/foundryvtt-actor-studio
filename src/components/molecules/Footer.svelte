@@ -520,7 +520,7 @@
   // Handle biography generation
   async function handleGenerateBiography() {
     const { generateBiography } = await import('~/src/stores/biography');
-    await generateBiography(actor);
+    await generateBiography($actor);
   }
 
   // Function to generate a random color

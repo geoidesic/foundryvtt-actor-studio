@@ -238,7 +238,7 @@ class LLM {
       // Analyze ability scores for correlations and outliers
       let abilityAnalysis = '';
       if (abilityScores && Object.keys(abilityScores).length > 0) {
-        abilityAnalysis = LLM.analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails);
+        abilityAnalysis = LLM.analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails, characterClass, background);
         const abilityList = [];
         const abilityNames = { str: 'STR', dex: 'DEX', con: 'CON', int: 'INT', wis: 'WIS', cha: 'CHA' };
         Object.entries(abilityScores).forEach(([key, value]) => {
@@ -263,11 +263,28 @@ class LLM {
         }
       }
       
+      // Determine if ability scores are missing or empty
+      const abilityScoresMissing = !abilityScores || Object.keys(abilityScores).length === 0 || Object.values(abilityScores).every(v => Number(v) === 0);
+
+      // Build explicit anomaly lines to include in prompt
+      // Build integrated instruction to guide the model to weave anomaly explanations into the narrative
+      const integratedInstruction = abilityAnalysis && abilityAnalysis.trim() ? LLM.buildIntegratedAnomalyInstruction(abilityAnalysis, characterClass, background) : '';
+
+      // Few-shot example demonstrating the desired integrated style (concise example only)
+      const fewShotExample = `EXAMPLE (Desired style):
+Input Analysis: Exceptional Strength (18) despite short stature.
+Appearance: A compact, muscular figure whose power is obvious despite a small frame; a visible patch of arcane scar tissue on his forearm hints at an early workshop accident.
+Biography: Born after a mishap with an experimental forge enchantment, he learned to turn his altered body into an asset, training in the clan workshops where practical skill outshone formal study.`;
+
       const prompt = `Generate biography elements for ${characterDescription} in a fantasy RPG setting. Provide the following elements in TOON format: ${selectedPrompts.join(', ')}.
 
-${abilityAnalysis ? `ABILITY SCORE ANALYSIS: ${abilityAnalysis}
+${abilityAnalysis ? `ABILITY SCORE ANALYSIS: ${abilityAnalysis}` : ''}
 
-Use these ability score insights to inform the biography generation, especially any unusual or notable traits that should be reflected in the character's background, personality, or appearance.` : ''}
+${integratedInstruction}
+
+${fewShotExample}
+
+${abilityScoresMissing ? `NOTE: No explicit ability scores were provided in the request. When necessary, infer plausible ability scores from race, class, and character details and label inferred values clearly (e.g., "Inferred STR ~18"). If you make inferences, integrate them smoothly into the Appearance and Biography text and label inferred scores inline where appropriate (e.g., "(Inferred STR ~18)").` : ''}
 
 Return the response in the following structured format:
 TOON
@@ -365,6 +382,8 @@ Only include the elements that were requested. Make each element detailed but co
             background,
             abilityScores,
             characterDetails,
+            abilityAnalysis,
+            anomalyInstruction: abilityAnalysis && abilityAnalysis.trim() ? LLM.buildAnomalyInstruction(abilityAnalysis, characterClass, background) : '',
             elements
           })
         });
@@ -376,7 +395,66 @@ Only include the elements that were requested. Make each element detailed but co
       }
 
       // Parse TOON format response
-      return LLM.parseToonBiography(content);
+      let parsed = LLM.parseToonBiography(content);
+
+      // Compliance check: ensure integrated explanations are present in both appearance and biography
+      const hasIntegratedExplanation = (text) => {
+        if (!text) return false;
+        // Look for causal phrases or cause keywords indicating the model explained anomalies inline
+        const causalRegex = /\b(because|due to|after|when|as a result|caused by|result of|following|from an|inferred|inferred STR|inferred DEX|enchant|enchantment|magic|augmen|prosthetic|graft|training|accident|mishap|upbringing|clan|workshop|forge)\b/i;
+        return causalRegex.test(text);
+      };
+
+      const hasAppearanceExplanation = hasIntegratedExplanation(parsed.appearance || '');
+      const hasBiographyExplanation = hasIntegratedExplanation(parsed.biography || '');
+
+      // If model didn't integrate explanations as required, attempt a single corrective re-prompt to the LLM
+      if (abilityAnalysis && abilityAnalysis.trim() && (!hasAppearanceExplanation || !hasBiographyExplanation)) {
+        // Build corrective instruction to integrate explanations into both fields
+        const insertPrompt = `You returned the following TOON block but did not integrate the required explanations for the detected anomalies into the Appearance or Biography fields. For EACH requested field (Appearance and Biography), choose a single plausible cause for the anomaly and integrate it naturally into the narrative (do not add labeled 'Anomaly:' lines or bullet lists; weave the cause into 1-2 sentences that explain how the anomaly shaped the character's life). Return only the full TOON block with the integrated explanations included in both fields.
+
+Original output:
+${content}
+`;
+
+        try {
+          // Perform one retry edit request
+          let editResponse;
+          const provider = LLM.getProvider();
+          if (provider === 'openrouter') {
+            const model = 'openai/gpt-4o-mini';
+            const res = await fetch(`${baseUrl}/chat/completions`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LLM.getApiKey()}` },
+              body: JSON.stringify({ model, messages: [{ role: 'user', content: insertPrompt }], max_tokens: 800, temperature: 0.8 })
+            });
+            const d = await res.json();
+            editResponse = d.choices?.[0]?.message?.content || '';
+          } else if (provider === 'claude') {
+            const res = await fetch(`${baseUrl}/messages`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': LLM.getApiKey(), 'anthropic-version': '2023-06-01' },
+              body: JSON.stringify({ model: 'claude-3-haiku-20240307', messages: [{ role: 'user', content: insertPrompt }], max_tokens: 800, temperature: 0.8 })
+            });
+            const d = await res.json();
+            editResponse = d.content?.[0]?.text || '';
+          } else {
+            const res = await fetch(`${baseUrl}/generateBiography`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${LLM.getApiKey()}` },
+              body: JSON.stringify({ licenseKey: LLM.getLicenseKey(), race, characterClass, level, background, abilityScores, characterDetails, elements, anomalyInstruction: LLM.buildAnomalyInstruction(abilityAnalysis, characterClass, background), editPrompt: insertPrompt })
+            });
+            const d = await res.json();
+            editResponse = d.object?.biography || '';
+          }
+
+          if (editResponse && editResponse.trim()) {
+            parsed = LLM.parseToonBiography(editResponse);
+          }
+        } catch (err) {
+          window.GAS.log.w('LLM: Anomaly insertion retry failed', err);
+        }
+      }
+
+      return parsed;
 
     } catch (error) {
       console.error('LLM: Failed to generate biography', error);
@@ -384,7 +462,34 @@ Only include the elements that were requested. Make each element detailed but co
     }
   }
 
-  static analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails) {
+  // Fallback helper: generate short narrative sentences from the ability analysis
+  static describeAnomaliesFromAnalysis(analysis, abilityScores = {}, race = '', characterDetails = {}, characterClass = '', background = '') {
+    if (!analysis || !analysis.trim()) return '';
+
+    // Simple mapping to produce human-readable explanation sentences
+    const reasons = [
+      'magical experimentation or a lingering enchantment',
+      'unique physiology or a rare birth trait',
+      'intensive training or unusual upbringing',
+      'a prosthetic, augmentation, or crafted enhancement',
+      'an illness or recovery from injury accident'
+    ];
+
+    // Compose a concise explanation
+    const shortAnalysis = analysis.replace(/\s*\.\s*$/,'');
+    const chosen = reasons.slice(0, 3).join(', ').replace(/, ([^,]*)$/, ', or $1');
+    const sentence = `Notably, ${shortAnalysis}. Possible explanations include ${chosen}.`;
+
+    // If we have height info and the analysis mentions stature, prefer to include that context
+    const height = characterDetails?.height;
+    if (height && /stature|height|short|tall/i.test(shortAnalysis)) {
+      return `${sentence} This contrast between physical build and abilities has likely shaped their life and reputation.`;
+    }
+
+    return sentence;
+  }
+
+  static analyzeAbilityScoreCorrelations(abilityScores, race, characterDetails, characterClass = '', background = '') {
     const insights = [];
     
     // Extract physical attributes
@@ -476,13 +581,21 @@ Only include the elements that were requested. Make each element detailed but co
     const raceKey = race.toLowerCase().replace(/\s+/g, '-');
     const raceData = raceExpectations[raceKey] || raceExpectations[race.split(' ')[0]?.toLowerCase()] || {};
     
-    // Analyze ability scores
-    const str = abilityScores?.str || 0;
-    const dex = abilityScores?.dex || 0;
-    const con = abilityScores?.con || 0;
-    const int = abilityScores?.int || 0;
-    const wis = abilityScores?.wis || 0;
-    const cha = abilityScores?.cha || 0;
+    // Normalize ability values (support objects like { value: 18 } or plain numbers)
+    const getVal = (v) => {
+      if (v == null) return 0;
+      if (typeof v === 'number') return v;
+      if (typeof v === 'object') return v.value || v.total || 0;
+      const parsed = parseInt(v);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
+    const str = getVal(abilityScores?.str);
+    const dex = getVal(abilityScores?.dex);
+    const con = getVal(abilityScores?.con);
+    const int = getVal(abilityScores?.int);
+    const wis = getVal(abilityScores?.wis);
+    const cha = getVal(abilityScores?.cha);
     
     // Check for exceptional scores (15+ is notable, 18+ is exceptional)
     if (str >= 18) {
@@ -561,7 +674,136 @@ Only include the elements that were requested. Make each element detailed but co
     }
     
     // Return formatted insights
+    // Class-based primary ability expectations
+    const classPrimary = {
+      barbarian: ['str'],
+      bard: ['cha'],
+      cleric: ['wis'],
+      druid: ['wis'],
+      fighter: ['str', 'dex'],
+      monk: ['dex'],
+      paladin: ['str', 'cha'],
+      ranger: ['dex'],
+      rogue: ['dex'],
+      sorcerer: ['cha'],
+      warlock: ['cha'],
+      wizard: ['int'],
+      artificer: ['int'],
+      default: []
+    };
+
+    const bgPrimary = {
+      charlatan: ['cha'],
+      soldier: ['str', 'con'],
+      sage: ['int'],
+      'guild artisan': ['int', 'cha'],
+      noble: ['cha', 'int'],
+      urchin: ['dex'],
+      criminal: ['dex'],
+      acolyte: ['wis', 'cha'],
+      entertainer: ['cha']
+    };
+
+    const normalizeKey = (s) => (s || '').toString().toLowerCase().trim();
+    const clsKey = normalizeKey(characterClass).split(' ')[0];
+    const bgKey = normalizeKey(background).split(' ')[0];
+
+    const expectedForClass = classPrimary[clsKey] || classPrimary[normalizeKey(characterClass)] || classPrimary.default;
+    const expectedForBg = bgPrimary[bgKey] || bgPrimary[normalizeKey(background)] || [];
+
+    // Low primary abilities for class
+    expectedForClass.forEach(ab => {
+      const val = { str, dex, con, int, wis, cha }[ab];
+      if (val !== undefined && val <= 8) {
+        insights.push(`Low ${ab.toUpperCase()} (${val}) for a ${characterClass} - this could be a notable flaw or a narrative obstacle for their chosen path`);
+      } else if (val !== undefined && val <= 10) {
+        insights.push(`Below-average ${ab.toUpperCase()} (${val}) for a ${characterClass} - this may influence their development or backstory`);
+      }
+    });
+
+    // High abilities that are not primary for class
+    const highAbilities = Object.entries({ str, dex, con, int, wis, cha }).filter(([k, v]) => v >= 15).map(([k]) => k);
+    highAbilities.forEach(ab => {
+      if (!expectedForClass.includes(ab)) {
+        const val = { str, dex, con, int, wis, cha }[ab];
+        insights.push(`High ${ab.toUpperCase()} (${val}) is not a typical primary for a ${characterClass} - this unusual strength could shape their story or lead to unexpected career choices`);
+      }
+    });
+
+    // Background mismatch: expected high ability not present
+    expectedForBg.forEach(ab => {
+      const val = { str, dex, con, int, wis, cha }[ab];
+      if (val !== undefined && val <= 9) {
+        insights.push(`Low ${ab.toUpperCase()} (${val}) is unusual for someone with a ${background} background and suggests a hidden history or a fall from grace`);
+      }
+    });
+
     return insights.length > 0 ? insights.join('. ') + '.' : '';
+  }
+
+  static getToneForClass(characterClass = '') {
+    const cls = (characterClass || '').toString().toLowerCase();
+    const mapping = {
+      artificer: 'mechanical and technical',
+      wizard: 'scholarly and precise',
+      barbarian: 'primal and blunt',
+      fighter: 'practical and direct',
+      rogue: 'sly and pragmatic',
+      bard: 'lyrical and colorful',
+      cleric: 'pious and reverent',
+      druid: 'earthy and natural',
+      paladin: 'honorable and resolute',
+      ranger: 'practical and rugged',
+      sorcerer: 'intense and emotional',
+      warlock: 'mysterious and obsessive',
+      monk: 'disciplined and spare',
+      default: 'neutral and narrative'
+    };
+    return mapping[cls] || mapping.default;
+  }
+
+  // New instruction builder: ask the model to integrate anomaly explanations into narrative
+  static buildIntegratedAnomalyInstruction(abilityAnalysis, characterClass = '', background = '') {
+    if (!abilityAnalysis || !abilityAnalysis.trim()) return '';
+    const tone = LLM.getToneForClass(characterClass);
+    return `INTEGRATE ANOMALIES: The ABILITY SCORE ANALYSIS above lists detected anomalies. For each relevant anomaly, choose a single, plausible cause and *integrate it naturally* into the Appearance and Biography text (1-2 sentences). Do NOT output labeled Anomaly lines, bullet lists, or multiple alternative causes—pick the most coherent single explanation and weave it into the narrative in a ${tone} tone appropriate for a ${characterClass || 'character'}. If age is mentioned, explain how it shapes the character's abilities or reputation. Keep explanations concise and story-driven (avoid enumerating options).`;
+  }
+
+  // Backwards-compatible alias for older callers
+  static buildAnomalyInstruction(abilityAnalysis, characterClass = '', background = '') {
+    return LLM.buildIntegratedAnomalyInstruction(abilityAnalysis, characterClass, background);
+  }
+
+  static buildAnomalyLines(abilityAnalysis, abilityScores = {}, race = '', characterDetails = {}, characterClass = '', background = '') {
+    if (!abilityAnalysis || !abilityAnalysis.trim()) return [];
+    // Split sentences from analysis
+    const sentences = abilityAnalysis.split(/[\.\!\?]+/).map(s => s.trim()).filter(Boolean);
+    const tone = LLM.getToneForClass(characterClass);
+
+    const getShort = (s) => {
+      // Try to extract a short summary from the sentence
+      return s.replace(/\s+/g, ' ').trim();
+    };
+
+    // Build an explanatory line per sentence, tailored to class tone
+    return sentences.map((s) => {
+      const summary = getShort(s);
+      // Tailor explanation based on keywords — return concise narrative sentences (no 'Anomaly:' prefix)
+      let explanation = '';
+      if (/strength|strong|powerful/i.test(s) && /short|stature|height/i.test(s)) {
+        explanation = `${summary}. Likely causes include intensive heavy-labor training, reinforced musculature, or crafted augmentations that boost raw power despite smaller stature.`;
+      } else if (/dexterity|dex/i.test(s) && /low|low(er)?|weak/i.test(s)) {
+        explanation = `${summary}. This may be compensated by mechanical stabilizers, crafted braces, or adaptive techniques that reduce the need for fine dexterity in a ${tone} fashion.`;
+      } else if (/age|young|youth/i.test(s)) {
+        explanation = `${summary}. The character's youth suggests prodigious talent, rapid learning, or accelerated growth after a magical or unusual upbringing.`;
+      } else if (/light|heavy|weight/i.test(s) && /unusual|unusually|slender|heavy/i.test(s)) {
+        explanation = `${summary}. This unusual build may stem from unique physiology, past injury, magical influence, or specialized diet/training.`;
+      } else {
+        explanation = `${summary}. Plausible causes include magical experimentation, unique physiology, prosthetic augmentation, or intensive training.`;
+      }
+
+      return explanation;
+    });
   }
 
   static parseToonBiography(content) {
