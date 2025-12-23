@@ -69,7 +69,8 @@
   } from "~/src/lib/workflow";
 
   // Derived store for LLM button visibility
-  const showLLMButton = derived([race], ([$race]) => {
+  const showLLMButton = derived([race, isGenerating], ([$race, $isGenerating]) => {
+    if($isGenerating) return false;
     const settingEnabled = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
     return !!$race && settingEnabled;
   });
@@ -524,7 +525,7 @@
 
     const { generateBiography } = await import('~/src/stores/biography');
     await generateBiography($actor);
-    readOnlyTabs.set();
+    readOnlyTabs.set([]);
 
   }
 
@@ -780,7 +781,10 @@
                 disabled="{$isGenerating}"
               )
                 span {$isGenerating ? 'Generating...' : 'Generate Biography'}
-                i.right.ml-md(class="fas fa-magic")
+                +if("$isGenerating")
+                  i.right.fa-solid.fa-spinner.fa-spin.spin
+                  +else
+                    i.right.ml-md(class="fas fa-magic")
               button.mt-xs(
                 type="button"
                 role="button"
@@ -788,12 +792,17 @@
                 disabled="{$isGenerating}"
               )
                 span Continue
-                i.right.ml-md(class="fas fa-chevron-right")
+                +if("$isGenerating")
+                  +else
+                    i.right.ml-md(class="fas fa-chevron-right")
+
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
             +if("$readOnlyTabs.includes($activeTab)")
-              ProgressBar(progress="{100}")
+              +if("$isGenerating")
+                +else
+                  ProgressBar(progress="{100}")
               +else()
                 ProgressBar(progress="{progress}")
                 +if("$progress === 100")
@@ -828,6 +837,9 @@
   align-items: center
 label
   margin: 10px 0 0 0
+.spin
+  animation: spin 1s ease-in-out infinite
+
 button[disabled]
   cursor: not-allowed
   background-color: #ccc
