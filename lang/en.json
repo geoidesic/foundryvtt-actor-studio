@@ -108,7 +108,7 @@
     "Welcome": {
       "To": "Welcome to the",
       "IntroductionTitle": "Introduction",
-      "Introduction": "Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e. It provides a guided workflow to help you create a character, and then guides you through the various advancements for your character.",
+      "Introduction": "Actor Studio is a tool to help you create and level-up your characters for Dungeons and Dragons 5e.",
       "UsageTitle": "Usage Instructions",
       "Issues": "If you have any issues, please report them on ",
       "Github": "GitHub.",
