@@ -35,9 +35,9 @@
 <template lang="pug">
 OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabName="race")
   div(slot="right")
-    pre activeTab {$activeTab}
-    pre tabDisabled {$tabDisabled}
-    pre readOnlyTabs {$readOnlyTabs}
+    //- pre activeTab {$activeTab}
+    //- pre tabDisabled {$tabDisabled}
+    //- pre readOnlyTabs {$readOnlyTabs}
     .biography-tab
 
       .character-details-section
