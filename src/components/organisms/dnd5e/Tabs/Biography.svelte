@@ -1,13 +1,22 @@
 <script>
-  import { getContext } from "svelte";
-  import { writable, derived } from "svelte/store";
-  import { MODULE_ID } from "~/src/helpers/constants";
+  import { biographyOptions, isGenerating, biographyContent,
+    generateBiography, requestTokens, responseTokens, 
+    characterDetails } from '~/src/stores/biography';
   import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
-  import { biographyOptions, isGenerating, biographyContent, generateBiography, requestTokens, responseTokens, characterDetails } from '~/src/stores/biography';
+  import { writable, derived } from "svelte/store";
+  import { localize as t } from "~/src/helpers/Utility";
   import { updateSource } from '~/src/helpers/Utility';
+  import { readOnlyTabs, tabDisabled, activeTab } from "~/src/stores/index";
+  import { getContext } from "svelte";
+  import { MODULE_ID } from "~/src/helpers/constants";
+  import OneColumnTabLayout from "~/src/components/organisms/OneColumnTabLayout.svelte";
 
   const actor = getContext("#doc");
   const app = getContext("#external").application;
+
+
+  const isDisabled = getContext('isDisabled') || false;
+
 
   // Store for actor name to make it reactive
   const actorNameStore = writable($biographyContent.name || $actor?.name || "");
@@ -21,225 +30,204 @@
     }
   }
 
-  // Local loading state for UI feedback
-  let isGeneratingLocal = false;
-
-  async function handleGenerateBiography() {
-    isGeneratingLocal = true;
-    try {
-      await generateBiography($actor);
-    } finally {
-      isGeneratingLocal = false;
-    }
-  }
 </script>
 
 <template lang="pug">
-.biography-tab
+OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabName="race")
+  div(slot="right")
+    pre activeTab {$activeTab}
+    pre tabDisabled {$tabDisabled}
+    pre readOnlyTabs {$readOnlyTabs}
+    .biography-tab
 
-  .character-details-section
-    h4 Character Details (Optional)
-    p Provide additional details to enhance biography generation. These will be included in AI prompts for more personalized content.
+      .character-details-section
+        h4 Character Details (Optional)
+        p Provide additional details to enhance biography generation. These will be included in AI prompts for more personalized content.
 
-    .character-details-grid
-      .detail-field
-        label(for="height") Height
-        input.detail-input(
-          id="height"
-          type="text"
-          placeholder="e.g., 5'10\""
-          bind:value="{$characterDetails.height}"
-        )
-
-      .detail-field
-        label(for="weight") Weight
-        input.detail-input(
-          id="weight"
-          type="text"
-          placeholder="e.g., 180 lbs"
-          bind:value="{$characterDetails.weight}"
-        )
-
-      .detail-field
-        label(for="age") Age
-        input.detail-input(
-          id="age"
-          type="text"
-          placeholder="e.g., 25"
-          bind:value="{$characterDetails.age}"
-        )
-
-      .detail-field
-        label(for="eyes") Eyes
-        input.detail-input(
-          id="eyes"
-          type="text"
-          placeholder="e.g., blue"
-          bind:value="{$characterDetails.eyes}"
-        )
-
-      .detail-field
-        label(for="hair") Hair
-        input.detail-input(
-          id="hair"
-          type="text"
-          placeholder="e.g., brown"
-          bind:value="{$characterDetails.hair}"
-        )
-
-      .detail-field
-        label(for="skin") Skin
-        input.detail-input(
-          id="skin"
-          type="text"
-          placeholder="e.g., fair"
-          bind:value="{$characterDetails.skin}"
-        )
-
-      .detail-field
-        label(for="gender") Gender
-        input.detail-input(
-          id="gender"
-          type="text"
-          placeholder="e.g., male"
-          bind:value="{$characterDetails.gender}"
-        )
-
-      .detail-field
-        label(for="faith") Faith
-        input.detail-input(
-          id="faith"
-          type="text"
-          placeholder="e.g., follower of Tempus"
-          bind:value="{$characterDetails.faith}"
-        )
-
-      .detail-field
-        label(for="alignment") Alignment
-        select.detail-input(
-          id="alignment"
-          bind:value="{$characterDetails.alignment}"
-        )
-          option(value="") Select alignment...
-          option(value="lawful good") Lawful Good
-          option(value="neutral good") Neutral Good
-          option(value="chaotic good") Chaotic Good
-          option(value="lawful neutral") Lawful Neutral
-          option(value="neutral") Neutral
-          option(value="chaotic neutral") Chaotic Neutral
-          option(value="lawful evil") Lawful Evil
-          option(value="neutral evil") Neutral Evil
-          option(value="chaotic evil") Chaotic Evil
-
-  .biography-header
-    h3 Biography Generation
-    p Generate detailed character biography elements using AI. Check the boxes for elements you want to generate.
-
-  .token-info
-    .token-display
-      span Request Tokens: {$requestTokens}
-      span Response Tokens: {$responseTokens}
-
-  .biography-content
-    .biography-cards
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.name}"
+        .character-details-grid
+          .detail-field
+            label(for="height") Height
+            input.detail-input(
+              id="height"
+              type="text"
+              placeholder="e.g., 5'10\""
+              bind:value="{$characterDetails.height}"
             )
-            span Name
-        input.name-input(
-          type="text"
-          placeholder="Enter character name..."
-          bind:value="{$actorNameStore}"
-        )
 
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.ideals}"
+          .detail-field
+            label(for="weight") Weight
+            input.detail-input(
+              id="weight"
+              type="text"
+              placeholder="e.g., 180 lbs"
+              bind:value="{$characterDetails.weight}"
             )
-            span Ideals
-        textarea.biography-textarea(
-          placeholder="Enter character's flaws..."
-          bind:value="{$biographyContent.flaws}"
-          rows="3"
-        )
 
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.bonds}"
+          .detail-field
+            label(for="age") Age
+            input.detail-input(
+              id="age"
+              type="text"
+              placeholder="e.g., 25"
+              bind:value="{$characterDetails.age}"
             )
-            span Bonds
-        textarea.biography-textarea(
-          placeholder="Enter character's bonds..."
-          bind:value="{$biographyContent.bonds}"
-          rows="3"
-        )
 
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.personalityTraits}"
+          .detail-field
+            label(for="eyes") Eyes
+            input.detail-input(
+              id="eyes"
+              type="text"
+              placeholder="e.g., blue"
+              bind:value="{$characterDetails.eyes}"
             )
-            span Personality Traits
-        textarea.biography-textarea(
-          placeholder="Enter character's personality traits..."
-          bind:value="{$biographyContent.personalityTraits}"
-          rows="3"
-        )
 
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.appearance}"
+          .detail-field
+            label(for="hair") Hair
+            input.detail-input(
+              id="hair"
+              type="text"
+              placeholder="e.g., brown"
+              bind:value="{$characterDetails.hair}"
             )
-            span Appearance
-        textarea.biography-textarea(
-          placeholder="Enter character's physical appearance..."
-          bind:value="{$biographyContent.appearance}"
-          rows="3"
-        )
 
-      .biography-card
-        .card-header
-          label.card-checkbox
-            input.option-checkbox(
-              type="checkbox"
-              bind:checked="{$biographyOptions.biography}"
+          .detail-field
+            label(for="skin") Skin
+            input.detail-input(
+              id="skin"
+              type="text"
+              placeholder="e.g., fair"
+              bind:value="{$characterDetails.skin}"
             )
-            span Biography
-        textarea.biography-textarea(
-          placeholder="Enter character's background biography..."
-          bind:value="{$biographyContent.biography}"
-          rows="4"
-        )
 
+          .detail-field
+            label(for="gender") Gender
+            input.detail-input(
+              id="gender"
+              type="text"
+              placeholder="e.g., male"
+              bind:value="{$characterDetails.gender}"
+            )
 
-  // Loading overlay
-  +if("isGeneratingLocal")
-    .loading-overlay
-      .loading-content
-        .spinner
-          i.fas.fa-spinner.fa-spin
-        .loading-text
-          p Generating biography...
-          button.cancel-btn(
-            type="button"
-            on:click!="{() => { isGeneratingLocal = false; }}"
-          )
-            span Cancel
+          .detail-field
+            label(for="faith") Faith
+            input.detail-input(
+              id="faith"
+              type="text"
+              placeholder="e.g., follower of Tempus"
+              bind:value="{$characterDetails.faith}"
+            )
+
+          .detail-field
+            label(for="alignment") Alignment
+            select.detail-input(
+              id="alignment"
+              bind:value="{$characterDetails.alignment}"
+            )
+              option(value="") Select alignment...
+              option(value="lawful good") Lawful Good
+              option(value="neutral good") Neutral Good
+              option(value="chaotic good") Chaotic Good
+              option(value="lawful neutral") Lawful Neutral
+              option(value="neutral") Neutral
+              option(value="chaotic neutral") Chaotic Neutral
+              option(value="lawful evil") Lawful Evil
+              option(value="neutral evil") Neutral Evil
+              option(value="chaotic evil") Chaotic Evil
+
+      .biography-header
+        h3 Biography Generation
+        p Generate detailed character biography elements using AI. Check the boxes for elements you want to generate.
+
+      .token-info
+        .token-display
+          span Request Tokens: {$requestTokens}
+          span Response Tokens: {$responseTokens}
+
+      .biography-content
+        .biography-cards
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.name}"
+                )
+                span Name
+            input.name-input(
+              type="text"
+              placeholder="Enter character name..."
+              bind:value="{$actorNameStore}"
+            )
+
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.ideals}"
+                )
+                span Ideals
+            textarea.biography-textarea(
+              placeholder="Enter character's flaws..."
+              bind:value="{$biographyContent.flaws}"
+              rows="3"
+            )
+
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.bonds}"
+                )
+                span Bonds
+            textarea.biography-textarea(
+              placeholder="Enter character's bonds..."
+              bind:value="{$biographyContent.bonds}"
+              rows="3"
+            )
+
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.personalityTraits}"
+                )
+                span Personality Traits
+            textarea.biography-textarea(
+              placeholder="Enter character's personality traits..."
+              bind:value="{$biographyContent.personalityTraits}"
+              rows="3"
+            )
+
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.appearance}"
+                )
+                span Appearance
+            textarea.biography-textarea(
+              placeholder="Enter character's physical appearance..."
+              bind:value="{$biographyContent.appearance}"
+              rows="3"
+            )
+
+          .biography-card
+            .card-header
+              label.card-checkbox
+                input.option-checkbox(
+                  type="checkbox"
+                  bind:checked="{$biographyOptions.biography}"
+                )
+                span Biography
+            textarea.biography-textarea(
+              placeholder="Enter character's background biography..."
+              bind:value="{$biographyContent.biography}"
+              rows="4"
+            )
 
 </template>
 

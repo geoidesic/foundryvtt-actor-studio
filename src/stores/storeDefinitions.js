@@ -20,7 +20,7 @@ export const readOnlyTabs = writable([]); //- tracks the read only tabs
 export const tabDisabled = derived(
   [activeTab, readOnlyTabs],
   ([$activeTab, $readOnlyTabs]) => {
-    return $readOnlyTabs.includes($activeTab)
+    return $readOnlyTabs && $readOnlyTabs.length && $readOnlyTabs.includes($activeTab)
 });
 export const levelUpTabs = writable([]); //- tracks the level up tabs
 export const actorInGame = writable(null); //- tracks the actor in game

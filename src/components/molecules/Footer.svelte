@@ -30,7 +30,8 @@
     levelUpSubClassObject,
     levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected,
-    readOnlyTabs
+    readOnlyTabs,
+    tabDisabled
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -519,8 +520,12 @@
 
   // Handle biography generation
   async function handleGenerateBiography() {
+    readOnlyTabs.set(['biography']);
+
     const { generateBiography } = await import('~/src/stores/biography');
     await generateBiography($actor);
+    readOnlyTabs.set();
+
   }
 
   // Function to generate a random color
@@ -662,7 +667,7 @@
                     class:x-sign="{experimentalStylingEnabled}"
                     type="text" 
                     bind:value="{$biographyContent.name}"
-                    disabled="{$isLevelUp}"
+                    disabled="{$isLevelUp || $tabDisabled}"
                   )
                   +if("$showLLMButton")
                     .flex.pointer(on:click="{generateName($race.name)}")

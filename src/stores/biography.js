@@ -103,6 +103,8 @@ actorInGame.subscribe(($actor) => {
 
 // Generate biography function
 export async function generateBiography(actor = null) {
+  
+  console.trace();
   console.log('generateBiography called with actor id:', actor?.id);
   console.log('isGenerating value at start:', get(isGenerating));
   // Guard only on explicit boolean true - in tests a malformed value may exist from prior runs
