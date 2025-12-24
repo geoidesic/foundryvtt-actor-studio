@@ -18,6 +18,9 @@
         "Skipped": "Sources not auto-assigned. You can configure them manually in the Actor Studio settings when ready."
       }
     },
+    "Notification": {
+      "CompendiumSourcesCleaned": "Actor Studio cleaned some compendium sources for {type}. <a class='gas-open-sources' href='#'>Open Sources</a> to review and save changes."
+    },
     "Disabled": "Disabled",
     "AbilityScores": "Ability Scores",
     "Advancements": "Advancements",

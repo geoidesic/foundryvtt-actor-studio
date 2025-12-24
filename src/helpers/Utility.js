@@ -538,20 +538,19 @@ export const getPacksFromSettings = (type) => {
     return false;
   });
 
-  // Update settings if any packs were removed
+  // If any packs were removed, update only in-memory (do NOT persist automatically).
+  // Persisting settings is a user action and should only happen through the Settings UI.
   if (filteredPackNames.length !== settings[type].length) {
-    settings[type] = filteredPackNames;
-    // Only persist the settings after the game is ready; otherwise defer
-    if (game.ready) {
-      game.settings.set(MODULE_ID, 'compendiumSources', settings);
-    } else {
-      try {
-        // Defer the write to the first 'ready' tick
-        globalThis.Hooks?.once?.('ready', () => {
-          try { game.settings.set(MODULE_ID, 'compendiumSources', settings); } catch (_) {}
-        });
-      } catch (_) {}
+    const newSettings = { ...settings, [type]: filteredPackNames };
+    window.GAS?.log?.i?.('[Utility] Removed invalid compendium packs for', type, '- not persisting to settings automatically');
+    // Emit a non-intrusive hook so callers (or settings UI) can optionally prompt the user to persist
+    try {
+      Hooks.call('gas.compendiumSources.cleaned', { original: settings, cleaned: newSettings, type });
+    } catch (e) {
+      // ignore
     }
+    // Update local variable so the cleaned data is returned to callers
+    settings = newSettings;
   }
 
   return packs;
