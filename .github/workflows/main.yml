@@ -55,11 +55,28 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Setup Bun (for local bun.lockb users)
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
 
-      - name: Build project
-        run: npm run build
+      - name: Install dependencies and build (prefer bun when bun.lockb exists)
+        run: |
+          if [ -f bun.lockb ]; then
+            echo "bun.lockb found — installing with bun and building with bun"
+            bun install --no-save
+            bun run build
+          else
+            echo "No bun.lockb found — falling back to npm"
+            if [ -f package-lock.json ]; then
+              echo "package-lock.json found, running 'npm ci' for reproducible install"
+              npm ci
+            else
+              echo "No package-lock.json found, running 'npm install'"
+              npm install
+            fi
+            npm run build
+          fi
 
       - name: Verify dist output
         run: |
