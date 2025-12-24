@@ -344,6 +344,10 @@
         "Name": "Enable LLM Name Generation",
         "Hint": "If enabled, adds a ChatGPT button next to the character name input that generates fantasy-appropriate names based on the selected race."
       },
+      "EnableBiographyTab": {
+        "Name": "Enable Biography Tab",
+        "Hint": "Show the Biography tab during character creation. If enabled, Biography will be shown even if LLM name generation or the license tracker are disabled; the Generate button will hide when generation isn't available."
+      },
       "EnableLicenseTracker": {
         "Name": "Enable License Tracker",
         "Hint": "If enabled, requires a license key for LLM name generation. The license key must be entered below."

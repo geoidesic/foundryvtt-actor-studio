@@ -72,7 +72,11 @@
   const showLLMButton = derived([race, isGenerating], ([$race, $isGenerating]) => {
     if($isGenerating) return false;
     const settingEnabled = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
-    return !!$race && settingEnabled;
+    // Hide the button if the license tracker is enabled but no license code is present.
+    const licenseTrackerEnabled = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLicenseTracker') : false;
+    const licenseCode = game?.settings?.get ? game.settings.get(MODULE_ID, 'AardvarkLicenseCode') : '';
+    const licenseReady = !licenseTrackerEnabled || (licenseTrackerEnabled && !!licenseCode);
+    return !!$race && settingEnabled && licenseReady;
   });
   
   // Debug logging for button visibility
@@ -208,10 +212,12 @@
     const fsm = getWorkflowFSM();
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     
-    // Check if biography generation is enabled
+    // Check if biography tab is enabled (new setting). Fall back to LLM name generation for backward compatibility.
+    const enableBiography = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableBiographyTab') : undefined;
     const enableLLM = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
-    
-    if (enableLLM) {
+    const shouldShowBiography = (typeof enableBiography !== 'undefined') ? !!enableBiography : !!enableLLM;
+
+    if (shouldShowBiography) {
       // Biography is enabled - defer actor creation and go to biography tab
       window.GAS.log.d('[FOOTER] Biography enabled - deferring actor creation and switching to biography tab');
       
@@ -235,6 +241,15 @@
       dropItemRegistry
     });
     $isActorCreated = true;
+
+    // Signal to the workflow FSM that the actor has been created so it can progress to advancements
+    try {
+      const workflowFSM = getWorkflowFSM();
+      window.GAS.log.d('[FOOTER] Signalling CHARACTER_CREATED to FSM');
+      workflowFSM.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+    } catch (e) {
+      window.GAS.log.e('[FOOTER] Error signalling CHARACTER_CREATED:', e);
+    }
   };
 
   const clickUpdateLevelUpHandler = async () => {
