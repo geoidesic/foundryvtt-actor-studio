@@ -58,6 +58,10 @@
             input(type="checkbox" on:change="{handleChange}" label="{t('Setting.DontShowWelcome.Name')}" bind:checked="{dontShowWelcome}") 
           .flex.dont-show
             span {t('Setting.DontShowWelcome.Name') }
+        hr
+        p My first premium FoundryVTT adventure has now been published on the Foundry Marketplace. Please buy it to help support this channel! 
+        a(href="https://www.foundryvtt.store/products/twilight-cluster-5e-adventure" target="_blank")
+          img(src="https://cdn.foundryvtt.store/images/assets/twilight-cluster-5e-adventure/foundry-market-place-cover-art-wide-screen.webp" alt="" class="rounded-lg object-cover")
     footer
       div.logo
         a(href="https://www.aardvark.games") 
