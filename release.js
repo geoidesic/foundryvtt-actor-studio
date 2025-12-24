@@ -389,6 +389,37 @@ if (!isDraft) {
         console.log('🔨 Building project...');
         execSync('npm run build', { stdio: 'inherit' });
 
+        // Ensure dist/style.css exists so Foundry's installer won't reject the package
+        // If Vite produced a hashed CSS file, copy it to dist/style.css. If no CSS was emitted, abort the release
+        try {
+            const distDir = path.join(__dirname, 'dist');
+            if (!fs.existsSync(distDir)) {
+                throw new Error('dist directory not found after build. Run `npm run build` and verify output.');
+            }
+
+            const cssFiles = fs.readdirSync(distDir).filter(f => f.endsWith('.css'));
+            if (cssFiles.length === 0) {
+                throw new Error('Build produced no CSS files. Aborting release to avoid shipping a package without styles. Check your Vite/SASS setup and run `npm run build` locally to reproduce.');
+            }
+
+            // Copy the first found CSS file to dist/style.css if needed
+            if (!cssFiles.includes('style.css')) {
+                const src = path.join(distDir, cssFiles[0]);
+                const dest = path.join(distDir, 'style.css');
+                fs.copyFileSync(src, dest);
+                console.log(`✅ Copied ${cssFiles[0]} → dist/style.css for Foundry compatibility`);
+            } else {
+                console.log('✅ dist/style.css already exists');
+            }
+        } catch (err) {
+            console.error('❌ CSS check failed:', err.message);
+            // Revert version changes before exiting
+            fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
+            fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
+            console.log('Reverted version changes due to CSS check failure.');
+            process.exit(1);
+        }
+
         // Commit changes
         console.log('💾 Committing changes...');
         execSync('git add .');
