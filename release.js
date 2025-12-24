@@ -421,7 +421,15 @@ if (!isDraft) {
         }
 
         // Commit changes
-        console.log('💾 Committing changes...');
+        console.log('💾 Staging files for commit...');
+        // Force-add built dist files (dist is usually gitignored) so the release zip will include them
+        try {
+            execSync('git add -f dist/style.css');
+            console.log('✅ Force-added dist/style.css to the commit');
+        } catch (addErr) {
+            console.warn('⚠️  Could not force-add dist/style.css (it may not exist):', addErr.message);
+        }
+
         execSync('git add .');
         execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
     } catch (error) {
