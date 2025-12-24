@@ -15,15 +15,15 @@
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { abilityGenerationMethod, abilityRolls, readOnlyTabs } from "~/src/stores/index";
+  import { abilityGenerationMethod, abilityRolls } from "~/src/stores/index";
+
+  const isDisabled = getContext('isDisabled') || false;
 
   const actor = getContext("#doc");
   const ruleConfig = {
     journalId: "0AGfrwZRzSG0vNKb",
     pageId: "yuSwUFIjK31Mr3DI",
   };
-
-  $: isDisabled = $readOnlyTabs.includes("abilities");
 
   const importAdvancements = async () => {
     // window.GAS.log.d('options',options)
@@ -112,8 +112,6 @@ StandardTabLayout(
     +if("$abilityGenerationMethod")
       .relative
         svelte:component(this="{abilityModule}")
-        +if("isDisabled")
-          .overlay
   div(slot="right") {@html richHTML}
 </template>
 
@@ -121,20 +119,5 @@ StandardTabLayout(
 :global(.icon-select)
   position: relative
 
-.relative
-  position: relative
 
-.overlay
-  position: absolute
-  top: 0
-  left: 0
-  right: 0
-  bottom: 0
-  background-color: rgba(200, 200, 200, 0.3)
-  pointer-events: all
-  cursor: not-allowed
-  z-index: 100
-  transition: background-color 0.2s ease
-  &:hover
-    background-color: rgba(200, 200, 200, 0.4)
 </style>

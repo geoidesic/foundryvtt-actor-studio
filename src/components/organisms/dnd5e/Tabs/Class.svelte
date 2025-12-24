@@ -28,6 +28,8 @@
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
+
+  const isDisabled = getContext('isDisabled') || false;
   import { goldRoll } from "~/src/stores/storeDefinitions";
 
   let richHTML = "",
@@ -124,6 +126,15 @@
   };
 
   const handleSelectClass = async (option) => {
+    // Reset workflow state when class changes
+    const fsm = window.GAS?.workflowFSM;
+    if (fsm) {
+      const currentState = fsm.getCurrentState();
+      if (currentState === 'creating_character') {
+        fsm.handle('reset');
+      }
+    }
+
     activeSubClass = null;
     $characterSubClass = null;
     subclassValue = null;
@@ -297,14 +308,14 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     .flexrow
       .flex0.required(class="{$characterClass ? '' : 'active'}") *
       .flex3 
-        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}")
+        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
     +if("$characterClass")
       +if("subclasses.length && subClassLevel == 1")
         h2.left {t('SubClass')}
         .flexrow
           .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
           .flex3
-            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17")
+            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
       
       +if("classAdvancementArrayFiltered")
         h3.left.mt-sm.flexrow

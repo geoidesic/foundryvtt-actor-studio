@@ -213,7 +213,7 @@
     // Add wealth choice tab
     if(!$tabs.find(x => x.id === "wealth-choice")) {
       tabs.update(t => {
-        const newTabs = [...t, { label: "Starting Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
+        const newTabs = [...t, { label: "Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
         window.GAS.log.d('[PCAPP] Added wealth choice tab:', newTabs);
         return newTabs;
       });
@@ -355,6 +355,7 @@
 
 <template lang="pug">
   ApplicationShell(bind:elementRoot bind:stylesApp)
+    img(class="break-out" src="/modules/foundryvtt-actor-studio/assets/xmas-hat.webp" alt="icon")
     main
       section.a
         Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC" on:confirm!="{handleWealthChoiceConfirm}" on:edit!="{handleWealthChoiceEdit}")
@@ -367,12 +368,21 @@
 
 
 <style lang="sass">
+:global(.application.GAS) 
+  contain: unset !important
 main 
   text-align: center
   display: flex
   flex-direction: column
   height: 100%
-
+.break-out
+  position: absolute
+  height: 50px
+  top: -27px
+  left: -23px
+  z-index: 4
+  overflow: visible !important
+  overflow-clip-margin: 30px
 section 
   padding: 0.5rem 0.2rem
 

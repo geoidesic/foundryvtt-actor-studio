@@ -15,6 +15,7 @@ export const WORKFLOW_STATES = {
   IDLE: 'idle',
   CREATING_CHARACTER: 'creating_character',
   PROCESSING_ADVANCEMENTS: 'processing_advancements',
+  BIOGRAPHY: 'biography',
   SELECTING_EQUIPMENT: 'selecting_equipment',
   SELECTING_SPELLS: 'selecting_spells',
   SHOPPING: 'shopping',
@@ -29,6 +30,7 @@ export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
   ADVANCEMENTS_COMPLETE: 'advancements_complete',
+  BIOGRAPHY_COMPLETE: 'biography_complete',
   WEALTH_CHOICE_MADE: 'wealth_choice_made',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
@@ -232,6 +234,10 @@ export const workflowFSMContext = {
     const enableShopping = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
     return enableShopping;
   },
+  _shouldShowBiography: function () {
+    const enableLLM = game.settings.get(MODULE_ID, 'EnableLLMNameGeneration');
+    return enableLLM;
+  },
   actor: undefined,
 };
 
@@ -243,33 +249,51 @@ export function createWorkflowStateMachine() {
     .configure()
     .initialState('idle')
     .state('idle')
-    .on('start_character_creation').transitionTo('creating_character')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      
-      // Destroy advancement managers when returning to idle
-      try {
-        destroyAdvancementManagers();
-      } catch (error) {
-        window.GAS.log.e('[WORKFLOW] Error destroying advancement managers on idle:', error);
-      }
-    })
+      .on('start_character_creation').transitionTo('creating_character')
+      .on('biography_complete')
+        .transitionTo('processing_advancements').withCondition((context) => !!workflowFSMContext.actor)
+        .transitionTo('creating_character') // Fallback - start creation when no actor is present
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        
+        // Destroy advancement managers when returning to idle
+        try {
+          destroyAdvancementManagers();
+        } catch (error) {
+          window.GAS.log.e('[WORKFLOW] Error destroying advancement managers on idle:', error);
+        }
+      })
     .state('creating_character')
-    .on('character_created').transitionTo('processing_advancements')
-    .on('error').transitionTo('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(true);
-      window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
-    })
+      .on('character_created')
+        .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
+        .transitionTo('processing_advancements')
+      .on('biography_complete')
+        .transitionTo('processing_advancements') // Handle biography completion from creating_character state
+      .on('start_character_creation').transitionTo('creating_character')
+      .on('error').transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(true);
+        window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
+      })
     .state('processing_advancements')
       .do(async (state, context) => {
         if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(true);
         window.GAS.log.d('[WORKFLOW] Entered PROCESSING_ADVANCEMENTS state');
+        
+        // Mark previous tabs as read-only while processing advancements
+        readOnlyTabs.set(['abilities', 'race', 'background', 'class']);
+        
+        // Ensure the actor sheet is rendered so drop handlers work properly
+        if (workflowFSMContext.actor) {
+          await workflowFSMContext.actor.sheet.render();
+        }
+        
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
-        // After queue completes, restore the actor's original sheetClass if we set a temporary one
+        
+        // After queue completes, restore the actor's original sheetClass
         try {
           const actor = workflowFSMContext.actor;
           if (actor) {
@@ -299,6 +323,25 @@ export function createWorkflowStateMachine() {
         .onFailure().transitionTo('error')
       .on('reset').transitionTo('idle')
       .on('error').transitionTo('error')
+    .state('biography')
+      .on('biography_complete')
+        .transitionTo('processing_advancements') // Always go to processing_advancements after biography to handle advancement capture
+      .on('reset').transitionTo('idle')
+      .on('error').transitionTo('error')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered BIOGRAPHY state');
+        
+        // Mark previous tabs as read-only
+        readOnlyTabs.set(['abilities', 'race', 'background', 'class']);
+        
+        // Add biography tab and switch to it
+        const currentTabs = get(tabs);
+        if (!currentTabs.find(t => t.id === "biography")) {
+          tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
+        }
+        activeTab.set("biography");
+      })
     .state('choosing_starting_wealth')
       .on('wealth_choice_made')
         .transitionTo('selecting_equipment').withCondition((context) => {
@@ -318,191 +361,202 @@ export function createWorkflowStateMachine() {
         Hooks.call('gas.choosingStartingWealth');
       })
     .state('selecting_equipment')
-    .on('wealth_choice_made')
-      .transitionTo('selecting_equipment').withCondition((context) => {
-        const choice = get(startingWealthChoice);
-        window.GAS.log.d('[FSM] Wealth choice re-confirmed in selecting_equipment:', choice, '-> stay in selecting_equipment');
-        // Stay in selecting_equipment; the UI will update based on the new choice
-        return true;
-      })
-    .on('equipment_complete')
-      .transitionTo('shopping').withCondition((context) => {
-        // 2014 rules: if they chose equipment, skip shopping
-        const choice = get(startingWealthChoice);
-        const is2014 = window.GAS?.dnd5eRules === '2014';
-        if (is2014 && choice === 'equipment') {
-          window.GAS.log.d('[FSM] 2014 rules + equipment choice -> skip shopping');
+      .on('wealth_choice_made')
+        .transitionTo('selecting_equipment').withCondition((context) => {
+          const choice = get(startingWealthChoice);
+          window.GAS.log.d('[FSM] Wealth choice re-confirmed in selecting_equipment:', choice, '-> stay in selecting_equipment');
+          // Stay in selecting_equipment; the UI will update based on the new choice
+          return true;
+        })
+      .on('equipment_complete')
+        .transitionTo('shopping').withCondition((context) => {
+          // Always transition to shopping after equipment completion
+          // The shopping UI will handle disabled functionality based on settings
+          return true;
+        })
+        .transitionTo('selecting_spells').withCondition((context) => {
+          // Don't go directly to spells from equipment - always go through shopping
           return false;
+        })
+        .transitionTo('completed') // Fallback if something goes wrong
+      .on('shopping_complete')
+        .transitionTo('selecting_spells').withCondition((context) => {
+          // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
+          const currentActor = get(actorInGame);
+          // Fallback to context actor if store is empty (useful for tests and edge cases)
+          const actorToCheck = currentActor || workflowFSMContext.actor;
+          const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
+          window.GAS.log.d('[FSM] shopping_complete (from selecting_equipment) -> selecting_spells condition:', shouldShow);
+          return shouldShow;
+        })
+        .transitionTo('completed') // Default fallback when spell selection is not needed
+      .on('skip_equipment')
+        .transitionTo('shopping').withCondition((context) => workflowFSMContext._shouldShowShopping())
+        .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
+        .transitionTo('completed') // Default fallback
+      .on('error').transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
+        
+        // Mark previous tabs as read-only
+        readOnlyTabs.set(['abilities', 'race', 'background', 'class', 'biography']);
+        
+        // Destroy advancement managers if advancement capture is disabled
+        const disableAdvancementCapture = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
+        if (disableAdvancementCapture) {
+          try {
+            destroyAdvancementManagers();
+          } catch (error) {
+            window.GAS.log.e('[WORKFLOW] Error destroying advancement managers:', error);
+          }
         }
-        const shouldShow = workflowFSMContext._shouldShowShopping();
-        window.GAS.log.d('[FSM] equipment_complete -> shopping condition:', shouldShow);
-        return shouldShow;
+        
+        Hooks.call('gas.equipmentSelection', workflowFSMContext.actor);
+        
+        // Note: Gold selection should fire equipment_complete when the user completes their selection
+        // Equipment selection should also fire equipment_complete when completed
       })
-      .transitionTo('selecting_spells').withCondition((context) => {
-        const shouldShow = !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor);
-        window.GAS.log.d('[FSM] equipment_complete -> selecting_spells condition:', shouldShow);
-        return shouldShow;
+    .state('shopping')
+      .on('wealth_choice_made')
+        .transitionTo('selecting_equipment').withCondition((context) => {
+          const choice = get(startingWealthChoice);
+          window.GAS.log.d('[FSM] Wealth choice re-confirmed from shopping:', choice, '-> back to selecting_equipment');
+          // Go back to selecting_equipment to reset workflow from that point
+          return true;
+        })
+      .on('shopping_complete')
+        .transitionTo('selecting_spells').withCondition((context) => {
+          // Always transition to spells after shopping completion
+          // The spells UI will handle disabled functionality based on settings
+          return true;
+        })
+        .transitionTo('completed') // Fallback if something goes wrong
+      .on('skip_shopping')
+        .transitionTo('selecting_spells').withCondition((context) => {
+          // Always transition to spells when skipping shopping
+          return true;
+        })
+        .transitionTo('completed') // Fallback
+      .on('error').transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered SHOPPING state');
+        // Add shop tab and switch to it
+        const currentTabs = get(tabs);
+        if (!currentTabs.find(t => t.id === "shop")) {
+          tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
+        }
+        activeTab.set("shop");
+        const currentReadOnlyTabs = get(readOnlyTabs);
+        if (!currentReadOnlyTabs.includes("equipment")) {
+          readOnlyTabs.update(current => [...current, "equipment"]);
+        }
+        const totalGoldFromChoices = window.GAS?.totalGoldFromChoices;
+        const goldRoll = window.GAS?.goldRoll;
+        let goldValue;
+        // Check both version AND rules - only use new system for D&D 2024 rules
+        if (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024") {
+          goldValue = totalGoldFromChoices ? get(totalGoldFromChoices) : 0;
+          window.GAS.log.d('[WORKFLOW] Using D&D 2024 rules - totalGoldFromChoices:', goldValue);
+        } else {
+          goldValue = goldRoll ? get(goldRoll) : 0;
+          window.GAS.log.d('[WORKFLOW] Using D&D 2014 rules - goldRoll:', goldValue);
+        }
+        const goldValueInCopper = goldValue * 100;
+        if (window.GAS && window.GAS.availableGold && typeof window.GAS.availableGold.set === 'function') {
+          window.GAS.availableGold.set(goldValueInCopper);
+        }
       })
-      .transitionTo('completed') // Default fallback
-    .on('shopping_complete')
-      .transitionTo('selecting_spells').withCondition((context) => {
-        // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
-        const currentActor = get(actorInGame);
-        // Fallback to context actor if store is empty (useful for tests and edge cases)
-        const actorToCheck = currentActor || workflowFSMContext.actor;
-        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
-        window.GAS.log.d('[FSM] shopping_complete (from selecting_equipment) -> selecting_spells condition:', shouldShow);
-        return shouldShow;
+      .state('selecting_spells')
+      .on('wealth_choice_made')
+        .transitionTo('selecting_equipment').withCondition((context) => {
+          const choice = get(startingWealthChoice);
+          window.GAS.log.d('[FSM] Wealth choice re-confirmed from selecting_spells:', choice, '-> back to selecting_equipment');
+          // Go back to selecting_equipment to reset workflow from that point
+          return true;
+        })
+      .on('spells_complete').transitionTo('completed')
+      .on('skip_spells').transitionTo('completed')
+      .on('error').transitionTo('error')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
+        
+        // Double-check that actor is actually a spellcaster before adding spell tab
+        const actor = workflowFSMContext.actor || get(actorInGame);
+        const isSpellcaster = workflowFSMContext._shouldShowSpellSelection(actor);
+        window.GAS.log.d('[WORKFLOW] Verifying spellcaster status in onEnter:', { isSpellcaster, actorName: actor?.name });
+        
+        if (isSpellcaster) {
+          const currentTabs = get(tabs);
+          if (!currentTabs.find(t => t.id === "spells")) {
+            tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
+          }
+          activeTab.set("spells");
+        } else {
+          window.GAS.log.w('[WORKFLOW] Actor is not a spellcaster but entered selecting_spells state - transitioning to completed');
+          // If we somehow entered this state for a non-spellcaster, immediately skip to completed
+          const fsm = getWorkflowFSM();
+          fsm.handle(WORKFLOW_EVENTS.SKIP_SPELLS);
+        }
       })
-      .transitionTo('completed') // Default fallback when spell selection is not needed
-    .on('skip_equipment')
-      .transitionTo('shopping').withCondition((context) => workflowFSMContext._shouldShowShopping())
-      .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
-      .transitionTo('completed') // Default fallback
-    .on('error').transitionTo('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
-      
-      // Destroy advancement managers if advancement capture is disabled
-      const disableAdvancementCapture = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
-      if (disableAdvancementCapture) {
+    .state('completed')
+      .on('reset').transitionTo('idle')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
+        
+        // Destroy advancement managers
         try {
           destroyAdvancementManagers();
         } catch (error) {
-          window.GAS.log.e('[WORKFLOW] Error destroying advancement managers:', error);
+          window.GAS.log.e('[WORKFLOW] Error destroying advancement managers on completed:', error);
         }
-      }
-      
-      Hooks.call('gas.equipmentSelection', workflowFSMContext.actor);
-    })
-    .state('shopping')
-    .on('wealth_choice_made')
-      .transitionTo('selecting_equipment').withCondition((context) => {
-        const choice = get(startingWealthChoice);
-        window.GAS.log.d('[FSM] Wealth choice re-confirmed from shopping:', choice, '-> back to selecting_equipment');
-        // Go back to selecting_equipment to reset workflow from that point
-        return true;
-      })
-    .on('shopping_complete')
-      .transitionTo('selecting_spells').withCondition((context) => {
-        // Use the persisted actor from actorInGame store instead of workflowFSMContext.actor
-        const currentActor = get(actorInGame);
-        // Fallback to context actor if store is empty (useful for tests and edge cases)
-        const actorToCheck = currentActor || workflowFSMContext.actor;
-        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
-        window.GAS.log.d('[FSM] shopping_complete -> selecting_spells condition (using actorInGame):', shouldShow);
-        return shouldShow;
-      })
-      .transitionTo('completed') // Default fallback when spell selection is not needed
-    .on('skip_shopping')
-      .transitionTo('selecting_spells').withCondition((context) => {
-        const currentActor = get(actorInGame);
-        // Fallback to context actor if store is empty (useful for tests and edge cases)
-        const actorToCheck = currentActor || workflowFSMContext.actor;
-        const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
-        window.GAS.log.d('[FSM] skip_shopping -> selecting_spells condition (using actorInGame):', shouldShow);
-        return shouldShow;
-      })
-      .transitionTo('completed') // Default fallback when spell selection is not needed
-    .on('error').transitionTo('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SHOPPING state');
-      // Add shop tab and switch to it
-      const currentTabs = get(tabs);
-      if (!currentTabs.find(t => t.id === "shop")) {
-        tabs.update(t => [...t, { label: "Shop", id: "shop", component: "ShopTab" }]);
-      }
-      activeTab.set("shop");
-      const currentReadOnlyTabs = get(readOnlyTabs);
-      if (!currentReadOnlyTabs.includes("equipment")) {
-        readOnlyTabs.update(current => [...current, "equipment"]);
-      }
-      const totalGoldFromChoices = window.GAS?.totalGoldFromChoices;
-      const goldRoll = window.GAS?.goldRoll;
-      let goldValue;
-      // Check both version AND rules - only use new system for D&D 2024 rules
-      if (window.GAS.dnd5eVersion >= 4 && window.GAS.dnd5eRules === "2024") {
-        goldValue = totalGoldFromChoices ? get(totalGoldFromChoices) : 0;
-        window.GAS.log.d('[WORKFLOW] Using D&D 2024 rules - totalGoldFromChoices:', goldValue);
-      } else {
-        goldValue = goldRoll ? get(goldRoll) : 0;
-        window.GAS.log.d('[WORKFLOW] Using D&D 2014 rules - goldRoll:', goldValue);
-      }
-      const goldValueInCopper = goldValue * 100;
-      if (window.GAS && window.GAS.availableGold && typeof window.GAS.availableGold.set === 'function') {
-        window.GAS.availableGold.set(goldValueInCopper);
-      }
-    })
-    .state('selecting_spells')
-    .on('wealth_choice_made')
-      .transitionTo('selecting_equipment').withCondition((context) => {
-        const choice = get(startingWealthChoice);
-        window.GAS.log.d('[FSM] Wealth choice re-confirmed from selecting_spells:', choice, '-> back to selecting_equipment');
-        // Go back to selecting_equipment to reset workflow from that point
-        return true;
-      })
-    .on('spells_complete').transitionTo('completed')
-    .on('skip_spells').transitionTo('completed')
-    .on('error').transitionTo('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered SELECTING_SPELLS state');
-      
-      // Double-check that actor is actually a spellcaster before adding spell tab
-      const actor = workflowFSMContext.actor || get(actorInGame);
-      const isSpellcaster = workflowFSMContext._shouldShowSpellSelection(actor);
-      window.GAS.log.d('[WORKFLOW] Verifying spellcaster status in onEnter:', { isSpellcaster, actorName: actor?.name });
-      
-      if (isSpellcaster) {
-        const currentTabs = get(tabs);
-        if (!currentTabs.find(t => t.id === "spells")) {
-          tabs.update(t => [...t, { label: "Spells", id: "spells", component: "Spells" }]);
+        
+        const { actor } = workflowFSMContext;
+        if (actor) {
+          window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
+          actor.sheet.render(true);
         }
-        activeTab.set("spells");
-      } else {
-        window.GAS.log.w('[WORKFLOW] Actor is not a spellcaster but entered selecting_spells state - transitioning to completed');
-        // If we somehow entered this state for a non-spellcaster, immediately skip to completed
-        const fsm = getWorkflowFSM();
-        fsm.handle(WORKFLOW_EVENTS.SKIP_SPELLS);
-      }
-    })
-    .state('completed')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.d('[WORKFLOW] Entered COMPLETED state');
-      
-      // Destroy advancement managers
-      try {
-        destroyAdvancementManagers();
-      } catch (error) {
-        window.GAS.log.e('[WORKFLOW] Error destroying advancement managers on completed:', error);
-      }
-      
-      const { actor } = workflowFSMContext;
-      if (actor) {
-        window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
-        actor.sheet.render(true);
-      }
-      setTimeout(() => {
-        window.GAS.log.d('[WORKFLOW] Closing Actor Studio');
-        Hooks.call("gas.close");
-      }, 1500);
-    })
+        setTimeout(() => {
+          window.GAS.log.d('[WORKFLOW] Closing Actor Studio');
+          Hooks.call("gas.close");
+        }, 1500);
+      })
     .state('error')
-    .on('reset').transitionTo('idle')
-    .onEnter((context) => {
-      if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
-      window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
-      if (context.error) ui.notifications.error(context.error);
-    })
-    .start();
-  return fsm;
+      .on('reset').transitionTo('idle')
+      .on('biography_complete').transitionTo('processing_advancements')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.e('[WORKFLOW] Entered ERROR state:', context.error);
+        if (context.error) ui.notifications.error(context.error);
+      })
+    // Start the FSM
+    const startedFsm = fsm.start();
+
+    // Wrap the handle method for safe, lightweight debugging/tracing without relying on
+    // Finity's optional global() API (which isn't present in our test mock).
+    try {
+      const originalHandle = startedFsm.handle;
+      startedFsm.handle = function(eventName, context) {
+        try {
+          const current = startedFsm.getCurrentState && startedFsm.getCurrentState();
+          window.GAS.log && window.GAS.log.d && window.GAS.log.d('[FSM] handle event:', { event: eventName, currentState: current });
+        } catch (e) {
+          // swallow in environments without window.GAS
+        }
+        return originalHandle.call(this, eventName, context);
+      };
+    } catch (e) {
+      // If wrapping fails, don't block FSM creation.
+      try { window.GAS.log && window.GAS.log.w && window.GAS.log.w('[FSM] Failed to attach debug wrapper', e); } catch (err) {}
+    }
+
+    return startedFsm;
 }
 
 // Provide a getter for the singleton FSM instance

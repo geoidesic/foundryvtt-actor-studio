@@ -17,9 +17,6 @@ div.content(class="{contentClass}")
   +if("showTitle")
     h1.center.mt-none.hide {title}
   .flexrow
-    .flex2.pr-sm.col-a(class="{leftPanelClass}")
-      slot(name="left")
-    .flex0.border-right.right-border-gradient-mask
     .flex3.left.pl-md.scroll.col-b(class="{rightPanelClass}")
       slot(name="right")
 

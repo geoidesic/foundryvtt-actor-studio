@@ -30,7 +30,8 @@
     levelUpSubClassObject,
     levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected,
-    readOnlyTabs
+    readOnlyTabs,
+    tabDisabled
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -38,18 +39,16 @@
   import { goldChoices, totalGoldFromChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { shopCart, cartTotalCost, remainingGold, finalizePurchase } from '~/src/stores/equipmentShop';
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
+  import { isGenerating } from '~/src/stores/biography';
+  import { biographyContent, characterDetails } from '~/src/stores/biography';
+  import { updateSource } from '~/src/helpers/Utility';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
-  import { getWorkflowFSM, WORKFLOW_EVENTS } from "~/src/helpers/WorkflowStateMachine";
-  
-  import {
-    getLevelByDropType,
-    itemHasAdvancementChoices,
-    isAdvancementsForLevelInItem,
-    dropItemOnCharacter
-  } from "~/src/helpers/Utility";
+  import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
+  import LLM from "~/src/plugins/llm";
   import { abilityGenerationMethod } from "~/src/stores/index";
   import { derived, writable } from "svelte/store";
+
   import { localize as t } from "~/src/helpers/Utility";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { equipmentSelections } from "~/src/stores/equipmentSelections";
@@ -69,8 +68,12 @@
     handleSkipSpellsLevelUp
   } from "~/src/lib/workflow";
 
-  // Add a flag to track if equipment has been added during this session
-  let hasAddedEquipmentThisSession = false;
+  // Derived store for LLM button visibility
+  const showLLMButton = derived([race, isGenerating], ([$race, $isGenerating]) => {
+    if($isGenerating) return false;
+    const settingEnabled = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    return !!$race && settingEnabled;
+  });
   
   // Debug logging for button visibility
   // $: {
@@ -91,6 +94,9 @@
 
   // Add state for processing feat spells
   const isProcessingFeatSpells = writable(false);
+
+  // Add state for tracking if equipment has been added this session
+  const hasAddedEquipmentThisSession = writable(false);
 
   // Store references for workflow functions
   const storeRefs = {
@@ -140,51 +146,89 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
   let actorName = $actor?.name || "";
+  const browserLanguage = navigator.language || 'en';
+
+  // Initialize biography content with actor name if available
+  onMount(() => {
+    if ($actor?.name && !$biographyContent.name) {
+      biographyContent.update(content => ({ ...content, name: $actor.name }));
+    }
+  });
+
+  // Sync actor name when biography content changes
+  $: if ($biographyContent.name && $actor && $biographyContent.name !== $actor.name) {
+    $actor.updateSource({ name: $biographyContent.name });
+  }
 
   // Derived store to check if actor has items in inventory
   const hasInventoryItems = derived(actorInGame, ($actorInGame) => {
-    if (!$actorInGame) return false;
-    
-    // Check if the actor has any items
-    // In Foundry VTT, items is a Collection that has methods like filter and size
-    const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
-    
-    // First check if items collection exists and has any items
-    if (!$actorInGame.items || $actorInGame.items.size === 0) {
-      // window.GAS.log.d('[FOOTER] No items found on actor');
+    try {
+      if (!$actorInGame || !$actorInGame.items) return false;
+      
+      // Check if the actor has any items
+      // In Foundry VTT, items is a Collection that has methods like filter and size
+      const inventoryTypes = ["weapon", "equipment", "consumable", "tool", "backpack", "loot"];
+      
+      // First check if items collection exists and has any items
+      if (!$actorInGame.items || $actorInGame.items.size === 0) {
+        // window.GAS.log.d('[FOOTER] No items found on actor');
+        return false;
+      }
+      
+      // Use the Foundry Collection's filter method
+      const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
+      const hasItems = inventoryItems.size > 0;
+      
+      // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
+      //   actorId: $actorInGame.id,
+      //   totalItems: $actorInGame.items.size,
+      //   inventoryItems: inventoryItems,
+      //   inventoryItemCount: inventoryItems.size,
+      //   hasItems: hasItems
+      // });
+      
+      return hasItems;
+    } catch (error) {
+      // If there's any error accessing the actor, return false
+      console.warn('[FOOTER] Error checking inventory items:', error);
       return false;
     }
-    
-    // Use the Foundry Collection's filter method
-    const inventoryItems = $actorInGame.items.filter(item => inventoryTypes.includes(item.type));
-    const hasItems = inventoryItems.size > 0;
-    
-    // window.GAS.log.d('[FOOTER] hasInventoryItems check:', {
-    //   actorId: $actorInGame.id,
-    //   totalItems: $actorInGame.items.size,
-    //   inventoryItems: inventoryItems,
-    //   inventoryItemCount: inventoryItems.size,
-    //   hasItems: hasItems
-    // });
-    
-    return hasItems;
   });
 
-  const handleNameInput = (e) => {
-    if ($isLevelUp) {
-      //- @why: for existing actors, we need to update the actor object in the database
-      actorName = e.target.value;
-    } else {
-      //- @why: for new actors, we need to update the actor source object in memory,
-      $actor.updateSource({ name: e.target.value });
-    }
-  };
+  // Temporary simple store for hasInventoryItems
+  // const hasInventoryItems = writable(false);
+
   const handleTokenNameInput = (e) => {
     if (!$actor.flags[MODULE_ID]) $actor.flags[MODULE_ID] = {};
     $actor.flags[MODULE_ID].tokenName = e.target.value;
   };
   //- Create Actor
   const clickCreateHandler = async () => {
+    // Initialize workflow state machine for character creation
+    const fsm = getWorkflowFSM();
+    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    
+    // Check if biography generation is enabled
+    const enableLLM = game?.settings?.get ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    
+    if (enableLLM) {
+      // Biography is enabled - defer actor creation and go to biography tab
+      window.GAS.log.d('[FOOTER] Biography enabled - deferring actor creation and switching to biography tab');
+      
+      // Add biography tab if not already present
+      const currentTabs = get(tabs);
+      if (!currentTabs.find(t => t.id === "biography")) {
+        tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
+      }
+      
+      // Switch to biography tab
+      activeTab.set("biography");
+      
+      // Don't set isActorCreated = true yet - actor creation is deferred
+      return;
+    }
+    
+    // Biography not enabled - create actor immediately as before
     await createActorWorkflow({
       actor,
       stores: storeRefs,
@@ -211,12 +255,11 @@
     });
   };
 
-  $: value = $actor?.name || "";
-  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || value;
+  $: tokenValue = $actor?.flags?.[MODULE_ID]?.tokenName || $biographyContent.name;
 
   // Define valid tabs for footer visibility
-  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells'];
-  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities'];
+  const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells', 'biography'];
+  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities', 'biography'];
 
   // Handle adding equipment to the actor
   const handleAddEquipment = async () => {
@@ -224,7 +267,7 @@
       stores: storeRefs,
       actorInGame,
       onEquipmentAdded: () => {
-        hasAddedEquipmentThisSession = true;
+        hasAddedEquipmentThisSession.set(true);
         window.GAS.log.d('[FOOTER] Equipment added to actor');
       }
     });
@@ -264,15 +307,16 @@
   }
 
   // Check actor inventory when actorInGame changes and set completion state
-  $: if ($actorInGame) {
-    // If equipment has already been added this session, don't change the flag
-    if (!hasAddedEquipmentThisSession) {
-              if (checkInventory($actorInGame)) {
-          // Actor already has inventory items
-          window.GAS.log.d('[FOOTER] Actor already has inventory items');
-        }
-    }
-  }
+  // Temporarily disabled to avoid temporal dead zone issues
+  // $: if (isMounted && $actorInGame) {
+  //   // If equipment has already been added this session, don't change the flag
+  //   if (!$hasAddedEquipmentThisSession) {
+  //             if (checkInventory($actorInGame)) {
+  //         // Actor already has inventory items
+  //         window.GAS.log.d('[FOOTER] Actor already has inventory items');
+  //       }
+  //   }
+  // }
 
   // Handle finalizing purchases in the shop
   async function handleFinalizePurchase() {
@@ -336,6 +380,153 @@
       const workflowFSM = getWorkflowFSM();
       workflowFSM.handle(WORKFLOW_EVENTS.SKIP_FEAT_SPELLS);
     }
+  }
+
+  // Handle biography completion
+  async function handleCompleteBiography() {
+    try {
+      // If actor hasn't been created yet (deferred creation for biography), create it now
+      let currentActorInGame;
+      try {
+        currentActorInGame = get(actorInGame);
+      } catch (e) {
+        currentActorInGame = null;
+      }
+      if (!currentActorInGame) {
+        window.GAS.log.d('[FOOTER] Creating deferred actor before completing biography');
+        await createActorWorkflow({
+          actor,
+          stores: storeRefs,
+          dropItemRegistry
+        });
+        $isActorCreated = true;
+        // Get the actor again after creation
+        try {
+          currentActorInGame = get(actorInGame);
+        } catch (e) {
+          currentActorInGame = null;
+        }
+      }
+      
+      // Apply biography content to the created actor
+      let $biographyContent;
+      let $characterDetails;
+      try {
+        $biographyContent = get(biographyContent);
+        $characterDetails = get(characterDetails);
+      } catch (e) {
+        $biographyContent = {};
+        $characterDetails = {};
+      }
+      if (currentActorInGame && (Object.values($biographyContent).some(val => val && val.trim()) || Object.values($characterDetails).some(val => val && val.trim()))) {
+        window.GAS.log.d('[FOOTER] Applying biography content to actor');
+        const updates = {};
+        
+        // Apply name to actor name
+        if ($biographyContent.name && $biographyContent.name.trim()) {
+          updates.name = $biographyContent.name.trim();
+        }
+        
+        // Apply biography fields to actor system.details
+        if ($biographyContent.ideals && $biographyContent.ideals.trim()) {
+          updates['system.details.ideal'] = $biographyContent.ideals.trim();
+        }
+        if ($biographyContent.flaws && $biographyContent.flaws.trim()) {
+          updates['system.details.flaw'] = $biographyContent.flaws.trim();
+        }
+        if ($biographyContent.bonds && $biographyContent.bonds.trim()) {
+          updates['system.details.bond'] = $biographyContent.bonds.trim();
+        }
+        if ($biographyContent.personalityTraits && $biographyContent.personalityTraits.trim()) {
+          updates['system.details.trait'] = $biographyContent.personalityTraits.trim();
+        }
+        if ($biographyContent.appearance && $biographyContent.appearance.trim()) {
+          updates['system.details.appearance'] = $biographyContent.appearance.trim();
+        }
+        if ($biographyContent.biography && $biographyContent.biography.trim()) {
+          updates['system.details.biography'] = { value: $biographyContent.biography.trim() };
+        }
+        
+        // Apply character details from characterDetails store
+        if ($characterDetails.height && $characterDetails.height.trim()) {
+          updates['system.details.height'] = $characterDetails.height.trim();
+        }
+        if ($characterDetails.weight && $characterDetails.weight.trim()) {
+          updates['system.details.weight'] = $characterDetails.weight.trim();
+        }
+        if ($characterDetails.age && $characterDetails.age.trim()) {
+          updates['system.details.age'] = $characterDetails.age.trim();
+        }
+        if ($characterDetails.eyes && $characterDetails.eyes.trim()) {
+          updates['system.details.eyes'] = $characterDetails.eyes.trim();
+        }
+        if ($characterDetails.hair && $characterDetails.hair.trim()) {
+          updates['system.details.hair'] = $characterDetails.hair.trim();
+        }
+        if ($characterDetails.skin && $characterDetails.skin.trim()) {
+          updates['system.details.skin'] = $characterDetails.skin.trim();
+        }
+        if ($characterDetails.gender && $characterDetails.gender.trim()) {
+          updates['system.details.gender'] = $characterDetails.gender.trim();
+        }
+        if ($characterDetails.faith && $characterDetails.faith.trim()) {
+          updates['system.details.faith'] = $characterDetails.faith.trim();
+        }
+        if ($characterDetails.alignment && $characterDetails.alignment.trim()) {
+          updates['system.details.alignment'] = $characterDetails.alignment.trim();
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await updateSource(currentActorInGame, updates);
+          window.GAS.log.d('[FOOTER] Biography content applied successfully');
+        }
+      }
+      
+      // Mark previous tabs as read-only when biography is completed
+      readOnlyTabs.update(tabs => {
+        const previousTabs = ['abilities', 'race', 'background', 'class'];
+        return [...new Set([...tabs, ...previousTabs])];
+      });
+      
+      const workflowFSM = getWorkflowFSM();
+      // Guard: ensure FSM is in an appropriate state before firing biography_complete
+      try {
+        const currentState = workflowFSM.getCurrentState && workflowFSM.getCurrentState();
+        if (currentState === 'idle') {
+          window.GAS.log.w('[FOOTER] FSM is in idle when completing biography; attempting to restart workflow');
+          // Kick off the workflow safely
+          workflowFSM.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+          // If actor was just created, signal CHARACTER_CREATED so FSM can progress to biography/processing
+          if (currentActorInGame) {
+            workflowFSM.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
+          }
+        }
+      } catch (fsmErr) {
+        window.GAS.log.e('[FOOTER] Error checking/advancing FSM before biography_complete:', fsmErr);
+      }
+
+      // Finally, signal biography completion
+      try {
+        workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+      } catch (e) {
+        // If the FSM still rejects the event, log it but avoid throwing (UI already handled)
+        window.GAS.log.e('[FOOTER] Error dispatching BIOGRAPHY_COMPLETE event:', e);
+        ui.notifications?.error(e.message || 'Failed to complete biography workflow');
+      }
+    } catch (err) {
+      window.GAS.log.e('[FOOTER] Error completing biography:', err);
+      ui.notifications?.error(err.message);
+    }
+  }
+
+  // Handle biography generation
+  async function handleGenerateBiography() {
+    readOnlyTabs.set(['biography']);
+
+    const { generateBiography } = await import('~/src/stores/biography');
+    await generateBiography($actor);
+    readOnlyTabs.set([]);
+
   }
 
   // Function to generate a random color
@@ -439,6 +630,19 @@
       el.removeEventListener('webkitAnimationIteration', handler);
     });
   });
+
+  const generateName = async (race) => {
+    try {
+      const name = await LLM.generateName(race + ' lang: ' + browserLanguage + ' avoiding patterns or common starting letters. Ensure the name is different with each request.');
+      actorName = name;
+      // Update biography content and actor
+      biographyContent.update(content => ({ ...content, name: name }));
+      await updateSource($actor, { name: name });
+    } catch (error) {
+      console.error('Failed to generate name:', error);
+      ui.notifications.error('Failed to generate character name');
+    }
+  };
 </script>
 
 <template lang="pug">
@@ -463,10 +667,12 @@
                   input.left.character-name-input(
                     class:x-sign="{experimentalStylingEnabled}"
                     type="text" 
-                    value="{value}" 
-                    on:input="{handleNameInput}"
-                    disabled="{$isActorCreated}"
+                    bind:value="{$biographyContent.name}"
+                    disabled="{$isLevelUp || $tabDisabled}"
                   )
+                  +if("$showLLMButton")
+                    .flex.pointer(on:click="{generateName($race.name)}")
+                      img(src="modules/foundryvtt-actor-studio/assets/ChatGPT_logo.svg" alt="Generate name via ChatGPT" style="height: 100%; max-height: 30px; border: none; width: auto;")
       
       //- Progress and buttons section
       .flex1
@@ -565,15 +771,43 @@
                   span {t('Skip')}
                   i.right.ml-md(class="fas fa-chevron-right")
               
+        +if("$activeTab === 'biography'")
+          .progress-container
+            .button-container
+              button.mt-xs.secondary(
+                type="button"
+                role="button"
+                on:mousedown="{handleGenerateBiography}"
+                disabled="{$isGenerating}"
+              )
+                span {$isGenerating ? 'Generating...' : 'Generate Biography'}
+                +if("$isGenerating")
+                  i.right.fa-solid.fa-spinner.fa-spin.spin
+                  +else
+                    i.right.ml-md(class="fas fa-magic")
+              button.mt-xs(
+                type="button"
+                role="button"
+                on:mousedown="{handleCompleteBiography}"
+                disabled="{$isGenerating}"
+              )
+                span Continue
+                +if("$isGenerating")
+                  +else
+                    i.right.ml-md(class="fas fa-chevron-right")
+
+              
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")
           .progress-container
             +if("$readOnlyTabs.includes($activeTab)")
-              ProgressBar(progress="{100}")
+              +if("$isGenerating")
+                +else
+                  ProgressBar(progress="{100}")
               +else()
                 ProgressBar(progress="{progress}")
                 +if("$progress === 100")
                   .button-container
-                    +if("!$isActorCreated")
+                    +if("!$isActorCreated && $activeTab !== 'biography'")
                       button.mt-xs.wide(
                         type="button"
                         role="button"
@@ -603,6 +837,9 @@
   align-items: center
 label
   margin: 10px 0 0 0
+.spin
+  animation: spin 1s ease-in-out infinite
+
 button[disabled]
   cursor: not-allowed
   background-color: #ccc

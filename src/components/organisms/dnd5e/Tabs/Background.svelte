@@ -13,6 +13,8 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs } from "~/src/stores/index";
 
+  const isDisabled = getContext('isDisabled') || false;
+
   $: console.log('[BG] $background changed:', $background);
 
   let active = null,
@@ -99,7 +101,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
-        IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value)
+        IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
     +if("advancementArray.length")
       h2.left {t('Advancements')}
       ul.icon-list

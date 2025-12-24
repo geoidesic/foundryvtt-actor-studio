@@ -65,7 +65,7 @@ export function dnd5eSheet2UI(app, html, data) {
   levelUpButton.on('click', async (event) => {
     //- check if Actor Studio is already open
     if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
-      ui.notifications.error('Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
+      ui.notifications.error('2. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
       return;
     }
     
@@ -203,7 +203,7 @@ export function tidy5eSheetUI(app, element, data) {
   levelUpButton.on("click", async (event) => {
     //- check if Actor Studio is already open
     if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
-      ui.notifications.error('Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
+      ui.notifications.error('3. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
       return;
     }
     

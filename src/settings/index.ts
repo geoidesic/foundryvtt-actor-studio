@@ -1,5 +1,7 @@
 import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
+import { llmNameGenerationSettings } from './llmNameGeneration';
+import { aardvarkLicenseTrackerSettings } from './aardvarkLicenseTracker';
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 
 // settings not shown on the Module Settings - not modifiable by users
@@ -68,6 +70,8 @@ export function registerSettings(app: Game): void {
   enableCustomFeatSelector();
   usageTracking();
   showLevelPreviewDropdown();
+  llmNameGenerationSettings.init();
+  aardvarkLicenseTrackerSettings.init();
   /** User settings */
   dontShowWelcome();
 }
