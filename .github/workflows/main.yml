@@ -49,12 +49,52 @@ jobs:
         if: "github.event.release.prerelease"
         run: echo "Pre release substitution completed."
 
+      # Build the project so the dist/ folder is available for zipping (dist is purposely gitignored)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Verify dist output
+        run: |
+          echo "Contents of dist:"
+          ls -la dist || true
+          if [ ! -d dist ] || [ -z "$(ls -A dist)" ]; then
+            echo "❌ dist is empty or missing; aborting release. Run 'npm run build' locally to reproduce.";
+            exit 1;
+          fi
+          if [ ! -f dist/style.css ]; then
+            echo "❌ dist/style.css is missing; aborting release. Build did not emit CSS. Run 'npm run build' locally to reproduce.";
+            exit 1;
+          fi
+
       # Create a zip file with all files required by the module to add to the release
       - name: Echo Start Zip Creation
         run: echo "Starting zip creation..."
       - run: zip -r ./module.zip module.json LICENSE index.js dist/ templates/ lang/ assets/
       - name: Echo End Zip Creation
         run: echo "Zip creation completed."
+
+      - name: Echo Start Zip Verification
+        run: echo "Starting module.zip verification..."
+      - name: Verify module.zip includes dist/style.css
+        run: |
+          echo "Listing module.zip contents:"
+          unzip -l module.zip
+          if ! unzip -l module.zip | awk '{print $4}' | grep -q '^dist/style.css$'; then
+            echo "❌ module.zip does not include dist/style.css; aborting release.";
+            exit 1;
+          else
+            echo "✅ module.zip contains dist/style.css";
+          fi
+      - name: Echo End Zip Verification
+        run: echo "Zip verification completed."
 
       # Create a release for this specific version
       - name: Echo Start Full Release Update
