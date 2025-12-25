@@ -237,9 +237,9 @@ export const workflowFSMContext = {
   _shouldShowBiography: function () {
     // Show biography tab only when explicitly enabled by the new setting.
     // For backward compatibility, fall back to LLM name generation setting if the biography setting is not present.
-    const enableBiography = game.settings.get(MODULE_ID, 'EnableBiographyTab');
+    const enableBiography = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableBiographyTab`)) ? game.settings.get(MODULE_ID, 'EnableBiographyTab') : undefined;
     if (typeof enableBiography !== 'undefined') return !!enableBiography;
-    const enableLLM = game.settings.get(MODULE_ID, 'EnableLLMNameGeneration');
+    const enableLLM = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableLLMNameGeneration`)) ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
     return !!enableLLM;
   },
   actor: undefined,
