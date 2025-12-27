@@ -71,9 +71,9 @@ export function registerSettings(app: Game): void {
   enableCustomFeatSelector();
   usageTracking();
   showLevelPreviewDropdown();
-  // llmNameGenerationSettings.init();
+  llmNameGenerationSettings.init();
   // aardvarkLicenseTrackerSettings.init();
-  // biographySettings.init();
+  biographySettings.init();
   /** User settings */
   dontShowWelcome();
 }

@@ -281,6 +281,22 @@ export function createWorkflowStateMachine() {
       .onEnter((context) => {
         if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(true);
         window.GAS.log.d('[WORKFLOW] Entered CREATING_CHARACTER state');
+
+        // If biography is enabled, make sure the Biography tab is present and switch to it.
+        // This ensures the tab is shown regardless of whether the UI or other code path initiated creation.
+        try {
+          if (workflowFSMContext._shouldShowBiography()) {
+            const currentTabs = get(tabs);
+            if (!currentTabs.find(t => t.id === "biography")) {
+              tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
+            }
+            // Mark previous tabs as read-only while the user fills in the biography
+            readOnlyTabs.set(['abilities', 'race', 'background', 'class']);
+            activeTab.set("biography");
+          }
+        } catch (e) {
+          window.GAS?.log?.w('[WORKFLOW] Failed to add biography tab on creating_character enter', e);
+        }
       })
     .state('processing_advancements')
       .do(async (state, context) => {
