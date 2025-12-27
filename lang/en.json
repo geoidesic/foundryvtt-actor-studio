@@ -211,6 +211,10 @@
         "Name": "Enable Level Up",
         "Hint": "Check this to include a button on the character sheet for leveling up via Actor Studio"
       },
+      "ShowRandomizeDetailsButton": {
+        "Name": "Show randomize biography details button",
+        "Hint": "Show a button in the Biography tab that fills the details fields (height, weight, age, eyes, hair, skin, gender, faith, alignment) with plausible random values based on race/class/background."
+      },
       "FilterPackSourcesAppropriatelyByName": {
         "Name": "Filter Pack Sources Appropriately by Name",
         "Hint": "If enabled, the Source sections will only include packs that have a name, path, id, or label that matches the source type"

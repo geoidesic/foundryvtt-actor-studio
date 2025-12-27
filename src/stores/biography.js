@@ -206,6 +206,86 @@ export async function generateBiography(actor = null) {
   }
 }
 
+// Randomize optional character details (height, weight, age, eyes, hair, skin, gender, faith, alignment)
+export function randomizeDetails() {
+  const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+  const raceName = (get(race)?.name || '').toLowerCase();
+  const cls = (get(characterClass)?.name || '').toLowerCase();
+  const bg = (get(background)?.name || '').toLowerCase();
+
+  // Height generation (feet and inches)
+  let minFeet = 4, maxFeet = 6;
+  if (/halfling|gnom/i.test(raceName)) { minFeet = 3; maxFeet = 4; }
+  else if (/dwarf/i.test(raceName)) { minFeet = 4; maxFeet = 5; }
+  else if (/elf/i.test(raceName)) { minFeet = 5; maxFeet = 6; }
+  const feet = rnd(minFeet, maxFeet);
+  const inches = rnd(0, 11);
+  const height = `${feet}'${inches}\"`;
+
+  // Weight (approximate lbs)
+  let minWeight = 90, maxWeight = 230;
+  if (/halfling|gnom/i.test(raceName)) { minWeight = 30; maxWeight = 80; }
+  else if (/dwarf/i.test(raceName)) { minWeight = 120; maxWeight = 220; }
+  else if (/elf/i.test(raceName)) { minWeight = 100; maxWeight = 160; }
+  const weight = `${rnd(minWeight, maxWeight)} lbs`;
+
+  // Age
+  let minAge = 18, maxAge = 60;
+  if (/elf|half-elf/i.test(raceName)) { minAge = 100; maxAge = 750; }
+  else if (/dwarf/i.test(raceName)) { minAge = 40; maxAge = 350; }
+  else if (/halfling|gnom/i.test(raceName)) { minAge = 20; maxAge = 150; }
+  const age = `${rnd(minAge, maxAge)}`;
+
+  // Eyes, hair, skin
+  const eyeColors = ['brown','blue','green','hazel','amber','gray','black','gold'];
+  const hairColors = ['brown','black','blonde','red','gray','white','auburn','bald'];
+  const skinTones = ['fair','pale','tan','olive','dark','ruddy','bronze'];
+  const eyes = eyeColors[Math.floor(Math.random() * eyeColors.length)];
+  const hair = hairColors[Math.floor(Math.random() * hairColors.length)];
+  const skin = skinTones[Math.floor(Math.random() * skinTones.length)];
+
+  // Gender
+  const genders = ['male','female','non-binary'];
+  const gender = genders[Math.floor(Math.random() * genders.length)];
+
+  // Faith - prefer religious wording if background or class imply it
+  let faith = '';
+  if (/acolyte|priest|clerg|templar|relig/i.test(bg) || /cleric|paladin/i.test(cls)) {
+    const deities = ['Pelor','Tyr','Corellon','Moradin','Bahamut','Kord','Ehlonna','Vecna','Mystra','Tiamat'];
+    faith = `Follower of ${deities[Math.floor(Math.random() * deities.length)]}`;
+  } else if (/soldier|folk|noble|guild|criminal|urchin|outlander/i.test(bg)) {
+    faith = ['Somewhat spiritual','Practices local rites','No particular faith'][Math.floor(Math.random()*3)];
+  } else {
+    faith = ['Agnostic','Somewhat spiritual','No particular faith'][Math.floor(Math.random()*3)];
+  }
+
+  // Alignment - small bias by class
+  const alignments = ['lawful good','neutral good','chaotic good','lawful neutral','neutral','chaotic neutral','lawful evil','neutral evil','chaotic evil'];
+  let alignment = alignments[Math.floor(Math.random() * alignments.length)];
+  if (/paladin/i.test(cls)) alignment = 'lawful good';
+  else if (/ranger|druid/i.test(cls)) alignment = ['neutral good','chaotic good','neutral'][Math.floor(Math.random()*3)];
+  else if (/rogue/i.test(cls)) alignment = ['chaotic neutral','neutral'][Math.floor(Math.random()*2)];
+  else if (/barbarian/i.test(cls)) alignment = ['chaotic neutral','chaotic good'][Math.floor(Math.random()*2)];
+
+  const details = {
+    height,
+    weight,
+    age,
+    eyes,
+    hair,
+    skin,
+    gender,
+    faith,
+    alignment
+  };
+
+  characterDetails.set(details);
+  // Also copy into biographyContent so it's visible in other places
+  biographyContent.update(c => ({ ...c, ...details }));
+
+  ui?.notifications?.info('Character details randomized');
+}
+
 // Exported helper to normalize ability scores into plain numeric values
 export function normalizeAbilities(raw) {
   const keys = ['str', 'dex', 'con', 'int', 'wis', 'cha'];

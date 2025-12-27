@@ -1,7 +1,8 @@
 <script>
   import { biographyOptions, isGenerating, biographyContent,
     generateBiography, requestTokens, responseTokens, 
-    characterDetails } from '~/src/stores/biography';
+    characterDetails, randomizeDetails } from '~/src/stores/biography';
+  import { safeGetSetting } from '~/src/helpers/Utility';
   import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { writable, derived } from "svelte/store";
   import { localize as t } from "~/src/helpers/Utility";
@@ -14,6 +15,8 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
 
+  // Whether to show the small Randomize Details button (world setting)
+  const showRandomizeButton = safeGetSetting(MODULE_ID, 'ShowRandomizeDetailsButton', true);
 
   const isDisabled = getContext('isDisabled') || false;
 
@@ -133,6 +136,13 @@ OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabNam
               option(value="lawful evil") Lawful Evil
               option(value="neutral evil") Neutral Evil
               option(value="chaotic evil") Chaotic Evil
+
+          //- Randomize details button (controlled by world setting)
+          +if("showRandomizeButton")
+            .randomize-details.mt-md
+              button.mt-xs(type="button" on:mousedown="{randomizeDetails}")
+                |  Randomize Details
+                i.fa-solid.fa-dice.ml-xs
 
       .biography-header
         h3 Biography Generation
@@ -366,7 +376,6 @@ OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabNam
           font-size: 0.85rem
 
         .detail-input
-          padding: 0.5rem
           border: 1px solid var(--color-border-light)
           border-radius: 4px
           font-family: inherit
@@ -376,6 +385,19 @@ OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabNam
             outline: none
             border-color: var(--color-primary)
             box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.2)
+
+      .randomize-details
+        button
+          display: inline-flex
+          align-items: center
+          margin-top: 4px
+          padding: 1rem 0.5rem
+          border-radius: 4px
+          border: 1px solid var(--color-border-light)
+          background: var(--color-bg-dark-secondary)
+          cursor: pointer
+          &:hover
+            background: var(--dnd5e-color-gold)
 
   .biography-actions
     margin-bottom: 1.5rem
