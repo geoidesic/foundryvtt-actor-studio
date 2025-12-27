@@ -2,6 +2,7 @@ import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { levelUpSubClassObject } from '~/src/stores/storeDefinitions';
 import PCApplication from '~/src/app/PCApplication.js';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 const pulseKeyframes = `
 @keyframes pulse {
