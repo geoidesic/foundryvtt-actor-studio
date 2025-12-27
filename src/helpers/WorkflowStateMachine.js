@@ -375,12 +375,26 @@ export function createWorkflowStateMachine() {
         })
       .on('equipment_complete')
         .transitionTo('shopping').withCondition((context) => {
-          // Always transition to shopping after equipment completion
-          // The shopping UI will handle disabled functionality based on settings
-          return true;
+          // Normally transition to shopping after equipment completion,
+          // but for D&D 2014 when the user chose 'equipment' (equipment-only), skip the shop.
+          const is2014 = window.GAS?.dnd5eRules === '2014';
+          const choice = get(startingWealthChoice);
+          const shouldShow = workflowFSMContext._shouldShowShopping();
+          window.GAS.log.d('[FSM] equipment_complete -> shopping condition:', { is2014, choice, shouldShow });
+          // Skip shopping if 2014 rules and the user chose equipment-only (no gold to purchase)
+          return shouldShow && !(is2014 && choice === 'equipment');
         })
         .transitionTo('selecting_spells').withCondition((context) => {
-          // Don't go directly to spells from equipment - always go through shopping
+          // If we're skipping shopping (e.g., 2014 equipment-only), go to spell selection if needed.
+          const is2014 = window.GAS?.dnd5eRules === '2014';
+          const choice = get(startingWealthChoice);
+          if (is2014 && choice === 'equipment') {
+            const actorToCheck = workflowFSMContext.actor || get(actorInGame);
+            const shouldShowSpells = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
+            window.GAS.log.d('[FSM] equipment_complete -> selecting_spells (skipped shopping) condition:', { shouldShowSpells });
+            return shouldShowSpells;
+          }
+          // Otherwise, do not go directly to spells from equipment
           return false;
         })
         .transitionTo('completed') // Fallback if something goes wrong
