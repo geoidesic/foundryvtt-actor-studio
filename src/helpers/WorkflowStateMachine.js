@@ -1,5 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
@@ -49,7 +50,7 @@ export const WORKFLOW_EVENTS = {
 export const workflowFSMContext = {
   isProcessing: writable(false),
   _shouldShowEquipmentSelection: function () {
-    const enableEquipmentSelection = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
+    const enableEquipmentSelection = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
     if (!enableEquipmentSelection) return false;
     const preSelections = get(preAdvancementSelections);
     if (!preSelections || Object.keys(preSelections).length === 0 || !preSelections.class || !preSelections.class.system || !preSelections.class.system.startingEquipment || preSelections.class.system.startingEquipment.length === 0 || preSelections.class.system.wealth === undefined) return false;
@@ -57,7 +58,7 @@ export const workflowFSMContext = {
     return compatibleEquipment.length > 0;
   },
   _shouldShowSpellSelection: function (inGameActor) {
-    const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
+    const enableSpellSelection = safeGetSetting(MODULE_ID, 'enableSpellSelection', false);
     if (!enableSpellSelection) return false;
     
     // Always prioritize the passed inGameActor parameter if it's provided and valid
@@ -231,15 +232,15 @@ export const workflowFSMContext = {
     return isSpellcaster;
   },
   _shouldShowShopping: function () {
-    const enableShopping = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+    const enableShopping = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
     return enableShopping;
   },
   _shouldShowBiography: function () {
     // Show biography tab only when explicitly enabled by the new setting.
     // For backward compatibility, fall back to LLM name generation setting if the biography setting is not present.
-    const enableBiography = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableBiographyTab`)) ? game.settings.get(MODULE_ID, 'EnableBiographyTab') : undefined;
+    const enableBiography = safeGetSetting(MODULE_ID, 'EnableBiographyTab', undefined);
     if (typeof enableBiography !== 'undefined') return !!enableBiography;
-    const enableLLM = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableLLMNameGeneration`)) ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    const enableLLM = safeGetSetting(MODULE_ID, 'EnableLLMNameGeneration', false);
     return !!enableLLM;
   },
   actor: undefined,
@@ -408,7 +409,7 @@ export function createWorkflowStateMachine() {
         readOnlyTabs.set(['abilities', 'race', 'background', 'class', 'biography']);
         
         // Destroy advancement managers if advancement capture is disabled
-        const disableAdvancementCapture = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
+        const disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
         if (disableAdvancementCapture) {
           try {
             destroyAdvancementManagers();

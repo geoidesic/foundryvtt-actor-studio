@@ -209,7 +209,14 @@ vi.mock('~/src/lib/workflow.js', () => ({
 
 // Mock Svelte helper
 vi.mock('~/src/helpers/Utility', () => ({
-  localize: vi.fn((key) => key)
+  localize: vi.fn((key) => key),
+  safeGetSetting: (module, key, defaultValue) => {
+    if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+      const val = global.game.settings.get(module, key);
+      return typeof val === 'undefined' ? defaultValue : val;
+    }
+    return defaultValue;
+  }
 }));
 
 describe('Advancement Managers Destruction', () => {

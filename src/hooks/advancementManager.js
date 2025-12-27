@@ -1,5 +1,6 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs } from '~/src/stores/index.js';
 
 // Helper to check if we're on first step based on version
@@ -20,7 +21,7 @@ export const renderAdvancementManager = async (app, html, data) => {
   if (currentProcess.id && isFirstAdvancementStep(app)) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
-      const disableAdvancementCapture = game.settings.get(MODULE_ID, 'disableAdvancementCapture') || false;
+      const disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
       if(disableAdvancementCapture) {
         return;
       }

@@ -9,7 +9,7 @@
   } from "svelte";
   import { abilities, race, abilityRolls } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { dnd5eModCalc, localize as t } from "~/src/helpers/Utility";
+  import { dnd5eModCalc, localize as t, safeGetSetting } from "~/src/helpers/Utility";
 
   export let document = false;
 
@@ -100,8 +100,8 @@
   $: scoreClass = allowMove && allRolled ? "left" : "center";
 
   onMount(async () => {
-    formula = game.settings.get(MODULE_ID, "abiiltyRollFormula");
-    allowMove = game.settings.get(MODULE_ID, "allowAbilityRollScoresToBeMoved");
+    formula = safeGetSetting(MODULE_ID, "abiiltyRollFormula", "4d6kh3");
+    allowMove = safeGetSetting(MODULE_ID, "allowAbilityRollScoresToBeMoved", true);
   });
 </script>
 

@@ -2,7 +2,7 @@
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { readOnlyTabs } from "~/src/stores/index";
-import { localize as t } from "~/src/helpers/Utility";
+import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -45,7 +45,7 @@ onMount(async () => {
   });
 });
 
-const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+const showPackLabelInSelect = safeGetSetting(MODULE_ID, 'showPackLabelInSelect', true);
 
 // Get the currently selected items that need configuration
 $: configurableSelections = Object.values($equipmentSelections).filter(group => {

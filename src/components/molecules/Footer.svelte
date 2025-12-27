@@ -69,12 +69,14 @@
   } from "~/src/lib/workflow";
 
   // Derived store for LLM button visibility
+  import { safeGetSetting } from '~/src/helpers/Utility';
+
   const showLLMButton = derived([race, isGenerating], ([$race, $isGenerating]) => {
     if($isGenerating) return false;
-    const settingEnabled = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableLLMNameGeneration`)) ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    const settingEnabled = safeGetSetting(MODULE_ID, 'EnableLLMNameGeneration', false);
     // Hide the button if the license tracker is enabled but no license code is present.
-    const licenseTrackerEnabled = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableLicenseTracker`)) ? game.settings.get(MODULE_ID, 'EnableLicenseTracker') : false;
-    const licenseCode = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.AardvarkLicenseCode`)) ? game.settings.get(MODULE_ID, 'AardvarkLicenseCode') : '';
+    const licenseTrackerEnabled = safeGetSetting(MODULE_ID, 'EnableLicenseTracker', false);
+    const licenseCode = safeGetSetting(MODULE_ID, 'AardvarkLicenseCode', '');
     const licenseReady = !licenseTrackerEnabled || (licenseTrackerEnabled && !!licenseCode);
     return !!$race && settingEnabled && licenseReady;
   });
@@ -213,8 +215,8 @@
     fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
     
     // Check if biography tab is enabled (new setting). Fall back to LLM name generation for backward compatibility.
-    const enableBiography = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableBiographyTab`)) ? game.settings.get(MODULE_ID, 'EnableBiographyTab') : undefined;
-    const enableLLM = (game?.settings?.settings?.has && game.settings.settings.has(`${MODULE_ID}.EnableLLMNameGeneration`)) ? game.settings.get(MODULE_ID, 'EnableLLMNameGeneration') : false;
+    const enableBiography = safeGetSetting(MODULE_ID, 'EnableBiographyTab', undefined);
+    const enableLLM = safeGetSetting(MODULE_ID, 'EnableLLMNameGeneration', false);
     const shouldShowBiography = (typeof enableBiography !== 'undefined') ? !!enableBiography : !!enableLLM;
 
     if (shouldShowBiography) {
@@ -569,7 +571,7 @@
   let inputClass;
 
   // Check if experimental styling is enabled
-  $: experimentalStylingEnabled = game.settings.get(MODULE_ID, 'experimentalCharacterNameStyling');
+  $: experimentalStylingEnabled = safeGetSetting(MODULE_ID, 'experimentalCharacterNameStyling', false);
   
   // Clean up experimental styles when disabled
   $: if (!experimentalStylingEnabled) {

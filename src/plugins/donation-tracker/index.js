@@ -24,6 +24,7 @@
  * ```
  */
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 class plugin {
 
@@ -37,7 +38,7 @@ class plugin {
    * Sets up a hook to notify when the GAS Plugin is loaded.
    */
   init() {
-    this.enabled = game.settings.get(MODULE_ID, 'enable-donation-tracker')
+    this.enabled = safeGetSetting(MODULE_ID, 'enable-donation-tracker', false)
     // @todo: https://github.com/geoidesic/foundryvtt-actor-studio/issues/32#issuecomment-2166888022
     Hooks.on('gas-plugin', () => {
       alert('GAS Plugin Loaded')
@@ -54,7 +55,7 @@ class plugin {
     const membershipRanks = game.membership.RANKS
     const membershipFolderArray = Object.entries(membershipRanks).filter(([_, value]) => value !== -1);
     const settings = membershipFolderArray
-      .map(([key, rank]) => { return { permission: key, rank, folderName: game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`) } })
+      .map(([key, rank]) => { return { permission: key, rank, folderName: safeGetSetting(MODULE_ID, `donation-tracker-rank-${key}`, '') } })
     return settings
   }
 
@@ -69,7 +70,7 @@ class plugin {
     const membershipFolderArray = Object.entries(membershipRanks).filter(([_, value]) => value !== -1);
 
     const DTfolders = membershipFolderArray
-      .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
+      .map(([key, _]) => safeGetSetting(MODULE_ID, `donation-tracker-rank-${key}`, ''))
     
     console.log('[GAS] DT folder names from settings:', DTfolders);
     console.log('[GAS] Pack folder names:', pack.folders.map(f => f.name));
@@ -102,7 +103,7 @@ class plugin {
         )
     }
     )
-      .map(([key, _]) => game.settings.get(MODULE_ID, `donation-tracker-rank-${key}`))
+      .map(([key, _]) => safeGetSetting(MODULE_ID, `donation-tracker-rank-${key}`, ''))
     // window.GAS.log.d('allowedMembershipFolderNames', allowedMembershipFolderNames)
     return allowedMembershipFolderNames
   }

@@ -3,6 +3,7 @@
   import { goldRoll, startingWealthChoice } from "~/src/stores/storeDefinitions";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext } from "svelte";
   import { goldChoices, areGoldChoicesComplete } from "~/src/stores/goldChoices";
   import { parsedEquipmentGold, areEquipmentGoldChoicesComplete, equipmentGoldOptions } from "~/src/stores/equipmentGold";
@@ -22,7 +23,7 @@
   const isDisabled = getContext('isDisabled') || false;
 
   // Get equipment selection setting
-  $: equipmentSelectionEnabled = game.settings.get(MODULE_ID, "enableEquipmentSelection");
+  $: equipmentSelectionEnabled = safeGetSetting(MODULE_ID, "enableEquipmentSelection", false);
 
   // Track if gold has been rolled/selected based on version
   $: isGoldComplete = window.GAS.dnd5eVersion >= 4  && window.GAS.dnd5eRules === "2024" ? $areGoldChoicesComplete : $goldRoll > 0;
@@ -68,7 +69,7 @@
   });
 
   onMount(() => {
-    if(game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+    if (safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false)) {
       window.GAS.log.d('[EQUIPMENT] Advancement capture disabled - destroying advancement managers');
       destroyAdvancementManagers();
     }

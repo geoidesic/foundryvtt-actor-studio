@@ -6,6 +6,7 @@
  */
 
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import pkg from '../package.json' assert { type: "json" };
 
 class UsageTracker {
@@ -55,15 +56,9 @@ class UsageTracker {
    */
   initializeConsent() {
     try {
-      // Check if module has consent setting
-      const consentSetting = `${MODULE_ID}.usage-tracking`;
-      if (game.settings && game.settings.settings && game.settings.settings.has(consentSetting)) {
-        this.consentGranted = game.settings.get(MODULE_ID, 'usage-tracking');
-        console.log('[UsageTracker] Consent setting found:', this.consentGranted);
-      } else {
-        console.log('[UsageTracker] Consent setting not found, defaulting to false');
-        this.consentGranted = false;
-      }
+      // Safely read consent setting (may not be registered in all environments)
+      this.consentGranted = safeGetSetting(MODULE_ID, 'usage-tracking', false);
+      console.log('[UsageTracker] Consent setting found or defaulted:', this.consentGranted);
     } catch (error) {
       console.warn('[UsageTracker] Error initializing consent:', error);
       this.consentGranted = false;

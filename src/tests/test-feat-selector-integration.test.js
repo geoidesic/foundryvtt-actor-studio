@@ -350,6 +350,27 @@ beforeEach(() => {
     }
   };
 
+  // Ensure game settings exist for feature gate checks
+  global.game = {
+    settings: {
+      get: vi.fn((module, key) => {
+        if (key === 'enableCustomFeatSelector') return true;
+        return false;
+      })
+    }
+  };
+
+  // Ensure Utility.safeGetSetting uses our game.settings mock
+  vi.mock('~/src/helpers/Utility', () => ({
+    safeGetSetting: (module, key, defaultValue) => {
+      if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+        const val = global.game.settings.get(module, key);
+        return typeof val === 'undefined' ? defaultValue : val;
+      }
+      return defaultValue;
+    }
+  }));
+
   global.window.document = global.document;
 
   ui.notifications = createNotificationMock();

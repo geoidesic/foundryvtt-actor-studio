@@ -48,7 +48,7 @@ export function dnd5eSheet2UI(app, html, data) {
     }
   }
 
-  if (!hasClasses || (!game.settings.get(MODULE_ID, 'milestoneLeveling') && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
+  if (!hasClasses || (!safeGetSetting(MODULE_ID, 'milestoneLeveling', false) && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
     window.GAS.log.d('[GAS] dnd5eSheet2UI: No classes or not eligible for level up.');
     return;
   }
@@ -101,7 +101,7 @@ export function dnd5eSheet2UI(app, html, data) {
 export function tidy5eSheetUI(app, element, data) {
   // Defensive logging for debugging
   console.log(app, element, data);
-  if (game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
+  if (safeGetSetting(MODULE_ID, 'enableLevelUp', true) === false) return;
 
   // Safer tidy5e module/api detection to support older tidy5e versions
   const tidyModule = game.modules.get("tidy5e-sheet") || game.modules.get("tidy5e");
@@ -154,7 +154,7 @@ export function tidy5eSheetUI(app, element, data) {
   }
 
   window.GAS.log.g('actorHasClasses', actorHasClasses)
-  const isMilestoneLeveling = game.settings.get(MODULE_ID, 'milestoneLeveling')
+  const isMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false)
   window.GAS.log.g('isMilestoneLeveling', isMilestoneLeveling)
   const actorHasLevellingXP = (actor.system.details.xp.max - actor.system.details.xp.value > 0)
   window.GAS.log.g('actorHasLevellingXP', actorHasLevellingXP)
@@ -249,7 +249,7 @@ export function initLevelup() {
    
     window.GAS.log.d(app.constructor.name)
     window.GAS.log.d(data)
-    if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
+    if (safeGetSetting(MODULE_ID, 'enableLevelUp', true) === false) return;
 
     if(app.constructor.name === "CharacterActorSheet") {
       dnd5eSheet2UI(app, $(app.element), data)
@@ -259,7 +259,7 @@ export function initLevelup() {
 
   Hooks.on("renderActorSheet5e", (app, html, data) => {
     // window.GAS.log.d(app.constructor.name)
-    if(game.settings.get(MODULE_ID, 'enableLevelUp') === false) return;
+    if (safeGetSetting(MODULE_ID, 'enableLevelUp', true) === false) return;
 
     if(app.constructor.name === "ActorSheet5eCharacter") {
       log.e("Level Up not implemented for old dnd5e character sheet")

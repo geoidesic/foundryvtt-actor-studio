@@ -122,7 +122,8 @@ describe('destroyAdvancementManagers on Completion', () => {
     vi.doMock('~/src/helpers/Utility', () => ({
       delay: vi.fn(() => Promise.resolve()),
       prepareItemForDrop: vi.fn(() => Promise.resolve({})),
-      dropItemOnCharacter: vi.fn(() => Promise.resolve({}))
+      dropItemOnCharacter: vi.fn(() => Promise.resolve({})),
+      safeGetSetting: (module, key, defaultValue) => defaultValue
     }));
     
     // Don't mock Finity - use the real FSM

@@ -21,7 +21,7 @@ window.diagnoseSpellIssues = function() {
   // 2. Check compendium settings
   console.log('\n2. Compendium Settings:');
   try {
-    const settings = game.settings.get('foundryvtt-actor-studio', 'compendiumSources');
+    const settings = safeGetSetting('foundryvtt-actor-studio', 'compendiumSources', {});
     console.log('   Settings object:', settings);
     
     if (!settings) {
@@ -47,7 +47,7 @@ window.diagnoseSpellIssues = function() {
   
   // 3. Check if spell packs exist
   console.log('\n3. Spell Pack Validation:');
-  const settings = game.settings.get('foundryvtt-actor-studio', 'compendiumSources');
+  const settings = safeGetSetting('foundryvtt-actor-studio', 'compendiumSources', {});
   const validPacks = [];
   
   settings.spells.forEach((packName, i) => {

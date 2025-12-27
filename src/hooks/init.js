@@ -2,7 +2,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { initLevelup } from '~/src/plugins/level-up';
 import { registerSettings } from '~/src/settings';
 import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase'; 
-import { log, getDnd5eVersion, getDndRulesVersion, hasSourcesAssigned, autoAssignSources } from '~/src/helpers/Utility'
+import { log, getDnd5eVersion, getDndRulesVersion, hasSourcesAssigned, autoAssignSources, safeGetSetting } from '~/src/helpers/Utility' 
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import SpellListsPlugin from '~/src/plugins/spell-lists';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
@@ -66,18 +66,18 @@ export const init = (app, html, data) => {
   }
  
  
-  if(game.settings.get(MODULE_ID, 'debug')) {
+  if (safeGetSetting(MODULE_ID, 'debug', false)) {
     log.level = log.VERBOSE;
   } else {
     log.level = log.INFO;
   }
 
-  if(game.settings.get(MODULE_ID, 'debug.hooks')) {
+  if (safeGetSetting(MODULE_ID, 'debug.hooks', false)) {
     CONFIG.debug.hooks = true;
   }
 
-  window.GAS.log.d('Debug mode is', game.settings.get(MODULE_ID, 'debug') ? 'enabled' : 'disabled');
-  window.GAS.log.d('Debug extended mode is', game.settings.get(MODULE_ID, 'debug.hooks') ? 'enabled' : 'disabled');
+  window.GAS.log.d('Debug mode is', safeGetSetting(MODULE_ID, 'debug', false) ? 'enabled' : 'disabled');
+  window.GAS.log.d('Debug extended mode is', safeGetSetting(MODULE_ID, 'debug.hooks', false) ? 'enabled' : 'disabled');
   window.GAS.log.d('Log level: ',log.level)
 
   Hooks.call("gas.initIsComplete");
@@ -85,13 +85,8 @@ export const init = (app, html, data) => {
 }
 
 export const ready = (app, html, data) => {
-  // Check if the setting exists before trying to access it
-  if (game.settings.settings.has(`${MODULE_ID}.dontShowWelcome`)) {
-    if (!game.settings.get(MODULE_ID, 'dontShowWelcome')) {
-      new WelcomeApplication().render(true, { focus: true });
-    }
-  } else {
-    // Setting not registered yet, show welcome by default
+  // Show welcome by default unless the setting explicitly disables it
+  if (!safeGetSetting(MODULE_ID, 'dontShowWelcome', false)) {
     new WelcomeApplication().render(true, { focus: true });
   }
 
@@ -112,10 +107,8 @@ export const ready = (app, html, data) => {
     });
   }
 
-  if (game.settings.settings.has(`${MODULE_ID}.forceDnd5eLevelUpAutomation`)) {
-    if (game.settings.get(MODULE_ID, 'forceDnd5eLevelUpAutomation')) {
-      game.settings.set("dnd5e", "disableAdvancements", false);
-    }
+  if (safeGetSetting(MODULE_ID, 'forceDnd5eLevelUpAutomation', false)) {
+    game.settings.set("dnd5e", "disableAdvancements", false);
   }
 
   Hooks.call("gas.readyIsComplete");

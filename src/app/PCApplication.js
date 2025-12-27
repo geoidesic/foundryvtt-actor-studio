@@ -2,6 +2,7 @@ import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
+import { safeGetSetting } from '~/src/helpers/Utility';
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
 import { version } from "../../module.json";
@@ -53,8 +54,8 @@ export default class PCApplication extends SvelteApplication {
       id: 'foundryvtt-actor-studio-pc-sheet',
       title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eVersion} | Rules: ${dnd5eRules}`,
       classes: [MODULE_CODE],
-      width: game.settings.get(MODULE_ID, 'windowX') || 700,
-      height: game.settings.get(MODULE_ID, 'windowX') || 800,
+      width: Number(safeGetSetting(MODULE_ID, 'windowX', 700)) || 700,
+      height: Number(safeGetSetting(MODULE_ID, 'windowX', 800)) || 800,
       headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png',
       minWidth: 500,
       padding: 0,
@@ -164,7 +165,7 @@ export default class PCApplication extends SvelteApplication {
   async #handleDocUpdate(doc, options) {
     const { action, data, documentType } = options;
     if ((action === void 0 || action === "update" || action === "subscribe") && doc) {
-      const isDebug = game.settings.get(MODULE_ID, 'debug');
+      const isDebug = safeGetSetting(MODULE_ID, 'debug', false);
       const moduleVersion = game.modules.get(MODULE_ID)?.version;
       const tokenText = doc.flags?.[MODULE_ID]?.tokenName ? ` (${doc.flags[MODULE_ID].tokenName})` : "";
       this.reactive.title = `${game.i18n.localize('GAS.ActorStudio')} - ${isDebug ? moduleVersion : ''} [${window.GAS.dnd5eRules}] - ${game.i18n.localize('GAS.PCTitle')} - ${doc.name} ${tokenText}`;

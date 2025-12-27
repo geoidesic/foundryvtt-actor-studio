@@ -18,6 +18,7 @@
   } from "~/src/stores/equipmentSelections";
   import { setEquipmentGoldChoice } from "~/src/stores/equipmentGold";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { safeGetSetting } from '~/src/helpers/Utility';
 
   import IconButton from "~/src/components/atoms/button/IconButton.svelte";
   import ImageButton from "~/src/components/atoms/button/ImageButton.svelte";
@@ -36,9 +37,10 @@
   export let equipmentGoldOptions = null;
 
   // Check if equipment selection is enabled in settings
-  const equipmentSelectionEnabled = game.settings.get(
+  const equipmentSelectionEnabled = safeGetSetting(
     MODULE_ID,
     "enableEquipmentSelection",
+    false
   );
 
   function getGroupFromSelection(groupId) {

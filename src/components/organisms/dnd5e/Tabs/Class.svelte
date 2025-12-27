@@ -9,7 +9,7 @@
     getPacksFromSettings,
     getAdvancementValue,
     getSubclassLevel,
-    illuminatedDescription,
+    illuminatedDescription, safeGetSetting,
   } from "~/src/helpers/Utility.js";
 
 
@@ -60,14 +60,16 @@
     ]),
     filteredClassIndex;
 
-  const showPackLabelInSelect = game.settings.get(
+  const showPackLabelInSelect = safeGetSetting(
     MODULE_ID,
     "showPackLabelInSelect",
+    false
   );
 
-  const showLevelPreviewDropdown = game.settings.get(
+  const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
     "showLevelPreviewDropdown",
+    false
   );
 
   filteredClassIndex = mappedClassIndex

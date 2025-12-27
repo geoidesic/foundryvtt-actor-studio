@@ -38,7 +38,7 @@ export function getItemsArray(collection) {
 
 export async function illuminatedDescription(html, store) {
   const enriched = await enrichHTML(html);
-  if(!game.settings.get(MODULE_ID, 'illuminatedDescription')) {
+  if(!safeGetSetting(MODULE_ID, 'illuminatedDescription', true)) {
     return enriched;
   }
   const jEnriched = jQuery(enriched);
@@ -275,7 +275,7 @@ export async function getRules(rule) {
 export function filterPackForDTPackItems(pack, entries) {
   // window.GAS.log.d('filterPackForDTPackItems', pack, entries);
   // window.GAS.log.d('filterPackForDTPackItems filter', entries.filter);
-  if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+  if (game.modules.get('donation-tracker')?.active && safeGetSetting(MODULE_ID, 'enable-donation-tracker', false)) {
 
     //- if the pack has no DT folders, include everything, @why: as this compendium is not managed by DT
     if (!DTPlugin.packHasDTFolders(pack)) {
@@ -285,7 +285,7 @@ export function filterPackForDTPackItems(pack, entries) {
     const allowedDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack)
     const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false)
 
-    const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
+    const unregisteredAccess = safeGetSetting(MODULE_ID, 'enable-donation-tracker-unregistered-access', false);
 
     // Game Masters should bypass donation tracker restrictions regardless of their login status
     if (game.user.isGM) return entries;
@@ -374,6 +374,31 @@ export function extractItemsFromPacksSync(packs, keys) {
 export function localize(string) {
   if (typeof game === 'undefined') return string; //- avoid lint error
   return game.i18n.localize(`${MODULE_CODE}.${string}`);
+}
+
+/**
+ * Safely read a game setting value if it is registered; return defaultValue otherwise.
+ * This guards against ClientSettings.assertSetting throwing when a setting is intentionally not registered.
+ * @param {string} module - The module id (e.g. MODULE_ID)
+ * @param {string} key - The setting key
+ * @param {*} defaultValue - Value to return if not available
+ */
+export function safeGetSetting(module, key, defaultValue = undefined) {
+  try {
+    if (!globalThis?.game || !game.settings) return defaultValue;
+    const fullKey = `${module}.${key}`;
+    // If the internal settings map is present, prefer checking it first
+    if (game.settings.settings && typeof game.settings.settings.has === 'function') {
+      if (game.settings.settings.has(fullKey)) return game.settings.get(module, key);
+      return defaultValue;
+    }
+    // Fallback: attempt to get, but wrap in try/catch to avoid assertion
+    return typeof game.settings.get === 'function' ? (() => { try { return game.settings.get(module, key); } catch (e) { return defaultValue; } })() : defaultValue;
+  } catch (e) {
+    // If anything goes wrong, return the default
+    console.warn(`safeGetSetting: failed to read ${module}.${key}`, e);
+    return defaultValue;
+  }
 }
 
 
@@ -520,7 +545,7 @@ export function getPackFolders(pack, depth = 1) {
 }
 
 export const getPacksFromSettings = (type) => {
-  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  let settings = safeGetSetting(MODULE_ID, 'compendiumSources', {});
   // Return empty array if settings or type doesn't exist
   if (!settings || !settings[type]) {
     return [];
@@ -557,7 +582,7 @@ export const getPacksFromSettings = (type) => {
 }
 
 export const getAllPacksFromAllSettings = () => {
-  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  const settings = safeGetSetting(MODULE_ID, 'compendiumSources', {});
   const types = Object.keys(settings);
   const packs = [];
   for (const type of types) {
@@ -1342,7 +1367,7 @@ export async function getFilteredFeats() {
  * @returns {boolean} True if any sources are assigned, false otherwise
  */
 export function hasSourcesAssigned() {
-  const settings = game.settings.get(MODULE_ID, 'compendiumSources');
+  const settings = safeGetSetting(MODULE_ID, 'compendiumSources', {});
   if (!settings) return false;
   
   // Check if any source type has packs assigned
@@ -1356,7 +1381,7 @@ export function hasSourcesAssigned() {
  */
 export function autoAssignSources() {
   const allItemPacks = game.packs.filter((p) => p.documentName === 'Item');
-  const filterByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
+  const filterByName = safeGetSetting(MODULE_ID, 'filterPackSourcesAppropriatelyByName', false);
   
   // Define the source type configurations with their inclusion/exclusion keywords
   const sourceConfigs = {

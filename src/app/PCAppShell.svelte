@@ -8,7 +8,7 @@
   import dnd5e from "~/config/systems/dnd5e.json"
   import Spells from "~/src/components/organisms/dnd5e/Tabs/Spells.svelte";
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
-  import { log } from '~/src/helpers/Utility';
+  import { log, safeGetSetting } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
@@ -42,8 +42,10 @@
   $: filteredTabs = levelUp ? $levelUpTabs : $tabs
 
   // Get illumination settings
-  const illuminatedHeight = Number(game.settings.get(MODULE_ID, 'illuminatedHeight').replace(/[a-zA-Z]/g, '')) + 'px';
-  const illuminatedWidth = Number(game.settings.get(MODULE_ID, 'illuminatedWidth').replace(/[a-zA-Z]/g, '')) + 'px';
+  const _illuminatedHeightRaw = safeGetSetting(MODULE_ID, 'illuminatedHeight', '100px');
+  const illuminatedHeight = Number(String(_illuminatedHeightRaw).replace(/[a-zA-Z]/g, '')) + 'px';
+  const _illuminatedWidthRaw = safeGetSetting(MODULE_ID, 'illuminatedWidth', '100px');
+  const illuminatedWidth = Number(String(_illuminatedWidthRaw).replace(/[a-zA-Z]/g, '')) + 'px';
 
   $: stylesApp = {
     '--tjs-app-overflow': 'visible',

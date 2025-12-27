@@ -29,7 +29,8 @@ import {
   extractMapIteratorObjectProperties,
   getPacksFromSettings,
   illuminatedDescription,
-  extractItemsFromPacksAsync
+  extractItemsFromPacksAsync,
+  safeGetSetting
 } from "~/src/helpers/Utility.js";
 
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
@@ -56,7 +57,7 @@ let
 ;
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
-window.GAS.log.d('[DEBUG] compendiumSources settings:', game.settings.get(MODULE_ID, 'compendiumSources'));
+window.GAS.log.d('[DEBUG] compendiumSources settings:', safeGetSetting(MODULE_ID, 'compendiumSources', {}));
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
 

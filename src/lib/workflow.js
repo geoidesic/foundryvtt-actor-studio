@@ -10,7 +10,8 @@ import {
   getLevelByDropType,
   itemHasAdvancementChoices,
   isAdvancementsForLevelInItem,
-  dropItemOnCharacter
+  dropItemOnCharacter,
+  safeGetSetting
 } from "~/src/helpers/Utility";
 import { destroyAdvancementManagers } from "~/src/helpers/AdvancementManager";
 import { goldRoll } from '../stores/storeDefinitions';
@@ -276,7 +277,7 @@ export async function updateActorAndEmbedItems({
   // The character creation workflow should handle its own state transitions
   
   // If advancement is disabled, destroy any open advancement managers
-  if (game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+  if (safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false)) {
     window.GAS.log.d('[WORKFLOW] Advancement disabled - destroying advancement managers');
     destroyAdvancementManagers();
   }
@@ -504,7 +505,7 @@ export async function handleAddEquipment({
     }
 
     // Check if equipment purchase is enabled
-    const enableEquipmentPurchase = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
+    const enableEquipmentPurchase = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
     if (!enableEquipmentPurchase) {
       // Shop is disabled, add gold directly to actor
       let goldValue;
@@ -974,9 +975,9 @@ export async function handleSkipSpellsLevelUp() {
  */
 export async function handleAdvancementCompletion(context) {
   const { actor } = context;
-  const enableEquipment = game.settings.get(MODULE_ID, 'enableEquipmentSelection');
-  const enableShop = game.settings.get(MODULE_ID, 'enableEquipmentPurchase');
-  const enableSpells = game.settings.get(MODULE_ID, 'enableSpellSelection');
+  const enableEquipment = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
+  const enableShop = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
+  const enableSpells = safeGetSetting(MODULE_ID, 'enableSpellSelection', false);
 
   // Helper to check if actor is a spellcaster
   function isSpellcaster(actor) {

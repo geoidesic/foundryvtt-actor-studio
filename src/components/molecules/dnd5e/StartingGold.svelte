@@ -1,5 +1,5 @@
 <script>
-  import { localize as t } from "~/src/helpers/Utility";
+  import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount } from "svelte";
   import { goldRoll } from "~/src/stores/storeDefinitions";
   import { MODULE_ID } from "~/src/helpers/constants";
@@ -71,7 +71,7 @@
       }
     } else {
       // Use default gold dice from settings if no class-specific formula
-      formula = game.settings.get(MODULE_ID, "defaultGoldDice") || "5d4 * 10";
+      formula = safeGetSetting(MODULE_ID, "defaultGoldDice", "5d4 * 10");
     }
   }
 

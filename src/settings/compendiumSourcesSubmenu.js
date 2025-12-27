@@ -1,10 +1,11 @@
 import { DEFAULT_SOURCES, LOG_PREFIX, MODULE_ID } from '../helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
     super({});
     this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item');
-    this.filterPackSourcesAppropriatelyByName = game.settings.get(MODULE_ID, 'filterPackSourcesAppropriatelyByName');
+    this.filterPackSourcesAppropriatelyByName = safeGetSetting(MODULE_ID, 'filterPackSourcesAppropriatelyByName', false);
   }
 
   static get defaultOptions() {
@@ -26,7 +27,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   }
 
   getData() {
-    let selected = game.settings.get(MODULE_ID, 'compendiumSources');
+    let selected = safeGetSetting(MODULE_ID, 'compendiumSources', DEFAULT_SOURCES);
     if (foundry.utils.isEmpty(selected)) {
       selected = DEFAULT_SOURCES;
     }

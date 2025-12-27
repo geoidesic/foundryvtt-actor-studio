@@ -16,8 +16,7 @@
     abilityRolls,
   } from "~/src/stores/index";
   import { POINT_BUY_COSTS, MODULE_ID } from "~/src/helpers/constants";
-  import { dnd5eModCalc } from "~/src/helpers/Utility";
-  import { localize as t } from "~/src/helpers/Utility";
+  import { dnd5eModCalc, localize as t, safeGetSetting } from "~/src/helpers/Utility";
 
   export let document = false;
 
@@ -47,7 +46,7 @@
 
   // Function to calculate pointBuyLimit
   function calculatePointBuyLimit() {
-    return game.settings.get(MODULE_ID, "pointBuyLimit");
+    return safeGetSetting(MODULE_ID, "pointBuyLimit", 27);
   }
 
   async function reset() {

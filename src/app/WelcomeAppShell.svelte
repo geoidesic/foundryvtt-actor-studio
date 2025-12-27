@@ -6,6 +6,7 @@
   import { ApplicationShell } from "@typhonjs-fvtt/runtime/svelte/component/application";
   import { localize as t } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import { safeGetSetting } from '~/src/helpers/Utility';
 
   export let elementRoot = void 0;
   export let version = void 0;
@@ -20,7 +21,7 @@
   draggable = true;
 
   $: application.reactive.draggable = draggable;
-  $: dontShowWelcome = game.settings.get(MODULE_ID, "dontShowWelcome");
+  $: dontShowWelcome = safeGetSetting(MODULE_ID, "dontShowWelcome", false);
 
   onMount(async () => {
     // Module initialization complete

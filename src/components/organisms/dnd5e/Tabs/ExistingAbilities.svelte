@@ -12,7 +12,7 @@
   import Roll from "~/src/components/molecules/dnd5e/AbilityEntry/Roll.svelte";
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
-  import { localize as t } from "~/src/helpers/Utility";
+  import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod } from "~/src/stores/index";
 
@@ -50,25 +50,25 @@
       value: 1,
       label: t('Tabs.Abilities.ManualEntry'),
       type: "ManualEntry",
-      setting: game.settings.get(MODULE_ID, "allowManualInput"),
+      setting: safeGetSetting(MODULE_ID, "allowManualInput", true),
     },
     {
       value: 2,
       label: t('Tabs.Abilities.PointBuy'),
       type: "PointBuy",
-      setting: game.settings.get(MODULE_ID, "allowPointBuy"),
+      setting: safeGetSetting(MODULE_ID, "allowPointBuy", '4d6kh3'),
     },
     {
       value: 3,
       label: t('Tabs.Abilities.Roll'),
       type: "Roll",
-      setting: game.settings.get(MODULE_ID, "allowRolling"),
+      setting: safeGetSetting(MODULE_ID, "allowRolling", false),
     },
     {
       value: 4,
       label: t('Tabs.Abilities.StandardArray'),
       type: "StandardArray",
-      setting: game.settings.get(MODULE_ID, "allowStandardArray"),
+      setting: safeGetSetting(MODULE_ID, "allowStandardArray", false),
     },
   ].filter((obj) => obj.setting);
 

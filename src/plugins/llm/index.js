@@ -24,7 +24,7 @@ class LLM {
 
   static getApiKey() {
     try {
-      const settingKey = game?.settings?.get ? game.settings.get(MODULE_ID, 'llmApiKey') : this.apiKey;
+      const settingKey = safeGetSetting(MODULE_ID, 'llmApiKey', this.apiKey);
       console.log('[LLM] getApiKey:', { settingKey: settingKey ? '***' + settingKey.slice(-4) : 'none', fallback: this.apiKey });
       return settingKey || this.apiKey;
     } catch (error) {
@@ -35,7 +35,7 @@ class LLM {
 
   static getLicenseKey() {
     try {
-      return game?.settings?.get ? game.settings.get(MODULE_ID, 'AardvarkLicenseCode') : '';
+      return safeGetSetting(MODULE_ID, 'AardvarkLicenseCode', '');
     } catch (error) {
       console.warn('LLM: Could not get license key from settings', error);
       return '';
@@ -44,7 +44,7 @@ class LLM {
 
   static getProvider() {
     try {
-      const provider = game?.settings?.get ? game.settings.get(MODULE_ID, 'llmProvider') : 'openai';
+      const provider = safeGetSetting(MODULE_ID, 'llmProvider', 'openai');
       console.log('[LLM] getProvider:', { provider });
       return provider;
     } catch (error) {

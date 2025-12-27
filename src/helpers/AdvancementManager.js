@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { activeTab, tabs } from '~/src/stores/index';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { delay, prepareItemForDrop, dropItemOnCharacter } from '~/src/helpers/Utility';
+import { delay, prepareItemForDrop, dropItemOnCharacter, safeGetSetting } from '~/src/helpers/Utility';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections, actorInGame } from '~/src/stores/index';
@@ -150,10 +150,10 @@ export class AdvancementManager {
    * @returns {Promise<void>}
    */
   async watchAdvancementManager() {
-    await delay(game.settings.get(MODULE_ID, 'advancementCaptureTimerThreshold')); //- delay to allow for the items to be dropped
+    await delay(safeGetSetting(MODULE_ID, 'advancementCaptureTimerThreshold', 300)); //- delay to allow for the items to be dropped
 
     //- if advancements are enabled handle advancement capture
-    if (!game.settings.get(MODULE_ID, 'disableAdvancementCapture')) {
+    if (!safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false)) {
       window.GAS.log.d('[ADVANCEMENT MANAGER] waiting for advancements tab to be empty');
       await this.waitForEmptyTab('advancements');
       window.GAS.log.d('[ADVANCEMENT MANAGER] advancements tab is empty');

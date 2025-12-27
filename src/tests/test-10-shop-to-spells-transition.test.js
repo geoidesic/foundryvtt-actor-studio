@@ -136,7 +136,14 @@ describe('Shop to Spells Transition for Bard User Journey', () => {
       handleContainerContents: vi.fn(),
       delay: vi.fn(() => Promise.resolve()),
       prepareItemForDrop: vi.fn(() => Promise.resolve({})),
-      dropItemOnCharacter: vi.fn(() => Promise.resolve({}))
+      dropItemOnCharacter: vi.fn(() => Promise.resolve({})),
+      safeGetSetting: (module, key, defaultValue) => {
+        if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+          const val = global.game.settings.get(module, key);
+          return typeof val === 'undefined' ? defaultValue : val;
+        }
+        return defaultValue;
+      }
     }));
   });
 

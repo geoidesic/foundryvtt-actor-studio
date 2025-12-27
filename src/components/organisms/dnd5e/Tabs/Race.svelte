@@ -9,6 +9,7 @@
     getAdvancementValue,
     illuminatedDescription
   } from "~/src/helpers/Utility.js";
+  import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { race, subRace, tabDisabled } from "~/src/stores/index";
@@ -29,7 +30,7 @@
     "uuid->value",
     "_id",
   ]);
-  const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+  const showPackLabelInSelect = safeGetSetting(MODULE_ID, 'showPackLabelInSelect', true);
   const importPath = "components/molecules/dnd5e/Advancements/";
 
   // window.GAS.log.d('allRaceItems', allRaceItems)

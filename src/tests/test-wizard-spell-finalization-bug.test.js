@@ -47,7 +47,8 @@ describe('Wizard Level-Up Spell Finalization Bug', () => {
 
     vi.doMock('~/src/helpers/Utility', () => ({
       getPacksFromSettings: vi.fn(() => []),
-      extractItemsFromPacksAsync: vi.fn(() => Promise.resolve([]))
+      extractItemsFromPacksAsync: vi.fn(() => Promise.resolve([])),
+      safeGetSetting: (module, key, defaultValue) => defaultValue
     }));
 
     vi.doMock('~/src/lib/workflow', () => ({

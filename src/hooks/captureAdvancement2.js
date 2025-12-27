@@ -1,5 +1,6 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 
 const BROWSE_TARGET_SELECTOR = [
@@ -153,7 +154,7 @@ export const interceptFeatBrowseButtons = (element, currentProcess) => {
   }
 
   // Check if custom feat selector is enabled
-  if (!game.settings.get('foundryvtt-actor-studio', 'enableCustomFeatSelector')) {
+  if (!safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false)) {
     return;
   }
 
@@ -264,7 +265,7 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
 
 export const captureAdvancement = (initial = false) => {
   window.GAS.log.d('[gas.captureAdvancement] initial', initial)
-  const skipDomMove = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
+  const skipDomMove = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
   if (skipDomMove) {
     window.GAS.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
     return;

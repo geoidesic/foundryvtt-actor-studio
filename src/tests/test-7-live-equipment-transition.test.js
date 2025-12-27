@@ -124,7 +124,8 @@ describe('Live Equipment Transition', () => {
     vi.doMock('~/src/helpers/Utility', () => ({
       delay: vi.fn(() => Promise.resolve()),
       prepareItemForDrop: vi.fn(() => Promise.resolve({})),
-      dropItemOnCharacter: vi.fn(() => Promise.resolve({}))
+      dropItemOnCharacter: vi.fn(() => Promise.resolve({})),
+      safeGetSetting: (module, key, defaultValue) => defaultValue
     }));
     
     // Mock AdvancementManager to track calls

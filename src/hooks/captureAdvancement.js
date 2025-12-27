@@ -1,5 +1,6 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 import FeatSelector from '~/src/components/molecules/dnd5e/Feats/FeatSelector.svelte';
 
@@ -17,11 +18,13 @@ const isAppElementAppended = (appId) => {
   return panelElement.find(`[data-appid="${appId}"]`).length > 0;
 };
 
-// Helper to get advancement element based on version
+// Helper to see if the module is configured to skip moving DOM during advancement capture
+const skipDomMove = () => safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
+
+// Helper to get the DOM/jQuery element for the advancement app across DnD5e versions
 const getAdvancementElement = (currentProcess) => {
-  const version = window.GAS.dnd5eVersion;
-  const rawElement = currentProcess.app?.element;
-  
+  const version = window.GAS?.dnd5eVersion || 0;
+  const rawElement = currentProcess?.app?.element;
   if (version >= 4) {
     // v4 passes raw DOM element
     return $(rawElement);
@@ -155,13 +158,12 @@ export const interceptFeatBrowseButtons = (element, currentProcess) => {
     }
 
     // Check if custom feat selector is enabled
-    const customFeatSelectorEnabled = game.settings.get('foundryvtt-actor-studio', 'enableCustomFeatSelector');
+    const customFeatSelectorEnabled = safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false);
     window.GAS.log.d('[interceptFeatBrowseButtons] Setting enabled:', customFeatSelectorEnabled);
     
     if (!customFeatSelectorEnabled) {
       return;
     }
-
     // Remove any existing handler
     if (element[0].gasFeatInterceptHandler) {
       element[0].removeEventListener('click', element[0].gasFeatInterceptHandler, true);
@@ -343,7 +345,7 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
 
 export const captureAdvancement = (initial = false) => {
   window.GAS.log.d('[gas.captureAdvancement] initial', initial)
-  const skipDomMove = game.settings.get(MODULE_ID, 'disableAdvancementCapture');
+  const skipDomMove = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
   if (skipDomMove) {
     window.GAS.log.d('[gas.captureAdvancement] Dev setting: Skipping advancement DOM movement');
     return;

@@ -1,5 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections, levelUpInProgress } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
@@ -347,7 +348,7 @@ export const levelUpFSMContext = {
    * Determines if spell selection should be shown for level-up
    */
   _shouldShowSpellSelection: function (actor) {
-    const enableSpellSelection = game.settings.get(MODULE_ID, 'enableSpellSelection');
+    const enableSpellSelection = safeGetSetting(MODULE_ID, 'enableSpellSelection', false);
     if (!enableSpellSelection) return false;
     
     if (!actor) {

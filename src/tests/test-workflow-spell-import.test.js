@@ -64,7 +64,8 @@ beforeEach(() => {
     getLevelByDropType: vi.fn(),
     itemHasAdvancementChoices: vi.fn(),
     isAdvancementsForLevelInItem: vi.fn(),
-    dropItemOnCharacter: vi.fn()
+    dropItemOnCharacter: vi.fn(),
+    safeGetSetting: (module, key, defaultValue) => defaultValue
   }));
 });
 

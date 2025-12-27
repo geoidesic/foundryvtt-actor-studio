@@ -7,7 +7,7 @@
    import SettingsFooter            from './SettingsFooter.svelte';
    import { sessionConstants }      from '~/src/helpers/constants';
    import { MODULE_ID }             from '~/src/helpers/constants';
-   import { camelCaseToTitleCase }  from '~/src/helpers/Utility';
+   import { camelCaseToTitleCase, safeGetSetting }  from '~/src/helpers/Utility';
 
    export let elementRoot;
 
@@ -26,8 +26,8 @@
    $: storePosition($position);
 
    // Settings state
-   let enableDonationTracker = game.settings.get(MODULE_ID, 'enable-donation-tracker');
-   let enableUnregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access');
+   let enableDonationTracker = safeGetSetting(MODULE_ID, 'enable-donation-tracker', false);
+   let enableUnregisteredAccess = safeGetSetting(MODULE_ID, 'enable-donation-tracker-unregistered-access', false);
    let membershipRanks = game.membership?.RANKS || {};
    let rankSettings = {};
 
@@ -38,7 +38,7 @@
          for (const [rank, value] of Object.entries(membershipRanks)) {
             if (value === -1) continue;
             const key = `donation-tracker-rank-${rank}`;
-            rankSettings[rank] = game.settings.get(MODULE_ID, key);
+            rankSettings[rank] = safeGetSetting(MODULE_ID, key, '');
          }
       }
    }

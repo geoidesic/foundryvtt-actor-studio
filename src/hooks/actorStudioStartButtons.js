@@ -1,6 +1,6 @@
 import PCApplication from '~/src//app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
-import { userHasRightPermissions } from '~/src/helpers/Utility'
+import { userHasRightPermissions, safeGetSetting } from '~/src/helpers/Utility'
 import { MODULE_ID } from '~/src/helpers/constants';
 
 // Store references to event handlers for cleanup
@@ -110,7 +110,7 @@ function getActorStudioButton(buttonId, text = false) {
 // Unified function to render sidebar button for both V12 and V13
 export const renderActorStudioSidebarButton = (app) => {
   if (!game.modules.get(MODULE_ID)?.active) return;
-  if (!game.settings.get(MODULE_ID, 'showButtonInSideBar')) return;
+  if (!safeGetSetting(MODULE_ID, 'showButtonInSideBar', true)) return;
   if (app.constructor.name !== "ActorDirectory") return;
 
   const element = game.version >= 13 ? app.element : app._element;
@@ -176,8 +176,8 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
       // window.GAS.log.d('actorType', actorType)
       if (isActorTypeValid(systemActorDocumentTypes, actorType)) {
         // disable the button if the setting is enabled
-        const hideOtherButtons =  !game.user.isGM && game.settings.get(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers');
-        const nonGmsCanOnlyCreatePCs = !game.user.isGM && game.settings.get(MODULE_ID, 'nonGmsCanOnlyCreatePCs');
+        const hideOtherButtons =  !game.user.isGM && safeGetSetting(MODULE_ID, 'disableOtherActorCreationOptionsForPlayers', false);
+        const nonGmsCanOnlyCreatePCs = !game.user.isGM && safeGetSetting(MODULE_ID, 'nonGmsCanOnlyCreatePCs', false);
         if ( hideOtherButtons) {
           $('button:not(#gas-dialog-button)', html).hide();
         }

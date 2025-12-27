@@ -26,7 +26,7 @@ export {
 import '~/src/stores/spellSelection';
 import { biographyOptions, isGenerating, biographyContent, generateBiography } from '~/src/stores/biography';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getSubclassLevel } from '~/src/helpers/Utility';
+import { getSubclassLevel, safeGetSetting } from '~/src/helpers/Utility';
 
 const initialTabs = [
   { label: 'Abilities', id: 'abilities', component: 'Abilities' },
@@ -213,7 +213,7 @@ export function resetStores() {
   storeDefinitions.level.set(1); //- number
   storeDefinitions.tabs.set(initialTabs); //- array
   storeDefinitions.pointBuyScoreTotal.set(12); //- number
-  storeDefinitions.pointBuyLimit.set(game.settings.get(MODULE_ID, "pointBuyLimit")); //- number
+  storeDefinitions.pointBuyLimit.set(safeGetSetting(MODULE_ID, "pointBuyLimit", 27)); //- number
   storeDefinitions.activeTab.set(initialTabs[0].id); //- string
   storeDefinitions.isActorCreated.set(false); //- boolean
   storeDefinitions.actorInGame.set(null); //- null | object

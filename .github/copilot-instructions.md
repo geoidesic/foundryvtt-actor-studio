@@ -70,6 +70,12 @@ bun dev           # Never use build commands - HMR handles compilation
 nvm use 20        # If node issues occur
 ```
 
+## AI Assistant Behavior
+- **NEVER** offer to create, stage, commit, push, or open pull requests (PRs) on behalf of the user.
+- **NEVER** perform any git operations or remote actions automatically. Do not execute or suggest automatic commits, pushes, or PR creation.
+- It is acceptable to provide suggested commit messages, patch diffs, or step-by-step instructions to create a PR, but only when explicitly requested by the user. Always ask for confirmation before suggesting manual commands and never run them yourself.
+- If the user asks for help preparing a PR, provide the exact commands and a clear description of what will change, and wait for explicit user confirmation to proceed with any manual steps.
+
 ## Test Patterns and Mocking
 
 **Critical Test Setup Pattern**: Tests that import `WorkflowStateMachine.js` require comprehensive mocking due to complex dependency chains. Use this proven pattern from `test-actor-studio-opening.test.js`:

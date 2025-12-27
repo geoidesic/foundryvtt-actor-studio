@@ -7,7 +7,7 @@
    */
 
     import { onMount, onDestroy } from "svelte";
-    import { truncate } from "~/src/helpers/Utility.js";
+    import { truncate, safeGetSetting } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
 
     export let options = []; //- {value, label, icon || img}
@@ -32,7 +32,7 @@
       toggleDropdown();
     };
 
-    const showPackLabelInSelect = game.settings.get(MODULE_ID, 'showPackLabelInSelect');
+    const showPackLabelInSelect = safeGetSetting(MODULE_ID, 'showPackLabelInSelect', true);
 
     function getLabel(option) {
       if (showPackLabelInSelect && option.packLabel) {

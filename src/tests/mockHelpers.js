@@ -89,6 +89,7 @@ export const setupGlobalMocks = () => {
         if (key === 'enableEquipmentPurchase') return false;
         if (key === 'enableSpellSelection') return true;
         if (key === 'disableAdvancementCapture') return true;
+        if (key === 'enableCustomFeatSelector') return true;
         return false;
       })
     },
@@ -157,7 +158,18 @@ export const createStandardMocks = () => {
     getLevelByDropType: vi.fn(),
     itemHasAdvancementChoices: vi.fn(),
     isAdvancementsForLevelInItem: vi.fn(),
-    dropItemOnCharacter: vi.fn()
+    dropItemOnCharacter: vi.fn(),
+    safeGetSetting: (module, key, defaultValue) => {
+      // Mirror the real safeGetSetting behavior lightly for tests
+      try {
+        if (global?.game && global.game.settings) {
+          try { return global.game.settings.get(module, key); } catch (e) { return defaultValue; }
+        }
+        return defaultValue;
+      } catch (e) {
+        return defaultValue;
+      }
+    }
   }));
 
   vi.mock('finity', createFinityMock);

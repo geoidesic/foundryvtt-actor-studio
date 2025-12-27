@@ -1,10 +1,11 @@
 
 import { getAllPackIdsFromAllSettings } from '~/src/helpers/Utility'
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 export const renderCompendium = (app, html, data) => {
   // window.GAS.log.d('renderCompendium', app, html, data)
-    if (game.modules.get('donation-tracker')?.active && game.settings.get(MODULE_ID, 'enable-donation-tracker')) {
+    if (game.modules.get('donation-tracker')?.active && safeGetSetting(MODULE_ID, 'enable-donation-tracker', false)) {
   
       const pack = app.collection
       if (pack.locked) return
@@ -31,7 +32,7 @@ export const renderCompendium = (app, html, data) => {
       const membershipRanks = game.membership.RANKS
       for (const [rank, value] of Object.entries(membershipRanks)) {
         if (value === -1) continue;
-        const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
+        const folder = pack.folders.find(f => f.name === safeGetSetting(MODULE_ID, `donation-tracker-rank-${rank}`, ''))
         if (folder) {
           window.GAS.log.i('Donation Tracker folders already exist, skipping')
           return;
@@ -42,12 +43,12 @@ export const renderCompendium = (app, html, data) => {
         const membershipRanks = game.membership.RANKS
         for (const [rank, value] of Object.entries(membershipRanks)) {
           if (value === -1) continue;
-          const folder = pack.folders.find(f => f.name === game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`))
+          const folder = pack.folders.find(f => f.name === safeGetSetting(MODULE_ID, `donation-tracker-rank-${rank}`, ''))
           if (!folder) {
             // pack.folders.createDocument({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "JournalEntry" });
             const folderCls = getDocumentClass("Folder");
             // const myFolder = await folderCls.create({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "JournalEntry" });
-            await folderCls.create({ name: game.settings.get(MODULE_ID, `donation-tracker-rank-${rank}`), type: "Item" }, { pack: pack.metadata.id });
+            await folderCls.create({ name: safeGetSetting(MODULE_ID, `donation-tracker-rank-${rank}`, ''), type: "Item" }, { pack: pack.metadata.id });
           }
         }
       }
