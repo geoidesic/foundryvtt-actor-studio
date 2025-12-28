@@ -11,9 +11,12 @@
   import { getContext } from "svelte";
   import { MODULE_ID } from "~/src/helpers/constants";
   import OneColumnTabLayout from "~/src/components/organisms/OneColumnTabLayout.svelte";
+  import AIportraitPanel from '~/src/ui/ai/AIportraitPanel.svelte';
+
+  const showAiTokens = safeGetSetting(MODULE_ID, 'enableAiTokens', false);
 
   const actor = getContext("#doc");
-  const app = getContext("#external").application;
+  const app = getContext("#external").application; 
 
   // Whether to show the small Randomize Details button (world setting)
   const showRandomizeButton = safeGetSetting(MODULE_ID, 'ShowRandomizeDetailsButton', true);
@@ -152,6 +155,10 @@ OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabNam
         .token-display
           span Request Tokens: {$requestTokens}
           span Response Tokens: {$responseTokens}
+
+      +if("showAiTokens")
+        .ai-portrait-section
+          AIportraitPanel(actor="{actor}")
 
       .biography-content
         .biography-cards

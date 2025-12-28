@@ -1,4 +1,5 @@
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 class LLM {
 
@@ -10,16 +11,37 @@ class LLM {
   constructor() {
   }
 
-  static getBaseUrl() {
+  // A stable default base URL used when provider is not openrouter/claude
+  static defaultBaseUrl = 'https://actor-studio-llm.vercel.app/api';
+
+  // Resolve base URL with optional user override setting
+  static resolveBaseUrl() {
+    try {
+      const raw = safeGetSetting(MODULE_ID, 'llmBaseUrl', '');
+      const override = (typeof raw === 'string') ? raw.trim() : '';
+      if (override) {
+        console.log('[LLM] Using override baseUrl from settings:', override);
+        return { baseUrl: override, source: 'setting' };
+      }
+    } catch (err) {
+      console.warn('[LLM] Could not read llmBaseUrl setting', err);
+    }
+
     const provider = this.getProvider();
     switch (provider) {
       case 'openrouter':
-        return 'https://openrouter.ai/api/v1';
+        return { baseUrl: 'https://openrouter.ai/api/v1', source: 'provider-default' };
       case 'claude':
-        return 'https://api.anthropic.com/v1';
+        return { baseUrl: 'https://api.anthropic.com/v1', source: 'provider-default' };
       default:
-        return this.baseUrl; // Default actor-studio service
+        return { baseUrl: this.defaultBaseUrl, source: 'default' }; // Default actor-studio service
     }
+  }
+
+  static getBaseUrl() {
+    const resolved = this.resolveBaseUrl();
+    // Ensure a non-empty string is always returned
+    return (resolved && resolved.baseUrl) ? resolved.baseUrl : this.defaultBaseUrl;
   }
 
   static getApiKey() {
@@ -388,10 +410,46 @@ Only include the elements that were requested. Make each element detailed but co
           })
         });
 
-        data = await response.json();
+        // Read raw text and attempt to parse JSON to provide clearer diagnostics on HTML/404 responses
+        let parsed;
 
+        if (typeof response.text === 'function') {
+          // Most environments
+          let raw;
+          try {
+            raw = await response.text();
+          } catch (err) {
+            window.GAS.log.e('LLM: Failed to read response from generateBiography', { baseUrl, err });
+            throw new Error(`LLM service error reading response from ${baseUrl}/generateBiography: ${err.message}`);
+          }
+
+          try {
+            parsed = JSON.parse(raw);
+          } catch (err) {
+            window.GAS.log.e('LLM: Non-JSON response from generateBiography', { baseUrl, raw: raw?.slice?.(0, 1024) });
+            throw new Error(`LLM service returned a non-JSON response from ${baseUrl}/generateBiography. Response starts with: ${raw?.slice?.(0,256)}`);
+          }
+        } else if (typeof response.json === 'function') {
+          // Some test mocks and SDKs return json() but not text()
+          try {
+            parsed = await response.json();
+          } catch (err) {
+            window.GAS.log.e('LLM: Failed to parse JSON response from generateBiography', { baseUrl, err });
+            throw new Error(`LLM service returned an invalid JSON response from ${baseUrl}/generateBiography: ${err.message}`);
+          }
+        } else {
+          window.GAS.log.e('LLM: Unexpected response shape from generateBiography', { baseUrl, response });
+          throw new Error('LLM service returned an unexpected response shape; cannot read body');
+        }
+
+        if (!response.ok) {
+          const errMsg = parsed?.error?.message || parsed?.message || `HTTP ${response.status} ${response.statusText}`;
+          throw new Error(`LLM service error from ${baseUrl}/generateBiography: ${errMsg}`);
+        }
+
+        data = parsed;
         window.GAS.log.d("Generated biography via default service", data);
-        content = data.object.biography;
+        content = data.object?.biography || data.biography || '';
       }
 
       // Parse TOON format response

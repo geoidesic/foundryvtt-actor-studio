@@ -145,6 +145,34 @@ vi.mock('~/src/helpers/Utility', () => ({ /* all utility functions as vi.fn() */
 
 **Cross-System Compatibility**: Supports D&D 5e v3.x and v4.x with version-specific handling throughout codebase.
 
+## Settings Index & Guidelines ✅
+Keep a single authoritative index of module settings here when adding new settings. ALWAYS update this index when you add a setting in code so contributors and the Copilot assistant can reference it and avoid invented keys.
+
+- Current AI / LLM related settings (update as you add more):
+  - `llmApiKey` (string) — API key used for LLM & image generation flows
+  - `llmProvider` (string) — 'openai' | 'claude' | 'openrouter'
+  - `openrouterModel` (string) — model id for OpenRouter (e.g., `stability/SDXL`)
+  - `enableAiTokens` (boolean) — toggle to enable the Phase‑1 AI portrait UI
+
+Guidelines (MANDATORY):
+- Always register settings using `game.settings.register(MODULE_ID, ... )` (use the `MODULE_ID` constant, not a literal string).
+- When reading settings, use `safeGetSetting(MODULE_ID, 'key', default)` from `src/helpers/Utility` (this avoids calling unregistered keys and keeps tests stable).
+- Do NOT call `game.settings.get('actor-studio', ...)` or hardcode module ids; use `MODULE_ID` and `safeGetSetting` instead.
+- When adding a new setting:
+  1. Register it in `src/settings/*` (follow existing patterns).
+  2. Add its key and short description to this `Settings Index` section.
+  3. Add localization strings to `lang/en.json` (and other locales as needed).
+  4. Add tests/mocks that reference the setting (use the test patterns above and mock `safeGetSetting`).
+  5. Run `npx vitest run` and ensure no regressions.
+
+Example (read a setting safely):
+```js
+import { safeGetSetting } from '~/src/helpers/Utility';
+const apiKey = safeGetSetting(MODULE_ID, 'llmApiKey', '');
+```
+
+> Rationale: keeping a single source-of-truth for settings prevents mismatched keys and runtime errors that throw when a setting is missing; using `safeGetSetting` ensures older/legacy settings are handled gracefully and that tests can mock behaviour reliably.
+
 ## Common Debugging Patterns
 
 - Advancement capture timing issues require `AdvancementCaptureTimerThreshold` setting adjustments

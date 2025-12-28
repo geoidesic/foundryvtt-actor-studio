@@ -3,6 +3,7 @@ import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
 import { llmNameGenerationSettings } from './llmNameGeneration';
 import { aardvarkLicenseTrackerSettings } from './aardvarkLicenseTracker';
 import { biographySettings } from './biographySettings';
+import { registerAIImageSettings } from './ai-images';
 import { MODULE_ID, LOG_PREFIX, DEFAULT_SOURCES } from '../helpers/constants';
 
 // settings not shown on the Module Settings - not modifiable by users
@@ -74,8 +75,11 @@ export function registerSettings(app: Game): void {
   llmNameGenerationSettings.init();
   // aardvarkLicenseTrackerSettings.init();
   biographySettings.init();
+  // AI image settings (Phase‑1)
+  try { registerAIImageSettings(); } catch (e) { window.GAS.log.w('AI image settings registration failed', e); }
   /** User settings */
   dontShowWelcome();
+
 }
 
 function illuminatedHeight() {

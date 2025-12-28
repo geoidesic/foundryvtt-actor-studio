@@ -108,6 +108,16 @@
         "Title": "Biography"
       }
     },
+    "AI": {
+      "Portrait": {
+        "Title": "AI Portrait",
+        "Generate": "Generate",
+        "Accept": "Accept",
+        "FixScale": "Fix Scale",
+        "Retry": "Retry",
+        "Copy": "Copy Diagnostic"
+      }
+    },
     "Welcome": {
       "To": "Welcome to the",
       "IntroductionTitle": "Introduction",
@@ -198,6 +208,10 @@
         "Name": "Add DT folders",
         "Hint": "Add the Donation Tracker membership level folders to this compendium"
       },
+      "EnablePortraitGeneration": {
+        "Name": "Enable Portrait Generation",
+        "Hint": "Enable the Foundry-only AI Portrait generation UI in the Biography tab. Uses OpenRouter/Stability (requires API key)."
+      },
       "DonationTracker": {
         "Name": "Donation Tracker settings",
         "Label": "Edit",
@@ -212,7 +226,7 @@
         "Hint": "Check this to include a button on the character sheet for leveling up via Actor Studio"
       },
       "ShowRandomizeDetailsButton": {
-        "Name": "Show randomize biography details button",
+        "Name": "Show randomize button for biography",
         "Hint": "Show a button in the Biography tab that fills the details fields (height, weight, age, eyes, hair, skin, gender, faith, alignment) with plausible random values based on race/class/background."
       },
       "FilterPackSourcesAppropriatelyByName": {
