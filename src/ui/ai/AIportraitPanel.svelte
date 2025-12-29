@@ -1,19 +1,17 @@
 <script>
-  // TODO: Implement UI for prompt, generate, preview, accept, and Fix Scale slider
   export let actor;
-  import { generateImageFromPrompt } from "~/src/helpers/aiImage";
   import { writable, get as getStore } from 'svelte/store';
-  import { getContext } from 'svelte';
+  import { getContext, onMount, onDestroy } from 'svelte';
   import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { biographyContent, generateBiography } from '~/src/stores/biography';
+  import { biographyContent } from '~/src/stores/biography';
   import LLM from '~/src/plugins/llm';
-  import { discoverOpenRouterImageModels } from '~/src/helpers/aiImage';
+  import { generateImageFromPrompt, discoverOpenRouterImageModels } from '~/src/helpers/aiImage';
 
   const preview = writable(null);
   let loading = false;
-  let scale = 1.0;
   let diagnostic = null;
+  let promptText = '';
   const provider = safeGetSetting(MODULE_ID, 'llmProvider', 'openai');
   const resolvedBaseUrl = LLM.getBaseUrl();
 
@@ -24,6 +22,30 @@
   let discovering = false;
   let discoveredModels = null;
   let selectedModel = null;
+  const handleCopyDiagnostic = () => navigator.clipboard?.writeText(JSON.stringify(diagnostic, null, 2));
+  const handleCloseDiagnostic = () => (diagnostic = null);
+  const portraitSettingEnabled = () => safeGetSetting(MODULE_ID, 'llmProvider', '') === 'openrouter' && safeGetSetting(MODULE_ID, 'llmApiKey', '');
+
+  let portraitHookId;
+  onMount(() => {
+    portraasync () => {
+    portraitHookId = Hooks.on('gas.generatePortrait', async () => {
+      if (!portraitSettingEnabled()) return;
+      if (loading) return;
+      await onGeneratePortrait();
+    });
+    // Load existing portrait from actor flags
+    if (activeActor) {
+      const aiPortraits = await activeActor.getFlag('actor-studio', 'aiPortraits') || [];
+      if (aiPortraits.length > 0) {
+        const lastPortrait = aiPortraits[aiPortraits.length - 1];
+        preview.set({ dataUrl: lastPortrait.dataUrl || lastPortrait.path, prompt: lastPortrait.prompt });
+      }
+    }
+
+  onDestroy(() => {
+    if (portraitHookId) Hooks.off('gas.generatePortrait', portraitHookId);
+  });
 
   async function discoverModels() {
     discovering = true;
@@ -43,43 +65,40 @@
 
   async function saveAndRetry() {
     if (!selectedModel) return;
-    // Save to settings and retry generate
     try {
       await game.settings.set(MODULE_ID, 'openrouterImageModel', selectedModel);
       ui.notifications.info(`Saved OpenRouter image model: ${selectedModel}. Retrying generation...`);
-      await onGenerate();
+    if (cleaned.length > 0) return cleaned;
+    
+    // Build prompt from character details in biography store
+    const bio = getStore(biographyContent);
+    const parts = [];
+    if (bio.race) parts.push(`${bio.race} character`);
+    if (bio.characterClass) parts.push(`${bio.characterClass}`);
+    if (bio.appearance) parts.push(`appearance: ${bio.appearance}`);
+    if (bio.biography) parts.push(`${bio.biography.substring(0, 100)}...`);
+    
+    return parts.length > 0 ? parts.join(', ')
     } catch (e) {
       ui.notifications.error(`Failed to save model: ${e.message}`);
     }
   }
 
-  async function onGenerate() {
+  async function preparePrompt() {
+    const cleaned = (promptText || '').trim();
+    return cleaned.length > 0 ? cleaned : 'Portrait of a fantasy character';
+  }
+
+  async function onGeneratePortrait() {
     loading = true;
     try {
-      // Use existing llm settings via safeGetSetting
       const apiKey = safeGetSetting(MODULE_ID, 'llmApiKey', '');
       const provider = safeGetSetting(MODULE_ID, 'llmProvider', 'openai');
       if (!apiKey) {
         ui.notifications.warn('LLM API key not configured (llmApiKey). Please set it in Module Settings → Actor Studio.');
         return;
       }
-      if (provider !== 'openrouter') ui.notifications.info(`LLM provider is set to ${provider}; images will use OpenRouter when provider is 'openrouter'.`);
-
-      // Use the same biography text that the biography generator would use.
-      let prompt = getStore(biographyContent)?.biography;
-      if (!prompt || prompt.trim().length < 20) {
-        // If biography is not present or short, auto-generate it using the existing flow
-        ui.notifications.info('Generating a quick biography to use as the image prompt...');
-        try {
-          await generateBiography(activeActor);
-        } catch (err) {
-          console.error('Biography generation failed', err);
-          diagnostic = { message: err.message, provider, baseUrl: resolvedBaseUrl };
-          ui.notifications.error('Biography generation failed; see diagnostics below.');
-          return;
-        }
-        prompt = getStore(biographyContent)?.biography;
-      }
+      if (provider !== 'openrouter') ui.notifications.info(`LLM provider is set to ${provider}; images will use OpenRouter when provider is "openrouter".`);
 
       if (resolvedBaseUrl && String(resolvedBaseUrl).includes('undefined')) {
         diagnostic = { message: 'Resolved baseUrl contains "undefined" — check module settings or your local proxy configuration', provider, baseUrl: resolvedBaseUrl };
@@ -87,19 +106,15 @@
         return;
       }
 
-      if (!prompt || prompt.trim().length === 0) {
-        prompt = "Portrait of a fantasy character";
-      }
+      const prompt = await preparePrompt();
 
-          try {
+      try {
         diagnostic = null;
         const res = await generateImageFromPrompt(prompt, { preferAlpha: true });
-        // Attach prompt for later metadata
         res.prompt = prompt;
         preview.set(res);
       } catch (err) {
         console.error('Image generation failed', err);
-        // Structured diagnostic data for UI and copy/paste
         diagnostic = {
           message: err.message,
           provider,
@@ -118,7 +133,6 @@
   import { get } from 'svelte/store';
 
   async function dataUrlToFile(dataUrl, filename = `ai-portrait-${Date.now()}.png`) {
-    // Avoid fetch on data: URLs which can be unreliable in some embed contexts; decode base64 manually
     const match = dataUrl.match(/^data:(.+?);base64,(.*)$/);
     if (!match) throw new Error('Invalid data URL');
     const mime = match[1] || 'image/png';
@@ -148,7 +162,6 @@
       const savedPath = uploadRes.files?.[0];
       if (!savedPath) throw new Error('Upload failed');
 
-      // Optionally call Tokenizer if available to auto-mask
       let finalPath = savedPath;
       const tokenizerApi = game.modules.get('tokenizer')?.api;
       if (tokenizerApi?.autoToken) {
@@ -160,12 +173,10 @@
         }
       }
 
-      // Update actor (portrait and prototype token with ring)
-      await actor.update({ img: finalPath, prototypeToken: { texture: { src: finalPath }, ring: { enabled: true, subject: { texture: finalPath, scale: Number(scale) } } } });
+      await actor.update({ img: finalPath, prototypeToken: { texture: { src: finalPath } } });
 
-      // Store metadata in flags
       const existing = await actor.getFlag('actor-studio', 'aiPortraits') || [];
-      await actor.setFlag('actor-studio', 'aiPortraits', [...existing, { path: finalPath, prompt: current.prompt || '', ts: Date.now() }]);
+      await actor.setFlag('actor-studio', 'aiPortraits', [...existing, { path: finalPath, dataUrl: current.dataUrl, prompt: current.prompt || '', ts: Date.now() }]);
 
       ui.notifications.info('AI portrait saved and token updated.');
     } catch (err) {
@@ -177,73 +188,310 @@
   }
 </script>
 
-<div class="ai-portrait-panel">
-  <h4>{t('AI.Portrait.Title')}</h4>
-  <div class="controls">
-    <button on:click={onGenerate} disabled={loading}>{t('AI.Portrait.Generate')}</button>
-    <button on:click={onAccept} disabled={$preview === null}>{t('AI.Portrait.Accept')}</button>
-  </div>
-  <div class="preview">
-    {#if $preview}
-      <img src={$preview.dataUrl} alt="AI preview" style="width:128px;height:128px;object-fit:cover; transform:scale({scale});"/>
-    {/if}
-  </div>
+<template lang="pug">
+.ai-portrait-panel
+  .panel-header
+    h4 {t('AI.Portrait.Title') || 'AI Portrait'}
+    p.panel-subtitle Generate a portrait image from character details.
 
-  {#if diagnostic}
-    <div class="diagnostic">
-      <strong>⚠️ Diagnostic</strong>
-      <div><em>Provider:</em> {diagnostic.provider || provider}</div>
-      <div><em>Resolved baseUrl:</em> {diagnostic.baseUrl || resolvedBaseUrl}</div>
-      <div><em>Endpoint:</em> {diagnostic.endpoint || 'N/A'}</div>
-      <div><em>Status:</em> {diagnostic.status || 'N/A'} {diagnostic.statusText ? `- ${diagnostic.statusText}` : ''}</div>
-      <div><em>Error:</em> {diagnostic.message}</div>
+  .prompt-section
+    textarea#ai-portrait-prompt(rows="3" placeholder="Custom prompt (optional). Leave blank to auto-generate from biography." bind:value!="{promptText}")
 
-      {#if diagnostic.status === 405}
-        <div class="diag-suggestion"><em>Suggestion:</em> Received 405 Method Not Allowed when calling the image endpoint. OpenRouter does not expose this image endpoint; either (1) use a provider with an images API (e.g., OpenAI or Stability) or (2) run a small local image-capable proxy and set the module setting `llmBaseUrl` to its API base (e.g., <code>http://localhost:3000/api</code>). If you're not running a proxy, try switching the LLM provider or deploying/starting `actor-studio-openai` with image support.</div>
-      {/if}
+  +if("$preview")
+    .preview-section
+      .preview-image
+        img(src!="{$preview.dataUrl}" alt="AI preview")
+      .preview-controls
+        button(on:click!="{onAccept}" disabled!="{!$preview}") Accept & Save
 
-      {#if diagnostic.status === 404}
-        <div class="diag-suggestion"><em>Suggestion:</em> Received 404 Not Found from the OpenRouter generation endpoint. Try setting the module setting <code>openrouterImageModel</code> to a known image model (e.g., <code>bytedance-seed/seedream-4.5</code> or <code>openai/gpt-5-image</code>) and ensure your <strong>OpenRouter API Key</strong> is present in settings. If you still get 404, your OpenRouter account may not have image-generation enabled or the model id may be unavailable—consider using a different provider or running a local proxy that exposes an image endpoint.</div>
-        <div class="diag-actions-extended">
-          <button on:click={discoverModels} disabled={discovering}>{discovering ? 'Discovering...' : 'Discover image models'}</button>
-        </div>
+  +if("diagnostic")
+    .diagnostic-section
+      .diagnostic-header
+        strong ⚠️ Generation Failed
+        button.btn-close(type="button" on:click!="{handleCloseDiagnostic}") ✕
 
-        {#if discoveredModels}
-          <div class="model-list">
-            <label>Select a model to try:</label>
-            <select bind:value={selectedModel}>
-              {#each discoveredModels as m}
-                <option value={m}>{m}</option>
-              {/each}
-            </select>
-            <div class="diag-actions-extended">
-              <button on:click={saveAndRetry} disabled={!selectedModel || loading}>Save & Retry</button>
-            </div>
-          </div>
-        {/if}
-      {/if}
+      .diagnostic-details
+        .detail-row
+          span.label Provider:
+          span.value {diagnostic.provider || provider}
+        .detail-row
+          span.label Error:
+          span.value {diagnostic.message}
+        +if("diagnostic.status")
+          .detail-row
+            span.label Status:
+            span.value {diagnostic.status} {diagnostic.statusText || ''}
 
-      <!-- Selectable/copyable diagnostic payload -->
-      <div class="diag-copy">
-        <label>Diagnostic details (select to copy):</label>
-        <textarea readonly rows="6">{JSON.stringify(diagnostic, null, 2)}</textarea>
-        <div class="diag-actions">
-          <button on:click={() => navigator.clipboard?.writeText(JSON.stringify(diagnostic, null, 2))}>{t('AI.Portrait.Copy') || 'Copy Diagnostic'}</button>
-          <button on:click={onGenerate} disabled={loading}>{t('AI.Portrait.Retry') || 'Retry'}</button>
-        </div>
-      </div>
-    </div>
-  {/if}
+      +if("diagnostic.status === 404")
+        .suggestion-box
+          p
+            strong Tip:
+            |  The endpoint wasn't found. Try discovering available image models below.
+          button(on:click!="{discoverModels}" disabled!="{discovering}") {discovering ? 'Discovering...' : 'Discover Models'}
 
-  <label>Fix Scale <input type="range" min="0.7" max="1.3" step="0.01" bind:value={scale} /></label>
-</div>
+          +if("discoveredModels")
+            .model-selector
+              label Select a model:
+              select(bind:value!="{selectedModel}")
+                +each("discoveredModels as m")
+                  option(value!="{m}") {m}
+              button(on:click!="{saveAndRetry}" disabled!="{!selectedModel || loading}") Save & Retry
+
+      +if("diagnostic.status === 405")
+        .suggestion-box
+          p
+            strong Tip:
+            |  Method not allowed. This provider may not support image generation via the current endpoint. Check your LLM provider settings.
+
+      .diagnostic-actions
+        button(on:click!="{handleCopyDiagnostic}") Copy Details
+        button(on:click!="{onGeneratePortrait}" disabled!="{loading}") Retry
+</template>
 
 <style>
-.ai-portrait-panel { padding: 8px; }
-.preview img { border-radius: 8px; }
-.diagnostic { background: #fff6f6; border: 1px solid #f0c6c6; padding: 8px; margin-top:8px; border-radius:6px; }
-.diagnostic .diag-copy textarea { width:100%; font-family: monospace; margin-top:4px; }
-.diagnostic .diag-actions { display:flex; gap:8px; margin-top:6px; }
-.diagnostic .diag-actions button { padding:6px 8px; }
+  .ai-portrait-panel {
+    padding: 16px;
+    background: var(--color-bg-dark-primary);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 
+  .panel-header {
+    margin-bottom: 8px;
+  }
+
+  .panel-header h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.2rem;
+    color: var(--color-text-dark-primary);
+  }
+
+  .panel-subtitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-dark-secondary);
+  }
+
+  .prompt-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .prompt-section textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 8px;
+    border: 1px solid var(--color-border-light);
+    border-radius: 6px;
+    background: var(--color-bg-dark-secondary);
+    color: var(--color-text-dark-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+  }
+
+  .prompt-section textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  .button-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-success,
+  .btn-tertiary,
+  .btn-close {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border-light);
+    background: var(--color-bg-dark-secondary);
+    color: var(--color-text-dark-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-light);
+    box-shadow: 0 2px 8px rgba(var(--color-primary-rgb), 0.3);
+  }
+
+  .btn-secondary {
+    background: var(--color-bg-dark-secondary);
+    border: 1px solid var(--color-border-light);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--color-bg-dark-tertiary);
+    border-color: var(--color-primary);
+  }
+
+  .btn-success {
+    background: var(--dnd5e-color-gold);
+    color: #000;
+    border-color: var(--dnd5e-color-gold);
+  }
+
+  .btn-success:hover:not(:disabled) {
+    background: var(--dnd5e-color-gold-light);
+  }
+
+  .btn-tertiary {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .preview-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    padding: 12px;
+    background: var(--color-bg-dark-secondary);
+    border-radius: 6px;
+  }
+
+  .preview-image {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .preview-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--color-border-light);
+  }
+
+  .preview-controls {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .diagnostic-section {
+    padding: 12px;
+    background: #fff6f6;
+    border: 1px solid #f0c6c6;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .diagnostic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .diagnostic-header strong {
+    color: #c41e3a;
+  }
+
+  .btn-close {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #c41e3a;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .btn-close:hover {
+    opacity: 0.7;
+  }
+
+  .diagnostic-details {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+  }
+
+  .detail-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .detail-row .label {
+    font-weight: 600;
+    min-width: 80px;
+    color: #666;
+  }
+
+  .detail-row .value {
+    flex: 1;
+    word-break: break-word;
+    color: #333;
+  }
+
+  .suggestion-box {
+    padding: 10px;
+    background: #fef3cd;
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .suggestion-box p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #856404;
+  }
+
+  .model-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.9rem;
+  }
+
+  .model-selector label {
+    color: #666;
+  }
+
+  .model-selector select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    color: #333;
+  }
+
+  .diagnostic-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .diagnostic-actions button {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
 </style>

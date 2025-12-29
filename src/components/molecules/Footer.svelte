@@ -542,6 +542,8 @@
 
     const { generateBiography } = await import('~/src/stores/biography');
     await generateBiography($actor);
+    const portraitEnabled = safeGetSetting(MODULE_ID, 'llmProvider', '') === 'openrouter' && safeGetSetting(MODULE_ID, 'llmApiKey', '');
+    if (portraitEnabled) Hooks.call('gas.generatePortrait');
     readOnlyTabs.set([]);
 
   }
@@ -789,20 +791,22 @@
                   i.right.ml-md(class="fas fa-chevron-right")
               
         +if("$activeTab === 'biography'")
-          .progress-container
-            .button-container
-              button.mt-xs.secondary(
+
+          .button-container.justify-flexrow-vertical.flexrow.gap-4.mb-xs
+            .flex1
+              button(
                 type="button"
                 role="button"
                 on:mousedown="{handleGenerateBiography}"
                 disabled="{$isGenerating}"
               )
-                span {$isGenerating ? 'Generating...' : 'Generate Biography'}
+                span {$isGenerating ? 'Generating...' : 'Generate'}
                 +if("$isGenerating")
                   i.right.fa-solid.fa-spinner.fa-spin.spin
                   +else
                     i.right.ml-md(class="fas fa-magic")
-              button.mt-xs(
+            .flex1
+              button(
                 type="button"
                 role="button"
                 on:mousedown="{handleCompleteBiography}"

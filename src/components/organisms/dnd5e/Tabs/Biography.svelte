@@ -36,6 +36,10 @@
     }
   }
 
+  async function handleGenerateBiographyClick() {
+    await generateBiography(actor);
+  }
+
 </script>
 
 <template lang="pug">
@@ -405,34 +409,6 @@ OneColumnTabLayout(title="{t('Tabs.Biography.Title')}" showTitle="{true}" tabNam
           cursor: pointer
           &:hover
             background: var(--dnd5e-color-gold)
-
-  .biography-actions
-    margin-bottom: 1.5rem
-    display: flex
-    justify-content: center
-
-    .action-buttons
-      .generate-btn
-        background: var(--color-primary)
-        color: white
-        border: none
-        padding: 0.75rem 1.5rem
-        border-radius: 4px
-        font-family: inherit
-        font-size: 0.9rem
-        cursor: pointer
-        display: flex
-        align-items: center
-        gap: 0.5rem
-        transition: background-color 0.2s
-
-        &:hover:not(:disabled)
-          background: var(--color-primary-dark)
-
-        &:disabled
-          background: var(--color-bg-dark-secondary)
-          color: var(--color-text-dark-secondary)
-          cursor: not-allowed
 
   .loading-overlay
     position: fixed
