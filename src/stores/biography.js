@@ -63,11 +63,14 @@ export const characterDetails = writable({
 });
 
 // Sync biography content with actor data
+let __lastActorId = null;
 actorInGame.subscribe(($actor) => {
   if ($actor) {
+    const isActorChanged = $actor.id !== __lastActorId;
     biographyContent.update(content => ({
       ...content,
-      name: content.name || $actor.name || '',
+      // If actor changed (sheet opened for a new actor), prefer the actor's name to reset any previous generated name
+      name: isActorChanged ? ($actor.name || '') : (content.name || $actor.name || ''),
       ideals: content.ideals || $actor.system?.details?.ideal || '',
       flaws: content.flaws || $actor.system?.details?.flaw || '',
       bonds: content.bonds || $actor.system?.details?.bond || '',
@@ -84,6 +87,8 @@ actorInGame.subscribe(($actor) => {
       faith: content.faith || $actor.system?.details?.faith || '',
       alignment: content.alignment || $actor.system?.details?.alignment || ''
     }));
+
+    __lastActorId = $actor.id;
 
     // Also sync characterDetails store
     characterDetails.update(details => ({

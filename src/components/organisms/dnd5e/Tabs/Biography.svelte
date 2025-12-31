@@ -15,6 +15,7 @@
 
   const showAiTokens = safeGetSetting(MODULE_ID, 'enableAiTokens', false);
 
+  export let sheet = undefined; // Accept sheet prop to avoid Svelte unknown-prop warnings
   const actor = getContext("#doc");
   const app = getContext("#external").application; 
 

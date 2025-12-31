@@ -39,6 +39,15 @@ export function registerAIImageSettings() {
     default: true
   });
 
+  game.settings.register(MODULE_ID, 'enableTokenCreation', {
+    name: t('Setting.EnableTokenCreation.Name'),
+    hint: t('Setting.EnableTokenCreation.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, 'aiImagesUsePlaceholderOnFailure', {
     name: 'Use placeholder image on failure',
     hint: 'When image generation fails, use a built-in placeholder image so the UI remains usable (MVP convenience toggle).',

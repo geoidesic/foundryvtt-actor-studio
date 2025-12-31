@@ -57,6 +57,7 @@ function storeEventHandler(elementId, element, event, handler) {
 export function openActorStudio(actorName, folderName = '', actorType = 'character') {
   if (userHasRightPermissions()) {
     if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
+      console.trace();
       ui.notifications.error('1. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
       return;
     }

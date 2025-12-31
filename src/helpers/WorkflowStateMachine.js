@@ -15,6 +15,7 @@ import Finity from 'finity';
 export const WORKFLOW_STATES = {
   IDLE: 'idle',
   CREATING_CHARACTER: 'creating_character',
+  TOKEN_CUSTOMIZATION: 'token_customization',
   PROCESSING_ADVANCEMENTS: 'processing_advancements',
   BIOGRAPHY: 'biography',
   SELECTING_EQUIPMENT: 'selecting_equipment',
@@ -30,8 +31,9 @@ export const WORKFLOW_STATES = {
 export const WORKFLOW_EVENTS = {
   START_CHARACTER_CREATION: 'start_character_creation',
   CHARACTER_CREATED: 'character_created',
-  ADVANCEMENTS_COMPLETE: 'advancements_complete',
   BIOGRAPHY_COMPLETE: 'biography_complete',
+  TOKEN_COMPLETE: 'token_complete',
+  ADVANCEMENTS_COMPLETE: 'advancements_complete',
   WEALTH_CHOICE_MADE: 'wealth_choice_made',
   EQUIPMENT_COMPLETE: 'equipment_complete',
   SPELLS_COMPLETE: 'spells_complete',
@@ -49,6 +51,8 @@ export const WORKFLOW_EVENTS = {
  */
 export const workflowFSMContext = {
   isProcessing: writable(false),
+  // Store pre-creation data (actor not yet created) such as portraits
+  preCreationPortraits: [],
   _shouldShowEquipmentSelection: function () {
     const enableEquipmentSelection = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
     if (!enableEquipmentSelection) return false;
@@ -274,6 +278,11 @@ export function createWorkflowStateMachine() {
         .transitionTo('biography').withCondition((context) => workflowFSMContext._shouldShowBiography())
         .transitionTo('processing_advancements')
       .on('biography_complete')
+        .transitionTo('token_customization').withCondition((context) => {
+          const enabled = safeGetSetting(MODULE_ID, 'enableTokenCreation', false);
+          window.GAS.log.d('[FSM] CREATING_CHARACTER biography_complete: enableTokenCreation =', enabled);
+          return enabled;
+        })
         .transitionTo('processing_advancements') // Handle biography completion from creating_character state
       .on('start_character_creation').transitionTo('creating_character')
       .on('error').transitionTo('error')
@@ -346,7 +355,12 @@ export function createWorkflowStateMachine() {
       .on('error').transitionTo('error')
     .state('biography')
       .on('biography_complete')
-        .transitionTo('processing_advancements') // Always go to processing_advancements after biography to handle advancement capture
+        .transitionTo('token_customization').withCondition((context) => {
+          const enabled = safeGetSetting(MODULE_ID, 'enableTokenCreation', false);
+          window.GAS.log.d('[FSM] BIOGRAPHY_COMPLETE: enableTokenCreation =', enabled);
+          return enabled;
+        })
+        .transitionTo('processing_advancements')
       .on('reset').transitionTo('idle')
       .on('error').transitionTo('error')
       .onEnter((context) => {
@@ -362,6 +376,25 @@ export function createWorkflowStateMachine() {
           tabs.update(t => [...t, { label: "Biography", id: "biography", component: "Biography" }]);
         }
         activeTab.set("biography");
+      })
+    .state('token_customization')
+      .on('token_complete')
+        .transitionTo('processing_advancements')
+      .on('reset').transitionTo('idle')
+      .on('error').transitionTo('error')
+      .onEnter((context) => {
+        if (workflowFSMContext.isProcessing) workflowFSMContext.isProcessing.set(false);
+        window.GAS.log.d('[WORKFLOW] Entered TOKEN_CUSTOMIZATION state');
+        
+        // Mark previous tabs as read-only
+        readOnlyTabs.set(['abilities', 'race', 'background', 'class', 'biography']);
+        
+        // Add token tab and switch to it
+        const currentTabs = get(tabs);
+        if (!currentTabs.find(t => t.id === "token")) {
+          tabs.update(t => [...t, { label: "Token", id: "token", component: "Token" }]);
+        }
+        activeTab.set("token");
       })
     .state('choosing_starting_wealth')
       .on('wealth_choice_made')

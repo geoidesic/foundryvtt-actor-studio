@@ -104,6 +104,16 @@
   // Add state for tracking if equipment has been added this session
   const hasAddedEquipmentThisSession = writable(false);
 
+  // Tokenizer presence (avoid long inline template expressions)
+  let tokenizerPresent = false;
+  onMount(() => {
+    try {
+      tokenizerPresent = !!game?.modules?.get('tokenizer')?.active;
+    } catch (e) {
+      tokenizerPresent = false;
+    }
+  });
+
   // Store references for workflow functions
   const storeRefs = {
     race,
@@ -524,7 +534,13 @@
 
       // Finally, signal biography completion
       try {
-        workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+        const current = workflowFSM.getCurrentState && workflowFSM.getCurrentState();
+        if (current === 'token_customization') {
+          window.GAS.log.d('[FOOTER] FSM already in token_customization; switching active tab to token');
+          activeTab.set('token');
+        } else {
+          workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
+        }
       } catch (e) {
         // If the FSM still rejects the event, log it but avoid throwing (UI already handled)
         window.GAS.log.e('[FOOTER] Error dispatching BIOGRAPHY_COMPLETE event:', e);
@@ -542,8 +558,43 @@
 
     const { generateBiography } = await import('~/src/stores/biography');
     await generateBiography($actor);
-    const portraitEnabled = safeGetSetting(MODULE_ID, 'llmProvider', '') === 'openrouter' && safeGetSetting(MODULE_ID, 'llmApiKey', '');
-    if (portraitEnabled) Hooks.call('gas.generatePortrait');
+    const portraitEnabled = (safeGetSetting(MODULE_ID, 'llmProvider', '') === 'openrouter' && safeGetSetting(MODULE_ID, 'llmApiKey', '')) || window.GAS?.debug;
+    if (portraitEnabled) {
+      // Use the hook when listeners are present (preferred), otherwise fall back to direct generation
+      const listeners = Hooks._callbacks && Hooks._callbacks['gas.generatePortrait'];
+      if (listeners && listeners.length) {
+        Hooks.call('gas.generatePortrait');
+      } else {
+        window.GAS?.log?.d && window.GAS.log.d('[FOOTER] No listeners for gas.generatePortrait; generating portrait directly');
+        // Build a simple prompt based on the current biography content and character details
+        const bio = $biographyContent || {};
+        const parts = [];
+        if (bio.race) parts.push(`${bio.race} character`);
+        if (bio.characterClass) parts.push(`${bio.characterClass}`);
+        if (bio.appearance) parts.push(`appearance: ${bio.appearance}`);
+        if (bio.biography) parts.push(`${bio.biography.substring(0, 100)}...`);
+        const prompt = parts.length > 0 ? parts.join(', ') : 'Portrait of a fantasy character';
+
+        (async () => {
+          try {
+            const { generateImageFromPrompt } = await import('~/src/helpers/aiImage');
+            const res = await generateImageFromPrompt(prompt, { preferAlpha: true });
+            res.prompt = prompt;
+            // Update shared preview store
+            const { aiPreview } = await import('~/src/stores/aiPortraitStore');
+            aiPreview.set(res);
+            // Cache to workflow pre-creation so Token tab sees it
+            const { workflowFSMContext } = await import('~/src/helpers/WorkflowStateMachine');
+            workflowFSMContext.preCreationPortraits = [...(workflowFSMContext.preCreationPortraits||[]), { path: res.dataUrl, dataUrl: res.dataUrl, prompt: res.prompt, ts: Date.now() }];
+            window.GAS?.log?.d && window.GAS.log.d('[FOOTER] Generated portrait directly and cached to preCreationPortraits');
+            ui.notifications.info('AI portrait generated (preview only). Open the Token tab to customize and save.');
+          } catch (err) {
+            console.error('[FOOTER] Direct portrait generation failed:', err);
+            ui.notifications.error(`Portrait generation failed: ${err.message}`);
+          }
+        })();
+      }
+    }
     readOnlyTabs.set([]);
 
   }
@@ -662,6 +713,23 @@
       ui.notifications.error('Failed to generate character name');
     }
   };
+
+  // Wrapper to avoid long inline expressions in the template
+  function handleGenerateNameClick() {
+    const _race = get(race);
+    const raceName = _race?.name ?? _race ?? '';
+    if (!raceName) return;
+    generateName(raceName);
+  }
+
+  // Footer token handlers (use named functions instead of inline arrow expressions)
+  function callTokenRegenerate() {
+    Hooks.call('gas.tokenRegenerate');
+  }
+
+  function callTokenAccept() {
+    Hooks.call('gas.tokenAccept');
+  }
 </script>
 
 <template lang="pug">
@@ -690,7 +758,7 @@
                     disabled="{$isLevelUp || $tabDisabled}"
                   )
                   +if("$showLLMButton")
-                    .flex.pointer(on:click="{generateName($race.name)}")
+                    .flex.pointer(on:click="{handleGenerateNameClick}")
                       img(src="modules/foundryvtt-actor-studio/assets/ChatGPT_logo.svg" alt="Generate name via ChatGPT" style="height: 100%; max-height: 30px; border: none; width: auto;")
       
       //- Progress and buttons section
@@ -816,6 +884,26 @@
                 +if("$isGenerating")
                   +else
                     i.right.ml-md(class="fas fa-chevron-right")
+
+        +if("$activeTab === 'token'")
+          .button-container.justify-flexrow-vertical.flexrow.gap-4.mb-xs
+            .flex1
+              button(
+                type="button"
+                role="button"
+                on:mousedown="{callTokenRegenerate}"
+                disabled="{!tokenizerPresent}"
+              )
+                span Regenerate
+                i.right.ml-md(class="fas fa-magic")
+            .flex1
+              button(
+                type="button"
+                role="button"
+                on:mousedown="{callTokenAccept}"
+              )
+                span Accept & Save
+                i.right.ml-md(class="fas fa-chevron-right")
 
               
         +if("CHARACTER_CREATION_TABS.includes($activeTab)")

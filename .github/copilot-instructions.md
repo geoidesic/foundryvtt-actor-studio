@@ -11,7 +11,12 @@
 - **FoundryVTT Hooks Integration**: Module uses hooks extensively for FoundryVTT lifecycle and D&D 5e advancement system integration
 
 ## Critical Development Patterns
-- NB: ensure you run the tests before claiming success
+
+**Testing**
+- NB: ensure you run all tests after every generation
+- If any tests fail, investigate why and fix appropriately.
+- Quench is designed for FoundryVTT end-to-end testing. Use it.
+
 
 **Frontend Stack**:
 - **CRITICAL**: ALL Svelte components MUST use Pug templates with `<template lang="pug">` - NEVER use standard HTML markup
@@ -155,6 +160,7 @@ Keep a single authoritative index of module settings here when adding new settin
   - `openrouterApiKey` (string) — dedicated API key for OpenRouter (optional, falls back to llmApiKey)
   - `openrouterImageModel` (string) — model for image generation (e.g., 'bytedance-seed/seedream-4.5')
   - `enableAiTokens` (boolean) — toggle to enable the Phase‑1 AI portrait UI
+  - `enableTokenCreation` (boolean) — toggle to show Token Customization tab after Bio tab (enables ring subject scale and Tokenizer integration)
   - `aiImagesUsePlaceholderOnFailure` (boolean) — use placeholder image when generation fails
   - Note: When `package.json` has `"debug": true`, image generation returns a static test image instead of calling APIs (saves credits during development)
 

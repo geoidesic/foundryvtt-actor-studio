@@ -106,6 +106,9 @@
       },
       "Biography": {
         "Title": "Biography"
+      },
+      "Token": {
+        "Title": "Token Customization"
       }
     },
     "AI": {
@@ -211,6 +214,10 @@
       "EnablePortraitGeneration": {
         "Name": "Enable Portrait Generation",
         "Hint": "Enable the Foundry-only AI Portrait generation UI in the Biography tab. Uses OpenRouter/Stability (requires API key)."
+      },
+      "EnableTokenCreation": {
+        "Name": "Enable Token Customization",
+        "Hint": "Show the Token Customization tab after the Biography tab. Allows players to configure ring subject scale and integrate with Tokenizer for masked tokens."
       },
       "DonationTracker": {
         "Name": "Donation Tracker settings",

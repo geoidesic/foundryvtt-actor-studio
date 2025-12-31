@@ -13,8 +13,100 @@
   let diagnostic = null;
   let promptText = '';
   let ringScale = 1.0;  // Default scale for token ring
+  let ringPreviewDataUrl = null;  // Rendered ring preview
   const provider = safeGetSetting(MODULE_ID, 'llmProvider', 'openai');
   const resolvedBaseUrl = LLM.getBaseUrl();
+  import { aiPreview } from '~/src/stores/aiPortraitStore';
+
+  // Reactive: render ring preview when portrait or scale changes
+  $: if ($preview?.dataUrl && canvas?.ready) {
+    renderTokenRingPreview($preview.dataUrl, ringScale);
+  }
+
+  async function renderTokenRingPreview(portraitUrl, scale) {
+    try {
+      if (!canvas?.ready || !canvas.tokens?.placeables?.length) {
+        ringPreviewDataUrl = portraitUrl;
+        return;
+      }
+
+      // Create a temporary token document with ring configuration
+      const tempTokenData = {
+        x: 0,
+        y: 0,
+        texture: { src: portraitUrl },
+        width: 1,
+        height: 1,
+        ring: {
+          enabled: true,
+          subject: {
+            texture: portraitUrl,
+            scale: scale
+          }
+        }
+      };
+
+      // Find any existing token to use as a template
+      const templateToken = canvas.tokens.placeables[0];
+      if (!templateToken) {
+        ringPreviewDataUrl = portraitUrl;
+        return;
+      }
+
+      // Clone the token (approach from Discord)
+      const clonedToken = templateToken.clone();
+      clonedToken.position.set(0, 0);
+      
+      // Update with our portrait texture
+      clonedToken.document.texture.src = portraitUrl;
+      if (clonedToken.document.ring) {
+        clonedToken.document.ring.enabled = true;
+        clonedToken.document.ring.subject = {
+          texture: portraitUrl,
+          scale: scale
+        };
+      }
+
+      // Draw the token (includes ring)
+      await clonedToken.draw();
+      const clonedMesh = clonedToken.mesh;
+      
+      // Configure ring on the mesh
+      if (clonedToken.ring) {
+        clonedToken.ring.configure(clonedMesh);
+      }
+
+      // Generate texture from the rendered token
+      const renderTexture = canvas.app.renderer.generateTexture(clonedMesh, {
+        resolution: clonedMesh.texture.resolution
+      });
+
+      // Convert PIXI texture to data URL
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = 140;
+      tempCanvas.height = 140;
+      const ctx = tempCanvas.getContext('2d');
+      
+      // Extract the texture and draw to canvas
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, 140, 140);
+        ringPreviewDataUrl = tempCanvas.toDataURL('image/png');
+        
+        // Cleanup
+        clonedToken.destroy();
+        renderTexture.destroy(true);
+      };
+      img.onerror = () => {
+        ringPreviewDataUrl = portraitUrl;
+        clonedToken.destroy();
+      };
+      img.src = canvas.app.renderer.plugins.extract.base64(renderTexture);
+    } catch (err) {
+      console.warn('Failed to render token ring preview:', err);
+      ringPreviewDataUrl = portraitUrl;
+    }
+  }
 
   // If actor isn't provided as a prop, get it from context (consistent with other components)
   const ctxActor = getContext('#doc');
@@ -31,10 +123,18 @@
   let portraitHookId;
   onMount(async () => {
     portraitHookId = Hooks.on('gas.generatePortrait', async () => {
-      if (!portraitSettingEnabled()) return;
+      // Allow debug mode to bypass the module setting checks so devs can preview without an API key
+      if (!portraitSettingEnabled() && !window.GAS?.debug) return;
       if (loading) return;
       await onGeneratePortrait();
     });
+
+    // Subscribe to shared preview store so panel shows previews generated elsewhere (Footer/direct generation)
+    const unsubPreview = aiPreview.subscribe(value => {
+      if (value && value.dataUrl) preview.set(value);
+      else if (value && value.path) preview.set({ dataUrl: value.path, prompt: value.prompt });
+    });
+
     // Load existing portrait from actor flags when available
     if (resolvedActor) {
       const aiPortraits = await resolvedActor.getFlag(MODULE_ID, 'aiPortraits') || [];
@@ -43,6 +143,12 @@
         preview.set({ dataUrl: lastPortrait.dataUrl || lastPortrait.path, prompt: lastPortrait.prompt });
       }
     }
+
+    // Clean up preview subscription on destroy
+    onDestroy(() => {
+      if (portraitHookId) Hooks.off('gas.generatePortrait', portraitHookId);
+      unsubPreview && unsubPreview();
+    });
   });
 
   onDestroy(() => {
@@ -94,11 +200,15 @@
   async function onGeneratePortrait() {
     loading = true;
     try {
-      const apiKey = safeGetSetting(MODULE_ID, 'llmApiKey', '');
+      const apiKey = safeGetSetting(MODULE_ID, 'llmApiKey', '') || '';
       const provider = safeGetSetting(MODULE_ID, 'llmProvider', 'openai');
-      if (!apiKey) {
+      // Allow debug mode to skip requiring an API key so developers can preview the test image
+      if (!apiKey && !window.GAS?.debug) {
         ui.notifications.warn('LLM API key not configured (llmApiKey). Please set it in Module Settings → Actor Studio.');
         return;
+      }
+      if (!apiKey && window.GAS?.debug) {
+        window.GAS.log.d && window.GAS.log.d('[AI] Debug mode: skipping API key requirement for portrait generation');
       }
       if (provider !== 'openrouter') ui.notifications.info(`LLM provider is set to ${provider}; images will use OpenRouter when provider is "openrouter".`);
 
@@ -115,6 +225,8 @@
         const res = await generateImageFromPrompt(prompt, { preferAlpha: true });
         res.prompt = prompt;
         preview.set(res);
+        // Also update shared preview store so other tabs can access the generated portrait before saving
+        import('~/src/stores/aiPortraitStore').then(({ aiPreview }) => aiPreview.set(res)).catch(e => window.GAS?.log?.w && window.GAS.log.w('[AI] Failed to update shared aiPreview store', e));
       } catch (err) {
         console.error('Image generation failed', err);
         diagnostic = {
@@ -190,10 +302,19 @@
         } 
       });
 
-      const existing = resolvedActor ? await resolvedActor.getFlag(MODULE_ID, 'aiPortraits') || [] : [];
+          const existing = resolvedActor ? await resolvedActor.getFlag(MODULE_ID, 'aiPortraits') || [] : [];
       if (resolvedActor) {
         await resolvedActor.setFlag(MODULE_ID, 'aiPortraits', [...existing, { path: finalPath, dataUrl: current.dataUrl, prompt: current.prompt || '', ts: Date.now() }]);
       }
+
+      // Always cache portrait in the workflow pre-creation context so Token tab can access it during creation
+      import('~/src/helpers/WorkflowStateMachine').then(({ workflowFSMContext }) => {
+        const list = workflowFSMContext.preCreationPortraits || [];
+        workflowFSMContext.preCreationPortraits = [...list, { path: finalPath, dataUrl: current.dataUrl, prompt: current.prompt || '', ts: Date.now() }];
+        window.GAS && window.GAS.log && window.GAS.log.d && window.GAS.log.d('[AI] Stored portrait to preCreationPortraits', workflowFSMContext.preCreationPortraits.length);
+      }).catch(e => {
+        console.warn('Failed to store pre-creation portrait in workflow context', e);
+      });
 
       ui.notifications.info('AI portrait saved and token ring enabled.');
     } catch (err) {
@@ -226,7 +347,7 @@
             p Token Ring Preview
           .token-preview-frame
             .token-ring
-              img.ring-subject(src!="{$preview.dataUrl}" alt="Token with ring" style!="{`transform: scale(${ringScale})`}")
+              img.ring-subject(src!="{ringPreviewDataUrl || $preview.dataUrl}" alt="Token with ring")
       
       .ring-scale-control
         label(for="ring-scale") Token Ring Scale:
