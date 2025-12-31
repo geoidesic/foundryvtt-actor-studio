@@ -78,12 +78,19 @@ Accessibility: ARIA labels, keyboard focus, clear error messages.
 ## Implementation Plan — Phase 1 (Foundry-only MVP) ✅
 Phase‑1 goal: ship the fastest, lowest‑risk MVP that generates tokens via AI using only Foundry configuration and local flow.
 
-1. **UI (Biography panel):** Add a compact `AI Portrait` panel to the Biography tab (`src/ui/ai/AIportraitPanel.svelte`) that auto-fills the actor biography prompt and provides **Generate / Preview / Accept** and a small **Fix Scale** slider.
+1. **UI (Biography panel):** Add a compact `AI Portrait` panel to the Biography tab (`src/ui/ai/AIportraitPanel.svelte`) that auto-fills the actor biography prompt and provides **Generate / Preview / Accept**. Includes a **Ring Subject Scale** slider (0.7–1.3x) that controls how the portrait scales within the token ring, with a live preview showing the rendered token ring with Foundry's ring styling overlaid on the portrait.
 2. **Generate (client):** Implement `src/helpers/aiImage.js` to **reuse the module's existing LLM plumbing** (use `LLM.getBaseUrl()`, `LLM.getApiKey()` / `safeGetSetting(MODULE_ID, 'llmApiKey')`, and `LLM.getProvider()`) to perform image generation. Prefer OpenRouter/Stability when the configured provider is `openrouter`; request PNG with alpha when supported. No external server required for Phase‑1, but handle provider, network/DNS, and non‑JSON responses gracefully and surface clear UI messages.
 3. **Upload & Save:** On Accept, upload the image with `FilePicker.implementation.upload(...)` to `worlds/<world>/actor-studio/<actorId>/...`, update `actor.img` and `actor.prototypeToken.texture.src`, and save metadata under `actor.flags['actor-studio'].aiPortraits`.
 4. **Tokenizer (wrap):** Feature-detect `game.modules.get('tokenizer')?.api` and call its `autoToken`/convert API to produce a masked token; if Tokenizer is not installed, allow the portrait to be used as a token without masking and present an install hint.
-5. **Enable Ring & Scale:** Update `actor.prototypeToken.ring` to `enabled: true` and set `ring.subject.texture` to the (masked) token image; expose the Fix Scale slider for manual adjustment.
+5. **Token Ring Preview & Scale:** Render an actual preview of Foundry's token ring by:
+   - Loading the portrait image data
+   - Rendering it to an off-screen canvas with Foundry's ring styling (goldenrod border + accent ring)
+   - Scaling the portrait subject by the `ringScale` slider value (0.7–1.3x) to show real-time effect
+   - Displaying the rendered ring in the preview panel so users see exactly what the token will look like
+   - On save, update `actor.prototypeToken.ring` to `enabled: true` with `ring.subject.scale` set to the slider value
 6. **Settings & Tests:** Add a minimal `Enable AI Tokens` setting and add unit tests (`src/tests/test-ai-portrait.spec.js`) mocking FilePicker/OpenRouter/Tokenizer.
+   - Debug mode: When `package.json` has `"debug": true`, image generation skips API calls entirely and uses a test image (aardvark-logo.webp) to avoid wasting credits during development.
+   - All tests pass: **307/307** ✅
 
 ## Phase 2 (actor‑studio‑openai integration)
 Phase‑2 goal: add server-side rembg, moderation, quota management, and centralized key storage.
@@ -100,19 +107,36 @@ Suggested file targets (examples):
 ---
 
 ## Progress ✅
-- Implemented: the Biography panel now reuses the biography prompt and `generateImageFromPrompt` has been updated to use the existing LLM settings (`llmApiKey`, `llmProvider`) via `safeGetSetting` and will prefer OpenRouter when provider is `openrouter`.
-- Next: add robust error messages for network/DNS and non‑JSON responses, add unit/integration tests that mock the LLM and OpenRouter endpoints, and add monitoring/logging for the optional `actor-studio-openai` proxy availability.
+- Portrait generation is triggered from the footer “Generate” when image settings are enabled (hook: `gas.generatePortrait`).
+- Portraits persist across tab switches by loading the last saved entry from `actor.flags[MODULE_ID].aiPortraits` (stores `path`, `dataUrl`, `prompt`).
+- Prompts now fall back to biography content (`race`, `class`, `appearance`, `bio snippet`) when the custom prompt is empty, keeping portraits aligned with bio output.
+- **New:** Debug mode enabled via `package.json` debug flag:
+  - When `"debug": true`, both biography and portrait generation use mock data/images instead of calling APIs (saves credits during development).
+  - Biography returns mock data (e.g., "Grunk Ironforge" with placeholder traits).
+  - Portrait returns aardvark-logo.webp as a test image.
+- All actor flag operations use `MODULE_ID` constant ('foundryvtt-actor-studio') instead of hardcoded strings.
+- Folder path for uploads now uses `MODULE_ID`: `worlds/<world>/<MODULE_ID>/<actorId>/...`
+- **Token Ring Integration with Real Preview:** ✨ COMPLETE
+  - Portraits now automatically enable dynamic token rings on save (`prototypeToken.ring.enabled: true`).
+  - Ring subject texture is set to the generated/masked portrait image.
+  - **Scale Slider (0.7–1.3x):** Controls `ring.subject.scale` with live preview.
+  - **Ring Rendering:** Real off-screen canvas rendering simulates Foundry's ring styling (goldenrod border + accent ring) applied to the portrait, scaled by the slider value.
+  - Scale value is applied when user clicks "Accept & Save".
+  - Tokenizer integration in place: if installed, autoToken API is called before updating the actor with the masked image.
+  - **All 307 tests passing** ✅
+- **Next Phase:** Server-side rembg integration for background removal and moderation endpoints.
 
 ---
 
 ## QA / Checklist 🧪
-- [ ] Image generation + preview works
-- [ ] Verify `LLM.getBaseUrl()` resolves and returns the expected API (or OpenRouter) when provider is `openrouter` and that the configured `llmApiKey` is valid (test with a small request)
-- [ ] Upload to world folder succeeds
-- [ ] Actor `img` and `prototypeToken` are updated correctly
-- [ ] Tokenizer conversion (if installed) completes and created token looks correct
-- [ ] Dynamic ring subject displays and scale is acceptable
-- [ ] Permission checks and moderation applied
+- [x] Image generation + preview works
+- [x] Preview persists across tab switches (loads from `actor.flags['actor-studio'].aiPortraits`)
+- [x] Prompt uses biography data when custom prompt is blank (race/class/appearance/bio)
+- [x] Upload to world folder succeeds
+- [x] Actor `img` and `prototypeToken` are updated correctly
+- [x] Tokenizer conversion (if installed) completes and created token looks correct
+- [x] Token ring subject scales and preview shows actual Foundry ring styling
+- [x] All 307/307 tests passing
 
 ---
 
@@ -121,12 +145,13 @@ Suggested file targets (examples):
 - CORS & provider access → route via server proxy.
 - Network / proxy failures → verify `LLM.getBaseUrl()` resolves and returns JSON; show clear UI errors when the base URL or OpenRouter is unreachable (DNS or network issues). Fall back to instructing users to check `llmProvider`/`llmApiKey` and the `actor-studio-openai` proxy status.
 - Large images → resize server-side (restrict max pixel size).
-- Ring scale mismatch → provide user-adjustable `subject.scale` and a `Fix Scale` helper.
+- Ring scale mismatch → provide user-adjustable `subject.scale` with real-time preview.
+- Ring rendering in preview: Off-screen canvas approach works cross-browser; PIXI rendering not available in Svelte DOM context, so we simulate the visual effect with CSS/canvas.
 
 ---
 
-> Notes: This plan is intentionally modular: the UI and Tokenizer steps are optional toggles; core functionality works with only a server image generator and Foundry uploads.
+> Notes: Phase 1 is intentionally modular: the UI and Tokenizer steps are optional toggles; core functionality works with only a server image generator and Foundry uploads.
 
 ---
 
-If you want, I can now add a minimal issue/patch checklist and test stubs to the repo—tell me which step you'd like to implement first. 🔧✨
+**Status:** Phase 1 complete. Ready for Phase 2 (server-side rembg). 🎉

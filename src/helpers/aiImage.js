@@ -8,6 +8,13 @@ import LLM from '~/src/plugins/llm';
 export async function generateImageFromPrompt(prompt, options = {}) {
   const { preferAlpha = false } = options;
 
+  // Check if debug mode is enabled (from package.json) - return test image without API calls
+  if (window.GAS?.debug) {
+    console.log('[AI Image Debug Mode] Using aardvark-logo.webp test image instead of calling API');
+    const testImagePath = `/modules/${MODULE_ID}/assets/aardvark-logo.webp`;
+    return { dataUrl: testImagePath, providerResponse: { dev_mode: true }, prompt };
+  }
+
   // Use existing LLM settings via safeGetSetting
   // Prefer a dedicated OpenRouter API key if configured, otherwise fall back to llmApiKey
   const openrouterKey = safeGetSetting(MODULE_ID, 'openrouterApiKey', '');
@@ -69,6 +76,17 @@ export async function generateImageFromPrompt(prompt, options = {}) {
   try {
     payload = JSON.parse(text);
   } catch (err) {
+    // If we got a 401/402/403/429 or any auth/payment/rate-limit error, don't retry - fail immediately with clear message
+    if ([401, 402, 403, 429].includes(res.status)) {
+      const authErr = new Error(`OpenRouter API error (${res.status}): ${res.status === 402 ? 'Insufficient credits. Purchase credits at https://openrouter.ai/settings/credits' : res.status === 401 ? 'Invalid API key' : res.status === 403 ? 'Access forbidden' : 'Rate limit exceeded'}`);
+      authErr.endpoint = endpoint;
+      authErr.provider = provider;
+      authErr.status = res.status;
+      authErr.statusText = res.statusText;
+      authErr.responseText = text;
+      throw authErr;
+    }
+
     // If we got a 405 or other non-JSON, attempt a small set of alternative endpoints automatically before failing
     const alternatives = [
       `${baseUrl}/images/generate`,
@@ -171,6 +189,25 @@ export async function generateImageFromPrompt(prompt, options = {}) {
 
   // If the response was a non-OK status, try alternative endpoints/payload shapes before failing
   if (!res.ok) {
+    // If we got a 401/402/403/429, don't retry - fail immediately with clear message
+    if ([401, 402, 403, 429].includes(res.status)) {
+      let errorMsg = 'Unknown error';
+      try {
+        const errorPayload = JSON.parse(text);
+        errorMsg = errorPayload?.error?.message || errorPayload?.message || JSON.stringify(errorPayload).slice(0, 200);
+      } catch (e) {
+        errorMsg = text.slice(0, 200);
+      }
+
+      const authErr = new Error(`OpenRouter API error (${res.status}): ${res.status === 402 ? 'Insufficient credits. Purchase credits at https://openrouter.ai/settings/credits' : res.status === 401 ? 'Invalid API key' : res.status === 403 ? 'Access forbidden' : 'Rate limit exceeded'}. Details: ${errorMsg}`);
+      authErr.endpoint = endpoint;
+      authErr.provider = provider;
+      authErr.status = res.status;
+      authErr.statusText = res.statusText;
+      authErr.responseText = text;
+      throw authErr;
+    }
+
     // Try host permutations (openrouter.ai vs api.openrouter.ai) and multiple endpoint paths
     const hostCandidates = new Set();
     hostCandidates.add(baseUrl);

@@ -231,6 +231,22 @@ class LLM {
 
     console.log('[LLM] Generate biography request:', { provider, baseUrl, apiKey: apiKey ? '***' + apiKey.slice(-4) : 'none', race, characterClass, level, elements });
 
+    // Check if debug mode is enabled - return mock biography without API calls
+    if (window.GAS?.debug) {
+      console.log('[LLM Debug Mode] Returning mock biography instead of calling API');
+      const mockBio = {
+        name: elements.includes('name') ? 'Grunk Ironforge' : undefined,
+        ideals: elements.includes('ideals') ? 'Honor and craftsmanship above all else.' : undefined,
+        flaws: elements.includes('flaws') ? 'Too stubborn to admit when wrong.' : undefined,
+        bonds: elements.includes('bonds') ? 'My clan forge is my sacred duty to protect.' : undefined,
+        personalityTraits: elements.includes('personalityTraits') ? 'Gruff exterior but loyal to friends.' : undefined,
+        appearance: elements.includes('appearance') ? `A sturdy ${race} ${characterClass} with weathered features and calloused hands.` : undefined,
+        biography: elements.includes('biography') ? `Born in the mountain forges, this ${race} ${characterClass} learned the ${background} trade from childhood.` : undefined
+      };
+      // Filter out undefined values
+      return Object.fromEntries(Object.entries(mockBio).filter(([_, v]) => v !== undefined));
+    }
+
     // Check if API key is required for this provider
     if ((provider === 'openrouter' || provider === 'claude') && (!apiKey || apiKey === 'actor-studio-gpt-beta' || apiKey.length < 10)) {
       throw new Error(`API key required for ${provider}. Please set your ${provider === 'claude' ? 'Anthropic' : 'OpenRouter'} API key in Actor Studio settings.`);
@@ -351,6 +367,19 @@ Only include the elements that were requested. Make each element detailed but co
         data = await response.json();
 
         if (!response.ok) {
+          // Handle auth/payment/rate-limit errors with clear messages
+          if (response.status === 402) {
+            throw new Error('OpenRouter API error: Insufficient credits. This account never purchased credits. Make sure your key is on the correct account or org, and if so, purchase more at https://openrouter.ai/settings/credits');
+          }
+          if (response.status === 401) {
+            throw new Error('OpenRouter API error: Invalid API key. Check your API key in Actor Studio settings.');
+          }
+          if (response.status === 403) {
+            throw new Error('OpenRouter API error: Access forbidden. Check your API key permissions.');
+          }
+          if (response.status === 429) {
+            throw new Error('OpenRouter API error: Rate limit exceeded. Please wait and try again.');
+          }
           throw new Error(`OpenRouter API error: ${data.error?.message || 'Unknown error'}`);
         }
 

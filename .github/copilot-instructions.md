@@ -152,7 +152,11 @@ Keep a single authoritative index of module settings here when adding new settin
   - `llmApiKey` (string) — API key used for LLM & image generation flows
   - `llmProvider` (string) — 'openai' | 'claude' | 'openrouter'
   - `openrouterModel` (string) — model id for OpenRouter (e.g., `stability/SDXL`)
+  - `openrouterApiKey` (string) — dedicated API key for OpenRouter (optional, falls back to llmApiKey)
+  - `openrouterImageModel` (string) — model for image generation (e.g., 'bytedance-seed/seedream-4.5')
   - `enableAiTokens` (boolean) — toggle to enable the Phase‑1 AI portrait UI
+  - `aiImagesUsePlaceholderOnFailure` (boolean) — use placeholder image when generation fails
+  - Note: When `package.json` has `"debug": true`, image generation returns a static test image instead of calling APIs (saves credits during development)
 
 Guidelines (MANDATORY):
 - Always register settings using `game.settings.register(MODULE_ID, ... )` (use the `MODULE_ID` constant, not a literal string).
