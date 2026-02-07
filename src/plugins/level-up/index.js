@@ -161,12 +161,13 @@ export function tidy5eSheetUI(app, element, data) {
   window.GAS.log.g('actorHasLevellingXP', actorHasLevellingXP)
 
   if (!actorHasClasses || (!isMilestoneLeveling && actorHasLevellingXP)) return;
-  // Find the new Tidy5e header actions container
-  // Primary selector for modern tidy5e
-  let actionsContainer = $(element).find('[data-tidy-sheet-part="sheet-header-actions-container"]');
+  // Find the Tidy5e header actions container (modern tidy5e)
+  let actionsContainer = $(element).find('.sheet-header-actions');
+  window.GAS.log.p('actionsContainer', actionsContainer)
+
   // Backwards-compatible fallbacks for older tidy5e markups
   if (!actionsContainer || actionsContainer.length === 0) {
-    actionsContainer = $(element).find('.sheet-header-actions');
+    actionsContainer = $(element).find('[data-tidy-sheet-part="sheet-header-actions-container"]');
   }
   if (!actionsContainer || actionsContainer.length === 0) {
     // Older tidy5e or other sheet shapes used .sheet-header-buttons
@@ -175,13 +176,22 @@ export function tidy5eSheetUI(app, element, data) {
   if (!actionsContainer || actionsContainer.length === 0) {
     actionsContainer = $(element).find('.sheet-header .sheet-header-buttons');
   }
-  if (!actionsContainer || actionsContainer.length === 0) {
+
+  // Old tidy5e versions inject after the name container
+  let nameContainer = $(element).find('.actor-name');
+  if (!nameContainer || nameContainer.length === 0) {
+    nameContainer = $(element).find('[data-tidy-sheet-part="name-container"]');
+  }
+  const hasActionsContainer = actionsContainer && actionsContainer.length > 0;
+  const hasNameContainer = nameContainer && nameContainer.length > 0;
+
+  if (!hasActionsContainer && !hasNameContainer) {
     window.GAS?.log?.w?.('[GAS] tidy5eSheetUI: header actions container not found; skipping button injection.');
     return;
   }
 
   // Prevent duplicate injections
-  if (actionsContainer.find('#gas-levelup-btn').length > 0) {
+  if ($(element).find('#gas-levelup-btn').length > 0) {
     window.GAS?.log?.d?.('[GAS] tidy5eSheetUI: level up button already present.');
     return;
   }
@@ -190,7 +200,8 @@ export function tidy5eSheetUI(app, element, data) {
     <button
       id="gas-levelup-btn"
       type="button"
-      class="button button-icon-only button-gold gas-levelup"
+      class="${hasActionsContainer ? 'button button-icon-only button-gold gas-levelup' : 'inline-transparent-button gas-levelup'}"
+      ${hasActionsContainer ? '' : 'data-tidy-render-scheme="handlebars"'}
       data-action="gasLevelUp"
       data-tooltip="GAS.LevelUp.Button"
       aria-label="GAS.LevelUp.Button"
@@ -238,8 +249,12 @@ export function tidy5eSheetUI(app, element, data) {
       .appendTo('head');
   }
 
-  // Append our button inside the container (not after)
-  actionsContainer.append(levelUpButton);
+  // Append our button inside the actions container, or after the name container for old tidy5e
+  if (hasActionsContainer) {
+    actionsContainer.append(levelUpButton);
+  } else if (hasNameContainer) {
+    nameContainer.after(levelUpButton);
+  }
   window.GAS.log.g(3)
 
 }
@@ -272,6 +287,15 @@ export function initLevelup() {
   })
 
   Hooks.on("renderTidy5eCharacterSheetQuadrone", (app, element, data) => {
+    tidy5eSheetUI(app, element, data);
+  });
+
+  // Backwards-compatible hook for older tidy5e versions
+  Hooks.on("tidy5e-sheet.renderActorSheet", (app, element, data) => {
+    tidy5eSheetUI(app, element, data);
+  });
+
+  Hooks.on("renderTidy5eCharacterSheet", (app, element, data) => {
     tidy5eSheetUI(app, element, data);
   });
 
