@@ -80,6 +80,20 @@ export const init = (app, html, data) => {
   window.GAS.log.d('Debug extended mode is', safeGetSetting(MODULE_ID, 'debug.hooks', false) ? 'enabled' : 'disabled');
   window.GAS.log.d('Log level: ',log.level)
 
+  // Load Quench test suites and autorun helper if the Quench module is active
+  // CRITICAL: Must load during init hook (before quenchReady fires in setup hook)
+  try {
+    if (game.modules?.get('quench')?.active) {
+      Promise.all([
+        import('~/src/module/quench-tests/quench-sanity-tests'),
+        import('~/src/module/quench-tests/quench-ai-portrait-bio'),
+        import('~/src/module/quench-tests/quench-autorun')
+      ]).then(() => window.GAS.log.d('[QUENCH] Test batches and autorun helper loaded')).catch((e) => window.GAS.log.w('[QUENCH] Failed to load test suites', e));
+    }
+  } catch (e) {
+    window.GAS.log.w('[QUENCH] Error while attempting to dynamically import quench tests:', e);
+  }
+
   Hooks.call("gas.initIsComplete");
 
 }

@@ -39,6 +39,15 @@ export function registerAIImageSettings() {
     default: true
   });
 
+  game.settings.register(MODULE_ID, 'quenchAutorun', {
+    name: 'Quench autorun',
+    hint: 'If enabled for this world, Quench will automatically run registered batches and write Data/quench-report.json on startup. Intended for CI/local automation.',
+    scope: 'world',
+    config: false,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, 'enableTokenCreation', {
     name: t('Setting.EnableTokenCreation.Name'),
     hint: t('Setting.EnableTokenCreation.Hint'),

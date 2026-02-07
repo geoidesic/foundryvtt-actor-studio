@@ -74,9 +74,6 @@ Hooks.on('renderAdvancementManager', async (app, html, data) => {
   renderAdvancementManager(app, html, data);
 });
 
-Hooks.on('renderCompendium', (pack, html, data ) => {
-  window.GAS.log.d('renderCompendium', pack);
-})
 Hooks.on("renderFolderConfig", (app, html, folder) => {
   window.GAS.log.d("folder", folder);
 })
@@ -129,6 +126,7 @@ Hooks.on('renderSettingsConfig', (app, html, context) => {
 })
 
 Hooks.on('renderCompendium', async (app, html, data) => {
+  window.GAS.log.d('renderCompendium', pack);
   renderCompendium(app, html, data);
 })
 

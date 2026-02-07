@@ -1,5 +1,10 @@
 name: Release Creation
 
+# Trigger: only when a GitHub Release is published.
+# This workflow runs only for the `release` event and the `published` type.
+# It will not run on push, pull_request, tag, or other events.
+# Steps below use `github.event.release.prerelease` to distinguish full releases
+# from pre-releases and run different steps accordingly.
 on:
   release:
     types: [published]

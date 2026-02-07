@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "ESNext",
     "lib": ["DOM", "ES2020"],
-    "types": ["@league-of-foundry-developers/foundry-vtt-types", "node", "jest"],
+    "types": ["@league-of-foundry-developers/foundry-vtt-types", "@ethaks/fvtt-quench", "node", "jest"],
     "esModuleInterop": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,

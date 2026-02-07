@@ -65,7 +65,8 @@ export default () => {
       // static resources / project.
       server: {
          port: 30001,
-         open: '/game',
+         // Allow automated runs to disable auto-opening the browser by setting QUENCH_NO_OPEN=true
+         open: (process.env.QUENCH_NO_OPEN && process.env.QUENCH_NO_OPEN.toLowerCase() === 'true') ? false : '/game',
          proxy: {
             // Serves static files from main Foundry server.
             [`^(/${s_PACKAGE_ID}/(assets|lang|packs|dist/style.css))`]: 'http://localhost:30000',

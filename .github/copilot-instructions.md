@@ -12,10 +12,73 @@
 
 ## Critical Development Patterns
 
-**Testing**
-- NB: ensure you run all tests after every generation
-- If any tests fail, investigate why and fix appropriately.
-- Quench is designed for FoundryVTT end-to-end testing. Use it.
+**Testing Strategy - Two Test Systems**
+
+This project uses TWO distinct testing systems:
+
+1. **vitest** (Node.js unit tests) - 88+ test files in `src/tests/`
+   - Tests pure logic, helpers, store behavior, and mocked FoundryVTT APIs
+   - Run via: `npx vitest run` (fast, no FoundryVTT needed)
+   - **Use vitest for**: function logic, data transformations, utility methods
+   
+2. **Quench** (FoundryVTT E2E integration tests) - 3 test files in `src/module/quench-tests/`
+   - Tests actual FoundryVTT UI, game objects, and module integration
+   - Runs INSIDE FoundryVTT client (not Node.js)
+   - **Use Quench for**: UI workflows, advancement capture, character creation flows
+
+**CRITICAL: AI Autonomous Testing Workflow**
+
+As an AI assistant, you CANNOT see FoundryVTT's browser UI. To verify your changes work in the actual game environment, you MUST use Quench automation:
+
+**Step 1: Run Automated Quench Tests**
+```bash
+# Set environment variables (adjust paths as needed)
+FOUNDY_DIR=/path/to/FoundryVTT-Node-13.341 WORLD_NAME=test npm run quench:run
+```
+
+**Step 2: Read Test Results**
+After `npm run quench:run` completes, test results are written to:
+- `reports/quench-report-{timestamp}.json` (timestamped copy)
+- `FoundryVTT-Node-13.341/Data/quench-report.json` (original)
+
+**Step 3: Parse Results and Iterate**
+```javascript
+// Use list_dir to find latest report
+// Use read_file to read the JSON report
+// Parse the structure to identify:
+//   - totalTests, passed, failed
+//   - Individual test results with failure messages
+//   - Stack traces for debugging
+```
+
+**Step 4: Fix Failures and Re-run**
+If tests fail:
+1. Read the failure messages and stack traces from the JSON report
+2. Identify the root cause (DOM elements missing, API calls failing, timing issues, etc.)
+3. Fix the code
+4. Re-run `npm run quench:run`
+5. Verify all tests pass
+
+**Quench JSON Report Structure**
+```json
+{
+  "testResults": [
+    {
+      "title": "Actor Studio Sanity",
+      "fullTitle": "ACTOR-STUDIO: Sanity tests > Actor Studio Sanity > has a sane environment",
+      "state": "passed" | "failed",
+      "err": { "message": "...", "stack": "..." }
+    }
+  ],
+  "stats": { "passes": 2, "failures": 0, "tests": 2 }
+}
+```
+
+**When to Run Quench vs vitest**
+- **vitest**: After every code change to catch logic bugs (fast feedback loop)
+- **Quench**: After UI changes, hook modifications, or FoundryVTT API integration (slower but essential for E2E verification)
+
+**NB**: You MUST run tests after every generation and fix failures before completing a task. Do not leave broken tests for the user to debug.
 
 
 **Frontend Stack**:
@@ -61,13 +124,6 @@
 - Level-up functionality integrates with existing character sheets (standard + Tidy5e)
 
 ## Essential Workflows
-
-**Testing**: 
-- tests should be stored in the `src/tests` folder
-- under no circumstances are failing tests acceptable
-```bash
-npx vitest run    # Run all tests without watch
-```
 
 **Development**:
 ```bash

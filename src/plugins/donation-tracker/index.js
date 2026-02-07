@@ -161,6 +161,7 @@ class plugin {
     // window.GAS.log.d('allowedFolderIds', allowedFolderIds)
     return allowedFolderIds;
   }
+  
 }
 
 export default new plugin();
