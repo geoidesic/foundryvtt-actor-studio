@@ -1,4 +1,4 @@
-import CompendiumSourcesSubmenu from './compendiumSourcesSubmenu';
+import CompendiumSourcesButton from './CompendiumSourcesButton';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
 import { llmNameGenerationSettings } from './llmNameGeneration';
 import { aardvarkLicenseTrackerSettings } from './aardvarkLicenseTracker';
@@ -262,7 +262,7 @@ function sourcesConfiguration() {
     hint: game.i18n.localize('GAS.Setting.Sources.Hint'),
     label: game.i18n.localize('GAS.Setting.Sources.Label'),
     icon: 'fas fa-atlas',
-    type: CompendiumSourcesSubmenu,
+    type: CompendiumSourcesButton,
     restricted: true,
   });
 }

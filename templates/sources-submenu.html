@@ -1,22 +1,161 @@
-<form class="flexcol">
-    <div class="flex0">
-        <button type="submit" name="submit">
-            {{localize 'GAS.Setting.Sources.Save'}}
-        </button>
-    </div>
-    <div class="flex">
-        {{#each source}}
-        <details class="flexcol">
-            <summary class="hct-cursor-pointer">{{label}}&nbsp&nbsp</summary>
-            {{#each compendia}}
-            <div class="flexrow ">
-                <input type="checkbox" name="{{@../key}}" value="{{collection}}" id="{{@../key}}_{{collection}}"
-                    {{checkedIf checked}}>
-                <label for="{{@../key}}_{{collection}}">{{label}}</label>
-                <br>
+<form class="gas-sources-form flexcol" autocomplete="off">
+    <header class="gas-sources-toolbar flexcol">
+        <div class="flexrow gas-sources-toolbar-row">
+            <label class="gas-sources-search flex3">
+                <i class="fas fa-search"></i>
+                <input
+                    type="search"
+                    data-action="search"
+                    placeholder="Search compendiums..."
+                    value="{{searchText}}"
+                />
+            </label>
+            <div class="flex2 gas-sources-actions">
+                <button type="button" class="gas-source-action" data-action="expand-all">Expand All</button>
+                <button type="button" class="gas-source-action" data-action="collapse-all">Collapse All</button>
             </div>
-            {{/each}}
+        </div>
+        <div class="flexrow gas-sources-toolbar-row gas-sources-bulk-actions">
+            <button type="button" class="gas-source-action" data-action="select-visible">Select Visible</button>
+            <button type="button" class="gas-source-action" data-action="clear-visible">Clear Visible</button>
+            <button type="button" class="gas-source-action" data-action="reset-defaults">Reset Defaults</button>
+        </div>
+    </header>
+
+    <section class="gas-sources-content flexcol">
+        {{#each source}}
+        <details class="gas-source-section" open>
+            <summary class="gas-source-summary">{{label}}</summary>
+            <div class="gas-source-list">
+                {{#each compendia}}
+                <label class="gas-source-row" data-searchable="{{label}} {{collection}}">
+                    <input
+                        type="checkbox"
+                        name="{{@../key}}"
+                        value="{{collection}}"
+                        id="{{@../key}}_{{collection}}"
+                        {{checkedIf checked}}
+                    >
+                    <span>{{label}}</span>
+                </label>
+                {{/each}}
+            </div>
         </details>
         {{/each}}
-    </div>
+    </section>
+
+    <footer class="gas-sources-footer flexrow">
+        <button type="button" class="gas-source-action" data-action="cancel">
+            Cancel
+        </button>
+        <button type="submit" name="submit" class="gas-source-save">
+            {{localize 'GAS.Setting.Sources.Save'}}
+        </button>
+    </footer>
 </form>
+
+<style>
+    #gas-settings-submenu .window-content {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .gas-sources-form {
+        height: 100%;
+    }
+
+    .gas-sources-toolbar {
+        gap: 0.5rem;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--color-bg-option);
+        border-bottom: 1px solid var(--color-border-light-secondary);
+        padding: 0.75rem;
+    }
+
+    .gas-sources-toolbar-row {
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .gas-sources-search {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    .gas-sources-search input {
+        width: 100%;
+    }
+
+    .gas-sources-actions,
+    .gas-sources-bulk-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.4rem;
+    }
+
+    .gas-source-action {
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .gas-sources-content {
+        flex: 1;
+        overflow: auto;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .gas-source-section {
+        border: 1px solid var(--color-border-light-secondary);
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--color-bg-option) 82%, transparent);
+        padding: 0.25rem 0.5rem 0.5rem;
+    }
+
+    .gas-source-summary {
+        cursor: pointer;
+        font-weight: 700;
+        line-height: 1.6;
+    }
+
+    .gas-source-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        margin-top: 0.35rem;
+    }
+
+    .gas-source-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .gas-source-row input {
+        margin-top: 0.15rem;
+    }
+
+    .gas-source-row.is-hidden,
+    .gas-source-section.is-hidden {
+        display: none;
+    }
+
+    .gas-sources-footer {
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        padding: 0.75rem;
+        border-top: 1px solid var(--color-border-light-secondary);
+        background: var(--color-bg-option);
+    }
+
+    .gas-source-save {
+        min-width: 9rem;
+    }
+</style>

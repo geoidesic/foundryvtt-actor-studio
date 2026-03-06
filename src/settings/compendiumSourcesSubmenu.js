@@ -6,24 +6,37 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
     super({});
     this.baseCompendiumList = game.packs.filter((p) => p.documentName === 'Item');
     this.filterPackSourcesAppropriatelyByName = safeGetSetting(MODULE_ID, 'filterPackSourcesAppropriatelyByName', false);
+    this._searchText = '';
   }
 
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
-      classes: ['form'],
+      classes: ['form', 'gas-sources-submenu'],
       popOut: true,
-      width: 420,
-      height: 600,
+      width: 760,
+      height: 700,
+      minWidth: 560,
+      minHeight: 500,
 
       template: `/modules/foundryvtt-actor-studio/templates/sources-submenu.html`,
       id: 'gas-settings-submenu',
       title: 'Actor Studio - Sources',
-      resizable: false,
+      resizable: true,
     });
   }
 
   activateListeners(html) {
     super.activateListeners(html);
+
+    html.find('[data-action="search"]').on('input', this.#onSearchInput.bind(this));
+    html.find('[data-action="expand-all"]').on('click', this.#onExpandAll.bind(this));
+    html.find('[data-action="collapse-all"]').on('click', this.#onCollapseAll.bind(this));
+    html.find('[data-action="select-visible"]').on('click', this.#onSelectVisible.bind(this));
+    html.find('[data-action="clear-visible"]').on('click', this.#onClearVisible.bind(this));
+    html.find('[data-action="reset-defaults"]').on('click', this.#onResetDefaults.bind(this));
+    html.find('[data-action="cancel"]').on('click', this.#onCancel.bind(this));
+
+    this.#applySearchFilter(html[0]);
   }
 
   getData() {
@@ -35,6 +48,9 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
       compendiaList: this.baseCompendiumList,
       selectedCompendia: selected,
     });
+
+    data.searchText = this._searchText;
+
     return data;
   }
 
@@ -54,6 +70,92 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
       data[el.name].push(el.value);
     });
     return data;
+  }
+
+  #onSearchInput(event) {
+    this._searchText = (event.currentTarget?.value ?? '').toLowerCase().trim();
+    this.#applySearchFilter(this.form);
+  }
+
+  #applySearchFilter(formElement) {
+    if (!formElement) return;
+
+    const searchText = this._searchText;
+    const sections = Array.from(formElement.querySelectorAll('.gas-source-section'));
+
+    for (const section of sections) {
+      const rows = Array.from(section.querySelectorAll('.gas-source-row'));
+      let visibleInSection = 0;
+
+      for (const row of rows) {
+        const searchable = row.dataset.searchable ?? '';
+        const visible = !searchText || searchable.includes(searchText);
+        row.classList.toggle('is-hidden', !visible);
+        if (visible) visibleInSection += 1;
+      }
+
+      section.classList.toggle('is-hidden', visibleInSection === 0);
+      if (searchText && visibleInSection > 0) {
+        section.open = true;
+      }
+    }
+  }
+
+  #onExpandAll(event) {
+    event.preventDefault();
+    this.form?.querySelectorAll('.gas-source-section').forEach((el) => {
+      el.open = true;
+    });
+  }
+
+  #onCollapseAll(event) {
+    event.preventDefault();
+    this.form?.querySelectorAll('.gas-source-section').forEach((el) => {
+      el.open = false;
+    });
+  }
+
+  #forEachVisibleCheckbox(callback) {
+    if (!this.form) return;
+    this.form.querySelectorAll('.gas-source-row:not(.is-hidden) input[type="checkbox"]').forEach((checkbox) => {
+      callback(checkbox);
+    });
+  }
+
+  #onSelectVisible(event) {
+    event.preventDefault();
+    this.#forEachVisibleCheckbox((checkbox) => {
+      checkbox.checked = true;
+    });
+  }
+
+  #onClearVisible(event) {
+    event.preventDefault();
+    this.#forEachVisibleCheckbox((checkbox) => {
+      checkbox.checked = false;
+    });
+  }
+
+  #onResetDefaults(event) {
+    event.preventDefault();
+    if (!this.form) return;
+
+    this.form.querySelectorAll('.gas-source-row input[type="checkbox"]').forEach((checkbox) => {
+      checkbox.checked = false;
+    });
+
+    Object.entries(DEFAULT_SOURCES).forEach(([sourceKey, compendia]) => {
+      if (!Array.isArray(compendia)) return;
+      compendia.forEach((collection) => {
+        const input = this.form.querySelector(`input[type="checkbox"][name="${sourceKey}"][value="${collection}"]`);
+        if (input) input.checked = true;
+      });
+    });
+  }
+
+  #onCancel(event) {
+    event.preventDefault();
+    this.close();
   }
 
   buildTemplateData({ compendiaList, selectedCompendia }) {
