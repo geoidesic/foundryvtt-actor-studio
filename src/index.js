@@ -17,6 +17,9 @@ import { renderCompendium } from './hooks/renderCompendium.js';
 import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
+//- import tests
+import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
+
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
 });
@@ -24,15 +27,7 @@ Hooks.once("init", (app, html, data) => {
 // Register Quench tests
 Hooks.on("quenchReady", (quench) => {
   console.log("Quench ready, registering Actor Studio test batch");
-  quench.registerBatch("foundryvtt-actor-studio.basic-test", (context) => {
-    const { describe, it, assert } = context;
-
-    describe("Basic Test Suite", function () {
-      it("should pass a basic test", function () {
-        assert.ok(true, "This is a basic test");
-      });
-    });
-  }, { displayName: "Actor Studio: Basic Test" });
+  quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, { displayName: "Actor Studio: Basic Test" });
   console.log("Registered Actor Studio test batch");
 });
 
