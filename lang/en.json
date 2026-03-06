@@ -367,6 +367,66 @@
       "LLMProvider": {
         "Name": "LLM Provider",
         "Hint": "Select which LLM provider to use for name generation. OpenAI uses the built-in service (no API key needed). Claude requires an Anthropic API key. OpenRouter requires an OpenRouter API key."
+      },
+      "AbilityScores": {
+        "Name": "Ability Scores",
+        "Hint": "Configure how players can enter ability scores during character creation",
+        "Label": "Configure ability scores",
+        "Title": "Ability Scores Configuration",
+        "Description": "Choose which methods players can use to determine their ability scores",
+        "EntryMethods": "Entry Methods"
+      },
+      "Equipment": {
+        "Name": "Equipment & Gold",
+        "Hint": "Configure starting gold and equipment/spell selection options",
+        "Label": "Configure equipment & gold",
+        "Title": "Equipment & Gold Configuration",
+        "Description": "Set starting gold and enable equipment/spell selection features",
+        "StartingGold": "Starting Gold",
+        "SelectionOptions": "Selection Options"
+      },
+      "Progression": {
+        "Name": "Progression",
+        "Hint": "Configure level-up and advancement options",
+        "Label": "Configure progression",
+        "Title": "Progression Configuration",
+        "Description": "Configure level-up behavior and advancement capture settings",
+        "LevelUpOptions": "Level Up Options",
+        "AdvancementOptions": "Advancement Options"
+      },
+      "UI": {
+        "Name": "UI & Window",
+        "Hint": "Configure window dimensions and UI display options",
+        "Label": "Configure UI & window",
+        "Title": "UI & Window Configuration",
+        "Description": "Customize the appearance and dimensions of the Actor Studio window",
+        "WindowDimensions": "Window Dimensions",
+        "DisplayOptions": "Display Options",
+        "IlluminatedOptions": "Illuminated Description Options"
+      },
+      "AccessControl": {
+        "Name": "Access Control",
+        "Hint": "Configure player permissions for character creation",
+        "Label": "Configure access control",
+        "Title": "Access Control Configuration",
+        "Description": "Control what actions players can perform when creating characters",
+        "PlayerRestrictions": "Player Restrictions"
+      },
+      "CompendiumDisplay": {
+        "Name": "Compendium Display",
+        "Hint": "Configure how compendia are displayed and filtered",
+        "Label": "Configure compendium display",
+        "Title": "Compendium Display Configuration",
+        "Description": "Control how compendium packs are shown in selection lists",
+        "DisplayOptions": "Display Options"
+      },
+      "Diagnostics": {
+        "Name": "Diagnostics",
+        "Hint": "Configure debug and diagnostic options",
+        "Label": "Configure diagnostics",
+        "Title": "Diagnostics Configuration",
+        "Description": "Enable debug logging and diagnostic features",
+        "DebugOptions": "Debug Options"
       }
     },
     "Equipment": {
