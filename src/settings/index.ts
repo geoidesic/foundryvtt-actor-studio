@@ -484,8 +484,8 @@ function allowStandardArray() {
 
 function standardArray() {
   game.settings.register(MODULE_ID, 'standardArray', {
-    name: game.i18n.localize('GAS.Setting.AbilityEntry.StandardArray.Name'),
-    hint: game.i18n.localize('GAS.Setting.AbilityEntry.StandardArray.Hint'),
+    name: game.i18n.localize('GAS.Setting.AbilityEntry.StandardArrayValues.Name'),
+    hint: game.i18n.localize('GAS.Setting.AbilityEntry.StandardArrayValues.Hint'),
     scope: 'world',
     config: true,
     default: '15, 14, 13, 12, 10, 8',

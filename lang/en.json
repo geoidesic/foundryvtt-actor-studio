@@ -140,7 +140,7 @@
           "Name": "Allow standard array",
           "Hint": "Allow the user to use the standard array"
         },
-        "StandardArray": {
+        "StandardArrayValues": {
           "Name": "Custom standard array",
           "Hint": "Set the custom standard array values (comma separated, e.g. 15, 14, 13, 12, 10, 8)"
         },
