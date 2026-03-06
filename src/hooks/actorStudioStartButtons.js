@@ -5,6 +5,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 
 // Store references to event handlers for cleanup
 const eventHandlers = new Map();
+let isOpeningActorStudio = false;
 
 const handleActorStudioStartButtonClick = function (e, app, html) {
   // window.GAS.log.d('handleActorStudioStartButtonClick', e, app, html)
@@ -38,7 +39,9 @@ export function cleanupEventHandlers(elementId) {
   const handlers = eventHandlers.get(elementId);
   if (handlers) {
     handlers.forEach(handler => {
-      if (handler.element && handler.element.length) {
+      if (handler.isNative && handler.element) {
+        handler.element.removeEventListener(handler.event, handler.handler);
+      } else if (handler.element && handler.element.length && typeof handler.element.off === 'function') {
         handler.element.off(handler.event, handler.handler);
       }
     });
@@ -51,19 +54,24 @@ function storeEventHandler(elementId, element, event, handler) {
   if (!eventHandlers.has(elementId)) {
     eventHandlers.set(elementId, []);
   }
-  eventHandlers.get(elementId).push({ element, event, handler });
+  const isNative = typeof element?.addEventListener === 'function';
+  eventHandlers.get(elementId).push({ element, event, handler, isNative });
 }
 
 export function openActorStudio(actorName, folderName = '', actorType = 'character') {
+  if (isOpeningActorStudio) return;
   if (userHasRightPermissions()) {
     if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
       ui.notifications.error('1. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
       return;
     }
     try {
+        isOpeningActorStudio = true;
         new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });
     } catch (error) {
         ui.notifications.error(error.message);
+    } finally {
+        setTimeout(() => { isOpeningActorStudio = false; }, 250);
     }
   }
 }
@@ -80,7 +88,6 @@ function getActorStudioButton(buttonId, text = false) {
   gasButton.className = 'dialog-button default bright';
   gasButton.setAttribute('data-gas_start', '');
   gasButton.setAttribute('tabindex', '0');
-  gasButton.onclick = () => console.log('GAS native onclick');
 
   const img = document.createElement('img');
   img.src = `modules/${MODULE_ID}/assets/actor-studio-blue.png`;
@@ -96,14 +103,6 @@ function getActorStudioButton(buttonId, text = false) {
     span.textContent = text;
     gasButton.appendChild(span);
   }
-
-  setTimeout(() => {
-    const btn = document.getElementById(buttonId);
-    if (btn) {
-      // console.log('GAS: computed style', window.getComputedStyle(btn));
-      console.log('GAS: button parent', btn.parentElement);
-    }
-  }, 500);
   return gasButton;
 }
 
@@ -114,7 +113,6 @@ export const renderActorStudioSidebarButton = (app) => {
   if (app.constructor.name !== "ActorDirectory") return;
 
   const element = game.version >= 13 ? app.element : app._element;
-  console.log('GAS: element', element);
   if (!element) return;
 
   const elementId = `sidebar-${app.id || 'default'}`;
@@ -125,8 +123,14 @@ export const renderActorStudioSidebarButton = (app) => {
     ? element.querySelector('#gas-sidebar-button')
     : element.find('#gas-sidebar-button').length > 0;
   
-  if (hasButton) return;
-
+  if (hasButton) {
+    if (game.version >= 13) {
+      element.querySelector('#gas-sidebar-button')?.remove();
+    } else {
+      element.find('#gas-sidebar-button').remove();
+    }
+  }
+  
   const gasButton = getActorStudioButton('gas-sidebar-button');
   if (game.version >= 13) {
     gasButton.classList.add('v13');
@@ -141,18 +145,15 @@ export const renderActorStudioSidebarButton = (app) => {
     if (header) header.appendChild(gasButton);
   }
   
-  // Check if button was added successfully
-  const buttonAdded = game.version >= 13 
-    ? element.querySelector('#gas-sidebar-button')
-    : element.find('#gas-sidebar-button').length > 0;
-  console.log('GAS: sidebar button added?', buttonAdded ? 1 : 0);
-
   const mousedownHandler = (e) => {
-    console.log('GAS sidebar button mousedown', e);
+    e.preventDefault();
+    e.stopPropagation();
     Hooks.call('gas.openActorStudio', game.user.name, '', 'character');
   };
   const keydownHandler = (e) => {
-    console.log('GAS sidebar button keydown', e);
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    e.stopPropagation();
     Hooks.call('gas.openActorStudio', game.user.name, '', 'character');
   };
   gasButton.addEventListener('mousedown', mousedownHandler);
@@ -170,6 +171,7 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
     // Clean up existing event handlers for this dialog
     const dialogId = `dialog-${app.id || 'create-actor'}`;
     cleanupEventHandlers(dialogId);
+    $('#gas-dialog-button', html).remove();
     
     function updateButton() {
       const actorType = select.val();
@@ -201,8 +203,8 @@ export const renderASButtonInCreateActorApplication = (app, html) => {
           $gasButton.on('keydown', keydownHandler);
           
           // Store handlers for cleanup
-          storeEventHandler(dialogId, gasButton, 'mousedown', mousedownHandler);
-          storeEventHandler(dialogId, gasButton, 'keydown', keydownHandler);
+          storeEventHandler(dialogId, $gasButton, 'mousedown', mousedownHandler);
+          storeEventHandler(dialogId, $gasButton, 'keydown', keydownHandler);
         }
         
       } else {

@@ -6,7 +6,7 @@ import { log, getDnd5eVersion, getDndRulesVersion, hasSourcesAssigned, autoAssig
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import SpellListsPlugin from '~/src/plugins/spell-lists';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
-import CompendiumSourcesSubmenu from '~/src/settings/compendiumSourcesSubmenu.js';
+import CompendiumSourcesButton from '~/src/settings/CompendiumSourcesButton.js';
 import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
 import packageJson from '../../package.json';
 import manifestJson from '../../module.json';
@@ -122,7 +122,7 @@ export const ready = (app, html, data) => {
       // One-time click handler for the notification link
       $(document).one('click', '.gas-open-sources', (e) => {
         e.preventDefault();
-        new CompendiumSourcesSubmenu().render(true);
+        CompendiumSourcesButton.showSettings();
       });
     } catch (err) {
       window.GAS.log.w('[hooks] Error handling compendiumSources.cleaned hook:', err);
