@@ -1,46 +1,138 @@
 {
   "GAS": {
     "Error": {
-      "ItemNotFoundInCompendium": "Item未在資料庫中找到",
-      "PackIndexNotFound": "在此世界中，並未找到從中導入的角色職業資料包"
+      "ItemNotFoundInCompendium": "資料庫中未找到物品",
+      "PackIndexNotFound": "在此世界中，並未找到從中導入的角色職業資料包",
+      "EquipmentSelectionNotViable": "無法選擇初始裝備，因為所選資料類型不包含初始裝備資料。"
     },
-    "ActorStudio": "ActorStudio角色工作室",
+    "ActorStudio": "角色工作室",
+    "CreateActor": "建立角色",
+    "Cancel": "取消",
+    "Dialog": {
+      "ReloadRequiredTitle": "需要重新載入",
+      "ReloadRequiredContent": "此設定變更需要重新載入Foundry。您想立即重新載入嗎？",
+      "AutoAssignSources": {
+        "Title": "配置角色工作室來源",
+        "Content": "尚未分配角色工作室來源。您想自動分配來源嗎？（您可以隨時在設定中修改這些 - 角色工作室需要分配一些來源才能工作）",
+        "Success": "來源已成功自動分配。如有需要，您可以在角色工作室設定中修改它們。",
+        "Skipped": "來源未自動分配。準備好後，您可以在角色工作室設定中手動配置它們。"
+      }
+    },
+    "Notification": {
+      "CompendiumSourcesCleaned": "角色工作室已清理{type}的一些資料庫來源。<a class='gas-open-sources' href='#'>開啟來源</a>以檢視並儲存變更。",
+      "SettingsSaved": "設定已成功儲存。",
+      "SettingsSaveFailed": "儲存設定失敗。請重試。"
+    },
+    "Disabled": "已停用",
     "AbilityScores": "屬性",
     "Advancements": "升級獎勵",
     "Level": "等級",
     "LevelUp": {
       "Button": "升級",
-      "ClassLevelUp": "升級此職業"
+      "ClassLevelUp": "升級此職業",
+      "ExistingClassesTitle": "升級現有職業",
+      "ExistingClassesDescription": "點擊您想升級的職業，或從多職選單中選擇一個新職業。",
+      "NewClassTitle": "新增多職",
+      "SelectClass": "選擇要新增的職業",
+      "SelectMulticlass": "選擇多職",
+      "CancelDescription": "點擊下方的職業按鈕以取消升級選擇並返回開始。或點擊「更新角色」以套用變更。",
+      "Subclass": "選擇子職業",
+      "LevelAdvancements": "等級升級獎勵",
+      "DisabledTooltip": "因升級獎勵進行中而停用",
+      "DisabledDescription": "升級獎勵進行中時，此區段無法編輯"
     },
+    "Footer": {
+      "AddLevel": "新增角色等級",
+      "AddEquipment": "確認",
+      "FinalizePurchase": "確定購買",
+      "FinalizeSpells": "確定法術",
+      "SkipSpells": "跳過法術",
+      "CharacterName": "角色名稱",
+      "CreateCharacter": "建立角色",
+      "UpdateCharacter": "更新角色"
+    },
+    "Name": "名稱",
+    "MulticlassMode": "多職模式",
+    "Item": "物品",
+    "Skip": "跳過",
+    "Complete": "完成",
+    "Type": "類型",
     "NoAdvancements": "此等級沒有升級獎勵",
     "PCTitle": "玩家角色",
+    "Title": "角色工作室",
     "Source": "來源",
+    "StartingEquipment": "初始裝備",
     "Permissions": {
-      "NeedCreateActorError": "用戶需要 '新增角色' 的權限。請詢問你的DM將此權限新增到你的角色中",
-      "NeedCreateItemWarn": "用戶沒有 '新增物品' 的權限。你將無法新增自定義特性",
-      "NeedFileUploadWarn": "用戶沒有 '上傳新文件' 的權限。選擇圖片時可能會遇到問題",
-      "NeedFileBrowseWarn": "用戶沒有 '瀏覽文件' 權限。選擇圖片時可能會遇到問題"
+      "NeedCreateActorError": "用戶需要「建立新角色」的權限。請詢問你的DM將此權限新增到你的角色中",
+      "NeedCreateItemWarn": "用戶沒有「建立新物品」的權限。你將無法建立自訂特性",
+      "NeedFileUploadWarn": "用戶沒有「上傳新檔案」的權限。選擇圖片時可能會遇到問題",
+      "NeedFileBrowseWarn": "用戶沒有「瀏覽檔案」權限。選擇圖片時可能會遇到問題"
     },
     "SubClass": "子職業",
     "Tabs": {
       "Abilities": {
-        "HowCalculated": "屬性是如何計算的？"
+        "Title": "屬性",
+        "HowCalculated": "屬性是如何計算的？",
+        "AbilityGenerationMethod": "屬性生成方法",
+        "ManualEntry": "手動輸入",
+        "PointBuy": "購點制",
+        "Roll": "擲骰",
+        "StandardArray": "標準陣列"
       },
       "Races": {
+        "Title": "種族",
         "Movement": "移動",
         "Senses": "感知",
-        "Type": "類型"
+        "Type": "類型",
+        "Placeholder": "種族"
       },
       "Classes": {
+        "Title": "職業",
         "Class": "職業",
         "SubClass": "子職業",
-        "FilterByLevel": "按等級篩選"
+        "FilterByLevel": "按等級探索升級獎勵",
+        "Placeholder": "職業",
+        "SubclassPlaceholder": "子職業",
+        "LevelPreview": "等級預覽",
+        "Level": "等級"
+      },
+      "Background": {
+        "Title": "背景",
+        "Placeholder": "背景"
+      },
+      "Equipment": {
+        "Title": "裝備"
+      },
+      "Shop": {
+        "Title": "商店"
+      },
+      "Biography": {
+        "Title": "傳記"
       }
+    },
+    "Welcome": {
+      "To": "歡迎使用",
+      "IntroductionTitle": "介紹",
+      "Introduction": "角色工作室是一款幫助您建立和升級Dungeons and Dragons 5e角色的工具。",
+      "UsageTitle": "使用說明",
+      "Issues": "如果您遇到任何問題，請在以下位置回報它們",
+      "Github": "GitHub。",
+      "CreatedBy": "為FoundryVTT開發，作者：",
+      "Support": "如果您希望支持此模組的開發，請考慮透過以下方式每月捐款",
+      "SponsorLinkText": "GitHub 贊助",
+      "IssuesLinkText": "GitHub Issues",
+      "PayPalLinkText": "PayPal",
+      "JoinDiscord": "加入",
+      "DiscordLinkText": "角色工作室 Discord 伺服器",
+      "Thanks": "感謝您使用角色工作室！"
     },
     "Setting": {
       "World": "世界設定",
       "User": "用戶設定",
       "AbilityScoreEntryOptions": "屬性輸入選項",
+      "LevelingOptions": "升級選項",
+      "DisplayOptions": "顯示選項",
+      "DebugOptions": "除錯選項",
       "AbilityEntry": {
         "AllowManualInput": {
           "Name": "允許手動輸入",
@@ -48,14 +140,14 @@
         },
         "AllowStandardArray": {
           "Name": "允許標準陣列",
-          "Hint": "允許用戶使用標準陣列[[15, 14, 13, 12, 10, 8]"
+          "Hint": "允許用戶使用標準陣列"
         },
         "StandardArrayValues": {
           "Name": "自訂標準陣列",
           "Hint": "設定自訂標準陣列值（逗號分隔，例如 15, 14, 13, 12, 10, 8）"
         },
         "AllowPointBuy": {
-          "Name": "允許點數購買",
+          "Name": "允許購點制",
           "Hint": "允許用戶使用購點制",
           "InvalidTotal": "總點數無效"
         },
@@ -64,58 +156,74 @@
           "Hint": "允許用戶擲骰來產生屬性"
         },
         "PointBuyLimit": {
-          "Name": "點數購買上限",
-          "Hint": "設定購點制的最大點數。超過此門檻的值將顯示為紅色。"
+          "Name": "購點制上限",
+          "Hint": "設定購點制的最大點數。超過此閾值的值將顯示為紅色。"
         },
         "AbilityRollFormula": {
           "Name": "擲骰統計用的公式（每項）",
           "Hint": "例如：4d6kh3"
         }
       },
+      "AdvancementCaptureTimerThreshold": {
+        "Name": "升級獎勵捕獲計時器閾值",
+        "Hint": "設定升級獎勵捕獲計時器的閾值。如果您發現新角色的種族、背景或職業未被捕獲，請將此數字調高。這表示在升級獎勵捕獲被視為失敗之前要等待的毫秒數。"
+      },
       "debug": {
-        "Name": "啟用調試模式",
-        "Hint": "提供額外的日誌以供調試使用"
+        "Name": "啟用除錯模式",
+        "Hint": "提供額外的日誌以供除錯使用"
       },
       "debugHooks": {
-        "Name": "啟用擴展調試模式",
+        "Name": "啟用擴展除錯模式",
         "Hint": "提供所有Foundry Hooks的額外日誌"
       },
-      "DefaultGoldDice": {
+      "defaultGoldDice": {
         "Name": "預設起始金幣擲骰",
-        "Hint": "在此自定義起始金幣的擲骰"
+        "Hint": "在此自訂工具中擲出的預設起始金幣骰子，如果角色職業沒有自訂起始金幣公式，將使用此設定"
       },
       "DonationTrackerEnabled": {
-        "Name": "啟用捐贈追踪器",
-        "Hint": "啟用捐贈追踪器以顯示當前捐贈金額和目標"
+        "Name": "啟用捐贈追蹤器",
+        "Hint": "啟用捐贈追蹤器以顯示當前捐贈金額和目標"
+      },
+      "disableAdvancementCapture": {
+        "Name": "停用升級獎勵標籤",
+        "Hint": "防止升級獎勵在升級獎勵標籤中被捕獲。相反，它們將以系統的預設方式顯示 - 即作為對話框彈出視窗。（注意：這僅用於除錯目的 - 停用此功能時使用角色工作室沒有太大意義。）"
+      },
+      "DisableOtherActorCreationOptionsForPlayers": {
+        "Name": "停用其他建立角色按鈕",
+        "Hint": "防止玩家使用標準的建立角色按鈕建立角色。僅角色工作室可用。"
       },
       "DonationTrackerRank": {
         "Name": "等級",
-        "Hint": "輸入等級的文件夾名稱"
+        "Hint": "輸入等級的資料夾名稱"
       },
       "DonationTracker_UnregisteredAccess": {
-        "Name": "未註冊訪問",
-        "Hint": "如果勾選，未註冊用戶將可訪問 DT 連結彙編中 DT 資料夾外的所有內容"
+        "Name": "未註冊存取",
+        "Hint": "如果勾選，未註冊用戶將可存取DT連結資料庫中DT資料夾外的所有內容"
       },
       "DonationTrackerAction": {
-        "Name": "新增捐贈追踪器文件夾",
-        "Hint": "將捐贈追踪器會員級別文件夾新增到此資料庫"
+        "Name": "新增DT資料夾",
+        "Hint": "將捐贈追蹤器會員級別資料夾新增到此資料庫"
       },
       "DonationTracker": {
-        "Name": "捐贈追踪器設定",
+        "Name": "捐贈追蹤器設定",
         "Label": "編輯",
-        "Hint": "啟用/禁用集成，每個捐贈追踪器會員級別都有一個文件夾名稱。你可以在這裡編輯它們。"
+        "Hint": "啟用/停用整合，每個捐贈追蹤器會員級別都有一個資料夾名稱。你可以在這裡編輯它們。"
       },
       "DontShowWelcome": {
-        "Name": "不再顯示此消息",
-        "Hint": "當Foundry首次加載時不再顯示歡迎應用程序（你可以通過配置設定隨時撤消此操作）。"
+        "Name": "不再顯示此訊息",
+        "Hint": "當Foundry首次載入時不再顯示歡迎應用程式（你可以透過配置設定隨時復原此操作）。"
       },
       "EnableLevelUp": {
         "Name": "啟用升級",
-        "Hint": "勾選此框以在角色表上包括升級按鈕，通過角色工作室升級"
+        "Hint": "勾選此項以在角色表上包括透過角色工作室升級的按鈕"
+      },
+      "FilterPackSourcesAppropriatelyByName": {
+        "Name": "按名稱適當篩選資料包來源",
+        "Hint": "如果啟用，來源區段將僅包含具有與來源類型相符的名稱、路徑、ID或標籤的資料包"
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "強制D&D5e升級自動化",
-        "Hint": "如果沒有這項，角色工作室幾乎無法使用，除了預覽選項，因為無法將更改應用於角色"
+        "Hint": "如果沒有這項，角色工作室幾乎無法使用，除了預覽選項，因為它無法將變更套用於角色"
       },
       "milestoneLeveling": {
         "Name": "里程碑升級",
@@ -123,15 +231,27 @@
       },
       "ShowRolls": {
         "Name": "在聊天中顯示擲骰",
-        "Hint": "將屬性、每級生命值和起始金幣的擲骰顯示為聊天消息"
+        "Hint": "將屬性、每級生命值和起始金幣的擲骰顯示為聊天訊息"
       },
       "showButtonInSideBar": {
         "Name": "在側邊欄中顯示按鈕",
-        "Hint": "在側邊欄中顯示角色工作室按鈕（需要刷新瀏覽器以生效）"
+        "Hint": "在側邊欄中顯示角色工作室按鈕（需要重新整理瀏覽器才能生效）"
+      },
+      "illuminatedDescription": {
+        "Name": "啟用照明說明",
+        "Hint": "這將在適當的情況下，在標籤的右側面板中新增選擇圖示的放大版本。"
+      },
+      "illuminatedHeight": {
+        "Name": "照明高度",
+        "Hint": "設定照明說明的高度"
+      },
+      "illuminatedWidth": {
+        "Name": "照明寬度",
+        "Hint": "設定照明說明的寬度"
       },
       "IndividualPanelScroll": {
         "Name": "獨立面板捲動",
-        "Hint": "在具有左右面板的選項卡中，使每一側具有獨立的捲動條"
+        "Hint": "在具有左右面板的標籤中，使每一側具有獨立的捲動條"
       },
       "AllowAbilityRolling": {
         "Name": "允許屬性擲骰"
@@ -140,32 +260,40 @@
         "Name": "允許屬性標準陣列"
       },
       "AllowAbilityPointBuy": {
-        "Name": "允許購點制"
+        "Name": "允許屬性購點制"
       },
       "AllowAbilityInput": {
         "Name": "允許手動輸入屬性"
       },
       "UseTokenizer": {
         "Name": "如果可用，使用Token生成器",
-        "Hint": "該工具將嘗試使用Token生成器模組（如果找到）作為生成頭像和Token圖片的默認方式"
+        "Hint": "該工具將嘗試使用Token生成器模組（如果找到）作為生成頭像和Token圖片的預設方式"
       },
       "TokenNameMode": {
         "Name": "Token名稱顯示模式"
       },
       "TokenBarMode": {
-        "Name": "TokenBar顯示模式"
+        "Name": "Token列1顯示模式"
       },
       "EquipmentBlacklist": {
         "Name": "裝備黑名單",
-        "Hint": "不顯示可購買的物品（裝備），按名稱（大小寫敏感，分號分隔，空格可用）。僅顯示'普通'稀有度物品，但此列表排除少數魔法/不合理的普通物品。預設 - '攀爬藥水; 治療藥水; 1級法術卷軸; 咒語卷軸; 無武裝攻擊'"
+        "Hint": "不顯示可購買的物品（裝備），按名稱（區分大小寫，分號分隔，空格可用）。僅顯示「普通」稀有度物品，但此清單排除少數魔法/不合理的普通物品。預設 - '攀爬藥水; 治療藥水; 1級法術卷軸; 戲法卷軸; 無武裝攻擊'"
+      },
+      "ShowPackLabelInSelect": {
+        "Name": "在選擇中顯示資料庫標籤",
+        "Hint": "在選擇選項中與物品標籤一起顯示資料包標籤"
       },
       "SubraceNameBlacklist": {
         "Name": "子種族名稱黑名單",
-        "Hint": "按名稱排除的項目（大小寫敏感，分號分隔，空格可用）。默認用於排除像Gnome Cunning特性不被計入Gnome子職業。預設 - 'Gnome Cunning; 半身人靈巧'"
+        "Hint": "按名稱排除的項目（區分大小寫，分號分隔，空格可用）。預設用於排除像地精狡詐特性不被計入地精子職業。預設 - 'Gnome Cunning; Halfling Nimbleness'"
       },
       "ButtonOnDialogInsteadOfActorsDirectory": {
-        "Name": "角色新增對話框按鈕",
-        "Hint": "如果按鈕干擾其他模組，或者你更喜歡有一個單一的'新增角色'按鈕以不混淆你的玩家"
+        "Name": "建立角色對話框按鈕",
+        "Hint": "如果按鈕干擾其他模組，或者你更喜歡有一個單一的「建立角色」按鈕以不混淆你的玩家"
+      },
+      "NonGmsCanOnlyCreatePCs": {
+        "Name": "非GM僅能建立PC",
+        "Hint": "如果啟用，非GM僅能建立玩家角色，而不能建立其他角色類型"
       },
       "WindowX": {
         "Name": "角色工作室應用視窗寬度",
@@ -177,9 +305,9 @@
       },
       "Sources": {
         "Name": "資料庫來源",
-        "Hint": "選擇將作為新增角色時的數據來源資料庫",
+        "Hint": "選擇將作為建立角色時的資料來源資料庫",
         "Label": "選擇來源",
-        "Save": "保存",
+        "Save": "儲存",
         "RaceCompendia": "種族資料庫",
         "RacialFeatureCompendia": "種族特性資料庫",
         "ClassCompendia": "職業列表資料庫",
@@ -191,13 +319,224 @@
         "EquipmentCompendia": "裝備資料庫"
       },
       "TrimSubclasses": {
-        "Name": "裁減子職業名稱",
-        "Hint": "顯示子職業名稱時去掉括號中的最後部分，主要用於DDB導入的子職業，如'刺客（盜賊）'僅顯示'刺客'（不修改新增到角色的項目，只在工具中顯示）"
+        "Name": "裁剪子職業名稱",
+        "Hint": "顯示子職業名稱時去掉括號中的最後部分，主要用於DDB匯入的子職業，如'刺客（盜賊）'僅顯示'刺客'（不修改新增到角色的項目，只在工具中顯示）"
+      },
+      "EnableEquipmentSelection": {
+        "Name": "啟用裝備選擇",
+        "Hint": "允許玩家在角色建立期間選擇他們的初始裝備。如果停用，裝備將需要在建立後手動新增。"
+      },
+      "EnableEquipmentPurchase": {
+        "Name": "啟用裝備購買",
+        "Hint": "如果啟用，在裝備選擇後為收到起始金幣的角色新增「商店」標籤，允許他們從指定的資料庫購買物品。注意，如果裝備選擇被停用，此設定將被忽略。"
       },
       "ExperimentalCharacterNameStyling": {
         "Name": "實驗性角色名稱樣式",
-        "Hint": "啟用具有隨機顏色和字體的實驗性動畫角色名稱樣式。這是一個為角色名稱輸入添加視覺效果的實驗性功能。"
+        "Hint": "啟用具有隨機顏色和字型的實驗性動畫角色名稱樣式。這是一個為角色名稱輸入新增視覺效果的實驗性功能。"
+      },
+      "AllowAbilityRollScoresToBeMoved": {
+        "Name": "允許移動擲骰的屬性",
+        "Hint": "如果啟用，可以移動擲骰的屬性；類似於標準陣列的運作方式。"
+      },
+      "EnableSpellSelection": {
+        "Name": "啟用法術選擇",
+        "Hint": "允許玩家在角色建立期間選擇他們的法術。如果停用，法術將需要在建立後手動新增。"
+      },
+      "ShowLevelPreviewDropdown": {
+        "Name": "顯示等級預覽下拉選單",
+        "Hint": "如果啟用，在職業標籤中顯示等級預覽下拉選單，允許用戶預覽不同等級的升級獎勵。如果停用，下拉選單將被隱藏以避免混淆建立高等級角色。"
+      },
+      "EnableLLMNameGeneration": {
+        "Name": "啟用LLM名稱生成",
+        "Hint": "如果啟用，在角色名稱輸入旁邊新增ChatGPT按鈕，根據所選種族生成適合奇幻的名稱。"
+      },
+      "EnableBiographyTab": {
+        "Name": "啟用傳記標籤",
+        "Hint": "在角色建立期間顯示傳記標籤。如果啟用，即使LLM名稱生成或授權追蹤器被停用，也會顯示傳記；當生成不可用時，生成按鈕將隱藏。"
+      },
+      "EnableLicenseTracker": {
+        "Name": "啟用授權追蹤器",
+        "Hint": "如果啟用，LLM名稱生成需要授權金鑰。授權金鑰必須在下方輸入。"
+      },
+      "AardvarkLicenseCode": {
+        "Name": "Aardvark授權碼",
+        "Hint": "輸入您的Aardvark授權碼以進行LLM名稱生成。啟用授權追蹤時需要此項。"
+      },
+      "LLMApiKey": {
+        "Name": "LLM API金鑰",
+        "Hint": "LLM服務的API金鑰。OpenAI（內建服務）請保留預設值。Claude請輸入您的Anthropic API金鑰。OpenRouter請輸入您的OpenRouter API金鑰。"
+      },
+      "LLMProvider": {
+        "Name": "LLM提供者",
+        "Hint": "選擇用於名稱生成的LLM提供者。OpenAI使用內建服務（無需API金鑰）。Claude需要Anthropic API金鑰。OpenRouter需要OpenRouter API金鑰。"
+      },
+      "AbilityScores": {
+        "Name": "屬性",
+        "Hint": "配置玩家在角色建立期間如何輸入屬性",
+        "Label": "配置屬性",
+        "Title": "屬性配置",
+        "Description": "選擇玩家可用於決定其屬性的方法",
+        "EntryMethods": "輸入方法"
+      },
+      "Equipment": {
+        "Name": "裝備與金幣",
+        "Hint": "配置起始金幣和裝備/法術選擇選項",
+        "Label": "配置裝備與金幣",
+        "Title": "裝備與金幣配置",
+        "Description": "設定起始金幣並啟用裝備/法術選擇功能",
+        "StartingGold": "起始金幣",
+        "SelectionOptions": "選擇選項"
+      },
+      "Progression": {
+        "Name": "進程",
+        "Hint": "配置升級和升級獎勵選項",
+        "Label": "配置進程",
+        "Title": "進程配置",
+        "Description": "配置升級行為和升級獎勵捕獲設定",
+        "LevelUpOptions": "升級選項",
+        "AdvancementOptions": "升級獎勵選項"
+      },
+      "UI": {
+        "Name": "UI與視窗",
+        "Hint": "配置視窗尺寸和UI顯示選項",
+        "Label": "配置UI與視窗",
+        "Title": "UI與視窗配置",
+        "Description": "自訂角色工作室視窗的外觀和尺寸",
+        "WindowDimensions": "視窗尺寸",
+        "DisplayOptions": "顯示選項",
+        "IlluminatedOptions": "照明說明選項"
+      },
+      "AccessControl": {
+        "Name": "存取控制",
+        "Hint": "配置角色建立的玩家權限",
+        "Label": "配置存取控制",
+        "Title": "存取控制配置",
+        "Description": "控制玩家在建立角色時可以執行的操作",
+        "PlayerRestrictions": "玩家限制"
+      },
+      "CompendiumDisplay": {
+        "Name": "資料庫顯示",
+        "Hint": "配置資料庫的顯示和篩選方式",
+        "Label": "配置資料庫顯示",
+        "Title": "資料庫顯示配置",
+        "Description": "控制資料庫資料包在選擇清單中的顯示方式",
+        "DisplayOptions": "顯示選項"
+      },
+      "Diagnostics": {
+        "Name": "診斷",
+        "Hint": "配置除錯和診斷選項",
+        "Label": "配置診斷",
+        "Title": "診斷配置",
+        "Description": "啟用除錯日誌和診斷功能",
+        "DebugOptions": "除錯選項"
       }
-    }
+    },
+    "Equipment": {
+      "Label": "裝備",
+      "Choice": "選擇一個",
+      "ChooseOne": "選擇一個...",
+      "EquipmentConfirmed": "裝備已確認並新增到角色表",
+      "EquipmentReadOnly": "裝備選擇已完成，在升級獎勵選擇期間為唯讀",
+      "Focus": "施法焦點",
+      "SelectEquipment": "選擇裝備",
+      "SelectOne": "從以下選項中選擇一個：",
+      "StartingGold": "起始金幣",
+      "Selection": "裝備選擇",
+      "Detail": "裝備詳情",
+      "Gold": "金幣",
+      "ConfigureLabel": "配置初始裝備",
+      "NoItemsToConfig": "沒有要配置的物品",
+      "Type": {
+        "Armor": "護甲",
+        "Weapon": "武器",
+        "Tool": "工具",
+        "Focus": "焦點"
+      },
+      "PlannedInventory": "計畫清單",
+      "NoItemsSelected": "未選擇物品",
+      "Weight": "重量",
+      "Quantity": "數量",
+      "SelectType": "選擇"
+    },
+    "Shop": {
+      "AvailableGold": "可用",
+      "SpentGold": "已花費",
+      "CartItems": "購物車物品",
+      "CartEmpty": "您的購物車是空的",
+      "PurchaseCompleted": "裝備購買已完成並確定",
+      "ShopReadOnly": "商店選擇已完成，現為唯讀",
+      "AvailableEquipment": "可用裝備",
+      "Loading": "載入物品中...",
+      "NoEquipment": "沒有可用的裝備。請在模組設定中檢查您的資料庫來源。",
+      "ErrorItemNoId": "無法將物品新增到購物車：缺少物品ID",
+      "ErrorAddToCart": "無法將物品新增到購物車",
+      "InfoAddedToCart": "已將{item}新增到購物車",
+      "ErrorUpdateQuantity": "無法更新物品數量",
+      "ErrorRemoveFromCart": "無法從購物車移除物品",
+      "FilterPlaceholder": "按關鍵字搜尋商店中的物品",
+      "NoMatchingEquipment": "未找到相符的裝備。"
+    },
+    "AltText": {
+      "MoveUp": "上移",
+      "MoveDown": "下移",
+      "Roll": "擲骰",
+      "Increase": "增加",
+      "Decrease": "減少",
+      "Subclass": "子職業"
+    },
+    "Spells": {
+      "CharacterLevel": "角色等級",
+      "MaxSpellLevel": "最大法術等級",
+      "SelectedSpells": "已選擇的法術",
+      "NoSpellsSelected": "未選擇法術",
+      "AvailableSpells": "可用法術",
+      "FilterPlaceholder": "按關鍵字搜尋法術",
+      "Loading": "載入法術中...",
+      "NoSpells": "沒有可用的法術。請在模組設定中檢查您的資料庫來源。",
+      "NoMatchingSpells": "未找到相符的法術。",
+      "SpellsReadOnly": "法術選擇已完成，現為唯讀",
+      "CantripLimitReached": "您已達到您的等級和職業的最大戲法數量。",
+      "SpellLimitReached": "您已達到您的等級和職業的最大法術數量。",
+      "MaxLvl": "最大法術等級",
+      "Spells": "法術",
+      "Cantrips": "戲法",
+      "Level": "等級"
+    },
+    "FeatSpells": {
+      "Title": "專長法術選擇",
+      "Description": "您的某些專長授予存取額外法術的權限。請為每個專長選擇所需的法術。",
+      "Loading": "載入專長需求中...",
+      "Error": "載入專長法術需求時發生錯誤：{error}",
+      "NoRequirements": "不需要專長法術選擇。",
+      "ChooseCount": "選擇{count}個",
+      "ManualReview": "此專長需要手動審查。請在完成升級過程後手動新增法術。",
+      "LoadingSpells": "載入可用法術中...",
+      "Complete": "完成",
+      "Skip": "跳過",
+      "Retry": "重試",
+      "SelectedSpells": "已選擇的法術",
+      "AvailableSpells": "可用法術",
+      "NoSpellsSelected": "未選擇法術"
+    },
+    "FeatSelector": {
+      "Title": "選擇專長",
+      "Search": "搜尋專長...",
+      "Loading": "載入專長中...",
+      "NoFeats": "沒有可用的專長。請在設定中檢查您的資料庫來源。",
+      "Select": "選擇專長",
+      "Cancel": "取消",
+      "ShowIneligible": "顯示不符資格的專長"
+    },
+    "SpellSchool": {
+      "abj": "防護系",
+      "con": "咒法系",
+      "div": "預言系",
+      "enc": "惑控系",
+      "evo": "塑能系",
+      "ill": "幻術系",
+      "nec": "死靈系",
+      "trs": "變化系"
+    },
+    "Cantrip": "戲法"
   }
 }

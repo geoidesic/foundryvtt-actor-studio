@@ -2,19 +2,66 @@
   "GAS": {
     "Error": {
       "ItemNotFoundInCompendium": "コンペンディウムにアイテムが見つかりません",
-      "PackIndexNotFound": "キャラクタークラスがインポートされたコンペンディウムパックがこのワールドに見つかりません"
+      "PackIndexNotFound": "キャラクタークラスがインポートされたコンペンディウムパックがこのワールドに見つかりません",
+      "EquipmentSelectionNotViable": "選択されたデータタイプに初期装備データが含まれていないため、初期装備を選択できませんでした。"
     },
     "ActorStudio": "アクタースタジオ",
+    "CreateActor": "アクターを作成",
+    "Cancel": "キャンセル",
+    "Dialog": {
+      "ReloadRequiredTitle": "リロードが必要",
+      "ReloadRequiredContent": "この設定変更にはFoundryのリロードが必要です。今すぐリロードしますか？",
+      "AutoAssignSources": {
+        "Title": "アクタースタジオのソースを設定",
+        "Content": "アクタースタジオのソースが割り当てられていません。自動割り当てしますか？（後で設定で変更できます - アクタースタジオを動作させるにはソースの割り当てが必要です）",
+        "Success": "ソースが自動割り当てされました。必要に応じてアクタースタジオ設定で変更できます。",
+        "Skipped": "ソースは自動割り当てされませんでした。準備ができたらアクタースタジオ設定で手動設定できます。"
+      }
+    },
+    "Notification": {
+      "CompendiumSourcesCleaned": "アクタースタジオは{type}の一部の資料庫ソースをクリーンアップしました。<a class='gas-open-sources' href='#'>ソースを開く</a>で変更を確認して保存してください。",
+      "SettingsSaved": "設定が正常に保存されました。",
+      "SettingsSaveFailed": "設定の保存に失敗しました。もう一度お試しください。"
+    },
+    "Disabled": "無効",
     "AbilityScores": "能力値",
     "Advancements": "進展",
     "Level": "レベル",
     "LevelUp": {
       "Button": "レベルアップ",
-      "ClassLevelUp": "このクラスをレベルアップ"
+      "ClassLevelUp": "このクラスをレベルアップ",
+      "ExistingClassesTitle": "既存クラスのレベルアップ",
+      "ExistingClassesDescription": "レベルアップするクラスをクリックするか、マルチクラスドロップダウンから新しいクラスを選択してください。",
+      "NewClassTitle": "マルチクラスを追加",
+      "SelectClass": "追加するクラスを選択",
+      "SelectMulticlass": "マルチクラスを選択",
+      "CancelDescription": "下のクラスボタンをクリックしてレベルアップ選択をキャンセルし、最初に戻ります。または「キャラクターを更新」をクリックして変更を適用します。",
+      "Subclass": "サブクラスを選択",
+      "LevelAdvancements": "レベル進展",
+      "DisabledTooltip": "進展の処理中のため無効",
+      "DisabledDescription": "進展の処理中は、このセクションは編集できません"
     },
+    "Footer": {
+      "AddLevel": "キャラクターレベルを追加",
+      "AddEquipment": "確認",
+      "FinalizePurchase": "購入を確定",
+      "FinalizeSpells": "呪文を確定",
+      "SkipSpells": "呪文をスキップ",
+      "CharacterName": "キャラクター名",
+      "CreateCharacter": "キャラクターを作成",
+      "UpdateCharacter": "キャラクターを更新"
+    },
+    "Name": "名前",
+    "MulticlassMode": "マルチクラスモード",
+    "Item": "アイテム",
+    "Skip": "スキップ",
+    "Complete": "完了",
+    "Type": "タイプ",
     "NoAdvancements": "このレベルでの進展はありません",
     "PCTitle": "プレイヤーキャラクター",
+    "Title": "アクタースタジオ",
     "Source": "ソース",
+    "StartingEquipment": "初期装備",
     "Permissions": {
       "NeedCreateActorError": "ユーザーには「新しいアクターを作成する」権限が必要です。DMにあなたの役割に追加してもらってください",
       "NeedCreateItemWarn": "「新しいアイテムを作成する」権限がないユーザー。カスタムフィーチャーを作成することはできません",
@@ -24,23 +71,68 @@
     "SubClass": "サブクラス",
     "Tabs": {
       "Abilities": {
-        "HowCalculated": "能力値はどのように計算されますか？"
+        "Title": "能力値",
+        "HowCalculated": "能力値はどのように計算されますか？",
+        "AbilityGenerationMethod": "能力値生成方法",
+        "ManualEntry": "手動入力",
+        "PointBuy": "ポイントバイ",
+        "Roll": "ロール",
+        "StandardArray": "標準配列"
       },
       "Races": {
+        "Title": "種族",
         "Movement": "移動",
         "Senses": "感覚",
-        "Type": "タイプ"
+        "Type": "タイプ",
+        "Placeholder": "種族"
       },
       "Classes": {
+        "Title": "クラス",
         "Class": "クラス",
         "SubClass": "サブクラス",
-        "FilterByLevel": "レベルでフィルタ"
+        "FilterByLevel": "レベルで進展を探索",
+        "Placeholder": "クラス",
+        "SubclassPlaceholder": "サブクラス",
+        "LevelPreview": "レベルプレビュー",
+        "Level": "レベル"
+      },
+      "Background": {
+        "Title": "背景",
+        "Placeholder": "背景"
+      },
+      "Equipment": {
+        "Title": "装備"
+      },
+      "Shop": {
+        "Title": "ショップ"
+      },
+      "Biography": {
+        "Title": "経歴"
       }
+    },
+    "Welcome": {
+      "To": "ようこそ",
+      "IntroductionTitle": "はじめに",
+      "Introduction": "アクタースタジオは、Dungeons and Dragons 5eのキャラクター作成とレベルアップを支援するツールです。",
+      "UsageTitle": "使用方法",
+      "Issues": "問題がある場合は、",
+      "Github": "GitHub",
+      "CreatedBy": "FoundryVTT用に開発 by ",
+      "Support": "このモジュールの開発を支援したい場合は、月次寄付をご検討ください",
+      "SponsorLinkText": "GitHub スポンサー",
+      "IssuesLinkText": "GitHub Issues",
+      "PayPalLinkText": "PayPal",
+      "JoinDiscord": "参加する",
+      "DiscordLinkText": "アクタースタジオ Discord サーバー",
+      "Thanks": "アクタースタジオをご利用いただきありがとうございます！"
     },
     "Setting": {
       "World": "ワールド設定",
       "User": "ユーザー設定",
       "AbilityScoreEntryOptions": "能力値入力オプション",
+      "LevelingOptions": "レベリングオプション",
+      "DisplayOptions": "表示オプション",
+      "DebugOptions": "デバッグオプション",
       "AbilityEntry": {
         "AllowManualInput": {
           "Name": "手動入力を許可",
@@ -72,6 +164,10 @@
           "Hint": "例: 4d6kh3"
         }
       },
+      "AdvancementCaptureTimerThreshold": {
+        "Name": "進展キャプチャタイマー閾値",
+        "Hint": "進展キャプチャタイマーの閾値を設定します。新しいアクターで種族、背景、またはクラスがキャプチャされない場合は、この数値を大きくしてください。これは、進展キャプチャが失敗したと見なされるまでに待機するミリ秒数を表します。"
+      },
       "debug": {
         "Name": "デバッグモードを有効化",
         "Hint": "デバッグ目的で追加のログを提供します"
@@ -80,17 +176,29 @@
         "Name": "拡張デバッグモードを有効化",
         "Hint": "すべてのFoundryフックの追加ログを提供します"
       },
-      "DefaultGoldDice": {
-        "Name": "初期ゴールドのロール",
-        "Hint": "ツールでロールされる初期ゴールドのダイスをカスタマイズできます"
+      "defaultGoldDice": {
+        "Name": "デフォルトの初期ゴールドロール",
+        "Hint": "ツールでロールされるデフォルトの初期ゴールドダイスをカスタマイズできます。キャラクタークラスにカスタム初期ゴールド式がない場合に使用されます"
       },
       "DonationTrackerEnabled": {
         "Name": "寄付トラッカーを有効化",
         "Hint": "現在の寄付額と目標を表示するために寄付トラッカーを有効にします"
       },
+      "disableAdvancementCapture": {
+        "Name": "進展タブを無効化",
+        "Hint": "進展タブで進展がキャプチャされないようにします。代わりに、システムのデフォルトとして表示されます（ダイアログポップアップウィンドウとして）。（注：これはデバッグ目的のみです - これを無効にしてアクタースタジオを使用する意味はあまりありません）"
+      },
+      "DisableOtherActorCreationOptionsForPlayers": {
+        "Name": "他のアクター作成ボタンを無効化",
+        "Hint": "プレイヤーが標準のアクター作成ボタンを使用してアクターを作成できないようにします。アクタースタジオのみが利用可能になります。"
+      },
       "DonationTrackerRank": {
         "Name": "ランク",
         "Hint": "ランクのフォルダー名を入力してください"
+      },
+      "DonationTracker_UnregisteredAccess": {
+        "Name": "未登録アクセス",
+        "Hint": "チェックを入れると、未登録ユーザーはDTリンクコンペンディウムのDTフォルダー外のすべてにアクセスできます"
       },
       "DonationTrackerAction": {
         "Name": "DTフォルダーを追加",
@@ -109,6 +217,10 @@
         "Name": "レベルアップを有効化",
         "Hint": "アクタースタジオでレベルアップするためのボタンをキャラクターシートに含めるにはこれをチェックしてください"
       },
+      "FilterPackSourcesAppropriatelyByName": {
+        "Name": "名前でパックソースを適切にフィルタ",
+        "Hint": "有効にすると、ソースセクションにはソースタイプに一致する名前、パス、ID、またはラベルを持つパックのみが含まれます"
+      },
       "forceDnd5eLevelUpAutomation": {
         "Name": "D&D5eのレベルアップ自動化を強制",
         "Hint": "これがないと、アクタースタジオはオプションをプレビューする以外にはほとんど役に立たず、アクターに変更を適用することができません"
@@ -124,6 +236,18 @@
       "showButtonInSideBar": {
         "Name": "サイドバーにボタンを表示",
         "Hint": "サイドバーにアクタースタジオボタンを表示します。（ブラウザのリフレッシュが必要です）"
+      },
+      "illuminatedDescription": {
+        "Name": "イルミネーション説明を有効化",
+        "Hint": "適切な場合、タブの右側パネルに選択アイコンの拡大版を追加します。"
+      },
+      "illuminatedHeight": {
+        "Name": "イルミネーションの高さ",
+        "Hint": "イルミネーション説明の高さを設定します"
+      },
+      "illuminatedWidth": {
+        "Name": "イルミネーションの幅",
+        "Hint": "イルミネーション説明の幅を設定します"
       },
       "IndividualPanelScroll": {
         "Name": "個別のパネルスクロール",
@@ -155,14 +279,264 @@
         "Name": "装備ブラックリスト",
         "Hint": "名前（大文字小文字区別、';'で区切り、スペースOK）で購入対象としないアイテム（装備）。「一般的」なレアリティのアイテムのみが表示されますが、このリストはわずかな魔法的/非合理的な一般アイテムを除外します。デフォルト - '登攀のポーション; 回復のポーション; 1レベルの呪文の巻物; キャントリップレベルの呪文の巻物; 無手の一撃'"
       },
+      "ShowPackLabelInSelect": {
+        "Name": "選択時にコンペンディウムラベルを表示",
+        "Hint": "選択オプションにアイテムラベルと共にパックラベルを表示します"
+      },
       "SubraceNameBlacklist": {
         "Name": "サブレース名ブラックリスト",
-        "Hint": "名前でサブレースとして除外されるアイテム（大文字小文字区別、';'で区切り、スペースOK）。デフォルト - 'ジーンボーン'"
+        "Hint": "名前でサブレースとして除外されるアイテム（大文字小文字区別、';'で区切り、スペースOK）。デフォルトで、ノームの狡猾さなどがノームのサブクラスとして登録されるのを除外するために使用されます。デフォルト - 'Gnome Cunning; Halfling Nimbleness'"
+      },
+      "ButtonOnDialogInsteadOfActorsDirectory": {
+        "Name": "アクター作成ダイアログボタン",
+        "Hint": "ボタンが他のモジュールと干渉する場合、またはプレイヤーを混乱させないために単一の「アクターを作成」ボタンの美学を好む場合"
+      },
+      "NonGmsCanOnlyCreatePCs": {
+        "Name": "GM以外はPCのみ作成可能",
+        "Hint": "有効にすると、GM以外は他のアクタータイプではなく、プレイヤーキャラクターのみを作成できます"
+      },
+      "WindowX": {
+        "Name": "アクタースタジオアプリケーションウィンドウの幅",
+        "Hint": "ここでウィンドウの初期幅を設定します"
+      },
+      "WindowY": {
+        "Name": "アクタースタジオアプリケーションウィンドウの高さ",
+        "Hint": "ここでウィンドウの初期高さを設定します"
+      },
+      "Sources": {
+        "Name": "コンペンディウムソース",
+        "Hint": "異なる作成ステップのデータソースとして機能するコンペンディアを選択します",
+        "Label": "ソースを選択",
+        "Save": "保存",
+        "RaceCompendia": "種族コンペンディア",
+        "RacialFeatureCompendia": "種族特性コンペンディア",
+        "ClassCompendia": "クラスコンペンディア",
+        "SubclassCompendia": "サブクラスコンペンディア",
+        "ClassFeatureCompendia": "クラス特性コンペンディア",
+        "BackgroundCompendia": "背景コンペンディア",
+        "SpellCompendia": "呪文コンペンディア",
+        "FeatCompendia": "特技コンペンディア",
+        "EquipmentCompendia": "装備コンペンディア"
+      },
+      "TrimSubclasses": {
+        "Name": "サブクラス名をトリム",
+        "Hint": "括弧内の最後の部分なしでサブクラス名を表示します。主にDDBImporterサブクラス（'Assassin (Rogue)'を単に'Assassin'として表示）用です。（アクターに追加されるアイテムは変更せず、ツールでの表示方法のみを変更します）"
+      },
+      "EnableEquipmentSelection": {
+        "Name": "装備選択を有効化",
+        "Hint": "キャラクター作成時にプレイヤーが初期装備を選択できるようにします。無効にすると、装備は作成後に手動で追加する必要があります。"
+      },
+      "EnableEquipmentPurchase": {
+        "Name": "装備購入を有効化",
+        "Hint": "有効にすると、初期ゴールドを受け取ったキャラクターの装備選択後に「ショップ」タブが追加され、指定されたコンペンディウムからアイテムを購入できるようになります。装備選択が無効の場合、この設定は無視されます。"
       },
       "ExperimentalCharacterNameStyling": {
         "Name": "実験的キャラクター名スタイリング",
         "Hint": "ランダムな色とフォントを使用した実験的なアニメーション化されたキャラクター名スタイリングを有効にします。これはキャラクター名入力に視覚的な魅力を追加する実験的機能です。"
+      },
+      "AllowAbilityRollScoresToBeMoved": {
+        "Name": "ロールした能力値の移動を許可",
+        "Hint": "有効にすると、ロールした能力値を移動できます。標準配列と同様の動作です。"
+      },
+      "EnableSpellSelection": {
+        "Name": "呪文選択を有効化",
+        "Hint": "キャラクター作成時にプレイヤーが呪文を選択できるようにします。無効にすると、呪文は作成後に手動で追加する必要があります。"
+      },
+      "ShowLevelPreviewDropdown": {
+        "Name": "レベルプレビュードロップダウンを表示",
+        "Hint": "有効にすると、クラスタブにレベルプレビュードロップダウンが表示され、異なるレベルでの進展をプレビューできます。無効にすると、高レベルキャラクター作成に関する混乱を避けるためにドロップダウンが非表示になります。"
+      },
+      "EnableLLMNameGeneration": {
+        "Name": "LLM名前生成を有効化",
+        "Hint": "有効にすると、選択した種族に基づいてファンタジーに適した名前を生成するChatGPTボタンがキャラクター名入力の横に追加されます。"
+      },
+      "EnableBiographyTab": {
+        "Name": "経歴タブを有効化",
+        "Hint": "キャラクター作成時に経歴タブを表示します。有効にすると、LLM名前生成またはライセンストラッカーが無効になっている場合でも経歴が表示されます。生成が利用できない場合は生成ボタンが非表示になります。"
+      },
+      "EnableLicenseTracker": {
+        "Name": "ライセンストラッカーを有効化",
+        "Hint": "有効にすると、LLM名前生成にライセンスキーが必要になります。ライセンスキーは以下に入力する必要があります。"
+      },
+      "AardvarkLicenseCode": {
+        "Name": "Aardvarkライセンスコード",
+        "Hint": "LLM名前生成用のAardvarkライセンスコードを入力してください。ライセンストラッキングが有効な場合に必要です。"
+      },
+      "LLMApiKey": {
+        "Name": "LLM APIキー",
+        "Hint": "LLMサービスのAPIキー。OpenAI（組み込みサービス）の場合はデフォルトのままにしてください。Claudeの場合はAnthropic APIキーを入力してください。OpenRouterの場合はOpenRouter APIキーを入力してください。"
+      },
+      "LLMProvider": {
+        "Name": "LLMプロバイダー",
+        "Hint": "名前生成に使用するLLMプロバイダーを選択してください。OpenAIは組み込みサービスを使用します（APIキー不要）。ClaudeにはAnthropic APIキーが必要です。OpenRouterにはOpenRouter APIキーが必要です。"
+      },
+      "AbilityScores": {
+        "Name": "能力値",
+        "Hint": "キャラクター作成時にプレイヤーが能力値を入力する方法を設定します",
+        "Label": "能力値を設定",
+        "Title": "能力値設定",
+        "Description": "プレイヤーが能力値を決定するために使用できる方法を選択します",
+        "EntryMethods": "入力方法"
+      },
+      "Equipment": {
+        "Name": "装備とゴールド",
+        "Hint": "初期ゴールドと装備/呪文選択オプションを設定します",
+        "Label": "装備とゴールドを設定",
+        "Title": "装備とゴールド設定",
+        "Description": "初期ゴールドを設定し、装備/呪文選択機能を有効にします",
+        "StartingGold": "初期ゴールド",
+        "SelectionOptions": "選択オプション"
+      },
+      "Progression": {
+        "Name": "進行",
+        "Hint": "レベルアップと進展オプションを設定します",
+        "Label": "進行を設定",
+        "Title": "進行設定",
+        "Description": "レベルアップの動作と進展キャプチャ設定を構成します",
+        "LevelUpOptions": "レベルアップオプション",
+        "AdvancementOptions": "進展オプション"
+      },
+      "UI": {
+        "Name": "UIとウィンドウ",
+        "Hint": "ウィンドウの寸法とUI表示オプションを設定します",
+        "Label": "UIとウィンドウを設定",
+        "Title": "UIとウィンドウ設定",
+        "Description": "アクタースタジオウィンドウの外観と寸法をカスタマイズします",
+        "WindowDimensions": "ウィンドウ寸法",
+        "DisplayOptions": "表示オプション",
+        "IlluminatedOptions": "イルミネーション説明オプション"
+      },
+      "AccessControl": {
+        "Name": "アクセス制御",
+        "Hint": "キャラクター作成のためのプレイヤー権限を設定します",
+        "Label": "アクセス制御を設定",
+        "Title": "アクセス制御設定",
+        "Description": "プレイヤーがキャラクター作成時に実行できるアクションを制御します",
+        "PlayerRestrictions": "プレイヤー制限"
+      },
+      "CompendiumDisplay": {
+        "Name": "コンペンディウム表示",
+        "Hint": "コンペンディアの表示とフィルタリング方法を設定します",
+        "Label": "コンペンディウム表示を設定",
+        "Title": "コンペンディウム表示設定",
+        "Description": "選択リストでコンペンディウムパックがどのように表示されるかを制御します",
+        "DisplayOptions": "表示オプション"
+      },
+      "Diagnostics": {
+        "Name": "診断",
+        "Hint": "デバッグと診断オプションを設定します",
+        "Label": "診断を設定",
+        "Title": "診断設定",
+        "Description": "デバッグログと診断機能を有効にします",
+        "DebugOptions": "デバッグオプション"
       }
-    }
+    },
+    "Equipment": {
+      "Label": "装備",
+      "Choice": "1つ選択",
+      "ChooseOne": "1つ選択...",
+      "EquipmentConfirmed": "装備が確認され、キャラクターシートに追加されました",
+      "EquipmentReadOnly": "装備選択が完了し、進展選択中は読み取り専用になりました",
+      "Focus": "呪文発動焦点具",
+      "SelectEquipment": "装備を選択",
+      "SelectOne": "次のオプションから1つ選択してください：",
+      "StartingGold": "初期ゴールド",
+      "Selection": "装備選択",
+      "Detail": "装備詳細",
+      "Gold": "ゴールド",
+      "ConfigureLabel": "初期装備を設定",
+      "NoItemsToConfig": "設定するアイテムがありません",
+      "Type": {
+        "Armor": "防具",
+        "Weapon": "武器",
+        "Tool": "道具",
+        "Focus": "焦点具"
+      },
+      "PlannedInventory": "予定インベントリ",
+      "NoItemsSelected": "アイテムが選択されていません",
+      "Weight": "重量",
+      "Quantity": "数量",
+      "SelectType": "選択"
+    },
+    "Shop": {
+      "AvailableGold": "利用可能",
+      "SpentGold": "使用済み",
+      "CartItems": "カートアイテム",
+      "CartEmpty": "カートは空です",
+      "PurchaseCompleted": "装備購入が完了し、確定されました",
+      "ShopReadOnly": "ショップ選択が完了し、読み取り専用になりました",
+      "AvailableEquipment": "利用可能な装備",
+      "Loading": "アイテムを読み込み中...",
+      "NoEquipment": "装備が利用できません。モジュール設定でコンペンディウムソースを確認してください。",
+      "ErrorItemNoId": "カートにアイテムを追加できませんでした：アイテムIDが見つかりません",
+      "ErrorAddToCart": "カートにアイテムを追加できませんでした",
+      "InfoAddedToCart": "{item}をカートに追加しました",
+      "ErrorUpdateQuantity": "アイテム数量を更新できませんでした",
+      "ErrorRemoveFromCart": "カートからアイテムを削除できませんでした",
+      "FilterPlaceholder": "キーワードでショップのアイテムを検索",
+      "NoMatchingEquipment": "一致する装備が見つかりませんでした。"
+    },
+    "AltText": {
+      "MoveUp": "上に移動",
+      "MoveDown": "下に移動",
+      "Roll": "ロール",
+      "Increase": "増加",
+      "Decrease": "減少",
+      "Subclass": "サブクラス"
+    },
+    "Spells": {
+      "CharacterLevel": "キャラクターレベル",
+      "MaxSpellLevel": "最大呪文レベル",
+      "SelectedSpells": "選択した呪文",
+      "NoSpellsSelected": "呪文が選択されていません",
+      "AvailableSpells": "利用可能な呪文",
+      "FilterPlaceholder": "キーワードで呪文を検索",
+      "Loading": "呪文を読み込み中...",
+      "NoSpells": "呪文が利用できません。モジュール設定でコンペンディウムソースを確認してください。",
+      "NoMatchingSpells": "一致する呪文が見つかりませんでした。",
+      "SpellsReadOnly": "呪文選択が完了し、読み取り専用になりました",
+      "CantripLimitReached": "レベルとクラスの最大カントリップ数に達しました。",
+      "SpellLimitReached": "レベルとクラスの最大呪文数に達しました。",
+      "MaxLvl": "最大呪文Lv",
+      "Spells": "呪文",
+      "Cantrips": "カントリップ",
+      "Level": "Lv"
+    },
+    "FeatSpells": {
+      "Title": "特技呪文選択",
+      "Description": "一部の特技は追加の呪文へのアクセスを許可します。各特技に必要な呪文を選択してください。",
+      "Loading": "特技要件を読み込み中...",
+      "Error": "特技呪文要件の読み込みエラー：{error}",
+      "NoRequirements": "特技呪文選択は必要ありません。",
+      "ChooseCount": "{count}個選択",
+      "ManualReview": "この特技は手動レビューが必要です。レベルアッププロセス完了後に呪文を手動で追加してください。",
+      "LoadingSpells": "利用可能な呪文を読み込み中...",
+      "Complete": "完了",
+      "Skip": "スキップ",
+      "Retry": "再試行",
+      "SelectedSpells": "選択した呪文",
+      "AvailableSpells": "利用可能な呪文",
+      "NoSpellsSelected": "呪文が選択されていません"
+    },
+    "FeatSelector": {
+      "Title": "特技を選択",
+      "Search": "特技を検索...",
+      "Loading": "特技を読み込み中...",
+      "NoFeats": "特技が利用できません。設定でコンペンディウムソースを確認してください。",
+      "Select": "特技を選択",
+      "Cancel": "キャンセル",
+      "ShowIneligible": "不適格な特技を表示"
+    },
+    "SpellSchool": {
+      "abj": "防御術",
+      "con": "召喚術",
+      "div": "占術",
+      "enc": "心術",
+      "evo": "力術",
+      "ill": "幻術",
+      "nec": "死霊術",
+      "trs": "変成術"
+    },
+    "Cantrip": "カントリップ"
   }
 }

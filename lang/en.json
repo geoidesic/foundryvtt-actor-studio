@@ -19,7 +19,9 @@
       }
     },
     "Notification": {
-      "CompendiumSourcesCleaned": "Actor Studio cleaned some compendium sources for {type}. <a class='gas-open-sources' href='#'>Open Sources</a> to review and save changes."
+      "CompendiumSourcesCleaned": "Actor Studio cleaned some compendium sources for {type}. <a class='gas-open-sources' href='#'>Open Sources</a> to review and save changes.",
+      "SettingsSaved": "Settings saved successfully.",
+      "SettingsSaveFailed": "Failed to save settings. Please try again."
     },
     "Disabled": "Disabled",
     "AbilityScores": "Ability Scores",
