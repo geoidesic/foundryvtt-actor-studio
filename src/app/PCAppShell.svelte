@@ -357,7 +357,7 @@
 
 <template lang="pug">
   ApplicationShell(bind:elementRoot bind:stylesApp)
-    img(class="break-out" src="/modules/foundryvtt-actor-studio/assets/xmas-hat.webp" alt="icon")
+    //- img(class="break-out" src="/modules/foundryvtt-actor-studio/assets/xmas-hat.webp" alt="icon")
     main
       section.a
         Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC" on:confirm!="{handleWealthChoiceConfirm}" on:edit!="{handleWealthChoiceEdit}")
