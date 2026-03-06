@@ -55,7 +55,7 @@ export default class PCApplication extends SvelteApplication {
       title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eVersion} | Rules: ${dnd5eRules}`,
       classes: [MODULE_CODE],
       width: Number(safeGetSetting(MODULE_ID, 'windowX', 700)) || 700,
-      height: Number(safeGetSetting(MODULE_ID, 'windowX', 800)) || 800,
+      height: Number(safeGetSetting(MODULE_ID, 'windowY', 800)) || 800,
       headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png',
       minWidth: 500,
       padding: 0,
