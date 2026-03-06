@@ -16,34 +16,39 @@ const args = process.argv.slice(2);
 const versionType = args[0];
 const isDraft = args.includes('draft') || args.includes('--draft');
 const isPreRelease = args.includes('pre') || args.includes('--pre');
+const isDryRun = args.includes('--dry-run') || args.includes('--dryrun');
 const isTestRelease = isDraft || isPreRelease;
 
 // Check for uncommitted changes (must be before any branch switching or merging)
-try {
-    const gitStatus = execSync('git status --porcelain').toString().trim();
-    if (gitStatus) {
-        console.error('❌ There are uncommitted changes in your working directory:');
-        console.error(gitStatus);
-        console.error('Please commit or stash your changes before running a release.');
+if (!isDryRun) {
+    try {
+        const gitStatus = execSync('git status --porcelain').toString().trim();
+        if (gitStatus) {
+            console.error('❌ There are uncommitted changes in your working directory:');
+            console.error(gitStatus);
+            console.error('Please commit or stash your changes before running a release.');
+            process.exit(1);
+        }
+    } catch (error) {
+        console.error('❌ Error checking git status:', error.message);
         process.exit(1);
     }
-} catch (error) {
-    console.error('❌ Error checking git status:', error.message);
-    process.exit(1);
 }
 
 if (!versionType) {
-    console.error('Usage: node release.js <major|minor|patch> [draft|pre]');
+    console.error('Usage: node release.js <major|minor|patch> [draft|pre] [--dry-run]');
     console.error('');
     console.error('Release Types:');
-    console.error('  (none)  - Public release on main branch (triggers GitHub Actions)');
-    console.error('  draft   - Draft release on next branch (private, triggers GitHub Actions)');
-    console.error('  pre     - Pre-release on next branch (public preview, triggers GitHub Actions)');
+    console.error('  (none)    - Public release on main branch (triggers GitHub Actions)');
+    console.error('  draft     - Draft release on next branch (private, triggers GitHub Actions)');
+    console.error('  pre       - Pre-release on next branch (public preview, triggers GitHub Actions)');
+    console.error('  --dry-run - Preview what would happen without making any changes');
     console.error('');
     console.error('Examples:');
-    console.error('  node release.js patch        # Public release');
-    console.error('  node release.js minor draft  # Private draft for internal testing');
-    console.error('  node release.js major pre    # Public pre-release for beta testing');
+    console.error('  node release.js patch              # Public release');
+    console.error('  node release.js patch --dry-run    # Preview release without executing');
+    console.error('  node release.js minor draft        # Private draft for internal testing');
+    console.error('  node release.js major pre          # Public pre-release for beta testing');
     process.exit(1);
 }
 
@@ -285,6 +290,11 @@ const getPreviousTag = () => {
 
 // Determine target branch
 const targetBranch = isTestRelease ? 'next' : 'main';
+
+if (isDryRun) {
+    console.log('\n🔍 DRY RUN MODE - No changes will be made\n');
+}
+
 console.log(`🎯 Target branch: ${targetBranch}`);
 
 // --- Branch merging logic ---
@@ -295,35 +305,39 @@ try {
         // For pre/draft releases: ensure next branch exists and has latest main changes
         const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
         if (!branches.includes('next')) {
-            console.log('🔄 Creating next branch...');
-            execSync('git checkout -b next');
+            console.log(isDryRun ? '🔍 Would create next branch' : '🔄 Creating next branch...');
+            if (!isDryRun) execSync('git checkout -b next');
         } else if (currentBranch !== 'next') {
-            console.log('🔄 Switching to next branch...');
-            execSync('git checkout next');
+            console.log(isDryRun ? '🔍 Would switch to next branch' : '🔄 Switching to next branch...');
+            if (!isDryRun) execSync('git checkout next');
         }
-        console.log('📥 Merging latest main into next branch...');
-        try {
-            execSync('git merge main');
-            console.log('✅ Successfully merged main into next');
-        } catch (error) {
-            console.error('❌ Merge conflict detected while merging main into next. Please resolve conflicts and re-run the release script.');
-            process.exit(1);
+        console.log(isDryRun ? '🔍 Would merge latest main into next branch' : '📥 Merging latest main into next branch...');
+        if (!isDryRun) {
+            try {
+                execSync('git merge main');
+                console.log('✅ Successfully merged main into next');
+            } catch (error) {
+                console.error('❌ Merge conflict detected while merging main into next. Please resolve conflicts and re-run the release script.');
+                process.exit(1);
+            }
         }
     } else {
         // For production releases: merge next into main if next exists
         if (currentBranch !== 'main') {
-            console.log('🔄 Switching to main branch...');
-            execSync('git checkout main');
+            console.log(isDryRun ? '🔍 Would switch to main branch' : '🔄 Switching to main branch...');
+            if (!isDryRun) execSync('git checkout main');
         }
         const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
         if (branches.includes('next')) {
-            console.log('📥 Merging next branch into main...');
-            try {
-                execSync('git merge next');
-                console.log('✅ Successfully merged next into main');
-            } catch (error) {
-                console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
-                process.exit(1);
+            console.log(isDryRun ? '🔍 Would merge next branch into main' : '📥 Merging next branch into main...');
+            if (!isDryRun) {
+                try {
+                    execSync('git merge next');
+                    console.log('✅ Successfully merged next into main');
+                } catch (error) {
+                    console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
+                    process.exit(1);
+                }
             }
         } else {
             console.log('📍 Next branch does not exist, skipping merge.');
@@ -353,92 +367,99 @@ packageJson.env = 'production';
 
 // Check if the new version tag already exists (only for published releases)
 if (!isDraft) {
-    try {
-        execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
-        console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
-        process.exit(1);
-    } catch (error) {
-        // Tag doesn't exist, which is what we want
-        console.log(`✅ Version ${newVersion} is available`);
-    }
-    
-    // Save original versions for potential revert
-    const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-    const originalModuleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
-    
-    // Update files and build for published releases only
-    packageJson.version = newVersion;
-    if (packageJson.debug !== undefined) {
-        packageJson.debug = false; // Set debug to false for releases
-    }
-    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
-
-    // Update module.json
-    const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
-    moduleJson.version = newVersion;
-    if (moduleJson.manifest) {
-        moduleJson.manifest = moduleJson.manifest.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-    }
-    if (moduleJson.download) {
-        moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-    }
-    fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
-
-    try {
-        // Build after version update so the new version is included in the build
-        console.log('🔨 Building project...');
-        execSync('npm run build', { stdio: 'inherit' });
-
-        // Ensure dist/style.css exists so Foundry's installer won't reject the package
-        // If Vite produced a hashed CSS file, copy it to dist/style.css. If no CSS was emitted, abort the release
+    if (!isDryRun) {
         try {
-            const distDir = path.join(__dirname, 'dist');
-            if (!fs.existsSync(distDir)) {
-                throw new Error('dist directory not found after build. Run `npm run build` and verify output.');
+            execSync(`git rev-parse ${newVersion}`, { stdio: 'pipe' });
+            console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
+            process.exit(1);
+        } catch (error) {
+            // Tag doesn't exist, which is what we want
+            console.log(`✅ Version ${newVersion} is available`);
+        }
+        
+        // Save original versions for potential revert
+        const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+        const originalModuleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+        
+        // Update files and build for published releases only
+        packageJson.version = newVersion;
+        if (packageJson.debug !== undefined) {
+            packageJson.debug = false; // Set debug to false for releases
+        }
+        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
+
+        // Update module.json
+        const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+        moduleJson.version = newVersion;
+        if (moduleJson.manifest) {
+            moduleJson.manifest = moduleJson.manifest.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
+        }
+        if (moduleJson.download) {
+            moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
+        }
+        fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
+
+        try {
+            // Build after version update so the new version is included in the build
+            console.log('🔨 Building project...');
+            execSync('npm run build', { stdio: 'inherit' });
+
+            // Ensure dist/style.css exists so Foundry's installer won't reject the package
+            // If Vite produced a hashed CSS file, copy it to dist/style.css. If no CSS was emitted, abort the release
+            try {
+                const distDir = path.join(__dirname, 'dist');
+                if (!fs.existsSync(distDir)) {
+                    throw new Error('dist directory not found after build. Run `npm run build` and verify output.');
+                }
+
+                const cssFiles = fs.readdirSync(distDir).filter(f => f.endsWith('.css'));
+                if (cssFiles.length === 0) {
+                    throw new Error('Build produced no CSS files. Aborting release to avoid shipping a package without styles. Check your Vite/SASS setup and run `npm run build` locally to reproduce.');
+                }
+
+                // Copy the first found CSS file to dist/style.css if needed
+                if (!cssFiles.includes('style.css')) {
+                    const src = path.join(distDir, cssFiles[0]);
+                    const dest = path.join(distDir, 'style.css');
+                    fs.copyFileSync(src, dest);
+                    console.log(`✅ Copied ${cssFiles[0]} → dist/style.css for Foundry compatibility`);
+                } else {
+                    console.log('✅ dist/style.css already exists');
+                }
+            } catch (err) {
+                console.error('❌ CSS check failed:', err.message);
+                // Revert version changes before exiting
+                fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
+                fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
+                console.log('Reverted version changes due to CSS check failure.');
+                process.exit(1);
             }
 
-            const cssFiles = fs.readdirSync(distDir).filter(f => f.endsWith('.css'));
-            if (cssFiles.length === 0) {
-                throw new Error('Build produced no CSS files. Aborting release to avoid shipping a package without styles. Check your Vite/SASS setup and run `npm run build` locally to reproduce.');
+            // Commit changes
+            console.log('💾 Staging files for commit...');
+            // Force-add built dist files (dist is usually gitignored) so the release zip will include them
+            try {
+                execSync('git add -f dist/style.css');
+                console.log('✅ Force-added dist/style.css to the commit');
+            } catch (addErr) {
+                console.warn('⚠️  Could not force-add dist/style.css (it may not exist):', addErr.message);
             }
 
-            // Copy the first found CSS file to dist/style.css if needed
-            if (!cssFiles.includes('style.css')) {
-                const src = path.join(distDir, cssFiles[0]);
-                const dest = path.join(distDir, 'style.css');
-                fs.copyFileSync(src, dest);
-                console.log(`✅ Copied ${cssFiles[0]} → dist/style.css for Foundry compatibility`);
-            } else {
-                console.log('✅ dist/style.css already exists');
-            }
-        } catch (err) {
-            console.error('❌ CSS check failed:', err.message);
-            // Revert version changes before exiting
+            execSync('git add .');
+            execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
+        } catch (error) {
+            console.error('❌ Build or commit failed:', error.message);
+            // Revert version changes
             fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
             fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
-            console.log('Reverted version changes due to CSS check failure.');
+            console.log('Reverted version changes due to error.');
             process.exit(1);
         }
-
-        // Commit changes
-        console.log('💾 Staging files for commit...');
-        // Force-add built dist files (dist is usually gitignored) so the release zip will include them
-        try {
-            execSync('git add -f dist/style.css');
-            console.log('✅ Force-added dist/style.css to the commit');
-        } catch (addErr) {
-            console.warn('⚠️  Could not force-add dist/style.css (it may not exist):', addErr.message);
-        }
-
-        execSync('git add .');
-        execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
-    } catch (error) {
-        console.error('❌ Build or commit failed:', error.message);
-        // Revert version changes
-        fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
-        fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
-        console.log('Reverted version changes due to error.');
-        process.exit(1);
+    } else {
+        // Dry run mode - just show what would happen
+        console.log(`🔍 Would check if tag ${newVersion} exists`);
+        console.log(`🔍 Would update package.json version to ${newVersion}`);
+        console.log(`🔍 Would update module.json version to ${newVersion}`);
     }
 } else {
     console.log(`✅ Draft release - no file changes or build needed`);
@@ -461,18 +482,23 @@ const ogSafeReleaseNotes = normalizeForOpenGraph(releaseNotes);
 
 // Create tag (skip for drafts)
 if (!isDraft) {
-    console.log('🏷️  Creating tag...');
-    execSync(`git tag ${newVersion}`);
+    console.log(isDryRun ? `🔍 Would create tag ${newVersion}` : '🏷️  Creating tag...');
+    if (!isDryRun) execSync(`git tag ${newVersion}`);
 } else {
     console.log('🏷️  Skipping tag creation for draft release...');
 }
 
 // Push changes and tag (only for published releases)
 if (!isDraft) {
-    console.log(`⬆️  Pushing to ${targetBranch} branch...`);
-    execSync(`git push origin ${targetBranch}`);
-    execSync(`git push origin ${newVersion}`);
-    console.log(`📌 Pushed tag ${newVersion}`);
+    if (isDryRun) {
+        console.log(`🔍 Would push to ${targetBranch} branch`);
+        console.log(`🔍 Would push tag ${newVersion}`);
+    } else {
+        console.log(`⬆️  Pushing to ${targetBranch} branch...`);
+        execSync(`git push origin ${targetBranch}`);
+        execSync(`git push origin ${newVersion}`);
+        console.log(`📌 Pushed tag ${newVersion}`);
+    }
 } else {
     console.log('📌 No git changes to push for draft release');
 }
@@ -483,24 +509,29 @@ fs.writeFileSync(releaseNotesPath, ogSafeReleaseNotes);
 
 // Create GitHub release
 const releaseTypeText = isDraft ? ' (draft)' : isPreRelease ? ' (pre-release)' : '';
-console.log(`📦 Creating GitHub release${releaseTypeText}...`);
-try {
-    let ghCommand = `gh release create ${newVersion} --title "Version ${newVersion}" --notes-file ${releaseNotesPath}`;
-    if (isDraft) {
-        ghCommand += ' --draft';
+if (isDryRun) {
+    console.log(`🔍 Would create GitHub release${releaseTypeText}`);
+    console.log(`🔍 Command: gh release create ${newVersion} --title "Version ${newVersion}"${isDraft ? ' --draft' : ''}${isPreRelease ? ' --prerelease' : ''}`);
+} else {
+    console.log(`📦 Creating GitHub release${releaseTypeText}...`);
+    try {
+        let ghCommand = `gh release create ${newVersion} --title "Version ${newVersion}" --notes-file ${releaseNotesPath}`;
+        if (isDraft) {
+            ghCommand += ' --draft';
+        }
+        if (isPreRelease) {
+            ghCommand += ' --prerelease';
+        }
+        execSync(ghCommand);
+        
+        const releaseTypeMsg = isDraft ? 'draft' : isPreRelease ? 'pre-release' : 'release';
+        console.log(`✅ GitHub ${releaseTypeMsg} created for ${newVersion}`);
+    } catch (error) {
+        console.error('❌ Error creating GitHub release:', error.message);
+        console.log('You may need to install GitHub CLI (gh) or authenticate it.');
+        console.log('To install: https://cli.github.com/');
+        process.exit(1);
     }
-    if (isPreRelease) {
-        ghCommand += ' --prerelease';
-    }
-    execSync(ghCommand);
-    
-    const releaseTypeMsg = isDraft ? 'draft' : isPreRelease ? 'pre-release' : 'release';
-    console.log(`✅ GitHub ${releaseTypeMsg} created for ${newVersion}`);
-} catch (error) {
-    console.error('❌ Error creating GitHub release:', error.message);
-    console.log('You may need to install GitHub CLI (gh) or authenticate it.');
-    console.log('To install: https://cli.github.com/');
-    process.exit(1);
 }
 
 // Clean up
@@ -511,11 +542,21 @@ try {
 }
 
 const actionText = isDraft ? 'drafted' : isPreRelease ? 'pre-released' : 'released';
-console.log(`🎉 Successfully ${actionText} version ${newVersion} on ${targetBranch} branch`);
-console.log(`📄 Release notes:\n${ogSafeReleaseNotes}`);
-console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
+if (isDryRun) {
+    console.log(`\n🔍 DRY RUN COMPLETE`);
+    console.log(`\n📊 Summary of what would happen:`);
+    console.log(`   Branch: ${targetBranch}`);
+    console.log(`   Version: ${currentVersion} → ${newVersion}`);
+    console.log(`   Type: ${isDraft ? 'Draft' : isPreRelease ? 'Pre-release' : 'Release'}`);
+    console.log(`\n📄 Release notes would be:\n${ogSafeReleaseNotes}`);
+    console.log(`\n💡 Run without --dry-run to execute the release`);
+} else {
+    console.log(`🎉 Successfully ${actionText} version ${newVersion} on ${targetBranch} branch`);
+    console.log(`📄 Release notes:\n${ogSafeReleaseNotes}`);
+    console.log(`🔗 View release: https://github.com/geoidesic/foundryvtt-actor-studio/releases/tag/${newVersion}`);
+}
 
-if (isDraft) {
+if (isDraft && !isDryRun) {
     console.log(`📝 Note: This is a DRAFT RELEASE (tentative).`);
     console.log(`❌ GitHub Actions will NOT run - no install files generated.`);
     console.log(`🔒 No version bump, no commits, no tags - purely tentative.`);
