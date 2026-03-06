@@ -16,6 +16,7 @@ const args = process.argv.slice(2);
 const versionType = args[0];
 const isDraft = args.includes('draft') || args.includes('--draft');
 const isPreRelease = args.includes('pre') || args.includes('--pre');
+const isFinalize = args.includes('finalize') || args.includes('--finalize');
 const isDryRun = args.includes('--dry-run') || args.includes('--dryrun');
 const isTestRelease = isDraft || isPreRelease;
 
@@ -36,17 +37,19 @@ if (!isDryRun) {
 }
 
 if (!versionType) {
-    console.error('Usage: node release.js <major|minor|patch> [draft|pre] [--dry-run]');
+    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--dry-run]');
     console.error('');
     console.error('Release Types:');
     console.error('  (none)    - Public release on main branch (triggers GitHub Actions)');
     console.error('  draft     - Draft release on next branch (private, triggers GitHub Actions)');
     console.error('  pre       - Pre-release on next branch (public preview, triggers GitHub Actions)');
+    console.error('  finalize  - Promote current pre-release to final release (explicit only)');
     console.error('  --dry-run - Preview what would happen without making any changes');
     console.error('');
     console.error('Examples:');
     console.error('  node release.js patch              # Public release');
     console.error('  node release.js patch --dry-run    # Preview release without executing');
+    console.error('  node release.js patch finalize     # Finalize pre-release (2.3.0-beta.3 → 2.3.0)');
     console.error('  node release.js minor draft        # Private draft for internal testing');
     console.error('  node release.js major pre          # Public pre-release for beta testing');
     process.exit(1);
@@ -56,21 +59,23 @@ if (!versionType) {
 const validTypes = ['major', 'minor', 'patch'];
 if (!validTypes.includes(versionType)) {
     console.error(`Invalid version type: ${versionType}. Valid types are: ${validTypes.join(', ')}`);
-    console.error('Usage: node release.js <major|minor|patch> [draft|pre]');
+    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--dry-run]');
     process.exit(1);
 }
 
 // Validate that only one release type is specified
-if (isDraft && isPreRelease) {
-    console.error('❌ Cannot specify both "draft" and "pre". Choose one.');
+const releaseModifiers = [isDraft, isPreRelease, isFinalize].filter(Boolean);
+if (releaseModifiers.length > 1) {
+    console.error('❌ Cannot specify multiple release modifiers (draft/pre/finalize). Choose one.');
     process.exit(1);
 }
 
 // Function to validate version format (including pre-release)
 const isValidVersion = (version) => /^\d+\.\d+\.\d+(-\w+\.\d+)?$/.test(version);
+const isStableVersion = (version) => /^\d+\.\d+\.\d+$/.test(version);
 
 // Function to increment version with clear pre-release logic
-const incrementVersion = (version, type, isPreRelease = false) => {
+const incrementVersion = (version, type, isPreRelease = false, isFinalize = false) => {
     if (!isValidVersion(version)) {
         console.error(`❌ Invalid version format: "${version}". Expected format: x.y.z or x.y.z-pre.n`);
         process.exit(1);
@@ -96,6 +101,17 @@ const incrementVersion = (version, type, isPreRelease = false) => {
     }
     
     let newVersion;
+
+    if (isFinalize) {
+        if (!isCurrentlyPreRelease) {
+            console.error(`❌ Cannot finalize - current version ${version} is not a pre-release`);
+            process.exit(1);
+        }
+        newVersion = baseVersion;
+        console.log(`📋 Finalizing pre-release: ${version} → ${newVersion}`);
+        console.log(`📋 Final new version: ${newVersion}`);
+        return newVersion;
+    }
     
     if (isPreRelease) {
         if (isCurrentlyPreRelease) {
@@ -124,31 +140,25 @@ const incrementVersion = (version, type, isPreRelease = false) => {
             console.log(`📋 Creating first pre-release: ${version} → ${newVersion}`);
         }
     } else {
-        if (isCurrentlyPreRelease) {
-            // Current version is a pre-release, final release drops beta suffix
-            newVersion = baseVersion;
-            console.log(`📋 Creating final release: ${version} → ${newVersion}`);
-        } else {
-            // Current version is a release, increment normally
-            switch (type) {
-                case 'major':
-                    parts[0]++;
-                    parts[1] = 0;
-                    parts[2] = 0;
-                    break;
-                case 'minor':
-                    parts[1]++;
-                    parts[2] = 0;
-                    break;
-                case 'patch':
-                    parts[2]++;
-                    break;
-                default:
-                    throw new Error('Invalid version type. Use major, minor, or patch.');
-            }
-            newVersion = parts.join('.');
-            console.log(`📋 Normal release increment: ${version} → ${newVersion}`);
+        // Current version is a release, increment normally
+        switch (type) {
+            case 'major':
+                parts[0]++;
+                parts[1] = 0;
+                parts[2] = 0;
+                break;
+            case 'minor':
+                parts[1]++;
+                parts[2] = 0;
+                break;
+            case 'patch':
+                parts[2]++;
+                break;
+            default:
+                throw new Error('Invalid version type. Use major, minor, or patch.');
         }
+        newVersion = parts.join('.');
+        console.log(`📋 Normal release increment: ${version} → ${newVersion}`);
     }
     
     console.log(`📋 Final new version: ${newVersion}`);
@@ -322,26 +332,12 @@ try {
             }
         }
     } else {
-        // For production releases: merge next into main if next exists
+        // For production releases: use main only. Do NOT auto-merge next.
         if (currentBranch !== 'main') {
             console.log(isDryRun ? '🔍 Would switch to main branch' : '🔄 Switching to main branch...');
             if (!isDryRun) execSync('git checkout main');
         }
-        const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
-        if (branches.includes('next')) {
-            console.log(isDryRun ? '🔍 Would merge next branch into main' : '📥 Merging next branch into main...');
-            if (!isDryRun) {
-                try {
-                    execSync('git merge next');
-                    console.log('✅ Successfully merged next into main');
-                } catch (error) {
-                    console.error('❌ Merge conflict detected while merging next into main. Please resolve conflicts and re-run the release script.');
-                    process.exit(1);
-                }
-            }
-        } else {
-            console.log('📍 Next branch does not exist, skipping merge.');
-        }
+        console.log('📍 Production release mode: no automatic merge from next to main');
     }
 } catch (error) {
     console.error('❌ Error handling git branches:', error.message);
@@ -352,13 +348,21 @@ try {
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const currentVersion = packageJson.version;
 
+if (!isDraft && !isPreRelease && !isFinalize && !isStableVersion(currentVersion)) {
+    console.error(`❌ Normal ${versionType} release requires a stable version (x.y.z). Found: ${currentVersion}`);
+    console.error(`Use explicit pre-release actions instead:`);
+    console.error(`  node release.js ${versionType} pre`);
+    console.error(`  node release.js ${versionType} finalize`);
+    process.exit(1);
+}
+
 let newVersion;
 if (isDraft) {
     newVersion = currentVersion; // Drafts use current version, no increment
     console.log(`🚀 Creating draft release with current version: ${currentVersion} (DRAFT - no version bump)`);
 } else {
-    newVersion = incrementVersion(currentVersion, versionType, isPreRelease);
-    const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : '';
+    newVersion = incrementVersion(currentVersion, versionType, isPreRelease, isFinalize);
+    const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : isFinalize ? ' (FINALIZED)' : '';
     console.log(`🚀 Releasing ${versionType} version: ${currentVersion} → ${newVersion}${releaseTypeLabel}`);
 }
 
@@ -561,10 +565,10 @@ if (isDraft && !isDryRun) {
     console.log(`❌ GitHub Actions will NOT run - no install files generated.`);
     console.log(`🔒 No version bump, no commits, no tags - purely tentative.`);
     console.log(`🔄 Publish the draft to trigger Actions and generate install files.`);
-} else if (isPreRelease) {
+} else if (isPreRelease && !isDryRun) {
     console.log(`📝 Note: This is a PRE-RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run and update the next branch manifest!`);
     console.log(`🔄 When ready, merge '${targetBranch}' to 'main' and create a full release.`);
-} else {
+} else if (!isDryRun) {
     console.log(`🚀 Production release created on 'main' branch. GitHub Actions will run!`);
 }
