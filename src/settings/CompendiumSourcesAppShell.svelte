@@ -10,6 +10,9 @@
   export let elementRoot;
 
   const { application } = getContext('#external');
+  let appDraggable = application.reactive.draggable;
+  appDraggable = true;
+  $: application.reactive.draggable = appDraggable;
 
   // Application position store reference
   const position = application.position;
@@ -26,7 +29,7 @@
   let selectedSources = safeGetSetting(MODULE_ID, 'compendiumSources', DEFAULT_SOURCES);
   let searchText = '';
   let showAllExpanded = true;
-  let showOnlySelected = false;
+  let showOnlySelected = true;
 
   // Build source categories (races, classes, etc.)
   const sourceCategories = [
@@ -141,26 +144,27 @@
 <TJSApplicationShell bind:elementRoot>
   <main class="compendium-sources-settings">
     <header class="gas-sources-toolbar">
-      <label class="search-box">
+      <label class="search-box no-drag">
         <i class="fas fa-search"></i>
         <input
+          class="no-drag"
           type="search"
           bind:value={searchText}
           placeholder="Search compendiums..."
         />
       </label>
       
-      <label class="toggle-control">
-        <input type="checkbox" bind:checked={showOnlySelected} />
-        <span>Show Selected Only</span>
+      <label class="toggle-control no-drag">
+        <input class="no-drag" type="checkbox" bind:checked={showOnlySelected} />
+        <span class="no-drag">Show Selected Only</span>
       </label>
       
-      <label class="toggle-control">
-        <input type="checkbox" bind:checked={showAllExpanded} />
-        <span>Expand All</span>
+      <label class="toggle-control no-drag">
+        <input class="no-drag" type="checkbox" bind:checked={showAllExpanded} />
+        <span class="no-drag">Expand All</span>
       </label>
       
-      <button type="button" class="reset-button" on:click={handleResetDefaults}>
+      <button type="button" class="reset-button no-drag" on:click={handleResetDefaults}>
         <i class="fas fa-undo"></i> Reset
       </button>
     </header>
@@ -326,8 +330,10 @@
     align-items: center
     gap: 0.5rem
     padding: 0.75rem
+    padding-right: 1.25rem
     border-top: 1px solid var(--tjs-sources-border)
     background: var(--color-bg-option, #222)
+    pointer-events: none
 
     button
       background: #444
@@ -337,6 +343,7 @@
       border-radius: 3px
       cursor: pointer
       margin: 0
+      pointer-events: auto
 
       &:hover
         background: #555

@@ -1,13 +1,11 @@
 import CompendiumSourcesApp from './CompendiumSourcesApp.js';
 
 export default class CompendiumSourcesButton extends FormApplication {
-  static #sourcesApp;
-
   static showSettings() {
-    this.#sourcesApp = this.#sourcesApp ? this.#sourcesApp : new CompendiumSourcesApp();
-    this.#sourcesApp.render(true, { focus: true });
+    const sourcesApp = new CompendiumSourcesApp();
+    sourcesApp.render(true, { focus: true });
 
-    return this.#sourcesApp;
+    return sourcesApp;
   }
 
   /**
