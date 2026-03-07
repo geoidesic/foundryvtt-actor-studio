@@ -1,5 +1,6 @@
 import { MODULE_ID } from '~/src/helpers/constants';
 import ProgressionSettingsButton from './ProgressionSettingsButton';
+import { DEFAULT_CHARACTER_CREATION_TAB_ORDER } from '~/src/helpers/characterCreationTabOrder';
 
 export function registerProgressionSettings() {
   // Register the menu for the settings app
@@ -74,5 +75,14 @@ export function registerProgressionSettings() {
     config: false,
     default: false,
     type: Boolean,
+  });
+
+  game.settings.register(MODULE_ID, 'characterCreationTabOrder', {
+    name: game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Name'),
+    hint: game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Hint'),
+    scope: 'world',
+    config: false,
+    default: DEFAULT_CHARACTER_CREATION_TAB_ORDER,
+    type: Array,
   });
 }

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { dropItemOnCharacter } from "~/src/helpers/Utility";
-  import { dropItemRegistry, isLevelUp, readOnlyTabs } from "~/src/stores/index.js";
+  import { dropItemRegistry, isLevelUp, readOnlyTabs, getCoreCreationReadOnlyTabs } from "~/src/stores/index.js";
   import { getContext } from "svelte";
 
   const doc = getContext("#doc");
@@ -33,7 +33,7 @@
     Hooks.call("gas.captureAdvancement", true);
     
     // Set read-only state for other tabs
-    readOnlyTabs.set(["race", "background", "abilities", "class", "biography"]);
+    readOnlyTabs.set(getCoreCreationReadOnlyTabs(true));
   });
 </script>
 

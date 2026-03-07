@@ -44,6 +44,33 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
+        h3 {game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Title')}
+
+        .setting-item
+          .setting-label
+            span {game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Hint')}
+          .tab-order-list
+            +each("characterCreationTabOrder as tabId, index")
+              .tab-order-row
+                span.tab-order-label {getCharacterCreationTabLabel(tabId)}
+                .tab-order-controls
+                  button.move-button(
+                    type="button"
+                    on:click!="{getMoveCharacterCreationTabHandler(index, -1)}"
+                    disabled="{index === 0}"
+                    aria-label="{game.i18n.localize('GAS.AltText.MoveUp')}"
+                  )
+                    i.fas.fa-chevron-up
+                  button.move-button(
+                    type="button"
+                    on:click!="{getMoveCharacterCreationTabHandler(index, 1)}"
+                    disabled="{index === characterCreationTabOrder.length - 1}"
+                    aria-label="{game.i18n.localize('GAS.AltText.MoveDown')}"
+                  )
+                    i.fas.fa-chevron-down
+
+      .setting-group
         h3 Advancement Options
         
         .setting-item
@@ -88,10 +115,21 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { MODULE_ID } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
+  import {
+    DEFAULT_CHARACTER_CREATION_TAB_ORDER,
+    normalizeCharacterCreationTabOrder,
+  } from '~/src/helpers/characterCreationTabOrder';
 
   export let elementRoot;
 
   const { application } = getContext('#external');
+
+  const characterCreationTabOrderLabelKeys = {
+    abilities: 'GAS.Setting.CharacterCreationTabOrder.Abilities',
+    race: 'GAS.Setting.CharacterCreationTabOrder.Race',
+    background: 'GAS.Setting.CharacterCreationTabOrder.Background',
+    class: 'GAS.Setting.CharacterCreationTabOrder.Class'
+  };
 
   // Load current settings
   let enableLevelUp = safeGetSetting(MODULE_ID, 'enableLevelUp', true);
@@ -101,9 +139,31 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let advancementCaptureTimerThreshold = safeGetSetting(MODULE_ID, 'advancementCaptureTimerThreshold', 300);
   let enableCustomFeatSelector = safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false);
   let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
+  let characterCreationTabOrder = normalizeCharacterCreationTabOrder(
+    safeGetSetting(MODULE_ID, 'characterCreationTabOrder', DEFAULT_CHARACTER_CREATION_TAB_ORDER)
+  );
+
+  function moveCharacterCreationTab(index, direction) {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= characterCreationTabOrder.length) return;
+
+    const updatedOrder = [...characterCreationTabOrder];
+    [updatedOrder[index], updatedOrder[targetIndex]] = [updatedOrder[targetIndex], updatedOrder[index]];
+    characterCreationTabOrder = updatedOrder;
+  }
+
+  function getMoveCharacterCreationTabHandler(index, direction) {
+    return () => moveCharacterCreationTab(index, direction);
+  }
+
+  function getCharacterCreationTabLabel(tabId) {
+    const localizationKey = characterCreationTabOrderLabelKeys[tabId];
+    return localizationKey ? game.i18n.localize(localizationKey) : tabId;
+  }
 
   async function saveSettings() {
     try {
+      const normalizedTabOrder = normalizeCharacterCreationTabOrder(characterCreationTabOrder);
       await game.settings.set(MODULE_ID, 'enableLevelUp', enableLevelUp);
       await game.settings.set(MODULE_ID, 'milestoneLeveling', milestoneLeveling);
       await game.settings.set(MODULE_ID, 'forceDnd5eLevelUpAutomation', forceDnd5eLevelUpAutomation);
@@ -111,6 +171,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'advancementCaptureTimerThreshold', advancementCaptureTimerThreshold);
       await game.settings.set(MODULE_ID, 'enableCustomFeatSelector', enableCustomFeatSelector);
       await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);
+      await game.settings.set(MODULE_ID, 'characterCreationTabOrder', normalizedTabOrder);
 
       ui.notifications.info('Progression settings saved successfully');
       
@@ -193,6 +254,14 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           margin-bottom: 0.25rem
           color: white
 
+        .setting-label
+          display: flex
+          align-items: center
+          gap: 0.5rem
+          font-weight: 500
+          margin-bottom: 0.25rem
+          color: white
+
           input[type="checkbox"]
             width: 1.2rem
             height: 1.2rem
@@ -216,6 +285,42 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           font-size: 0.85rem
           color: #aaa
           font-style: italic
+
+        .tab-order-list
+          margin-top: 0.5rem
+          display: flex
+          flex-direction: column
+          gap: 0.35rem
+
+          .tab-order-row
+            display: flex
+            align-items: center
+            justify-content: space-between
+            padding: 0.4rem 0.5rem
+            border: 1px solid #555
+            border-radius: 4px
+            background: rgba(0, 0, 0, 0.25)
+
+            .tab-order-label
+              font-weight: 600
+
+            .tab-order-controls
+              display: flex
+              gap: 0.35rem
+
+              .move-button
+                min-width: 2rem
+                padding: 0.25rem 0.4rem
+                background: #333
+                border: 1px solid #666
+                color: white
+
+                &:hover:not([disabled])
+                  background: #444
+
+                &[disabled]
+                  opacity: 0.45
+                  cursor: not-allowed
 
   .settings-footer
     position: sticky

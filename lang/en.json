@@ -346,6 +346,15 @@
         "Name": "Show Level Preview Dropdown",
         "Hint": "If enabled, shows a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
       },
+      "CharacterCreationTabOrder": {
+        "Name": "Character Creation Tab Order",
+        "Hint": "Set the order for the four core character creation tabs (Abilities, Race, Background, Class).",
+        "Title": "Character Creation Tab Order",
+        "Abilities": "Abilities",
+        "Race": "Race",
+        "Background": "Background",
+        "Class": "Class"
+      },
       "EnableLLMNameGeneration": {
         "Name": "Enable LLM Name Generation",
         "Hint": "If enabled, adds a ChatGPT button next to the character name input that generates fantasy-appropriate names based on the selected race."

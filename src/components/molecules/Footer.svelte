@@ -31,7 +31,8 @@
     levelUpClassGetsSubclassThisLevel,
     isNewMultiClassSelected,
     readOnlyTabs,
-    tabDisabled
+    tabDisabled,
+    getCoreCreationReadOnlyTabs
   } from "~/src/stores/index";
   import { progress } from "~/src/stores/progress";
   import { flattenedSelections } from "~/src/stores/equipmentSelections";
@@ -276,7 +277,7 @@
 
   // Define valid tabs for footer visibility
   const FOOTER_TABS = ['race', 'class', 'background', 'abilities', 'equipment', 'level-up', 'shop', 'spells', 'biography'];
-  const CHARACTER_CREATION_TABS = ['race', 'class', 'background', 'abilities', 'biography'];
+  const CHARACTER_CREATION_TABS = [...getCoreCreationReadOnlyTabs(), 'biography'];
 
   // Handle adding equipment to the actor
   const handleAddEquipment = async () => {
@@ -501,7 +502,7 @@
       
       // Mark previous tabs as read-only when biography is completed
       readOnlyTabs.update(tabs => {
-        const previousTabs = ['abilities', 'race', 'background', 'class'];
+        const previousTabs = getCoreCreationReadOnlyTabs();
         return [...new Set([...tabs, ...previousTabs])];
       });
       

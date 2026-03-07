@@ -1,7 +1,7 @@
 <script>
   import { ApplicationShell }   from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { setContext, getContext, onMount, onDestroy } from "svelte";
-  import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs } from "~/src/stores/index"
+  import { characterClass, characterSubClass, resetStores, tabs, isLevelUp, levelUpTabs, activeTab, actorInGame, readOnlyTabs, getCoreCreationReadOnlyTabs, getCharacterCreationTabs } from "~/src/stores/index"
   import { goldRoll, startingWealthChoice } from "~/src/stores/storeDefinitions";
   import Tabs from "~/src/components/molecules/Tabs.svelte";
   import Footer from "~/src/components/molecules/Footer.svelte";
@@ -87,6 +87,9 @@
       // window.GAS.log.d('[PCAPP] Started LevelUp workflow');
     } else {
       // Character creation workflow
+      const characterCreationTabs = getCharacterCreationTabs();
+      tabs.set(characterCreationTabs);
+      activeTab.set(characterCreationTabs[0]?.id || 'abilities');
       getWorkflowFSM()
     }
     
@@ -225,7 +228,7 @@
     activeTab.set("wealth-choice");
     
     // Set read-only state for other tabs
-    readOnlyTabs.set(["race", "background", "abilities", "class"]);
+    readOnlyTabs.set(getCoreCreationReadOnlyTabs());
   }
 
   /**
@@ -274,7 +277,7 @@
 
     // Set read-only state for other tabs while preserving existing locked tabs (including wealth-choice)
     readOnlyTabs.update(ro => {
-      const base = ["race", "background", "abilities", "class"];
+      const base = getCoreCreationReadOnlyTabs();
       const preserved = ro.includes("wealth-choice") ? ["wealth-choice"] : [];
       return Array.from(new Set([...base, ...preserved]));
     });

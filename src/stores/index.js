@@ -27,13 +27,35 @@ import '~/src/stores/spellSelection';
 import { biographyOptions, isGenerating, biographyContent, generateBiography } from '~/src/stores/biography';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel, safeGetSetting } from '~/src/helpers/Utility';
+import {
+  DEFAULT_CHARACTER_CREATION_TAB_ORDER,
+  isValidCharacterCreationTabOrder,
+  getCharacterCreationTabsFromOrder,
+  getCoreCreationReadOnlyTabs,
+} from '~/src/helpers/characterCreationTabOrder';
 
-const initialTabs = [
-  { label: 'Abilities', id: 'abilities', component: 'Abilities' },
-  { label: 'Race', id: 'race', component: 'Race' },
-  { label: 'Background', id: 'background', component: 'Background' },
-  { label: 'Class', id: 'class', component: 'Class' },
-];
+export { DEFAULT_CHARACTER_CREATION_TAB_ORDER, isValidCharacterCreationTabOrder, getCoreCreationReadOnlyTabs };
+
+export function getCharacterCreationTabOrder() {
+  const configuredOrder = safeGetSetting(
+    MODULE_ID,
+    'characterCreationTabOrder',
+    DEFAULT_CHARACTER_CREATION_TAB_ORDER,
+  );
+
+  if (!isValidCharacterCreationTabOrder(configuredOrder)) {
+    return [...DEFAULT_CHARACTER_CREATION_TAB_ORDER];
+  }
+
+  return [...configuredOrder];
+}
+
+export function getCharacterCreationTabs() {
+  const tabOrder = getCharacterCreationTabOrder();
+  return getCharacterCreationTabsFromOrder(tabOrder);
+}
+
+let initialTabs = getCharacterCreationTabs();
 
 // Tabs for level up
 const upTabs = [
@@ -205,6 +227,7 @@ export const resetLevelUpStores = () => {
 // Function to reset all stores
 export function resetStores() {
   window.GAS.log.d('[resetStores]')
+  initialTabs = getCharacterCreationTabs();
   storeDefinitions.race.set(null); //- null | object
   storeDefinitions.background.set(null); //- null | object
   storeDefinitions.characterClass.set(null); //- null | object

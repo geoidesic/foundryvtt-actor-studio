@@ -1,7 +1,7 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';
-import { activeTab, tabs, readOnlyTabs } from '~/src/stores/index';
+import { activeTab, tabs, readOnlyTabs, getCoreCreationReadOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
 import { actorInGame, startingWealthChoice } from '~/src/stores/storeDefinitions';
@@ -288,7 +288,7 @@ export function createWorkflowStateMachine() {
         window.GAS.log.d('[WORKFLOW] Entered PROCESSING_ADVANCEMENTS state');
         
         // Mark previous tabs as read-only while processing advancements
-        readOnlyTabs.set(['abilities', 'race', 'background', 'class']);
+        readOnlyTabs.set(getCoreCreationReadOnlyTabs());
         
         // Ensure the actor sheet is rendered so drop handlers work properly
         if (workflowFSMContext.actor) {
@@ -338,7 +338,7 @@ export function createWorkflowStateMachine() {
         window.GAS.log.d('[WORKFLOW] Entered BIOGRAPHY state');
         
         // Mark previous tabs as read-only
-        readOnlyTabs.set(['abilities', 'race', 'background', 'class']);
+        readOnlyTabs.set(getCoreCreationReadOnlyTabs());
         
         // Add biography tab and switch to it
         const currentTabs = get(tabs);
@@ -420,7 +420,7 @@ export function createWorkflowStateMachine() {
         window.GAS.log.d('[WORKFLOW] Entered SELECTING_EQUIPMENT state');
         
         // Mark previous tabs as read-only
-        readOnlyTabs.set(['abilities', 'race', 'background', 'class', 'biography']);
+        readOnlyTabs.set(getCoreCreationReadOnlyTabs(true));
         
         // Destroy advancement managers if advancement capture is disabled
         const disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
