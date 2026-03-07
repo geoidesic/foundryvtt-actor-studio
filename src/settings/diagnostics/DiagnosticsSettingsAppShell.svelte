@@ -33,6 +33,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 <script>
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
+  import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { MODULE_ID } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
 
@@ -51,13 +52,17 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
       ui.notifications.info('Diagnostics settings saved successfully');
       
-      Dialog.confirm({
+      const result = await TJSDialog.confirm({
         title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
         content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-        yes: () => window.location.reload(),
-        no: () => application.close(),
         defaultYes: true
       });
+
+      if (result) {
+        window.location.reload();
+      } else {
+        application.close();
+      }
     } catch (error) {
       console.error('Error saving diagnostics settings:', error);
       ui.notifications.error('Failed to save diagnostics settings');

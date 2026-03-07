@@ -3,6 +3,7 @@
 <script>
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
+  import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { Timing } from '@typhonjs-fvtt/runtime/util';
   import { MODULE_ID, DEFAULT_SOURCES } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
@@ -131,13 +132,17 @@
   async function handleSave() {
     await game.settings.set(MODULE_ID, 'compendiumSources', selectedSources);
     
-    Dialog.confirm({
+    const result = await TJSDialog.confirm({
       title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
       content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-      yes: () => window.location.reload(),
-      no: () => application.close(),
       defaultYes: true
     });
+
+    if (result) {
+      window.location.reload();
+    } else {
+      application.close();
+    }
   }
 </script>
 
