@@ -27,17 +27,19 @@ alwaysApply: false
     ```
 
 ## Content
-- **Description**: Content must always be contained within an element, never as a bare pipe beneath an +if statement.
+- **Description**: Content should usually be contained within elements. Exception: standalone Svelte directives like `{@html ...}` in Pug must be pipe-prefixed text lines.
 - **Examples**:
   - **Correct**:
     ```pug
     +if("condition")
       span content here
+    +if("hasHtml")
+      | {@html richHTML}
     ```
   - **Incorrect**:
     ```pug
-    +if("condition")
-      | content here
+    +if("hasHtml")
+      {@html richHTML}
     ```
 
 ## Conditional Logic

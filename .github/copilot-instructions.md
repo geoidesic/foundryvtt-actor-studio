@@ -36,6 +36,7 @@
   - Else-if logic: Use nested `+if`/`+else` blocks (no `+elseif`)
   - Loops: `+each("array as item")` with expression in double quotes
   - Attributes: Use `!=` for complex expressions, e.g., `class:selected!="{isSelected(item)}"`
+  - Svelte raw HTML in Pug: when rendering `{@html ...}` as a standalone line, **MUST** use a pipe prefix: `| {@html richHTML}` (do not place bare `{@html ...}` on its own line in Pug blocks)
   - Text content: Inline with elements, e.g., `button(type="button") Text`
 - Avoid long expressions in attributes - extract to script functions
 - ESM-only project - never use `require()`, always `import`
