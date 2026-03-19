@@ -99,7 +99,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background")
+StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background" singlePanel="{hideAdvancementList}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
@@ -120,7 +120,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
               svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
     +if("hideAdvancementList && value")
       .description-fill.mt-sm
-        {@html richHTML}
+        | {@html richHTML}
   div(slot="right") {@html richHTML}
 </template>
 

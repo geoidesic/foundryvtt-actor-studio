@@ -9,6 +9,7 @@
   export let leftPanelClass = ""; // Additional classes for left panel
   export let rightPanelClass = ""; // Additional classes for right panel
   export let contentClass = ""; // Additional classes for content wrapper
+  export let singlePanel = false;
 
 </script>
 
@@ -19,9 +20,10 @@ div.content(class="{contentClass}")
   .flexrow
     .flex2.pr-sm.col-a(class="{leftPanelClass}")
       slot(name="left")
-    .flex0.border-right.right-border-gradient-mask
-    .flex3.left.pl-md.scroll.col-b(class="{rightPanelClass}")
-      slot(name="right")
+    +if("!singlePanel")
+      .flex0.border-right.right-border-gradient-mask
+      .flex3.left.pl-md.scroll.col-b(class="{rightPanelClass}")
+        slot(name="right")
 
   +if("$tabDisabled")
     .overlay

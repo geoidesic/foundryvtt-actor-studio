@@ -161,7 +161,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="race")
+StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="race" singlePanel="{hideAdvancementList}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
@@ -197,7 +197,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
       +if("hideAdvancementList")
         .description-fill.mt-sm
-          {@html richHTML}
+          | {@html richHTML}
   
   div(slot="right") {@html richHTML}
 </template>

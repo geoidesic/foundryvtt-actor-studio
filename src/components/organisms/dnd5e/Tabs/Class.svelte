@@ -311,7 +311,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideAdvancementList}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$characterClass ? '' : 'active'}") *
@@ -361,9 +361,9 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
         +if("hideAdvancementList")
           .description-fill.mt-sm
             +if("$characterSubClass")
-              {@html richSubClassHTML}
+              | {@html richSubClassHTML}
               +else()
-                {@html richHTML}
+                | {@html richHTML}
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
         +if("!hideAdvancementList")
