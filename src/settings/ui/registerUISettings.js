@@ -75,4 +75,13 @@ export function registerUISettings() {
     default: '100',
     type: String,
   });
+
+  game.settings.register(MODULE_ID, 'hideAdvancementList', {
+    name: game.i18n.localize('GAS.Setting.HideAdvancementList.Name'),
+    hint: game.i18n.localize('GAS.Setting.HideAdvancementList.Hint'),
+    scope: 'world',
+    config: false,
+    default: false,
+    type: Boolean,
+  });
 }

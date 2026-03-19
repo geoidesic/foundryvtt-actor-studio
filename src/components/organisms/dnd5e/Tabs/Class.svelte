@@ -72,6 +72,12 @@
     false
   );
 
+  const hideAdvancementList = safeGetSetting(
+    MODULE_ID,
+    "hideAdvancementList",
+    false
+  );
+
   filteredClassIndex = mappedClassIndex
     .filter((i) => {
       return i.type == "class";
@@ -320,60 +326,68 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
       
       +if("classAdvancementArrayFiltered")
-        h3.left.mt-sm.flexrow
-          .flex0(on:click="{toggleClassAdvancements}")
-            +if("classAdvancementExpanded")
-              span [-]&nbsp;
-            +if("!classAdvancementExpanded")
-              span [+]&nbsp;
-          .flex {t('Tabs.Classes.LevelPreview')}
-        ul.icon-list
-          +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
-            li.flexrow
-              .flex2.left
-                TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
-          +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
-            li.left {t('NoAdvancements')}
-          +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
-            li.badge.left.inset.ml-sm.mb-xs {t('Level')} {$level}
-            li.left 
-              .flexrow
-                .flex0.relative.image
-                  img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{t('AltText.Subclass')}")
-                .flex2 {t('SubClass')}
-          +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
-            +each("classAdvancementArrayFiltered as advancement")
-              //- @todo: this should be broken out into components for each advancement.type
-              li.left(data-type="{advancement.type}")
-                .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                  .flex0.relative.image
-                    img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                  .flex2 {advancement.title}
+        +if("!hideAdvancementList")
+          h3.left.mt-sm.flexrow
+            .flex0(on:click="{toggleClassAdvancements}")
+              +if("classAdvancementExpanded")
+                span [-]&nbsp;
+              +if("!classAdvancementExpanded")
+                span [+]&nbsp;
+            .flex {t('Tabs.Classes.LevelPreview')}
+          ul.icon-list
+            +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
+              li.flexrow
+                .flex2.left
+                  TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
+            +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
+              li.left {t('NoAdvancements')}
+            +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
+              li.badge.left.inset.ml-sm.mb-xs {t('Level')} {$level}
+              li.left 
                 .flexrow
-                  svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-    +if("subclasses.length")
-      +if("subClassAdvancementArrayFiltered.length")
-        h2.left.mt-sm.flexrow
-          .flex0.pointer(on:click="{toggleSubClassAdvancements}")
-            +if("subClassAdvancementExpanded")
-              span [-]
-            +if("!subClassAdvancementExpanded")
-              span [+]
-          .flex {t('Tabs.Classes.SubClass')} {t('Advancements')}
-          .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
-        ul.icon-list
-          +if("!subClassAdvancementArrayFiltered.length")
-            li.left {t('NoAdvancements')}
-          +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
-            +each("subClassAdvancementArrayFiltered as advancement")
+                  .flex0.relative.image
+                    img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{t('AltText.Subclass')}")
+                  .flex2 {t('SubClass')}
+            +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
+              +each("classAdvancementArrayFiltered as advancement")
                 //- @todo: this should be broken out into components for each advancement.type
                 li.left(data-type="{advancement.type}")
-                  .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                  .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
                     .flex0.relative.image
                       img.icon(src="{advancement.icon}" alt="{advancement.title}")
                     .flex2 {advancement.title}
                   .flexrow
-                    svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
+                    svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
+        +if("hideAdvancementList")
+          .description-fill.mt-sm
+            +if("$characterSubClass")
+              {@html richSubClassHTML}
+              +else()
+                {@html richHTML}
+    +if("subclasses.length")
+      +if("subClassAdvancementArrayFiltered.length")
+        +if("!hideAdvancementList")
+          h2.left.mt-sm.flexrow
+            .flex0.pointer(on:click="{toggleSubClassAdvancements}")
+              +if("subClassAdvancementExpanded")
+                span [-]
+              +if("!subClassAdvancementExpanded")
+                span [+]
+            .flex {t('Tabs.Classes.SubClass')} {t('Advancements')}
+            .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
+          ul.icon-list
+            +if("!subClassAdvancementArrayFiltered.length")
+              li.left {t('NoAdvancements')}
+            +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
+              +each("subClassAdvancementArrayFiltered as advancement")
+                  //- @todo: this should be broken out into components for each advancement.type
+                  li.left(data-type="{advancement.type}")
+                    .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                      .flex0.relative.image
+                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                      .flex2 {advancement.title}
+                    .flexrow
+                      svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
   div(slot="right") {@html combinedHtml}
 </template>
 
@@ -393,4 +407,11 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     border-radius: 5px
     box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
     font-size: smaller
+
+  .description-fill
+    overflow-y: auto
+    font-size: smaller
+    :global(img)
+      max-width: 100%
+      height: auto
 </style>

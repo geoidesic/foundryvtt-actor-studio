@@ -16,6 +16,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
+  const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
 
   let active = null,
     value = null,
@@ -182,7 +183,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
         ol.properties-list
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
-      +if("advancementArray")
+      +if("advancementArray && !hideAdvancementList")
         h2.left {t('Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")
@@ -194,6 +195,9 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
                 .flex2 {advancement.title}
               .flexrow
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
+      +if("hideAdvancementList")
+        .description-fill.mt-sm
+          {@html richHTML}
   
   div(slot="right") {@html richHTML}
 </template>
@@ -201,4 +205,11 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
 <style lang="sass">
   :global(.icon-select)
     position: relative
+
+  .description-fill
+    overflow-y: auto
+    font-size: smaller
+    :global(img)
+      max-width: 100%
+      height: auto
 </style>

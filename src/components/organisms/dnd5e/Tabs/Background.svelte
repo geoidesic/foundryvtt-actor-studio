@@ -7,13 +7,16 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
-    illuminatedDescription
+    illuminatedDescription,
+    safeGetSetting
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs } from "~/src/stores/index";
+  import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
+  const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
 
   $: console.log('[BG] $background changed:', $background);
 
@@ -102,7 +105,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-    +if("advancementArray.length")
+    +if("advancementArray.length && !hideAdvancementList")
       h2.left {t('Advancements')}
       ul.icon-list
         +each("advancementArray as advancement")
@@ -115,10 +118,20 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
             .flexrow
               //- pre advancement {advancement.type}
               svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
+    +if("hideAdvancementList && value")
+      .description-fill.mt-sm
+        {@html richHTML}
   div(slot="right") {@html richHTML}
 </template>
 
 <style lang="sass">
   :global(.icon-select)
     position: relative
+
+  .description-fill
+    overflow-y: auto
+    font-size: smaller
+    :global(img)
+      max-width: 100%
+      height: auto
 </style>
