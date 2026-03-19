@@ -347,8 +347,8 @@
         "Hint": "If enabled, shows a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
       },
       "HideAdvancementList": {
-        "Name": "Hide Advancement List",
-        "Hint": "If enabled, hides the advancement list from the left panel of the Race, Background, and Class tabs. The dropdown selectors remain visible. The blank area is filled with the relevant item description."
+        "Name": "Hide left panel for Backgrounds, Origins and Classes",
+        "Hint": "If enabled, hides the left panel of the Background, Origins and Class tabs. The dropdown selectors remain visible. The blank area is filled with the relevant item description."
       },
       "CharacterCreationTabOrder": {
         "Name": "Character Creation Tab Order",
