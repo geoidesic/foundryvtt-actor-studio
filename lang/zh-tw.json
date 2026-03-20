@@ -1,9 +1,9 @@
 {
   "GAS": {
     "Error": {
-      "ItemNotFoundInCompendium": "Compendium 中未找到物品",
-      "PackIndexNotFound": "在此世界中找不到用來匯入職業的 Compendium 索引",
-      "EquipmentSelectionNotViable": "無法選擇起始裝備，因為所選的資料類型未包含起始裝備資訊。"
+      "ItemNotFoundInCompendium": "合集包 中未找到相關合集",
+      "PackIndexNotFound": "在此世界中找不到用來匯入職業的 合集包 索引",
+      "EquipmentSelectionNotViable": "無法選擇起始裝備，因為所選的合集未包含起始裝備資訊。"
     },
     "ActorStudio": "Actor Studio",
     "CreateActor": "建立角色",
@@ -19,7 +19,7 @@
       }
     },
     "Notification": {
-      "CompendiumSourcesCleaned": "Actor Studio 已清理 {type} 的一些 Compendium 來源。<br><br><a class='gas-open-sources' href='#'>開啟來源設定</a> 來檢視並儲存變更。",
+      "CompendiumSourcesCleaned": "Actor Studio 已清理 {type} 的一些 合集包 來源。<br><br><a class='gas-open-sources' href='#'>開啟來源設定</a> 來檢視並儲存變更。",
       "SettingsSaved": "設定已成功儲存。",
       "SettingsSaveFailed": "儲存設定失敗，請再試一次。"
     },
@@ -194,7 +194,7 @@
       },
       "DonationTrackerRank": {
         "Name": "捐贈會員級別資料夾",
-        "Hint": "此 Donation Tracker (捐贈會員追蹤器) 捐贈會員級別在資料庫（Compendium）中對應的資料夾名稱，須與實際資料夾名稱一致"
+        "Hint": "此 Donation Tracker (捐贈會員追蹤器) 捐贈會員級別在資料庫（合集包）中對應的資料夾名稱，須與實際資料夾名稱一致"
       },
       "DonationTracker_UnregisteredAccess": {
         "Name": "未註冊使用者存取",
@@ -202,7 +202,7 @@
       },
       "DonationTrackerAction": {
         "Name": "新增 DT 捐贈會員資料夾",
-        "Hint": "依 Donation Tracker (捐贈會員追蹤器) 設定的捐贈會員級別，在此資料庫（Compendium）內建立對應資料夾。"
+        "Hint": "依 Donation Tracker (捐贈會員追蹤器) 設定的捐贈會員級別，在此資料庫（合集包）內建立對應資料夾。"
       },
       "DonationTracker": {
         "Name": "Donation Tracker (捐贈會員追蹤器) 設定",
@@ -280,7 +280,7 @@
         "Hint": "不顯示可購買的物品（裝備），按名稱（區分大小寫，分號分隔，空格可用）。僅顯示「普通」稀有度物品，但此清單排除少數魔法/不合理的普通物品。預設 - '攀爬藥水; 治療藥水; 1級法術卷軸; 戲法卷軸; 無武裝攻擊'"
       },
       "ShowPackLabelInSelect": {
-        "Name": "在選擇中顯示Compendium標籤",
+        "Name": "在選擇中顯示合集包標籤",
         "Hint": "在選擇選項中與物品標籤一起顯示資料包標籤"
       },
       "SubraceNameBlacklist": {
@@ -304,19 +304,19 @@
         "Hint": "在此設定視窗的初始高度"
       },
       "Sources": {
-        "Name": "Compendium來源",
-        "Hint": "選擇將作為建立角色時的資料來源Compendium",
+        "Name": "合集包來源",
+        "Hint": "選擇將作為建立角色時的資料來源合集包",
         "Label": "選擇來源",
         "Save": "儲存",
-        "RaceCompendia": "種族Compendium",
-        "RacialFeatureCompendia": "種族特性Compendium",
-        "ClassCompendia": "職業列表Compendium",
-        "SubclassCompendia": "子職列表Compendium",
-        "ClassFeatureCompendia": "職業特性Compendium",
-        "BackgroundCompendia": "背景列表Compendium",
-        "SpellCompendia": "法術Compendium",
-        "FeatCompendia": "專長Compendium",
-        "EquipmentCompendia": "裝備Compendium"
+        "RaceCompendia": "種族合集包",
+        "RacialFeatureCompendia": "種族特性合集包",
+        "ClassCompendia": "職業列表合集包",
+        "SubclassCompendia": "子職列表合集包",
+        "ClassFeatureCompendia": "職業特性合集包",
+        "BackgroundCompendia": "背景列表合集包",
+        "SpellCompendia": "法術合集包",
+        "FeatCompendia": "專長合集包",
+        "EquipmentCompendia": "裝備合集包"
       },
       "TrimSubclasses": {
         "Name": "裁剪子職名稱",
@@ -328,7 +328,7 @@
       },
       "EnableEquipmentPurchase": {
         "Name": "啟用裝備購買",
-        "Hint": "如果啟用，在裝備選擇後為收到起始金幣的角色新增「商店」標籤，允許他們從指定的Compendium購買物品。注意，如果裝備選擇被停用，此設定將被忽略。"
+        "Hint": "如果啟用，在裝備選擇後為收到起始金幣的角色新增「商店」標籤，允許他們從指定的合集包購買物品。注意，如果裝備選擇被停用，此設定將被忽略。"
       },
       "ExperimentalCharacterNameStyling": {
         "Name": "實驗性角色名稱樣式",
@@ -428,11 +428,11 @@
         "PlayerRestrictions": "玩家限制"
       },
       "CompendiumDisplay": {
-        "Name": "Compendium顯示",
-        "Hint": "配置Compendium的顯示和篩選方式",
-        "Label": "配置Compendium顯示",
-        "Title": "Compendium顯示配置",
-        "Description": "控制Compendium資料包在選擇清單中的顯示方式",
+        "Name": "合集包顯示",
+        "Hint": "配置合集包的顯示和篩選方式",
+        "Label": "配置合集包顯示",
+        "Title": "合集包顯示配置",
+        "Description": "控制合集包資料包在選擇清單中的顯示方式",
         "DisplayOptions": "顯示選項"
       },
       "Diagnostics": {
@@ -480,7 +480,7 @@
       "ShopReadOnly": "商店選擇已完成，現為唯讀",
       "AvailableEquipment": "可用裝備",
       "Loading": "載入物品中...",
-      "NoEquipment": "沒有可用的裝備。請在模組設定中檢查您的Compendium來源。",
+      "NoEquipment": "沒有可用的裝備。請在模組設定中檢查您的合集包來源。",
       "ErrorItemNoId": "無法將物品新增到購物車：缺少物品ID",
       "ErrorAddToCart": "無法將物品新增到購物車",
       "InfoAddedToCart": "已將{item}新增到購物車",
@@ -505,7 +505,7 @@
       "AvailableSpells": "可用法術",
       "FilterPlaceholder": "按關鍵字搜尋法術",
       "Loading": "載入法術中...",
-      "NoSpells": "沒有可用的法術。請在模組設定中檢查您的Compendium來源。",
+      "NoSpells": "沒有可用的法術。請在模組設定中檢查您的合集包來源。",
       "NoMatchingSpells": "未找到相符的法術。",
       "SpellsReadOnly": "法術選擇已完成，現為唯讀",
       "CantripLimitReached": "您已達到您的等級和職業的最大戲法數量。",
@@ -535,7 +535,7 @@
       "Title": "選擇專長",
       "Search": "搜尋專長...",
       "Loading": "載入專長中...",
-      "NoFeats": "沒有可用的專長。請在設定中檢查您的Compendium來源。",
+      "NoFeats": "沒有可用的專長。請在設定中檢查您的合集包來源。",
       "Select": "選擇專長",
       "Cancel": "取消",
       "ShowIneligible": "顯示不符資格的專長"
