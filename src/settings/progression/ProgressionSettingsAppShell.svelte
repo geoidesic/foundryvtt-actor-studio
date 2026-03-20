@@ -84,6 +84,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
         .setting-item
           label
+            input(
+              type="checkbox"
+              bind:checked="{forceTakeAverageHitPoints}"
+            )
+            span {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Hint')}
+
+        .setting-item
+          label
             span {game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Name')}
             input(
               type="number"
@@ -136,6 +145,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let milestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
   let forceDnd5eLevelUpAutomation = safeGetSetting(MODULE_ID, 'forceDnd5eLevelUpAutomation', true);
   let disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
+  let forceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
   let advancementCaptureTimerThreshold = safeGetSetting(MODULE_ID, 'advancementCaptureTimerThreshold', 300);
   let enableCustomFeatSelector = safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false);
   let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
@@ -168,6 +178,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'milestoneLeveling', milestoneLeveling);
       await game.settings.set(MODULE_ID, 'forceDnd5eLevelUpAutomation', forceDnd5eLevelUpAutomation);
       await game.settings.set(MODULE_ID, 'disableAdvancementCapture', disableAdvancementCapture);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', forceTakeAverageHitPoints);
       await game.settings.set(MODULE_ID, 'advancementCaptureTimerThreshold', advancementCaptureTimerThreshold);
       await game.settings.set(MODULE_ID, 'enableCustomFeatSelector', enableCustomFeatSelector);
       await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);

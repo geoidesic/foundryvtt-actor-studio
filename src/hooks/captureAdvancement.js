@@ -13,9 +13,159 @@ const BROWSE_TARGET_SELECTOR = [
   'a[data-action="browse"]'
 ].join(', ');
 
+const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
+  default: {
+    radioSelectors: [
+      'input[type="radio"][value="average"]',
+      'input[type="radio"][value="avg"]',
+      'input[type="radio"][data-value="average"]',
+      'input[type="radio"][name*="hp"][value="average"]',
+      'input[type="radio"][name*="hit"][value="average"]'
+    ],
+    selectSelectors: [
+      'select[name*="hp"]',
+      'select[name*="hit"]',
+      'select[data-action*="hp"]',
+      'select[data-action*="hit"]'
+    ],
+    buttonSelectors: [
+      '[data-action="take-average"]',
+      'button[value="average"]',
+      'button[data-value="average"]'
+    ],
+    selectValues: ['average', 'avg']
+  },
+  3: {
+    radioSelectors: [],
+    selectSelectors: [],
+    buttonSelectors: [],
+    selectValues: []
+  },
+  4: {
+    radioSelectors: [],
+    selectSelectors: [],
+    buttonSelectors: [],
+    selectValues: []
+  }
+};
+
 const isAppElementAppended = (appId) => {
   const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
   return panelElement.find(`[data-appid="${appId}"]`).length > 0;
+};
+
+const getSystemMajorVersion = () => {
+  const version = Number(window.GAS?.dnd5eVersion ?? 0);
+  return Number.isFinite(version) ? Math.floor(version) : 0;
+};
+
+const getForceTakeAverageSelectorConfig = () => {
+  const majorVersion = getSystemMajorVersion();
+  const baseConfig = FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG.default;
+  const versionConfig = FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[majorVersion] ?? {};
+
+  return {
+    radioSelectors: [...(baseConfig.radioSelectors ?? []), ...(versionConfig.radioSelectors ?? [])],
+    selectSelectors: [...(baseConfig.selectSelectors ?? []), ...(versionConfig.selectSelectors ?? [])],
+    buttonSelectors: [...(baseConfig.buttonSelectors ?? []), ...(versionConfig.buttonSelectors ?? [])],
+    selectValues: [...(baseConfig.selectValues ?? []), ...(versionConfig.selectValues ?? [])]
+  };
+};
+
+const includesHitPoints = (value) => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+
+  return /hit\s*points?|hitpoints|hp/i.test(value);
+};
+
+const isHitPointAdvancement = (currentProcess, element) => {
+  const advancement = currentProcess?.app?.step?.flow?.advancement;
+  const advancementMeta = [
+    advancement?.type,
+    advancement?.title,
+    advancement?.hint,
+    advancement?.identifier,
+    advancement?.slug
+  ];
+
+  if (advancementMeta.some((entry) => includesHitPoints(entry))) {
+    return true;
+  }
+
+  const forms = element?.find?.('form') ?? [];
+  for (const form of forms) {
+    const markers = [
+      form?.dataset?.advancementType,
+      form?.dataset?.type,
+      form?.dataset?.action,
+      form?.getAttribute?.('data-advancement-type'),
+      form?.getAttribute?.('data-type'),
+      form?.getAttribute?.('data-action')
+    ];
+
+    if (markers.some((entry) => includesHitPoints(entry))) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
+const forceTakeAverageHitPoints = (element, currentProcess) => {
+  if (!safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false)) {
+    return;
+  }
+
+  if (!element?.length || !isHitPointAdvancement(currentProcess, element)) {
+    return;
+  }
+
+  const selectorConfig = getForceTakeAverageSelectorConfig();
+  let didApply = false;
+
+  for (const selector of selectorConfig.radioSelectors) {
+    const radios = element.find(selector);
+    radios.each((_, radio) => {
+      if (!radio.checked) {
+        radio.checked = true;
+        $(radio).trigger('change');
+        $(radio).trigger('click');
+        didApply = true;
+      }
+    });
+  }
+
+  for (const selector of selectorConfig.selectSelectors) {
+    const selects = element.find(selector);
+    selects.each((_, selectElement) => {
+      const options = Array.from(selectElement.options ?? []);
+      const targetValue = options.find((option) => selectorConfig.selectValues.includes(option.value))?.value;
+      if (targetValue && selectElement.value !== targetValue) {
+        selectElement.value = targetValue;
+        $(selectElement).trigger('change');
+        didApply = true;
+      }
+    });
+  }
+
+  for (const selector of selectorConfig.buttonSelectors) {
+    const button = element.find(selector).first();
+    if (button.length) {
+      button.trigger('click');
+      didApply = true;
+      break;
+    }
+  }
+
+  window.GAS.log.d('[forceTakeAverageHitPoints] processed', {
+    didApply,
+    majorVersion: getSystemMajorVersion(),
+    hasVersionSpecificSelectors: (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.radioSelectors?.length ?? 0) > 0
+      || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.selectSelectors?.length ?? 0) > 0
+      || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.buttonSelectors?.length ?? 0) > 0
+  });
 };
 
 // Helper to see if the module is configured to skip moving DOM during advancement capture
@@ -386,11 +536,15 @@ export const captureAdvancement = (initial = false) => {
         // Intercept browse buttons for feat selections
         interceptFeatBrowseButtons(element, currentProcess);
         window.GAS.log.d('[gas.captureAdvancement] interceptFeatBrowseButtons completed');
+
+        forceTakeAverageHitPoints(element, currentProcess);
       } else {
         window.GAS.log.w('[gas.captureAdvancement] No element found from getAdvancementElement');
       }
     } else {
       window.GAS.log.d('[gas.captureAdvancement] Element already appended for', currentProcess.id);
+      const existingElement = panelElement.find(`[gas-appid="${currentProcess.id}"]`);
+      forceTakeAverageHitPoints(existingElement, currentProcess);
     }
   } else {
     window.GAS.log.w('[gas.captureAdvancement] No currentProcess available');
