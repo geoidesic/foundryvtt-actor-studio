@@ -36,7 +36,7 @@
       "SelectClass": "選擇要新增的職業",
       "SelectMulticlass": "選擇兼職職業",
       "CancelDescription": "點擊下方職業按鈕取消升級流程，或點擊「更新角色」來套用變更。",
-      "Subclass": "選擇子職業",
+      "Subclass": "選擇子職",
       "LevelAdvancements": "等級特性",
       "DisabledTooltip": "正在進行升級特性流程，此功能已停用",
       "DisabledDescription": "升級特性流程進行中時，此區塊無法編輯"
@@ -68,7 +68,7 @@
       "NeedFileUploadWarn": "您沒有「上傳新檔案」的權限，選擇圖像時可能會出現問題。",
       "NeedFileBrowseWarn": "您沒有「使用檔案瀏覽器」的權限，選擇圖像時可能會出現問題。"
     },
-    "SubClass": "子職業",
+    "SubClass": "子職",
     "Tabs": {
       "Abilities": {
         "Title": "屬性",
@@ -89,10 +89,10 @@
       "Classes": {
         "Title": "職業",
         "Class": "職業",
-        "SubClass": "子職業",
+        "SubClass": "子職",
         "FilterByLevel": "依等級查看特性",
         "Placeholder": "職業",
-        "SubclassPlaceholder": "子職業",
+        "SubclassPlaceholder": "子職",
         "LevelPreview": "等級預覽",
         "Level": "等級"
       },
@@ -285,7 +285,7 @@
       },
       "SubraceNameBlacklist": {
         "Name": "子種族名稱黑名單",
-        "Hint": "按名稱排除的項目（區分大小寫，分號分隔，空格可用）。預設用於排除像地精狡詐特性不被計入地精子職業。預設 - 'Gnome Cunning; Halfling Nimbleness'"
+        "Hint": "按名稱排除的項目（區分大小寫，分號分隔，空格可用）。預設用於排除像地精狡詐特性不被計入地精子職。預設 - 'Gnome Cunning; Halfling Nimbleness'"
       },
       "ButtonOnDialogInsteadOfActorsDirectory": {
         "Name": "建立角色對話框按鈕",
@@ -311,7 +311,7 @@
         "RaceCompendia": "種族Compendium",
         "RacialFeatureCompendia": "種族特性Compendium",
         "ClassCompendia": "職業列表Compendium",
-        "SubclassCompendia": "子職業列表Compendium",
+        "SubclassCompendia": "子職列表Compendium",
         "ClassFeatureCompendia": "職業特性Compendium",
         "BackgroundCompendia": "背景列表Compendium",
         "SpellCompendia": "法術Compendium",
@@ -319,8 +319,8 @@
         "EquipmentCompendia": "裝備Compendium"
       },
       "TrimSubclasses": {
-        "Name": "裁剪子職業名稱",
-        "Hint": "顯示子職業名稱時去掉括號中的最後部分，主要用於DDB匯入的子職業，如'刺客（盜賊）'僅顯示'刺客'（不修改新增到角色的項目，只在工具中顯示）"
+        "Name": "裁剪子職名稱",
+        "Hint": "顯示子職名稱時去掉括號中的最後部分，主要用於DDB匯入的子職，如'刺客（盜賊）'僅顯示'刺客'（不修改新增到角色的項目，只在工具中顯示）"
       },
       "EnableEquipmentSelection": {
         "Name": "啟用裝備選擇",
@@ -495,7 +495,7 @@
       "Roll": "擲骰",
       "Increase": "增加",
       "Decrease": "減少",
-      "Subclass": "子職業"
+      "Subclass": "子職"
     },
     "Spells": {
       "CharacterLevel": "角色等級",
