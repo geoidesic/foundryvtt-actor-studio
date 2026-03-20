@@ -33,6 +33,7 @@ import {
   safeGetSetting
 } from "~/src/helpers/Utility.js";
 
+import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
 import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
@@ -53,8 +54,15 @@ let
   subClassesPacks = getPacksFromSettings("subclasses"),
   subclassesPlaceholder = t('Tabs.Classes.SubclassPlaceholder'),
   mapKeys = ["name->label", "img", "type", "folder", "uuid->value", "_id"], //- keys to extract from the packs map
-  mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys)
+  mappedClassIndex = extractItemsFromPacksSync(packs, mapKeys),
+  classAdvancementComponents = {}
 ;
+
+const hideAdvancementList = safeGetSetting(
+  MODULE_ID,
+  "hideAdvancementList",
+  false
+);
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
 window.GAS.log.d('[DEBUG] compendiumSources settings:', safeGetSetting(MODULE_ID, 'compendiumSources', {}));
@@ -385,101 +393,100 @@ onDestroy(() => {
 });
 </script>
 <template lang="pug">
-.content
-  .flexrow
-    .flex2.pr-sm.col-a
+StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideAdvancementList}")
+  div(slot="left")
+    +if("window.GAS.debug")
+      //- pre classUuidForLevelUp {$classUuidForLevelUp}
+      //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
+      //- pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
+      //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
+      //- pre levelUpClassObject {$levelUpClassObject}
+      //- pre classUuidForLevelUp {$classUuidForLevelUp}
+      //- pre levelUpSubClassObject {$levelUpSubClassObject}
+      //- pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
+      //- pre activeRowClassKey {$activeRowClassKey}
+      //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
+      //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+      //- pre subclasses {subclasses}
+      //- pre classKeys {classKeys}
 
-      +if("window.GAS.debug")
-        //- pre classUuidForLevelUp {$classUuidForLevelUp}
-        //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
-        //- pre isLevelUpAdvancementInProgress {$isLevelUpAdvancementInProgress}
-        //- pre newLevelValueForExistingClass {$newLevelValueForExistingClass}
-        //- pre levelUpClassObject {$levelUpClassObject}
-        //- pre classUuidForLevelUp {$classUuidForLevelUp}
-        //- pre levelUpSubClassObject {$levelUpSubClassObject}
-        //- pre subClassUuidForLevelUp {$subClassUuidForLevelUp}
-        //- pre activeRowClassKey {$activeRowClassKey}
-        //- pre selectedMultiClassUUID {$selectedMultiClassUUID}
-        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        //- pre subclasses {subclasses}
-        //- pre classKeys {classKeys}
-
-        
-      +if("!$selectedMultiClassUUID")
-        h1.flex {t('LevelUp.ExistingClassesTitle')}
-        +if("$classUuidForLevelUp")
-          p.left {$isLevelUpAdvancementInProgress ? t('LevelUp.DisabledDescription') : t('LevelUp.CancelDescription')}
-          +else 
-            p.left {t('LevelUp.ExistingClassesDescription')}
-        +each("classKeys as classKey, index")
-          
-          +if("$activeRowClassKey == classKey")
-            //- Active row with "Cancel" tooltip
-            ClassLevelRow(
-              cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
-              eventHandler!="{eventHandlers.handleRowDeactivation(classKey)}"
-              imgSrc="{getters.getCharacterClass(classKey)?.img}"
-              oldLevel="{existingCLassLevels[index]}"
-              classKey="{classKey}"
-              iconClass="fas fa-times"
-              newLevel="{$newLevelValueForExistingClass}"
-              tooltip="{getters.rowTooltip(classKey)}"
-
-              disabled="{$isLevelUpAdvancementInProgress}"
-            )
-            +else
-              //- Inactive row with default tooltip
-              +if("!$classUuidForLevelUp")
-                ClassLevelRow(
-                  imgSrc="{getters.getCharacterClass(classKey)?.img}"
-                  cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
-                  eventHandler!="{eventHandlers.handleRowActivation(classKey)}"
-                  oldLevel="{existingCLassLevels[index]}"
-                  classKey="{classKey}"
-                  tooltip="{getters.rowTooltip(classKey)}"
-                  iconClass="{$classUuidForLevelUp ? '' : 'fas fa-plus'}"
-                )
-
-      +if("!$newLevelValueForExistingClass") 
-        h1.flexrow.mt-md
-          .flex2.left {t('LevelUp.NewClassTitle')}
-          +if("$selectedMultiClassUUID")
-            .flex0
-              button.mt-sm.gold-button(style="padding-right: 2px" type="button" role="button" on:mousedown="{eventHandlers.clickCancel}")
-                i(class="fas fa-times")
-        IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{t('LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectMultiClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
-
+      
+    +if("!$selectedMultiClassUUID")
+      h1.flex {t('LevelUp.ExistingClassesTitle')}
       +if("$classUuidForLevelUp")
+        p.left {$isLevelUpAdvancementInProgress ? t('LevelUp.DisabledDescription') : t('LevelUp.CancelDescription')}
+        +else 
+          p.left {t('LevelUp.ExistingClassesDescription')}
+      +each("classKeys as classKey, index")
         
-        h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
+        +if("$activeRowClassKey == classKey")
+          //- Active row with "Cancel" tooltip
+          ClassLevelRow(
+            cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
+            eventHandler!="{eventHandlers.handleRowDeactivation(classKey)}"
+            imgSrc="{getters.getCharacterClass(classKey)?.img}"
+            oldLevel="{existingCLassLevels[index]}"
+            classKey="{classKey}"
+            iconClass="fas fa-times"
+            newLevel="{$newLevelValueForExistingClass}"
+            tooltip="{getters.rowTooltip(classKey)}"
 
-        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
-          h3.left.mt-md {t('LevelUp.Subclass')}
-          +if("window.GAS.debug")
-            //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-          IconSelect.icon-select.mb-md(
-            active="{subClassProp}" 
-            options="{subclasses}"  
-            placeHolder="{subclassesPlaceholder}" 
-            handler="{eventHandlers.selectSubClassHandler}" 
-            id="subClass-select" 
-            bind:value="{subclassValue}" 
-            truncateWidth="17"
             disabled="{$isLevelUpAdvancementInProgress}"
           )
-        +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
-          p
-            i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
-            | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
+          +else
+            //- Inactive row with default tooltip
+            +if("!$classUuidForLevelUp")
+              ClassLevelRow(
+                imgSrc="{getters.getCharacterClass(classKey)?.img}"
+                cssClasses="{decorators.existingClassesCssClassForRow(classKey)}"
+                eventHandler!="{eventHandlers.handleRowActivation(classKey)}"
+                oldLevel="{existingCLassLevels[index]}"
+                classKey="{classKey}"
+                tooltip="{getters.rowTooltip(classKey)}"
+                iconClass="{$classUuidForLevelUp ? '' : 'fas fa-plus'}"
+              )
+
+    +if("!$newLevelValueForExistingClass") 
+      h1.flexrow.mt-md
+        .flex2.left {t('LevelUp.NewClassTitle')}
+        +if("$selectedMultiClassUUID")
+          .flex0
+            button.mt-sm.gold-button(style="padding-right: 2px" type="button" on:mousedown="{eventHandlers.clickCancel}")
+              i(class="fas fa-times")
+      IconSelect.icon-select( options="{filteredClassIndex}" data-tooltip="{t('LevelUp.SelectClass')}" placeHolder="{classesPlaceholder}" handler="{eventHandlers.selectMultiClassHandler}" id="characterClass-select" bind:value="{$selectedMultiClassUUID}" )
+
+    +if("$classUuidForLevelUp")
+      
+      h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
+
+      +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+        h3.left.mt-md {t('LevelUp.Subclass')}
+        +if("window.GAS.debug")
+          //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+        IconSelect.icon-select.mb-md(
+          active="{subClassProp}" 
+          options="{subclasses}"  
+          placeHolder="{subclassesPlaceholder}" 
+          handler="{eventHandlers.selectSubClassHandler}" 
+          id="subClass-select" 
+          bind:value="{subclassValue}" 
+          truncateWidth="17"
+          disabled="{$isLevelUpAdvancementInProgress}"
+        )
+      +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+        p
+          i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
+          | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
 
 
-        //- pre subclasses {subclasses.length}
-        //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
-        //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
-        //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
-        //- +if("selectedMultiClassUUID")
+      //- pre subclasses {subclasses.length}
+      //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+      //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
+      //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
+      //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
+      //- +if("selectedMultiClassUUID")
 
+      +if("!hideAdvancementList")
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         //- Subclass selection section
@@ -490,16 +497,19 @@ onDestroy(() => {
                 .flex0.relative.image
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
                 .flex2 {t('SubClass')}
+      +if("hideAdvancementList && $classUuidForLevelUp")
+        .description-fill.mt-sm
+          +if("$levelUpSubClassObject")
+            | {@html richSubClassHTML}
+            +else()
+              | {@html $levelUpRichHTML}
 
-      
-    .flex0.border-right.right-border-gradient-mask 
-    .flex3.left.pl-md.scroll.col-b 
-      //- pre isLevelUp: {$isLevelUp}
-      +if("$classUuidForLevelUp")
-        h1 {$levelUpClassObject?.name || ''}
-      | {@html $levelUpCombinedHtml}
+  div(slot="right")
+    +if("$classUuidForLevelUp")
+      h1 {$levelUpClassObject?.name || ''}
+    | {@html $levelUpCombinedHtml}
 </template>
-<style lang="sass">
+<style lang="sass" scoped>
   @use "../../../../../styles/Mixins.sass" as mixins
 
   :global(.icon-select)
@@ -510,14 +520,20 @@ onDestroy(() => {
   .gold-button
     +mixins.gold-button  
 
-  .content 
-    +mixins.staticOptions
-    .badge.inset
-      +mixins.badge
-      +mixins.inset
-      display: inline-block
-      white-space: nowrap
+  :global(.icon-select)
+    position: relative
 
-    .col-a
-      // max-width: 325px
+  .badge.inset
+    +mixins.badge
+    +mixins.inset
+    display: inline-block
+    white-space: nowrap
+
+  .description-fill
+    color: inherit
+    font-size: 0.9375rem
+    line-height: 1.5
+
+  :global(.icon-select)
+    position: relative
 </style>
