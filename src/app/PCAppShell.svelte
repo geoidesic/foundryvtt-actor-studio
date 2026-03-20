@@ -376,7 +376,6 @@
 :global(.application.GAS) 
   contain: unset !important
 main 
-  text-align: center
   display: flex
   flex-direction: column
   height: 100%
