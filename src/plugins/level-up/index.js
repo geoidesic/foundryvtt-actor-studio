@@ -2,7 +2,7 @@ import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { levelUpSubClassObject } from '~/src/stores/storeDefinitions';
 import PCApplication from '~/src/app/PCApplication.js';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { bringActorStudioToFront, safeGetSetting } from '~/src/helpers/Utility';
 
 const pulseKeyframes = `
 @keyframes pulse {
@@ -78,14 +78,6 @@ export function dnd5eSheet2UI(app, html, data) {
         return;
       }
     }
-    
-    // Store the current sheet class before opening Actor Studio
-    const currentSheetClass = app.actor.getFlag('core', 'sheetClass') ?? '';
-    await app.actor.setFlag(MODULE_ID, 'originalSheetClass', currentSheetClass);
-    window.GAS.log.d('[GAS] Stored original sheet class for level up:', currentSheetClass);
-    
-    // Close the actor sheet to prevent it from reopening during level up
-    await app.close();
     
     //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
@@ -228,14 +220,6 @@ export function tidy5eSheetUI(app, element, data) {
       }
     }
     
-    // Store the current sheet class before opening Actor Studio
-    const currentSheetClass = app.actor.getFlag('core', 'sheetClass') ?? '';
-    await app.actor.setFlag(MODULE_ID, 'originalSheetClass', currentSheetClass);
-    window.GAS.log.d('[GAS] Stored original sheet class for level up:', currentSheetClass);
-    
-    // Close the actor sheet to prevent it from reopening during level up
-    await app.close();
-    
     //- render the level up UI
     new PCApplication(app.actor, true).render(true, { focus: true });
   });
@@ -268,6 +252,7 @@ export function initLevelup() {
     if (safeGetSetting(MODULE_ID, 'enableLevelUp', true) === false) return;
 
     if(app.constructor.name === "CharacterActorSheet") {
+      bringActorStudioToFront();
       dnd5eSheet2UI(app, $(app.element), data)
     }
 
@@ -281,6 +266,7 @@ export function initLevelup() {
       log.e("Level Up not implemented for old dnd5e character sheet")
     }
     if(app.constructor.name === "ActorSheet5eCharacter2") {
+      bringActorStudioToFront();
       dnd5eSheet2UI(app, html, data)
     }
 

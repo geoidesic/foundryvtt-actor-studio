@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { bringActorStudioToFront, safeGetSetting } from '~/src/helpers/Utility';
 import { tabs, activeTab, dropItemRegistry, isLevelUp, levelUpTabs } from '~/src/stores/index.js';
 
 // Helper to check if we're on first step based on version
@@ -32,11 +32,13 @@ export const renderAdvancementManager = async (app, html, data) => {
       let flows = app.flows || app._flows || app.advancementFlows;
       window.GAS.advancementManager = { app, flows };
       window.GAS.log.d('[renderAdvancementManager] Set global advancementManager with flows:', flows);
+      bringActorStudioToFront();
       
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
       // console.log('advancementsTab', advancementsTab)
       if (advancementsTab) {
         Hooks.call("gas.captureAdvancement");
+        bringActorStudioToFront();
       } else {
         window.GAS.log.i('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.captureAdvancement
@@ -46,6 +48,7 @@ export const renderAdvancementManager = async (app, html, data) => {
           await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         }
         activeTab.set('advancements');
+        bringActorStudioToFront();
       }
     }
   }
