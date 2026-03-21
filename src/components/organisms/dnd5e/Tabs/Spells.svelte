@@ -6,7 +6,7 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
     initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
-    spellLimits, currentSpellCounts, spellProgress, autoPopulateAllSpells
+    spellLimits, currentSpellCounts, spellProgress
   } from '~/src/stores/spellSelection';
   import spellsKnownData from '~/src/stores/spellsKnown.json';
   import { MODULE_ID } from '~/src/helpers/constants';
@@ -21,6 +21,8 @@
   let scrolled = false;
   let spellContainer;
   let cleanup;
+  let lastAutoSelectSignature = '';
+  let autoSelectInProgress = false;
 
   $: isDisabled = $readOnlyTabs.includes('spells');
   $: actorObject = $actor.toObject();
@@ -99,15 +101,110 @@
   $: oldMaxSpellLevel = $isLevelUp && $newLevelValueForExistingClass 
     ? getMaxSpellLevelForClass($newLevelValueForExistingClass - 1, characterClassName, $actor)
     : 0;
+
+  function getSpellSelectionKey(spell) {
+    return spell?.id || spell?._id || spell?.uuid || null;
+  }
   
-  // Determine if auto-populate should be offered
-  $: shouldOfferAutoPopulate = hasAllSpellsAccess && (
-    !$isLevelUp || // Always offer during character creation
-    (effectiveMaxSpellLevel > oldMaxSpellLevel) // Only offer during level-up if max spell level increased
-  );
-  
-  // Check if this is a level-up with no new spell access
-  $: isLevelUpWithNoSpellUpdates = $isLevelUp && hasAllSpellsAccess && effectiveMaxSpellLevel <= oldMaxSpellLevel;
+  function getAutoSelectedSpells() {
+    const spells = $availableSpells || [];
+    if (!hasAllSpellsAccess) return [];
+
+    const knownSpellNames = new Set((actorSpells || []).map(item => String(item?.name || '').toLowerCase()));
+
+    const rawMatches = ($isLevelUp && oldMaxSpellLevel > 0)
+      ? spells.filter(spell => {
+        const spellLevel = spell.system?.level || 0;
+        return spellLevel > oldMaxSpellLevel && spellLevel <= levelUpAwareMaxSpellLevel;
+      })
+      : spells.filter(spell => {
+        const spellLevel = spell.system?.level || 0;
+        return spellLevel > 0 && spellLevel <= levelUpAwareMaxSpellLevel;
+      });
+
+    const uniqueByKey = new Map();
+    for (const spell of rawMatches) {
+      const key = getSpellSelectionKey(spell);
+      if (!key) continue;
+      const nameLower = String(spell?.name || '').toLowerCase();
+      if (knownSpellNames.has(nameLower)) continue;
+      if (!uniqueByKey.has(key)) {
+        uniqueByKey.set(key, spell);
+      }
+    }
+
+    return Array.from(uniqueByKey.values());
+  }
+
+  // For classes with "all spells" access (e.g. Cleric), derive a concrete spell count
+  // matching what auto-populate will add, so the UI can show real numbers instead of "All" / 0.
+  $: autoPopulateEligibleSpellCount = hasAllSpellsAccess
+    ? getAutoSelectedSpells().length
+    : $spellLimits.spells;
+
+  $: displaySpellLimit = hasAllSpellsAccess
+    ? autoPopulateEligibleSpellCount
+    : $spellLimits.spells;
+
+  // Check if this is a level-up with no new auto-selected spells and no cantrip updates.
+  $: isLevelUpWithNoSpellUpdates = $isLevelUp
+    && hasAllSpellsAccess
+    && autoPopulateEligibleSpellCount === 0
+    && $spellLimits.cantrips === 0;
+
+  $: shouldShowAllSpellsNotice = hasAllSpellsAccess && !isLevelUpWithNoSpellUpdates;
+
+  async function autoSelectAllAccessSpells() {
+    if (!hasAllSpellsAccess || loading) return;
+
+    const autoSelectedSpells = getAutoSelectedSpells();
+    const desiredIds = autoSelectedSpells
+      .map(spell => getSpellSelectionKey(spell))
+      .filter(Boolean)
+      .sort();
+
+    const signature = [
+      $isLevelUp,
+      oldMaxSpellLevel,
+      levelUpAwareMaxSpellLevel,
+      desiredIds.join('|')
+    ].join('::');
+
+    if (signature === lastAutoSelectSignature || autoSelectInProgress) return;
+
+    autoSelectInProgress = true;
+    try {
+      const desiredSet = new Set(desiredIds);
+      const currentSelections = get(selectedSpells);
+
+      for (const [selectedSpellId, { itemData }] of currentSelections.entries()) {
+        const level = itemData?.system?.level || 0;
+        if (level > 0 && !desiredSet.has(selectedSpellId)) {
+          removeSpell(selectedSpellId);
+        }
+      }
+
+      for (const spell of autoSelectedSpells) {
+        const spellId = getSpellSelectionKey(spell);
+        const latestSelections = get(selectedSpells);
+        if (spellId && !latestSelections.has(spellId)) {
+          await addSpell(spell);
+        }
+      }
+
+      lastAutoSelectSignature = signature;
+    } finally {
+      autoSelectInProgress = false;
+    }
+  }
+
+  $: if (hasAllSpellsAccess && !loading) {
+    autoSelectAllAccessSpells();
+  }
+
+  $: if (!hasAllSpellsAccess) {
+    lastAutoSelectSignature = '';
+  }
   
   // Debug logging for character data
   // $: {
@@ -207,16 +304,21 @@
 
   // Helper function to calculate max spell level by class name (fallback)
   function getMaxSpellLevelByClassName(level, className, is2024Rules) {
+    const normalizedClassName = String(className || '')
+      .toLowerCase()
+      .replace(/^dnd5e\.classes\./, '')
+      .trim();
+
     // Standard D&D 5e spellcasting progression for full casters
-    const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
-    const halfCasters = ['Paladin', 'Ranger'];
-    const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
-    const warlockProgression = ['Warlock'];
+    const fullCasters = ['bard', 'cleric', 'druid', 'sorcerer', 'wizard'];
+    const halfCasters = ['paladin', 'ranger'];
+    const thirdCasters = ['arcane trickster', 'arcane-trickster', 'eldritch knight', 'eldritch-knight'];
+    const warlockProgression = ['warlock'];
     
-    if (fullCasters.includes(className)) {
+    if (fullCasters.includes(normalizedClassName)) {
       // Full casters: spell level = Math.ceil(character level / 2), max 9
       return Math.min(9, Math.ceil(level / 2));
-    } else if (halfCasters.includes(className)) {
+    } else if (halfCasters.includes(normalizedClassName)) {
       // Half casters: Different progression for 2014 vs 2024 rules
       if (is2024Rules) {
         // 2024 rules: Half casters start spellcasting at level 1
@@ -225,10 +327,10 @@
         // 2014 rules: Half casters start spellcasting at level 2
         return Math.min(5, Math.ceil((level - 1) / 4));
       }
-    } else if (thirdCasters.includes(className)) {
+    } else if (thirdCasters.includes(normalizedClassName)) {
       // Third casters: spell level = Math.ceil((character level - 2) / 6), max 4
       return Math.min(4, Math.ceil((level - 2) / 6));
-    } else if (warlockProgression.includes(className)) {
+    } else if (warlockProgression.includes(normalizedClassName)) {
       // Warlocks have their own progression based on D&D 5e warlock table
       // Spell levels increase at 3, 5, 7, and 9
       if (level >= 9) return 5;
@@ -237,7 +339,7 @@
       if (level >= 3) return 2;
       if (level >= 1) return 1;
       return 0;
-    } else if (className === 'Artificer') {
+    } else if (normalizedClassName === 'artificer') {
       // Artificers: Different progression for 2014 vs 2024 rules
       if (is2024Rules) {
         // 2024 rules: Artificers start spellcasting at level 1
@@ -326,10 +428,13 @@
     // This fixes Rangers 2014 who get 0 cantrips but were still seeing cantrips in the list
     // Allow spells up to the character's max spell level
     // OR allow level 1 spells if the character has spell slots available (fixes Ranger 2024 issue)
-    const withinCharacterLevel = 
-      (spellLevel === 0 && $spellLimits.cantrips > 0) || 
-      (spellLevel > 0 && spellLevel <= effectiveMaxSpellLevel) || 
-      (spellLevel === 1 && $spellLimits.spells > 0);
+    const withinCharacterLevel = hasAllSpellsAccess
+      ? (spellLevel === 0 && $spellLimits.cantrips > 0)
+      : (
+        (spellLevel === 0 && $spellLimits.cantrips > 0) ||
+        (spellLevel > 0 && spellLevel <= effectiveMaxSpellLevel) ||
+        (spellLevel === 1 && $spellLimits.spells > 0)
+      );
     
     const alreadySelected = selectedSpellsList.map(item => item.id).includes(spell._id);
     const alreadyKnown = actorSpells.map(item => item.name).includes(spell.name);
@@ -390,19 +495,24 @@
     const isCantrip = spellLevel === 0;
     const counts = get(currentSpellCounts);
     const limits = get(spellLimits);
+    const effectiveSpellLimit = hasAllSpellsAccess ? displaySpellLimit : limits.spells;
+
+    if (hasAllSpellsAccess && !isCantrip) {
+      return;
+    }
 
     // Strict enforcement: check if adding this spell would exceed limits
     if (isCantrip && counts.cantrips >= limits.cantrips) {
       ui.notifications?.warn(t('Spells.CantripLimitReached'));
       return;
     }
-    if (!isCantrip && counts.spells >= limits.spells) {
+    if (!isCantrip && counts.spells >= effectiveSpellLimit) {
       ui.notifications?.warn(t('Spells.SpellLimitReached'));
       return;
     }
     
     // Double-check that we're not adding duplicates
-    const spellId = spell.id || spell._id;
+    const spellId = getSpellSelectionKey(spell);
     const currentSelections = get(selectedSpells);
     if (currentSelections.has(spellId)) {
       ui.notifications?.warn('Spell already selected');
@@ -417,29 +527,9 @@
     removeSpell(spellId);
   }
 
-  // Auto-populate all spells for classes that get all spells
-  async function autoPopulateSpells() {
-    if (!hasAllSpellsAccess) {
-      ui.notifications?.warn('This class does not have access to all spells');
-      return;
-    }
-    
-    try {
-      const success = await autoPopulateAllSpells(
-        characterClassName, 
-        effectiveMaxSpellLevel, 
-        $actor, 
-        $isLevelUp, 
-        oldMaxSpellLevel
-      );
-      if (success) {
-        // Refresh the selected spells list
-        await tick();
-      }
-    } catch (error) {
-      console.error('Error auto-populating spells:', error);
-      ui.notifications?.error('Failed to auto-populate spells');
-    }
+  function isLockedAutoSelectedSpell(spell) {
+    const spellLevel = spell?.system?.level || 0;
+    return hasAllSpellsAccess && spellLevel > 0;
   }
 
   // Get spell school display name
@@ -466,8 +556,10 @@
       : 'Unknown';
   }
 
-  $: cantripCountCss = $currentSpellCounts.cantrips >= $spellLimits.cantrips
-  $: spellCountCss = $currentSpellCounts.spells >= $spellLimits.spells
+  $: cantripCountAtLimit = $currentSpellCounts.cantrips >= $spellLimits.cantrips
+  $: spellCountAtLimit = $currentSpellCounts.spells >= displaySpellLimit
+  $: shouldHideSpellSearch = hasAllSpellsAccess && spellCountAtLimit
+  $: shouldHideAvailableSpellsPanel = hasAllSpellsAccess && spellCountAtLimit && $spellLimits.cantrips === 0
 </script>
 
 <template lang="pug">
@@ -479,127 +571,140 @@ spells-tab-container(clas:readonlys="{isDisabled}")
       .info-message.no-updates-notice
         p 
           strong No spell updates needed for this level-up
-        p 
-          | {characterClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
+        p
+          span.capitalise {characterClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
         p 
           em Your spell selection is complete - no changes needed.
-    +elseif("shouldOfferAutoPopulate")
+    +elseif("shouldShowAllSpellsNotice")
       .info-message.all-spells-notice
-        p 
-          strong {characterClassName}s 
-          | have access to all spells of appropriate level. You only need to select the cantrips you want to know - all other spells can be prepared during gameplay.
-        p 
-          em Note: You still need to select your cantrips as they cannot be changed later.
-        .auto-populate-section
-          button.auto-populate-btn(
-            on:click!="{ () => autoPopulateSpells() }" 
-            disabled="{isDisabled || loading}"
-          )
-            i.fas.fa-magic
-            +if("$isLevelUp && effectiveMaxSpellLevel > oldMaxSpellLevel")
-              span Auto-populate New Level {effectiveMaxSpellLevel} Spells
-              +else()
-                span Auto-populate All Spells (Levels 1-{effectiveMaxSpellLevel})
+        p
+          strong.capitalise {characterClassName}s 
+          +if("$isLevelUp")
+            | automatically gain all newly available spells for this level.
+            +else()
+              | automatically gain all available spells for this level.
+        p
+          +if("$spellLimits.cantrips")
+            em {displaySpellLimit} spells are auto-selected. You only need to choose cantrips.
+            +else()
+              em {displaySpellLimit} spells are auto-selected.
+        +if("$spellLimits.cantrips")
+          p 
+            em Note: You still need to select your cantrips as they cannot be changed later.
   .sticky-header(class:hidden="{!scrolled}")
     .panel-header-grid
       .grid-item.label {t('Spells.Cantrips')}:
-      .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+      .grid-item.value(class:at-limit="{cantripCountAtLimit}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
       .grid-item.label {t('Spells.Spells')}:
-      .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
+      .grid-item.value(class:at-limit="{spellCountAtLimit}") {$currentSpellCounts.spells}/{displaySpellLimit}
   .spells-tab
-    .left-panel(bind:this="{spellContainer}")
-      .panel-header-grid(class:hidden="{scrolled}")
-        .grid-item.label {t('Spells.Cantrips')}:
-        .grid-item.value(class:at-limit="{cantripCountCss}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-        .grid-item.label {t('Spells.Spells')}:
-        .grid-item.value(class:at-limit="{spellCountCss}") {$currentSpellCounts.spells}/{$spellLimits.spells === 999 ? 'All' : $spellLimits.spells}
-      h3 {t('Spells.SelectedSpells')}
+    +if("$spellLimits.cantrips || displaySpellLimit")
 
-      .selected-spells
-        +if("selectedSpellsList.length === 0")
-          .empty-selection
-            p {t('Spells.NoSpellsSelected')}      
+      .left-panel(bind:this="{spellContainer}")
+        h3 Expected spell selections
+        .panel-header-grid(class:hidden="{scrolled}")
+          .grid-item.label {t('Spells.Cantrips')}:
+          .grid-item.value(class:at-limit="{cantripCountAtLimit}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
+          .grid-item.label {t('Spells.Spells')}:
+          .grid-item.value(class:at-limit="{spellCountAtLimit}") {$currentSpellCounts.spells}/{displaySpellLimit}
 
-          +else()
-            +each("selectedSpellsList as selectedSpell")
-              .selected-spell
-                .spell-col1
-                  img.spell-icon( alt="{selectedSpell.spell.name}" src="{selectedSpell.spell.img}")
-                .spell-col2.left            
-                  .spell-name
-                    +await("getEnrichedName(selectedSpell.spell)")
-                      span {selectedSpell.spell.name}
-                      +then("Html")
-                        span {@html Html}
-                      +catch("error")
-                        span {selectedSpell.spell.name}
+        +if("$spellLimits.cantrips || displaySpellLimit")
+          h3 {t('Spells.SelectedSpells')}
+          .selected-spells
+            +if("selectedSpellsList.length === 0")
+              .empty-selection
+                p {t('Spells.NoSpellsSelected')}      
+
+              +else()
+                +each("selectedSpellsList as selectedSpell")
+                  .selected-spell
+                    .spell-col1
+                      img.spell-icon( alt="{selectedSpell.spell.name}" src="{selectedSpell.spell.img}")
+                    .spell-col2.left            
+                      .spell-name
+                        +await("getEnrichedName(selectedSpell.spell)")
+                          span {selectedSpell.spell.name}
+                          +then("Html")
+                            span {@html Html}
+                          +catch("error")
+                            span {selectedSpell.spell.name}
 
 
-                  .spell-subdetails
-                    span.spell-level {getSpellLevelDisplay(selectedSpell.spell)}
-                    span.spell-school {getSchoolName(selectedSpell.spell)}
+                      .spell-subdetails
+                        span.spell-level {getSpellLevelDisplay(selectedSpell.spell)}
+                        span.spell-school {getSchoolName(selectedSpell.spell)}
 
-                .spell-col3
-                  button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id) }" disabled="{isDisabled}")
-                    i.fas.fa-trash
+                    .spell-col3
+                      button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id) }" disabled="{isDisabled || isLockedAutoSelectedSpell(selectedSpell.spell)}")
+                        i.fas.fa-trash
 
     .right-panel.spell-list
-      h3 {t('Spells.AvailableSpells')} | {characterClassName}
-      .filter-container.mb-sm
-        input.keyword-filter(type="text" bind:value="{keywordFilter}" placeholder="{t('Spells.FilterPlaceholder')}" disabled="{isDisabled}")
-      +if("loading")
-        .loading {t('Spells.Loading')}
-        +elseif("filteredSpells.length === 0")
+      +if("$spellLimits.cantrips || displaySpellLimit")
+
+        h3 {t('Spells.AvailableSpells')} | {characterClassName}
+        +if("shouldHideAvailableSpellsPanel")
           .empty-state
-            p {keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}
+            p All available spells selected.
           +else()
-            +each("spellLevels as spellLevel")
-              +if("(spellLevel == 'Cantrips' && !cantripCountCss) || (spellLevel != 'Cantrips' && !spellCountCss)")
-                .spell-level-group
-                  h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
-                    .flex0.mr-xs
-                      +if("expandedLevels[spellLevel]")
-                        span [-]
-                        +else()
-                          span [+]
-                    .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
-
-                  +if("expandedLevels[spellLevel]")
-                    ul.blank
-                      +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
-                        li.flexrow.spell-row.justify-flexrow-vertical
-                          .flex0.spell-details
-                            img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
-
-                          .flex1.spell-info
-                            .flexrow
-                              .flex1.left.spell-name.gold
-                                +await("getEnrichedName(spell)")
-                                  span {spell.name}
-                                  +then("Html")
-                                    span {@html Html}
-                                  +catch("error")
-                                    span {spell.name}
-                            .flexrow.smalltext
-
-                              .flex1.left.spell-meta
-                                +if("getSchoolName(spell, true)")
-                                  .flexrow.gap-10
-                                    .flex2.flexrow
-                                      div School:
-                                      .badge {getSchoolName(spell, true)}
-                                    .flex2.flexrow 
-                                      div Activation
-                                      .badge {getCastingTimeDisplay(spell)}
-
-                          .spell-actions.mx-sm
-                            button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
-                              i.fas.fa-plus
+            +if("!shouldHideSpellSearch")
+              .filter-container.mb-sm
+                input.keyword-filter(type="text" bind:value="{keywordFilter}" placeholder="{t('Spells.FilterPlaceholder')}" disabled="{isDisabled}")
+            +if("loading")
+              .loading {t('Spells.Loading')}
+              +elseif("filteredSpells.length === 0")
+                .empty-state
+                  +if("hasAllSpellsAccess && spellCountAtLimit")
+                    p All available spells are already selected.
+                    +else()
+                      p {keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}
                 +else()
-                  .spell-level-group
-                    p.left.mt-sm.flexrow.positive 
-                      i.fa.fa-check.getParentClasses
-                      | {spellLevel} selection completed
+                  +each("spellLevels as spellLevel")
+                    +if("(spellLevel == 'Cantrips' && !cantripCountAtLimit) || (spellLevel != 'Cantrips' && !spellCountAtLimit)")
+                      .spell-level-group
+                        h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
+                          .flex0.mr-xs
+                            +if("expandedLevels[spellLevel]")
+                              span [-]
+                              +else()
+                                span [+]
+                          .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
+
+                        +if("expandedLevels[spellLevel]")
+                          ul.blank
+                            +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
+                              li.flexrow.spell-row.justify-flexrow-vertical
+                                .flex0.spell-details
+                                  img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
+
+                                .flex1.spell-info
+                                  .flexrow
+                                    .flex1.left.spell-name.gold
+                                      +await("getEnrichedName(spell)")
+                                        span {spell.name}
+                                        +then("Html")
+                                          span {@html Html}
+                                        +catch("error")
+                                          span {spell.name}
+                                  .flexrow.smalltext
+
+                                    .flex1.left.spell-meta
+                                      +if("getSchoolName(spell, true)")
+                                        .flexrow.gap-10
+                                          .flex2.flexrow
+                                            div School:
+                                            .badge {getSchoolName(spell, true)}
+                                          .flex2.flexrow 
+                                            div Activation
+                                            .badge {getCastingTimeDisplay(spell)}
+
+                                .spell-actions.mx-sm
+                                  button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
+                                    i.fas.fa-plus
+                      +else()
+                        .spell-level-group
+                          p.left.mt-sm.flexrow.positive 
+                            i.fa.fa-check.getParentClasses
+                            | {spellLevel} selection completed
 </template>
 
 <style lang="sass">
@@ -751,7 +856,7 @@ spells-tab-container(clas:readonlys="{isDisabled}")
           
           &.at-limit
             background: rgba(255, 0, 0, 0.1)
-            color: #cc0000
+            color: var(--color-positive)
 
         .progress-section
           margin-top: 1rem
@@ -1035,5 +1140,5 @@ spells-tab-container(clas:readonlys="{isDisabled}")
       font-weight: bold
       text-align: left
       &.at-limit
-        color: #cc0000
+        color: var(--color-positive)
 </style>

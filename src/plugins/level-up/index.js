@@ -252,7 +252,6 @@ export function initLevelup() {
     if (safeGetSetting(MODULE_ID, 'enableLevelUp', true) === false) return;
 
     if(app.constructor.name === "CharacterActorSheet") {
-      bringActorStudioToFront();
       dnd5eSheet2UI(app, $(app.element), data)
     }
 
@@ -266,7 +265,6 @@ export function initLevelup() {
       window.GAS?.log?.e?.("Level Up not implemented for old dnd5e character sheet")
     }
     if(app.constructor.name === "ActorSheet5eCharacter2") {
-      bringActorStudioToFront();
       dnd5eSheet2UI(app, html, data)
     }
 

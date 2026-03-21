@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { safeGetSetting, bringActorStudioToFront } from '~/src/helpers/Utility';
 import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections, levelUpInProgress } from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
@@ -700,6 +700,8 @@ export function createLevelUpStateMachine() {
           (async () => {
             window.GAS.log.d('[LEVELUP] Opening actor sheet for:', actor.name);
             actor.sheet.render(true);
+            setTimeout(() => bringActorStudioToFront(), 0);
+            setTimeout(() => bringActorStudioToFront(), 100);
             
             setTimeout(() => {
               window.GAS.log.d('[LEVELUP] Closing Actor Studio');

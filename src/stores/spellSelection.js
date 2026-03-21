@@ -1517,6 +1517,35 @@ export async function finalizeSpellSelection(actor) {
 
 // Function to auto-populate all spells for classes that get access to all spells
 export async function autoPopulateAllSpells(characterClassName, maxSpellLevel, actor, isLevelUp = false, oldMaxSpellLevel = 0) {
+  const raiseAutoPopulateDialogAboveActorStudio = () => {
+    try {
+      if (typeof document === 'undefined') return;
+
+      const actorStudioElement = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+      if (!actorStudioElement) return;
+
+      const actorStudioZ = Number.parseInt(globalThis.getComputedStyle(actorStudioElement).zIndex, 10);
+      const targetDialogZ = Number.isFinite(actorStudioZ) ? actorStudioZ + 3 : 1000;
+
+      const dialogElements = Array.from(document.querySelectorAll('.window-app.dialog, .dialog, .app.dialog, .dialog.application'));
+      if (dialogElements.length === 0) return;
+
+      const latestDialog = dialogElements[dialogElements.length - 1];
+      const dialogZ = Number.parseInt(globalThis.getComputedStyle(latestDialog).zIndex, 10);
+
+      if (!Number.isFinite(dialogZ) || !Number.isFinite(actorStudioZ) || dialogZ <= actorStudioZ) {
+        latestDialog.style.zIndex = String(targetDialogZ);
+      }
+
+      if (latestDialog.tabIndex < 0 || latestDialog.getAttribute('tabindex') === null) {
+        latestDialog.tabIndex = -1;
+      }
+      latestDialog.focus?.({ preventScroll: true });
+    } catch (error) {
+      window.GAS?.log?.w?.('[SPELLS] Failed to raise auto-populate dialog', error);
+    }
+  };
+
   try {
     // window.GAS.log.d('[SPELLS] Auto-populating spells for', characterClassName, 'up to level', maxSpellLevel, 'isLevelUp:', isLevelUp, 'oldMaxSpellLevel:', oldMaxSpellLevel);
 
@@ -1574,6 +1603,8 @@ export async function autoPopulateAllSpells(characterClassName, maxSpellLevel, a
     }
 
     // Ask user for confirmation
+    const dialogRaiseTimers = [0, 50, 150].map((delay) => setTimeout(raiseAutoPopulateDialogAboveActorStudio, delay));
+
     const confirmed = await Dialog.confirm({
       title: `Auto-populate ${characterClassName} Spells`,
       content: dialogContent,
@@ -1581,6 +1612,8 @@ export async function autoPopulateAllSpells(characterClassName, maxSpellLevel, a
       no: () => false,
       defaultYes: true
     });
+
+    dialogRaiseTimers.forEach((timerId) => clearTimeout(timerId));
 
     if (!confirmed) {
       return false;

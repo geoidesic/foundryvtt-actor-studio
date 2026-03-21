@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { safeGetSetting, bringActorStudioToFront } from '~/src/helpers/Utility';
 import { activeTab, tabs, readOnlyTabs, getCoreCreationReadOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
@@ -293,6 +293,7 @@ export function createWorkflowStateMachine() {
         // Ensure the actor sheet is rendered so drop handlers work properly
         if (workflowFSMContext.actor) {
           await workflowFSMContext.actor.sheet.render();
+          bringActorStudioToFront();
         }
         
         // Process advancement queue asynchronously
@@ -540,6 +541,8 @@ export function createWorkflowStateMachine() {
         if (actor) {
           window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
           actor.sheet.render(true);
+          setTimeout(() => bringActorStudioToFront(), 0);
+          setTimeout(() => bringActorStudioToFront(), 100);
         }
         setTimeout(() => {
           window.GAS.log.d('[WORKFLOW] Closing Actor Studio');
