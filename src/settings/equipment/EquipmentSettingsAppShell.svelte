@@ -34,7 +34,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             input(
               type="checkbox"
               bind:checked="{enableEquipmentPurchase}"
-              disabled!="{!enableEquipmentSelection}"
             )
             span {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name')}
           p.hint {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint')}
