@@ -1110,6 +1110,9 @@ export const dropItemOnCharacter = async (actor, item) => {
       // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
 
       // Prepare a mock event object that mimics a real drop.
+      // v13+ _onDropItem expects a DragEvent-like object even for programmatic drops.
+      // We provide a minimal mock for dataTransfer and target DOM checks.
+      // Important: closest() must return null (not false) so optional chaining short-circuits safely.
       // target must look like a DOM element: closest() must return null (not false)
       // so that optional-chaining on the result (.getAttribute) is safe.
       const mockTarget = {
