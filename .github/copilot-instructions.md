@@ -62,7 +62,7 @@
 - tests should be stored in the `src/tests` folder
 - under no circumstances are failing tests acceptable
 ```bash
-npx vitest run    # Run all tests without watch
+bun run test      # Run all tests without watch (uses package.json script)
 ```
 
 **Development**:

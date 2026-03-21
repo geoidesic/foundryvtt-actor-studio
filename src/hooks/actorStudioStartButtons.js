@@ -2,6 +2,7 @@ import PCApplication from '~/src//app/PCApplication.js';
 import dnd5e from "~/config/systems/dnd5e.json";
 import { userHasRightPermissions, safeGetSetting } from '~/src/helpers/Utility'
 import { MODULE_ID } from '~/src/helpers/constants';
+import { resetStores } from '~/src/stores/index';
 
 // Store references to event handlers for cleanup
 const eventHandlers = new Map();
@@ -67,6 +68,7 @@ export function openActorStudio(actorName, folderName = '', actorType = 'charact
     }
     try {
         isOpeningActorStudio = true;
+        resetStores();
         new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });
     } catch (error) {
         ui.notifications.error(error.message);

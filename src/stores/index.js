@@ -24,7 +24,7 @@ export {
 } from '~/src/stores/equipmentGold';
 // Import spell selection store to ensure it gets loaded
 import '~/src/stores/spellSelection';
-import { biographyOptions, isGenerating, biographyContent, generateBiography } from '~/src/stores/biography';
+import { biographyOptions, isGenerating, biographyContent, characterDetails, requestTokens, responseTokens, generateBiography } from '~/src/stores/biography';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getSubclassLevel, safeGetSetting } from '~/src/helpers/Utility';
 import {
@@ -262,6 +262,41 @@ export function resetStores() {
   clearEquipmentSelections(); //- void
   clearStartingEquipment(); //- void
   clearEquipmentGoldChoices(); //- void
+
+  biographyContent.set({
+    name: '',
+    ideals: '',
+    flaws: '',
+    bonds: '',
+    personalityTraits: '',
+    appearance: '',
+    biography: '',
+    height: '',
+    weight: '',
+    age: '',
+    eyes: '',
+    hair: '',
+    skin: '',
+    gender: '',
+    faith: '',
+    alignment: ''
+  });
+
+  characterDetails.set({
+    height: '',
+    weight: '',
+    age: '',
+    eyes: '',
+    hair: '',
+    skin: '',
+    gender: '',
+    faith: '',
+    alignment: ''
+  });
+
+  requestTokens.set(400);
+  responseTokens.set(0);
+  isGenerating.set(false);
   
   // Clear spell selection stores
   try {
