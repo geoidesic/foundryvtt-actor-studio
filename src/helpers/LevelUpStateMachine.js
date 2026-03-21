@@ -540,6 +540,13 @@ export function createLevelUpStateMachine() {
         
         // Suppress Tidy5e auto-reopen during level up
         suppressTidy5eAutoReopen(true);
+
+        // Clear any stale sheet restore flag from older workflow logic.
+        // Sheet switching/restoration is now handled per-drop in Utility.js.
+        const actor = levelUpFSMContext.actor || get(actorInGame);
+        if (actor) {
+          actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
+        }
         
         // Ensure we're on the level-up tab
         activeTab.set('level-up');
@@ -551,39 +558,8 @@ export function createLevelUpStateMachine() {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(true);
         window.GAS.log.d('[LEVELUP] Entered PROCESSING_ADVANCEMENTS state');
         
-        // Switch to standard 5e sheet for drop processing
-        // (original sheet was already saved by the level up button handler)
-        const actor = levelUpFSMContext.actor || get(actorInGame);
-        if (actor) {
-          try {
-            const hasOriginalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
-            if (hasOriginalSheet !== undefined) {
-              await actor.setFlag('core', 'sheetClass', 'dnd5e.CharacterActorSheet');
-              window.GAS.log.d('[LEVELUP] Switched to standard 5e sheet for advancement processing');
-            }
-          } catch (e) {
-            window.GAS?.log?.w?.('[LEVELUP] Failed to set temporary sheetClass; continuing', e);
-          }
-        }
-        
         // Process advancement queue asynchronously
         await dropItemRegistry.advanceQueue(true);
-        
-        // After queue completes, restore the actor's original sheetClass if we set a temporary one
-        try {
-          const actor = levelUpFSMContext.actor || get(actorInGame);
-          if (actor) {
-            const originalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
-            if (originalSheet !== undefined) {
-              await actor.setFlag('core', 'sheetClass', originalSheet);
-              // Clear our module flag to avoid future confusion
-              await actor.unsetFlag(MODULE_ID, 'originalSheetClass');
-              window.GAS.log.d('[LEVELUP] Restored original sheet type after advancement queue:', originalSheet);
-            }
-          }
-        } catch (e) {
-          window.GAS?.log?.w?.('[LEVELUP] Failed to restore original sheetClass after queue', e);
-        }
         
         // Add a longer delay to ensure actor is fully updated after advancements
         // Advancements might update the actor's spellcasting system asynchronously
@@ -720,20 +696,8 @@ export function createLevelUpStateMachine() {
         
         const actor = levelUpFSMContext.actor || get(actorInGame);
         if (actor) {
-          // Restore the original sheet class (e.g., Tidy5e) before opening the sheet
-          // This is done asynchronously but we don't await it in onEnter
+          // Open actor sheet on completion.
           (async () => {
-            try {
-              const originalSheet = await actor.getFlag(MODULE_ID, 'originalSheetClass');
-              if (originalSheet !== undefined) {
-                await actor.setFlag('core', 'sheetClass', originalSheet);
-                await actor.unsetFlag(MODULE_ID, 'originalSheetClass');
-                window.GAS.log.d('[LEVELUP] Restored original sheet class:', originalSheet);
-              }
-            } catch (error) {
-              window.GAS.log.w('[LEVELUP] Error restoring original sheet class:', error);
-            }
-            
             window.GAS.log.d('[LEVELUP] Opening actor sheet for:', actor.name);
             actor.sheet.render(true);
             

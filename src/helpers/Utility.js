@@ -704,6 +704,21 @@ function getCurrentEffectiveSheetId(actor) {
   try {
     const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
     const type = actor?.type ?? 'character';
+
+    // Prefer resolving from the currently instantiated sheet class.
+    // This preserves user-selected sheets (e.g. Tidy5e) even when no per-actor
+    // core.sheetClass flag is set.
+    const currentSheet = actor?.sheet;
+    if (currentSheet) {
+      const config = CONFIG?.Actor?.sheetClasses?.[type] ?? {};
+      for (const [id, cfg] of Object.entries(config)) {
+        const SheetClass = cfg?.cls;
+        if (SheetClass && currentSheet instanceof SheetClass) {
+          return id;
+        }
+      }
+    }
+
     const currentFlag = actor.getFlag('core', 'sheetClass');
     if (currentFlag) return currentFlag;
     if (DSC) {
@@ -766,8 +781,21 @@ export function bringActorStudioToFront() {
 async function switchActorSheetTemporarily(actor, targetSheetId) {
   const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
   const type = actor?.type ?? 'character';
+  const originalSheetId = getCurrentEffectiveSheetId(actor);
   const currentFlag = actor.getFlag('core', 'sheetClass');
   const wasOpen = !!actor.sheet?.rendered;
+
+  // If a sheet is already open, do not switch classes at all.
+  // Switching here causes visible sheet flashes (core / legacy) and can override
+  // user-selected sheet UX (e.g. Tidy5e) during level-up flows.
+  // In this case, drop handlers will run against the currently active sheet.
+  if (wasOpen) {
+    return {
+      currentSheetId: originalSheetId ?? currentFlag ?? '',
+      restore: async () => {}
+    };
+  }
+
   let currentSheetId = currentFlag ?? '';
   if (!currentSheetId && DSC) {
     const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
@@ -805,7 +833,7 @@ async function switchActorSheetTemporarily(actor, targetSheetId) {
       if (renderedForDrop && actor.sheet.rendered) {
         await actor.sheet.close();
       }
-      const revertTo = currentFlag ?? '';
+      const revertTo = originalSheetId ?? currentFlag ?? '';
       // wait briefly for any sheet changes scheduled by the drop handler to complete
       await delay(100);
       await actor.setFlag('core', 'sheetClass', revertTo);
