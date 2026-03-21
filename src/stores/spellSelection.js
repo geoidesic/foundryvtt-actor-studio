@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
-import { readOnlyTabs, characterClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
+import { readOnlyTabs, characterClass, characterSubClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
 
 // Import spellsKnown data for determining spell limits
@@ -1104,42 +1104,120 @@ export async function loadAvailableSpells(characterClassName = null) {
           // window.GAS.log.d(`[SPELLS DEBUG] Filtered ${filteredSpells.length} spells for class ${characterClassName} from ${pack.collection}`);
 
         } else {
-          // D&D 5e v3.x - NO CLASS FILTERING (class data doesn't exist on spells)
-          // window.GAS.log.d('[SPELLS DEBUG] Skipping class filtering for D&D 5e v3.x (class data not available on spells)');
-          // window.GAS.log.d(`[SPELLS DEBUG] Processing pack without class filtering: ${pack.collection}`);
+          // D&D 5e v3.x - normally no class data exists on spells, but tcr-main-module
+          // adds spell class associations via item flags for D&D 3.x compatibility.
+          const hasTCRModule = typeof game !== 'undefined' && game.modules?.get("tcr-main-module")?.active;
 
-          // Use index approach for better performance
-          const index = await pack.getIndex({ fields: ['system.level', 'system.school'] });
-          const indexEntries = Array.from(index.values());
+          if (hasTCRModule) {
+            // tcr-main-module stores flags["tcr-main-module"]["spellClasses"] on each spell
+            // as an object whose keys are class/subclass UUIDs and values are document names.
+            // Load full documents so we can read flags (flags are not indexed).
+            window.GAS.log.d('[SPELLS DEBUG] tcr-main-module detected – using flag-based class filtering for D&D 5e v3.x');
 
-          const spells = indexEntries
-            .filter(entry => entry.type === "spell")
-            .map(entry => ({
-              _id: entry._id,
-              name: entry.name,
-              img: entry.img,
-              type: entry.type,
-              uuid: entry.uuid,
-              system: {
-                level: entry.system?.level || 0,
-                school: entry.system?.school || 'unknown',
-                preparation: { mode: 'prepared', prepared: false }, // Default for compatibility
-                components: {},
-                description: { value: '' },
-                activation: {}
-              },
-              labels: {} // Empty labels for v3.x compatibility
-            }));
+            const allDocs = await pack.getDocuments();
+            const filteredSpells = [];
 
-          allSpells.push(...spells);
-          // window.GAS.log.d(`[SPELLS DEBUG] Loaded ${spells.length} spells (no class filtering) from ${pack.collection}`);
-          if (spells.length === 0) {
-            // Provide more context when index yields no spells
-            try {
-              const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
-              // window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
-            } catch (e) {
-              window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
+            // Collect all class/subclass UUIDs for the current character.
+            const classUuidsToCheck = new Set();
+            const $isLevelUp = get(isLevelUp);
+            if ($isLevelUp) {
+              const levelUpClass = get(levelUpClassObject);
+              if (levelUpClass?.uuid) classUuidsToCheck.add(levelUpClass.uuid);
+              if (levelUpClass?.flags?.core?.sourceId) classUuidsToCheck.add(levelUpClass.flags.core.sourceId);
+              const levelUpUuid = get(classUuidForLevelUp);
+              if (levelUpUuid) classUuidsToCheck.add(levelUpUuid);
+            } else {
+              const charClass = get(characterClass);
+              if (charClass?.uuid) classUuidsToCheck.add(charClass.uuid);
+              if (charClass?.flags?.core?.sourceId) classUuidsToCheck.add(charClass.flags.core.sourceId);
+              const charSubClass = get(characterSubClass);
+              if (charSubClass?.uuid) classUuidsToCheck.add(charSubClass.uuid);
+              if (charSubClass?.flags?.core?.sourceId) classUuidsToCheck.add(charSubClass.flags.core.sourceId);
+            }
+
+            window.GAS.log.d('[SPELLS DEBUG] tcr-main-module – class UUIDs to check:', [...classUuidsToCheck]);
+            if (classUuidsToCheck.size === 0) {
+              window.GAS.log.w('[SPELLS] tcr-main-module active but no class UUID found – showing all spells. Check that a class has been selected.');
+            }
+
+            for (const doc of allDocs) {
+              if (doc.type !== "spell") continue;
+
+              const tcrSpellClasses = doc.flags?.["tcr-main-module"]?.spellClasses;
+              let availableToClass;
+
+              if (!tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0) {
+                // Spell has no TCR class restriction – include it for all classes.
+                availableToClass = true;
+              } else if (classUuidsToCheck.size === 0) {
+                // No character class UUID available – include spell to avoid an empty list.
+                availableToClass = true;
+              } else {
+                // Include only if one of the character's class/subclass UUIDs is in the flag.
+                availableToClass = [...classUuidsToCheck].some(uuid => uuid in tcrSpellClasses);
+              }
+
+              if (availableToClass) {
+                filteredSpells.push({
+                  _id: doc.id,
+                  name: doc.name,
+                  img: doc.img,
+                  type: doc.type,
+                  uuid: doc.uuid,
+                  system: {
+                    level: doc.system?.level || 0,
+                    school: doc.system?.school || 'unknown',
+                    preparation: { mode: 'prepared', prepared: false },
+                    components: {},
+                    description: { value: '' },
+                    activation: {}
+                  },
+                  labels: {}
+                });
+              }
+            }
+
+            allSpells.push(...filteredSpells);
+            window.GAS.log.d(`[SPELLS DEBUG] tcr-main-module: filtered ${filteredSpells.length} spells from ${pack.collection}`);
+
+          } else {
+            // D&D 5e v3.x without tcr-main-module – NO CLASS FILTERING
+            // (class data doesn't exist on spells in this version)
+            // window.GAS.log.d('[SPELLS DEBUG] Skipping class filtering for D&D 5e v3.x (class data not available on spells)');
+
+            // Use index approach for better performance
+            const index = await pack.getIndex({ fields: ['system.level', 'system.school'] });
+            const indexEntries = Array.from(index.values());
+
+            const spells = indexEntries
+              .filter(entry => entry.type === "spell")
+              .map(entry => ({
+                _id: entry._id,
+                name: entry.name,
+                img: entry.img,
+                type: entry.type,
+                uuid: entry.uuid,
+                system: {
+                  level: entry.system?.level || 0,
+                  school: entry.system?.school || 'unknown',
+                  preparation: { mode: 'prepared', prepared: false }, // Default for compatibility
+                  components: {},
+                  description: { value: '' },
+                  activation: {}
+                },
+                labels: {} // Empty labels for v3.x compatibility
+              }));
+
+            allSpells.push(...spells);
+            // window.GAS.log.d(`[SPELLS DEBUG] Loaded ${spells.length} spells (no class filtering) from ${pack.collection}`);
+            if (spells.length === 0) {
+              // Provide more context when index yields no spells
+              try {
+                const sampleTypes = indexEntries.slice(0, 5).map(e => ({ name: e.name, type: e.type }));
+                // window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length} sample=${JSON.stringify(sampleTypes)}`);
+              } catch (e) {
+                window.GAS.log.p(`[SPELLS DEBUG] [INDEX EMPTY] pack=${pack.collection} indexEntries=${indexEntries.length}`);
+              }
             }
           }
         }

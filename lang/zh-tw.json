@@ -188,6 +188,10 @@
         "Name": "停用升級特性標籤",
         "Hint": "防止升級特性在升級特性標籤中被捕捉。改為使用系統預設方式（即對話框彈出）。（注意：此選項僅供除錯使用）"
       },
+      "forceTakeAverageHitPoints": {
+        "Name": "強制選擇平均生命值",
+        "Hint": "啟用後，在升級生命值獎勵時會強制選擇「取平均值」。"
+      },
       "DisableOtherActorCreationOptionsForPlayers": {
         "Name": "停用其他建立角色按鈕",
         "Hint": "防止玩家使用標準的建立角色按鈕。僅允許使用 Actor Studio。"

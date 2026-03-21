@@ -50,6 +50,15 @@ export function registerProgressionSettings() {
     default: false
   });
 
+  game.settings.register(MODULE_ID, 'forceTakeAverageHitPoints', {
+    name: game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Name'),
+    hint: game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Hint'),
+    scope: 'world',
+    config: false,
+    type: Boolean,
+    default: false
+  });
+
   game.settings.register(MODULE_ID, 'advancementCaptureTimerThreshold', {
     name: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Name'),
     hint: game.i18n.localize('GAS.Setting.AdvancementCaptureTimerThreshold.Hint'),

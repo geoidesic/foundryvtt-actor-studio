@@ -92,7 +92,6 @@
 
   .tabs {
     @include flex-column;
-    @include flex-group-top;
     @include border;
     height: 100%;
     width: 100%;

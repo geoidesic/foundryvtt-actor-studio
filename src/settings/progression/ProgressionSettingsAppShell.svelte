@@ -4,44 +4,6 @@
 TJSApplicationShell(bind:elementRoot="{elementRoot}")
   main.gas-settings-app
     .settings-content
-      .setting-group
-        h3 Level Up Options
-        
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{enableLevelUp}"
-            )
-            span {game.i18n.localize('GAS.Setting.EnableLevelUp.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.EnableLevelUp.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{milestoneLeveling}"
-            )
-            span {game.i18n.localize('GAS.Setting.milestoneLeveling.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.milestoneLeveling.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{forceDnd5eLevelUpAutomation}"
-            )
-            span {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{showLevelPreviewDropdown}"
-            )
-            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
         h3 {game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Title')}
@@ -69,6 +31,54 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
                     aria-label="{game.i18n.localize('GAS.AltText.MoveDown')}"
                   )
                     i.fas.fa-chevron-down
+
+      .setting-group
+        h3 Level Up Options
+        
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{enableLevelUp}"
+            )
+            span {game.i18n.localize('GAS.Setting.EnableLevelUp.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.EnableLevelUp.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{milestoneLeveling}"
+            )
+            span {game.i18n.localize('GAS.Setting.milestoneLeveling.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.milestoneLeveling.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{forceTakeAverageHitPoints}"
+            )
+            span {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{forceDnd5eLevelUpAutomation}"
+            )
+            span {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{showLevelPreviewDropdown}"
+            )
+            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
         h3 Advancement Options
@@ -136,6 +146,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let milestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
   let forceDnd5eLevelUpAutomation = safeGetSetting(MODULE_ID, 'forceDnd5eLevelUpAutomation', true);
   let disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);
+  let forceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
   let advancementCaptureTimerThreshold = safeGetSetting(MODULE_ID, 'advancementCaptureTimerThreshold', 300);
   let enableCustomFeatSelector = safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false);
   let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
@@ -168,6 +179,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'milestoneLeveling', milestoneLeveling);
       await game.settings.set(MODULE_ID, 'forceDnd5eLevelUpAutomation', forceDnd5eLevelUpAutomation);
       await game.settings.set(MODULE_ID, 'disableAdvancementCapture', disableAdvancementCapture);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', forceTakeAverageHitPoints);
       await game.settings.set(MODULE_ID, 'advancementCaptureTimerThreshold', advancementCaptureTimerThreshold);
       await game.settings.set(MODULE_ID, 'enableCustomFeatSelector', enableCustomFeatSelector);
       await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);

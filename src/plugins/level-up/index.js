@@ -59,7 +59,7 @@ export function dnd5eSheet2UI(app, html, data) {
     `<button type="button" class="config-button gold-button level-up" data-action="flags" data-tooltip="GAS.LevelUp.Button" aria-label="GAS.LevelUp.Button" style="
       animation: pulse 2s infinite;
     ">
-      <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 24px; max-height: 24px;"></img>
+      <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-arrow.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 24px; max-height: 24px;"></img>
     </button>
   `);
 
@@ -199,7 +199,7 @@ export function tidy5eSheetUI(app, element, data) {
       aria-label="GAS.LevelUp.Button"
       style="animation: pulse 2s infinite;"
     >
-      <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 20px; max-height: 20px;">
+      <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-arrow.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 20px; max-height: 20px;">
     </button>
   `);
   window.GAS.log.g(2)
