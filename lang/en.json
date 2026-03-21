@@ -188,6 +188,10 @@
         "Name": "Disable Advancement Tab",
         "Hint": "Prevents advancements from being captured in the Advancements Tab. Instead they will appear as default for the system – i.e. as a dialog popup window. (Note: this is intended for debugging purposes only – there's not much point in using Actor Studio with this disabled.)"
       },
+      "forceTakeAverageHitPoints": {
+        "Name": "Force Take Average Hit Points",
+        "Hint": "When enabled, Actor Studio will force the Take Average option during level-up hit point advancements."
+      },
       "DisableOtherActorCreationOptionsForPlayers": {
         "Name": "Disable other Create Actor button",
         "Hint": "Prevents players from creating actors using the standard Create Actor button. Only Actor Studio will be available."
