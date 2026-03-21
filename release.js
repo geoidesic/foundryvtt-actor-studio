@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 // Define paths to package.json and module.json
 const packageJsonPath = path.join(__dirname, 'package.json');
 const moduleJsonPath = path.join(__dirname, 'module.json');
+const REPO_BASE = 'https://github.com/geoidesic/foundryvtt-actor-studio';
+const NEXT_MANIFEST_URL = 'https://raw.githubusercontent.com/geoidesic/foundryvtt-actor-studio/next/module.json';
+const STABLE_MANIFEST_URL = `${REPO_BASE}/releases/latest/download/module.json`;
 
 const args = process.argv.slice(2);
 const versionType = args[0];
@@ -395,13 +398,15 @@ if (!isDraft) {
         // Update module.json
         const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
         moduleJson.version = newVersion;
-        if (moduleJson.manifest) {
-            moduleJson.manifest = moduleJson.manifest.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-        }
+        // Release channel manifest strategy:
+        // - stable/finalized releases must point at "latest" so update checks move forward
+        // - pre-releases stay on the "next" channel
+        moduleJson.manifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
         if (moduleJson.download) {
             moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
         }
         fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
+        console.log(`📦 module.json manifest channel set to: ${moduleJson.manifest}`);
 
         try {
             // Build after version update so the new version is included in the build
@@ -461,9 +466,11 @@ if (!isDraft) {
         }
     } else {
         // Dry run mode - just show what would happen
+        const dryRunManifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
         console.log(`🔍 Would check if tag ${newVersion} exists`);
         console.log(`🔍 Would update package.json version to ${newVersion}`);
         console.log(`🔍 Would update module.json version to ${newVersion}`);
+        console.log(`🔍 Would set module.json manifest to ${dryRunManifest}`);
     }
 } else {
     console.log(`✅ Draft release - no file changes or build needed`);
