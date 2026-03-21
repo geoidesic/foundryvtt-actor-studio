@@ -719,6 +719,46 @@ function getCurrentEffectiveSheetId(actor) {
 }
 
 /**
+ * Raise Actor Studio if a level-up flow is currently active.
+ * This is used after dnd5e sheet operations that temporarily steal z-order / focus.
+ */
+export function bringActorStudioToFront() {
+  try {
+    const state = window.GAS?.levelUpFSM?.getCurrentState?.();
+    if (!state || state === 'idle') return false;
+
+    const gasApp = Object.values(ui?.windows ?? {}).find(
+      (windowApp) => windowApp?.id === 'foundryvtt-actor-studio-pc-sheet'
+    );
+    const gasElement = gasApp?.elementTarget
+      || gasApp?.element?.[0]
+      || document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+    if (!gasElement) return false;
+
+    const windowElements = Array.from(document.querySelectorAll('.window-app, .application'));
+    const maxZIndex = windowElements.reduce((max, element) => {
+      const value = Number.parseInt(globalThis.getComputedStyle(element).zIndex, 10);
+      return Number.isFinite(value) ? Math.max(max, value) : max;
+    }, 100);
+
+    gasElement.style.zIndex = String(maxZIndex + 2);
+
+    if (gasApp?.bringToTop) {
+      gasApp.bringToTop({ focus: true, force: true });
+    }
+
+    if (gasElement.tabIndex < 0 || gasElement.getAttribute('tabindex') === null) {
+      gasElement.tabIndex = -1;
+    }
+    gasElement.focus({ preventScroll: true });
+    return true;
+  } catch (error) {
+    window.GAS?.log?.w?.('[UTILITY] Failed to bring Actor Studio to front', error);
+    return false;
+  }
+}
+
+/**
  * Temporarily switch an Actor's sheet to a target sheet id, then provide a restore function to revert.
  * Uses the same mechanism as the UI: sets the `core.sheetClass` flag on the document.
  * If the current sheet is already the target, no change is made.
@@ -1069,7 +1109,19 @@ export const dropItemOnCharacter = async (actor, item) => {
       // For v13+, simulate the drop event by calling _onDropItem
       // window.GAS.log.d('[UTILITY] Simulating _onDropItem for v >= 13');
 
-      // Prepare a more realistic mock event object that mimics a real drop
+      // Prepare a mock event object that mimics a real drop.
+      // v13+ _onDropItem expects a DragEvent-like object even for programmatic drops.
+      // We provide a minimal mock for dataTransfer and target DOM checks.
+      // Important: closest() must return null (not false) so optional chaining short-circuits safely.
+      // target must look like a DOM element: closest() must return null (not false)
+      // so that optional-chaining on the result (.getAttribute) is safe.
+      const mockTarget = {
+        closest: () => null,
+        getAttribute: () => null,
+        matches: () => false,
+        contains: () => false,
+        nodeType: 1,
+      };
       const mockEvent = {
         preventDefault: () => {},
         stopPropagation: () => {},
@@ -1080,7 +1132,8 @@ export const dropItemOnCharacter = async (actor, item) => {
           },
           types: ['text/plain']
         },
-        target: { closest: () => false }
+        target: mockTarget,
+        currentTarget: mockTarget,
       };
 
       await actor.sheet._onDropItem(mockEvent, item);
@@ -1094,6 +1147,7 @@ export const dropItemOnCharacter = async (actor, item) => {
     // Always restore the original sheet (if it was different)
     try {
       await restore();
+      bringActorStudioToFront();
     } catch (restoreErr) {
       window.GAS.log.w('[UTILITY] Failed to restore original sheet class', {
         original: currentSheetId,
