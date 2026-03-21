@@ -4,44 +4,6 @@
 TJSApplicationShell(bind:elementRoot="{elementRoot}")
   main.gas-settings-app
     .settings-content
-      .setting-group
-        h3 Level Up Options
-        
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{enableLevelUp}"
-            )
-            span {game.i18n.localize('GAS.Setting.EnableLevelUp.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.EnableLevelUp.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{milestoneLeveling}"
-            )
-            span {game.i18n.localize('GAS.Setting.milestoneLeveling.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.milestoneLeveling.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{forceDnd5eLevelUpAutomation}"
-            )
-            span {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{showLevelPreviewDropdown}"
-            )
-            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
         h3 {game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Title')}
@@ -71,6 +33,54 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
                     i.fas.fa-chevron-down
 
       .setting-group
+        h3 Level Up Options
+        
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{enableLevelUp}"
+            )
+            span {game.i18n.localize('GAS.Setting.EnableLevelUp.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.EnableLevelUp.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{milestoneLeveling}"
+            )
+            span {game.i18n.localize('GAS.Setting.milestoneLeveling.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.milestoneLeveling.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{forceTakeAverageHitPoints}"
+            )
+            span {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{forceDnd5eLevelUpAutomation}"
+            )
+            span {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{showLevelPreviewDropdown}"
+            )
+            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
+
+      .setting-group
         h3 Advancement Options
         
         .setting-item
@@ -81,15 +91,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             )
             span {game.i18n.localize('GAS.Setting.disableAdvancementCapture.Name')}
           p.hint {game.i18n.localize('GAS.Setting.disableAdvancementCapture.Hint')}
-
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{forceTakeAverageHitPoints}"
-            )
-            span {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.forceTakeAverageHitPoints.Hint')}
 
         .setting-item
           label

@@ -15,6 +15,9 @@ const BROWSE_TARGET_SELECTOR = [
 
 const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
   default: {
+    checkboxSelectors: [],
+    rollInputSelectors: [],
+    rollButtonSelectors: [],
     radioSelectors: [
       'input[type="radio"][value="average"]',
       'input[type="radio"][value="avg"]',
@@ -36,12 +39,40 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
     selectValues: ['average', 'avg']
   },
   3: {
+    checkboxSelectors: [
+      'div.rolls input[type="checkbox"].averageCheckbox'
+    ],
+    rollInputSelectors: [
+      'input.rollResult'
+    ],
+    rollButtonSelectors: [
+      'button.rollButton'
+    ],
     radioSelectors: [],
     selectSelectors: [],
     buttonSelectors: [],
     selectValues: []
   },
   4: {
+    checkboxSelectors: [],
+    rollInputSelectors: [],
+    rollButtonSelectors: [],
+    radioSelectors: [],
+    selectSelectors: [],
+    buttonSelectors: [],
+    selectValues: []
+  },
+  5: {
+    checkboxSelectors: [
+      'dnd5e-checkbox.average-checkbox'
+    ],
+    rollInputSelectors: [
+      'input.roll-result'
+    ],
+    rollButtonSelectors: [
+      'button.roll-button.dice-button',
+      'button.roll-button dice-button'
+    ],
     radioSelectors: [],
     selectSelectors: [],
     buttonSelectors: [],
@@ -65,6 +96,9 @@ const getForceTakeAverageSelectorConfig = () => {
   const versionConfig = FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[majorVersion] ?? {};
 
   return {
+    checkboxSelectors: [...(baseConfig.checkboxSelectors ?? []), ...(versionConfig.checkboxSelectors ?? [])],
+    rollInputSelectors: [...(baseConfig.rollInputSelectors ?? []), ...(versionConfig.rollInputSelectors ?? [])],
+    rollButtonSelectors: [...(baseConfig.rollButtonSelectors ?? []), ...(versionConfig.rollButtonSelectors ?? [])],
     radioSelectors: [...(baseConfig.radioSelectors ?? []), ...(versionConfig.radioSelectors ?? [])],
     selectSelectors: [...(baseConfig.selectSelectors ?? []), ...(versionConfig.selectSelectors ?? [])],
     buttonSelectors: [...(baseConfig.buttonSelectors ?? []), ...(versionConfig.buttonSelectors ?? [])],
@@ -113,20 +147,132 @@ const isHitPointAdvancement = (currentProcess, element) => {
   return false;
 };
 
-const forceTakeAverageHitPoints = (element, currentProcess) => {
-  if (!safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false)) {
+const ensureForcedAverageOverlay = (checkboxElement) => {
+  const overlayHost = checkboxElement.closest('label, .rolls, .form-group, .form-fields').first();
+  const host = overlayHost.length ? overlayHost : checkboxElement.parent();
+
+  if (!host.length) {
     return;
   }
 
-  if (!element?.length || !isHitPointAdvancement(currentProcess, element)) {
+  host.attr('data-gas-force-locked', 'true');
+
+  const currentPosition = host.css('position');
+  if (!currentPosition || currentPosition === 'static') {
+    host.css('position', 'relative');
+  }
+
+  const existingOverlay = host.find('> .gas-force-lock-overlay');
+  if (existingOverlay.length) {
     return;
   }
 
-  const selectorConfig = getForceTakeAverageSelectorConfig();
+  const overlay = $('<div class="gas-force-lock-overlay" data-gas-force-locked="true" aria-hidden="false" tabindex="0"></div>');
+  overlay.css({
+    position: 'absolute',
+    inset: '0',
+    zIndex: '999',
+    background: 'transparent',
+    cursor: 'not-allowed',
+    pointerEvents: 'auto'
+  });
+
+  const notifyLockedChoice = (event) => {
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+    ui.notifications?.error('The Game Master has disabled this choice.');
+    return false;
+  };
+
+  overlay.on('click', notifyLockedChoice);
+  overlay.on('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      notifyLockedChoice(event);
+    }
+  });
+
+  host.append(overlay);
+};
+
+const applyForceTakeAverageSelection = (element, selectorConfig) => {
   let didApply = false;
+  let foundTarget = false;
+
+  const lockControl = (controlElement, { disable = true } = {}) => {
+    if (disable) {
+      controlElement.prop('disabled', true);
+      controlElement.attr('disabled', 'disabled');
+    } else {
+      controlElement.prop('disabled', false);
+      controlElement.removeAttr('disabled');
+    }
+
+    controlElement.attr('aria-disabled', 'true');
+    controlElement.attr('data-gas-force-locked', 'true');
+
+    const rawControl = controlElement[0];
+    if (rawControl instanceof HTMLElement) {
+      rawControl.disabled = disable;
+    }
+
+    ensureForcedAverageOverlay(controlElement);
+  };
+
+  for (const selector of selectorConfig.checkboxSelectors) {
+    const checkboxes = element.find(selector);
+    if (checkboxes.length) {
+      foundTarget = true;
+    }
+
+    checkboxes.each((_, checkbox) => {
+      const checkboxElement = $(checkbox);
+      if (!checkboxElement.is(':checked')) {
+        checkboxElement.prop('checked', true);
+        checkboxElement.trigger('input');
+        checkboxElement.trigger('change');
+        didApply = true;
+      }
+
+      lockControl(checkboxElement, { disable: false });
+
+      const nestedInputs = checkboxElement.find('input[type="checkbox"]');
+      if (nestedInputs.length) {
+        nestedInputs.each((__, nestedInput) => {
+          lockControl($(nestedInput), { disable: false });
+        });
+      }
+    });
+  }
+
+  for (const selector of selectorConfig.rollInputSelectors) {
+    const rollInputs = element.find(selector);
+    if (rollInputs.length) {
+      foundTarget = true;
+    }
+
+    rollInputs.each((_, rollInput) => {
+      lockControl($(rollInput));
+    });
+  }
+
+  for (const selector of selectorConfig.rollButtonSelectors) {
+    const rollButtons = element.find(selector);
+    if (rollButtons.length) {
+      foundTarget = true;
+    }
+
+    rollButtons.each((_, rollButton) => {
+      lockControl($(rollButton));
+    });
+  }
 
   for (const selector of selectorConfig.radioSelectors) {
     const radios = element.find(selector);
+    if (radios.length) {
+      foundTarget = true;
+    }
+
     radios.each((_, radio) => {
       if (!radio.checked) {
         radio.checked = true;
@@ -139,6 +285,10 @@ const forceTakeAverageHitPoints = (element, currentProcess) => {
 
   for (const selector of selectorConfig.selectSelectors) {
     const selects = element.find(selector);
+    if (selects.length) {
+      foundTarget = true;
+    }
+
     selects.each((_, selectElement) => {
       const options = Array.from(selectElement.options ?? []);
       const targetValue = options.find((option) => selectorConfig.selectValues.includes(option.value))?.value;
@@ -153,19 +303,125 @@ const forceTakeAverageHitPoints = (element, currentProcess) => {
   for (const selector of selectorConfig.buttonSelectors) {
     const button = element.find(selector).first();
     if (button.length) {
+      foundTarget = true;
       button.trigger('click');
       didApply = true;
       break;
     }
   }
 
+  return { didApply, foundTarget };
+};
+
+const forceTakeAverageHitPoints = (element, currentProcess) => {
+  if (!safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false)) {
+    return;
+  }
+
+  if (!element?.length || !isHitPointAdvancement(currentProcess, element)) {
+    return;
+  }
+
+  const selectorConfig = getForceTakeAverageSelectorConfig();
+  const initialResult = applyForceTakeAverageSelection(element, selectorConfig);
+  const rootElement = element[0];
+
+  if (!initialResult.didApply && !initialResult.foundTarget && rootElement) {
+    if (rootElement.gasForceAverageObserver) {
+      rootElement.gasForceAverageObserver.disconnect();
+      rootElement.gasForceAverageObserver = null;
+    }
+
+    if (rootElement.gasForceAverageRetryTimer) {
+      clearTimeout(rootElement.gasForceAverageRetryTimer);
+      rootElement.gasForceAverageRetryTimer = null;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    const finalize = () => {
+      if (rootElement.gasForceAverageObserver) {
+        rootElement.gasForceAverageObserver.disconnect();
+        rootElement.gasForceAverageObserver = null;
+      }
+      if (rootElement.gasForceAverageRetryTimer) {
+        clearTimeout(rootElement.gasForceAverageRetryTimer);
+        rootElement.gasForceAverageRetryTimer = null;
+      }
+    };
+
+    const attemptApply = (reason = 'retry') => {
+      attempts += 1;
+      const result = applyForceTakeAverageSelection(element, selectorConfig);
+      if (result.didApply || result.foundTarget || attempts >= maxAttempts) {
+        window.GAS.log.d('[forceTakeAverageHitPoints] processed (delayed)', {
+          didApply: result.didApply,
+          foundTarget: result.foundTarget,
+          attempts,
+          reason,
+          majorVersion: getSystemMajorVersion()
+        });
+        finalize();
+        return;
+      }
+
+      rootElement.gasForceAverageRetryTimer = setTimeout(() => attemptApply('timer'), 75);
+    };
+
+    rootElement.gasForceAverageObserver = new MutationObserver(() => {
+      attemptApply('mutation');
+    });
+
+    rootElement.gasForceAverageObserver.observe(rootElement, { childList: true, subtree: true });
+    rootElement.gasForceAverageRetryTimer = setTimeout(() => attemptApply('initial-timer'), 50);
+  }
+
   window.GAS.log.d('[forceTakeAverageHitPoints] processed', {
-    didApply,
+    didApply: initialResult.didApply,
+    foundTarget: initialResult.foundTarget,
     majorVersion: getSystemMajorVersion(),
-    hasVersionSpecificSelectors: (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.radioSelectors?.length ?? 0) > 0
+    hasVersionSpecificSelectors: (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.checkboxSelectors?.length ?? 0) > 0
+      || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.rollInputSelectors?.length ?? 0) > 0
+      || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.rollButtonSelectors?.length ?? 0) > 0
+      || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.radioSelectors?.length ?? 0) > 0
       || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.selectSelectors?.length ?? 0) > 0
       || (FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG[getSystemMajorVersion()]?.buttonSelectors?.length ?? 0) > 0
   });
+};
+
+const interceptForcedAverageClicks = (element) => {
+  if (!safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false)) {
+    return;
+  }
+
+  if (!element?.length || !element[0]) {
+    return;
+  }
+
+  if (element[0].gasForceAverageClickHandler) {
+    element[0].removeEventListener('click', element[0].gasForceAverageClickHandler, true);
+  }
+
+  element[0].gasForceAverageClickHandler = (event) => {
+    if ($(event.target).closest('.gas-force-lock-overlay').length) {
+      return;
+    }
+
+    const lockedControl = $(event.target).closest('[data-gas-force-locked="true"]');
+    if (!lockedControl.length) {
+      return;
+    }
+
+    if (typeof event.preventDefault === 'function') event.preventDefault();
+    if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+    if (typeof event.stopPropagation === 'function') event.stopPropagation();
+
+    ui.notifications?.error('The Game Master has disabled this choice.');
+    return false;
+  };
+
+  element[0].addEventListener('click', element[0].gasForceAverageClickHandler, true);
 };
 
 // Helper to see if the module is configured to skip moving DOM during advancement capture
@@ -537,6 +793,8 @@ export const captureAdvancement = (initial = false) => {
         interceptFeatBrowseButtons(element, currentProcess);
         window.GAS.log.d('[gas.captureAdvancement] interceptFeatBrowseButtons completed');
 
+        interceptForcedAverageClicks(element);
+
         forceTakeAverageHitPoints(element, currentProcess);
       } else {
         window.GAS.log.w('[gas.captureAdvancement] No element found from getAdvancementElement');
@@ -544,6 +802,7 @@ export const captureAdvancement = (initial = false) => {
     } else {
       window.GAS.log.d('[gas.captureAdvancement] Element already appended for', currentProcess.id);
       const existingElement = panelElement.find(`[gas-appid="${currentProcess.id}"]`);
+      interceptForcedAverageClicks(existingElement);
       forceTakeAverageHitPoints(existingElement, currentProcess);
     }
   } else {
