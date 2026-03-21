@@ -131,19 +131,31 @@
         &:not(.active) {
           &:before {
             content: "";
-            border-top: 5px solid var(--color-border-highlight);
+            border-top: 2px solid rgb(60, 60, 60);
             position: absolute;
             width: 100%;
             bottom: 5px;
           } 
-          &:not(:hover) {
+          &:hover {
             &:before {
-              border-top: 5px solid brown;
-            }
+              content: "";
+              border-top: 5px solid var(--color-border-highlight);
+              position: absolute;
+              width: 100%;
+              bottom: 5px;
+            } 
           }
+          
         }
 
         &.active {
+          &:before {
+            content: "";
+            border-top: 5px solid brown;
+            position: absolute;
+            width: 100%;
+            bottom: 5px;
+          } 
           &:hover {
             background: #f9f9f9;
             box-shadow: none;
