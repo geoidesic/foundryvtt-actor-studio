@@ -256,6 +256,12 @@
     // Create a filtered list that excludes the currently selected option for keyboard navigation
     $: navigableOptions = filteredOptions.filter(option => option?.value !== value);
 
+    // Guard: do nothing if the option is already the current selection
+    function selectOption(option) {
+      if (option.value === value) return;
+      handleSelect(option);
+    }
+
     // Focus search input when dropdown opens
     $: if (isOpen && searchInput) {
       searchInput.focus();
@@ -291,14 +297,16 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
         +each("groupedOptionKeys as groupName")
           div.group-label {groupName}
           +each("groupedOptions[groupName] as option")
-            +if("option && option?.value !== value")
+            +if("option")
               div.option(
                 role="option"
-                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
-                tabindex="0"
+                on:click|stopPropagation|preventDefault!="{selectOption(option)}"
+                tabindex!="{option.value === value ? '-1' : '0'}"
                 class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                class:is-current-selection!="{option.value === value}"
                 data-index="{navigableOptions.indexOf(option)}"
                 aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+                aria-disabled!="{option.value === value}"
               )
                 +if("!textOnly(option) && shrinkIfNoIcon")
                   div.option-icon(class="{option.img ? option.img : ''}")
@@ -312,14 +320,16 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
                     div.option-label {getLabel(option)}
         +else
           +each("filteredOptions as option")
-            +if("option && option?.value !== value")
+            +if("option")
               div.option(
                 role="option"
-                on:click|stopPropagation|preventDefault!="{handleSelect(option)}"
-                tabindex="0"
+                on:click|stopPropagation|preventDefault!="{selectOption(option)}"
+                tabindex!="{option.value === value ? '-1' : '0'}"
                 class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                class:is-current-selection!="{option.value === value}"
                 data-index="{navigableOptions.indexOf(option)}"
                 aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
+                aria-disabled!="{option.value === value}"
               )
                 +if("!textOnly(option) && shrinkIfNoIcon")
                   div.option-icon(class="{option.img ? option.img : ''}")
@@ -430,6 +440,13 @@ img
 
     &:hover
       background-color: rgba(0, 0, 0, 0.4)
+
+  &.is-current-selection
+    background-color: var(--select-option-highlight-color, rgba(0, 0, 0, 0.08))
+    cursor: default
+    font-weight: bold
+    pointer-events: none
+    opacity: 0.75
 
 .search-input
   width: calc(100% - 8px)
