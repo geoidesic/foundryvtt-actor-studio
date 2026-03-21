@@ -1,6 +1,5 @@
 import { LOG_PREFIX, MODULE_ID, MODULE_CODE, LOG_PREFIX_COLOR, LOG_STYLES} from "~/src/helpers/constants"
 import DTPlugin from "~/src/plugins/donation-tracker";
-import { dropItemRegistry } from "~/src/stores/index";
 import { get } from "svelte/store";
 import { tick } from "svelte";
 
@@ -237,8 +236,6 @@ export async function showDDBImporterWarning(actor) {
 export function getLevelByDropType(actor, droppedItem) {
   // window.GAS.log.d('getLevelByDropType', droppedItem);
   // window.GAS.log.d('actor', actor);
-  const currentDropItemRegistry = get(dropItemRegistry);
-  // window.GAS.log.d('currentDropItemRegistry', currentDropItemRegistry);
   switch (droppedItem.type) {
     case 'class':
       return actor.classes[droppedItem.system.identifier].system.levels

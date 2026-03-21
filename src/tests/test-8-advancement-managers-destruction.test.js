@@ -70,6 +70,11 @@ const mockStores = {
     { id: 'equipment', label: 'Equipment' }
   ]),
   readOnlyTabs: mockWritable([]),
+  getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+    includeBiography
+      ? ['abilities', 'race', 'background', 'class', 'equipment', 'biography']
+      : ['abilities', 'race', 'background', 'class', 'equipment']
+  )),
   preAdvancementSelections: mockWritable({}),
   dropItemRegistry: {
     advanceQueue: vi.fn().mockResolvedValue(true)
@@ -99,7 +104,15 @@ vi.mock('~/src/stores/storeDefinitions', () => ({
 vi.mock('~/src/helpers/Utility', () => ({ 
   getActorFromUuid: vi.fn(),
   isSpellcaster: vi.fn(() => false),
-  getEquipmentCompletionEvent: vi.fn(() => 'equipment_complete')
+  getEquipmentCompletionEvent: vi.fn(() => 'equipment_complete'),
+  localize: vi.fn((key) => key),
+  safeGetSetting: (module, key, defaultValue) => {
+    if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+      const val = global.game.settings.get(module, key);
+      return typeof val === 'undefined' ? defaultValue : val;
+    }
+    return defaultValue;
+  }
 }));
 
 // Mock DOM elements to simulate advancement manager dialogs
@@ -205,18 +218,6 @@ vi.mock('finity', () => ({
 vi.mock('~/src/lib/workflow.js', () => ({
   updateActorAndEmbedItems: vi.fn(),
   handleAdvancementCompletion: vi.fn()
-}));
-
-// Mock Svelte helper
-vi.mock('~/src/helpers/Utility', () => ({
-  localize: vi.fn((key) => key),
-  safeGetSetting: (module, key, defaultValue) => {
-    if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
-      const val = global.game.settings.get(module, key);
-      return typeof val === 'undefined' ? defaultValue : val;
-    }
-    return defaultValue;
-  }
 }));
 
 describe('Advancement Managers Destruction', () => {
