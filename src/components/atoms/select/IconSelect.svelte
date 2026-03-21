@@ -6,11 +6,12 @@
    * @license: https://creativecommons.org/licenses/by/4.0/
    */
 
-    import { onMount, onDestroy } from "svelte";
+    import { onMount, onDestroy, getContext } from "svelte";
     import { truncate, safeGetSetting } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
     import { enrichHTML } from "~/src/helpers/Utility.js";
     import { derived } from 'svelte/store';
+    import { getExternalApplication, subscribeToPositionStores, calculateDropdownMaxHeight, isClickOutsideContainer } from './selectDropdownUtils.js';
 
     export let options = []; //- {value, label, link, icon || img}
     export let value = ""; //- the currently selected uuid
@@ -29,6 +30,23 @@
     let isOpen = false;
     let searchInput;
     let highlightedIndex = -1; // Track the currently highlighted option index
+
+    // Dynamic dropdown height based on available vertical space
+    let containerEl;
+    let maxDropdownHeight = 300;
+    let _unsubscribePositionStores = null;
+    const _application = getExternalApplication(getContext);
+    let _appTop = null;
+    let _appHeight = null;
+
+    function calculateMaxHeight() {
+      maxDropdownHeight = calculateDropdownMaxHeight({
+        containerEl,
+        application: _application,
+        appTop: _appTop,
+        appHeight: _appHeight
+      });
+    }
     
     export let handleSelect = (option) => {
       if (handler) {
@@ -104,37 +122,6 @@
           break;
       }
     }
-
-
-    function isClickOutsideContainer(event, containerElement) {
-      try {
-        const targetElement = event.target;
-
-        // Check if the target element is the container itself
-        if (targetElement === containerElement) {
-          return false;
-        }
-
-        // Guard: if containerElement is null, treat as click outside
-        if (!containerElement) {
-          console.warn('[IconSelect] containerElement is null, treating as click outside');
-          return true;
-        }
-
-        // Guard: if targetElement is null, treat as click outside
-        if (!targetElement) {
-          console.warn('[IconSelect] targetElement is null, treating as click outside');
-          return true;
-        }
-
-        // Check if the target element is inside the container
-        return !containerElement.contains(targetElement);
-      } catch (error) {
-        console.error('[IconSelect] Error in isClickOutsideContainer:', error);
-        return true; // Treat as click outside on error
-      }
-    }
-
     function handleClickOutside(event) {
       try {
         const containerElement = document.getElementById(id);
@@ -157,9 +144,16 @@
 
     onMount(() => {
       window.addEventListener("click", handleClickOutside);
+
+      _unsubscribePositionStores = subscribeToPositionStores(_application, (type, value) => {
+        if (type === 'top') _appTop = value;
+        if (type === 'height') _appHeight = value;
+        requestAnimationFrame(calculateMaxHeight);
+      });
     });
     onDestroy(() => {
       window.removeEventListener("click", handleClickOutside);
+      if (_unsubscribePositionStores) _unsubscribePositionStores();
     });
 
 
@@ -267,10 +261,13 @@
       searchInput.focus();
     }
 
+    // Recalculate dropdown max-height when it opens
+    $: if (isOpen) calculateMaxHeight();
+
   </script>
 
 <template lang="pug">
-div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0" on:keydown="{handleKeydown}")
+div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isOpen}" aria-haspopup="listbox" aria-controls="options-list" tabindex="0" on:keydown="{handleKeydown}" bind:this="{containerEl}" style="--dropdown-max-height: {maxDropdownHeight}px")
   div.selected-option(on:click="{toggleDropdown}" role="button" aria-expanded="{isOpen}" aria-haspopup="listbox" tabindex="0" class:selected="{isOpen}" class:disabled="{disabled}")
     +if("placeHolder && !value")
       div.placeholder {placeHolder}
@@ -287,7 +284,7 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
       i(class="fas fa-chevron-down")
 
   +if("isOpen")
-    div.options-dropdown.dropshadow(id="options-list" role="listbox")
+    div.options-dropdown.dropshadow(id="options-list" role="listbox" on:wheel|stopPropagation)
       // search input for filtering options
       +if("searchable")
         input.search-input(type="text" value="{searchTerm}" on:input="{handleInput}" placeholder="Search..." bind:this="{searchInput}")
@@ -344,72 +341,9 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
 </template>
 
 <style lang="sass">
-
-
-.custom-select
-  position: relative
-  display: inline-block
-  min-height: var(--tjs-select-height, 32px)
-
-.selected-option
-  display: flex
-  align-items: left
-  padding: 0.35rem 1.75rem 0.35rem 0.15rem
-  font-size: 0.875rem
-  font-weight: 400
-  color: #212529
-  background-color: #fff
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
-  cursor: pointer
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
-  position: relative
-
-img
-  position: absolute
-  top: -3px
-  left: 0
-  width: 24px
-  height: 24px
-  vertical-align: middle
-
-.selected-option
-  &.disabled
-    cursor: not-allowed
-    opacity: 0.6
-    .chevron-icon
-      i
-        color: var(--color-text-disabled)
-        
-  &:selected
-    display: none
-    border-color: #80bdff
-  
-        
-.option-icon
-  position: relative
-  min-width: 24px
-  margin-right: 8px
-
-.option-label
-  flex-grow: 1
-  text-align: left
-
-.chevron-icon
-  position: absolute
-  right: 0.5rem
+@import './selectShared.sass'
 
 .options-dropdown
-  position: absolute
-  top: calc(100% + 4px)
-  left: 0
-  width: 100%
-  background-color: #fff
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
-  overflow: hidden
   z-index: 999
 
 .group-label
@@ -422,18 +356,6 @@ img
   font-size: 2rem
   font-family: var(--dnd5e-font-modesto)
 .option
-  display: flex
-  align-items: left
-  padding: 4px
-  font-size: 0.875rem
-  font-weight: 400
-  line-height: 1.5
-  color: #212529
-  cursor: pointer
-
-  &:hover
-    background-color: var(--select-option-highlight-color)
-
   &.highlighted
     background-color: rgba(0, 0, 0, 0.3)
     color: var(--gas-color-text)
@@ -447,20 +369,6 @@ img
     font-weight: bold
     pointer-events: none
     opacity: 0.75
-
-.search-input
-  width: calc(100% - 8px)
-  padding: 4px 4px 4px 8px
-  font-size: 0.875rem
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
-  margin: 4px
-  box-shadow: none
-  transition: border-color 0.2s
-
-  &:focus
-    outline: none
-    border-color: #80bdff
 
 :global(.theme-dark) .option.highlighted
   background-color: rgba(255, 255, 255, 0.3)
