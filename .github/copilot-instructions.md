@@ -61,6 +61,7 @@
 **Testing**: 
 - tests should be stored in the `src/tests` folder
 - under no circumstances are failing tests acceptable
+- **CRITICAL for class progression tests**: Always set `game.settings.set(MODULE_ID, 'milestoneLeveling', true)` before any level-up flow assertions or interactions.
 ```bash
 bun run test      # Run all tests without watch (uses package.json script)
 ```
@@ -160,3 +161,48 @@ vi.mock('~/src/helpers/Utility', () => ({ /* all utility functions as vi.fn() */
 **Import chain failures**: Mock all modules imported by WorkflowStateMachine.js (see Test Patterns above)
 
 Reference working test: `test-actor-studio-opening.test.js` for complete pattern.
+
+## Quench Integration Testing (Foundry In-App) - Required Patterns
+
+These rules apply to Quench tests in `src/hooks/tests/character-permutation-tests.js` and similar Foundry in-app flows.
+
+- Quench tests are not plain Vitest unit tests. Treat them as DOM + sheet lifecycle integration flows running in Foundry.
+- For class progression tests, always set both:
+  - `game.settings.set(MODULE_ID, 'milestoneLeveling', true)`
+  - `game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true)`
+
+### Proven Failure Modes and Fixes (Cleric/Fighter)
+
+- **Failure**: Actor exists in world but test actor id is `null`.
+  - **Cause**: `resetStores()` clears `actorInGame` on Actor Studio close.
+  - **Fix**: Persist a unique test actor name and recover actor from `game.actors` by name when store id is null.
+
+- **Failure**: Level-up “open app” appears to pass without the sheet button being present.
+  - **Cause**: Test helper bypasses sheet flow (direct `new PCApplication(...).render()` fallback).
+  - **Fix**: Never bypass sheet interaction in button tests. Require clicking sheet button selectors.
+
+- **Failure**: Level-up button assertion fails even when actor has class/background.
+  - **Cause**: Sheet header injection timing / render race.
+  - **Fix**: Render sheet, wait, render again, then click `button.level-up` first (fallback selectors only after that).
+
+### Stable Class Test Structure (must mirror Cleric/Fighter)
+
+Use four ordered `it()` blocks per class:
+1. creation flow
+2. open level-up app from sheet button
+3. level 1→2
+4. level 2→3
+
+Creation flow must assert:
+- Actor Studio closes after creation completion.
+- Actor exists in world.
+- Class level 1 exists on actor.
+- Background item exists on actor.
+
+### Ranger Next-Test Checklist (first-pass reliability)
+
+- Clone the stable Fighter block structure first; only then swap class-specific values.
+- Use Ranger class UUID + `classIdentifier = 'ranger'` consistently in assertions.
+- Keep the same actor id fallback strategy (store id first, world actor-by-name fallback second).
+- Keep the same sheet button strategy (`button.level-up` primary selector).
+- At level 1→2 and 2→3, assert expected spell-tab behavior for Ranger per current ruleset/settings before finalizing.

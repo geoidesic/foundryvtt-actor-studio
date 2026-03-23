@@ -1,0 +1,19 @@
+---
+description: Guardrails for Quench class permutation tests (Cleric/Fighter/Ranger)
+globs: src/hooks/tests/character-permutation-tests.js
+alwaysApply: true
+---
+
+- Keep class blocks split into four ordered tests: creation, open-level-up-app, level 1->2, level 2->3.
+- For each class block, set in level-up tests:
+  - `game.settings.set(MODULE_ID, 'milestoneLeveling', true)`
+  - `game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true)`
+- Use class-specific actor ids and names per describe block; do not share actor state across class describes.
+- Use a unique actor name per run and recover actor id from `game.actors` by that name if store id is null.
+- In sheet interaction helper, prioritize `button.level-up` clicks for standard dnd5e sheet behavior.
+- Never call `new PCApplication(...).render()` as a fallback inside “button clickable/open from sheet” assertions.
+- For non-spellcaster creation flows, assert completion by waiting for Actor Studio close and persisted actor items.
+- Always verify creation persisted at least:
+  - one class item with expected class identifier at level 1
+  - one background item
+- For Ranger implementation, clone the stable Fighter block and then change only class UUID, class identifier, and spell-tab expectations.

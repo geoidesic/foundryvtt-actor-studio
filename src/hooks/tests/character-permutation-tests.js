@@ -2,15 +2,14 @@ import { get } from 'svelte/store';
 import { actorInGame } from '~/src/stores/index';
 import { safeGetSetting } from '~/src/helpers/Utility';
 
-export function registerCharacterPermutationTests(context) {
+export function registerCharacterPermutationTests(context, options = {}) {
   const { describe, it, assert, before, after } = context;
+  const enabledClasses = new Set((options?.classes || ['cleric', 'fighter']).map((entry) => String(entry).toLowerCase()));
 
   const MODULE_ID = 'foundryvtt-actor-studio';
   const wait = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
   let createdActor = null;
   let createdActorId = null;
-  let originalMilestoneLeveling = false;
-  let originalForceTakeAverageHitPoints = false;
 
   const closeActorStudioIfOpen = async () => {
     const app = Object.values(ui.windows).find((windowApp) => windowApp?.id === 'foundryvtt-actor-studio-pc-sheet');
@@ -148,17 +147,66 @@ export function registerCharacterPermutationTests(context) {
   const clickActorStudioLevelUpButtonOnSheet = async (actor) => {
     if (!actor?.sheet) return false;
 
-    actor.sheet.render(true, { focus: true });
+    await closeActorStudioIfOpen();
+    await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 5000, 100);
 
-    return waitForCondition(() => {
-      const rootElement = actor.sheet?.element?.[0] || actor.sheet?.element || document;
-      const button = rootElement?.querySelector?.('#gas-levelup-btn, button.level-up')
-        || document.querySelector('#gas-levelup-btn, button.level-up');
+    await actor.sheet.render(true, { focus: true });
+    await wait(250);
 
-      if (!button) return false;
+    // Retry render once more to ensure header controls are injected on some sheet implementations.
+    await actor.sheet.render(true, { focus: true });
+    await waitForCondition(() => {
+      const rootElement = actor.sheet?.element?.[0] || actor.sheet?.element || null;
+      return Boolean(rootElement && rootElement.isConnected);
+    }, 5000, 100);
+
+    const buttonClicked = await waitForCondition(() => {
+      const rootElement = actor.sheet?.element?.[0] || actor.sheet?.element || null;
+      const appWrapper = actor.sheet?.appId != null
+        ? document.querySelector(`[data-appid="${actor.sheet.appId}"]`)
+        : null;
+
+      // Primary path: exactly the sheet button used by dnd5e sheet integration.
+      const levelUpButton =
+        rootElement?.querySelector?.('button.level-up')
+        || appWrapper?.querySelector?.('button.level-up')
+        || document.querySelector('button.level-up')
+        || null;
+
+      const button = levelUpButton
+        || rootElement?.querySelector?.('#gas-levelup-btn, button.gas-levelup, .gas-levelup')
+        || appWrapper?.querySelector?.('#gas-levelup-btn, button.gas-levelup, .gas-levelup')
+        || null;
+
+      if (!button || button.disabled || !button.isConnected) return false;
+
+      if (typeof button.scrollIntoView === 'function') {
+        button.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+
+      button.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
+      button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
       button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      if (typeof button.click === 'function') {
+        button.click();
+      }
+      if (typeof window.$ === 'function') {
+        window.$(button).trigger('click');
+      }
+
       return true;
     }, 15000, 150);
+
+    return buttonClicked;
+  };
+
+  const waitForActorStudioClosed = async () => {
+    return waitForCondition(
+      () => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'),
+      30000,
+      150
+    );
   };
 
   const waitForLevelUpAppOpen = async () => {
@@ -196,7 +244,71 @@ export function registerCharacterPermutationTests(context) {
     }, 15000, 150);
   };
 
-  const ensureSubclassChoiceIfRequired = async () => {
+  const selectIconSelectOptionByLabel = async (selectId, labels, { excludedLabels = [] } = {}) => {
+    const preferredLabels = (Array.isArray(labels) ? labels : [labels])
+      .map((label) => String(label || '').trim().toLowerCase())
+      .filter(Boolean);
+    const excluded = new Set(
+      (Array.isArray(excludedLabels) ? excludedLabels : [excludedLabels])
+        .map((label) => String(label || '').trim().toLowerCase())
+        .filter(Boolean)
+    );
+
+    return waitForCondition(() => {
+      const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+      if (!root) return false;
+
+      const select = root.querySelector(`#${selectId}`);
+      if (!select) return false;
+
+      const selectedLabel = select.querySelector('.selected-option .option-label');
+      const selectedText = String(selectedLabel?.textContent || '').trim().toLowerCase();
+      if (selectedText) {
+        if (preferredLabels.length === 0) {
+          return !excluded.has(selectedText);
+        }
+
+        if (preferredLabels.some((label) => selectedText.includes(label))) {
+          return true;
+        }
+      }
+
+      const trigger = select.querySelector('.selected-option');
+      if (!trigger) return false;
+
+      if (!select.querySelector('.options-dropdown')) {
+        trigger.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        return false;
+      }
+
+      const options = Array.from(select.querySelectorAll('.options-dropdown .option'));
+      if (!options.length) return false;
+
+      const matchingOption = options.find((option) => {
+        const text = String(option.textContent || '').trim().toLowerCase();
+        return preferredLabels.some((label) => text.includes(label)) && !excluded.has(text);
+      }) || options.find((option) => {
+        const text = String(option.textContent || '').trim().toLowerCase();
+        return !excluded.has(text);
+      });
+
+      if (!matchingOption) return false;
+
+      matchingOption.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+      const updatedLabel = select.querySelector('.selected-option .option-label');
+      const updatedText = String(updatedLabel?.textContent || '').trim().toLowerCase();
+      if (!updatedText) return false;
+
+      if (preferredLabels.length === 0) {
+        return !excluded.has(updatedText);
+      }
+
+      return preferredLabels.some((label) => updatedText.includes(label));
+    }, 10000, 150);
+  };
+
+  const ensureSubclassChoiceIfRequired = async ({ preferredLabels = [], excludedLabels = [] } = {}) => {
     return waitForCondition(() => {
       const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
       if (!root) return false;
@@ -219,9 +331,18 @@ export function registerCharacterPermutationTests(context) {
         return false;
       }
 
-      const option = subclassSelect.querySelector(
-        '.options-dropdown .option[tabindex="0"], .options-dropdown .option:not(.is-current-selection):not([aria-disabled="true"])'
-      );
+      const options = Array.from(subclassSelect.querySelectorAll('.options-dropdown .option'));
+      const preferred = preferredLabels.map((label) => String(label || '').trim().toLowerCase()).filter(Boolean);
+      const excluded = new Set(excludedLabels.map((label) => String(label || '').trim().toLowerCase()).filter(Boolean));
+
+      const option = options.find((candidate) => {
+        const text = String(candidate.textContent || '').trim().toLowerCase();
+        return preferred.some((label) => text.includes(label)) && !excluded.has(text);
+      }) || options.find((candidate) => {
+        const text = String(candidate.textContent || '').trim().toLowerCase();
+        return !excluded.has(text);
+      });
+
       if (!option) return false;
 
       option.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -359,8 +480,11 @@ export function registerCharacterPermutationTests(context) {
   // Keys set on window.GAS when package.json debug === true
   const DEBUG_ROOT_KEYS = ['debug', 'race', 'background', 'characterClass', 'characterSubClass'];
 
+  if (enabledClasses.has('cleric')) {
   describe('Cleric', function () {
     let savedDebugState = {};
+    let originalMilestoneLeveling = false;
+    let originalForceTakeAverageHitPoints = false;
     const testActorName = 'Quench Cleric Automation';
     const clericClassUuid = 'Compendium.dnd-players-handbook.classes.Item.phbclcCleric0000';
 
@@ -611,4 +735,248 @@ export function registerCharacterPermutationTests(context) {
       await closeActorStudioIfOpen();
     });
   });
+  }
+
+  if (enabledClasses.has('fighter')) {
+  describe('Fighter', function () {
+    let savedDebugState = {};
+    let originalMilestoneLeveling = false;
+    let originalForceTakeAverageHitPoints = false;
+    let fighterActorId = null;
+    let fighterActor = null;
+    const testActorName = `Quench Fighter Automation ${Date.now()}`;
+    const fighterClassUuid = 'Compendium.dnd-players-handbook.classes.Item.phbftrFighter000';
+
+    const findFighterActorByName = () => {
+      const matches = game.actors.contents
+        .filter((actorDoc) => actorDoc?.name === testActorName && actorDoc?.type === 'character');
+      if (!matches.length) return null;
+      return matches[matches.length - 1];
+    };
+
+    const getCurrentFighterActor = () => {
+      if (fighterActorId) {
+        const actorFromId = game.actors.get(fighterActorId) || null;
+        if (actorFromId) return actorFromId;
+      }
+
+      const actorFromName = findFighterActorByName();
+      if (actorFromName && !fighterActorId) {
+        fighterActorId = actorFromName.id;
+      }
+      return actorFromName;
+    };
+
+    before(function () {
+      // Neutralise any values set by init.js when package.json debug === true
+      // so that quenchAutomation selections take full precedence.
+      savedDebugState = {};
+      for (const key of DEBUG_ROOT_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(window.GAS, key)) {
+          savedDebugState[key] = window.GAS[key];
+          delete window.GAS[key];
+        }
+      }
+
+      originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
+      originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+    });
+
+    beforeEach(function () {
+      this.timeout(120000);
+    });
+
+    after(async function () {
+      clearQuenchAutomation();
+      await closeActorStudioIfOpen();
+
+      const actorToCleanup = fighterActorId ? game.actors.get(fighterActorId) : (fighterActor || findFighterActorByName());
+      await closeActorSheetIfOpen(actorToCleanup);
+
+      if (actorToCleanup && !actorToCleanup.deleted) {
+        await actorToCleanup.delete();
+      }
+      fighterActor = null;
+      fighterActorId = null;
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
+
+      // Restore the debug-mode root values that were saved in before()
+      for (const [key, value] of Object.entries(savedDebugState)) {
+        window.GAS[key] = value;
+      }
+      savedDebugState = {};
+    });
+
+    it('should auto-run fighter creation without spell selection', async function () {
+      this.timeout(120000);
+
+      await game.settings.set(MODULE_ID, 'allowManualInput', true);
+      await game.settings.set(MODULE_ID, 'allowStandardArray', false);
+      await game.settings.set(MODULE_ID, 'allowPointBuy', false);
+      await game.settings.set(MODULE_ID, 'allowRolling', false);
+      await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
+      await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
+      await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
+
+      configureQuenchAutomation({
+        selections: {
+          race: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
+          background: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
+          characterClass: fighterClassUuid
+        }
+      });
+
+      await closeActorStudioIfOpen();
+      const creationApp = await openActorStudio(testActorName);
+      assert.ok(creationApp, 'Actor Studio should open for fighter creation test');
+
+      const requiredTabsVisited = await visitRequiredCreationTabs();
+      assert.ok(requiredTabsVisited, 'All visible creation tabs should be visited before creating the character');
+
+      const createClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'),
+        20000,
+        150
+      );
+      assert.ok(createClicked, 'Create Character button should be clickable');
+
+      const spellsTabLoaded = await waitForCondition(() => hasSpellsTabVisible(), 8000, 200);
+      assert.ok(!spellsTabLoaded, 'Spells tab should not appear for fighter creation (non-spellcaster at level 1)');
+
+      const actorStudioClosed = await waitForActorStudioClosed();
+      assert.ok(actorStudioClosed, 'Actor Studio should close after fighter creation completes');
+
+      await wait(1200);
+      fighterActorId = get(actorInGame)?.id || null;
+
+      if (!fighterActorId) {
+        const actorByName = findFighterActorByName();
+        fighterActorId = actorByName?.id || null;
+      }
+
+      assert.ok(fighterActorId, 'Created actor id should be available after finalizing creation');
+
+      const reachedLevel1 = await waitForActorClassLevel(fighterActorId, 'fighter', 1);
+      assert.ok(reachedLevel1, 'Fighter class level should be embedded at level 1 after creation');
+
+      fighterActor = game.actors.get(fighterActorId);
+      assert.ok(fighterActor, 'Created fighter actor should exist in world actors');
+
+      const hasBackground = fighterActor.items.some((item) => item.type === 'background');
+      assert.ok(hasBackground, 'Created fighter actor should have a background item embedded');
+    });
+
+    it('should open level-up app from fighter actor sheet when milestone leveling is enabled', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentFighterActor();
+      assert.ok(actor, 'Existing created fighter actor should be available for level-up tests');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Actor Studio level-up button should be clickable on the fighter actor sheet');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up Actor Studio app should open from fighter actor sheet button');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level fighter from 1 to 2 without showing spells tab', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentFighterActor();
+      assert.ok(actor, 'Existing created fighter actor should be available for 1->2 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for fighter 1->2 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for fighter 1->2 test');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before fighter 1->2 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked to select class level-up');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for fighter 1->2 progression');
+
+      const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 12000, 200);
+      assert.ok(!spellsTabAppeared, 'Spells tab should not appear for fighter level 1->2');
+
+      const reachedLevel2 = await waitForActorClassLevel(fighterActorId, 'fighter', 2);
+      assert.ok(reachedLevel2, 'Fighter class level should progress to 2');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level fighter from 2 to 3 without showing spells tab', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentFighterActor();
+      assert.ok(actor, 'Existing created fighter actor should be available for 2->3 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for fighter 2->3 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for fighter 2->3 test');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before fighter 2->3 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked for fighter 2->3 test');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for fighter 2->3 progression');
+
+      const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
+      assert.ok(!spellsTabAppeared, 'Spells tab should not appear for fighter level 2->3');
+
+      const reachedLevel3 = await waitForActorClassLevel(fighterActorId, 'fighter', 3);
+      assert.ok(reachedLevel3, 'Fighter class level should progress to 3');
+
+      fighterActor = getCurrentFighterActor();
+      await closeActorStudioIfOpen();
+    });
+  });
+  }
+}
+
+export function registerClericPermutationTests(context) {
+  return registerCharacterPermutationTests(context, { classes: ['cleric'] });
+}
+
+export function registerFighterPermutationTests(context) {
+  return registerCharacterPermutationTests(context, { classes: ['fighter'] });
 }

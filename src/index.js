@@ -19,7 +19,11 @@ import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 //- import tests
 import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
-import { registerCharacterPermutationTests } from './hooks/tests/character-permutation-tests.js';
+import {
+  registerCharacterPermutationTests,
+  registerClericPermutationTests,
+  registerFighterPermutationTests
+} from './hooks/tests/character-permutation-tests.js';
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
@@ -34,6 +38,14 @@ Hooks.on("quenchReady", (quench) => {
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test", registerCharacterPermutationTests, {
     displayName: "Actor Studio: Character Permutation Tests",
+    timeout: 120000
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericPermutationTests, {
+    displayName: "Cleric",
+    timeout: 120000
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.fighter", registerFighterPermutationTests, {
+    displayName: "Fighter",
     timeout: 120000
   });
   console.log("Registered Actor Studio test batches");

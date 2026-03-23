@@ -1,0 +1,19 @@
+---
+description: class test milestone leveling requirement
+globs: src/hooks/tests/*.js,src/tests/*.test.js
+alwaysApply: true
+---
+
+- For any class progression / level-up tests, always set `game.settings.set(MODULE_ID, 'milestoneLeveling', true)` before attempting level-up actions.
+- For class progression / level-up tests, also set `game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true)` before level-up interactions.
+- Do not rely on default settings for level-up tests.
+- If a test includes class level progression (e.g., 1->2, 2->3), assert this setting step is present in setup.
+
+## Quench (Foundry in-app) class test hardening
+
+- Treat Quench tests as integration tests with async UI / sheet lifecycle timing.
+- Never assume `actorInGame` store survives Actor Studio close; recover actor by unique test name from `game.actors` when needed.
+- In class permutation tests, use a unique actor name per run (e.g., with timestamp) to avoid collision and stale lookups.
+- For level-up button interactions, click `button.level-up` first; use `#gas-levelup-btn` / `.gas-levelup` only as fallback selectors.
+- Do not bypass sheet button tests by directly opening `PCApplication` in test helpers.
+- Creation tests must assert: actor exists, class level 1 embedded, background embedded, and Actor Studio closes.
