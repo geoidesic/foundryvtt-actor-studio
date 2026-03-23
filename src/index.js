@@ -19,6 +19,7 @@ import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 //- import tests
 import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
+import { registerCharacterPermutationTests } from './hooks/tests/character-permutation-tests.js';
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
@@ -26,9 +27,16 @@ Hooks.once("init", (app, html, data) => {
 
 // Register Quench tests
 Hooks.on("quenchReady", (quench) => {
-  console.log("Quench ready, registering Actor Studio test batch");
-  quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, { displayName: "Actor Studio: Basic Test" });
-  console.log("Registered Actor Studio test batch");
+  console.log("Quench ready, registering Actor Studio test batches");
+  quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
+    displayName: "Actor Studio: Basic Test",
+    timeout: 120000
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test", registerCharacterPermutationTests, {
+    displayName: "Actor Studio: Character Permutation Tests",
+    timeout: 120000
+  });
+  console.log("Registered Actor Studio test batches");
 });
 
 Hooks.once("ready", (app, html, data) => {

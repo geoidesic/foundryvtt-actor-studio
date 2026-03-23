@@ -17,8 +17,11 @@ export const renderAdvancementManager = async (app, html, data) => {
 
   // Check if the Actor Studio application is currently open by looking for its specific DOM element
   const currentProcess = get(dropItemRegistry.currentProcess)
+  const levelUpMode = get(isLevelUp) === true;
+  const isCurrentProcessApp = Boolean(currentProcess?.app?.id && app?.id && currentProcess.app.id === app.id);
+  const shouldCaptureRender = Boolean(currentProcess?.id) && (isFirstAdvancementStep(app) || levelUpMode || isCurrentProcessApp);
   
-  if (currentProcess.id && isFirstAdvancementStep(app)) {
+  if (shouldCaptureRender) {
     const appElement = $('#foundryvtt-actor-studio-pc-sheet');
     if (appElement.length) {
       const disableAdvancementCapture = safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false);

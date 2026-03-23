@@ -10,6 +10,8 @@
     getAdvancementValue,
     getSubclassLevel,
     illuminatedDescription, safeGetSetting,
+    isSelectionAutomationEnabled,
+    getSelectionAutomationValue,
   } from "~/src/helpers/Utility.js";
 
 
@@ -294,9 +296,9 @@
 
   onMount(async () => {
     let classUuid, subclassUuid;
-    if (window.GAS.debug) {
-      classUuid = window.GAS.characterClass;
-      subclassUuid = window.GAS.characterSubClass;
+    if (isSelectionAutomationEnabled()) {
+      classUuid = getSelectionAutomationValue('characterClass');
+      subclassUuid = getSelectionAutomationValue('characterSubClass');
     } else {
       classUuid = $characterClass?.uuid;
       subclassUuid = $characterSubClass?.uuid;

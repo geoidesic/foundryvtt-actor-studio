@@ -162,4 +162,5 @@ export function registerActorStudioTests(context) {
       assert.equal(Number(app.position?.height), 650, "Runtime resize should update height to 650");
     });
   });
+
 }

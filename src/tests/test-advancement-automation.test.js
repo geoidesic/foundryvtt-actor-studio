@@ -33,7 +33,9 @@ vi.mock('~/src/helpers/constants', () => ({
 vi.mock('~/src/helpers/Utility', () => ({
   delay: vi.fn(),
   prepareItemForDrop: vi.fn(),
-  dropItemOnCharacter: vi.fn()
+  dropItemOnCharacter: vi.fn(),
+  isAdvancementAutomationEnabled: vi.fn(() => Boolean(global.window?.GAS?.debug)),
+  getAdvancementAutomationConfig: vi.fn(() => ({}))
 }));
 
 vi.mock('~/src/stores/startingEquipment', () => ({

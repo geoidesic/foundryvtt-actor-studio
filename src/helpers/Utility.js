@@ -398,6 +398,71 @@ export function safeGetSetting(module, key, defaultValue = undefined) {
   }
 }
 
+const getGASAutomationConfig = () => {
+  const gas = globalThis?.window?.GAS;
+  if (!gas) return {};
+
+  // Preferred namespace for new test harness automation configuration.
+  if (gas.quenchAutomation && typeof gas.quenchAutomation === 'object') {
+    return gas.quenchAutomation;
+  }
+
+  // Backward-compatible alias for local / experimental tests.
+  if (gas.testAutomation && typeof gas.testAutomation === 'object') {
+    return gas.testAutomation;
+  }
+
+  return {};
+};
+
+export function isSelectionAutomationEnabled() {
+  const gas = globalThis?.window?.GAS;
+  const automation = getGASAutomationConfig();
+  return Boolean(gas?.debug || automation?.enabled);
+}
+
+export function getSelectionAutomationValue(key, fallback = null) {
+  const gas = globalThis?.window?.GAS;
+  const automation = getGASAutomationConfig();
+
+  // Preserve existing debug-mode behavior first.
+  if (gas?.debug && gas?.[key] != null) {
+    return gas[key];
+  }
+
+  // Primary test harness source.
+  if (automation?.selections?.[key] != null) {
+    return automation.selections[key];
+  }
+
+  // Optional legacy compatibility for tests that set values at root GAS level.
+  if (gas?.[key] != null && automation?.allowLegacyRootValues) {
+    return gas[key];
+  }
+
+  return fallback;
+}
+
+export function isAdvancementAutomationEnabled() {
+  const gas = globalThis?.window?.GAS;
+  const automation = getGASAutomationConfig();
+
+  if (gas?.debug) return true;
+  if (!automation?.enabled) return false;
+
+  // Explicitly allow turning advancement automation on/off independently.
+  if (typeof automation?.advancements?.enabled === 'boolean') {
+    return automation.advancements.enabled;
+  }
+
+  return true;
+}
+
+export function getAdvancementAutomationConfig() {
+  const automation = getGASAutomationConfig();
+  return automation?.advancements || {};
+}
+
 
 /**
  * Extracts items from all compendium packs including subfolders.

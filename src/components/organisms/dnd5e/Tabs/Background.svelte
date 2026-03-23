@@ -8,7 +8,9 @@
     getPacksFromSettings,
     getAdvancementValue,
     illuminatedDescription,
-    safeGetSetting
+    safeGetSetting,
+    isSelectionAutomationEnabled,
+    getSelectionAutomationValue
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
@@ -84,9 +86,9 @@
 
   onMount(async () => {
     console.log('[BG] onMount, $background:', $background);
-    let backgroundUuid;
-    if (window.GAS.debug) {
-      backgroundUuid = window.GAS.background;
+    let backgroundUuid = null;
+    if (isSelectionAutomationEnabled()) {
+      backgroundUuid = getSelectionAutomationValue('background');
     } else {
       backgroundUuid = $background?.uuid;
     }

@@ -1,11 +1,22 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting, bringActorStudioToFront } from '~/src/helpers/Utility';
-import { readOnlyTabs, tabs, activeTab, levelUpTabs, levelUpPreAdvancementSelections, levelUpInProgress } from '~/src/stores/index';
+import {
+  readOnlyTabs,
+  tabs,
+  activeTab,
+  levelUpTabs,
+  levelUpPreAdvancementSelections,
+  levelUpInProgress,
+  isLevelUp,
+  newLevelValueForExistingClass,
+  levelUpClassObject
+} from '~/src/stores/index';
 import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
 import Finity from 'finity';
+import spellsKnownData from '~/src/stores/spellsKnown.json';
 
 // Helper to safely get fromUuidSync
 const fromUuidSync = (uuid) => {
@@ -343,6 +354,100 @@ function parseSpellcastingFromDescription(item) {
 export const levelUpFSMContext = {
   isProcessing: writable(false),
   actor: undefined,
+
+  _parseSpellProgressionValue: function (value) {
+    if (typeof value !== 'string') return null;
+    const [cantripsRaw, spellsRaw] = value.split('/').map((entry) => String(entry ?? '').trim());
+    if (!cantripsRaw || !spellsRaw) return null;
+
+    return {
+      cantrips: Number.parseInt(cantripsRaw, 10) || 0,
+      spells: Number.parseInt(spellsRaw, 10) || 0,
+      hasAllSpells: spellsRaw.toLowerCase() === 'all'
+    };
+  },
+
+  _getMaxSpellLevelForProgression: function (level, progression, classIdentifier = '') {
+    const rulesVersion = window.GAS?.dnd5eRules || '2014';
+    const is2024Rules = rulesVersion === '2024';
+    const normalizedProgression = String(progression || '').toLowerCase();
+    const normalizedClass = String(classIdentifier || '').toLowerCase();
+    const numericLevel = Number(level) || 0;
+
+    const resolvedProgression = normalizedProgression || (() => {
+      if (['bard', 'cleric', 'druid', 'sorcerer', 'wizard'].includes(normalizedClass)) return 'full';
+      if (['paladin', 'ranger', 'artificer'].includes(normalizedClass)) return 'half';
+      if (normalizedClass === 'warlock') return 'pact';
+      return 'none';
+    })();
+
+    switch (resolvedProgression) {
+      case 'full':
+        return Math.max(0, Math.min(9, Math.ceil(numericLevel / 2)));
+      case 'half':
+        return Math.max(0, Math.min(5, is2024Rules
+          ? Math.ceil(numericLevel / 4)
+          : Math.ceil((numericLevel - 1) / 4)));
+      case 'third':
+        return Math.max(0, Math.min(4, Math.ceil((numericLevel - 2) / 6)));
+      case 'pact':
+        if (numericLevel >= 9) return 5;
+        if (numericLevel >= 7) return 4;
+        if (numericLevel >= 5) return 3;
+        if (numericLevel >= 3) return 2;
+        return numericLevel >= 1 ? 1 : 0;
+      default:
+        return 0;
+    }
+  },
+
+  _shouldRequireSpellSelectionForLevelUp: function (actor) {
+    if (!get(isLevelUp)) return null;
+
+    const targetLevel = Number(get(newLevelValueForExistingClass) || 0);
+    if (!Number.isFinite(targetLevel) || targetLevel <= 0) return null;
+
+    const selectedClass = get(levelUpClassObject);
+    const classIdentifier = String(
+      selectedClass?.system?.identifier
+      || selectedClass?.name
+      || ''
+    ).toLowerCase();
+
+    if (!classIdentifier) return null;
+
+    const oldLevel = Math.max(1, targetLevel - 1);
+    const rulesVersion = window.GAS?.dnd5eRules || '2014';
+    const oldLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === oldLevel);
+    const newLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === targetLevel);
+
+    const oldValue = oldLevelData?.[classIdentifier]?.[rulesVersion] ?? oldLevelData?.[classIdentifier];
+    const newValue = newLevelData?.[classIdentifier]?.[rulesVersion] ?? newLevelData?.[classIdentifier];
+    const oldParsed = levelUpFSMContext._parseSpellProgressionValue(oldValue);
+    const newParsed = levelUpFSMContext._parseSpellProgressionValue(newValue);
+
+    if (!oldParsed || !newParsed) return null;
+
+    const cantripDifference = Math.max(0, newParsed.cantrips - oldParsed.cantrips);
+
+    if (oldParsed.hasAllSpells || newParsed.hasAllSpells) {
+      const classEntry = Object.values(actor?.classes || {}).find((entry) =>
+        String(entry?.system?.identifier || entry?.name || '').toLowerCase() === classIdentifier
+      );
+
+      const progression = classEntry?.system?.spellcasting?.progression
+        || selectedClass?.system?.spellcasting?.progression
+        || 'none';
+
+      const oldMaxSpellLevel = levelUpFSMContext._getMaxSpellLevelForProgression(oldLevel, progression, classIdentifier);
+      const newMaxSpellLevel = levelUpFSMContext._getMaxSpellLevelForProgression(targetLevel, progression, classIdentifier);
+
+      return cantripDifference > 0 || newMaxSpellLevel > oldMaxSpellLevel;
+    }
+
+    const spellDifference = Math.max(0, newParsed.spells - oldParsed.spells);
+    return cantripDifference > 0 || spellDifference > 0;
+  },
   
   /**
    * Determines if spell selection should be shown for level-up
@@ -476,6 +581,19 @@ export const levelUpFSMContext = {
     });
     
     const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
+
+    const levelUpSpellSelectionRequired = levelUpFSMContext._shouldRequireSpellSelectionForLevelUp(actor);
+    if (typeof levelUpSpellSelectionRequired === 'boolean') {
+      const shouldShowForLevelUp = isSpellcaster && levelUpSpellSelectionRequired;
+      window.GAS.log.d('[LEVELUP] Level-up spell selection requirement check:', {
+        isSpellcaster,
+        levelUpSpellSelectionRequired,
+        shouldShowForLevelUp,
+        actorName: actor?.name,
+        targetLevel: get(newLevelValueForExistingClass)
+      });
+      return shouldShowForLevelUp;
+    }
     
     window.GAS.log.d('[LEVELUP] Spellcasting detection:', {
       spellcastingInfo,
@@ -564,6 +682,16 @@ export function createLevelUpStateMachine() {
         // Add a longer delay to ensure actor is fully updated after advancements
         // Advancements might update the actor's spellcasting system asynchronously
         await new Promise(resolve => setTimeout(resolve, 500));
+
+        const contextActor = levelUpFSMContext.actor || get(actorInGame);
+        const refreshedActor = contextActor?.id
+          ? (game.actors?.get(contextActor.id) || contextActor)
+          : contextActor;
+
+        if (refreshedActor) {
+          levelUpFSMContext.actor = refreshedActor;
+          actorInGame.set(refreshedActor);
+        }
         
         window.GAS.log.d('[LEVELUP] Advancement queue completed, checking for spellcasting...');
       })
@@ -698,8 +826,12 @@ export function createLevelUpStateMachine() {
         if (actor) {
           // Open actor sheet on completion.
           (async () => {
-            window.GAS.log.d('[LEVELUP] Opening actor sheet for:', actor.name);
-            actor.sheet.render(true);
+            const refreshedActor = actor?.id ? (game.actors?.get(actor.id) || actor) : actor;
+            levelUpFSMContext.actor = refreshedActor;
+            actorInGame.set(refreshedActor);
+
+            window.GAS.log.d('[LEVELUP] Opening actor sheet for:', refreshedActor.name);
+            refreshedActor.sheet.render(true);
             setTimeout(() => bringActorStudioToFront(), 0);
             setTimeout(() => bringActorStudioToFront(), 100);
             

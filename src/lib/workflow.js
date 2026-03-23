@@ -251,7 +251,7 @@ export async function updateActorAndEmbedItems({
       isLevelUp: $isLevelUp,
       hasAdvancementChoices: itemHasAdvancementChoices($levelUpSubClassObject),
       hasAdvancementsForLevel: isAdvancementsForLevelInItem(
-        getLevelByDropType(get(actor), "subclass"),
+        getLevelByDropType(get(actor), $levelUpSubClassObject),
         $levelUpSubClassObject,
       ),
     });
@@ -317,7 +317,7 @@ export async function updateActorLevelUpWorkflow({
         isNewMultiClass: $isNewMultiClass,
         hasAdvancementChoices: itemHasAdvancementChoices($levelUpClassObject),
         hasAdvancementsForLevel: isAdvancementsForLevelInItem(
-          getLevelByDropType(get(actor), "class"),
+          getLevelByDropType(get(actor), $levelUpClassObject),
           $levelUpClassObject,
         ),
       });
@@ -332,7 +332,7 @@ export async function updateActorLevelUpWorkflow({
         isLevelUp: $isLevelUp,
         hasAdvancementChoices: itemHasAdvancementChoices($levelUpSubClassObject),
         hasAdvancementsForLevel: isAdvancementsForLevelInItem(
-          getLevelByDropType(get(actor), "subclass"),
+          getLevelByDropType(get(actor), $levelUpSubClassObject),
           $levelUpSubClassObject,
         ),
       });

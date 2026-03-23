@@ -30,7 +30,9 @@ import {
   getPacksFromSettings,
   illuminatedDescription,
   extractItemsFromPacksAsync,
-  safeGetSetting
+  safeGetSetting,
+  isSelectionAutomationEnabled,
+  getSelectionAutomationValue
 } from "~/src/helpers/Utility.js";
 
 import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
@@ -385,6 +387,34 @@ onMount(async () => {
     if($levelUpPreAdvancementSelections.subClass) {
       await eventHandlers.selectSubClassHandler($levelUpPreAdvancementSelections.subClass);
     }
+  }
+
+  if (!isSelectionAutomationEnabled()) {
+    return;
+  }
+
+  if ($classUuidForLevelUp) {
+    return;
+  }
+
+  const configuredClass = getSelectionAutomationValue('levelUpClass');
+  const configuredSubClass = getSelectionAutomationValue('levelUpSubClass');
+
+  if (configuredClass) {
+    const normalizedClassKey = String(configuredClass).toLowerCase();
+    const matchingClassKey = classKeys.find((key) => key.toLowerCase() === normalizedClassKey);
+
+    if (matchingClassKey) {
+      await eventHandlers.clickAddLevel(matchingClassKey);
+    } else {
+      await eventHandlers.selectMultiClassHandler(configuredClass);
+    }
+  } else if (classKeys.length) {
+    await eventHandlers.clickAddLevel(classKeys[0]);
+  }
+
+  if (configuredSubClass && $levelUpClassGetsSubclassThisLevel) {
+    await eventHandlers.selectSubClassHandler(configuredSubClass);
   }
 });
 

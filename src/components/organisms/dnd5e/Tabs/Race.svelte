@@ -7,7 +7,9 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
-    illuminatedDescription
+    illuminatedDescription,
+    isSelectionAutomationEnabled,
+    getSelectionAutomationValue
   } from "~/src/helpers/Utility.js";
   import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -141,9 +143,9 @@
     // Log mount
     // window.GAS.log.d("Race tab mounted");
     
-    let raceUuid;
-    if (window.GAS.debug) {
-      raceUuid = window.GAS.race;
+    let raceUuid = null;
+    if (isSelectionAutomationEnabled()) {
+      raceUuid = getSelectionAutomationValue('race');
     }
     if (raceUuid) {
       await selectRaceHandler(raceUuid);

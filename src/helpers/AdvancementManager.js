@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { activeTab, tabs } from '~/src/stores/index';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { delay, prepareItemForDrop, dropItemOnCharacter, safeGetSetting } from '~/src/helpers/Utility';
+import { delay, prepareItemForDrop, dropItemOnCharacter, safeGetSetting, isAdvancementAutomationEnabled, getAdvancementAutomationConfig } from '~/src/helpers/Utility';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections, actorInGame } from '~/src/stores/index';
@@ -51,8 +51,8 @@ export class AdvancementManager {
     if (this.isTabContentEmpty(tabName)) {
       resolve();
     } else {
-      // Automated advancement clicking in debug mode
-      if (window.GAS?.debug) {
+      // Automated advancement clicking in debug mode or test automation mode
+      if (isAdvancementAutomationEnabled()) {
         this.autoAdvanceSteps();
       }
       if (!this.stopAutoAdvance) {
@@ -62,12 +62,11 @@ export class AdvancementManager {
   };
 
   /**
-   * Automatically advance through advancement dialog steps when in debug mode
+  * Automatically advance through advancement dialog steps when automation is enabled
    * Finds and clicks "next" buttons, then "complete" buttons to speed up debug iteration
    */
   autoAdvanceSteps() {
-    // Only run automation in debug mode
-    if (!window.GAS || !window.GAS.debug) {
+    if (!isAdvancementAutomationEnabled()) {
       return;
     }
     
@@ -77,9 +76,88 @@ export class AdvancementManager {
 
       // Look for advancement dialogs within the captured area
       const advancementDialogs = panel.find('.gas-advancements');
+      const automationConfig = getAdvancementAutomationConfig();
       
       advancementDialogs.each((index, dialog) => {
         const $dialog = $(dialog);
+        const idForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
+        const typeForm = $dialog.find('form[data-type]').first();
+
+        const advancementId = (typeof idForm?.attr === 'function')
+          ? (idForm.attr('data-advancement-id') || idForm.attr('data-id') || null)
+          : null;
+
+        const advancementType = (typeof typeForm?.attr === 'function')
+          ? (typeForm.attr('data-type') || null)
+          : null;
+
+        const titleElement = $dialog.find('h3, h4, h2').first();
+        const title = (typeof titleElement?.text === 'function')
+          ? String(titleElement.text() || '').trim()
+          : '';
+
+        const context = {
+          index,
+          dialog,
+          advancementId,
+          advancementType,
+          title
+        };
+
+        let overrideAction = null;
+        if (typeof automationConfig?.resolveAction === 'function') {
+          try {
+            overrideAction = automationConfig.resolveAction(context);
+          } catch (overrideError) {
+            window.GAS?.log?.w?.('[AUTO-ADVANCE] resolveAction override failed:', overrideError);
+          }
+        }
+
+        if (overrideAction === 'none' || overrideAction === false) {
+          window.GAS.log.d('[AUTO-ADVANCE] Skipping dialog due to override', context);
+          return;
+        }
+
+        const clickFirstEnabled = (selector) => {
+          const candidate = $dialog.find(selector).first();
+          if (candidate.length && !candidate.prop('disabled')) {
+            candidate.click();
+            return true;
+          }
+          return false;
+        };
+
+        if (overrideAction === 'next') {
+          if (clickFirstEnabled('[data-action="next"]')) {
+            window.GAS.log.d('[AUTO-ADVANCE] Override clicked next button in dialog', index);
+            return;
+          }
+        }
+
+        if (overrideAction === 'complete') {
+          if (clickFirstEnabled('[data-action="complete"]')) {
+            window.GAS.log.d('[AUTO-ADVANCE] Override clicked complete button in dialog', index);
+            return;
+          }
+        }
+
+        if (overrideAction && typeof overrideAction === 'object' && overrideAction.selector) {
+          if (clickFirstEnabled(overrideAction.selector)) {
+            window.GAS.log.d('[AUTO-ADVANCE] Override clicked selector', overrideAction.selector);
+            return;
+          }
+        }
+
+        if (typeof automationConfig?.beforeDefaultAdvance === 'function') {
+          try {
+            const consumed = automationConfig.beforeDefaultAdvance({ ...context, dialog: $dialog[0] });
+            if (consumed === true) {
+              return;
+            }
+          } catch (beforeError) {
+            window.GAS?.log?.w?.('[AUTO-ADVANCE] beforeDefaultAdvance hook failed:', beforeError);
+          }
+        }
         
         // First, try to find and click "next" buttons
         const nextButton = $dialog.find('[data-action="next"]').first();

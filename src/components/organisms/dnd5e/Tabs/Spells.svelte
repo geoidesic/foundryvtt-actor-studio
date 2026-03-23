@@ -670,7 +670,7 @@ spells-tab-container(clas:readonlys="{isDisabled}")
                           .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
 
                         +if("expandedLevels[spellLevel]")
-                          ul.blank
+                          ul.blank.spell-rows
                             +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
                               li.flexrow.spell-row.justify-flexrow-vertical
                                 .flex0.spell-details

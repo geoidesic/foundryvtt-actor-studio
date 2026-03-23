@@ -17,7 +17,12 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
   default: {
     checkboxSelectors: [],
     rollInputSelectors: [],
-    rollButtonSelectors: [],
+    rollButtonSelectors: [
+      '[data-action="roll"]',
+      '[data-action="roll-hit-points"]',
+      'button.rollButton',
+      'button.roll-button.dice-button'
+    ],
     radioSelectors: [
       'input[type="radio"][value="average"]',
       'input[type="radio"][value="avg"]',
@@ -104,6 +109,19 @@ const getForceTakeAverageSelectorConfig = () => {
     buttonSelectors: [...(baseConfig.buttonSelectors ?? []), ...(versionConfig.buttonSelectors ?? [])],
     selectValues: [...(baseConfig.selectValues ?? []), ...(versionConfig.selectValues ?? [])]
   };
+};
+
+const hasForceTakeAverageTargets = (element, selectorConfig) => {
+  const selectors = [
+    ...(selectorConfig.checkboxSelectors ?? []),
+    ...(selectorConfig.radioSelectors ?? []),
+    ...(selectorConfig.selectSelectors ?? []),
+    ...(selectorConfig.buttonSelectors ?? []),
+    ...(selectorConfig.rollInputSelectors ?? []),
+    ...(selectorConfig.rollButtonSelectors ?? [])
+  ].filter(Boolean);
+
+  return selectors.some((selector) => element.find(selector).length > 0);
 };
 
 const includesHitPoints = (value) => {
@@ -198,6 +216,7 @@ const ensureForcedAverageOverlay = (checkboxElement) => {
 const applyForceTakeAverageSelection = (element, selectorConfig) => {
   let didApply = false;
   let foundTarget = false;
+  let foundSelectionTarget = false;
 
   const lockControl = (controlElement, { disable = true } = {}) => {
     if (disable) {
@@ -205,15 +224,19 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
       controlElement.attr('disabled', 'disabled');
     } else {
       controlElement.prop('disabled', false);
-      controlElement.removeAttr('disabled');
+      if (typeof controlElement.removeAttr === 'function') {
+        controlElement.removeAttr('disabled');
+      }
     }
-
     controlElement.attr('aria-disabled', 'true');
     controlElement.attr('data-gas-force-locked', 'true');
 
     const rawControl = controlElement[0];
     if (rawControl instanceof HTMLElement) {
       rawControl.disabled = disable;
+      if (!disable && typeof rawControl.removeAttribute === 'function') {
+        rawControl.removeAttribute('disabled');
+      }
     }
 
     ensureForcedAverageOverlay(controlElement);
@@ -223,12 +246,30 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
     const checkboxes = element.find(selector);
     if (checkboxes.length) {
       foundTarget = true;
+      foundSelectionTarget = true;
     }
 
     checkboxes.each((_, checkbox) => {
       const checkboxElement = $(checkbox);
-      if (!checkboxElement.is(':checked')) {
+      const nestedCheckbox = checkboxElement.find('input[type="checkbox"]').first();
+      const rawCheckbox = checkboxElement[0];
+      const isChecked = checkboxElement.is(':checked')
+        || Boolean(rawCheckbox?.checked)
+        || (nestedCheckbox.length ? nestedCheckbox.is(':checked') : false);
+
+      if (!isChecked) {
+        if (nestedCheckbox.length) {
+          nestedCheckbox.prop('checked', true);
+          nestedCheckbox.trigger('input');
+          nestedCheckbox.trigger('change');
+        }
+
         checkboxElement.prop('checked', true);
+        checkboxElement.attr('checked', 'checked');
+        if (rawCheckbox && 'checked' in rawCheckbox) {
+          rawCheckbox.checked = true;
+        }
+
         checkboxElement.trigger('input');
         checkboxElement.trigger('change');
         didApply = true;
@@ -271,6 +312,7 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
     const radios = element.find(selector);
     if (radios.length) {
       foundTarget = true;
+      foundSelectionTarget = true;
     }
 
     radios.each((_, radio) => {
@@ -280,6 +322,8 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
         $(radio).trigger('click');
         didApply = true;
       }
+
+      lockControl($(radio), { disable: false });
     });
   }
 
@@ -287,6 +331,7 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
     const selects = element.find(selector);
     if (selects.length) {
       foundTarget = true;
+      foundSelectionTarget = true;
     }
 
     selects.each((_, selectElement) => {
@@ -297,6 +342,8 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
         $(selectElement).trigger('change');
         didApply = true;
       }
+
+      lockControl($(selectElement), { disable: false });
     });
   }
 
@@ -304,13 +351,15 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
     const button = element.find(selector).first();
     if (button.length) {
       foundTarget = true;
+      foundSelectionTarget = true;
       button.trigger('click');
       didApply = true;
+      lockControl(button, { disable: false });
       break;
     }
   }
 
-  return { didApply, foundTarget };
+  return { didApply, foundTarget, foundSelectionTarget };
 };
 
 const forceTakeAverageHitPoints = (element, currentProcess) => {
@@ -318,11 +367,22 @@ const forceTakeAverageHitPoints = (element, currentProcess) => {
     return;
   }
 
-  if (!element?.length || !isHitPointAdvancement(currentProcess, element)) {
+  if (!element?.length) {
     return;
   }
 
   const selectorConfig = getForceTakeAverageSelectorConfig();
+  const isHpAdvancement = isHitPointAdvancement(currentProcess, element);
+  const hasTargetControls = hasForceTakeAverageTargets(element, selectorConfig);
+
+  if (!isHpAdvancement && !hasTargetControls) {
+    return;
+  }
+
+  if (!isHpAdvancement && hasTargetControls) {
+    window.GAS.log.d('[forceTakeAverageHitPoints] proceeding via control-detection fallback');
+  }
+
   const initialResult = applyForceTakeAverageSelection(element, selectorConfig);
   const rootElement = element[0];
 

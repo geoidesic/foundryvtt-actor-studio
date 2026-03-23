@@ -122,7 +122,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 <script>
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
-  import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { MODULE_ID } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
   import {
@@ -172,6 +171,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     return localizationKey ? game.i18n.localize(localizationKey) : tabId;
   }
 
+  function refreshOpenActorSheets() {
+    const openWindows = Object.values(ui.windows || {});
+    for (const app of openWindows) {
+      if (app?.document?.documentName === 'Actor' && typeof app.render === 'function') {
+        app.render(false);
+      }
+    }
+  }
+
   async function saveSettings() {
     try {
       const normalizedTabOrder = normalizeCharacterCreationTabOrder(characterCreationTabOrder);
@@ -185,19 +193,9 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);
       await game.settings.set(MODULE_ID, 'characterCreationTabOrder', normalizedTabOrder);
 
+      refreshOpenActorSheets();
       ui.notifications.info('Progression settings saved successfully');
-      
-      const result = await TJSDialog.confirm({
-        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
-        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-        defaultYes: true
-      });
-
-      if (result) {
-        window.location.reload();
-      } else {
-        application.close();
-      }
+      application.close();
     } catch (error) {
       console.error('Error saving progression settings:', error);
       ui.notifications.error('Failed to save progression settings');

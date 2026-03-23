@@ -699,7 +699,7 @@
             ProgressBar(progress="{levelUpProgress}")
             +if("$levelUpProgress === 100 && !$readOnlyTabs.includes('level-up')")
               .button-container.mt-xs
-                button(
+                button.gas-add-level-btn(
                   disabled="{!$classUuidForLevelUp}"
                   type="button"
                   role="button"
@@ -731,7 +731,7 @@
               ProgressBar(progress="{100}")
               +else()
                 .button-container
-                  button.mt-xs(
+                  button.mt-xs.gas-finalize-purchase-btn(
                     type="button"
                     role="button"
                     on:mousedown="{handleFinalizePurchase}"
@@ -748,7 +748,7 @@
                 ProgressBar(progress="{$spellProgress.progressPercentage}")
                 +if("$spellProgress.progressPercentage === 100")
                   .button-container
-                    button.mt-xs(
+                    button.mt-xs.gas-finalize-spells-btn(
                       type="button"
                       role="button"
                       on:mousedown="{handleFinalizeSpells}"
@@ -826,7 +826,7 @@
                 +if("$progress === 100")
                   .button-container
                     +if("!$isActorCreated && $activeTab !== 'biography'")
-                      button.mt-xs.wide(
+                      button.mt-xs.wide.gas-create-character-btn(
                         type="button"
                         role="button"
                         on:mousedown="{clickCreateHandler}"
