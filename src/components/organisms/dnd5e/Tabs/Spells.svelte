@@ -1,16 +1,17 @@
 <script>
   import { get } from 'svelte/store';
   import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
-  import { characterClass, characterSubClass } from '~/src/stores/storeDefinitions';
+  import { characterClass } from '~/src/stores/storeDefinitions';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
     initializeSpellSelection, loadAvailableSpells, addSpell, removeSpell,
-    spellLimits, currentSpellCounts, spellProgress
+    spellLimits, currentSpellCounts
   } from '~/src/stores/spellSelection';
-  import spellsKnownData from '~/src/stores/spellsKnown.json';
-  import { MODULE_ID } from '~/src/helpers/constants';
-  import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
+  import { determineSpellListClass } from '~/src/helpers/LevelUpStateMachine';
+  import SpellCounterGrid from '~/src/components/atoms/dnd5e/SpellCounterGrid.svelte';
+  import SelectedSpellsPanel from '~/src/components/molecules/dnd5e/Spells/SelectedSpellsPanel.svelte';
+  import AvailableSpellsPanel from '~/src/components/molecules/dnd5e/Spells/AvailableSpellsPanel.svelte';
   
   const actor = getContext("#doc");
   
@@ -19,7 +20,6 @@
   let expandedLevels = {};
   let selectedSpellsList = [];
   let scrolled = false;
-  let spellContainer;
   let cleanup;
   let lastAutoSelectSignature = '';
   let autoSelectInProgress = false;
@@ -487,6 +487,10 @@
     expandedLevels = { ...expandedLevels };
   }
 
+  function handleKeywordFilter(event) {
+    keywordFilter = event.currentTarget?.value || '';
+  }
+
   // Add spell to selection
   async function addToSelection(spell) {
     // Always get the latest store values to avoid stale cap checks
@@ -592,139 +596,61 @@ spells-tab-container(clas:readonlys="{isDisabled}")
           p 
             em Note: You still need to select your cantrips as they cannot be changed later.
   .sticky-header(class:hidden="{!scrolled}")
-    .panel-header-grid
-      .grid-item.label {t('Spells.Cantrips')}:
-      .grid-item.value(class:at-limit="{cantripCountAtLimit}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-      .grid-item.label {t('Spells.Spells')}:
-      .grid-item.value(class:at-limit="{spellCountAtLimit}") {$currentSpellCounts.spells}/{displaySpellLimit}
+    SpellCounterGrid(
+      cantripLabel="{t('Spells.Cantrips')}"
+      spellLabel="{t('Spells.Spells')}"
+      cantripCount="{$currentSpellCounts.cantrips}"
+      cantripLimit="{$spellLimits.cantrips}"
+      spellCount="{$currentSpellCounts.spells}"
+      spellLimit="{displaySpellLimit}"
+      cantripCountAtLimit="{cantripCountAtLimit}"
+      spellCountAtLimit="{spellCountAtLimit}"
+    )
   .spells-tab
     +if("$spellLimits.cantrips || displaySpellLimit")
+      SelectedSpellsPanel(
+        scrolled="{scrolled}"
+        cantripCountAtLimit="{cantripCountAtLimit}"
+        spellCountAtLimit="{spellCountAtLimit}"
+        currentCantrips="{$currentSpellCounts.cantrips}"
+        currentSpells="{$currentSpellCounts.spells}"
+        cantripLimit="{$spellLimits.cantrips}"
+        spellLimit="{displaySpellLimit}"
+        selectedSpellsList="{selectedSpellsList}"
+        isDisabled="{isDisabled}"
+        isLockedAutoSelectedSpell="{isLockedAutoSelectedSpell}"
+        removeFromSelection="{removeFromSelection}"
+        getEnrichedName="{getEnrichedName}"
+        getSpellLevelDisplay="{getSpellLevelDisplay}"
+        getSchoolName="{getSchoolName}"
+      )
 
-      .left-panel(bind:this="{spellContainer}")
-        h3 Expected spell selections
-        .panel-header-grid(class:hidden="{scrolled}")
-          .grid-item.label {t('Spells.Cantrips')}:
-          .grid-item.value(class:at-limit="{cantripCountAtLimit}") {$currentSpellCounts.cantrips}/{$spellLimits.cantrips}
-          .grid-item.label {t('Spells.Spells')}:
-          .grid-item.value(class:at-limit="{spellCountAtLimit}") {$currentSpellCounts.spells}/{displaySpellLimit}
-
-        +if("$spellLimits.cantrips || displaySpellLimit")
-          h3 {t('Spells.SelectedSpells')}
-          .selected-spells
-            +if("selectedSpellsList.length === 0")
-              .empty-selection
-                p {t('Spells.NoSpellsSelected')}      
-
-              +else()
-                +each("selectedSpellsList as selectedSpell")
-                  .selected-spell
-                    .spell-col1
-                      img.spell-icon( alt="{selectedSpell.spell.name}" src="{selectedSpell.spell.img}")
-                    .spell-col2.left            
-                      .spell-name
-                        +await("getEnrichedName(selectedSpell.spell)")
-                          span {selectedSpell.spell.name}
-                          +then("Html")
-                            span {@html Html}
-                          +catch("error")
-                            span {selectedSpell.spell.name}
-
-
-                      .spell-subdetails
-                        span.spell-level {getSpellLevelDisplay(selectedSpell.spell)}
-                        span.spell-school {getSchoolName(selectedSpell.spell)}
-
-                    .spell-col3
-                      button.remove-btn(on:click!="{ () => removeFromSelection(selectedSpell.id) }" disabled="{isDisabled || isLockedAutoSelectedSpell(selectedSpell.spell)}")
-                        i.fas.fa-trash
-
-    .right-panel.spell-list
-      //- pre {$spellLimits.spells} {$spellLimits.cantrips} {displaySpellLimit} {$currentSpellCounts.cantrips} {currentSpellCounts.spells}
-      +if("$spellLimits.cantrips || displaySpellLimit")
-
-        h3 {t('Spells.AvailableSpells')} | {characterClassName}
-        +if("shouldHideAvailableSpellsPanel")
-          .empty-state
-            p All available spells selected.
-          +else()
-            +if("!shouldHideSpellSearch")
-              .filter-container.mb-sm
-                input.keyword-filter(type="text" bind:value="{keywordFilter}" placeholder="{t('Spells.FilterPlaceholder')}" disabled="{isDisabled}")
-            +if("loading")
-              .loading {t('Spells.Loading')}
-              +elseif("filteredSpells.length === 0")
-                .empty-state
-                  +if("hasAllSpellsAccess && spellCountAtLimit")
-                    p All available spells are already selected.
-                    +else()
-                      p {keywordFilter ? t('Spells.NoMatchingSpells') : t('Spells.NoSpells')}
-                +else()
-                  +each("spellLevels as spellLevel")
-                    +if("(spellLevel == 'Cantrips' && !cantripCountAtLimit) || (spellLevel != 'Cantrips' && !spellCountAtLimit)")
-                      .spell-level-group
-                        h4.left.mt-sm.flexrow.spell-level-header.pointer(on:click!="{ () => toggleSpellLevel(spellLevel) }")
-                          .flex0.mr-xs
-                            +if("expandedLevels[spellLevel]")
-                              span [-]
-                              +else()
-                                span [+]
-                          .flex1 {spellLevel} ({spellsByLevel[spellLevel].length})
-
-                        +if("expandedLevels[spellLevel]")
-                          ul.blank.spell-rows
-                            +each("spellsByLevel[spellLevel] as spell (spell.uuid || spell._id)")
-                              li.flexrow.spell-row.justify-flexrow-vertical
-                                .flex0.spell-details
-                                  img.spell-icon.cover(src="{spell.img}" alt="{spell.name}")
-
-                                .flex1.spell-info
-                                  .flexrow
-                                    .flex1.left.spell-name.gold
-                                      +await("getEnrichedName(spell)")
-                                        span {spell.name}
-                                        +then("Html")
-                                          span {@html Html}
-                                        +catch("error")
-                                          span {spell.name}
-                                  .flexrow.smalltext
-
-                                    .flex1.left.spell-meta
-                                      +if("getSchoolName(spell, true)")
-                                        .flexrow.gap-10
-                                          .flex2.flexrow
-                                            div School:
-                                            .badge {getSchoolName(spell, true)}
-                                          .flex2.flexrow 
-                                            div Activation
-                                            .badge {getCastingTimeDisplay(spell)}
-
-                                .spell-actions.mx-sm
-                                  button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
-                                    i.fas.fa-plus
-                      +else()
-                        .spell-level-group
-                          p.left.mt-sm.flexrow.positive 
-                            i.fa.fa-check.getParentClasses
-                            | {spellLevel} selection completed
-        +else()
-          .empty-state
-            p No spells available for selection at this level.
+    AvailableSpellsPanel(
+      className="{characterClassName}"
+      loading="{loading}"
+      isDisabled="{isDisabled}"
+      shouldHideAvailableSpellsPanel="{shouldHideAvailableSpellsPanel}"
+      shouldHideSpellSearch="{shouldHideSpellSearch}"
+      keywordFilter="{keywordFilter}"
+      filteredSpells="{filteredSpells}"
+      spellLevels="{spellLevels}"
+      spellsByLevel="{spellsByLevel}"
+      expandedLevels="{expandedLevels}"
+      cantripCountAtLimit="{cantripCountAtLimit}"
+      spellCountAtLimit="{spellCountAtLimit}"
+      hasAllSpellsAccess="{hasAllSpellsAccess}"
+      spellCountAtLimitForNotice="{spellCountAtLimit}"
+      onKeywordFilter="{handleKeywordFilter}"
+      toggleSpellLevel="{toggleSpellLevel}"
+      addToSelection="{addToSelection}"
+      getEnrichedName="{getEnrichedName}"
+      getSchoolName="{getSchoolName}"
+      getCastingTimeDisplay="{getCastingTimeDisplay}"
+    )
 </template>
 
 <style lang="sass">
   @import "../../../../../styles/Mixins.sass"
-
-  .badge
-    +badge(var(--color-cool-3), 0.5rem)
-    margin-top: -2px
-    margin-left: -8px
-  :global(.GAS.theme-dark .selected-spell .spell-level)
-    color: silver
-
-  :global(.GAS.theme-dark .spell-row .spell-meta .spell-school)
-    color: silver
-  :global(.GAS.theme-dark .selected-spell .spell-school)
-    color: silver !important
 
   .spells-tab-container 
     height: 100%
@@ -739,8 +665,6 @@ spells-tab-container(clas:readonlys="{isDisabled}")
       :global(*)
         cursor: default !important
     
-  ul.blank
-     padding: 0 
   .info-message
     font-size: 0.8rem
     color: #666
@@ -829,320 +753,4 @@ spells-tab-container(clas:readonlys="{isDisabled}")
     height: 100%
     width: 100%
     flex: 1
-
-  .left-panel
-    flex: 1
-    max-width: 40%
-    min-width: 250px
-    border-right: 1px solid var(--color-border-light-tertiary)
-    padding: 1rem
-    overflow-y: auto
-    
-    .panel-header
-      margin-bottom: 1rem
-      &.hidden
-        display: none
-        
-    h3
-      margin-bottom: 0.5rem
-      
-    .spell-limits
-        display: flex
-        flex-direction: column
-        gap: 0.25rem
-        margin-bottom: 1rem
-        
-        .limit-display
-          font-size: 0.9rem
-          padding: 0.25rem 0.5rem
-          background: rgba(0, 128, 0, 0.1)
-          border-radius: 4px
-          
-          &.at-limit
-            background: rgba(255, 0, 0, 0.1)
-            color: var(--color-positive)
-
-        .progress-section
-          margin-top: 1rem
-          margin-bottom: 1rem
-          
-          .progress-header
-            display: flex
-            justify-content: space-between
-            align-items: center
-            margin-bottom: 0.5rem
-            font-size: 0.9rem
-            
-            .progress-text
-              color: var(--color-text)
-              
-            .progress-percentage
-              font-weight: bold
-              color: var(--color-text-primary)
-              
-          .progress-bar
-            width: 100%
-            height: 8px
-            background: var(--color-border-light-tertiary)
-            border-radius: 4px
-            overflow: hidden
-            
-            .progress-fill
-              height: 100%
-              background: linear-gradient(90deg, #28a745, #20c997)
-              border-radius: 4px
-              transition: width 0.3s ease
-      
-    .selected-spells
-      max-height: 60vh
-      overflow-y: auto
-      
-    .empty-selection
-      text-align: center
-      color: #666
-      font-style: italic
-      padding: 2rem
-      
-    .selected-spell
-      display: flex
-      align-items: center
-      padding: 0.5rem
-      border: 1px solid var(--color-border-light-tertiary)
-      margin-bottom: 0.5rem
-      border-radius: 4px
-      background: var(--color-bg)
-      
-      .spell-col1, .spell-col3
-        flex: 0 0 auto
-        
-      .spell-col2
-        flex: 1
-        margin: 0 0.5rem
-        
-      .spell-icon
-        width: 32px
-        height: 32px
-        border-radius: 4px
-        border: 1px solid var(--color-border-light-tertiary)
-        
-      .spell-name
-        font-weight: bold
-        display: block
-        
-      .spell-subdetails
-        font-size: 0.85em
-        color: #666
-        display: flex
-        gap: 0.5rem
-        
-        .spell-level, .spell-school
-          background: rgba(0, 0, 0, 0.05)
-          padding: 0.125rem 0.25rem
-          border-radius: 3px
-          
-      .remove-btn
-        background: none
-        border: none
-        cursor: pointer
-        padding: 0.25rem 0 0.25rem 0.25rem
-        border-radius: 3px
-        line-height: 1
-        
-        &:hover
-          background: rgba(153, 0, 0, 0.1)
-
-        &:disabled
-          opacity: 0.5
-          cursor: not-allowed
-          &:hover
-            background: none
-
-  .right-panel
-    flex: 2
-    padding: 1rem
-    overflow-y: auto
-    
-    .filter-container
-      margin-bottom: 1rem
-      
-    .keyword-filter
-      width: 100%
-      padding: 0.5rem
-      border: 1px solid var(--color-border-light-tertiary)
-      border-radius: 4px
-      background: var(--color-bg)
-      color: var(--color-text)
-      
-    .loading, .empty-state
-      text-align: center
-      color: #666
-      font-style: italic
-      padding: 2rem
-      
-    .spell-level-group
-      margin-bottom: 1rem
-      position: relative
-      
-    .spell-level-header
-      background: var(--color-bg-btn)
-      padding: 0.5rem
-      border-radius: 4px
-      cursor: pointer
-      font-weight: bold
-      border: 1px solid var(--color-border-light-tertiary)
-      
-      &:hover
-        background: var(--color-bg-btn-hover)
-        
-    .spell-row
-      position: relative
-     
-      border: 1px solid var(--color-border-light-tertiary)
-      margin-bottom: 0.25rem
-      border-radius: 4px
-      background: var(--color-bg)
-      min-height: 40px
-      
-      &:hover
-        background: var(--color-bg-btn)
-        
-      .spell-details
-        min-width: 50px
-        
-        .spell-icon
-          width: 40px
-          height: 40px
-          border-radius: 4px
-          flex-shrink: 0
-          object-fit: cover
-          position: absolute
-          border-top: 1px solid var(--dnd5e-color-gold)
-          border-left: 1px solid var(--dnd5e-color-gold)
-          border-bottom: 1px solid var(--dnd5e-color-gold)
-          border-right: none
-          border-top-right-radius: 0
-          border-bottom-right-radius: 0
-          left: -1px
-          top: 0px
-          margin-top: -1px
-
-          img
-            border: none
-
-          
-        .spell-info
-          
-          .spell-name
-            font-weight: bold
-            
-          .spell-meta
-            font-size: 0.85em
-            color: #666
-            display: flex
-            gap: 0.5rem
-            
-            .spell-school, .casting-time
-              background: rgba(0, 0, 0, 0.05)
-              padding: 0.125rem 0.25rem
-              border-radius: 3px
-            
-      .spell-actions
-        flex: 0 0 auto
-        
-        .add-btn
-          background: var(--dnd5e-color-gold, #b59e54)
-          border: none
-          width: 24px
-          height: 24px
-          border-radius: 3px
-          color: black
-          display: flex
-          align-items: center
-          justify-content: center
-          cursor: pointer
-
-          i.fas.fa-plus
-            margin-right: 0
-            margin-left: 0
-
-          &:hover
-            background: darken(#b59e54, 10%)
-
-          &:disabled
-            opacity: 0.5
-            cursor: not-allowed
-            &:hover
-              background: var(--dnd5e-color-gold, #b59e54)
-
-  .finalize-section
-    position: sticky
-    bottom: 0
-    left: 0
-    right: 0
-    padding: 1rem
-    background: var(--color-bg)
-    border-top: 1px solid var(--color-border-light-tertiary)
-    z-index: 10
-    
-    .finalize-btn
-      width: 100%
-      padding: 1rem 2rem
-      background: linear-gradient(135deg, #28a745, #20c997)
-      color: white
-      border: none
-      border-radius: 8px
-      font-size: 1rem
-      font-weight: bold
-      cursor: pointer
-      display: flex
-      align-items: center
-      justify-content: center
-      gap: 0.5rem
-      transition: all 0.3s ease
-      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3)
-      
-      &:hover
-        background: linear-gradient(135deg, #218838, #1ba085)
-        transform: translateY(-2px)
-        box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4)
-        
-      &:active
-        transform: translateY(0)
-        
-      &:disabled
-        opacity: 0.6
-        cursor: not-allowed
-        transform: none
-        box-shadow: none
-
-  .spell-icon.cover
-    width: 48px
-    height: 48px
-    object-fit: cover
-    border-radius: 4px
-    border: 1px solid var(--color-border-light-tertiary)
-
-  .panel-header-grid
-    display: grid
-    grid-template-columns: 1fr 0.4fr 1fr 0.4fr
-    grid-template-rows: repeat(2, auto)
-    padding: 0.6rem 1.3rem 0.3rem 1.1rem
-    gap: 4px
-    margin-bottom: 0
-    align-items: center
-    background-color: var(--li-background-color)
-    border-radius: var(--border-radius)
-    border-collapse: none
-    justify-content: space-evenly
-    .label
-      font-size: 0.95em
-      color: var(--dnd5e-color-gold)
-      text-align: right
-      font-weight: 600
-    .value
-      font-size: 1.1em
-      font-weight: bold
-      text-align: left
-      &.at-limit
-        color: var(--color-positive)
 </style>

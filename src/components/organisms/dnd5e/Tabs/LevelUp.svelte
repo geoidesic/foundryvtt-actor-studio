@@ -317,6 +317,7 @@ $: classAdvancementComponents = {};
 $: subClassAdvancementComponents = {};
 $: subClassProp = $subClassUuidForLevelUp;
 $: classProp = $selectedMultiClassUUID;
+$: shouldShowSubclassPreview = subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014');
 $: classes = window.GAS.dnd5eVersion >= 4 ? $actor.classes : $actor._classes;
 $: classKeys = Object.keys(classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
@@ -493,16 +494,10 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
         h3.left.mt-md {t('LevelUp.Subclass')}
         +if("window.GAS.debug")
           //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        IconSelect.icon-select.mb-md(
-          active="{subClassProp}" 
-          options="{subclasses}"  
-          placeHolder="{subclassesPlaceholder}" 
-          handler="{eventHandlers.selectSubClassHandler}" 
-          id="subClass-select" 
-          bind:value="{subclassValue}" 
-          truncateWidth="17"
-          disabled="{$isLevelUpAdvancementInProgress}"
-        )
+        .flexrow
+          .flex0.required(class="{$levelUpSubClassObject ? '' : 'active'}") *
+          .flex3
+            IconSelect.icon-select.mb-md(active="{subClassProp}" options="{subclasses}" placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{$isLevelUpAdvancementInProgress}")
       +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
         p
           i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
@@ -520,7 +515,7 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         //- Subclass selection section
-        +if("subclasses.length && $levelUpClassGetsSubclassThisLevel && (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules == '2014')")
+        +if("shouldShowSubclassPreview")
           ul.icon-list
             li.left
               .flexrow
