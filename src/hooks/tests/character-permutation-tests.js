@@ -4,7 +4,7 @@ import { safeGetSetting } from '~/src/helpers/Utility';
 
 export function registerCharacterPermutationTests(context, options = {}) {
   const { describe, it, assert, before, after } = context;
-  const enabledClasses = new Set((options?.classes || ['cleric', 'fighter', 'ranger']).map((entry) => String(entry).toLowerCase()));
+  const enabledClasses = new Set((options?.classes || ['cleric', 'fighter', 'ranger', 'warlock']).map((entry) => String(entry).toLowerCase()));
 
   const MODULE_ID = 'foundryvtt-actor-studio';
   const wait = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
@@ -510,7 +510,12 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return Number(targetLevel) >= 1;
   };
 
-  const completeSpellsStepIfVisible = async ({ timeoutMs = 25000 } = {}) => {
+  const shouldExpectWarlockSpellsForLevel = (targetLevel) => {
+    // Warlocks always get spells from level 1 onwards
+    return Number(targetLevel) >= 1;
+  };
+
+  const completeSpellsStepIfVisible = async ({ timeoutMs = 20000 } = {}) => {
     const spellsVisible = await waitForCondition(() => hasSpellsTabVisible(), timeoutMs, 200);
     if (!spellsVisible) {
       return { visible: false, completed: false, action: 'none' };
@@ -558,7 +563,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
       const currentCantripsSelected = cantripLimitMatch ? parseInt(cantripLimitMatch[1], 10) : 0;
       const cantripLimit = cantripLimitMatch ? parseInt(cantripLimitMatch[2], 10) : 0;
 
-      // Expand collapsed spell groups
+      // Expand ALL collapsed spell groups
       const collapsedHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
         .filter((header) => (header.textContent || '').includes('[+]'));
       if (collapsedHeaders.length) {
@@ -574,24 +579,30 @@ export function registerCharacterPermutationTests(context, options = {}) {
         return true; // All requirements met
       }
 
-      // Select spells/cantrips up to the limit
-      const addButtons = Array.from(root.querySelectorAll('.spell-level-group .add-btn:not([disabled])'));
-      if (!addButtons.length) {
-        return false;
+      // Get cantrip buttons from Cantrips group
+      const cantripGroup = Array.from(root.querySelectorAll('.spell-level-group'))
+        .find((group) => (group.textContent || '').includes('Cantrips'));
+      const cantripButtons = cantripGroup 
+        ? Array.from(cantripGroup.querySelectorAll('.add-btn:not([disabled])'))
+        : [];
+
+      // Get spell buttons from Lvl 1+ groups
+      const spellLevelGroups = Array.from(root.querySelectorAll('.spell-level-group'))
+        .filter((group) => !(group.textContent || '').includes('Cantrips'));
+      const spellButtons = spellLevelGroups
+        .flatMap((group) => Array.from(group.querySelectorAll('.add-btn:not([disabled])')))
+        .slice(0, spellLimit - currentSpellsSelected);
+
+      // Select cantrips first
+      const cantripsToSelect = Math.max(0, cantripLimit - currentCantripsSelected);
+      for (let i = 0; i < Math.min(cantripsToSelect, cantripButtons.length); i++) {
+        cantripButtons[i].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
 
-      // Only click enough buttons to reach the total limit
-      const totalSelected = currentSpellsSelected + currentCantripsSelected;
-      const totalLimit = spellLimit + cantripLimit;
-      const needToSelect = totalLimit - totalSelected;
-      
-      if (needToSelect <= 0) {
-        return true;
-      }
-
-      const clicksThisPass = Math.min(addButtons.length, needToSelect);
-      for (let index = 0; index < clicksThisPass; index++) {
-        addButtons[index].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      // Then select spells
+      const spellsToSelect = Math.max(0, spellLimit - currentSpellsSelected);
+      for (let i = 0; i < Math.min(spellsToSelect, spellButtons.length); i++) {
+        spellButtons[i].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
 
       return isFooterButtonAvailable('finalize');
@@ -1395,6 +1406,276 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
   });
   }
+
+  if (enabledClasses.has('warlock')) {
+  describe('Warlock', function () {
+    let savedDebugState = {};
+    let originalMilestoneLeveling = false;
+    let originalForceTakeAverageHitPoints = false;
+    let warlockActorId = null;
+    let warlockActor = null;
+    const testActorName = `Quench Warlock Automation ${Date.now()}`;
+    const warlockClassUuid = 'Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000';
+
+    const findWarlockActorByName = () => {
+      const matches = game.actors.contents
+        .filter((actorDoc) => actorDoc?.name === testActorName && actorDoc?.type === 'character');
+      if (!matches.length) return null;
+      return matches[matches.length - 1];
+    };
+
+    const getCurrentWarlockActor = () => {
+      if (warlockActorId) {
+        const actorFromId = game.actors.get(warlockActorId) || null;
+        if (actorFromId) return actorFromId;
+      }
+
+      const actorFromName = findWarlockActorByName();
+      if (actorFromName && !warlockActorId) {
+        warlockActorId = actorFromName.id;
+      }
+      return actorFromName;
+    };
+
+    before(function () {
+      savedDebugState = {};
+      for (const key of DEBUG_ROOT_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(window.GAS, key)) {
+          savedDebugState[key] = window.GAS[key];
+          delete window.GAS[key];
+        }
+      }
+
+      originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
+      originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+    });
+
+    beforeEach(function () {
+      this.timeout(120000);
+    });
+
+    after(async function () {
+      clearQuenchAutomation();
+      await closeActorStudioIfOpen();
+
+      const actorToCleanup = warlockActorId ? game.actors.get(warlockActorId) : (warlockActor || findWarlockActorByName());
+      await closeActorSheetIfOpen(actorToCleanup);
+
+      if (actorToCleanup && !actorToCleanup.deleted) {
+        await actorToCleanup.delete();
+      }
+      warlockActor = null;
+      warlockActorId = null;
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
+
+      for (const [key, value] of Object.entries(savedDebugState)) {
+        window.GAS[key] = value;
+      }
+      savedDebugState = {};
+    });
+
+    it('should auto-run warlock creation and handle spell step as required by rules', async function () {
+      this.timeout(120000);
+
+      await game.settings.set(MODULE_ID, 'allowManualInput', true);
+      await game.settings.set(MODULE_ID, 'allowStandardArray', false);
+      await game.settings.set(MODULE_ID, 'allowPointBuy', false);
+      await game.settings.set(MODULE_ID, 'allowRolling', false);
+      await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
+      await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
+      await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
+
+      configureQuenchAutomation({
+        selections: {
+          race: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
+          background: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
+          characterClass: warlockClassUuid
+        }
+      });
+
+      await closeActorStudioIfOpen();
+      const creationApp = await openActorStudio(testActorName);
+      assert.ok(creationApp, 'Actor Studio should open for warlock creation test');
+
+      const requiredTabsVisited = await visitRequiredCreationTabs();
+      assert.ok(requiredTabsVisited, 'All visible creation tabs should be visited before creating the warlock');
+
+      const createClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'),
+        20000,
+        150
+      );
+      assert.ok(createClicked, 'Create Character button should be clickable for warlock creation');
+
+      const creationClosedEarly = await waitForCondition(
+        () => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'),
+        12000,
+        200
+      );
+
+      if (!creationClosedEarly) {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 12000, 200);
+        if (spellsTabAppeared) {
+          const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 30000 });
+          assert.ok(spellStepResult.visible, 'Spells tab should be detectable when shown during warlock creation');
+          assert.ok(spellStepResult.completed, 'Warlock creation spells step should complete via UI controls when displayed');
+        }
+      }
+
+      const actorStudioClosed = await waitForActorStudioClosed();
+      assert.ok(actorStudioClosed, 'Actor Studio should close after warlock creation completes');
+
+      await wait(1200);
+      warlockActorId = get(actorInGame)?.id || null;
+      if (!warlockActorId) {
+        const actorByName = findWarlockActorByName();
+        warlockActorId = actorByName?.id || null;
+      }
+      assert.ok(warlockActorId, 'Created warlock actor id should be available after creation');
+
+      const reachedLevel1 = await waitForActorClassLevel(warlockActorId, 'warlock', 1);
+      assert.ok(reachedLevel1, 'Warlock class level should be embedded at level 1 after creation');
+
+      warlockActor = game.actors.get(warlockActorId);
+      assert.ok(warlockActor, 'Created warlock actor should exist in world actors');
+
+      const hasBackground = warlockActor.items.some((item) => item.type === 'background');
+      assert.ok(hasBackground, 'Created warlock actor should have a background item embedded');
+    });
+
+    it('should open level-up app from warlock actor sheet when milestone leveling is enabled', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentWarlockActor();
+      assert.ok(actor, 'Existing created warlock actor should be available for level-up tests');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Actor Studio level-up button should be clickable on the warlock actor sheet');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up Actor Studio app should open from warlock actor sheet button');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level warlock from 1 to 2 and handle spells according to rules', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentWarlockActor();
+      assert.ok(actor, 'Existing created warlock actor should be available for 1->2 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for warlock 1->2 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for warlock 1->2 test');
+
+      const levelUpTabFocused = await focusLevelUpClassTab();
+      assert.ok(levelUpTabFocused, 'Level-up/Class tab should be focused before warlock 1->2 class selection');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before warlock 1->2 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked to select warlock level-up');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for warlock 1->2 progression');
+
+      const expectSpellsAtLevel2 = shouldExpectWarlockSpellsForLevel(2);
+      if (expectSpellsAtLevel2) {
+        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 25000 });
+        assert.ok(spellStepResult.visible, 'Spells tab should appear for warlock level 2 in this ruleset');
+        assert.ok(spellStepResult.completed, 'Warlock level 1->2 spells step should complete (finalize or skip)');
+      } else {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
+        assert.ok(!spellsTabAppeared, 'Spells tab should not appear for warlock level 1->2 in this ruleset');
+      }
+
+      // Wait for the level-up app to fully close after spells completes
+      const appClosedAfterSpells = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 15000, 200);
+      assert.ok(appClosedAfterSpells, 'Level-up app should close after spell completion');
+
+      const reachedLevel2 = await waitForActorClassLevel(warlockActorId, 'warlock', 2);
+      assert.ok(reachedLevel2, 'Warlock class level should progress to 2');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level warlock from 2 to 3 and handle spells according to rules', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentWarlockActor();
+      assert.ok(actor, 'Existing created warlock actor should be available for 2->3 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for warlock 2->3 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for warlock 2->3 test');
+
+      const levelUpTabFocused = await focusLevelUpClassTab();
+      assert.ok(levelUpTabFocused, 'Level-up/Class tab should be focused before warlock 2->3 class selection');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before warlock 2->3 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked for warlock 2->3 test');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for warlock 2->3 progression');
+
+      const expectSpellsAtLevel3 = shouldExpectWarlockSpellsForLevel(3);
+      if (expectSpellsAtLevel3) {
+        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 25000 });
+        assert.ok(spellStepResult.visible, 'Spells tab should appear for warlock level 3 in this ruleset');
+        assert.ok(spellStepResult.completed, 'Warlock level 2->3 spells step should complete (finalize or skip)');
+      } else {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
+        assert.ok(!spellsTabAppeared, 'Spells tab should not appear for warlock level 2->3 in this ruleset');
+      }
+
+      // Wait for the level-up app to fully close after spells completes
+      const appClosedAfterSpells = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 15000, 200);
+      assert.ok(appClosedAfterSpells, 'Level-up app should close after spell completion');
+
+      const reachedLevel3 = await waitForActorClassLevel(warlockActorId, 'warlock', 3);
+      assert.ok(reachedLevel3, 'Warlock class level should progress to 3');
+
+      warlockActor = getCurrentWarlockActor();
+      await closeActorStudioIfOpen();
+    });
+  });
+  }
 }
 
 export function registerClericPermutationTests(context) {
@@ -1407,4 +1688,8 @@ export function registerFighterPermutationTests(context) {
 
 export function registerRangerPermutationTests(context) {
   return registerCharacterPermutationTests(context, { classes: ['ranger'] });
+}
+
+export function registerWarlockPermutationTests(context) {
+  return registerCharacterPermutationTests(context, { classes: ['warlock'] });
 }
