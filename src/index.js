@@ -2,6 +2,7 @@ import '../styles/Variables.sass'; // Import any styles as this includes them in
 import '../styles/init.sass'; // Import any styles as this includes them in the build.
 
 import { MODULE_ID } from '~/src/helpers/constants';
+import { safeGetSetting } from '~/src/helpers/Utility';
 
 import DonationTrackerGameSettings from '~/src/settings/DonationTrackerGameSettings.js';
 
@@ -19,13 +20,10 @@ import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 //- import tests
 import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
-import {
-  registerCharacterPermutationTests,
-  registerClericPermutationTests,
-  registerFighterPermutationTests,
-  registerRangerPermutationTests,
-  registerWarlockPermutationTests
-} from './hooks/tests/character-permutation-tests.js';
+import { registerClericPermutationTests } from './hooks/tests/character-permutation-tests/cleric.js';
+import { registerFighterPermutationTests } from './hooks/tests/character-permutation-tests/fighter.js';
+import { registerRangerPermutationTests } from './hooks/tests/character-permutation-tests/ranger.js';
+import { registerWarlockPermutationTests } from './hooks/tests/character-permutation-tests/warlock.js';
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
@@ -34,29 +32,26 @@ Hooks.once("init", (app, html, data) => {
 // Register Quench tests
 Hooks.on("quenchReady", (quench) => {
   console.log("Quench ready, registering Actor Studio test batches");
+  const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000)) || 120000;
   quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
     displayName: "Actor Studio: Basic Test",
-    timeout: 120000
-  });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test", registerCharacterPermutationTests, {
-    displayName: "Actor Studio: Character Permutation Tests",
-    timeout: 120000
+    timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericPermutationTests, {
     displayName: "Cleric",
-    timeout: 120000
+    timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.fighter", registerFighterPermutationTests, {
     displayName: "Fighter",
-    timeout: 120000
+    timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.ranger", registerRangerPermutationTests, {
     displayName: "Ranger",
-    timeout: 120000
+    timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.warlock", registerWarlockPermutationTests, {
     displayName: "Warlock",
-    timeout: 120000
+    timeout: testBatchTimeout
   });
   console.log("Registered Actor Studio test batches");
 });

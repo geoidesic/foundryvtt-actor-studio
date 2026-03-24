@@ -1,12 +1,14 @@
 import { get } from 'svelte/store';
 import { actorInGame } from '~/src/stores/index';
 import { safeGetSetting } from '~/src/helpers/Utility';
+import { getTestTimeouts } from '~/src/helpers/testTimeouts';
 
 export function registerCharacterPermutationTests(context, options = {}) {
   const { describe, it, assert, before, after } = context;
   const enabledClasses = new Set((options?.classes || ['cleric', 'fighter', 'ranger', 'warlock']).map((entry) => String(entry).toLowerCase()));
 
   const MODULE_ID = 'foundryvtt-actor-studio';
+  const TEST_TIMEOUTS = getTestTimeouts();
   const wait = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
   let createdActor = null;
   let createdActorId = null;
@@ -80,7 +82,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     }
   };
 
-  const waitForCondition = async (fn, timeoutMs = 20000, intervalMs = 100) => {
+  const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.generalCondition, intervalMs = TEST_TIMEOUTS.pollingInterval) => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       try {
@@ -669,7 +671,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     beforeEach(function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
     });
 
     after(async function () {
@@ -696,7 +698,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should auto-run cleric creation and finalize spells', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       await game.settings.set(MODULE_ID, 'allowManualInput', true);
       await game.settings.set(MODULE_ID, 'allowStandardArray', false);
@@ -760,7 +762,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should open level-up app from actor sheet when milestone leveling is enabled', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentActor();
       assert.ok(actor, 'Existing created actor should be available for level-up tests');
@@ -781,7 +783,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level cleric from 1 to 2 without showing spells tab', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentActor();
       assert.ok(actor, 'Existing created actor should be available for 1->2 level-up test');
@@ -821,7 +823,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level cleric from 2 to 3, finalize spells, and add them to the actor', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentActor();
       assert.ok(actor, 'Existing created actor should be available for 2->3 level-up test');
@@ -948,7 +950,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     beforeEach(function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
     });
 
     after(async function () {
@@ -975,7 +977,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should auto-run fighter creation without spell selection', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       await game.settings.set(MODULE_ID, 'allowManualInput', true);
       await game.settings.set(MODULE_ID, 'allowStandardArray', false);
@@ -1034,7 +1036,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should open level-up app from fighter actor sheet when milestone leveling is enabled', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentFighterActor();
       assert.ok(actor, 'Existing created fighter actor should be available for level-up tests');
@@ -1055,7 +1057,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level fighter from 1 to 2 without showing spells tab', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentFighterActor();
       assert.ok(actor, 'Existing created fighter actor should be available for 1->2 level-up test');
@@ -1095,7 +1097,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level fighter from 2 to 3 without showing spells tab', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentFighterActor();
       assert.ok(actor, 'Existing created fighter actor should be available for 2->3 level-up test');
@@ -1181,7 +1183,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     beforeEach(function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
     });
 
     after(async function () {
@@ -1207,7 +1209,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should auto-run ranger creation and handle spell step as required by rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       await game.settings.set(MODULE_ID, 'allowManualInput', true);
       await game.settings.set(MODULE_ID, 'allowStandardArray', false);
@@ -1276,7 +1278,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should open level-up app from ranger actor sheet when milestone leveling is enabled', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentRangerActor();
       assert.ok(actor, 'Existing created ranger actor should be available for level-up tests');
@@ -1297,7 +1299,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level ranger from 1 to 2 and handle spells according to rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentRangerActor();
       assert.ok(actor, 'Existing created ranger actor should be available for 1->2 level-up test');
@@ -1351,7 +1353,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level ranger from 2 to 3 and handle spells according to rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentRangerActor();
       assert.ok(actor, 'Existing created ranger actor should be available for 2->3 level-up test');
@@ -1451,7 +1453,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     beforeEach(function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
     });
 
     after(async function () {
@@ -1477,7 +1479,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should auto-run warlock creation and handle spell step as required by rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       await game.settings.set(MODULE_ID, 'allowManualInput', true);
       await game.settings.set(MODULE_ID, 'allowStandardArray', false);
@@ -1546,7 +1548,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should open level-up app from warlock actor sheet when milestone leveling is enabled', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentWarlockActor();
       assert.ok(actor, 'Existing created warlock actor should be available for level-up tests');
@@ -1567,7 +1569,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level warlock from 1 to 2 and handle spells according to rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentWarlockActor();
       assert.ok(actor, 'Existing created warlock actor should be available for 1->2 level-up test');
@@ -1621,7 +1623,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
 
     it('should level warlock from 2 to 3 and handle spells according to rules', async function () {
-      this.timeout(120000);
+      this.timeout(TEST_TIMEOUTS.perTest);
 
       const actor = getCurrentWarlockActor();
       assert.ok(actor, 'Existing created warlock actor should be available for 2->3 level-up test');

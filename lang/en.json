@@ -446,6 +446,26 @@
         "Title": "Diagnostics Configuration",
         "Description": "Enable debug logging and diagnostic features",
         "DebugOptions": "Debug Options"
+      },
+      "testTimeoutPerTest": {
+        "Name": "Test timeout per test (ms)",
+        "Hint": "Maximum time in milliseconds for each test to complete"
+      },
+      "testTimeoutActorStudioClosed": {
+        "Name": "Actor Studio closed timeout (ms)",
+        "Hint": "Timeout for Actor Studio window to close"
+      },
+      "testTimeoutSpellsTabVisible": {
+        "Name": "Spells tab visible timeout (ms)",
+        "Hint": "Maximum time to wait for spells tab to become visible"
+      },
+      "testTimeoutGeneralCondition": {
+        "Name": "General condition timeout (ms)",
+        "Hint": "Timeout for general condition polling"
+      },
+      "testIntervalPolling": {
+        "Name": "Polling interval (ms)",
+        "Hint": "Time between polls when waiting for conditions"
       }
     },
     "Equipment": {

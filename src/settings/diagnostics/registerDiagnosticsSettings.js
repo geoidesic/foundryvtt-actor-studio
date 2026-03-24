@@ -30,4 +30,50 @@ export function registerDiagnosticsSettings() {
     default: false,
     type: Boolean,
   });
+
+  // Test timeout settings
+  game.settings.register(MODULE_ID, 'testTimeoutPerTest', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint'),
+    scope: 'world',
+    config: false,
+    default: 120000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutActorStudioClosed', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Hint'),
+    scope: 'world',
+    config: false,
+    default: 5000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutSpellsTabVisible', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Hint'),
+    scope: 'world',
+    config: false,
+    default: 25000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutGeneralCondition', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Hint'),
+    scope: 'world',
+    config: false,
+    default: 20000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testIntervalPolling', {
+    name: game.i18n.localize('GAS.Setting.testIntervalPolling.Name'),
+    hint: game.i18n.localize('GAS.Setting.testIntervalPolling.Hint'),
+    scope: 'world',
+    config: false,
+    default: 100,
+    type: Number,
+  });
 }

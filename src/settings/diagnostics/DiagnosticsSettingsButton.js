@@ -1,10 +1,12 @@
 import DiagnosticsSettingsApp from './DiagnosticsSettingsApp.js';
 
 export default class DiagnosticsSettingsButton extends FormApplication {
+  static #diagnosticsSettingsApp;
+
   static showSettings() {
-    const app = new DiagnosticsSettingsApp();
-    app.render(true, { focus: true });
-    return app;
+    this.#diagnosticsSettingsApp = this.#diagnosticsSettingsApp ? this.#diagnosticsSettingsApp : new DiagnosticsSettingsApp();
+    this.#diagnosticsSettingsApp.render(true, { focus: true });
+    return this.#diagnosticsSettingsApp;
   }
 
   /**
@@ -16,7 +18,5 @@ export default class DiagnosticsSettingsButton extends FormApplication {
   }
 
   async _updateObject(event, formData) {}
-  render() {
-    this.close();
-  }
+  render() { this.close(); }
 }
