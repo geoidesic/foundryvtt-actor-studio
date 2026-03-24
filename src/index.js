@@ -22,7 +22,8 @@ import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
 import {
   registerCharacterPermutationTests,
   registerClericPermutationTests,
-  registerFighterPermutationTests
+  registerFighterPermutationTests,
+  registerRangerPermutationTests
 } from './hooks/tests/character-permutation-tests.js';
 
 Hooks.once("init", (app, html, data) => {
@@ -46,6 +47,10 @@ Hooks.on("quenchReady", (quench) => {
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.fighter", registerFighterPermutationTests, {
     displayName: "Fighter",
+    timeout: 120000
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.ranger", registerRangerPermutationTests, {
+    displayName: "Ranger",
     timeout: 120000
   });
   console.log("Registered Actor Studio test batches");

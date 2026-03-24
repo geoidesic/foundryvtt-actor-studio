@@ -17,3 +17,9 @@ alwaysApply: true
   - one class item with expected class identifier at level 1
   - one background item
 - For Ranger implementation, clone the stable Fighter block and then change only class UUID, class identifier, and spell-tab expectations.
+- When adding a new class permutation suite, also register it in `src/index.js` via `quench.registerBatch(...)`; test code alone is not enough for Quench UI visibility.
+- For Ranger spell automation, expand collapsed `.spell-level-header` groups before trying to click `.add-btn`; do not assume spell rows are initially expanded.
+- Before clicking class-row/plus during level-up tests, explicitly switch to `Level Up` / `Class` tab.
+- If spells tab is visible but has no spell rows, no enabled `.add-btn`, and no finalize/skip footer actions, fail with explicit diagnostics and treat this as a real bug.
+- Never dispatch workflow/level-up FSM events from tests to bypass broken UI behavior.
+- Never add fallback logic that converts a real integration failure into a pass.

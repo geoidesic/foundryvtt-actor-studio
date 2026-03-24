@@ -4,7 +4,7 @@ import { safeGetSetting } from '~/src/helpers/Utility';
 
 export function registerCharacterPermutationTests(context, options = {}) {
   const { describe, it, assert, before, after } = context;
-  const enabledClasses = new Set((options?.classes || ['cleric', 'fighter']).map((entry) => String(entry).toLowerCase()));
+  const enabledClasses = new Set((options?.classes || ['cleric', 'fighter', 'ranger']).map((entry) => String(entry).toLowerCase()));
 
   const MODULE_ID = 'foundryvtt-actor-studio';
   const wait = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
@@ -144,6 +144,10 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return false;
   };
 
+  const focusLevelUpClassTab = async () => {
+    return clickFirstAvailableTabLabel(['Level Up', 'Class']);
+  };
+
   const clickActorStudioLevelUpButtonOnSheet = async (actor) => {
     if (!actor?.sheet) return false;
 
@@ -232,12 +236,15 @@ export function registerCharacterPermutationTests(context, options = {}) {
       const plusIcon = root.querySelector(
         '.class-row[role="button"] i.fa-plus, .class-row[role="button"] i.fas.fa-plus, .class-row i.fa-plus, .class-row i.fas.fa-plus'
       );
-      if (!plusIcon) return false;
-
-      const clickableRow = plusIcon.closest('[role="button"]') || plusIcon.closest('.class-row');
+      const clickableRow = plusIcon?.closest?.('[role="button"]')
+        || plusIcon?.closest?.('.class-row')
+        || root.querySelector('.class-row[role="button"]')
+        || root.querySelector('.class-row');
       if (!clickableRow) return false;
 
+      clickableRow.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+      clickableRow.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
       return Boolean(root.querySelector('.footer-container .gas-add-level-btn'));
@@ -457,6 +464,89 @@ export function registerCharacterPermutationTests(context, options = {}) {
       clickedCantripCount,
       finalizeReady: isFooterButtonAvailable('finalize'),
       selectedSpellCount: document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .selected-spell').length
+    };
+  };
+
+  const shouldExpectRangerSpellsForLevel = (targetLevel) => {
+    const rulesVersion = String(window.GAS?.dnd5eRules || '').trim();
+    if (rulesVersion === '2014') {
+      return Number(targetLevel) >= 2;
+    }
+    return Number(targetLevel) >= 1;
+  };
+
+  const completeSpellsStepIfVisible = async ({ timeoutMs = 25000 } = {}) => {
+    const spellsVisible = await waitForCondition(() => hasSpellsTabVisible(), timeoutMs, 200);
+    if (!spellsVisible) {
+      return { visible: false, completed: false, action: 'none' };
+    }
+
+    await clickTabByLabel('Spells');
+    const spellsLoaded = await waitForSpellsTab();
+    if (!spellsLoaded) {
+      return { visible: true, completed: false, action: 'none' };
+    }
+
+    const finalizedImmediately = await waitForCondition(
+      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn') || clickFooterButtonContaining('finalize'),
+      10000,
+      150
+    );
+    if (finalizedImmediately) {
+      return { visible: true, completed: true, action: 'finalize' };
+    }
+
+    const skipped = await waitForCondition(
+      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-skip-spells-btn') || clickFooterButtonContaining('skip') || clickFooterButtonContaining('continue'),
+      8000,
+      150
+    );
+    if (skipped) {
+      return { visible: true, completed: true, action: 'skip' };
+    }
+
+    const selectedEnoughSpells = await waitForCondition(() => {
+      const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+      if (!root) return false;
+
+      if (isFooterButtonAvailable('finalize')) {
+        return true;
+      }
+
+      const collapsedHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
+        .filter((header) => (header.textContent || '').includes('[+]'));
+      if (collapsedHeaders.length) {
+        collapsedHeaders[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        return false;
+      }
+
+      const addButtons = Array.from(root.querySelectorAll('.spell-level-group .add-btn:not([disabled])'));
+      if (!addButtons.length) {
+        return false;
+      }
+
+      const clicksThisPass = Math.min(addButtons.length, 2);
+      for (let index = 0; index < clicksThisPass; index++) {
+        addButtons[index].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      }
+
+      return isFooterButtonAvailable('finalize');
+    }, 20000, 200);
+
+    if (!selectedEnoughSpells) {
+      return { visible: true, completed: false, action: 'none' };
+    }
+
+    const finalizedAfterSelection = await waitForCondition(
+      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn') || clickFooterButtonContaining('finalize'),
+      10000,
+      150
+    );
+
+    return {
+      visible: true,
+      completed: finalizedAfterSelection,
+      action: finalizedAfterSelection ? 'finalize' : 'none'
     };
   };
 
@@ -971,6 +1061,268 @@ export function registerCharacterPermutationTests(context, options = {}) {
     });
   });
   }
+
+  if (enabledClasses.has('ranger')) {
+  describe('Ranger', function () {
+    let savedDebugState = {};
+    let originalMilestoneLeveling = false;
+    let originalForceTakeAverageHitPoints = false;
+    let rangerActorId = null;
+    let rangerActor = null;
+    const testActorName = `Quench Ranger Automation ${Date.now()}`;
+    const rangerClassUuid = 'Compendium.dnd-players-handbook.classes.Item.phbrgrRanger0000';
+
+    const findRangerActorByName = () => {
+      const matches = game.actors.contents
+        .filter((actorDoc) => actorDoc?.name === testActorName && actorDoc?.type === 'character');
+      if (!matches.length) return null;
+      return matches[matches.length - 1];
+    };
+
+    const getCurrentRangerActor = () => {
+      if (rangerActorId) {
+        const actorFromId = game.actors.get(rangerActorId) || null;
+        if (actorFromId) return actorFromId;
+      }
+
+      const actorFromName = findRangerActorByName();
+      if (actorFromName && !rangerActorId) {
+        rangerActorId = actorFromName.id;
+      }
+      return actorFromName;
+    };
+
+    before(function () {
+      savedDebugState = {};
+      for (const key of DEBUG_ROOT_KEYS) {
+        if (Object.prototype.hasOwnProperty.call(window.GAS, key)) {
+          savedDebugState[key] = window.GAS[key];
+          delete window.GAS[key];
+        }
+      }
+
+      originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
+      originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+    });
+
+    beforeEach(function () {
+      this.timeout(120000);
+    });
+
+    after(async function () {
+      clearQuenchAutomation();
+      await closeActorStudioIfOpen();
+
+      const actorToCleanup = rangerActorId ? game.actors.get(rangerActorId) : (rangerActor || findRangerActorByName());
+      await closeActorSheetIfOpen(actorToCleanup);
+
+      if (actorToCleanup && !actorToCleanup.deleted) {
+        await actorToCleanup.delete();
+      }
+      rangerActor = null;
+      rangerActorId = null;
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
+
+      for (const [key, value] of Object.entries(savedDebugState)) {
+        window.GAS[key] = value;
+      }
+      savedDebugState = {};
+    });
+
+    it('should auto-run ranger creation and handle spell step as required by rules', async function () {
+      this.timeout(120000);
+
+      await game.settings.set(MODULE_ID, 'allowManualInput', true);
+      await game.settings.set(MODULE_ID, 'allowStandardArray', false);
+      await game.settings.set(MODULE_ID, 'allowPointBuy', false);
+      await game.settings.set(MODULE_ID, 'allowRolling', false);
+      await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
+      await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
+      await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
+
+      configureQuenchAutomation({
+        selections: {
+          race: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
+          background: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
+          characterClass: rangerClassUuid
+        }
+      });
+
+      await closeActorStudioIfOpen();
+      const creationApp = await openActorStudio(testActorName);
+      assert.ok(creationApp, 'Actor Studio should open for ranger creation test');
+
+      const requiredTabsVisited = await visitRequiredCreationTabs();
+      assert.ok(requiredTabsVisited, 'All visible creation tabs should be visited before creating the ranger');
+
+      const createClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'),
+        20000,
+        150
+      );
+      assert.ok(createClicked, 'Create Character button should be clickable for ranger creation');
+
+      const creationClosedEarly = await waitForCondition(
+        () => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'),
+        12000,
+        200
+      );
+
+      if (!creationClosedEarly) {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 12000, 200);
+        if (spellsTabAppeared) {
+          const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 30000 });
+          assert.ok(spellStepResult.visible, 'Spells tab should be detectable when shown during ranger creation');
+          assert.ok(spellStepResult.completed, 'Ranger creation spells step should complete via UI controls when displayed');
+        }
+      }
+
+      const actorStudioClosed = await waitForActorStudioClosed();
+      assert.ok(actorStudioClosed, 'Actor Studio should close after ranger creation completes');
+
+      await wait(1200);
+      rangerActorId = get(actorInGame)?.id || null;
+      if (!rangerActorId) {
+        const actorByName = findRangerActorByName();
+        rangerActorId = actorByName?.id || null;
+      }
+      assert.ok(rangerActorId, 'Created ranger actor id should be available after creation');
+
+      const reachedLevel1 = await waitForActorClassLevel(rangerActorId, 'ranger', 1);
+      assert.ok(reachedLevel1, 'Ranger class level should be embedded at level 1 after creation');
+
+      rangerActor = game.actors.get(rangerActorId);
+      assert.ok(rangerActor, 'Created ranger actor should exist in world actors');
+
+      const hasBackground = rangerActor.items.some((item) => item.type === 'background');
+      assert.ok(hasBackground, 'Created ranger actor should have a background item embedded');
+    });
+
+    it('should open level-up app from ranger actor sheet when milestone leveling is enabled', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentRangerActor();
+      assert.ok(actor, 'Existing created ranger actor should be available for level-up tests');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Actor Studio level-up button should be clickable on the ranger actor sheet');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up Actor Studio app should open from ranger actor sheet button');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level ranger from 1 to 2 and handle spells according to rules', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentRangerActor();
+      assert.ok(actor, 'Existing created ranger actor should be available for 1->2 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for ranger 1->2 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for ranger 1->2 test');
+
+      const levelUpTabFocused = await focusLevelUpClassTab();
+      assert.ok(levelUpTabFocused, 'Level-up/Class tab should be focused before ranger 1->2 class selection');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before ranger 1->2 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked to select ranger level-up');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for ranger 1->2 progression');
+
+      const expectSpellsAtLevel2 = shouldExpectRangerSpellsForLevel(2);
+      if (expectSpellsAtLevel2) {
+        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 25000 });
+        assert.ok(spellStepResult.visible, 'Spells tab should appear for ranger level 2 in this ruleset');
+        assert.ok(spellStepResult.completed, 'Ranger level 1->2 spells step should complete (finalize or skip)');
+      } else {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
+        assert.ok(!spellsTabAppeared, 'Spells tab should not appear for ranger level 1->2 in this ruleset');
+      }
+
+      const reachedLevel2 = await waitForActorClassLevel(rangerActorId, 'ranger', 2);
+      assert.ok(reachedLevel2, 'Ranger class level should progress to 2');
+
+      await closeActorStudioIfOpen();
+    });
+
+    it('should level ranger from 2 to 3 and handle spells according to rules', async function () {
+      this.timeout(120000);
+
+      const actor = getCurrentRangerActor();
+      assert.ok(actor, 'Existing created ranger actor should be available for 2->3 level-up test');
+
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+      configureQuenchAutomation({ advancements: { enabled: true } });
+
+      await closeActorStudioIfOpen();
+
+      const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+      assert.ok(levelUpButtonClicked, 'Level-up button should be clickable for ranger 2->3 test');
+
+      const levelUpAppOpened = await waitForLevelUpAppOpen();
+      assert.ok(levelUpAppOpened, 'Level-up app should open for ranger 2->3 test');
+
+      const levelUpTabFocused = await focusLevelUpClassTab();
+      assert.ok(levelUpTabFocused, 'Level-up/Class tab should be focused before ranger 2->3 class selection');
+
+      const subclassHandled = await ensureSubclassChoiceIfRequired();
+      assert.ok(subclassHandled, 'Subclass choice should be selected when required before ranger 2->3 progression');
+
+      const plusClicked = await clickExistingClassPlusInLevelUp();
+      assert.ok(plusClicked, 'Existing class plus button should be clicked for ranger 2->3 test');
+
+      const addLevelClicked = await waitForCondition(
+        () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'),
+        20000,
+        150
+      );
+      assert.ok(addLevelClicked, 'Add Level button should be clickable for ranger 2->3 progression');
+
+      const expectSpellsAtLevel3 = shouldExpectRangerSpellsForLevel(3);
+      if (expectSpellsAtLevel3) {
+        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 25000 });
+        assert.ok(spellStepResult.visible, 'Spells tab should appear for ranger level 3 in this ruleset');
+        assert.ok(spellStepResult.completed, 'Ranger level 2->3 spells step should complete (finalize or skip)');
+      } else {
+        const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
+        assert.ok(!spellsTabAppeared, 'Spells tab should not appear for ranger level 2->3 in this ruleset');
+      }
+
+      const reachedLevel3 = await waitForActorClassLevel(rangerActorId, 'ranger', 3);
+      assert.ok(reachedLevel3, 'Ranger class level should progress to 3');
+
+      rangerActor = getCurrentRangerActor();
+      await closeActorStudioIfOpen();
+    });
+  });
+  }
 }
 
 export function registerClericPermutationTests(context) {
@@ -979,4 +1331,8 @@ export function registerClericPermutationTests(context) {
 
 export function registerFighterPermutationTests(context) {
   return registerCharacterPermutationTests(context, { classes: ['fighter'] });
+}
+
+export function registerRangerPermutationTests(context) {
+  return registerCharacterPermutationTests(context, { classes: ['ranger'] });
 }

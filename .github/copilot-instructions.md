@@ -185,6 +185,22 @@ These rules apply to Quench tests in `src/hooks/tests/character-permutation-test
   - **Cause**: Sheet header injection timing / render race.
   - **Fix**: Render sheet, wait, render again, then click `button.level-up` first (fallback selectors only after that).
 
+- **Failure**: New class tests added but class does not appear in Quench UI.
+  - **Cause**: Test block exists in `character-permutation-tests.js` but batch not registered in `src/index.js`.
+  - **Fix**: Add import + `quench.registerBatch(...)` entry for the new class in `Hooks.on('quenchReady', ...)`.
+
+- **Failure**: Ranger spells step shows expected count but no spells are selected; tests stall on spells completion.
+  - **Cause**: Spell groups can start collapsed, so `.add-btn` elements are unavailable until headers are expanded.
+  - **Fix**: In spell-step automation, expand collapsed `.spell-level-header` groups first, then click enabled `.add-btn` until Finalize becomes available.
+
+- **Failure**: Ranger creation lands on spells tab with no spell rows and no actionable buttons; app never closes.
+  - **Cause**: Spell UI enters a non-actionable state (no add buttons, no finalize/skip) and cannot progress via footer interactions.
+  - **Fix**: Treat this as a real product defect and fail the test with explicit diagnostics (no spell rows, no add buttons, no finalize/skip controls). Do NOT dispatch FSM events from tests to force completion.
+
+- **Failure**: Ranger 2→3 fails to find class plus button.
+  - **Cause**: Level-up app can open on a different tab than Level Up/Class.
+  - **Fix**: Explicitly focus `Level Up`/`Class` tab before attempting class-row / plus interactions.
+
 ### Stable Class Test Structure (must mirror Cleric/Fighter)
 
 Use four ordered `it()` blocks per class:
@@ -206,3 +222,10 @@ Creation flow must assert:
 - Keep the same actor id fallback strategy (store id first, world actor-by-name fallback second).
 - Keep the same sheet button strategy (`button.level-up` primary selector).
 - At level 1→2 and 2→3, assert expected spell-tab behavior for Ranger per current ruleset/settings before finalizing.
+
+## Test Integrity Rules (non-negotiable)
+
+- Never add fallback logic that makes a failing integration path look successful.
+- Never force FSM transitions (e.g., `skip_spells`, `spells_complete`, `completed`) from tests to bypass broken UI paths.
+- Never replace UI-driven assertions with weaker assertions just to pass tests.
+- If UI is missing required controls/content, fail fast with diagnostics and fix production behavior.

@@ -639,6 +639,7 @@ spells-tab-container(clas:readonlys="{isDisabled}")
                         i.fas.fa-trash
 
     .right-panel.spell-list
+      //- pre {$spellLimits.spells} {$spellLimits.cantrips} {displaySpellLimit} {$currentSpellCounts.cantrips} {currentSpellCounts.spells}
       +if("$spellLimits.cantrips || displaySpellLimit")
 
         h3 {t('Spells.AvailableSpells')} | {characterClassName}
@@ -705,6 +706,9 @@ spells-tab-container(clas:readonlys="{isDisabled}")
                           p.left.mt-sm.flexrow.positive 
                             i.fa.fa-check.getParentClasses
                             | {spellLevel} selection completed
+        +else()
+          .empty-state
+            p No spells available for selection at this level.
 </template>
 
 <style lang="sass">
