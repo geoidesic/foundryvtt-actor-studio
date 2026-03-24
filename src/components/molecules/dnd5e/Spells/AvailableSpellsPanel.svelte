@@ -22,6 +22,15 @@
   export let getEnrichedName = () => Promise.resolve('');
   export let getSchoolName = () => '';
   export let getCastingTimeDisplay = () => '';
+
+  function shouldDisableButton(spell) {
+    if (isDisabled) return true;
+    const spellLevel = spell.system?.level || 0;
+    const isCantrip = spellLevel === 0;
+    if (isCantrip && cantripCountAtLimit) return true;
+    if (!isCantrip && spellCountAtLimit) return true;
+    return false;
+  }
 </script>
 
 <template lang="pug">
@@ -84,7 +93,7 @@
                                     .badge {getCastingTimeDisplay(spell)}
 
                             .spell-actions.mx-sm
-                              button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{isDisabled}")
+                              button.add-btn(on:click|preventDefault!="{ () => addToSelection(spell) }" disabled="{shouldDisableButton(spell)}")
                                 i.fas.fa-plus
                 +else()
                   .spell-level-group

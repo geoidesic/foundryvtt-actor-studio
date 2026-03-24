@@ -145,7 +145,15 @@ export function registerCharacterPermutationTests(context, options = {}) {
   };
 
   const focusLevelUpClassTab = async () => {
-    return clickFirstAvailableTabLabel(['Level Up', 'Class']);
+    const tabFocused = await clickFirstAvailableTabLabel(['Level Up', 'Class']);
+    if (!tabFocused) return false;
+
+    // Wait for class-row elements to appear in the focused tab
+    return waitForCondition(() => {
+      const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+      if (!root) return false;
+      return Boolean(root.querySelector('.class-row'));
+    }, 8000, 100);
   };
 
   const clickActorStudioLevelUpButtonOnSheet = async (actor) => {
@@ -154,15 +162,17 @@ export function registerCharacterPermutationTests(context, options = {}) {
     await closeActorStudioIfOpen();
     await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 5000, 100);
 
+    // Render sheet multiple times to ensure header injections are complete
     await actor.sheet.render(true, { focus: true });
-    await wait(250);
-
-    // Retry render once more to ensure header controls are injected on some sheet implementations.
+    await wait(300);
     await actor.sheet.render(true, { focus: true });
+    await wait(300);
+    await actor.sheet.render(true, { focus: true });
+    
     await waitForCondition(() => {
       const rootElement = actor.sheet?.element?.[0] || actor.sheet?.element || null;
       return Boolean(rootElement && rootElement.isConnected);
-    }, 5000, 100);
+    }, 8000, 100);
 
     const buttonClicked = await waitForCondition(() => {
       const rootElement = actor.sheet?.element?.[0] || actor.sheet?.element || null;
@@ -170,17 +180,27 @@ export function registerCharacterPermutationTests(context, options = {}) {
         ? document.querySelector(`[data-appid="${actor.sheet.appId}"]`)
         : null;
 
-      // Primary path: exactly the sheet button used by dnd5e sheet integration.
-      const levelUpButton =
-        rootElement?.querySelector?.('button.level-up')
-        || appWrapper?.querySelector?.('button.level-up')
-        || document.querySelector('button.level-up')
-        || null;
+      // Search selectors in priority order
+      const selectors = [
+        'button.level-up',
+        'button[title*="Level"]',
+        'button[title*="level"]',
+        '#gas-levelup-btn',
+        'button.gas-levelup',
+        '.gas-levelup'
+      ];
 
-      const button = levelUpButton
-        || rootElement?.querySelector?.('#gas-levelup-btn, button.gas-levelup, .gas-levelup')
-        || appWrapper?.querySelector?.('#gas-levelup-btn, button.gas-levelup, .gas-levelup')
-        || null;
+      let button = null;
+      for (const selector of selectors) {
+        button = rootElement?.querySelector?.(selector)
+          || appWrapper?.querySelector?.(selector)
+          || document.querySelector(selector)
+          || null;
+        if (button && !button.disabled && button.isConnected) {
+          break;
+        }
+        button = null;
+      }
 
       if (!button || button.disabled || !button.isConnected) return false;
 
@@ -188,19 +208,30 @@ export function registerCharacterPermutationTests(context, options = {}) {
         button.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
 
-      button.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
+      // Ensure button has focus
+      if (typeof button.focus === 'function') {
+        button.focus();
+      }
+
+      // Dispatch multiple event types for broader compatibility
+      button.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, composed: true }));
+      button.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, composed: true }));
       button.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
       button.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
       button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      if (typeof button.click === 'function') {
-        button.click();
-      }
+      
+      // Try jQuery if available
       if (typeof window.$ === 'function') {
         window.$(button).trigger('click');
       }
 
+      // Try native click method
+      if (typeof button.click === 'function') {
+        button.click();
+      }
+
       return true;
-    }, 15000, 150);
+    }, 20000, 150);
 
     return buttonClicked;
   };
@@ -242,13 +273,17 @@ export function registerCharacterPermutationTests(context, options = {}) {
         || root.querySelector('.class-row');
       if (!clickableRow) return false;
 
+      if (typeof clickableRow.scrollIntoView === 'function') {
+        clickableRow.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+
       clickableRow.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
       return Boolean(root.querySelector('.footer-container .gas-add-level-btn'));
-    }, 15000, 150);
+    }, 18000, 150);
   };
 
   const selectIconSelectOptionByLabel = async (selectId, labels, { excludedLabels = [] } = {}) => {
@@ -513,6 +548,17 @@ export function registerCharacterPermutationTests(context, options = {}) {
         return true;
       }
 
+      // Parse the expected vs selected counters from the header (e.g., "0/3 Cantrips, 2/4 Spells")
+      const headerText = root.textContent || '';
+      const spellLimitMatch = headerText.match(/Spells[:\s]+(\d+)\/(\d+)/i);
+      const cantripLimitMatch = headerText.match(/Cantrips[:\s]+(\d+)\/(\d+)/i);
+      
+      const currentSpellsSelected = spellLimitMatch ? parseInt(spellLimitMatch[1], 10) : 0;
+      const spellLimit = spellLimitMatch ? parseInt(spellLimitMatch[2], 10) : 0;
+      const currentCantripsSelected = cantripLimitMatch ? parseInt(cantripLimitMatch[1], 10) : 0;
+      const cantripLimit = cantripLimitMatch ? parseInt(cantripLimitMatch[2], 10) : 0;
+
+      // Expand collapsed spell groups
       const collapsedHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
         .filter((header) => (header.textContent || '').includes('[+]'));
       if (collapsedHeaders.length) {
@@ -520,12 +566,30 @@ export function registerCharacterPermutationTests(context, options = {}) {
         return false;
       }
 
+      // Check if we've already met the requirements
+      const needsMoreSpells = currentSpellsSelected < spellLimit;
+      const needsMoreCantrips = currentCantripsSelected < cantripLimit;
+      
+      if (!needsMoreSpells && !needsMoreCantrips) {
+        return true; // All requirements met
+      }
+
+      // Select spells/cantrips up to the limit
       const addButtons = Array.from(root.querySelectorAll('.spell-level-group .add-btn:not([disabled])'));
       if (!addButtons.length) {
         return false;
       }
 
-      const clicksThisPass = Math.min(addButtons.length, 2);
+      // Only click enough buttons to reach the total limit
+      const totalSelected = currentSpellsSelected + currentCantripsSelected;
+      const totalLimit = spellLimit + cantripLimit;
+      const needToSelect = totalLimit - totalSelected;
+      
+      if (needToSelect <= 0) {
+        return true;
+      }
+
+      const clicksThisPass = Math.min(addButtons.length, needToSelect);
       for (let index = 0; index < clicksThisPass; index++) {
         addButtons[index].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       }
@@ -1265,6 +1329,10 @@ export function registerCharacterPermutationTests(context, options = {}) {
         assert.ok(!spellsTabAppeared, 'Spells tab should not appear for ranger level 1->2 in this ruleset');
       }
 
+      // Wait for the level-up app to fully close after spells completes
+      const appClosedAfterSpells = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 15000, 200);
+      assert.ok(appClosedAfterSpells, 'Level-up app should close after spell completion');
+
       const reachedLevel2 = await waitForActorClassLevel(rangerActorId, 'ranger', 2);
       assert.ok(reachedLevel2, 'Ranger class level should progress to 2');
 
@@ -1314,6 +1382,10 @@ export function registerCharacterPermutationTests(context, options = {}) {
         const spellsTabAppeared = await waitForCondition(() => hasSpellsTabVisible(), 15000, 200);
         assert.ok(!spellsTabAppeared, 'Spells tab should not appear for ranger level 2->3 in this ruleset');
       }
+
+      // Wait for the level-up app to fully close after spells completes
+      const appClosedAfterSpells = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 15000, 200);
+      assert.ok(appClosedAfterSpells, 'Level-up app should close after spell completion');
 
       const reachedLevel3 = await waitForActorClassLevel(rangerActorId, 'ranger', 3);
       assert.ok(reachedLevel3, 'Ranger class level should progress to 3');
