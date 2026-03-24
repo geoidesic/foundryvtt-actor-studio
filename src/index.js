@@ -20,6 +20,7 @@ import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
 //- import tests
 import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
+import { registerWizardTests } from './hooks/tests/wizard-tests.js';
 import { registerClericPermutationTests } from './hooks/tests/character-permutation-tests/cleric.js';
 import { registerFighterPermutationTests } from './hooks/tests/character-permutation-tests/fighter.js';
 import { registerRangerPermutationTests } from './hooks/tests/character-permutation-tests/ranger.js';
@@ -35,6 +36,10 @@ Hooks.on("quenchReady", (quench) => {
   const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000)) || 120000;
   quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
     displayName: "Actor Studio: Basic Test",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.wizard-test", registerWizardTests, {
+    displayName: "Actor Studio: Wizard Tests",
     timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericPermutationTests, {
