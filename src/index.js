@@ -24,6 +24,7 @@ import { registerWizardTests } from './hooks/tests/wizard-tests.js';
 import { registerClericPermutationTests } from './hooks/tests/character-permutation-tests/cleric.js';
 import { registerFighterPermutationTests } from './hooks/tests/character-permutation-tests/fighter.js';
 import { registerRangerPermutationTests } from './hooks/tests/character-permutation-tests/ranger.js';
+import { registerPaladinPermutationTests } from './hooks/tests/character-permutation-tests/paladin.js';
 import { registerWarlockPermutationTests } from './hooks/tests/character-permutation-tests/warlock.js';
 
 Hooks.once("init", (app, html, data) => {
@@ -52,6 +53,10 @@ Hooks.on("quenchReady", (quench) => {
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.ranger", registerRangerPermutationTests, {
     displayName: "Ranger",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.paladin", registerPaladinPermutationTests, {
+    displayName: "Paladin",
     timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.warlock", registerWarlockPermutationTests, {
