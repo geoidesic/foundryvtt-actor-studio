@@ -226,7 +226,7 @@ export const resetLevelUpStores = () => {
 
 // Function to reset all stores
 export function resetStores() {
-  window.GAS.log.d('[resetStores]')
+  window.GAS?.log?.d?.('[resetStores]')
   initialTabs = getCharacterCreationTabs();
   storeDefinitions.race.set(null); //- null | object
   storeDefinitions.background.set(null); //- null | object
@@ -303,12 +303,12 @@ export function resetStores() {
     // Import and clear spell selection stores
     import('~/src/stores/spellSelection').then(({ selectedSpells }) => {
       selectedSpells.set(new Map());
-      window.GAS.log.d('[resetStores] Cleared selectedSpells store');
+      window.GAS?.log?.d?.('[resetStores] Cleared selectedSpells store');
     }).catch(error => {
-      window.GAS.log.w('[resetStores] Failed to clear spell selection stores:', error);
+      window.GAS?.log?.w?.('[resetStores] Failed to clear spell selection stores:', error);
     });
   } catch (error) {
-    window.GAS.log.w('[resetStores] Error importing spell selection module:', error);
+    window.GAS?.log?.w?.('[resetStores] Error importing spell selection module:', error);
   }
 }
 

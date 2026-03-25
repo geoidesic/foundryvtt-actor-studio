@@ -138,7 +138,7 @@
     [classUuidForLevelUp, levelUpClassGetsSubclassThisLevel, subClassUuidForLevelUp],
     ([$classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp]) => {
 
-      window.GAS.log.d('levelUpProgress', $classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp);
+      window.GAS?.log?.d?.('levelUpProgress', $classUuidForLevelUp, $levelUpClassGetsSubclassThisLevel, $subClassUuidForLevelUp);
       // If a new multiclass is selected, show 100% progress
       if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && !$subClassUuidForLevelUp) return 50;
       if ($classUuidForLevelUp && $levelUpClassGetsSubclassThisLevel && $subClassUuidForLevelUp) return 100;
@@ -222,7 +222,7 @@
 
     if (shouldShowBiography) {
       // Biography is enabled - defer actor creation and go to biography tab
-      window.GAS.log.d('[FOOTER] Biography enabled - deferring actor creation and switching to biography tab');
+      window.GAS?.log?.d?.('[FOOTER] Biography enabled - deferring actor creation and switching to biography tab');
       
       // Add biography tab if not already present
       const currentTabs = get(tabs);
@@ -248,15 +248,15 @@
     // Signal to the workflow FSM that the actor has been created so it can progress to advancements
     try {
       const workflowFSM = getWorkflowFSM();
-      window.GAS.log.d('[FOOTER] Signalling CHARACTER_CREATED to FSM');
+      window.GAS?.log?.d?.('[FOOTER] Signalling CHARACTER_CREATED to FSM');
       workflowFSM.handle(WORKFLOW_EVENTS.CHARACTER_CREATED);
     } catch (e) {
-      window.GAS.log.e('[FOOTER] Error signalling CHARACTER_CREATED:', e);
+      window.GAS?.log?.e?.('[FOOTER] Error signalling CHARACTER_CREATED:', e);
     }
   };
 
   const clickUpdateLevelUpHandler = async () => {
-    window.GAS.log.d('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
+    window.GAS?.log?.d?.('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
     
     await updateActorLevelUpWorkflow({
       actor,
@@ -286,7 +286,7 @@
       actorInGame,
       onEquipmentAdded: () => {
         hasAddedEquipmentThisSession.set(true);
-        window.GAS.log.d('[FOOTER] Equipment added to actor');
+        window.GAS?.log?.d?.('[FOOTER] Equipment added to actor');
       }
     });
   };
@@ -380,7 +380,7 @@
         workflowFSM.handle(WORKFLOW_EVENTS.FEAT_SPELLS_COMPLETE);
       }
     } catch (err) {
-      window.GAS.log.e('[FOOTER] Error completing feat spell selection:', err);
+      window.GAS?.log?.e?.('[FOOTER] Error completing feat spell selection:', err);
       ui.notifications?.error(err.message);
     } finally {
       isProcessingFeatSpells.set(false);
@@ -411,7 +411,7 @@
         currentActorInGame = null;
       }
       if (!currentActorInGame) {
-        window.GAS.log.d('[FOOTER] Creating deferred actor before completing biography');
+        window.GAS?.log?.d?.('[FOOTER] Creating deferred actor before completing biography');
         await createActorWorkflow({
           actor,
           stores: storeRefs,
@@ -437,7 +437,7 @@
         $characterDetails = {};
       }
       if (currentActorInGame && (Object.values($biographyContent).some(val => val && val.trim()) || Object.values($characterDetails).some(val => val && val.trim()))) {
-        window.GAS.log.d('[FOOTER] Applying biography content to actor');
+        window.GAS?.log?.d?.('[FOOTER] Applying biography content to actor');
         const updates = {};
         
         // Apply name to actor name
@@ -496,7 +496,7 @@
         
         if (Object.keys(updates).length > 0) {
           await updateSource(currentActorInGame, updates);
-          window.GAS.log.d('[FOOTER] Biography content applied successfully');
+          window.GAS?.log?.d?.('[FOOTER] Biography content applied successfully');
         }
       }
       
@@ -511,7 +511,7 @@
       try {
         const currentState = workflowFSM.getCurrentState && workflowFSM.getCurrentState();
         if (currentState === 'idle') {
-          window.GAS.log.w('[FOOTER] FSM is in idle when completing biography; attempting to restart workflow');
+          window.GAS?.log?.w?.('[FOOTER] FSM is in idle when completing biography; attempting to restart workflow');
           // Kick off the workflow safely
           workflowFSM.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
           // If actor was just created, signal CHARACTER_CREATED so FSM can progress to biography/processing
@@ -520,7 +520,7 @@
           }
         }
       } catch (fsmErr) {
-        window.GAS.log.e('[FOOTER] Error checking/advancing FSM before biography_complete:', fsmErr);
+        window.GAS?.log?.e?.('[FOOTER] Error checking/advancing FSM before biography_complete:', fsmErr);
       }
 
       // Finally, signal biography completion
@@ -528,11 +528,11 @@
         workflowFSM.handle(WORKFLOW_EVENTS.BIOGRAPHY_COMPLETE);
       } catch (e) {
         // If the FSM still rejects the event, log it but avoid throwing (UI already handled)
-        window.GAS.log.e('[FOOTER] Error dispatching BIOGRAPHY_COMPLETE event:', e);
+        window.GAS?.log?.e?.('[FOOTER] Error dispatching BIOGRAPHY_COMPLETE event:', e);
         ui.notifications?.error(e.message || 'Failed to complete biography workflow');
       }
     } catch (err) {
-      window.GAS.log.e('[FOOTER] Error completing biography:', err);
+      window.GAS?.log?.e?.('[FOOTER] Error completing biography:', err);
       ui.notifications?.error(err.message);
     }
   }

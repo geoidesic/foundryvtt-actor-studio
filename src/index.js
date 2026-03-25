@@ -11,12 +11,12 @@ import UsageTracker from '~/src/usage-tracking.js';
 
 
 //- import hooks
-import { init, ready } from './hooks/init.js';
-import { captureAdvancement } from './hooks/captureAdvancement.js';
-import { renderAdvancementManager } from './hooks/advancementManager.js';
-import { renderCompendium } from './hooks/renderCompendium.js';
-import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from './hooks/actorStudioStartButtons.js';
-import { openActorStudio } from './hooks/actorStudioStartButtons.js';
+import { init, ready } from '~/src/hooks/init.js';
+import { captureAdvancement } from '~/src/hooks/captureAdvancement.js';
+import { renderAdvancementManager } from '~/src/hooks/advancementManager.js';
+import { renderCompendium } from '~/src/hooks/renderCompendium.js';
+import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from '~/src/hooks/actorStudioStartButtons.js';
+import { openActorStudio } from '~/src/hooks/actorStudioStartButtons.js';
 
 
 
@@ -29,15 +29,30 @@ Hooks.on("quenchReady", async (quench) => {
   console.log("Quench ready, registering Actor Studio test batches");
   const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000)) || 120000;
 
-  const [{ registerActorStudioTests }, { registerWizardTests }, { registerClericPermutationTests }, { registerFighterPermutationTests }, { registerRangerPermutationTests }, { registerPaladinPermutationTests }, { registerWarlockPermutationTests }] = await Promise.all([
-    import('./hooks/tests/actor-studio-tests.js'),
-    import('./hooks/tests/wizard-tests.js'),
-    import('./hooks/tests/character-permutation-tests/cleric.js'),
-    import('./hooks/tests/character-permutation-tests/fighter.js'),
-    import('./hooks/tests/character-permutation-tests/ranger.js'),
-    import('./hooks/tests/character-permutation-tests/paladin.js'),
-    import('./hooks/tests/character-permutation-tests/warlock.js'),
+  const [{ registerActorStudioTests }, { registerWizardTests }, { registerClericTests }, { registerFighterTests }, { registerRangerTests }, { registerPaladinTests }, { registerWarlockTests }, { registerBarbarianTests }, { registerBardTests }, { registerSorcererTests }, { registerArtificerTests }] = await Promise.all([
+    import('~/src/hooks/tests/actor-studio-tests.js'),
+    import('~/src/hooks/tests/wizard-tests.js'),
+    import('~/src/hooks/tests/cleric-tests.js'),
+    import('~/src/hooks/tests/fighter-tests.js'),
+    import('~/src/hooks/tests/ranger-tests.js'),
+    import('~/src/hooks/tests/paladin-tests.js'),
+    import('~/src/hooks/tests/warlock-tests.js'),
+    import('~/src/hooks/tests/barbarian-tests.js'),
+    import('~/src/hooks/tests/bard-tests.js'),
+    import('~/src/hooks/tests/sorcerer-tests.js'),
+    import('~/src/hooks/tests/artificer-tests.js'),
   ]);
+
+  // Create wrapper functions for permutation tests
+  const registerClericPermutationTests = (context) => registerClericTests(context);
+  const registerFighterPermutationTests = (context) => registerFighterTests(context);
+  const registerRangerPermutationTests = (context) => registerRangerTests(context);
+  const registerPaladinPermutationTests = (context) => registerPaladinTests(context);
+  const registerWarlockPermutationTests = (context) => registerWarlockTests(context);
+  const registerBarbarianPermutationTests = (context) => registerBarbarianTests(context);
+  const registerBardPermutationTests = (context) => registerBardTests(context);
+  const registerSorcererPermutationTests = (context) => registerSorcererTests(context);
+  const registerArtificerPermutationTests = (context) => registerArtificerTests(context);
 
   quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
     displayName: "Actor Studio: Basic Test",
@@ -65,6 +80,22 @@ Hooks.on("quenchReady", async (quench) => {
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.warlock", registerWarlockPermutationTests, {
     displayName: "Warlock",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.barbarian", registerBarbarianPermutationTests, {
+    displayName: "Barbarian",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.bard", registerBardPermutationTests, {
+    displayName: "Bard",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.sorcerer", registerSorcererPermutationTests, {
+    displayName: "Sorcerer",
+    timeout: testBatchTimeout
+  });
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.artificer", registerArtificerPermutationTests, {
+    displayName: "Artificer",
     timeout: testBatchTimeout
   });
   console.log("Registered Actor Studio test batches");

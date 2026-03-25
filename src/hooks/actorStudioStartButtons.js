@@ -71,7 +71,15 @@ export function openActorStudio(actorName, folderName = '', actorType = 'charact
         resetStores();
         new PCApplication(new Actor.implementation({ name: actorName, folder: folderName, type: actorType })).render(true, { focus: true });
     } catch (error) {
-        ui.notifications.error(error.message);
+        console.error('[GAS] openActorStudio failed', {
+          actorName,
+          folderName,
+          actorType,
+          error,
+          message: error?.message,
+          stack: error?.stack
+        });
+        ui.notifications.error(error?.message || String(error));
     } finally {
         setTimeout(() => { isOpeningActorStudio = false; }, 250);
     }

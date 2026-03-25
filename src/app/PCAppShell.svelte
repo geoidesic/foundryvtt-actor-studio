@@ -74,7 +74,7 @@
       
       // Check current state and reset if needed
       const currentState = levelUpFSM.getCurrentState();
-      window.GAS.log.d('[PCAPP] Current FSM state before starting level-up:', currentState);
+      window.GAS?.log?.d?.('[PCAPP] Current FSM state before starting level-up:', currentState);
       
       // Reset FSM to idle if it's in any state other than 'idle'
       if (currentState !== 'idle') {
@@ -95,7 +95,7 @@
     
     isLevelUp.set(levelUp);
 
-    window.GAS.log.d(stylesApp)
+    window.GAS?.log?.d?.(stylesApp)
 
     // window.GAS.log.d($isLevelUp)
   });
@@ -152,13 +152,13 @@
 
   function gasClose() {
     // console.log('[PCAPP] ====== gasClose CALLED ======');
-    window.GAS.log.d('gas.close')
-    window.GAS.log.d($actorInGame);
+    window.GAS?.log?.d?.('gas.close')
+    window.GAS?.log?.d?.($actorInGame);
     
     // Only try to access actor sheet if actor exists
     if ($actorInGame) {
-      window.GAS.log.d($actorInGame.sheet);
-      window.GAS.log.d($isLevelUp);
+      window.GAS?.log?.d?.($actorInGame.sheet);
+      window.GAS?.log?.d?.($isLevelUp);
       if(!$isLevelUp) {
         $actorInGame.sheet.render(true);
       }
@@ -213,13 +213,13 @@
    * Handle starting wealth choice for 2014 rules
    */
   function handleStartingWealthChoice() {
-    window.GAS.log.d('[PCAPP] handleStartingWealthChoice called');
+    window.GAS?.log?.d?.('[PCAPP] handleStartingWealthChoice called');
     
     // Add wealth choice tab
     if(!$tabs.find(x => x.id === "wealth-choice")) {
       tabs.update(t => {
         const newTabs = [...t, { label: "Wealth", id: "wealth-choice", component: "StartingWealthChoice" }];
-        window.GAS.log.d('[PCAPP] Added wealth choice tab:', newTabs);
+        window.GAS?.log?.d?.('[PCAPP] Added wealth choice tab:', newTabs);
         return newTabs;
       });
     }
@@ -290,13 +290,13 @@
    */
   function handleWealthChoiceConfirm(event) {
     const { choice } = event.detail;
-    window.GAS.log.d('[PCAPP] Wealth choice confirmed:', choice);
+    window.GAS?.log?.d?.('[PCAPP] Wealth choice confirmed:', choice);
     
     // CRITICAL: Never reset gold roll once it's been rolled
     // Once rolled, the value is immutable for this character
     const hasAlreadyRolled = $goldRoll > 0;
     if (hasAlreadyRolled) {
-      window.GAS.log.d('[PCAPP] Gold already rolled:', $goldRoll, '- preserving value (can only roll once)');
+      window.GAS?.log?.d?.('[PCAPP] Gold already rolled:', $goldRoll, '- preserving value (can only roll once)');
     }
     
     // Store the choice FIRST so that equipment tab setup uses the correct choice
@@ -322,7 +322,7 @@
    * Handle edit button click from Starting Wealth tab
    */
   function handleWealthChoiceEdit(event) {
-    window.GAS.log.d('[PCAPP] Wealth choice edit requested');
+    window.GAS?.log?.d?.('[PCAPP] Wealth choice edit requested');
     
     // Remove wealth-choice from readonly tabs
     readOnlyTabs.update(ro => {
@@ -332,7 +332,7 @@
     // Remove downstream tabs that may no longer be appropriate (equipment/gold, shop, spells)
     tabs.update(t => {
       const filtered = t.filter(tab => tab.id !== 'equipment' && tab.id !== 'shop' && tab.id !== 'spells');
-      window.GAS.log.d('[PCAPP] Removed equipment/gold/shop/spells tabs, remaining:', filtered);
+      window.GAS?.log?.d?.('[PCAPP] Removed equipment/gold/shop/spells tabs, remaining:', filtered);
       return filtered;
     });
     
@@ -342,7 +342,7 @@
     // Transition state machine back to choosing_starting_wealth
     const workflowFSM = getWorkflowFSM();
     const currentState = workflowFSM.getCurrentState();
-    window.GAS.log.d('[PCAPP] Current FSM state before reset:', currentState);
+    window.GAS?.log?.d?.('[PCAPP] Current FSM state before reset:', currentState);
     
     // Reset the choice in the store
     startingWealthChoice.set(null);
