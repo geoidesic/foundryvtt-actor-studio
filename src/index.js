@@ -18,23 +18,27 @@ import { renderCompendium } from './hooks/renderCompendium.js';
 import { renderASButtonInCreateActorApplication, renderActorStudioSidebarButton, cleanupAllEventHandlers, cleanupEventHandlers } from './hooks/actorStudioStartButtons.js';
 import { openActorStudio } from './hooks/actorStudioStartButtons.js';
 
-//- import tests
-import { registerActorStudioTests } from './hooks/tests/actor-studio-tests.js';
-import { registerWizardTests } from './hooks/tests/wizard-tests.js';
-import { registerClericPermutationTests } from './hooks/tests/character-permutation-tests/cleric.js';
-import { registerFighterPermutationTests } from './hooks/tests/character-permutation-tests/fighter.js';
-import { registerRangerPermutationTests } from './hooks/tests/character-permutation-tests/ranger.js';
-import { registerPaladinPermutationTests } from './hooks/tests/character-permutation-tests/paladin.js';
-import { registerWarlockPermutationTests } from './hooks/tests/character-permutation-tests/warlock.js';
+
 
 Hooks.once("init", (app, html, data) => {
   init(app, html, data);
 });
 
-// Register Quench tests
-Hooks.on("quenchReady", (quench) => {
+// Register Quench tests — dynamic import so test code is never bundled for non-Quench users
+Hooks.on("quenchReady", async (quench) => {
   console.log("Quench ready, registering Actor Studio test batches");
   const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000)) || 120000;
+
+  const [{ registerActorStudioTests }, { registerWizardTests }, { registerClericPermutationTests }, { registerFighterPermutationTests }, { registerRangerPermutationTests }, { registerPaladinPermutationTests }, { registerWarlockPermutationTests }] = await Promise.all([
+    import('./hooks/tests/actor-studio-tests.js'),
+    import('./hooks/tests/wizard-tests.js'),
+    import('./hooks/tests/character-permutation-tests/cleric.js'),
+    import('./hooks/tests/character-permutation-tests/fighter.js'),
+    import('./hooks/tests/character-permutation-tests/ranger.js'),
+    import('./hooks/tests/character-permutation-tests/paladin.js'),
+    import('./hooks/tests/character-permutation-tests/warlock.js'),
+  ]);
+
   quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
     displayName: "Actor Studio: Basic Test",
     timeout: testBatchTimeout

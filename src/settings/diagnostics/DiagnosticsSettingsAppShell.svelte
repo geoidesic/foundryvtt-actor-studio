@@ -25,63 +25,64 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             span {game.i18n.localize('GAS.Setting.debugHooks.Name')}
           p.hint {game.i18n.localize('GAS.Setting.debugHooks.Hint')}
 
-      .setting-group
-        h3 Test Timeout Configuration (milliseconds)
-        
-        .setting-item
-          p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name')}
-          input(
-            type="number"
-            placeholder="120000"
-            bind:value="{testTimeoutPerTest}"
-            min="5000"
-            step="1000"
-          )
-          p.hint {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint')}
+      +if("quenchActive")
+        .setting-group
+          h3 Test Timeout Configuration (milliseconds)
 
-        .setting-item
-          p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Name')}
-          input(
-            type="number"
-            placeholder="5000"
-            bind:value="{testTimeoutActorStudioClosed}"
-            min="1000"
-            step="500"
-          )
-          p.hint {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Hint')}
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name')}
+            input(
+              type="number"
+              placeholder="120000"
+              bind:value="{testTimeoutPerTest}"
+              min="5000"
+              step="1000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint')}
 
-        .setting-item
-          p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Name')}
-          input(
-            type="number"
-            placeholder="25000"
-            bind:value="{testTimeoutSpellsTabVisible}"
-            min="5000"
-            step="1000"
-          )
-          p.hint {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Hint')}
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Name')}
+            input(
+              type="number"
+              placeholder="5000"
+              bind:value="{testTimeoutActorStudioClosed}"
+              min="1000"
+              step="500"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Hint')}
 
-        .setting-item
-          p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Name')}
-          input(
-            type="number"
-            placeholder="20000"
-            bind:value="{testTimeoutGeneralCondition}"
-            min="5000"
-            step="1000"
-          )
-          p.hint {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Hint')}
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Name')}
+            input(
+              type="number"
+              placeholder="25000"
+              bind:value="{testTimeoutSpellsTabVisible}"
+              min="5000"
+              step="1000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Hint')}
 
-        .setting-item
-          p.setting-label {game.i18n.localize('GAS.Setting.testIntervalPolling.Name')}
-          input(
-            type="number"
-            placeholder="100"
-            bind:value="{testIntervalPolling}"
-            min="10"
-            step="10"
-          )
-          p.hint {game.i18n.localize('GAS.Setting.testIntervalPolling.Hint')}
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Name')}
+            input(
+              type="number"
+              placeholder="20000"
+              bind:value="{testTimeoutGeneralCondition}"
+              min="5000"
+              step="1000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testIntervalPolling.Name')}
+            input(
+              type="number"
+              placeholder="100"
+              bind:value="{testIntervalPolling}"
+              min="10"
+              step="10"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testIntervalPolling.Hint')}
 
     footer.settings-footer
       button.cancel-button(on:click="{cancelSettings}") Cancel
@@ -99,23 +100,26 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   const { application } = getContext('#external');
 
   // Load current settings
+  const quenchActive = Boolean(game.modules.get('quench')?.active);
   let debug = safeGetSetting(MODULE_ID, 'debug', false);
   let debugHooks = safeGetSetting(MODULE_ID, 'debug.hooks', false);
-  let testTimeoutPerTest = safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000);
-  let testTimeoutActorStudioClosed = safeGetSetting(MODULE_ID, 'testTimeoutActorStudioClosed', 5000);
-  let testTimeoutSpellsTabVisible = safeGetSetting(MODULE_ID, 'testTimeoutSpellsTabVisible', 25000);
-  let testTimeoutGeneralCondition = safeGetSetting(MODULE_ID, 'testTimeoutGeneralCondition', 20000);
-  let testIntervalPolling = safeGetSetting(MODULE_ID, 'testIntervalPolling', 100);
+  let testTimeoutPerTest = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000) : 120000;
+  let testTimeoutActorStudioClosed = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutActorStudioClosed', 5000) : 5000;
+  let testTimeoutSpellsTabVisible = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellsTabVisible', 25000) : 25000;
+  let testTimeoutGeneralCondition = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutGeneralCondition', 20000) : 20000;
+  let testIntervalPolling = quenchActive ? safeGetSetting(MODULE_ID, 'testIntervalPolling', 100) : 100;
 
   async function saveSettings() {
     try {
       await game.settings.set(MODULE_ID, 'debug', debug);
       await game.settings.set(MODULE_ID, 'debug.hooks', debugHooks);
-      await game.settings.set(MODULE_ID, 'testTimeoutPerTest', parseInt(testTimeoutPerTest, 10));
-      await game.settings.set(MODULE_ID, 'testTimeoutActorStudioClosed', parseInt(testTimeoutActorStudioClosed, 10));
-      await game.settings.set(MODULE_ID, 'testTimeoutSpellsTabVisible', parseInt(testTimeoutSpellsTabVisible, 10));
-      await game.settings.set(MODULE_ID, 'testTimeoutGeneralCondition', parseInt(testTimeoutGeneralCondition, 10));
-      await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(testIntervalPolling, 10));
+      if (quenchActive) {
+        await game.settings.set(MODULE_ID, 'testTimeoutPerTest', parseInt(testTimeoutPerTest, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutActorStudioClosed', parseInt(testTimeoutActorStudioClosed, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutSpellsTabVisible', parseInt(testTimeoutSpellsTabVisible, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutGeneralCondition', parseInt(testTimeoutGeneralCondition, 10));
+        await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(testIntervalPolling, 10));
+      }
 
       ui.notifications.info('Diagnostics settings saved successfully');
       

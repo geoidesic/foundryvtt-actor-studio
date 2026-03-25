@@ -31,7 +31,9 @@ export function registerDiagnosticsSettings() {
     type: Boolean,
   });
 
-  // Test timeout settings
+  // Test timeout settings — only register when Quench is active
+  if (!game.modules.get('quench')?.active) return;
+
   game.settings.register(MODULE_ID, 'testTimeoutPerTest', {
     name: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name'),
     hint: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint'),
