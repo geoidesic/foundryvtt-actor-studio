@@ -84,6 +84,17 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             )
             p.hint {game.i18n.localize('GAS.Setting.testIntervalPolling.Hint')}
 
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Name')}
+            input(
+              type="number"
+              placeholder="1500"
+              bind:value="{testTimeoutAdvancementAutomation}"
+              min="100"
+              step="100"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Hint')}
+
     footer.settings-footer
       button.cancel-button(on:click="{cancelSettings}") Cancel
       button.save-button(on:click="{saveSettings}") Save
@@ -108,6 +119,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let testTimeoutSpellsTabVisible = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellsTabVisible', 25000) : 25000;
   let testTimeoutGeneralCondition = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutGeneralCondition', 20000) : 20000;
   let testIntervalPolling = quenchActive ? safeGetSetting(MODULE_ID, 'testIntervalPolling', 100) : 100;
+  let testTimeoutAdvancementAutomation = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementAutomation', 1500) : 1500;
 
   async function saveSettings() {
     try {
@@ -119,6 +131,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
         await game.settings.set(MODULE_ID, 'testTimeoutSpellsTabVisible', parseInt(testTimeoutSpellsTabVisible, 10));
         await game.settings.set(MODULE_ID, 'testTimeoutGeneralCondition', parseInt(testTimeoutGeneralCondition, 10));
         await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(testIntervalPolling, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementAutomation', parseInt(testTimeoutAdvancementAutomation, 10));
       }
 
       ui.notifications.info('Diagnostics settings saved successfully');

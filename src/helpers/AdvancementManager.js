@@ -6,6 +6,7 @@ import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { goldRoll } from '~/src/stores/storeDefinitions';
 import { preAdvancementSelections, actorInGame } from '~/src/stores/index';
 import { getWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+import { getTestTimeouts } from '~/src/helpers/testTimeouts';
 
 /**
  * Class responsible for monitoring and managing the advancement process
@@ -257,7 +258,7 @@ export class AdvancementManager {
       // Reset the flag after a delay to allow subsequent clicks for multi-step dialogs
       setTimeout(() => {
         this.clickedLastTime = false;
-      }, 1500); // Allow next click after 1.5 seconds
+      }, getTestTimeouts().advancementAutomation); // Allow next click after configured delay
     }
   }
 

@@ -13,6 +13,7 @@ export function getTestTimeouts() {
     spellsTabVisible: safeGetSetting(MODULE_ID, 'testTimeoutSpellsTabVisible', 10000),
     generalCondition: safeGetSetting(MODULE_ID, 'testTimeoutGeneralCondition', 10000),
     pollingInterval: safeGetSetting(MODULE_ID, 'testIntervalPolling', 100),
+    advancementAutomation: safeGetSetting(MODULE_ID, 'testTimeoutAdvancementAutomation', 1500),
   };
 }
 

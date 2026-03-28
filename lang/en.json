@@ -466,6 +466,10 @@
       "testIntervalPolling": {
         "Name": "Polling interval (ms)",
         "Hint": "Time between polls when waiting for conditions"
+      },
+      "testTimeoutAdvancementAutomation": {
+        "Name": "Advancement automation click delay (ms)",
+        "Hint": "Delay between automated advancement button clicks to prevent race conditions"
       }
     },
     "Equipment": {

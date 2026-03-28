@@ -83,4 +83,13 @@ export function registerDiagnosticsSettings() {
     default: 100,
     type: Number,
   });
+
+  game.settings.register(MODULE_ID, 'testTimeoutAdvancementAutomation', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Hint'),
+    scope: 'world',
+    config: false,
+    default: 1500,
+    type: Number,
+  });
 }
