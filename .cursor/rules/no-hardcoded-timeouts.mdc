@@ -1,0 +1,10 @@
+---
+description: Enforce settings-driven timeout and polling values
+globs: ["src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]
+alwaysApply: true
+---
+
+- Never hard-code timeout or polling durations (for example `5000`, `20000`, `150`) in async waits, retries, or test assertions.
+- Always source timing values from settings-backed helpers or stores.
+- For Quench/integration tests, use `getTestTimeouts()` from `src/helpers/testTimeouts.js` and derive named constants from those settings.
+- If you need a different timing behavior, add a new setting-backed timeout key instead of introducing a literal millisecond value.

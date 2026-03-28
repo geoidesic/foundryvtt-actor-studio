@@ -21,5 +21,6 @@ alwaysApply: true
 - For Ranger spell automation, expand collapsed `.spell-level-header` groups before trying to click `.add-btn`; do not assume spell rows are initially expanded.
 - Before clicking class-row/plus during level-up tests, explicitly switch to `Level Up` / `Class` tab.
 - If spells tab is visible but has no spell rows, no enabled `.add-btn`, and no finalize/skip footer actions, fail with explicit diagnostics and treat this as a real bug.
+- Never use hard-coded timeout/polling literals in Quench tests. Use `getTestTimeouts()` settings and named constants derived from those settings.
 - Never dispatch workflow/level-up FSM events from tests to bypass broken UI behavior.
 - Never add fallback logic that converts a real integration failure into a pass.
