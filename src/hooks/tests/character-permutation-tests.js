@@ -260,6 +260,35 @@ export function registerCharacterPermutationTests(context, options = {}) {
     logSubclassDebug('spells tab visible, clicking Spells tab');
     await clickTabByLabel('Spells');
 
+    // Wait for spells UI to load
+    await wait(1000);
+
+    // Expand any collapsed spell level headers
+    const headers = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .spell-level-header'));
+    for (const header of headers) {
+      if (header.classList.contains('collapsed') || !header.classList.contains('expanded')) {
+        header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        await wait(200);
+      }
+    }
+
+    // Click available add buttons until finalize becomes available or no more add buttons
+    let addButtonsClicked = 0;
+    const maxClicks = 20; // Prevent infinite loop
+    while (addButtonsClicked < maxClicks) {
+      const addButtons = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .add-btn:not([disabled])'));
+      if (addButtons.length === 0) break;
+
+      // Click the first enabled add button
+      addButtons[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+      addButtonsClicked++;
+      await wait(500);
+
+      // Check if finalize button is now available
+      const finalizeBtn = document.querySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn');
+      if (finalizeBtn && !finalizeBtn.disabled) break;
+    }
+
     const finalized = await waitForCondition(
       () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn'),
       12000,

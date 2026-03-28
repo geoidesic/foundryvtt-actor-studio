@@ -16,6 +16,7 @@ export class AdvancementManager {
     this.inProcessStore = inProcessStore;
     this.monitoringPromise = null;
     this.stopAutoAdvance = false;
+    this.clickedLastTime = false; // Flag to prevent consecutive clicks that could trigger errors
     // Allow injection of a custom DOM query function for testability
     this._getPanel = getPanel || (() => {
       if (typeof $ !== 'function') return null;
@@ -49,10 +50,11 @@ export class AdvancementManager {
 
   checkTabContent(resolve, tabName = 'advancements', timeout = 600) {
     if (this.isTabContentEmpty(tabName)) {
+      this.clickedLastTime = false; // Reset flag when tab becomes empty
       resolve();
     } else {
       // Automated advancement clicking in debug mode or test automation mode
-      if (isAdvancementAutomationEnabled()) {
+      if (!this.clickedLastTime && isAdvancementAutomationEnabled()) {
         this.autoAdvanceSteps();
       }
       if (!this.stopAutoAdvance) {
@@ -70,6 +72,7 @@ export class AdvancementManager {
       return;
     }
     
+    let clickedThisPass = false;
     try {
       const panel = this._getPanel();
       if (!panel || !panel.length) return;
@@ -78,7 +81,6 @@ export class AdvancementManager {
       const advancementDialogs = panel.find('.gas-advancements');
       const automationConfig = getAdvancementAutomationConfig();
       
-      let clickedThisPass = false;
       advancementDialogs.each((index, dialog) => {
         if (clickedThisPass) return;
 
@@ -125,6 +127,19 @@ export class AdvancementManager {
           if (clickedThisPass) return false;
           const candidate = $dialog.find(selector).first();
           if (candidate.length && !candidate.prop('disabled')) {
+            // Additional validation: check if the dialog still has valid advancement data
+            // Skip clicking if the advancement ID was present but is now missing (indicating processing)
+            const currentIdForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
+            const currentAdvancementId = (typeof currentIdForm?.attr === 'function')
+              ? (currentIdForm.attr('data-advancement-id') || currentIdForm.attr('data-id') || null)
+              : null;
+            
+            // Only skip if we had an advancement ID initially but it's now missing
+            if (advancementId && !currentAdvancementId) {
+              window.GAS.log.d('[AUTO-ADVANCE] Skipping click - dialog appears to be processing (ID disappeared)', index);
+              return false;
+            }
+            
             candidate.click();
             clickedThisPass = true;
             return true;
@@ -167,6 +182,18 @@ export class AdvancementManager {
         // First, try to find and click "next" buttons
         const nextButton = $dialog.find('[data-action="next"]').first();
         if (nextButton.length && !nextButton.prop('disabled')) {
+          // Additional validation: check if the dialog still has valid advancement data
+          const currentIdForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
+          const currentAdvancementId = (typeof currentIdForm?.attr === 'function')
+            ? (currentIdForm.attr('data-advancement-id') || currentIdForm.attr('data-id') || null)
+            : null;
+          
+          // Only skip if we had an advancement ID initially but it's now missing
+          if (advancementId && !currentAdvancementId) {
+            window.GAS.log.d('[AUTO-ADVANCE] Skipping next button click - dialog appears to be processing (ID disappeared)', index);
+            return;
+          }
+          
           window.GAS.log.d('[AUTO-ADVANCE] Clicking next button in dialog', index);
           nextButton.click();
           clickedThisPass = true;
@@ -176,6 +203,18 @@ export class AdvancementManager {
         // If no next button, look for "complete" button
         const completeButton = $dialog.find('[data-action="complete"]').first();
         if (completeButton.length && !completeButton.prop('disabled')) {
+          // Additional validation: check if the dialog still has valid advancement data
+          const currentIdForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
+          const currentAdvancementId = (typeof currentIdForm?.attr === 'function')
+            ? (currentIdForm.attr('data-advancement-id') || currentIdForm.attr('data-id') || null)
+            : null;
+          
+          // Only skip if we had an advancement ID initially but it's now missing
+          if (advancementId && !currentAdvancementId) {
+            window.GAS.log.d('[AUTO-ADVANCE] Skipping complete button click - dialog appears to be processing (ID disappeared)', index);
+            return;
+          }
+          
           window.GAS.log.d('[AUTO-ADVANCE] Clicking complete button in dialog', index);
           completeButton.click();
           clickedThisPass = true;
@@ -191,6 +230,18 @@ export class AdvancementManager {
         }).first();
         
         if (textButton.length && !textButton.prop('disabled')) {
+          // Additional validation: check if the dialog still has valid advancement data
+          const currentIdForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
+          const currentAdvancementId = (typeof currentIdForm?.attr === 'function')
+            ? (currentIdForm.attr('data-advancement-id') || currentIdForm.attr('data-id') || null)
+            : null;
+          
+          // Only skip if we had an advancement ID initially but it's now missing
+          if (advancementId && !currentAdvancementId) {
+            window.GAS.log.d('[AUTO-ADVANCE] Skipping text button click - dialog appears to be processing (ID disappeared)', index);
+            return;
+          }
+          
           window.GAS.log.d('[AUTO-ADVANCE] Clicking text-based button:', textButton.text().trim());
           textButton.click();
           clickedThisPass = true;
@@ -199,6 +250,14 @@ export class AdvancementManager {
       });
     } catch (error) {
       window.GAS.log.e('[AUTO-ADVANCE] Error in autoAdvanceSteps:', error);
+    }
+    // Set flag to prevent consecutive clicks that could cause errors
+    if (clickedThisPass) {
+      this.clickedLastTime = true;
+      // Reset the flag after a delay to allow subsequent clicks for multi-step dialogs
+      setTimeout(() => {
+        this.clickedLastTime = false;
+      }, 1500); // Allow next click after 1.5 seconds
     }
   }
 
@@ -214,6 +273,7 @@ export class AdvancementManager {
 
     // Reset auto-advance flag when starting monitoring
     this.stopAutoAdvance = false;
+    this.clickedLastTime = false;
 
     // Create new monitoring promise
     this.monitoringPromise = new Promise(resolve => {
