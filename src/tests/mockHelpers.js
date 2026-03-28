@@ -22,6 +22,11 @@ export const mockStores = {
   activeTab: mockWritable('abilities'),
   tabs: mockWritable([]),
   readOnlyTabs: mockWritable([]),
+  getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+    includeBiography
+      ? ['race', 'class', 'background', 'abilities', 'biography']
+      : ['race', 'class', 'background', 'abilities']
+  )),
   preAdvancementSelections: mockWritable({}),
   dropItemRegistry: {
     advanceQueue: vi.fn().mockResolvedValue(true)
@@ -49,6 +54,13 @@ export const createFinityMock = () => {
     start: vi.fn()
   };
   
+  const mockGlobal = {
+    onStateEnter: vi.fn(() => mockGlobal),
+    onStateExit: vi.fn(() => mockGlobal),
+    onTransition: vi.fn(() => mockGlobal),
+    start: vi.fn(() => mockFsm)
+  };
+  
   const mockFinity = {
     configure: vi.fn(() => mockFinity),
     initialState: vi.fn(() => mockFinity),
@@ -60,6 +72,7 @@ export const createFinityMock = () => {
     do: vi.fn(() => mockFinity),
     onSuccess: vi.fn(() => mockFinity),
     onFailure: vi.fn(() => mockFinity),
+    global: vi.fn(() => mockGlobal),
     start: vi.fn(() => mockFsm)
   };
   

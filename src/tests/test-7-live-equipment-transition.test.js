@@ -102,6 +102,11 @@ describe('Live Equipment Transition', () => {
         { id: 'class', label: 'Class' }
       ]),
       readOnlyTabs: mockWritable([]),
+      getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+        includeBiography
+          ? ['race', 'class', 'background', 'abilities', 'biography']
+          : ['race', 'class', 'background', 'abilities']
+      )),
       actorInGame: mockWritable(null),
       preAdvancementSelections: mockWritable({}),
       dropItemRegistry: {

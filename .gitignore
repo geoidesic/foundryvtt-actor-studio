@@ -6,3 +6,4 @@
 *.code-workspace
 node_modules/
 dist/
+docs/plans

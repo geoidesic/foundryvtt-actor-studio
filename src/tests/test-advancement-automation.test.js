@@ -257,34 +257,38 @@ describe('Advancement Automation in Debug Mode', () => {
               return {
                 length: 1,
                 filter: (filterFn) => {
-                  // Simulate a button that matches the text filter
-                  const mockButton = {
-                    text: () => 'Continue'
+                  // Create a mock button element
+                  const mockBtn = {
+                    text: () => 'Continue',
+                    click: textButtonClickSpy,
+                    prop: () => false // not disabled
                   };
-                  // Test if the filter function returns true for this button
-                  const text = mockButton.text().toLowerCase().trim();
-                  const matches = text.includes('next') || text.includes('continue') || text.includes('complete') || text.includes('finish');
                   
-                  if (matches) {
+                  // Test the filter function
+                  const shouldInclude = filterFn(0, mockBtn);
+                  
+                  if (shouldInclude) {
                     return {
                       length: 1,
-                      filter: () => ({
+                      first: () => ({
                         length: 1,
-                        first: () => ({
-                          length: 1,
-                          text: () => 'Continue',
-                          click: textButtonClickSpy
-                        })
+                        text: () => 'Continue',
+                        click: textButtonClickSpy,
+                        prop: () => false
                       })
                     };
                   }
-                  return { length: 0 };
+                  return { length: 0, first: () => ({ length: 0 }) };
                 }
               };
             }
             return { length: 0, first: () => ({ length: 0 }) };
           }
         };
+      }
+      // Handle $(btn) calls in the filter function
+      if (selector && typeof selector === 'object' && selector.text) {
+        return selector; // Return the mock button object directly
       }
       return { length: 0 };
     });

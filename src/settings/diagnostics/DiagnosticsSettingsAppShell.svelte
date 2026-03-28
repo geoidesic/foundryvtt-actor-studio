@@ -122,7 +122,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       }
 
       ui.notifications.info('Diagnostics settings saved successfully');
-      
       application.close();
     } catch (error) {
       console.error('Error saving diagnostics settings:', error);

@@ -74,6 +74,11 @@ vi.mock('~/src/stores/index', () => ({
   activeTab: mockWritable('character'),
   tabs: mockWritable([]),
   readOnlyTabs: mockWritable([]),
+  getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+    includeBiography
+      ? ['race', 'class', 'background', 'abilities', 'biography']
+      : ['race', 'class', 'background', 'abilities']
+  )),
   preAdvancementSelections: mockWritable({}),
   dropItemRegistry: { advanceQueue: vi.fn().mockResolvedValue(true) }
 }));
@@ -95,6 +100,13 @@ vi.mock('~/src/helpers/AdvancementManager', () => ({
 }));
 
 // Mock Finity - CRITICAL for WorkflowStateMachine tests
+const mockGlobal = {
+  onStateEnter: vi.fn(() => mockGlobal),
+  onStateExit: vi.fn(() => mockGlobal),
+  onTransition: vi.fn(() => mockGlobal),
+  start: vi.fn(() => mockFsm)
+};
+
 const mockFinity = {
   configure: vi.fn(() => mockFinity),
   initialState: vi.fn(() => mockFinity),
@@ -106,6 +118,7 @@ const mockFinity = {
   do: vi.fn(() => mockFinity),
   onSuccess: vi.fn(() => mockFinity),
   onFailure: vi.fn(() => mockFinity),
+  global: vi.fn(() => mockGlobal),
   start: vi.fn(() => mockFsm)
 };
 
@@ -133,7 +146,7 @@ describe('TDD: Unhandled shopping_complete Event', () => {
     
     // Verify the state machine was created
     expect(mockFinity.configure).toHaveBeenCalled();
-    expect(mockFinity.start).toHaveBeenCalled();
+    expect(mockGlobal.start).toHaveBeenCalled();
     
     // The test passes because we expect this to work
     // This documents that the state machine should handle shopping_complete

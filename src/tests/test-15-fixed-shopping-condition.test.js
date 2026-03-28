@@ -60,7 +60,12 @@ describe('Fixed Shopping State Condition - TDD', () => {
       dropItemRegistry: { advanceQueue: vi.fn(() => Promise.resolve()) },
       tabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
       readOnlyTabs: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
-      activeTab: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }
+      activeTab: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() },
+      getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+        includeBiography
+          ? ['race', 'class', 'background', 'abilities', 'biography']
+          : ['race', 'class', 'background', 'abilities']
+      ))
     }));
     vi.doMock('~/src/stores/startingEquipment', () => ({ 
       compatibleStartingEquipment: { set: vi.fn(), update: vi.fn(), subscribe: vi.fn() }

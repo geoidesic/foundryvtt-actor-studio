@@ -7,7 +7,33 @@ import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
 import { actorInGame, startingWealthChoice } from '~/src/stores/storeDefinitions';
 import { handleAdvancementCompletion } from '~/src/lib/workflow.js';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
+import spellsKnownData from '~/src/stores/spellsKnown.json';
 import Finity from 'finity';
+
+function parseSpellProgressionValue(value) {
+  if (typeof value !== 'string') return null;
+
+  const [cantripsRaw, spellsRaw] = value.split('/').map((entry) => String(entry ?? '').trim());
+  if (!cantripsRaw || !spellsRaw) return null;
+
+  return {
+    cantrips: Number.parseInt(cantripsRaw, 10) || 0,
+    spells: Number.parseInt(spellsRaw, 10) || 0,
+    hasAllSpells: spellsRaw.toLowerCase() === 'all'
+  };
+}
+
+function classHasSpellSelectionAtLevel(classIdentifier, level, rulesVersion) {
+  const normalizedClass = String(classIdentifier || '').toLowerCase();
+  const numericLevel = Number(level) || 0;
+  const levelData = spellsKnownData.levels.find((entry) => Number(entry.level) === numericLevel);
+  const rawValue = levelData?.[normalizedClass]?.[rulesVersion] ?? levelData?.[normalizedClass];
+  const parsedValue = parseSpellProgressionValue(rawValue);
+
+  if (!parsedValue) return true;
+
+  return parsedValue.cantrips > 0 || parsedValue.spells > 0 || parsedValue.hasAllSpells;
+}
 
 /**
  * Character creation workflow states
@@ -208,6 +234,17 @@ export const workflowFSMContext = {
     });
     
     const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;
+    const rulesVersion = window.GAS?.dnd5eRules || '2014';
+    const spellcastingClassIdentifiers = Array.from(new Set(
+      classNamesLower.filter((className) => knownSpellcastingClasses.includes(className))
+    ));
+    const shouldCheckLevelOneSpellCapacity = spellcastingClassIdentifiers.length > 0
+      && !hasActorSpellcasting
+      && !hasSubclassWithSpellcasting
+      && !hasSubclassSpellcasting
+      && !hasSubclassInClassData;
+    const hasLevelOneSpellSelection = !shouldCheckLevelOneSpellCapacity
+      || spellcastingClassIdentifiers.some((classIdentifier) => classHasSpellSelectionAtLevel(classIdentifier, 1, rulesVersion));
     
     window.GAS.log.d('[WORKFLOW] Spellcasting detection:', {
       spellcastingInfo,
@@ -223,13 +260,17 @@ export const workflowFSMContext = {
       hasSubclassSpellcasting,
       hasSubclassInClassData,
       isSpellcaster,
+      rulesVersion,
+      spellcastingClassIdentifiers,
+      shouldCheckLevelOneSpellCapacity,
+      hasLevelOneSpellSelection,
       actorName: actorForDecision.name,
       actorDataSpells: actorData?.spells,
       actorDataSpellsType: typeof actorData?.spells,
       actorDataSpellsExists: !!actorData?.spells
     });
     
-    return isSpellcaster;
+    return isSpellcaster && hasLevelOneSpellSelection;
   },
   _shouldShowShopping: function () {
     const enableShopping = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
@@ -558,7 +599,18 @@ export function createWorkflowStateMachine() {
         if (context.error) ui.notifications.error(context.error);
       })
     // Start the FSM
-    const startedFsm = fsm.start();
+    const startedFsm = fsm
+      .global()
+        .onStateEnter((context, state) => {
+          console.log('[WORKFLOW] Entering state:', state);
+        })
+        .onStateExit((context, state) => {
+          console.log('[WORKFLOW] Exiting state:', state);
+        })
+        .onTransition((context, fromState, toState) => {
+          console.log('[WORKFLOW] Transitioning from', fromState, 'to', toState);
+        })
+      .start();
 
     // Wrap the handle method for safe, lightweight debugging/tracing without relying on
     // Finity's optional global() API (which isn't present in our test mock).

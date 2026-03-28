@@ -1,5 +1,6 @@
 import { MODULE_ID } from '~/src/helpers/constants';
 import DiagnosticsSettingsButton from './DiagnosticsSettingsButton';
+import { showReloadRequiredConfirm } from '../confirmationHelpers';
 
 export function registerDiagnosticsSettings() {
   // Register the menu for the settings app
@@ -20,6 +21,10 @@ export function registerDiagnosticsSettings() {
     config: false,
     default: false,
     type: Boolean,
+    requiresReload: true,
+    onChange: () => {
+      return showReloadRequiredConfirm({ world: true });
+    }
   });
 
   game.settings.register(MODULE_ID, 'debug.hooks', {

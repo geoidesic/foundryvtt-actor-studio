@@ -78,7 +78,10 @@ export class AdvancementManager {
       const advancementDialogs = panel.find('.gas-advancements');
       const automationConfig = getAdvancementAutomationConfig();
       
+      let clickedThisPass = false;
       advancementDialogs.each((index, dialog) => {
+        if (clickedThisPass) return;
+
         const $dialog = $(dialog);
         const idForm = $dialog.find('form[data-advancement-id], form[data-id]').first();
         const typeForm = $dialog.find('form[data-type]').first();
@@ -119,9 +122,11 @@ export class AdvancementManager {
         }
 
         const clickFirstEnabled = (selector) => {
+          if (clickedThisPass) return false;
           const candidate = $dialog.find(selector).first();
           if (candidate.length && !candidate.prop('disabled')) {
             candidate.click();
+            clickedThisPass = true;
             return true;
           }
           return false;
@@ -164,6 +169,7 @@ export class AdvancementManager {
         if (nextButton.length && !nextButton.prop('disabled')) {
           window.GAS.log.d('[AUTO-ADVANCE] Clicking next button in dialog', index);
           nextButton.click();
+          clickedThisPass = true;
           return; // Exit early after clicking next
         }
         
@@ -172,21 +178,23 @@ export class AdvancementManager {
         if (completeButton.length && !completeButton.prop('disabled')) {
           window.GAS.log.d('[AUTO-ADVANCE] Clicking complete button in dialog', index);
           completeButton.click();
+          clickedThisPass = true;
           return; // Exit early after clicking complete
         }
         
-        // If no data-action buttons found, try common button text patterns
-        const buttons = $dialog.find('button').filter(function() {
-          const text = $(this).text().toLowerCase().trim();
+        // Fall back to text-based button detection
+        const buttons = $dialog.find('button');
+        const textButton = buttons.filter((_, btn) => {
+          const $btn = $(btn);
+          const text = $btn.text().toLowerCase().trim();
           return text.includes('next') || text.includes('continue') || text.includes('complete') || text.includes('finish');
-        });
+        }).first();
         
-        if (buttons.length) {
-          const enabledButton = buttons.filter(':not(:disabled)').first();
-          if (enabledButton.length) {
-            window.GAS.log.d('[AUTO-ADVANCE] Clicking text-based button:', enabledButton.text().trim());
-            enabledButton.click();
-          }
+        if (textButton.length && !textButton.prop('disabled')) {
+          window.GAS.log.d('[AUTO-ADVANCE] Clicking text-based button:', textButton.text().trim());
+          textButton.click();
+          clickedThisPass = true;
+          return; // Exit early after clicking text button
         }
       });
     } catch (error) {

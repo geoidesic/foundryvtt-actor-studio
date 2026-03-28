@@ -114,6 +114,13 @@ vi.mock('finity', () => {
     start: vi.fn()
   };
   
+  const mockGlobal = {
+    onStateEnter: vi.fn(() => mockGlobal),
+    onStateExit: vi.fn(() => mockGlobal),
+    onTransition: vi.fn(() => mockGlobal),
+    start: vi.fn(() => mockFsm)
+  };
+  
   const mockFinity = {
     configure: vi.fn(() => mockFinity),
     initialState: vi.fn(() => mockFinity),
@@ -125,6 +132,7 @@ vi.mock('finity', () => {
     do: vi.fn(() => mockFinity),
     onSuccess: vi.fn(() => mockFinity),
     onFailure: vi.fn(() => mockFinity),
+    global: vi.fn(() => mockGlobal),
     start: vi.fn(() => mockFsm)
   };
   

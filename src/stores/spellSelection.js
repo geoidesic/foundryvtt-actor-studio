@@ -502,12 +502,40 @@ export const spellLimits = derived(
     // (helps when store wiring is incomplete)
     const resolvedClassName = className || $classUuidForLevelUp;
 
-    if (!resolvedClassName || !effectiveCharacterLevel) {
+    const getFirstActorClassIdentifier = () => {
+      const actorItems = $currentCharacter?.items;
+      if (!actorItems) return null;
+
+      const classItem = typeof actorItems.find === 'function'
+        ? actorItems.find((item) => item?.type === 'class')
+        : null;
+
+      return classItem?.system?.identifier || classItem?.name || null;
+    };
+
+    const looksLikeDocumentUuid = (value) => {
+      if (typeof value !== 'string') return false;
+      const lower = value.toLowerCase();
+      return lower.startsWith('actor.') || lower.includes('.item.') || lower.startsWith('compendium.');
+    };
+
+    let normalizedClassName = resolvedClassName;
+    if (looksLikeDocumentUuid(normalizedClassName)) {
+      normalizedClassName =
+        $levelUpClassObject?.system?.identifier
+        || $levelUpClassObject?.name
+        || $characterClass?.system?.identifier
+        || $characterClass?.name
+        || getFirstActorClassIdentifier()
+        || normalizedClassName;
+    }
+
+    if (!normalizedClassName || !effectiveCharacterLevel) {
       return { cantrips: 0, spells: 0 };
     }
 
     // Normalize className to lowercase to match spellsKnown.json keys
-    const classNameLower = typeof resolvedClassName === 'string' ? resolvedClassName.toLowerCase() : resolvedClassName;
+    const classNameLower = typeof normalizedClassName === 'string' ? normalizedClassName.toLowerCase() : normalizedClassName;
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
 
     // First, try to get spell limits from subclass advancement data
@@ -1489,11 +1517,11 @@ export async function finalizeSpellSelection(actor) {
       }
     }
 
-    // Clear the selection
-    selectedSpells.set(new Map());
-
     // Make the spells tab readonly
     readOnlyTabs.update(tabs => [...tabs, 'spells']);
+
+    // Clear the selection after the tab is readonly so the UI does not briefly re-render empty state.
+    selectedSpells.set(new Map());
 
     // Check if we're in level-up mode and handle workflow accordingly
     const isLevelUpMode = get(isLevelUp);

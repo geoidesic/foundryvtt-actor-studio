@@ -595,58 +595,59 @@ spells-tab-container(clas:readonlys="{isDisabled}")
         +if("$spellLimits.cantrips")
           p 
             em Note: You still need to select your cantrips as they cannot be changed later.
-  .sticky-header(class:hidden="{!scrolled}")
-    SpellCounterGrid(
-      cantripLabel="{t('Spells.Cantrips')}"
-      spellLabel="{t('Spells.Spells')}"
-      cantripCount="{$currentSpellCounts.cantrips}"
-      cantripLimit="{$spellLimits.cantrips}"
-      spellCount="{$currentSpellCounts.spells}"
-      spellLimit="{displaySpellLimit}"
-      cantripCountAtLimit="{cantripCountAtLimit}"
-      spellCountAtLimit="{spellCountAtLimit}"
-    )
-  .spells-tab
-    +if("$spellLimits.cantrips || displaySpellLimit")
-      SelectedSpellsPanel(
-        scrolled="{scrolled}"
+  +if("!isDisabled")
+    .sticky-header(class:hidden="{!scrolled}")
+      SpellCounterGrid(
+        cantripLabel="{t('Spells.Cantrips')}"
+        spellLabel="{t('Spells.Spells')}"
+        cantripCount="{$currentSpellCounts.cantrips}"
+        cantripLimit="{$spellLimits.cantrips}"
+        spellCount="{$currentSpellCounts.spells}"
+        spellLimit="{displaySpellLimit}"
         cantripCountAtLimit="{cantripCountAtLimit}"
         spellCountAtLimit="{spellCountAtLimit}"
-        currentCantrips="{$currentSpellCounts.cantrips}"
-        currentSpells="{$currentSpellCounts.spells}"
-        cantripLimit="{$spellLimits.cantrips}"
-        spellLimit="{displaySpellLimit}"
-        selectedSpellsList="{selectedSpellsList}"
-        isDisabled="{isDisabled}"
-        isLockedAutoSelectedSpell="{isLockedAutoSelectedSpell}"
-        removeFromSelection="{removeFromSelection}"
-        getEnrichedName="{getEnrichedName}"
-        getSpellLevelDisplay="{getSpellLevelDisplay}"
-        getSchoolName="{getSchoolName}"
       )
+    .spells-tab
+      +if("$spellLimits.cantrips || displaySpellLimit")
+        SelectedSpellsPanel(
+          scrolled="{scrolled}"
+          cantripCountAtLimit="{cantripCountAtLimit}"
+          spellCountAtLimit="{spellCountAtLimit}"
+          currentCantrips="{$currentSpellCounts.cantrips}"
+          currentSpells="{$currentSpellCounts.spells}"
+          cantripLimit="{$spellLimits.cantrips}"
+          spellLimit="{displaySpellLimit}"
+          selectedSpellsList="{selectedSpellsList}"
+          isDisabled="{isDisabled}"
+          isLockedAutoSelectedSpell="{isLockedAutoSelectedSpell}"
+          removeFromSelection="{removeFromSelection}"
+          getEnrichedName="{getEnrichedName}"
+          getSpellLevelDisplay="{getSpellLevelDisplay}"
+          getSchoolName="{getSchoolName}"
+        )
 
-    AvailableSpellsPanel(
-      className="{characterClassName}"
-      loading="{loading}"
-      isDisabled="{isDisabled}"
-      shouldHideAvailableSpellsPanel="{shouldHideAvailableSpellsPanel}"
-      shouldHideSpellSearch="{shouldHideSpellSearch}"
-      keywordFilter="{keywordFilter}"
-      filteredSpells="{filteredSpells}"
-      spellLevels="{spellLevels}"
-      spellsByLevel="{spellsByLevel}"
-      expandedLevels="{expandedLevels}"
-      cantripCountAtLimit="{cantripCountAtLimit}"
-      spellCountAtLimit="{spellCountAtLimit}"
-      hasAllSpellsAccess="{hasAllSpellsAccess}"
-      spellCountAtLimitForNotice="{spellCountAtLimit}"
-      onKeywordFilter="{handleKeywordFilter}"
-      toggleSpellLevel="{toggleSpellLevel}"
-      addToSelection="{addToSelection}"
-      getEnrichedName="{getEnrichedName}"
-      getSchoolName="{getSchoolName}"
-      getCastingTimeDisplay="{getCastingTimeDisplay}"
-    )
+      AvailableSpellsPanel(
+        className="{characterClassName}"
+        loading="{loading}"
+        isDisabled="{isDisabled}"
+        shouldHideAvailableSpellsPanel="{shouldHideAvailableSpellsPanel}"
+        shouldHideSpellSearch="{shouldHideSpellSearch}"
+        keywordFilter="{keywordFilter}"
+        filteredSpells="{filteredSpells}"
+        spellLevels="{spellLevels}"
+        spellsByLevel="{spellsByLevel}"
+        expandedLevels="{expandedLevels}"
+        cantripCountAtLimit="{cantripCountAtLimit}"
+        spellCountAtLimit="{spellCountAtLimit}"
+        hasAllSpellsAccess="{hasAllSpellsAccess}"
+        spellCountAtLimitForNotice="{spellCountAtLimit}"
+        onKeywordFilter="{handleKeywordFilter}"
+        toggleSpellLevel="{toggleSpellLevel}"
+        addToSelection="{addToSelection}"
+        getEnrichedName="{getEnrichedName}"
+        getSchoolName="{getSchoolName}"
+        getCastingTimeDisplay="{getCastingTimeDisplay}"
+      )
 </template>
 
 <style lang="sass">

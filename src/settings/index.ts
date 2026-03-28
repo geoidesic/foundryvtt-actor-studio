@@ -1,6 +1,7 @@
 import CompendiumSourcesButton from './CompendiumSourcesButton';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
 import { MODULE_ID, DEFAULT_SOURCES } from '../helpers/constants';
+import { showReloadRequiredConfirm, showSettingsConfirm } from './confirmationHelpers';
 
 // Import domain-specific settings modules
 import { registerAbilityScoresSettings } from './abilityScores/registerAbilityScoresSettings';
@@ -65,13 +66,7 @@ function sourcesConfiguration() {
     type: Object,
     default: DEFAULT_SOURCES,
     onChange: () => {
-      Dialog.confirm({
-        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
-        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-        yes: () => window.location.reload(),
-        no: () => {},
-        defaultYes: true
-      });
+      return showReloadRequiredConfirm({ world: true });
     }
   });
   // Define a settings submenu which handles advanced configuration needs
@@ -126,7 +121,7 @@ function usageTracking() {
     default: true,
     onChange: (value) => {
       if (!value) {
-        Dialog.confirm({
+        return showSettingsConfirm({
           title: 'Disable Usage Tracking?',
           content: `<p>Disabling usage tracking means we won't know which languages or features are most important to our users. This anonymous data helps us improve Actor Studio for everyone. Are you sure you want to disable it?</p>`,
           yes: () => {

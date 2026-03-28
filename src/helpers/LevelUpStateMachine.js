@@ -418,13 +418,16 @@ export const levelUpFSMContext = {
 
     const oldLevel = Math.max(1, targetLevel - 1);
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
+    console.log('[LEVELUP] _shouldRequireSpellSelectionForLevelUp:', { targetLevel, classIdentifier, oldLevel, rulesVersion });
     const oldLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === oldLevel);
     const newLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === targetLevel);
 
     const oldValue = oldLevelData?.[classIdentifier]?.[rulesVersion] ?? oldLevelData?.[classIdentifier];
     const newValue = newLevelData?.[classIdentifier]?.[rulesVersion] ?? newLevelData?.[classIdentifier];
+    console.log('[LEVELUP] Spell values:', { oldValue, newValue });
     const oldParsed = levelUpFSMContext._parseSpellProgressionValue(oldValue);
     const newParsed = levelUpFSMContext._parseSpellProgressionValue(newValue);
+    console.log('[LEVELUP] Parsed values:', { oldParsed, newParsed });
 
     if (!oldParsed || !newParsed) return null;
 
@@ -441,12 +444,15 @@ export const levelUpFSMContext = {
 
       const oldMaxSpellLevel = levelUpFSMContext._getMaxSpellLevelForProgression(oldLevel, progression, classIdentifier);
       const newMaxSpellLevel = levelUpFSMContext._getMaxSpellLevelForProgression(targetLevel, progression, classIdentifier);
-
-      return cantripDifference > 0 || newMaxSpellLevel > oldMaxSpellLevel;
+      const result = cantripDifference > 0 || newMaxSpellLevel > oldMaxSpellLevel;
+      console.log('[LEVELUP] Level-up spell selection result (hasAll):', result);
+      return result;
     }
 
     const spellDifference = Math.max(0, newParsed.spells - oldParsed.spells);
-    return cantripDifference > 0 || spellDifference > 0;
+    const result = cantripDifference > 0 || spellDifference > 0;
+    console.log('[LEVELUP] Level-up spell selection result:', result);
+    return result;
   },
   
   /**
@@ -795,7 +801,7 @@ export function createLevelUpStateMachine() {
             window.GAS.log.d('[LEVELUP] Final levelUpTabs after filtering:', filteredTabs);
             return filteredTabs;
           });
-          activeTab.set("spells");
+          setTimeout(() => activeTab.set("spells"), 0);
           window.GAS.log.d('[LEVELUP] Set active tab to spells');
         } else {
           window.GAS.log.w('[LEVELUP] Actor is not a spellcaster but entered selecting_spells state - transitioning to completed');
@@ -858,6 +864,16 @@ export function createLevelUpStateMachine() {
         if (context.error) ui.notifications.error(context.error);
       })
     
+    .global()
+      .onStateEnter((context, state) => {
+        console.log('[LEVELUP] Entering state:', state);
+      })
+      .onStateExit((context, state) => {
+        console.log('[LEVELUP] Exiting state:', state);
+      })
+      .onTransition((context, fromState, toState) => {
+        console.log('[LEVELUP] Transitioning from', fromState, 'to', toState);
+      })
     .start();
   
   return fsm;

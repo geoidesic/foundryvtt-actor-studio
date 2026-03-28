@@ -126,6 +126,11 @@ describe('Shop to Spells Transition for Bard User Journey', () => {
       tabs: mockWritable([{ label: 'Shop', id: 'shop' }]),
       readOnlyTabs: mockWritable([]),
       activeTab: mockWritable('shop'),
+      getCoreCreationReadOnlyTabs: vi.fn((includeBiography = false) => (
+        includeBiography
+          ? ['race', 'class', 'background', 'abilities', 'biography']
+          : ['race', 'class', 'background', 'abilities']
+      )),
       actorInGame: mockWritable(mockActor)
     }));
     vi.doMock('~/src/stores/startingEquipment', () => ({ compatibleStartingEquipment: mockWritable([]) }));

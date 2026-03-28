@@ -69,11 +69,22 @@
     }
 
     function toggleDropdown() {
+          window.GAS?.log?.d?.('[IconSelect.toggleDropdown]', {
+            id,
+            disabled,
+            isOpenBefore: isOpen
+          });
           if (disabled) {
+            window.GAS?.log?.d?.('[IconSelect.toggleDropdown] blocked by disabled', { id });
             isOpen = false;
             return;
           }
           isOpen = !isOpen;
+          window.GAS?.log?.d?.('[IconSelect.toggleDropdown] toggled', {
+            id,
+            isOpenAfter: isOpen,
+            optionCount: options.length
+          });
           // reset search and highlight when opening dropdown
           if (isOpen) {
             searchTerm = '';
@@ -133,6 +144,11 @@
         }
         const isClickOutside = isClickOutsideContainer(event, containerElement);
         if(isClickOutside) {
+          window.GAS?.log?.d?.('[IconSelect.handleClickOutside] closing', {
+            id,
+            targetClass: event?.target?.className || '',
+            targetTag: event?.target?.tagName || ''
+          });
           isOpen = false;
         }
       } catch (error) {
@@ -252,6 +268,12 @@
 
     // Guard: do nothing if the option is already the current selection
     function selectOption(option) {
+      window.GAS?.log?.d?.('[IconSelect.selectOption]', {
+        id,
+        optionValue: option?.value,
+        optionLabel: option?.label,
+        currentValue: value
+      });
       if (option.value === value) return;
       handleSelect(option);
     }
