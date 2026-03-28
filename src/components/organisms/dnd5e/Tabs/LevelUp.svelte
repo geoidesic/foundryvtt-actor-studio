@@ -21,7 +21,7 @@ import {
   levelUpRichHTML,
   levelUpRichSubClassHTML,
   levelUpPreAdvancementSelections
-} from "~/src/stores";
+} from "~/src/stores/index";
 import { readOnlyTabs } from "~/src/stores";
 
 import {
@@ -39,6 +39,8 @@ import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svel
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
 import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
+
+export let sheet;
 
 /** LOCAL VARIABLES */
 let 

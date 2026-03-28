@@ -158,10 +158,7 @@
     // Only try to access actor sheet if actor exists
     if ($actorInGame) {
       window.GAS?.log?.d?.($actorInGame.sheet);
-      window.GAS?.log?.d?.($isLevelUp);
-      if(!$isLevelUp) {
-        $actorInGame.sheet.render(true);
-      }
+      $actorInGame.sheet.render(true);
     } else {
       console.log('[PCAPP] No actor in game - skipping sheet render');
     }

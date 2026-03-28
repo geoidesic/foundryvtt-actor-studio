@@ -13,6 +13,8 @@
   let remainingCurrency = { gp: 0, sp: 0, cp: 0 };
   let loading = true;
   let cartItems = [];
+
+  export let sheet;
   let keywordFilter = ''; // Add variable for keyword filter
   let expandedCategories = {}; // Track which categories are expanded
 

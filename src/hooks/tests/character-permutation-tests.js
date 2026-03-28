@@ -22,8 +22,12 @@ const DEBUG_ROOT_KEYS = ['debug', 'race', 'background', 'characterClass', 'chara
 export function registerCharacterPermutationTests(context, options = {}) {
   const { describe, it, assert, before, after } = context;
   const TEST_TIMEOUTS = getTestTimeouts();
-  const wait = (ms = 100) => new Promise((resolve) => setTimeout(resolve, ms));
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const enabledClasses = new Set((options?.classes || Object.keys(CLASS_CONFIG)).map((entry) => String(entry).toLowerCase()));
+  const POLL_INTERVAL = TEST_TIMEOUTS.pollingInterval;
+  const WAIT_SHORT = POLL_INTERVAL;
+  const WAIT_MEDIUM = POLL_INTERVAL * 2;
+  const WAIT_LONG = POLL_INTERVAL * 3;
 
   const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.generalCondition, intervalMs = TEST_TIMEOUTS.pollingInterval) => {
     const start = Date.now();
@@ -47,25 +51,25 @@ export function registerCharacterPermutationTests(context, options = {}) {
     if (app?.close) {
       app.setClosingFromGasHook(true);
       await app.close();
-      await wait(200);
+      await wait(WAIT_MEDIUM);
     }
 
     let attempts = 0;
     while (document.querySelector('#foundryvtt-actor-studio-pc-sheet') && attempts < 20) {
-      await wait(100);
+      await wait(WAIT_SHORT);
       attempts++;
     }
 
     const element = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
     if (element) {
       element.remove();
-      await wait(100);
+      await wait(WAIT_SHORT);
     }
   };
 
   const openActorStudio = async (name = 'Quench Permutation Test') => {
     Hooks.call('gas.openActorStudio', name, '', 'character');
-    await wait(300);
+    await wait(WAIT_LONG);
     return Object.values(ui.windows).find((windowApp) => windowApp?.id === 'foundryvtt-actor-studio-pc-sheet') || null;
   };
 
@@ -76,6 +80,25 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return true;
   };
 
+  const clickFooterButtonContaining = async (text) => {
+    const buttons = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .footer-container .button-container button'));
+    const target = buttons.find((button) => {
+      const label = (button.textContent || '').toLowerCase();
+      return label.includes(String(text || '').toLowerCase()) && !button.disabled;
+    });
+    if (!target) return false;
+    target.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    return true;
+  };
+
+  const isFooterButtonAvailable = (text) => {
+    const buttons = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .footer-container .button-container button'));
+    return buttons.some((button) => {
+      const label = (button.textContent || '').toLowerCase();
+      return label.includes(String(text || '').toLowerCase()) && !button.disabled;
+    });
+  };
+
   const clickTabByLabel = async (label) => {
     const tabs = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button'));
     const target = tabs.find((button) => ((button.textContent || '').trim().toLowerCase() === String(label).toLowerCase()));
@@ -84,8 +107,8 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return waitForCondition(
       () => Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button.active'))
         .some((button) => ((button.textContent || '').trim().toLowerCase() === String(label).toLowerCase())),
-      5000,
-      100
+      TEST_TIMEOUTS.generalCondition,
+      POLL_INTERVAL
     );
   };
 
@@ -108,7 +131,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
   const focusLevelUpClassTab = async () => {
     const tabFocused = await clickFirstAvailableTabLabel(['Level Up', 'Class']);
     if (!tabFocused) return false;
-    return waitForCondition(() => Boolean(document.querySelector('#foundryvtt-actor-studio-pc-sheet .class-row')), 8000, 100);
+    return waitForCondition(() => Boolean(document.querySelector('#foundryvtt-actor-studio-pc-sheet .class-row[role="button"]')), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
   };
 
   const selectFirstSubclassOptionIfRequired = async () => {
@@ -184,25 +207,48 @@ export function registerCharacterPermutationTests(context, options = {}) {
       const updatedLabel = String(subclassSelect.querySelector('.selected-option .option-label')?.textContent || '').trim().toLowerCase();
       logSubclassDebug('label after click', updatedLabel || '(empty)');
       return updatedLabel.length > 0 && !updatedLabel.includes('select');
-    }, 10000, 150);
+    }, TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
   };
 
-  // Activates the existing class row by clicking the plus icon.
-  // Returns true as soon as the row is activated — indicated by either:
-  //   - the Add Level button appearing (no subclass required at this level), or
-  //   - the #subClass-select appearing (subclass required: caller must handle it before Add Level).
-  const activateExistingClassRow = async () => {
+  // Activates the existing class row.
+  // Returns true once the row is clearly active, even if the Add Level button is not yet available.
+  const activateExistingClassRow = async (classIdentifier = '') => {
+    const normalizedClassIdentifier = String(classIdentifier || '').toLowerCase();
+
+    const isRowActivated = (root) => {
+      const addLevelButton = root.querySelector('.footer-container .gas-add-level-btn');
+      if (addLevelButton && !addLevelButton.disabled) return true;
+      if (root.querySelector('#subClass-select')) return true;
+
+      const classRows = Array.from(root.querySelectorAll('.class-row[role="button"]'));
+      if (!classRows.length) return false;
+
+      const matchingRow = classRows.find((row) => {
+        const text = String(row.textContent || '').toLowerCase();
+        const tooltip = String(row.getAttribute('data-tooltip') || row.getAttribute('aria-label') || '').toLowerCase();
+        return normalizedClassIdentifier ? `${text} ${tooltip}`.includes(normalizedClassIdentifier) : true;
+      }) || classRows[0];
+
+      // Active rows switch to a cancel icon even when progress is below 100%.
+      return Boolean(matchingRow?.querySelector('i.fa-times, i.fas.fa-times'));
+    };
+
     return waitForCondition(() => {
       const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
       if (!root) return false;
-      // Already activated — add-level button is ready.
-      const addLevelButton = root.querySelector('.footer-container .gas-add-level-btn');
-      if (addLevelButton && !addLevelButton.disabled) return true;
-      // Already activated — subclass is required at this level.
-      if (root.querySelector('#subClass-select')) return true;
 
-      const plusIcon = root.querySelector('.class-row[role="button"] i.fa-plus, .class-row[role="button"] i.fas.fa-plus, .class-row i.fa-plus, .class-row i.fas.fa-plus');
-      const clickableRow = plusIcon?.closest?.('[role="button"]') || plusIcon?.closest?.('.class-row') || root.querySelector('.class-row[role="button"]') || root.querySelector('.class-row');
+      if (isRowActivated(root)) return true;
+
+      const classRows = Array.from(root.querySelectorAll('.class-row[role="button"]'));
+      const matchingRow = classRows.find((row) => {
+        const text = String(row.textContent || '').toLowerCase();
+        const tooltip = String(row.getAttribute('data-tooltip') || row.getAttribute('aria-label') || '').toLowerCase();
+        return normalizedClassIdentifier ? `${text} ${tooltip}`.includes(normalizedClassIdentifier) : true;
+      }) || classRows[0];
+
+      const plusIcon = matchingRow?.querySelector('i.fa-plus, i.fas.fa-plus')
+        || root.querySelector('.class-row[role="button"] i.fa-plus, .class-row[role="button"] i.fas.fa-plus');
+      const clickableRow = plusIcon?.closest?.('[role="button"]') || matchingRow || root.querySelector('.class-row[role="button"]');
       if (!clickableRow) return false;
 
       clickableRow.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, cancelable: true }));
@@ -210,19 +256,19 @@ export function registerCharacterPermutationTests(context, options = {}) {
       clickableRow.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }));
       clickableRow.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
       return false;
-    }, 18000, 150);
+    }, TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
   };
 
   const clickActorStudioLevelUpButtonOnSheet = async (actor) => {
     if (!actor?.sheet) return false;
     await actor.sheet.render(true, { focus: true });
-    await wait(350);
+    await wait(WAIT_LONG);
 
     const button = document.querySelector('button.level-up');
     if (!button || button.disabled) return false;
 
     button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    await wait(250);
+    await wait(WAIT_MEDIUM);
     return true;
   };
 
@@ -232,10 +278,10 @@ export function registerCharacterPermutationTests(context, options = {}) {
       if (!root) return false;
       const tabsList = root.querySelector('.tabs-list');
       return Boolean(tabsList);
-    }, 20000, 150);
+    }, TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
   };
 
-  const waitForActorStudioClosed = async () => waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 30000, 150);
+  const waitForActorStudioClosed = async () => waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.actorStudioClosed * 8, POLL_INTERVAL);
 
   const waitForActorClassLevel = async (actorId, classIdentifier, targetLevel) => {
     return waitForCondition(() => {
@@ -243,15 +289,121 @@ export function registerCharacterPermutationTests(context, options = {}) {
       if (!actor) return false;
       const classItem = actor.items.find((item) => item.type === 'class' && String(item.system?.identifier || '').toLowerCase() === String(classIdentifier).toLowerCase());
       return Number(classItem?.system?.levels || 0) >= Number(targetLevel);
-    }, 50000, 250);
+    }, TEST_TIMEOUTS.perTest, POLL_INTERVAL);
   };
 
   const hasSpellsTabVisible = () => Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).some((button) => (button.textContent || '').trim().toLowerCase().includes('spell'));
 
-  const completeSpellsStepIfVisible = async ({ timeoutMs = 20000 } = {}) => {
+  const waitForSpellsTab = async () => {
+    return waitForCondition(() => {
+      const root = '#foundryvtt-actor-studio-pc-sheet';
+      const spellsTabButtonActive = Array.from(document.querySelectorAll(`${root} .tabs-list button.active`))
+        .some((button) => (button.textContent || '').trim().toLowerCase().includes('spell'));
+
+      return Boolean(
+        document.querySelector(`${root} spells-tab-container`)
+        || document.querySelector(`${root} .spells-tab`)
+        || document.querySelector(`${root} .selected-spells`)
+        || spellsTabButtonActive
+        || Array.from(document.querySelectorAll(`${root} .footer-container .button-container button`))
+          .some((button) => (button.textContent || '').toLowerCase().includes('finalize'))
+      );
+    }, TEST_TIMEOUTS.spellsTabVisible * 3, POLL_INTERVAL);
+  };
+
+  const parseCounterValue = (valueText = '') => {
+    const match = String(valueText || '').match(/(\d+)\/(\d+)/);
+    if (!match) return { current: 0, limit: 0 };
+    return {
+      current: Number.parseInt(match[1], 10) || 0,
+      limit: Number.parseInt(match[2], 10) || 0
+    };
+  };
+
+  const readSpellCounters = (root) => {
+    const labels = Array.from(root.querySelectorAll('.spells-tab-container .grid-item.label'));
+    const values = Array.from(root.querySelectorAll('.spells-tab-container .grid-item.value'));
+
+    let spells = { current: 0, limit: 0 };
+    let cantrips = { current: 0, limit: 0 };
+
+    labels.forEach((labelNode, index) => {
+      const labelText = String(labelNode.textContent || '').toLowerCase();
+      const valueText = String(values[index]?.textContent || '');
+      const parsed = parseCounterValue(valueText);
+
+      if (labelText.includes('spell')) {
+        spells = parsed;
+      }
+      if (labelText.includes('cantrip')) {
+        cantrips = parsed;
+      }
+    });
+
+    // Fallback for layouts where counters are only in free text.
+    if (spells.limit === 0 && cantrips.limit === 0) {
+      const headerText = root.textContent || '';
+      spells = parseCounterValue((headerText.match(/Spells[^0-9]*(\d+\/(\d+))/i) || [])[1] || '0/0');
+      cantrips = parseCounterValue((headerText.match(/Cantrips[^0-9]*(\d+\/(\d+))/i) || [])[1] || '0/0');
+    }
+
+    return { spells, cantrips };
+  };
+
+  const readSpellSelectionSnapshot = (root) => {
+    const counters = readSpellCounters(root);
+    const selectedSpellRows = root.querySelectorAll('.selected-spells .selected-spell').length;
+    return {
+      counters,
+      selectedSpellRows,
+      totalSelected: counters.spells.current + counters.cantrips.current
+    };
+  };
+
+  const logSpellStepDiagnostics = (stage, root = document.querySelector('#foundryvtt-actor-studio-pc-sheet')) => {
+    if (!root) {
+      logSubclassDebug(`[spells diagnostics] ${stage}: actor studio root missing`);
+      return;
+    }
+
+    const activeTab = String(root.querySelector('.tabs-list button.active')?.textContent || '').trim();
+    const tabs = Array.from(root.querySelectorAll('.tabs-list button')).map((button) => String(button.textContent || '').trim());
+    const counters = readSpellCounters(root);
+    const addButtons = Array.from(root.querySelectorAll('button.add-btn'));
+    const enabledAddButtons = addButtons.filter((button) => !button.disabled).length;
+    const collapsedHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
+      .filter((header) => (header.textContent || '').includes('[+]'))
+      .map((header) => String(header.textContent || '').replace(/\s+/g, ' ').trim());
+    const spellLevelHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
+      .map((header) => String(header.textContent || '').replace(/\s+/g, ' ').trim());
+    const footerButtons = Array.from(root.querySelectorAll('.footer-container .button-container button'))
+      .map((button) => ({
+        text: String(button.textContent || '').replace(/\s+/g, ' ').trim(),
+        disabled: !!button.disabled,
+        classes: button.className
+      }));
+    const selectedSpellRows = root.querySelectorAll('.selected-spells .selected-spell').length;
+    const availableSpellRows = root.querySelectorAll('.spell-level-group .spell-row').length;
+
+    logSubclassDebug(`[spells diagnostics] ${stage}`, {
+      activeTab,
+      tabs,
+      counters,
+      addButtonsTotal: addButtons.length,
+      addButtonsEnabled: enabledAddButtons,
+      spellLevelHeaders,
+      collapsedHeaders,
+      selectedSpellRows,
+      availableSpellRows,
+      footerButtons,
+      rootTextSample: String(root.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 500)
+    });
+  };
+
+  const completeSpellsStepIfVisible = async ({ timeoutMs = TEST_TIMEOUTS.spellsTabVisible * 3, allowSkip = true } = {}) => {
     const allTabs = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map(b => (b.textContent || '').trim());
     logSubclassDebug('checking for spells tab, all tabs:', allTabs);
-    const spellsVisible = await waitForCondition(() => hasSpellsTabVisible(), timeoutMs, 200);
+    const spellsVisible = await waitForCondition(() => hasSpellsTabVisible(), timeoutMs, POLL_INTERVAL);
     if (!spellsVisible) {
       logSubclassDebug('spells tab not visible');
       return { visible: false, completed: false };
@@ -259,48 +411,128 @@ export function registerCharacterPermutationTests(context, options = {}) {
 
     logSubclassDebug('spells tab visible, clicking Spells tab');
     await clickTabByLabel('Spells');
+    const spellsLoaded = await waitForSpellsTab();
+    if (!spellsLoaded) {
+      logSpellStepDiagnostics('spells tab did not become actionable');
+      logSubclassDebug('spells tab failed to load actionable UI');
+      return { visible: true, completed: false };
+    }
 
-    // Wait for spells UI to load
-    await wait(1000);
+    logSpellStepDiagnostics('spells tab actionable');
 
-    // Expand any collapsed spell level headers
-    const headers = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .spell-level-header'));
-    for (const header of headers) {
-      if (header.classList.contains('collapsed') || !header.classList.contains('expanded')) {
-        header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-        await wait(200);
+    const finalizedImmediately = await waitForCondition(
+      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn') || clickFooterButtonContaining('finalize'),
+      TEST_TIMEOUTS.generalCondition,
+      POLL_INTERVAL
+    );
+    if (finalizedImmediately) return { visible: true, completed: true };
+
+    const selectionDeadline = Date.now() + (TEST_TIMEOUTS.generalCondition * 2);
+    let selectedEnoughSpells = false;
+    while (Date.now() < selectionDeadline) {
+      const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+      if (!root) break;
+
+      if (isFooterButtonAvailable('finalize')) {
+        selectedEnoughSpells = true;
+        break;
+      }
+
+      const { counters, selectedSpellRows, totalSelected } = readSpellSelectionSnapshot(root);
+      const spellLimit = counters.spells.limit;
+      const cantripLimit = counters.cantrips.limit;
+      const totalLimit = spellLimit + cantripLimit;
+
+      const collapsedHeaders = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
+        .filter((header) => (header.textContent || '').includes('[+]'));
+      if (collapsedHeaders.length) {
+        logSubclassDebug('expanding collapsed spell group', {
+          header: String(collapsedHeaders[0].textContent || '').replace(/\s+/g, ' ').trim(),
+          counters,
+          totalSelected,
+          totalLimit
+        });
+        collapsedHeaders[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        await wait(WAIT_SHORT);
+        continue;
+      }
+
+      const spellRows = root.querySelectorAll('.spell-level-group .spell-row').length;
+      const addButtons = Array.from(root.querySelectorAll('button.add-btn:not([disabled])'));
+      const hasSpellChoicesVisible = spellRows > 0 || addButtons.length > 0;
+      const useFallbackSelection = totalLimit === 0 && hasSpellChoicesVisible;
+      const needsMoreSpells = counters.spells.current < spellLimit;
+      const needsMoreCantrips = counters.cantrips.current < cantripLimit;
+
+      if (!useFallbackSelection && !needsMoreSpells && !needsMoreCantrips) {
+        selectedEnoughSpells = true;
+        break;
+      }
+
+      if (!addButtons.length) {
+        if (useFallbackSelection) {
+          logSpellStepDiagnostics('fallback selection active but no add buttons visible', root);
+        }
+        await wait(WAIT_SHORT);
+        continue;
+      }
+
+      const targetButton = addButtons[0];
+      const buttonLabel = String(targetButton.closest('.spell-row')?.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      logSubclassDebug('clicking spell add button', {
+        buttonLabel,
+        useFallbackSelection,
+        beforeCounters: counters,
+        beforeSelectedSpellRows: selectedSpellRows,
+        totalSelected,
+        totalLimit
+      });
+
+      targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+      const selectionAdvanced = await waitForCondition(() => {
+        const updatedRoot = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
+        if (!updatedRoot) return false;
+        const updated = readSpellSelectionSnapshot(updatedRoot);
+        return updated.totalSelected > totalSelected || updated.selectedSpellRows > selectedSpellRows || isFooterButtonAvailable('finalize');
+      }, WAIT_MEDIUM, POLL_INTERVAL);
+
+      if (!selectionAdvanced) {
+        logSpellStepDiagnostics(`spell add click produced no visible progress: ${buttonLabel}`);
+        await wait(WAIT_SHORT);
       }
     }
 
-    // Click available add buttons until finalize becomes available or no more add buttons
-    let addButtonsClicked = 0;
-    const maxClicks = 20; // Prevent infinite loop
-    while (addButtonsClicked < maxClicks) {
-      const addButtons = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .add-btn:not([disabled])'));
-      if (addButtons.length === 0) break;
-
-      // Click the first enabled add button
-      addButtons[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-      addButtonsClicked++;
-      await wait(500);
-
-      // Check if finalize button is now available
-      const finalizeBtn = document.querySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn');
-      if (finalizeBtn && !finalizeBtn.disabled) break;
+    if (!selectedEnoughSpells) {
+      logSpellStepDiagnostics('selection did not reach required counters');
+      logSubclassDebug('unable to satisfy spell selection counters before timeout');
     }
 
     const finalized = await waitForCondition(
-      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn'),
-      12000,
-      150
+      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-finalize-spells-btn') || clickFooterButtonContaining('finalize'),
+      TEST_TIMEOUTS.generalCondition,
+      POLL_INTERVAL
     );
     if (finalized) return { visible: true, completed: true };
 
-    const skipped = await waitForCondition(
-      () => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-skip-spells-btn'),
-      8000,
-      150
-    );
+    logSpellStepDiagnostics('finalize button unavailable after selection');
+
+    if (!allowSkip) {
+      logSpellStepDiagnostics('skip disabled for required spell flow');
+      return { visible: true, completed: false };
+    }
+
+    const skipped = await waitForCondition(() => {
+      const selectors = [
+        '#foundryvtt-actor-studio-pc-sheet .footer-container .gas-skip-spells-btn',
+        '#foundryvtt-actor-studio-pc-sheet .footer-container button.secondary',
+        '#foundryvtt-actor-studio-pc-sheet .footer-container .button-container .secondary'
+      ];
+      return selectors.some((selector) => clickFooterButtonBySelector(selector)) || clickFooterButtonContaining('skip') || clickFooterButtonContaining('continue');
+    }, TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
+    if (!skipped) {
+      logSpellStepDiagnostics('skip/continue controls unavailable');
+    }
     return { visible: true, completed: skipped };
   };
 
@@ -421,12 +653,12 @@ export function registerCharacterPermutationTests(context, options = {}) {
         const requiredTabsVisited = await visitRequiredCreationTabs();
         assert.ok(requiredTabsVisited, `All visible creation tabs should be visited before creating ${classIdentifier}`);
 
-        const createClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'), 20000, 150);
+        const createClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
         assert.ok(createClicked, `Create Character button should be clickable for ${classIdentifier}`);
 
-        const creationClosedEarly = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 12000, 200);
+        const creationClosedEarly = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
         if (!creationClosedEarly) {
-          const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 30000 });
+          const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3 });
           if (spellStepResult.visible) {
             assert.ok(spellStepResult.completed, `${classConfig.displayName} creation spells step should complete via UI controls`);
           }
@@ -435,7 +667,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
         const actorStudioClosed = await waitForActorStudioClosed();
         assert.ok(actorStudioClosed, `Actor Studio should close after ${classIdentifier} creation completes`);
 
-        await wait(1200);
+        await wait(TEST_TIMEOUTS.advancementAutomation);
         classActorId = get(actorInGame)?.id || findActorByName()?.id || null;
         assert.ok(classActorId, `Created ${classIdentifier} actor id should be available after creation`);
 
@@ -487,7 +719,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
         assert.ok(levelUpTabFocused, `Level-up/Class tab should be focused before ${classIdentifier} level-up`);
 
         // Step 1: Activate the class row (returns once either the subclass selector OR the add-level button is visible).
-        const rowActivated = await activateExistingClassRow();
+        const rowActivated = await activateExistingClassRow(classIdentifier);
         assert.ok(rowActivated, `Existing class row should activate for ${classIdentifier} level-up`);
 
         // Step 2: If the class receives its subclass at this level, pick the first available option.
@@ -495,17 +727,17 @@ export function registerCharacterPermutationTests(context, options = {}) {
         assert.ok(subclassHandled, `Subclass choice should be handled when required for ${classIdentifier} at level ${targetLevel}`);
 
         // Step 3: Now the Add Level button must be present (subclass satisfied or not required).
-        const addLevelClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'), 20000, 150);
+        const addLevelClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
         assert.ok(addLevelClicked, `Add Level button should be clickable for ${classIdentifier} progression`);
 
         // Wait for advancement processing and workflow progression
-        await wait(3000);
+        await wait(TEST_TIMEOUTS.advancementAutomation * 2);
         const tabsAfterAddLevel = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map(b => (b.textContent || '').trim());
         logSubclassDebug('tabs after add level:', tabsAfterAddLevel);
 
-        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: 25000 });
         const expectSpells = shouldExpectSpellsForLevel(classIdentifier, targetLevel);
         const rulesVersion = String(window.GAS?.dnd5eRules || '').trim();
+        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3, allowSkip: !expectSpells });
         logSubclassDebug('spell expectations', { classIdentifier, targetLevel, expectSpells, rulesVersion });
         if (expectSpells) {
           assert.ok(spellStepResult.visible, `Spells tab should appear for ${classIdentifier} level ${targetLevel}`);
@@ -514,7 +746,18 @@ export function registerCharacterPermutationTests(context, options = {}) {
           assert.ok(spellStepResult.completed, `If spells UI appears for ${classIdentifier} level ${targetLevel}, it should complete`);
         }
 
-        const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), 15000, 200);
+        const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
+        if (!appClosed) {
+          logSpellStepDiagnostics(`level-up app did not close for ${classIdentifier} level ${targetLevel}`);
+          const levelUpState = window.GAS?.levelUpFSM?.getCurrentState?.();
+          logSubclassDebug('level-up close failure state snapshot', {
+            classIdentifier,
+            targetLevel,
+            levelUpState,
+            actorId: classActorId,
+            actorName: getCurrentActor()?.name || null
+          });
+        }
         assert.ok(appClosed, 'Level-up app should close after progression');
 
         const reachedTargetLevel = await waitForActorClassLevel(classActorId, classIdentifier, targetLevel);

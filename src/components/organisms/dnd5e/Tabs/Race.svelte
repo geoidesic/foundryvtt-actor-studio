@@ -13,6 +13,8 @@
   } from "~/src/helpers/Utility.js";
   import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext, onDestroy, onMount, tick } from "svelte";
+
+  export let sheet;
   import { localize as t } from "~/src/helpers/Utility";
   import { race, subRace, tabDisabled } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";

@@ -841,17 +841,14 @@ export function createLevelUpStateMachine() {
             setTimeout(() => bringActorStudioToFront(), 0);
             setTimeout(() => bringActorStudioToFront(), 100);
             
-            setTimeout(() => {
-              window.GAS.log.d('[LEVELUP] Closing Actor Studio');
-              Hooks.call("gas.close");
-            }, 1500);
+            // Close Actor Studio immediately
+            window.GAS.log.d('[LEVELUP] Closing Actor Studio');
+            Hooks.call("gas.close");
           })();
         } else {
           // No actor, just close Actor Studio
-          setTimeout(() => {
-            window.GAS.log.d('[LEVELUP] Closing Actor Studio (no actor)');
-            Hooks.call("gas.close");
-          }, 1500);
+          window.GAS.log.d('[LEVELUP] No actor, closing Actor Studio');
+          Hooks.call("gas.close");
         }
       })
     

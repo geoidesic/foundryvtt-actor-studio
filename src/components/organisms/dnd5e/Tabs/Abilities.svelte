@@ -13,6 +13,8 @@
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
   import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
+
+  export let sheet;
   import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod, abilityRolls } from "~/src/stores/index";

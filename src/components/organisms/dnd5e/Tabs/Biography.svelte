@@ -14,6 +14,8 @@
   const actor = getContext("#doc");
   const app = getContext("#external").application;
 
+  export let sheet;
+
 
   const isDisabled = getContext('isDisabled') || false;
 

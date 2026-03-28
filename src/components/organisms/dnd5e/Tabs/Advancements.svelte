@@ -6,6 +6,8 @@
 
   const doc = getContext("#doc");
 
+  export let sheet;
+
   $: currentDrops = $dropItemRegistry?.currentProcess || [];
   $: itemsWithoutAdvancements = currentDrops.filter(drop => 
     !drop.itemData.advancement || drop.itemData.advancement.length === 0

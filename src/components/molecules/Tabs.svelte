@@ -79,6 +79,8 @@
       {#if tab.id === activeTab && tabComponents[tab.component]}
         {#if tab.component === 'StartingWealthChoice'}
           <svelte:component this={tabComponents[tab.component]} on:confirm on:edit />
+        {:else if tab.component === 'Spells'}
+          <svelte:component this={tabComponents[tab.component]} />
         {:else}
           <svelte:component this={tabComponents[tab.component]} {sheet} />
         {/if}
