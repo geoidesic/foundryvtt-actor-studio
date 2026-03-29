@@ -4,30 +4,33 @@ import { safeGetSetting } from '~/src/helpers/Utility';
 import { getTestTimeouts } from '~/src/helpers/testTimeouts';
 
 const MODULE_ID = 'foundryvtt-actor-studio';
-
-const CLASS_CONFIG = {
-  cleric: { displayName: 'Cleric', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbclcCleric0000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  fighter: { displayName: 'Fighter', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbftrFighter000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  ranger: { displayName: 'Ranger', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbrgrRanger0000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  paladin: { displayName: 'Paladin', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbpdnPaladin000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspDwarf000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000' },
-  warlock: { displayName: 'Warlock', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbclWarlock000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  barbarian: { displayName: 'Barbarian', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  bard: { displayName: 'Bard', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  sorcerer: { displayName: 'Sorcerer', classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbscrSorcerer00', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' },
-  artificer: { displayName: 'Artificer', classUuid: 'Compendium.dnd-tashas-cauldron.tcoe-character-options.Item.tcoeArtificer000', raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000', backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000' }
-};
-
 const DEBUG_ROOT_KEYS = ['debug', 'race', 'background', 'characterClass', 'characterSubClass'];
 
-export function registerCharacterPermutationTests(context, options = {}) {
-  const { describe, it, assert, before, after } = context;
+export function createCharacterPermutationTestHelpers(context, classConfig = {}) {
+  const { assert } = context;
+  const classIdentifier = String(classConfig.identifier || '').toLowerCase();
+
+  if (!classIdentifier) {
+    throw new Error('Character permutation tests require a class identifier');
+  }
+
+  if (!classConfig.displayName || !classConfig.classUuid || !classConfig.raceUuid || !classConfig.backgroundUuid) {
+    throw new Error(`Character permutation tests require complete config for ${classIdentifier}`);
+  }
+
   const TEST_TIMEOUTS = getTestTimeouts();
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const enabledClasses = new Set((options?.classes || Object.keys(CLASS_CONFIG)).map((entry) => String(entry).toLowerCase()));
   const POLL_INTERVAL = TEST_TIMEOUTS.pollingInterval;
   const WAIT_SHORT = POLL_INTERVAL;
   const WAIT_MEDIUM = POLL_INTERVAL * 2;
   const WAIT_LONG = POLL_INTERVAL * 3;
+
+  let savedDebugState = {};
+  let originalMilestoneLeveling = false;
+  let originalForceTakeAverageHitPoints = false;
+  let classActorId = null;
+  let classActor = null;
+  const testActorName = `Quench ${classConfig.displayName} Automation ${Date.now()}`;
 
   const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.generalCondition, intervalMs = TEST_TIMEOUTS.pollingInterval) => {
     const start = Date.now();
@@ -210,11 +213,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
     }, TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
   };
 
-  // Activates the existing class row.
-  // Returns true once the row is clearly active, even if the Add Level button is not yet available.
-  const activateExistingClassRow = async (classIdentifier = '') => {
-    const normalizedClassIdentifier = String(classIdentifier || '').toLowerCase();
-
+  const activateExistingClassRow = async () => {
     const isRowActivated = (root) => {
       const addLevelButton = root.querySelector('.footer-container .gas-add-level-btn');
       if (addLevelButton && !addLevelButton.disabled) return true;
@@ -226,10 +225,9 @@ export function registerCharacterPermutationTests(context, options = {}) {
       const matchingRow = classRows.find((row) => {
         const text = String(row.textContent || '').toLowerCase();
         const tooltip = String(row.getAttribute('data-tooltip') || row.getAttribute('aria-label') || '').toLowerCase();
-        return normalizedClassIdentifier ? `${text} ${tooltip}`.includes(normalizedClassIdentifier) : true;
+        return `${text} ${tooltip}`.includes(classIdentifier);
       }) || classRows[0];
 
-      // Active rows switch to a cancel icon even when progress is below 100%.
       return Boolean(matchingRow?.querySelector('i.fa-times, i.fas.fa-times'));
     };
 
@@ -243,7 +241,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
       const matchingRow = classRows.find((row) => {
         const text = String(row.textContent || '').toLowerCase();
         const tooltip = String(row.getAttribute('data-tooltip') || row.getAttribute('aria-label') || '').toLowerCase();
-        return normalizedClassIdentifier ? `${text} ${tooltip}`.includes(normalizedClassIdentifier) : true;
+        return `${text} ${tooltip}`.includes(classIdentifier);
       }) || classRows[0];
 
       const plusIcon = matchingRow?.querySelector('i.fa-plus, i.fas.fa-plus')
@@ -276,18 +274,17 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return waitForCondition(() => {
       const root = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
       if (!root) return false;
-      const tabsList = root.querySelector('.tabs-list');
-      return Boolean(tabsList);
+      return Boolean(root.querySelector('.tabs-list'));
     }, TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
   };
 
   const waitForActorStudioClosed = async () => waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.actorStudioClosed * 8, POLL_INTERVAL);
 
-  const waitForActorClassLevel = async (actorId, classIdentifier, targetLevel) => {
+  const waitForActorClassLevel = async (actorId, targetLevel) => {
     return waitForCondition(() => {
       const actor = game.actors.get(actorId);
       if (!actor) return false;
-      const classItem = actor.items.find((item) => item.type === 'class' && String(item.system?.identifier || '').toLowerCase() === String(classIdentifier).toLowerCase());
+      const classItem = actor.items.find((item) => item.type === 'class' && String(item.system?.identifier || '').toLowerCase() === classIdentifier);
       return Number(classItem?.system?.levels || 0) >= Number(targetLevel);
     }, TEST_TIMEOUTS.perTest, POLL_INTERVAL);
   };
@@ -340,7 +337,6 @@ export function registerCharacterPermutationTests(context, options = {}) {
       }
     });
 
-    // Fallback for layouts where counters are only in free text.
     if (spells.limit === 0 && cantrips.limit === 0) {
       const headerText = root.textContent || '';
       spells = parseCounterValue((headerText.match(/Spells[^0-9]*(\d+\/(\d+))/i) || [])[1] || '0/0');
@@ -401,7 +397,7 @@ export function registerCharacterPermutationTests(context, options = {}) {
   };
 
   const completeSpellsStepIfVisible = async ({ timeoutMs = TEST_TIMEOUTS.spellsTabVisible * 3, allowSkip = true } = {}) => {
-    const allTabs = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map(b => (b.textContent || '').trim());
+    const allTabs = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map((button) => (button.textContent || '').trim());
     logSubclassDebug('checking for spells tab, all tabs:', allTabs);
     const spellsVisible = await waitForCondition(() => hasSpellsTabVisible(), timeoutMs, POLL_INTERVAL);
     if (!spellsVisible) {
@@ -536,15 +532,6 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return { visible: true, completed: skipped };
   };
 
-  const shouldExpectSpellsForLevel = (classIdentifier, targetLevel) => {
-    const normalized = String(classIdentifier || '').toLowerCase();
-    const rulesVersion = String(window.GAS?.dnd5eRules || '').trim();
-    if (['cleric', 'warlock', 'bard', 'sorcerer', 'artificer'].includes(normalized)) return Number(targetLevel) >= 1;
-    if (normalized === 'ranger') return rulesVersion === '2014' ? Number(targetLevel) >= 2 : Number(targetLevel) >= 1;
-    if (normalized === 'paladin') return rulesVersion === '2014' ? Number(targetLevel) === 2 : false;
-    return false;
-  };
-
   const hasSelectionFromUuid = (item, expectedUuid) => {
     const uuidTail = String(expectedUuid || '').split('.').pop() || '';
     const sourceId = String(
@@ -558,257 +545,204 @@ export function registerCharacterPermutationTests(context, options = {}) {
     return Boolean(uuidTail && sourceId.includes(uuidTail));
   };
 
-  const assertCoreSelectionsOnActor = (assert, actor, { classIdentifier, classUuid, raceUuid, backgroundUuid, className }) => {
-    const hasClassSelection = actor.items.some((item) => item.type === 'class' && (String(item.system?.identifier || '').toLowerCase() === String(classIdentifier || '').toLowerCase() || hasSelectionFromUuid(item, classUuid) || String(item.name || '').toLowerCase().includes(String(className || '').toLowerCase())));
-    const hasRaceSelection = actor.items.some((item) => ['race', 'species'].includes(item.type) && hasSelectionFromUuid(item, raceUuid));
-    const hasBackgroundSelection = actor.items.some((item) => item.type === 'background' && hasSelectionFromUuid(item, backgroundUuid));
-    assert.ok(hasClassSelection, `Created actor should contain the selected ${className} class`);
+  const assertCoreSelectionsOnActor = (actor) => {
+    const hasClassSelection = actor.items.some((item) => item.type === 'class' && (
+      String(item.system?.identifier || '').toLowerCase() === classIdentifier
+      || hasSelectionFromUuid(item, classConfig.classUuid)
+      || String(item.name || '').toLowerCase().includes(classConfig.displayName.toLowerCase())
+    ));
+    const hasRaceSelection = actor.items.some((item) => ['race', 'species'].includes(item.type) && hasSelectionFromUuid(item, classConfig.raceUuid));
+    const hasBackgroundSelection = actor.items.some((item) => item.type === 'background' && hasSelectionFromUuid(item, classConfig.backgroundUuid));
+    assert.ok(hasClassSelection, `Created actor should contain the selected ${classConfig.displayName} class`);
     assert.ok(hasRaceSelection, 'Created actor should contain the selected race/species');
     assert.ok(hasBackgroundSelection, 'Created actor should contain the selected background');
   };
 
-  for (const classIdentifier of enabledClasses) {
-    const classConfig = CLASS_CONFIG[classIdentifier];
-    if (!classConfig) continue;
+  const findActorByName = () => {
+    const matches = game.actors.contents.filter((actorDoc) => actorDoc?.name === testActorName && actorDoc?.type === 'character');
+    if (!matches.length) return null;
+    return matches[matches.length - 1];
+  };
 
-    describe(classConfig.displayName, function () {
-      let savedDebugState = {};
-      let originalMilestoneLeveling = false;
-      let originalForceTakeAverageHitPoints = false;
-      let classActorId = null;
-      let classActor = null;
-      let classUuid = classConfig.classUuid;
-      const testActorName = `Quench ${classConfig.displayName} Automation ${Date.now()}`;
+  const getCurrentActor = () => {
+    if (classActorId) {
+      const actorFromId = game.actors.get(classActorId) || null;
+      if (actorFromId) return actorFromId;
+    }
+    const actorFromName = findActorByName();
+    if (actorFromName && !classActorId) classActorId = actorFromName.id;
+    return actorFromName;
+  };
 
-      const findActorByName = () => {
-        const matches = game.actors.contents.filter((actorDoc) => actorDoc?.name === testActorName && actorDoc?.type === 'character');
-        if (!matches.length) return null;
-        return matches[matches.length - 1];
-      };
+  const beforeAll = function () {
+    window.GAS = window.GAS || {};
+    savedDebugState = {};
+    for (const key of DEBUG_ROOT_KEYS) {
+      if (Object.prototype.hasOwnProperty.call(window.GAS, key)) {
+        savedDebugState[key] = window.GAS[key];
+        delete window.GAS[key];
+      }
+    }
+    originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
+    originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+  };
 
-      const getCurrentActor = () => {
-        if (classActorId) {
-          const actorFromId = game.actors.get(classActorId) || null;
-          if (actorFromId) return actorFromId;
-        }
-        const actorFromName = findActorByName();
-        if (actorFromName && !classActorId) classActorId = actorFromName.id;
-        return actorFromName;
-      };
+  const afterAll = async function () {
+    if (window?.GAS?.quenchAutomation) delete window.GAS.quenchAutomation;
+    await closeActorStudioIfOpen();
+    const actorToCleanup = classActorId ? game.actors.get(classActorId) : (classActor || findActorByName());
+    try {
+      await actorToCleanup?.sheet?.close?.();
+    } catch (error) {
+      // ignore
+    }
+    if (actorToCleanup && !actorToCleanup.deleted) await actorToCleanup.delete();
+    await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
+    await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
+    for (const [key, value] of Object.entries(savedDebugState)) window.GAS[key] = value;
+  };
 
-      before(function () {
-        window.GAS = window.GAS || {};
-        savedDebugState = {};
-        for (const key of DEBUG_ROOT_KEYS) {
-          if (Object.prototype.hasOwnProperty.call(window.GAS, key)) {
-            savedDebugState[key] = window.GAS[key];
-            delete window.GAS[key];
-          }
-        }
-        originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
-        originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+  const runCreationTest = async () => {
+    await game.settings.set(MODULE_ID, 'allowManualInput', true);
+    await game.settings.set(MODULE_ID, 'allowStandardArray', false);
+    await game.settings.set(MODULE_ID, 'allowPointBuy', false);
+    await game.settings.set(MODULE_ID, 'allowRolling', false);
+    await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
+    await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
+    await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
+
+    window.GAS.quenchAutomation = {
+      enabled: true,
+      allowLegacyRootValues: false,
+      advancements: { enabled: true },
+      selections: {
+        race: classConfig.raceUuid,
+        background: classConfig.backgroundUuid,
+        characterClass: classConfig.classUuid
+      }
+    };
+
+    await closeActorStudioIfOpen();
+    const creationApp = await openActorStudio(testActorName);
+    assert.ok(creationApp, `Actor Studio should open for ${classIdentifier} creation test`);
+
+    const requiredTabsVisited = await visitRequiredCreationTabs();
+    assert.ok(requiredTabsVisited, `All visible creation tabs should be visited before creating ${classIdentifier}`);
+
+    const createClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
+    assert.ok(createClicked, `Create Character button should be clickable for ${classIdentifier}`);
+
+    const creationClosedEarly = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
+    if (!creationClosedEarly) {
+      const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3 });
+      if (spellStepResult.visible) {
+        assert.ok(spellStepResult.completed, `${classConfig.displayName} creation spells step should complete via UI controls`);
+      }
+    }
+
+    const actorStudioClosed = await waitForActorStudioClosed();
+    assert.ok(actorStudioClosed, `Actor Studio should close after ${classIdentifier} creation completes`);
+
+    await wait(TEST_TIMEOUTS.advancementAutomation);
+    classActorId = get(actorInGame)?.id || findActorByName()?.id || null;
+    assert.ok(classActorId, `Created ${classIdentifier} actor id should be available after creation`);
+
+    const reachedLevel1 = await waitForActorClassLevel(classActorId, 1);
+    assert.ok(reachedLevel1, `${classConfig.displayName} class level should be embedded at level 1 after creation`);
+
+    classActor = game.actors.get(classActorId);
+    assert.ok(classActor, `Created ${classIdentifier} actor should exist in world actors`);
+    assertCoreSelectionsOnActor(classActor);
+  };
+
+  const runOpenLevelUpAppTest = async () => {
+    const actor = getCurrentActor();
+    assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up tests`);
+
+    await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+    await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+    window.GAS.quenchAutomation = { enabled: true, allowLegacyRootValues: false, advancements: { enabled: true }, selections: {} };
+
+    await closeActorStudioIfOpen();
+    const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+    assert.ok(levelUpButtonClicked, `Actor Studio level-up button should be clickable on the ${classIdentifier} actor sheet`);
+
+    const levelUpAppOpened = await waitForLevelUpAppOpen();
+    assert.ok(levelUpAppOpened, `Level-up Actor Studio app should open from ${classIdentifier} actor sheet button`);
+    await closeActorStudioIfOpen();
+  };
+
+  const runLevelTest = async (targetLevel) => {
+    const actor = getCurrentActor();
+    assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up to ${targetLevel}`);
+
+    await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+    await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
+    await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
+    await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
+    await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
+    window.GAS.quenchAutomation = { enabled: true, allowLegacyRootValues: false, advancements: { enabled: true }, selections: {} };
+
+    await closeActorStudioIfOpen();
+    const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
+    assert.ok(levelUpButtonClicked, `Level-up button should be clickable for ${classIdentifier} -> ${targetLevel}`);
+
+    const levelUpAppOpened = await waitForLevelUpAppOpen();
+    assert.ok(levelUpAppOpened, `Level-up app should open for ${classIdentifier} -> ${targetLevel}`);
+
+    const levelUpTabFocused = await focusLevelUpClassTab();
+    assert.ok(levelUpTabFocused, `Level-up/Class tab should be focused before ${classIdentifier} level-up`);
+
+    const rowActivated = await activateExistingClassRow();
+    assert.ok(rowActivated, `Existing class row should activate for ${classIdentifier} level-up`);
+
+    const subclassHandled = await selectFirstSubclassOptionIfRequired();
+    assert.ok(subclassHandled, `Subclass choice should be handled when required for ${classIdentifier} at level ${targetLevel}`);
+
+    const addLevelClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
+    assert.ok(addLevelClicked, `Add Level button should be clickable for ${classIdentifier} progression`);
+
+    await wait(TEST_TIMEOUTS.advancementAutomation * 2);
+    const tabsAfterAddLevel = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map((button) => (button.textContent || '').trim());
+    logSubclassDebug('tabs after add level:', tabsAfterAddLevel);
+
+    const rulesVersion = String(window.GAS?.dnd5eRules || '').trim();
+    const expectSpells = typeof classConfig.shouldExpectSpellsForLevel === 'function'
+      ? Boolean(classConfig.shouldExpectSpellsForLevel({ classIdentifier, targetLevel, rulesVersion }))
+      : false;
+    const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3, allowSkip: !expectSpells });
+    logSubclassDebug('spell expectations', { classIdentifier, targetLevel, expectSpells, rulesVersion });
+    if (expectSpells) {
+      assert.ok(spellStepResult.visible, `Spells tab should appear for ${classIdentifier} level ${targetLevel}`);
+      assert.ok(spellStepResult.completed, `${classConfig.displayName} level-up spells step should complete`);
+    } else if (spellStepResult.visible) {
+      assert.ok(spellStepResult.completed, `If spells UI appears for ${classIdentifier} level ${targetLevel}, it should complete`);
+    }
+
+    const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
+    if (!appClosed) {
+      logSpellStepDiagnostics(`level-up app did not close for ${classIdentifier} level ${targetLevel}`);
+      const levelUpState = window.GAS?.levelUpFSM?.getCurrentState?.();
+      logSubclassDebug('level-up close failure state snapshot', {
+        classIdentifier,
+        targetLevel,
+        levelUpState,
+        actorId: classActorId,
+        actorName: getCurrentActor()?.name || null
       });
+    }
+    assert.ok(appClosed, 'Level-up app should close after progression');
 
-      after(async function () {
-        if (window?.GAS?.quenchAutomation) delete window.GAS.quenchAutomation;
-        await closeActorStudioIfOpen();
-        const actorToCleanup = classActorId ? game.actors.get(classActorId) : (classActor || findActorByName());
-        try {
-          await actorToCleanup?.sheet?.close?.();
-        } catch (error) {
-          // ignore
-        }
-        if (actorToCleanup && !actorToCleanup.deleted) await actorToCleanup.delete();
-        await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
-        await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
-        for (const [key, value] of Object.entries(savedDebugState)) window.GAS[key] = value;
-      });
+    const reachedTargetLevel = await waitForActorClassLevel(classActorId, targetLevel);
+    assert.ok(reachedTargetLevel, `${classConfig.displayName} class level should progress to ${targetLevel}`);
+  };
 
-      it(`should auto-run ${classIdentifier} creation and complete`, async function () {
-        this.timeout(TEST_TIMEOUTS.perTest);
-
-        await game.settings.set(MODULE_ID, 'allowManualInput', true);
-        await game.settings.set(MODULE_ID, 'allowStandardArray', false);
-        await game.settings.set(MODULE_ID, 'allowPointBuy', false);
-        await game.settings.set(MODULE_ID, 'allowRolling', false);
-        await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
-        await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
-        await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
-
-        window.GAS.quenchAutomation = {
-          enabled: true,
-          allowLegacyRootValues: false,
-          advancements: { enabled: true },
-          selections: {
-            race: classConfig.raceUuid,
-            background: classConfig.backgroundUuid,
-            characterClass: classUuid
-          }
-        };
-
-        await closeActorStudioIfOpen();
-        const creationApp = await openActorStudio(testActorName);
-        assert.ok(creationApp, `Actor Studio should open for ${classIdentifier} creation test`);
-
-        const requiredTabsVisited = await visitRequiredCreationTabs();
-        assert.ok(requiredTabsVisited, `All visible creation tabs should be visited before creating ${classIdentifier}`);
-
-        const createClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-create-character-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
-        assert.ok(createClicked, `Create Character button should be clickable for ${classIdentifier}`);
-
-        const creationClosedEarly = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
-        if (!creationClosedEarly) {
-          const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3 });
-          if (spellStepResult.visible) {
-            assert.ok(spellStepResult.completed, `${classConfig.displayName} creation spells step should complete via UI controls`);
-          }
-        }
-
-        const actorStudioClosed = await waitForActorStudioClosed();
-        assert.ok(actorStudioClosed, `Actor Studio should close after ${classIdentifier} creation completes`);
-
-        await wait(TEST_TIMEOUTS.advancementAutomation);
-        classActorId = get(actorInGame)?.id || findActorByName()?.id || null;
-        assert.ok(classActorId, `Created ${classIdentifier} actor id should be available after creation`);
-
-        const reachedLevel1 = await waitForActorClassLevel(classActorId, classIdentifier, 1);
-        assert.ok(reachedLevel1, `${classConfig.displayName} class level should be embedded at level 1 after creation`);
-
-        classActor = game.actors.get(classActorId);
-        assert.ok(classActor, `Created ${classIdentifier} actor should exist in world actors`);
-        assertCoreSelectionsOnActor(assert, classActor, { classIdentifier, classUuid, raceUuid: classConfig.raceUuid, backgroundUuid: classConfig.backgroundUuid, className: classIdentifier });
-      });
-
-      it(`should open level-up app from ${classIdentifier} actor sheet when milestone leveling is enabled`, async function () {
-        this.timeout(TEST_TIMEOUTS.perTest);
-        const actor = getCurrentActor();
-        assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up tests`);
-
-        await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
-        await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
-        window.GAS.quenchAutomation = { enabled: true, allowLegacyRootValues: false, advancements: { enabled: true }, selections: {} };
-
-        await closeActorStudioIfOpen();
-        const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
-        assert.ok(levelUpButtonClicked, `Actor Studio level-up button should be clickable on the ${classIdentifier} actor sheet`);
-
-        const levelUpAppOpened = await waitForLevelUpAppOpen();
-        assert.ok(levelUpAppOpened, `Level-up Actor Studio app should open from ${classIdentifier} actor sheet button`);
-        await closeActorStudioIfOpen();
-      });
-
-      const runLevel = async (targetLevel) => {
-        const actor = getCurrentActor();
-        assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up to ${targetLevel}`);
-
-        await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
-        await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
-        await game.settings.set(MODULE_ID, 'enableEquipmentSelection', false);
-        await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', false);
-        await game.settings.set(MODULE_ID, 'enableSpellSelection', true);
-        window.GAS.quenchAutomation = { enabled: true, allowLegacyRootValues: false, advancements: { enabled: true }, selections: {} };
-
-        await closeActorStudioIfOpen();
-        const levelUpButtonClicked = await clickActorStudioLevelUpButtonOnSheet(actor);
-        assert.ok(levelUpButtonClicked, `Level-up button should be clickable for ${classIdentifier} -> ${targetLevel}`);
-
-        const levelUpAppOpened = await waitForLevelUpAppOpen();
-        assert.ok(levelUpAppOpened, `Level-up app should open for ${classIdentifier} -> ${targetLevel}`);
-
-        const levelUpTabFocused = await focusLevelUpClassTab();
-        assert.ok(levelUpTabFocused, `Level-up/Class tab should be focused before ${classIdentifier} level-up`);
-
-        // Step 1: Activate the class row (returns once either the subclass selector OR the add-level button is visible).
-        const rowActivated = await activateExistingClassRow(classIdentifier);
-        assert.ok(rowActivated, `Existing class row should activate for ${classIdentifier} level-up`);
-
-        // Step 2: If the class receives its subclass at this level, pick the first available option.
-        const subclassHandled = await selectFirstSubclassOptionIfRequired();
-        assert.ok(subclassHandled, `Subclass choice should be handled when required for ${classIdentifier} at level ${targetLevel}`);
-
-        // Step 3: Now the Add Level button must be present (subclass satisfied or not required).
-        const addLevelClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'), TEST_TIMEOUTS.generalCondition * 2, POLL_INTERVAL);
-        assert.ok(addLevelClicked, `Add Level button should be clickable for ${classIdentifier} progression`);
-
-        // Wait for advancement processing and workflow progression
-        await wait(TEST_TIMEOUTS.advancementAutomation * 2);
-        const tabsAfterAddLevel = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map(b => (b.textContent || '').trim());
-        logSubclassDebug('tabs after add level:', tabsAfterAddLevel);
-
-        const expectSpells = shouldExpectSpellsForLevel(classIdentifier, targetLevel);
-        const rulesVersion = String(window.GAS?.dnd5eRules || '').trim();
-        const spellStepResult = await completeSpellsStepIfVisible({ timeoutMs: TEST_TIMEOUTS.spellsTabVisible * 3, allowSkip: !expectSpells });
-        logSubclassDebug('spell expectations', { classIdentifier, targetLevel, expectSpells, rulesVersion });
-        if (expectSpells) {
-          assert.ok(spellStepResult.visible, `Spells tab should appear for ${classIdentifier} level ${targetLevel}`);
-          assert.ok(spellStepResult.completed, `${classConfig.displayName} level-up spells step should complete`);
-        } else if (spellStepResult.visible) {
-          assert.ok(spellStepResult.completed, `If spells UI appears for ${classIdentifier} level ${targetLevel}, it should complete`);
-        }
-
-        const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.generalCondition, POLL_INTERVAL);
-        if (!appClosed) {
-          logSpellStepDiagnostics(`level-up app did not close for ${classIdentifier} level ${targetLevel}`);
-          const levelUpState = window.GAS?.levelUpFSM?.getCurrentState?.();
-          logSubclassDebug('level-up close failure state snapshot', {
-            classIdentifier,
-            targetLevel,
-            levelUpState,
-            actorId: classActorId,
-            actorName: getCurrentActor()?.name || null
-          });
-        }
-        assert.ok(appClosed, 'Level-up app should close after progression');
-
-        const reachedTargetLevel = await waitForActorClassLevel(classActorId, classIdentifier, targetLevel);
-        assert.ok(reachedTargetLevel, `${classConfig.displayName} class level should progress to ${targetLevel}`);
-      };
-
-      it(`should level ${classIdentifier} from 1 to 2`, async function () {
-        this.timeout(TEST_TIMEOUTS.perTest);
-        await runLevel(2);
-      });
-
-      it(`should level ${classIdentifier} from 2 to 3`, async function () {
-        this.timeout(TEST_TIMEOUTS.perTest);
-        await runLevel(3);
-      });
-    });
-  }
-}
-
-export function registerBarbarianPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['barbarian'] });
-}
-
-export function registerBardPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['bard'] });
-}
-
-export function registerSorcererPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['sorcerer'] });
-}
-
-export function registerArtificerPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['artificer'] });
-}
-
-export function registerClericPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['cleric'] });
-}
-
-export function registerFighterPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['fighter'] });
-}
-
-export function registerRangerPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['ranger'] });
-}
-
-export function registerPaladinPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['paladin'] });
-}
-
-export function registerWarlockPermutationTests(context) {
-  return registerCharacterPermutationTests(context, { classes: ['warlock'] });
+  return {
+    TEST_TIMEOUTS,
+    beforeAll,
+    afterAll,
+    runCreationTest,
+    runOpenLevelUpAppTest,
+    runLevelTest
+  };
 }

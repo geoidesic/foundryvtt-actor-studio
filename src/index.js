@@ -43,17 +43,6 @@ Hooks.on("quenchReady", async (quench) => {
     import('~/src/hooks/tests/artificer-tests.js'),
   ]);
 
-  // Create wrapper functions for permutation tests
-  const registerClericPermutationTests = (context) => registerClericTests(context);
-  const registerFighterPermutationTests = (context) => registerFighterTests(context);
-  const registerRangerPermutationTests = (context) => registerRangerTests(context);
-  const registerPaladinPermutationTests = (context) => registerPaladinTests(context);
-  const registerWarlockPermutationTests = (context) => registerWarlockTests(context);
-  const registerBarbarianPermutationTests = (context) => registerBarbarianTests(context);
-  const registerBardPermutationTests = (context) => registerBardTests(context);
-  const registerSorcererPermutationTests = (context) => registerSorcererTests(context);
-  const registerArtificerPermutationTests = (context) => registerArtificerTests(context);
-
   quench.registerBatch("foundryvtt-actor-studio.basic-test", registerActorStudioTests, {
     displayName: "Actor Studio: Basic Test",
     timeout: testBatchTimeout
@@ -62,39 +51,39 @@ Hooks.on("quenchReady", async (quench) => {
     displayName: "Actor Studio: Wizard Tests",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericTests, {
     displayName: "Cleric",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.fighter", registerFighterPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.fighter", registerFighterTests, {
     displayName: "Fighter",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.ranger", registerRangerPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.ranger", registerRangerTests, {
     displayName: "Ranger",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.paladin", registerPaladinPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.paladin", registerPaladinTests, {
     displayName: "Paladin",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.warlock", registerWarlockPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.warlock", registerWarlockTests, {
     displayName: "Warlock",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.barbarian", registerBarbarianPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.barbarian", registerBarbarianTests, {
     displayName: "Barbarian",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.bard", registerBardPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.bard", registerBardTests, {
     displayName: "Bard",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.sorcerer", registerSorcererPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.sorcerer", registerSorcererTests, {
     displayName: "Sorcerer",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.artificer", registerArtificerPermutationTests, {
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.artificer", registerArtificerTests, {
     displayName: "Artificer",
     timeout: testBatchTimeout
   });
