@@ -446,6 +446,46 @@
         "Title": "診斷配置",
         "Description": "啟用除錯日誌和診斷功能",
         "DebugOptions": "除錯選項"
+      },
+      "testTimeoutUiInteraction": {
+        "Name": "UI 互動超時 (ms)",
+        "Hint": "按鈕點擊和分頁切換等一般 UI 互動的超時"
+      },
+      "testTimeoutUiStateChange": {
+        "Name": "UI 狀態變更超時 (ms)",
+        "Hint": "應用程式開啟、分頁啟用或表單更新等 UI 狀態變更的超時"
+      },
+      "testTimeoutSpellUiLoad": {
+        "Name": "法術 UI 載入超時 (ms)",
+        "Hint": "法術相關 UI 元素載入並變為可互動的超時"
+      },
+      "testTimeoutSpellWorkflow": {
+        "Name": "法術工作流程超時 (ms)",
+        "Hint": "包含最終化的完整法術選擇工作流程的超時"
+      },
+      "testTimeoutAppClosure": {
+        "Name": "應用程式關閉超時 (ms)",
+        "Hint": "應用程式視窗完全關閉的超時"
+      },
+      "testTimeoutAppLifecycleComplete": {
+        "Name": "應用程式生命週期完成超時 (ms)",
+        "Hint": "包含建立和清理的完整應用程式生命週期的超時"
+      },
+      "testTimeoutAdvancementProcessing": {
+        "Name": "進階處理超時 (ms)",
+        "Hint": "進階處理和自動化步驟的超時"
+      },
+      "testTimeoutAdvancementPostLevel": {
+        "Name": "進階後等級超時 (ms)",
+        "Hint": "等級後進階操作和狀態更新的超時"
+      },
+      "testTimeoutActorDataUpdate": {
+        "Name": "角色資料更新超時 (ms)",
+        "Hint": "角色資料更新和持久化操作的超時"
+      },
+      "testIntervalPolling": {
+        "Name": "輪詢間隔 (ms)",
+        "Hint": "等待條件時輪詢之間的時間"
       }
     },
     "Equipment": {

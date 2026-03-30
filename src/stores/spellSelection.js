@@ -297,6 +297,21 @@ function getSpellLimitsFromSubclassAdvancement(actor, level) {
   return null;
 }
 
+function getSpellcastingSubclassIdentifier(actor) {
+  if (!actor) return '';
+
+  const actorItems = actor.items || [];
+  for (const item of actorItems) {
+    if (item?.type !== 'subclass') continue;
+    const progression = item?.system?.spellcasting?.progression;
+    if (progression && progression !== 'none') {
+      return String(item?.system?.identifier || item?.name || '').toLowerCase();
+    }
+  }
+
+  return '';
+}
+
 // Helper function to parse spell limits from advancement data
 function parseSpellLimitsFromAdvancement(subclassItem, level) {
   if (!subclassItem) {
@@ -568,29 +583,41 @@ export const spellLimits = derived(
         
         window.GAS.log.d('📊 [spellLimits] OLD LEVEL LIMITS:', oldSubclassLimits);
         
-        if (oldSubclassLimits) {
-          // Calculate the difference (what's NEW at this level)
-          const cantripDifference = Math.max(0, subclassLimits.cantrips - oldSubclassLimits.cantrips);
-          const spellDifference = Math.max(0, subclassLimits.spells - oldSubclassLimits.spells);
+        const isFirstThirdCasterSpellLevel = oldLevel === 2 && $newLevelValueForExistingClass === 3;
+        const spellcastingSubclassIdentifier = getSpellcastingSubclassIdentifier($currentCharacter);
+        const isKnownThirdCasterSubclass = ['eldritch-knight', 'eldritchknight', 'arcane-trickster', 'arcanetrickster']
+          .includes(spellcastingSubclassIdentifier);
+
+        if (oldSubclassLimits || (isFirstThirdCasterSpellLevel && isKnownThirdCasterSubclass)) {
+          const baselineOldLimits = oldSubclassLimits || { cantrips: 0, spells: 0, hasAllSpells: false };
+
+          const cantripDifference = Math.max(0, subclassLimits.cantrips - baselineOldLimits.cantrips);
+          const spellDifference = Math.max(0, subclassLimits.spells - baselineOldLimits.spells);
           
           const result = {
             cantrips: cantripDifference,
             spells: spellDifference,
             hasAllSpells: subclassLimits.hasAllSpells
           };
+
+          if (!oldSubclassLimits) {
+            window.GAS.log.w('⚠️ [spellLimits] Old subclass limits missing during known third-caster transition; using zero baseline');
+          }
           
           window.GAS.log.d('✅ [spellLimits] USING SUBCLASS ADVANCEMENT (DIFFERENCE):', {
-            oldLevel, 
+            oldLevel,
             newLevel: $newLevelValueForExistingClass,
-            oldLimits: oldSubclassLimits,
+            oldLimits: baselineOldLimits,
+            oldLimitsFound: !!oldSubclassLimits,
+            spellcastingSubclassIdentifier,
             newLimits: subclassLimits,
             result
           });
           
           return result;
-        } else {
-          window.GAS.log.w('⚠️ [spellLimits] Could not get old level limits, falling through to base class calculation');
         }
+
+        window.GAS.log.w('⚠️ [spellLimits] Could not get old level limits, falling through to base class calculation');
       } else {
         // For character creation or if we couldn't get old limits, use the total
         window.GAS.log.d('✅ [spellLimits] USING SUBCLASS ADVANCEMENT (TOTAL - character creation):', subclassLimits);
@@ -1399,19 +1426,49 @@ export async function finalizeSpellSelection(actor) {
   }
 
   try {
+    const resolveLiveActor = (inputActor) => {
+      if (!inputActor) return null;
+
+      if (inputActor.id && typeof globalThis.game?.actors?.get === 'function') {
+        const liveById = globalThis.game.actors.get(inputActor.id);
+        if (liveById) return liveById;
+      }
+
+      const actorName = String(inputActor.name || '').trim();
+      if (actorName && Array.isArray(globalThis.game?.actors?.contents)) {
+        const sameNameActors = globalThis.game.actors.contents.filter((actorDoc) => actorDoc?.name === actorName);
+        if (sameNameActors.length) return sameNameActors[sameNameActors.length - 1];
+      }
+
+      return inputActor;
+    };
+
+    const targetActor = resolveLiveActor(actor);
+    if (!targetActor?.id || (typeof globalThis.game?.actors?.get === 'function' && !globalThis.game.actors.get(targetActor.id))) {
+      const debugActor = {
+        inputActorId: actor?.id || null,
+        inputActorName: actor?.name || null,
+        resolvedActorId: targetActor?.id || null,
+        resolvedActorName: targetActor?.name || null
+      };
+      window.GAS.log.e('[SPELLS][finalize] Could not resolve a live actor for spell creation', debugActor);
+      ui.notifications?.error('Unable to add spells: character no longer exists in world actors');
+      return false;
+    }
+
     const spells = get(selectedSpells);
     try {
       const actorDebug = {
-        name: actor?.name,
-        id: actor?.id,
-        hasCreateEmbeddedDocuments: typeof actor?.createEmbeddedDocuments === 'function',
-        itemsType: actor?.items ? (actor.items.constructor?.name || typeof actor.items) : 'none',
+        name: targetActor?.name,
+        id: targetActor?.id,
+        hasCreateEmbeddedDocuments: typeof targetActor?.createEmbeddedDocuments === 'function',
+        itemsType: targetActor?.items ? (targetActor.items.constructor?.name || typeof targetActor.items) : 'none',
         itemsCount: (() => {
           try {
-            if (!actor?.items) return 0;
-            if (typeof actor.items.size === 'number') return actor.items.size;
-            if (Array.isArray(actor.items)) return actor.items.length;
-            if (typeof actor.items === 'object') return Object.keys(actor.items).length;
+            if (!targetActor?.items) return 0;
+            if (typeof targetActor.items.size === 'number') return targetActor.items.size;
+            if (Array.isArray(targetActor.items)) return targetActor.items.length;
+            if (typeof targetActor.items === 'object') return Object.keys(targetActor.items).length;
             return -1;
           } catch { return -1; }
         })()
@@ -1432,6 +1489,28 @@ export async function finalizeSpellSelection(actor) {
       const spellObject = typeof itemData.toObject === 'function'
         ? itemData.toObject()
         : foundry.utils.deepClone(itemData);
+
+      // Strip document / ownership metadata that can carry stale references.
+      delete spellObject._id;
+      delete spellObject.uuid;
+      delete spellObject.parent;
+      delete spellObject.pack;
+      delete spellObject.folder;
+      delete spellObject.sort;
+
+      if (spellObject._stats && typeof spellObject._stats === 'object') {
+        delete spellObject._stats;
+      }
+
+      if (Array.isArray(spellObject.effects)) {
+        spellObject.effects = spellObject.effects.map((effect) => {
+          const cleanedEffect = foundry.utils.deepClone(effect);
+          if (cleanedEffect?._id) delete cleanedEffect._id;
+          if (cleanedEffect?.origin) delete cleanedEffect.origin;
+          return cleanedEffect;
+        });
+      }
+
       return spellObject;
     });
 
@@ -1447,15 +1526,15 @@ export async function finalizeSpellSelection(actor) {
       // If items is a Map or an object, convert to array
       if (act.items && typeof act.items === 'object') return Array.isArray(act.items) ? act.items : Object.values(act.items);
       // If actor appears to be a lightweight data object, try to locate live Actor document by id
-      if (act.id && typeof game?.actors?.get === 'function') {
-        const live = game.actors.get(act.id);
+      if (act.id && typeof globalThis.game?.actors?.get === 'function') {
+        const live = globalThis.game.actors.get(act.id);
         if (live) return live.items;
       }
       // Fallback: empty array
       return [];
     };
 
-    const actorItems = resolveActorItems(actor);
+    const actorItems = resolveActorItems(targetActor);
     try {
       const existingNames = (() => {
         try {
@@ -1493,15 +1572,15 @@ export async function finalizeSpellSelection(actor) {
     if (itemsToCreate.length > 0) {
       try {
         window.GAS.log.d('[SPELLS][finalize] About to create items. Using actor.createEmbeddedDocuments? ', typeof actor.createEmbeddedDocuments === 'function');
-        if (typeof actor.createEmbeddedDocuments === 'function') {
-          const createdSpells = await actor.createEmbeddedDocuments("Item", itemsToCreate);
+        if (typeof targetActor.createEmbeddedDocuments === 'function') {
+          const createdSpells = await targetActor.createEmbeddedDocuments("Item", itemsToCreate);
           window.GAS.log.d('[SPELLS][finalize] Created spells via createEmbeddedDocuments:', createdSpells?.length ?? itemsToCreate.length);
         } else if (typeof Item === 'function' && typeof Item.create === 'function') {
           // Fallback: create each item with Item.create({ parent: actor })
           const created = [];
           for (const data of itemsToCreate) {
             try {
-              const createdItem = await Item.create(data, { parent: actor });
+              const createdItem = await Item.create(data, { parent: targetActor });
               created.push(createdItem);
             } catch (e) {
               window.GAS.log.w('[SPELLS] Failed to create item via Item.create:', data.name, e);

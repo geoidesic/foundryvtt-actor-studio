@@ -447,29 +447,45 @@
         "Description": "Enable debug logging and diagnostic features",
         "DebugOptions": "Debug Options"
       },
-      "testTimeoutPerTest": {
-        "Name": "Test timeout per test (ms)",
-        "Hint": "Maximum time in milliseconds for each test to complete"
+      "testTimeoutUiInteraction": {
+        "Name": "UI interaction timeout (ms)",
+        "Hint": "Timeout for general UI interactions like button clicks and tab switches"
       },
-      "testTimeoutActorStudioClosed": {
-        "Name": "Actor Studio closed timeout (ms)",
-        "Hint": "Timeout for Actor Studio window to close"
+      "testTimeoutUiStateChange": {
+        "Name": "UI state change timeout (ms)",
+        "Hint": "Timeout for UI state changes like app opening, tab activation, or form updates"
       },
-      "testTimeoutSpellsTabVisible": {
-        "Name": "Spells tab visible timeout (ms)",
-        "Hint": "Maximum time to wait for spells tab to become visible"
+      "testTimeoutSpellUiLoad": {
+        "Name": "Spell UI load timeout (ms)",
+        "Hint": "Timeout for spell-related UI elements to load and become interactive"
       },
-      "testTimeoutGeneralCondition": {
-        "Name": "General condition timeout (ms)",
-        "Hint": "Timeout for general condition polling"
+      "testTimeoutSpellWorkflow": {
+        "Name": "Spell workflow timeout (ms)",
+        "Hint": "Timeout for complete spell selection workflows including finalization"
+      },
+      "testTimeoutAppClosure": {
+        "Name": "App closure timeout (ms)",
+        "Hint": "Timeout for application windows to close completely"
+      },
+      "testTimeoutAppLifecycleComplete": {
+        "Name": "App lifecycle complete timeout (ms)",
+        "Hint": "Timeout for complete application lifecycle including creation and cleanup"
+      },
+      "testTimeoutAdvancementProcessing": {
+        "Name": "Advancement processing timeout (ms)",
+        "Hint": "Timeout for advancement processing and automation steps"
+      },
+      "testTimeoutAdvancementPostLevel": {
+        "Name": "Advancement post-level timeout (ms)",
+        "Hint": "Timeout for post-level advancement operations and state updates"
+      },
+      "testTimeoutActorDataUpdate": {
+        "Name": "Actor data update timeout (ms)",
+        "Hint": "Timeout for actor data updates and persistence operations"
       },
       "testIntervalPolling": {
         "Name": "Polling interval (ms)",
         "Hint": "Time between polls when waiting for conditions"
-      },
-      "testTimeoutAdvancementAutomation": {
-        "Name": "Advancement automation click delay (ms)",
-        "Hint": "Delay between automated advancement button clicks to prevent race conditions"
       }
     },
     "Equipment": {

@@ -258,7 +258,7 @@ export class AdvancementManager {
       // Reset the flag after a delay to allow subsequent clicks for multi-step dialogs
       setTimeout(() => {
         this.clickedLastTime = false;
-      }, getTestTimeouts().advancementAutomation); // Allow next click after configured delay
+      }, getTestTimeouts().advancementProcessing); // Allow next click after configured delay
     }
   }
 

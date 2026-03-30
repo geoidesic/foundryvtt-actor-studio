@@ -35,8 +35,8 @@ vi.mock('~/src/helpers/Utility', () => ({
   prepareItemForDrop: vi.fn(),
   dropItemOnCharacter: vi.fn(),
   safeGetSetting: vi.fn((module, key, defaultValue) => {
-    // Mock the advancement automation timeout setting
-    if (key === 'testTimeoutAdvancementAutomation') return 1500;
+    // Mock the advancement processing timeout setting
+    if (key === 'testTimeoutAdvancementProcessing') return 1500;
     return defaultValue;
   }),
   isAdvancementAutomationEnabled: vi.fn(() => Boolean(global.window?.GAS?.debug)),

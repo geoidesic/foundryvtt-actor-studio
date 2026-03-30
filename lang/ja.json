@@ -446,6 +446,46 @@
         "Title": "診断設定",
         "Description": "デバッグログと診断機能を有効にします",
         "DebugOptions": "デバッグオプション"
+      },
+      "testTimeoutUiInteraction": {
+        "Name": "UIインタラクションタイムアウト (ms)",
+        "Hint": "ボタンクリックやタブ切り替えなどの一般的なUIインタラクションのタイムアウト"
+      },
+      "testTimeoutUiStateChange": {
+        "Name": "UI状態変更タイムアウト (ms)",
+        "Hint": "アプリのオープン、タブのアクティブ化、フォーム更新などのUI状態変更のタイムアウト"
+      },
+      "testTimeoutSpellUiLoad": {
+        "Name": "呪文UIロードタイムアウト (ms)",
+        "Hint": "呪文関連のUI要素がロードされてインタラクティブになるまでのタイムアウト"
+      },
+      "testTimeoutSpellWorkflow": {
+        "Name": "呪文ワークフロータイムアウト (ms)",
+        "Hint": "確定を含む完全な呪文選択ワークフローのタイムアウト"
+      },
+      "testTimeoutAppClosure": {
+        "Name": "アプリクロージャータイムアウト (ms)",
+        "Hint": "アプリケーションワインドウが完全に閉じるまでのタイムアウト"
+      },
+      "testTimeoutAppLifecycleComplete": {
+        "Name": "アプリライフサイクル完了タイムアウト (ms)",
+        "Hint": "作成とクリーンアップを含む完全なアプリケーショライフサイクルのタイムアウト"
+      },
+      "testTimeoutAdvancementProcessing": {
+        "Name": "進展処理タイムアウト (ms)",
+        "Hint": "進展処理と自動化ステップのタイムアウト"
+      },
+      "testTimeoutAdvancementPostLevel": {
+        "Name": "進展ポストレベルタイムアウト (ms)",
+        "Hint": "レベル後の進展操作と状態更新のタイムアウト"
+      },
+      "testTimeoutActorDataUpdate": {
+        "Name": "アクターデータ更新タイムアウト (ms)",
+        "Hint": "アクターデータ更新と永続化操作のタイムアウト"
+      },
+      "testIntervalPolling": {
+        "Name": "ポーリング間隔 (ms)",
+        "Hint": "条件を待機しているときのポーリング間の時間"
       }
     },
     "Equipment": {

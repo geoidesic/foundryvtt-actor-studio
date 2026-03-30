@@ -40,38 +40,119 @@ export function registerDiagnosticsSettings() {
   if (!game.modules.get('quench')?.active) return;
 
   game.settings.register(MODULE_ID, 'testTimeoutPerTest', {
-    name: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name'),
-    hint: game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint'),
+    name: 'Per-test timeout (ms)',
+    hint: 'Timeout applied to each Quench test case.',
     scope: 'world',
     config: false,
     default: 120000,
     type: Number,
   });
 
-  game.settings.register(MODULE_ID, 'testTimeoutActorStudioClosed', {
-    name: game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Name'),
-    hint: game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Hint'),
+  game.settings.register(MODULE_ID, 'testTimeoutWaitShort', {
+    name: 'Short wait duration (ms)',
+    hint: 'Short helper wait used by Quench automation.',
+    scope: 'world',
+    config: false,
+    default: 100,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutWaitMedium', {
+    name: 'Medium wait duration (ms)',
+    hint: 'Medium helper wait used by Quench automation.',
+    scope: 'world',
+    config: false,
+    default: 200,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutWaitLong', {
+    name: 'Long wait duration (ms)',
+    hint: 'Long helper wait used by Quench automation.',
+    scope: 'world',
+    config: false,
+    default: 300,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutUiInteraction', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutUiInteraction.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutUiInteraction.Hint'),
     scope: 'world',
     config: false,
     default: 5000,
     type: Number,
   });
 
-  game.settings.register(MODULE_ID, 'testTimeoutSpellsTabVisible', {
-    name: game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Name'),
-    hint: game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Hint'),
-    scope: 'world',
-    config: false,
-    default: 25000,
-    type: Number,
-  });
-
-  game.settings.register(MODULE_ID, 'testTimeoutGeneralCondition', {
-    name: game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Name'),
-    hint: game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Hint'),
+  game.settings.register(MODULE_ID, 'testTimeoutUiStateChange', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutUiStateChange.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutUiStateChange.Hint'),
     scope: 'world',
     config: false,
     default: 20000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutSpellUiLoad', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutSpellUiLoad.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutSpellUiLoad.Hint'),
+    scope: 'world',
+    config: false,
+    default: 5000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutSpellWorkflow', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutSpellWorkflow.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutSpellWorkflow.Hint'),
+    scope: 'world',
+    config: false,
+    default: 30000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutAppClosure', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutAppClosure.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutAppClosure.Hint'),
+    scope: 'world',
+    config: false,
+    default: 4000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutAppLifecycleComplete', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutAppLifecycleComplete.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutAppLifecycleComplete.Hint'),
+    scope: 'world',
+    config: false,
+    default: 32000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutAdvancementProcessing', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutAdvancementProcessing.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutAdvancementProcessing.Hint'),
+    scope: 'world',
+    config: false,
+    default: 1500,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutAdvancementPostLevel', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutAdvancementPostLevel.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutAdvancementPostLevel.Hint'),
+    scope: 'world',
+    config: false,
+    default: 3000,
+    type: Number,
+  });
+
+  game.settings.register(MODULE_ID, 'testTimeoutActorDataUpdate', {
+    name: game.i18n.localize('GAS.Setting.testTimeoutActorDataUpdate.Name'),
+    hint: game.i18n.localize('GAS.Setting.testTimeoutActorDataUpdate.Hint'),
+    scope: 'world',
+    config: false,
+    default: 50000,
     type: Number,
   });
 
@@ -81,15 +162,6 @@ export function registerDiagnosticsSettings() {
     scope: 'world',
     config: false,
     default: 100,
-    type: Number,
-  });
-
-  game.settings.register(MODULE_ID, 'testTimeoutAdvancementAutomation', {
-    name: game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Name'),
-    hint: game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Hint'),
-    scope: 'world',
-    config: false,
-    default: 1500,
     type: Number,
   });
 }

@@ -27,7 +27,10 @@ Hooks.once("init", (app, html, data) => {
 // Register Quench tests — dynamic import so test code is never bundled for non-Quench users
 Hooks.on("quenchReady", async (quench) => {
   console.log("Quench ready, registering Actor Studio test batches");
-  const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000)) || 120000;
+  const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutActorDataUpdate'));
+  if (!Number.isFinite(testBatchTimeout) || testBatchTimeout <= 0) {
+    throw new Error(`[TEST TIMEOUT] Missing or invalid setting '${MODULE_ID}.testTimeoutActorDataUpdate'. Expected a positive number.`);
+  }
 
   const [{ registerActorStudioTests }, { registerWizardTests }, { registerClericTests }, { registerFighterTests }, { registerRangerTests }, { registerPaladinTests }, { registerWarlockTests }, { registerBarbarianTests }, { registerBardTests }, { registerSorcererTests }, { registerArtificerTests }] = await Promise.all([
     import('~/src/hooks/tests/actor-studio-tests.js'),
@@ -47,8 +50,8 @@ Hooks.on("quenchReady", async (quench) => {
     displayName: "Actor Studio: Basic Test",
     timeout: testBatchTimeout
   });
-  quench.registerBatch("foundryvtt-actor-studio.wizard-test", registerWizardTests, {
-    displayName: "Actor Studio: Wizard Tests",
+  quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.wizard", registerWizardTests, {
+    displayName: "Wizard",
     timeout: testBatchTimeout
   });
   quench.registerBatch("foundryvtt-actor-studio.character-permutation-test.cleric", registerClericTests, {

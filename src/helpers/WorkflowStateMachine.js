@@ -26,11 +26,12 @@ function parseSpellProgressionValue(value) {
 function classHasSpellSelectionAtLevel(classIdentifier, level, rulesVersion) {
   const normalizedClass = String(classIdentifier || '').toLowerCase();
   const numericLevel = Number(level) || 0;
+
   const levelData = spellsKnownData.levels.find((entry) => Number(entry.level) === numericLevel);
   const rawValue = levelData?.[normalizedClass]?.[rulesVersion] ?? levelData?.[normalizedClass];
   const parsedValue = parseSpellProgressionValue(rawValue);
 
-  if (!parsedValue) return true;
+  if (!parsedValue) return false;
 
   return parsedValue.cantrips > 0 || parsedValue.spells > 0 || parsedValue.hasAllSpells;
 }

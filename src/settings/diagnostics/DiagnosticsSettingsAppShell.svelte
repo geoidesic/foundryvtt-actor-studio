@@ -30,73 +30,118 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           h3 Test Timeout Configuration (milliseconds)
 
           .setting-item
-            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Name')}
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutUiInteraction.Name')}
             input(
               type="number"
-              placeholder="120000"
-              bind:value="{testTimeoutPerTest}"
-              min="5000"
-              step="1000"
-            )
-            p.hint {game.i18n.localize('GAS.Setting.testTimeoutPerTest.Hint')}
-
-          .setting-item
-            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Name')}
-            input(
-              type="number"
-              placeholder="5000"
-              bind:value="{testTimeoutActorStudioClosed}"
+              placeholder="10000"
+              bind:value="{uiInteraction}"
               min="1000"
               step="500"
             )
-            p.hint {game.i18n.localize('GAS.Setting.testTimeoutActorStudioClosed.Hint')}
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutUiInteraction.Hint')}
 
           .setting-item
-            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Name')}
-            input(
-              type="number"
-              placeholder="25000"
-              bind:value="{testTimeoutSpellsTabVisible}"
-              min="5000"
-              step="1000"
-            )
-            p.hint {game.i18n.localize('GAS.Setting.testTimeoutSpellsTabVisible.Hint')}
-
-          .setting-item
-            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Name')}
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutUiStateChange.Name')}
             input(
               type="number"
               placeholder="20000"
-              bind:value="{testTimeoutGeneralCondition}"
+              bind:value="{uiStateChange}"
               min="5000"
               step="1000"
             )
-            p.hint {game.i18n.localize('GAS.Setting.testTimeoutGeneralCondition.Hint')}
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutUiStateChange.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellUiLoad.Name')}
+            input(
+              type="number"
+              placeholder="10000"
+              bind:value="{spellUiLoad}"
+              min="1000"
+              step="500"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutSpellUiLoad.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellWorkflow.Name')}
+            input(
+              type="number"
+              placeholder="30000"
+              bind:value="{spellWorkflow}"
+              min="5000"
+              step="1000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutSpellWorkflow.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAppClosure.Name')}
+            input(
+              type="number"
+              placeholder="4000"
+              bind:value="{appClosure}"
+              min="1000"
+              step="500"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAppClosure.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAppLifecycleComplete.Name')}
+            input(
+              type="number"
+              placeholder="32000"
+              bind:value="{appLifecycleComplete}"
+              min="5000"
+              step="1000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAppLifecycleComplete.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAdvancementProcessing.Name')}
+            input(
+              type="number"
+              placeholder="1500"
+              bind:value="{advancementProcessing}"
+              min="100"
+              step="100"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAdvancementProcessing.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAdvancementPostLevel.Name')}
+            input(
+              type="number"
+              placeholder="3000"
+              bind:value="{advancementPostLevel}"
+              min="500"
+              step="100"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAdvancementPostLevel.Hint')}
+
+          .setting-item
+            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutActorDataUpdate.Name')}
+            input(
+              type="number"
+              placeholder="50000"
+              bind:value="{actorDataUpdate}"
+              min="10000"
+              step="5000"
+            )
+            p.hint {game.i18n.localize('GAS.Setting.testTimeoutActorDataUpdate.Hint')}
 
           .setting-item
             p.setting-label {game.i18n.localize('GAS.Setting.testIntervalPolling.Name')}
             input(
               type="number"
               placeholder="100"
-              bind:value="{testIntervalPolling}"
+              bind:value="{pollingInterval}"
               min="10"
               step="10"
             )
             p.hint {game.i18n.localize('GAS.Setting.testIntervalPolling.Hint')}
 
-          .setting-item
-            p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Name')}
-            input(
-              type="number"
-              placeholder="1500"
-              bind:value="{testTimeoutAdvancementAutomation}"
-              min="100"
-              step="100"
-            )
-            p.hint {game.i18n.localize('GAS.Setting.testTimeoutAdvancementAutomation.Hint')}
-
     footer.settings-footer
       button.cancel-button(on:click="{cancelSettings}") Cancel
+      button.reset-button(on:click="{resetSettings}") Reset to Defaults
       button.save-button(on:click="{saveSettings}") Save
 </template>
 
@@ -114,24 +159,32 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   const quenchActive = Boolean(game.modules.get('quench')?.active);
   let debug = safeGetSetting(MODULE_ID, 'debug', false);
   let debugHooks = safeGetSetting(MODULE_ID, 'debug.hooks', false);
-  let testTimeoutPerTest = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutPerTest', 120000) : 120000;
-  let testTimeoutActorStudioClosed = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutActorStudioClosed', 5000) : 5000;
-  let testTimeoutSpellsTabVisible = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellsTabVisible', 25000) : 25000;
-  let testTimeoutGeneralCondition = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutGeneralCondition', 20000) : 20000;
-  let testIntervalPolling = quenchActive ? safeGetSetting(MODULE_ID, 'testIntervalPolling', 100) : 100;
-  let testTimeoutAdvancementAutomation = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementAutomation', 1500) : 1500;
+  let uiInteraction = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutUiInteraction') : null;
+  let uiStateChange = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutUiStateChange') : null;
+  let spellUiLoad = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellUiLoad') : null;
+  let spellWorkflow = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellWorkflow') : null;
+  let appClosure = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAppClosure') : null;
+  let appLifecycleComplete = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAppLifecycleComplete') : null;
+  let advancementProcessing = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementProcessing') : null;
+  let advancementPostLevel = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementPostLevel') : null;
+  let actorDataUpdate = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutActorDataUpdate') : null;
+  let pollingInterval = quenchActive ? safeGetSetting(MODULE_ID, 'testIntervalPolling') : null;
 
   async function saveSettings() {
     try {
       await game.settings.set(MODULE_ID, 'debug', debug);
       await game.settings.set(MODULE_ID, 'debug.hooks', debugHooks);
       if (quenchActive) {
-        await game.settings.set(MODULE_ID, 'testTimeoutPerTest', parseInt(testTimeoutPerTest, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutActorStudioClosed', parseInt(testTimeoutActorStudioClosed, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutSpellsTabVisible', parseInt(testTimeoutSpellsTabVisible, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutGeneralCondition', parseInt(testTimeoutGeneralCondition, 10));
-        await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(testIntervalPolling, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementAutomation', parseInt(testTimeoutAdvancementAutomation, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutUiInteraction', parseInt(uiInteraction, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutUiStateChange', parseInt(uiStateChange, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutSpellUiLoad', parseInt(spellUiLoad, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutSpellWorkflow', parseInt(spellWorkflow, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutAppClosure', parseInt(appClosure, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutAppLifecycleComplete', parseInt(appLifecycleComplete, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementProcessing', parseInt(advancementProcessing, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementPostLevel', parseInt(advancementPostLevel, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutActorDataUpdate', parseInt(actorDataUpdate, 10));
+        await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(pollingInterval, 10));
       }
 
       ui.notifications.info('Diagnostics settings saved successfully');
@@ -144,6 +197,23 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
   function cancelSettings() {
     application.close();
+  }
+
+  function resetSettings() {
+    debug = false;
+    debugHooks = false;
+    if (quenchActive) {
+      uiInteraction = 5000;
+      uiStateChange = 20000;
+      spellUiLoad = 5000;
+      spellWorkflow = 30000;
+      appClosure = 4000;
+      appLifecycleComplete = 32000;
+      advancementProcessing = 1500;
+      advancementPostLevel = 3000;
+      actorDataUpdate = 50000;
+      pollingInterval = 100;
+    }
   }
 </script>
 
