@@ -3,10 +3,17 @@ import { createCharacterPermutationTestHelpers } from '~/src/hooks/tests/charact
 const warlockConfig = {
   identifier: 'warlock',
   displayName: 'Warlock',
-  classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbclWarlock000',
+  classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbwlkWarlock000',
   raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
   backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
-  shouldExpectSpellsForLevel: ({ targetLevel }) => Number(targetLevel) >= 1
+  spellProgressionTOON: {
+    format: 'TOON-1',
+    levels: {
+      1: { '2014': { cantrips: 2, spells: 2, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 2, maxSpellLevel: 1 } },
+      2: { '2014': { cantrips: 2, spells: 3, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 3, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 2, spells: 4, maxSpellLevel: 2 }, '2024': { cantrips: 2, spells: 4, maxSpellLevel: 2 } }
+    }
+  }
 };
 
 export function registerWarlockTests(context) {

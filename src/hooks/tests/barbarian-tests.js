@@ -6,7 +6,14 @@ const barbarianConfig = {
   classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0',
   raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
   backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
-  shouldExpectSpellsForLevel: () => false
+  spellProgressionTOON: {
+    format: 'TOON-1',
+    levels: {
+      1: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 0 } },
+      2: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 0 } },
+      3: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 0 } }
+    }
+  }
 };
 
 export function registerBarbarianTests(context) {

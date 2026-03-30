@@ -6,7 +6,14 @@ const fighterConfig = {
   classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbftrFighter000',
   raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
   backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
-  shouldExpectSpellsForLevel: () => false
+  spellProgressionTOON: {
+    format: 'TOON-1',
+    levels: {
+      1: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 0 } },
+      2: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 0 } },
+      3: { '2014': { cantrips: 2, spells: 3, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 3, maxSpellLevel: 1 } }
+    }
+  }
 };
 
 export function registerFighterTests(context) {

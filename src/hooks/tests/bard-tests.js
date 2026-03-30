@@ -6,7 +6,14 @@ const bardConfig = {
   classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000',
   raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspOrc00000000',
   backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000',
-  shouldExpectSpellsForLevel: ({ targetLevel }) => Number(targetLevel) >= 1
+  spellProgressionTOON: {
+    format: 'TOON-1',
+    levels: {
+      1: { '2014': { cantrips: 2, spells: 4, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 4, maxSpellLevel: 1 } },
+      2: { '2014': { cantrips: 2, spells: 5, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 5, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 2, spells: 6, maxSpellLevel: 2 }, '2024': { cantrips: 2, spells: 6, maxSpellLevel: 2 } }
+    }
+  }
 };
 
 export function registerBardTests(context) {

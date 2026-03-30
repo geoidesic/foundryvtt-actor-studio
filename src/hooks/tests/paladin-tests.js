@@ -6,7 +6,14 @@ const paladinConfig = {
   classUuid: 'Compendium.dnd-players-handbook.classes.Item.phbpdnPaladin000',
   raceUuid: 'Compendium.dnd-players-handbook.origins.Item.phbspDwarf000000',
   backgroundUuid: 'Compendium.dnd-players-handbook.origins.Item.phbbgFarmer00000',
-  shouldExpectSpellsForLevel: ({ targetLevel, rulesVersion }) => rulesVersion === '2014' ? Number(targetLevel) === 2 : false
+  spellProgressionTOON: {
+    format: 'TOON-1',
+    levels: {
+      1: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 2, maxSpellLevel: 1 } },
+      2: { '2014': { cantrips: 0, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 3, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 0, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 4, maxSpellLevel: 1 } }
+    }
+  }
 };
 
 export function registerPaladinTests(context) {
