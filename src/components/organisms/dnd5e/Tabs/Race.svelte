@@ -121,8 +121,24 @@
 
   $: filteredMovement = movement
     ? Object.keys(movement)
-        .filter((key) => key !== "units" && movement[key] && typeof movement[key] === 'number')
-        .map((key) => ({ label: key, value: movement[key] }))
+        .filter((key) => key !== "units" && movement[key])
+        .map((key) => {
+          const value = movement[key];
+          if (key === 'ignoredDifficultTerrain' && value instanceof Set) {
+            // Convert Set to readable list
+            const terrains = Array.from(value);
+            return {
+              label: 'Ignores difficult terrain in',
+              value: terrains.length > 0 ? terrains.join(', ') : 'all terrain',
+              isSpecial: true
+            };
+          } else if (typeof value === 'number') {
+            return { label: key, value: value };
+          }
+          // Skip other non-numeric, non-Set properties
+          return null;
+        })
+        .filter(item => item !== null)
     : [];
 
   $: filteredSenses = senses
@@ -181,7 +197,7 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
-            li.left {movement.label} : {movement.value} {units}
+            li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
       +if("filteredSenses.length")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
