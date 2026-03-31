@@ -678,19 +678,19 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const requiredSpells = requiredSelection.spells || 0;
     logSubclassDebug('starting TOON-driven spell selection', { requiredCantrips, requiredSpells });
 
-    // Helper: expand a collapsed group by header text match, return true if expanded
-    const expandGroupByHeaderMatch = async (root, matchFn) => {
-      const header = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
-        .find((h) => {
+    // Helper: expand ALL collapsed groups matching a header predicate, return count expanded
+    const expandGroupsByHeaderMatch = async (root, matchFn) => {
+      const headers = Array.from(root.querySelectorAll('.spell-level-group .spell-level-header'))
+        .filter((h) => {
           const text = String(h.textContent || '').toLowerCase();
           return text.includes('[+]') && matchFn(text);
         });
-      if (header) {
+      for (const header of headers) {
+        logSubclassDebug('expanding collapsed group', String(header.textContent || '').replace(/\s+/g, ' ').trim());
         header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
         await wait(WAIT_SHORT);
-        return true;
       }
-      return false;
+      return headers.length;
     };
 
     // Helper: click N add-btn buttons within groups matching a header predicate
@@ -702,10 +702,10 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         const currentRoot = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
         if (!currentRoot) break;
 
-        // Try expanding if collapsed
-        await expandGroupByHeaderMatch(currentRoot, headerMatchFn);
+        // Expand all matching collapsed groups first
+        await expandGroupsByHeaderMatch(currentRoot, headerMatchFn);
 
-        // Find an enabled add button in a matching group
+        // Find an enabled add button in any matching group
         const groups = Array.from(currentRoot.querySelectorAll('.spell-level-group'));
         let targetButton = null;
         for (const group of groups) {
@@ -716,7 +716,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         }
 
         if (!targetButton) {
-          logSubclassDebug('no add button found for group, waiting', { selected, count });
+          logSubclassDebug('no add button found in any matching group, waiting', { selected, count });
           await wait(WAIT_SHORT);
           continue;
         }
@@ -724,8 +724,6 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
         selected++;
         logSubclassDebug('clicked add button', { selected, count });
-
-        // Wait for the click to register (button should disappear or counter should change)
         await wait(WAIT_SHORT);
       }
 
