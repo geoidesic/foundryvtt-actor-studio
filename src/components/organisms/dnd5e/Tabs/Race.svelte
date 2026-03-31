@@ -121,7 +121,7 @@
 
   $: filteredMovement = movement
     ? Object.keys(movement)
-        .filter((key) => key !== "units" && movement[key])
+        .filter((key) => key !== "units" && movement[key] && typeof movement[key] === 'number')
         .map((key) => ({ label: key, value: movement[key] }))
     : [];
 
