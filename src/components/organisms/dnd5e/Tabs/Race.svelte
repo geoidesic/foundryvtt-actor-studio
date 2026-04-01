@@ -124,18 +124,19 @@
         .filter((key) => key !== "units" && movement[key])
         .map((key) => {
           const value = movement[key];
-          if (key === 'ignoredDifficultTerrain' && value instanceof Set) {
-            // Convert Set to readable list
+          if (key === 'ignoredDifficultTerrain' && value instanceof Set && value.size > 0) {
+            // Convert non-empty Set to readable list
             const terrains = Array.from(value);
             return {
               label: 'Ignores difficult terrain in',
-              value: terrains.length > 0 ? terrains.join(', ') : 'all terrain',
+              value: terrains.join(', '),
               isSpecial: true
             };
-          } else if (typeof value === 'number') {
-            return { label: key, value: value };
+          } else if (typeof value === 'number' || (typeof value === 'string' && !isNaN(Number(value)))) {
+            // Handle both numbers and numeric strings
+            return { label: key, value: Number(value) };
           }
-          // Skip other non-numeric, non-Set properties
+          // Skip other non-numeric properties
           return null;
         })
         .filter(item => item !== null)
