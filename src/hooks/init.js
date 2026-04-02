@@ -36,8 +36,8 @@ export const init = (app, html, data) => {
     window.GAS.background = "Compendium.dnd-players-handbook.origins.Item.phbbgArtisan0000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrbBarbarian0"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbbrdBard000000"
-    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbftrFighter000"
-    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwzdWizard0000"
+    // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbftrFighter000"
+    window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbwzdWizard0000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbpdnPaladin000"
     // window.GAS.characterClass = "Compendium.dnd-tashas-cauldron.tcoe-character-options.Item.tcoeArtificer000"
     // window.GAS.characterClass = "Compendium.dnd-players-handbook.classes.Item.phbrgrRanger0000"
@@ -87,7 +87,7 @@ export const init = (app, html, data) => {
 
 }
 
-export const ready = (app, html, data) => {
+export const ready = async (app, html, data) => {
   // Show welcome by default unless the setting explicitly disables it
   if (!safeGetSetting(MODULE_ID, 'dontShowWelcome', false)) {
     new WelcomeApplication().render(true, { focus: true });
@@ -132,9 +132,118 @@ export const ready = (app, html, data) => {
     }
   });
 
+  // Register custom spell lists with dnd5e registry via JournalEntryPages
+  if (game.system.id === 'dnd5e' && window.GAS?.dnd5eVersion >= 4) {
+    try {
+      await registerCustomSpellLists();
+    } catch (error) {
+      window.GAS.log.w('[SPELL LISTS] Failed to register custom spell lists:', error);
+    }
+  }
+
   // Initialize plugins
   SubclassLevelPlugin.init();
   SpellListsPlugin.init();
+}
+
+/**
+ * Register custom spell lists with the dnd5e SpellListRegistry.
+ * Creates/updates a hidden JournalEntry with JournalEntryPages of type "spells",
+ * then calls dnd5e.registry.spellLists.register() for each page.
+ */
+async function registerCustomSpellLists() {
+  const customLists = game.settings.get(MODULE_ID, 'customSpellLists') || [];
+  if (customLists.length === 0) return;
+
+  const JOURNAL_NAME = 'Actor Studio - Custom Spell Lists';
+
+  // Find or create the hidden journal entry
+  let journal = game.journal.find(j => j.name === JOURNAL_NAME && j.getFlag(MODULE_ID, 'customSpellListJournal'));
+  if (!journal) {
+    journal = await JournalEntry.create({
+      name: JOURNAL_NAME,
+      ownership: { default: 0 },
+      flags: { [MODULE_ID]: { customSpellListJournal: true } }
+    });
+    window.GAS.log.d('[SPELL LISTS] Created journal entry:', journal.id);
+  }
+
+  // Build a map of existing pages by their GAS list id
+  const existingPages = new Map();
+  for (const page of journal.pages) {
+    const gasId = page.getFlag(MODULE_ID, 'customSpellListId');
+    if (gasId) existingPages.set(gasId, page);
+  }
+
+  // Track which list IDs are still in settings (for cleanup)
+  const activeIds = new Set(customLists.map(l => l.id));
+
+  // Delete pages for lists that no longer exist in settings
+  const pagesToDelete = [];
+  for (const [gasId, page] of existingPages) {
+    if (!activeIds.has(gasId)) {
+      pagesToDelete.push(page.id);
+    }
+  }
+  if (pagesToDelete.length > 0) {
+    await journal.deleteEmbeddedDocuments('JournalEntryPage', pagesToDelete);
+    window.GAS.log.d(`[SPELL LISTS] Deleted ${pagesToDelete.length} orphaned pages`);
+  }
+
+  // Create or update pages for each custom list
+  for (const listData of customLists) {
+    try {
+      const existingPage = existingPages.get(listData.id);
+      const spellSet = new Set(listData.spells || []);
+
+      if (existingPage) {
+        // Update existing page if data changed
+        const currentSpells = existingPage.system?.spells;
+        const spellsMatch = currentSpells instanceof Set
+          ? currentSpells.size === spellSet.size && [...spellSet].every(s => currentSpells.has(s))
+          : false;
+
+        if (!spellsMatch ||
+            existingPage.name !== listData.name ||
+            existingPage.system?.type !== listData.type ||
+            existingPage.system?.identifier !== listData.identifier) {
+          await existingPage.update({
+            name: listData.name,
+            'system.type': listData.type,
+            'system.identifier': listData.identifier,
+            'system.spells': Array.from(spellSet)
+          });
+          window.GAS.log.d(`[SPELL LISTS] Updated page: ${listData.name}`);
+        }
+      } else {
+        // Create new page
+        const created = await journal.createEmbeddedDocuments('JournalEntryPage', [{
+          name: listData.name,
+          type: 'spells',
+          'system.type': listData.type,
+          'system.identifier': listData.identifier,
+          'system.spells': Array.from(spellSet),
+          flags: { [MODULE_ID]: { customSpellListId: listData.id } }
+        }]);
+        window.GAS.log.d(`[SPELL LISTS] Created page: ${listData.name} (${created[0]?.id})`);
+      }
+    } catch (error) {
+      window.GAS.log.w(`[SPELL LISTS] Failed to sync page for ${listData.name}:`, error);
+    }
+  }
+
+  // Re-fetch journal to get updated pages
+  journal = game.journal.get(journal.id);
+
+  // Register all pages with the dnd5e registry
+  for (const page of journal.pages) {
+    try {
+      await dnd5e.registry.spellLists.register(page.uuid);
+      window.GAS.log.d(`[SPELL LISTS] Registered with dnd5e registry: ${page.name} (${page.uuid})`);
+    } catch (error) {
+      window.GAS.log.w(`[SPELL LISTS] Failed to register page ${page.name}:`, error);
+    }
+  }
 }
 
 export default {

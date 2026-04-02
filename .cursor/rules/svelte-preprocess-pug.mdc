@@ -8,6 +8,9 @@ alwaysApply: false
 
 # svelte-preprocess-pug Rules
 
+## Quotes
+Always use double quotes
+
 ## Indentation
 - **Description**: In Pug templates, +else() statements must be nested within the related +if statement, indented one level deeper.
 - **Examples**:
@@ -62,6 +65,17 @@ alwaysApply: false
       .armor-config
     +else if("type === 'weapon'")
       .weapon-config
+    ```
+## Expressions
+- **Description**: Do not use compound expressions, instead wrap them as functions.
+- **Examples**:
+  - **Correct**:
+    ```pug
+    div(class:selected!="{isSelected}")
+    ```
+  - **Incorrect**:
+    ```pug
+    div(class:selected!='{selectedList && selectedList.id === list.id}')
     ```
 
 ## Event Handlers

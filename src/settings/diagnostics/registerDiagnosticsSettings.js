@@ -33,6 +33,7 @@ export function registerDiagnosticsSettings() {
     scope: 'world',
     config: false,
     default: false,
+    requiresReload: true,
     type: Boolean,
   });
 

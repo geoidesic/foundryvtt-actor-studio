@@ -1,5 +1,6 @@
 import CompendiumSourcesButton from './CompendiumSourcesButton';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
+import SpellListManagerButton from './SpellListManagerButton';
 import { MODULE_ID, DEFAULT_SOURCES } from '../helpers/constants';
 import { showReloadRequiredConfirm, showSettingsConfirm } from './confirmationHelpers';
 
@@ -41,6 +42,7 @@ export function registerSettings(app: Game): void {
   sourcesConfiguration();
   donationTracker();
   usageTracking();
+  customSpellLists();
   dontShowWelcome();
 }
 
@@ -142,5 +144,25 @@ function usageTracking() {
         }
       }
     }
+  });
+}
+
+function customSpellLists() {
+  game.settings.register(MODULE_ID, 'customSpellLists', {
+    name: 'Custom Spell Lists',
+    hint: 'Manage custom spell lists for classes/subclasses',
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: []
+  });
+
+  game.settings.registerMenu(MODULE_ID, 'customSpellLists', {
+    name: 'Custom Spell Lists',
+    label: 'Manage Spell Lists',
+    hint: 'Create and edit custom spell lists',
+    icon: 'fas fa-scroll',
+    type: SpellListManagerButton,
+    restricted: true
   });
 }
