@@ -6,7 +6,7 @@
   import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { Timing } from '@typhonjs-fvtt/runtime/util';
   import { MODULE_ID, DEFAULT_SOURCES } from '~/src/helpers/constants';
-  import { safeGetSetting } from '~/src/helpers/Utility';
+  import { safeGetSetting, packIndexHasDocumentType } from '~/src/helpers/Utility';
 
   export let elementRoot;
 
@@ -71,6 +71,10 @@
           searchFields.some((field) => field.includes(exc.toLowerCase()))
         );
 
+        const spellPackByContent = storageKey === 'spells' && packIndexHasDocumentType(pack, 'spell');
+        if (storageKey === 'spells') {
+          return !hasExclusion && (hasMatch || spellPackByContent);
+        }
         return hasMatch && !hasExclusion;
       });
     }

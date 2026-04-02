@@ -660,8 +660,25 @@ export const getAllPackIdsFromAllSettings = () => {
   const packs = getAllPacksFromAllSettings();
   // window.GAS.log.d('getAllPackIdsFromAllSettings', packs);
   return packs.map(p => {
-    return p.collection
+    return p.collection;
   });
+}
+
+/**
+ * True if the compendium index contains at least one document of the given type (e.g. Item subtype "spell").
+ * Lets "filter by name" still list custom packs whose labels omit "spell" but hold spell items.
+ */
+export function packIndexHasDocumentType(pack, docType) {
+  try {
+    const idx = pack?.index;
+    if (!idx || idx.size === 0) return false;
+    for (const entry of idx.values()) {
+      if (entry?.type === docType) return true;
+    }
+  } catch (e) {
+    return false;
+  }
+  return false;
 }
 
 export function getAdvancementValue(advancement, key) {
@@ -1563,9 +1580,15 @@ export function autoAssignSources() {
         pack.metadata.label.toLowerCase().includes(exclusion.toLowerCase())
       );
 
+      const spellPackByContent = sourceType === 'spells' && packIndexHasDocumentType(pack, 'spell');
+
       // Only apply filtering by name if the setting is enabled
       if (filterByName) {
-        if (hasMatch && !hasExclusion) {
+        if (sourceType === 'spells') {
+          if (!hasExclusion && (hasMatch || spellPackByContent)) {
+            autoAssigned[sourceType].push(pack.collection);
+          }
+        } else if (hasMatch && !hasExclusion) {
           autoAssigned[sourceType].push(pack.collection);
         }
       } else {
@@ -1575,6 +1598,13 @@ export function autoAssignSources() {
         }
         if (sourceType === 'subclasses' && !hasMatch) {
           continue; // Only include subclass packs in subclasses
+        }
+        if (sourceType === 'spells') {
+          if (hasExclusion) continue;
+          if (hasMatch || spellPackByContent) {
+            autoAssigned[sourceType].push(pack.collection);
+          }
+          continue;
         }
         // For other types without filtering, include all Item packs
         if (config.inclusions.length === 0 || hasMatch) {

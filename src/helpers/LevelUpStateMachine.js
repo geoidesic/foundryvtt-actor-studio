@@ -125,8 +125,13 @@ function determineSpellListClass(actor) {
         try {
           const subclassItem = fromUuidSync(subclassUuid);
           if (subclassItem) {
-            const customSpellLists = subclassItem.getFlag(MODULE_ID, 'spellLists');
-            if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
+            const rawSpellLists = subclassItem.getFlag(MODULE_ID, 'spellLists');
+            const customSpellLists = Array.isArray(rawSpellLists)
+              ? rawSpellLists
+              : (rawSpellLists && typeof rawSpellLists === 'object' && Array.isArray(rawSpellLists.lists)
+                ? rawSpellLists.lists
+                : null);
+            if (customSpellLists && customSpellLists.length > 0) {
               window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on subclass:', subclassItem.name, '->', customSpellLists);
               return customSpellLists; // Return array of spell lists for custom subclasses
             }
@@ -151,8 +156,13 @@ function determineSpellListClass(actor) {
         try {
           const classItem = fromUuidSync(classUuid);
           if (classItem) {
-            const customSpellLists = classItem.getFlag(MODULE_ID, 'spellLists');
-            if (customSpellLists && Array.isArray(customSpellLists) && customSpellLists.length > 0) {
+            const rawSpellLists = classItem.getFlag(MODULE_ID, 'spellLists');
+            const customSpellLists = Array.isArray(rawSpellLists)
+              ? rawSpellLists
+              : (rawSpellLists && typeof rawSpellLists === 'object' && Array.isArray(rawSpellLists.lists)
+                ? rawSpellLists.lists
+                : null);
+            if (customSpellLists && customSpellLists.length > 0) {
               window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on class:', classItem.name, '->', customSpellLists);
               return customSpellLists; // Return array of spell lists for custom classes
             }
