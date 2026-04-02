@@ -5,6 +5,7 @@
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { MODULE_ID } from '~/src/helpers/constants';
+  import { localize } from '~/src/helpers/Utility';
 
   export let elementRoot;
 
@@ -61,7 +62,7 @@
 
   async function saveLists() {
     await game.settings.set(MODULE_ID, 'customSpellLists', spellLists);
-    ui.notifications.info('Spell lists saved. Reload the world to apply changes to spell filtering.');
+    ui.notifications.info(localize('SpellListManager.SavedNotification'));
   }
 
   async function handleSpellDrop(event) {
@@ -93,7 +94,7 @@
         const pack = game.packs.get(data.collection);
         if (!pack) {
           console.warn('SpellListManager: Compendium not found', data.collection);
-          ui.notifications.warn(`Compendium "${data.collection}" not found.`);
+          ui.notifications.warn(localize('SpellListManager.CompendiumNotFound').replace('{pack}', data.collection));
           return;
         }
         
@@ -106,7 +107,7 @@
         console.log('SpellListManager: Filtered spell documents', spellDocuments.length);
         
         if (spellDocuments.length === 0) {
-          ui.notifications.warn(`No spells found in compendium "${pack.title}".`);
+          ui.notifications.warn(localize('SpellListManager.NoSpellsInCompendium').replace('{pack}', pack.title));
           return;
         }
         
@@ -124,9 +125,9 @@
         if (newSpellUuids.length > 0) {
           selectedList.spells = [...selectedList.spells, ...newSpellUuids];
           spellLists = [...spellLists];
-          ui.notifications.info(`Added ${newSpellUuids.length} spell(s) from "${pack.title}".`);
+          ui.notifications.info(localize('SpellListManager.SpellsAdded').replace('{count}', newSpellUuids.length).replace('{pack}', pack.title));
         } else {
-          ui.notifications.info(`All spells from "${pack.title}" are already in this list.`);
+          ui.notifications.info(localize('SpellListManager.AllSpellsAlreadyInList').replace('{pack}', pack.title));
         }
       } else {
         console.log('SpellListManager: Unhandled drop type', data.type, data);
@@ -195,32 +196,34 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     header.slm-toolbar
       button.slm-btn(type="button" on:click!="{createNewList}")
         i.fas.fa-plus
-        |  New List
+        |  {localize('SpellListManager.NewList')}
       .toolbar-spacer
       button.slm-btn(type="button" on:click!="{saveLists}")
         i.fas.fa-save
-        |  Save
+        |  {localize('SpellListManager.SaveAll')}
 
     .slm-content
       .list-panel
         h3.panel-heading
           i.fas.fa-scroll
-          |  Spell Lists
+          |  {localize('SpellListManager.SpellLists')}
         .list-entries
           +if("spellLists.length === 0")
             .empty-state
               i.fas.fa-inbox
-              p No spell lists yet. Click "New List" to create one.
+              p {localize('SpellListManager.NoSpellLists')}
             +else()
               +each("spellLists as list")
                 .list-entry(class:active!="{selectedList && selectedList.id === list.id}" on:click!="{selectList(list)}")
                   .list-entry-info
                     .list-entry-name {list.name}
                     .list-entry-meta {list.type}: {list.identifier || '(none)'}
+                    +if("list.description")
+                      .list-entry-description {list.description}
                     .list-entry-count
                       i.fas.fa-hat-wizard
-                      |  {list.spells.length} spell{list.spells.length !== 1 ? 's' : ''}
-                  button.delete-btn(type="button" on:click|stopPropagation!="{deleteList(list)}" title="Delete list")
+                      |  {list.spells.length === 1 ? localize('SpellListManager.SpellCount').replace('{count}', list.spells.length) : localize('SpellListManager.SpellCountPlural').replace('{count}', list.spells.length)}
+                  button.delete-btn(type="button" on:click|stopPropagation!="{deleteList(list)}" title="{localize('SpellListManager.DeleteList')}")
                     i.fas.fa-trash
 
       .editor-panel
@@ -232,59 +235,59 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           .editor-form
             .form-row
               .form-group
-                label.form-label Name
-                input.form-input(type="text" bind:value="{selectedList.name}" placeholder="Enter list name")
+                label.form-label {localize('SpellListManager.Name')}
+                input.form-input(type="text" bind:value="{selectedList.name}" placeholder="{localize('SpellListManager.NamePlaceholder')}")
               .form-group
-                label.form-label Type
+                label.form-label {localize('SpellListManager.Type')}
                 select.form-input(bind:value="{selectedList.type}")
-                  option(value="class") Class
-                  option(value="subclass") Subclass
-                  option(value="race") Race
-                  option(value="background") Background
-                  option(value="feat") Feat
+                  option(value="class") {localize('SpellListManager.TypeClass')}
+                  option(value="subclass") {localize('SpellListManager.TypeSubclass')}
+                  option(value="race") {localize('SpellListManager.TypeRace')}
+                  option(value="background") {localize('SpellListManager.TypeBackground')}
+                  option(value="feat") {localize('SpellListManager.TypeFeat')}
             .form-row
               .form-group
-                label.form-label Identifier
-                input.form-input(type="text" bind:value="{selectedList.identifier}" placeholder="e.g. wizard, eldritch-knight")
+                label.form-label {localize('SpellListManager.Identifier')}
+                input.form-input(type="text" bind:value="{selectedList.identifier}" placeholder="{localize('SpellListManager.IdentifierPlaceholder')}")
               .form-group
-                label.form-label Description
-                input.form-input(type="text" bind:value="{selectedList.description}" placeholder="Optional description")
+                label.form-label {localize('SpellListManager.Description')}
+                input.form-input(type="text" bind:value="{selectedList.description}" placeholder="{localize('SpellListManager.DescriptionPlaceholder')}")
 
           .spell-drop-zone(class:drag-active!="{dragOver}" on:drop!="{handleSpellDrop}" on:dragover!="{handleDragOver}" on:dragenter!="{handleDragEnter}" on:dragleave!="{handleDragLeave}")
             +if("selectedList.spells.length === 0 && !dragOver")
               .drop-placeholder
                 i.fas.fa-hand-sparkles
-                p Drag spells or entire compendiums from the sidebar to add them here
+                p {localize('SpellListManager.DragPlaceholder')}
               +else()
                 +if("dragOver")
                   .drop-placeholder.active
                     i.fas.fa-bullseye
-                    p Drop to add spell
+                    p {localize('SpellListManager.DropActive')}
                 +each("selectedList.spells as spellUuid")
                   .spell-row
                     .spell-icon-wrap
                       img.spell-icon(src="{resolvedSpells[spellUuid]?.img || 'icons/svg/mystery-man.svg'}" alt="{resolvedSpells[spellUuid]?.name || 'Loading'}")
                     .spell-info
-                      .spell-name {resolvedSpells[spellUuid]?.name || 'Loading...'}
+                      .spell-name {resolvedSpells[spellUuid]?.name || localize('SpellListManager.Loading')}
                       .spell-meta
                         +if("getSpellLevel(resolvedSpells[spellUuid])")
                           span.spell-badge {getSpellLevel(resolvedSpells[spellUuid])}
                         +if("getSpellSchool(resolvedSpells[spellUuid])")
                           span.spell-badge {getSpellSchool(resolvedSpells[spellUuid])}
                     .spell-actions
-                      button.remove-btn(type="button" on:click!="{removeSpellFromList(selectedList, spellUuid)}" title="Remove spell")
+                      button.remove-btn(type="button" on:click!="{removeSpellFromList(selectedList, spellUuid)}" title="{localize('SpellListManager.RemoveSpell')}")
                         i.fas.fa-times
 
           +else()
             .no-selection
               i.fas.fa-arrow-left
-              p Select a spell list from the left panel to edit it
+              p {localize('SpellListManager.SelectListMessage')}
 
     footer.slm-footer
-      button.slm-btn(type="button" on:click!="{handleCancel}") Cancel
+      button.slm-btn(type="button" on:click!="{handleCancel}") {localize('SpellListManager.Cancel')}
       button.slm-btn.save-btn(type="button" on:click!="{saveLists}")
         i.fas.fa-save
-        |  Save
+        |  {localize('SpellListManager.Save')}
 </template>
 
 <style lang="sass">
@@ -361,6 +364,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     i
       font-size: 0.85em
 
+  
   .list-entries
     flex: 1
     overflow-y: auto
@@ -422,6 +426,11 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
     i
       font-size: 0.8em
+
+  .list-entry-description
+    font-size: 0.75rem
+    color: #888
+
 
   .delete-btn
     background: none
