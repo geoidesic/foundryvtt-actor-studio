@@ -1,5 +1,5 @@
 import { DEFAULT_SOURCES, LOG_PREFIX, MODULE_ID } from '../helpers/constants';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { safeGetSetting, packIndexHasDocumentType } from '~/src/helpers/Utility';
 
 export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
@@ -227,6 +227,11 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         pack.metadata.label.toLowerCase().includes(exclusion.toLowerCase())
       );
 
+      const spellPackByContent = storageKey === 'spells' && packIndexHasDocumentType(pack, 'spell');
+      const passes = storageKey === 'spells'
+        ? !hasExclusion && (hasMatch || spellPackByContent)
+        : hasMatch && !hasExclusion;
+
       window.GAS.log.d('Filtering pack:', {
         id: pack.metadata.id,
         name: pack.metadata.name,
@@ -235,10 +240,12 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         inclusions,
         hasMatch,
         hasExclusion,
-        exclusions
+        exclusions,
+        spellPackByContent,
+        passes
       });
 
-      return hasMatch && !hasExclusion;
+      return passes;
     };
 
     const filteredCompendia = this.filterPackSourcesAppropriatelyByName ? compendiaList.filter(filter) : compendiaList;
