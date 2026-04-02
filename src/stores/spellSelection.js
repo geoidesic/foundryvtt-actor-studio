@@ -40,6 +40,33 @@ function safeInspectLazyClasses(lazy) {
   }
 }
 
+/**
+ * True if the spell document has any class-list assignment (SRD / official-style).
+ * Homebrew spells often omit this metadata; those should not be filtered out by class.
+ */
+function spellHasClassAssignment(doc) {
+  try {
+    const lc = doc.labels?.classes;
+    if (lc != null) {
+      if (Array.isArray(lc)) return lc.length > 0;
+      if (String(lc).trim() !== '') return true;
+    }
+
+    const sc = doc.system?.classes;
+    if (sc) {
+      if (typeof sc === 'object' && sc.value != null && String(sc.value).trim() !== '') return true;
+      if (typeof sc === 'string' && sc.trim() !== '') return true;
+    }
+
+    const lazy = doc._lazy?.classes;
+    if (lazy && typeof lazy === 'object' && Object.keys(lazy).length > 0) return true;
+
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
+
 // Helper: summarize class information found on a spell document (labels, system, _lazy)
 function inspectSpellClasses(doc) {
   try {
@@ -999,9 +1026,14 @@ export async function loadAvailableSpells(characterClassName = null) {
               let spellClasses = null;
               let availableToClass = false;
 
+              // Custom compendium spells often have no labels.classes / system.classes — include them for any class
+              if (!spellHasClassAssignment(doc)) {
+                availableToClass = true;
+              }
+
               // Check each of the character's spell list classes
               for (const className of classNamesToCheck) {
-                if (availableToClass) break; // Already found a match, skip remaining checks
+                if (availableToClass) break; // Already matched (e.g. unrestricted homebrew) or found a match
 
                 // Check doc.labels.classes (2024 style)
                 if (doc.labels?.classes) {
