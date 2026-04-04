@@ -3,6 +3,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
 import { readOnlyTabs, characterClass, characterSubClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
+import DTPlugin from '~/src/plugins/donation-tracker';
 
 // Import spellsKnown data for determining spell limits
 import spellsKnownData from './spellsKnown.json';
@@ -38,6 +39,48 @@ function safeInspectLazyClasses(lazy) {
   } catch (e) {
     return { error: String(e) };
   }
+}
+
+// Helper: filter documents by donation tracker permissions
+function filterDocumentsByDT(pack, documents) {
+  if (typeof game === 'undefined' || !game.modules?.get('donation-tracker')?.active || !game.settings?.get(MODULE_ID, 'enable-donation-tracker', false)) {
+    return documents;
+  }
+
+  // If the pack has no DT folders, include everything
+  if (!DTPlugin.packHasDTFolders(pack)) {
+    return documents;
+  }
+
+  // Get allowed DT folder IDs for the current user
+  const allowedDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, true);
+  const allDTFolderIds = DTPlugin.getDTFolderIdsFromPack(pack, false);
+
+  const unregisteredAccess = game.settings.get(MODULE_ID, 'enable-donation-tracker-unregistered-access', false);
+
+  // Game Masters bypass restrictions
+  if (game.user.isGM) return documents;
+
+  // Filter documents
+  return documents.filter(doc => {
+    // If item is not in a folder
+    if (!doc.folder) {
+      return unregisteredAccess;
+    }
+
+    // If the item is in a folder that is not a real folder
+    if (!pack.folders.get(doc.folder)) return false;
+
+    // If the item is in a DT folder tree, include it
+    if (allowedDTFolderIds.includes(doc.folder)) return true;
+
+    // If item is in a folder that is not a DT folder
+    if (!allDTFolderIds.includes(doc.folder)) {
+      return unregisteredAccess;
+    }
+
+    return false;
+  });
 }
 
 /**
@@ -1016,10 +1059,14 @@ export async function loadAvailableSpells(characterClassName = null) {
           const allDocs = await pack.getDocuments();
           window.GAS.log.d(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from ${pack.collection}`);
 
+          // Filter by donation tracker permissions
+          const dtFilteredDocs = filterDocumentsByDT(pack, allDocs);
+          window.GAS.log.d(`[SPELLS DEBUG] After DT filtering: ${dtFilteredDocs.length} documents from ${pack.collection}`);
+
           const filteredSpells = [];
 
           // Filter by class and convert to our format
-          for (const doc of allDocs) {
+          for (const doc of dtFilteredDocs) {
             if (doc.type === "spell") {
               // window.GAS.log.d(`[SPELLS DEBUG] Checking spell: ${doc.name}`);
               // Check multiple possible locations for class information
@@ -1202,6 +1249,11 @@ export async function loadAvailableSpells(characterClassName = null) {
             window.GAS.log.d('[SPELLS DEBUG] tcr-main-module detected – using flag-based class filtering for D&D 5e v3.x');
 
             const allDocs = await pack.getDocuments();
+
+            // Filter by donation tracker permissions
+            const dtFilteredDocs = filterDocumentsByDT(pack, allDocs);
+            window.GAS.log.d(`[SPELLS DEBUG] tcr-main-module: after DT filtering ${dtFilteredDocs.length} documents from ${pack.collection}`);
+
             const filteredSpells = [];
 
             // Collect all class/subclass UUIDs for the current character.
@@ -1224,10 +1276,10 @@ export async function loadAvailableSpells(characterClassName = null) {
 
             window.GAS.log.d('[SPELLS DEBUG] tcr-main-module – class UUIDs to check:', [...classUuidsToCheck]);
             if (classUuidsToCheck.size === 0) {
-              window.GAS.log.w('[SPELLS] tcr-main-module active but no class UUID found – showing all spells. Check that a class has been selected.');
+              window.GAS.log.w('[SPELLS] tcr-main-module active but no class UUID found – showing only unrestricted spells. Check that a class has been selected.');
             }
 
-            for (const doc of allDocs) {
+            for (const doc of dtFilteredDocs) {
               if (doc.type !== "spell") continue;
 
               const tcrSpellClasses = doc.flags?.["tcr-main-module"]?.spellClasses;
@@ -1237,8 +1289,8 @@ export async function loadAvailableSpells(characterClassName = null) {
                 // Spell has no TCR class restriction – include it for all classes.
                 availableToClass = true;
               } else if (classUuidsToCheck.size === 0) {
-                // No character class UUID available – include spell to avoid an empty list.
-                availableToClass = true;
+                // No character class UUID available – do not include restricted spells.
+                availableToClass = false;
               } else {
                 // Include only if one of the character's class/subclass UUIDs is in the flag.
                 availableToClass = [...classUuidsToCheck].some(uuid => uuid in tcrSpellClasses);
@@ -1272,21 +1324,24 @@ export async function loadAvailableSpells(characterClassName = null) {
             // (class data doesn't exist on spells in this version)
             // window.GAS.log.d('[SPELLS DEBUG] Skipping class filtering for D&D 5e v3.x (class data not available on spells)');
 
-            // Use index approach for better performance
-            const index = await pack.getIndex({ fields: ['system.level', 'system.school'] });
-            const indexEntries = Array.from(index.values());
+            // Load documents to respect user permissions
+            const allDocs = await pack.getDocuments();
 
-            const spells = indexEntries
-              .filter(entry => entry.type === "spell")
-              .map(entry => ({
-                _id: entry._id,
-                name: entry.name,
-                img: entry.img,
-                type: entry.type,
-                uuid: entry.uuid,
+            // Filter by donation tracker permissions
+            const dtFilteredDocs = filterDocumentsByDT(pack, allDocs);
+            window.GAS.log.d(`[SPELLS DEBUG] D&D 5e v3.x: after DT filtering ${dtFilteredDocs.length} documents from ${pack.collection}`);
+
+            const spells = dtFilteredDocs
+              .filter(doc => doc.type === "spell")
+              .map(doc => ({
+                _id: doc.id,
+                name: doc.name,
+                img: doc.img,
+                type: doc.type,
+                uuid: doc.uuid,
                 system: {
-                  level: entry.system?.level || 0,
-                  school: entry.system?.school || 'unknown',
+                  level: doc.system?.level || 0,
+                  school: doc.system?.school || 'unknown',
                   preparation: { mode: 'prepared', prepared: false }, // Default for compatibility
                   components: {},
                   description: { value: '' },

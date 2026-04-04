@@ -28,8 +28,8 @@ describe('tcr-main-module spell class flag filtering', () => {
         return true;
       }
       if (uuidSet.size === 0) {
-        // No character class UUID known – include to avoid empty list
-        return true;
+        // No character class UUID known – do not include restricted spells
+        return false;
       }
       return [...uuidSet].some(uuid => uuid in tcrSpellClasses);
     });
@@ -110,11 +110,17 @@ describe('tcr-main-module spell class flag filtering', () => {
     expect(result.length).toBe(5);
   });
 
-  it('should return all spells (no filtering) when no class UUIDs are known', () => {
-    // When classUuidsToCheck is empty we include all spells rather than showing nothing
+  it('should return only unrestricted spells when no class UUIDs are known', () => {
+    // When classUuidsToCheck is empty we include only unrestricted spells
     const result = filterSpellsByTCRFlag(mockSpells, []);
-    const spells = result.filter(d => d.type === 'spell');
-    expect(spells.length).toBe(mockSpells.filter(d => d.type === 'spell').length);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Guidance');       // No TCR flag
+    expect(names).toContain('Sacred Flame');   // Empty flag object
+    expect(names).not.toContain('Fireball');   // Restricted to Wizard
+    expect(names).not.toContain('Magic Missile'); // Restricted to Wizard
+    expect(names).not.toContain('Cure Wounds'); // Restricted to Cleric/Bard
+    expect(names).not.toContain('Evocation Special'); // Restricted to subclass
+    expect(result.length).toBe(2);
   });
 
   it('should treat spells with no TCR flag as unrestricted (available to all classes)', () => {
