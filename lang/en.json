@@ -223,7 +223,7 @@
       },
       "FilterPackSourcesAppropriatelyByName": {
         "Name": "Filter Pack Sources Appropriately by Name",
-        "Hint": "If enabled, the Source sections will only include packs that have a name, path, id, or label that matches the source type"
+        "Hint": "If enabled, the Source sections will only include packs that have a name, path, id, or label that matches the source type. E.g. a spell items compendium titled 'Spell emporium' would be shown in the Spells sources section but not in other sources sections."
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "Force D&D5e Level Up Automation",
@@ -616,6 +616,13 @@
       "Select": "Select Feat",
       "Cancel": "Cancel",
       "ShowIneligible": "Show ineligible feats"
+    },
+    "Import": {
+      "Method": "Import Method",
+      "FromFile": "From File",
+      "FromText": "From Text",
+      "JSONText": "JSON Text",
+      "NoJSONProvided": "No JSON text provided"
     },
     "SpellSchool": {
       "abj": "Abjuration",

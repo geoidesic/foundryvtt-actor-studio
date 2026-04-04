@@ -223,7 +223,7 @@
       },
       "FilterPackSourcesAppropriatelyByName": {
         "Name": "按名稱適當篩選資料包來源",
-        "Hint": "如果啟用，來源區段將僅包含具有與來源類型相符的名稱、路徑、ID或標籤的資料包"
+        "Hint": "如果啟用，來源區段將僅包含具有與來源類型相符的名稱、路徑、ID或標籤的資料包。例如：標題為 'Spell emporium' 的法術物品彙編將顯示在法術來源區段中，但不會顯示在其他來源區段中。"
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "強制D&D5e升級自動化",
@@ -616,6 +616,13 @@
       "Select": "選擇專長",
       "Cancel": "取消",
       "ShowIneligible": "顯示不符資格的專長"
+    },
+    "Import": {
+      "Method": "匯入方法",
+      "FromFile": "從檔案",
+      "FromText": "從文字",
+      "JSONText": "JSON文字",
+      "NoJSONProvided": "未提供JSON文字"
     },
     "SpellSchool": {
       "abj": "防護系",

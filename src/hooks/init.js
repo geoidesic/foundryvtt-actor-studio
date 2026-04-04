@@ -8,6 +8,7 @@ import SpellListsPlugin from '~/src/plugins/spell-lists';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
 import CompendiumSourcesButton from '~/src/settings/CompendiumSourcesButton.js';
 import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
+import { initItemContextOptions } from '~/src/hooks/itemContextOptions.js';
 import packageJson from '../../package.json';
 import manifestJson from '../../module.json';
 
@@ -59,6 +60,7 @@ export const init = (app, html, data) => {
   initLevelup();
   registerSettings(app);
   initEquipmentPurchase(); // Initialize the new feature
+  initItemContextOptions(); // Initialize custom item import dialog
   
   // Initialize workflow FSM to ensure it's available on window.GAS for debugging
   try {

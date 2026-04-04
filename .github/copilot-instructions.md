@@ -40,6 +40,7 @@
   - Text content: Inline with elements, e.g., `button(type="button") Text`
 - Avoid long expressions in attributes - extract to script functions
 - ESM-only project - never use `require()`, always `import`
+- **i18n**: Always use `localize()` from `~/src/helpers/Utility` for GAS-namespaced strings — pass the key **without** the `GAS.` prefix (e.g. `localize("Footer.Cancel")`). Only fall back to `game.i18n.localize` / `game.i18n.format` for core Foundry keys that are not in the GAS namespace (e.g. `"DOCUMENT.ImportData"`).
 
 **State Machine (Finity v0.5.4) - CRITICAL API PATTERNS**:
 - **ASYNC OPERATIONS**: Only `.do()` method on states supports async functions - NEVER use `.onEnter()` for async

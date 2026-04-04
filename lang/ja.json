@@ -223,7 +223,7 @@
       },
       "FilterPackSourcesAppropriatelyByName": {
         "Name": "名前でパックソースを適切にフィルタ",
-        "Hint": "有効にすると、ソースセクションにはソースタイプに一致する名前、パス、ID、またはラベルを持つパックのみが含まれます"
+        "Hint": "有効にすると、ソースセクションにはソースタイプに一致する名前、パス、ID、またはラベルを持つパックのみが含まれます。例: 'Spell emporium' というタイトルの呪文アイテムコンペンディウムは、呪文ソースセクションに表示されますが、他のソースセクションには表示されません。"
       },
       "forceDnd5eLevelUpAutomation": {
         "Name": "D&D5eのレベルアップ自動化を強制",
@@ -616,6 +616,13 @@
       "Select": "特技を選択",
       "Cancel": "キャンセル",
       "ShowIneligible": "不適格な特技を表示"
+    },
+    "Import": {
+      "Method": "インポート方法",
+      "FromFile": "ファイルから",
+      "FromText": "テキストから",
+      "JSONText": "JSONテキスト",
+      "NoJSONProvided": "JSONテキストが提供されていません"
     },
     "SpellSchool": {
       "abj": "防御術",
