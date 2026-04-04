@@ -1059,14 +1059,10 @@ export async function loadAvailableSpells(characterClassName = null) {
           const allDocs = await pack.getDocuments();
           window.GAS.log.d(`[SPELLS DEBUG] Loaded ${allDocs.length} documents from ${pack.collection}`);
 
-          // Filter by donation tracker permissions
-          const dtFilteredDocs = filterDocumentsByDT(pack, allDocs);
-          window.GAS.log.d(`[SPELLS DEBUG] After DT filtering: ${dtFilteredDocs.length} documents from ${pack.collection}`);
-
           const filteredSpells = [];
 
           // Filter by class and convert to our format
-          for (const doc of dtFilteredDocs) {
+          for (const doc of allDocs) {
             if (doc.type === "spell") {
               // window.GAS.log.d(`[SPELLS DEBUG] Checking spell: ${doc.name}`);
               // Check multiple possible locations for class information
