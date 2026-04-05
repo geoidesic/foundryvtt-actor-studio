@@ -9,9 +9,9 @@ const clericConfig = {
   spellProgressionTOON: {
     format: 'TOON-1',
     levels: {
-      1: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 4, maxSpellLevel: 1 } },
-      2: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 5, maxSpellLevel: 1 } },
-      3: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 2 }, '2024': { cantrips: 3, spells: 6, maxSpellLevel: 2 } }
+      1: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 'All', maxSpellLevel: 1 } },
+      2: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 'All', maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 3, spells: 'All', maxSpellLevel: 2 }, '2024': { cantrips: 3, spells: 'All', maxSpellLevel: 2 } }
     }
   }
 };
