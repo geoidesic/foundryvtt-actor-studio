@@ -237,10 +237,17 @@ export function getLevelByDropType(actor, droppedItem) {
   // window.GAS.log.d('getLevelByDropType', droppedItem);
   // window.GAS.log.d('actor', actor);
   switch (droppedItem.type) {
-    case 'class':
-      return actor.classes[droppedItem.system.identifier].system.levels
-    case 'subclass':
-      return actor.classes[droppedItem.system.classIdentifier].system.levels
+    case 'class': {
+      const actorClass = actor.classes[droppedItem.system.identifier];
+      // New multiclass: the actor doesn't have this class yet, so it starts at level 1
+      if (!actorClass) return 1;
+      return actorClass.system.levels;
+    }
+    case 'subclass': {
+      const actorClass = actor.classes[droppedItem.system.classIdentifier];
+      if (!actorClass) return 1;
+      return actorClass.system.levels;
+    }
     case 'race':
     case 'background':
     default:

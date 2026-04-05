@@ -370,7 +370,7 @@ $: if($classUuidForLevelUp) {
  * Filters class advancements for the current level
  * Maps advancement data to include IDs for component rendering
  */
-   $: if ($levelUpClassObject?.system?.advancement.length) {
+   $: if ($levelUpClassObject?.system?.advancement.size) {
     classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel[newLevel]
   } else {
     classAdvancementArrayFiltered = [];
