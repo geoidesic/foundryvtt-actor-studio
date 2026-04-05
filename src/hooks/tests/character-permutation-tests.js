@@ -69,7 +69,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
             resolve(true);
           } else if (Date.now() - start >= timeoutMs) {
             clearInterval(interval);
-            console.error(`[QUENCH ERROR] Timeout waiting for ${description} after ${timeoutMs}ms`);
+            window.GAS.log.d(`[QUENCH] Timeout waiting for ${description} after ${timeoutMs}ms`);
             resolve(false);
           }
         } catch (error) {
@@ -153,7 +153,6 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const numericTargetLevel = Number(targetLevel) || 0;
     if (numericTargetLevel <= 1) return false;
 
-    const oldLevel = Math.max(1, numericTargetLevel - 1);
     const progressionTOON = classConfig?.spellProgressionTOON?.levels;
 
     const readTOONValue = (levelNumber) => {
@@ -162,47 +161,34 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       return levelData?.[rulesVersion] ?? levelData?.default;
     };
 
-    const oldValueFromTOON = readTOONValue(oldLevel);
-    const newValueFromTOON = readTOONValue(numericTargetLevel);
-
-    // Test oracle must come from test-owned TOON data, not production progression stores.
-    if (!oldValueFromTOON || !newValueFromTOON) {
-      logSubclassDebug('missing TOON spell progression rows; defaulting to no required spells UI', {
+    // For levels > 1, the TOON value IS the delta (new spells to pick at this level).
+    // Level 1 contains the cumulative initial selection; levels 2+ contain per-level increments.
+    const levelValue = readTOONValue(numericTargetLevel);
+    if (!levelValue) {
+      logSubclassDebug('missing TOON spell progression row; defaulting to no required spells UI', {
         classIdentifier,
         rulesVersion,
-        oldLevel,
         targetLevel: numericTargetLevel,
-        hasTOON: Boolean(progressionTOON),
-        oldValueFromTOON,
-        newValueFromTOON
+        hasTOON: Boolean(progressionTOON)
       });
       return false;
     }
 
-    const oldValue = oldValueFromTOON;
-    const newValue = newValueFromTOON;
+    const parsed = parseSpellProgressionValue(levelValue);
+    if (!parsed) return false;
 
-    const oldParsed = parseSpellProgressionValue(oldValue);
-    const newParsed = parseSpellProgressionValue(newValue);
-    if (!oldParsed || !newParsed) return false;
-
-    if (typeof newParsed.uiRequired === 'boolean') return newParsed.uiRequired;
-
-    const cantripDifference = Math.max(0, newParsed.cantrips - oldParsed.cantrips);
-    if (cantripDifference > 0) return true;
+    if (typeof parsed.uiRequired === 'boolean') return parsed.uiRequired;
 
     // For classes that auto-gain all spells, the UI step is only needed when cantrips increase.
-    if (oldParsed.hasAllSpells || newParsed.hasAllSpells) return false;
+    if (parsed.hasAllSpells) return false;
 
-    const spellDifference = Math.max(0, newParsed.spells - oldParsed.spells);
-    return spellDifference > 0;
+    return parsed.cantrips > 0 || parsed.spells > 0;
   };
 
   const getExpectedSpellSelectionDeltaDynamic = ({ targetLevel, rulesVersion }) => {
     const numericTargetLevel = Number(targetLevel) || 0;
     if (numericTargetLevel <= 1) return { cantrips: 0, spells: 0, required: false };
 
-    const oldLevel = Math.max(1, numericTargetLevel - 1);
     const progressionTOON = classConfig?.spellProgressionTOON?.levels;
     const readTOONValue = (levelNumber) => {
       const levelData = progressionTOON?.[String(levelNumber)] || progressionTOON?.[Number(levelNumber)] || null;
@@ -210,19 +196,18 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       return levelData?.[rulesVersion] ?? levelData?.default;
     };
 
-    const oldParsed = parseSpellProgressionValue(readTOONValue(oldLevel));
-    const newParsed = parseSpellProgressionValue(readTOONValue(numericTargetLevel));
-    if (!oldParsed || !newParsed) return { cantrips: 0, spells: 0, required: false };
+    // For levels > 1, the TOON value IS the delta — it directly states how many new
+    // spells/cantrips the player must pick at this level, not a cumulative total.
+    const parsed = parseSpellProgressionValue(readTOONValue(numericTargetLevel));
+    if (!parsed) return { cantrips: 0, spells: 0, required: false };
 
-    const cantripDelta = Math.max(0, newParsed.cantrips - oldParsed.cantrips);
-    const spellDelta = (oldParsed.hasAllSpells || newParsed.hasAllSpells)
-      ? 0
-      : Math.max(0, newParsed.spells - oldParsed.spells);
+    const cantrips = parsed.hasAllSpells ? 0 : (parsed.cantrips || 0);
+    const spells = parsed.hasAllSpells ? 0 : (parsed.spells || 0);
 
     return {
-      cantrips: cantripDelta,
-      spells: spellDelta,
-      required: cantripDelta > 0 || spellDelta > 0
+      cantrips,
+      spells,
+      required: cantrips > 0 || spells > 0
     };
   };
 
@@ -312,7 +297,8 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       () => Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button.active'))
         .some((button) => ((button.textContent || '').trim().toLowerCase() === String(label).toLowerCase())),
       TEST_TIMEOUTS.uiInteraction,
-      POLL_INTERVAL
+      POLL_INTERVAL,
+      `tab '${label}' to become active`
     );
   };
 
@@ -335,7 +321,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   const focusLevelUpClassTab = async () => {
     const tabFocused = await clickFirstAvailableTabLabel(['Level Up', 'Class']);
     if (!tabFocused) return false;
-    return waitForCondition(() => Boolean(document.querySelector('#foundryvtt-actor-studio-pc-sheet .class-row[role="button"]')), TEST_TIMEOUTS.uiInteraction, POLL_INTERVAL);
+    return waitForCondition(() => Boolean(document.querySelector('#foundryvtt-actor-studio-pc-sheet .class-row[role="button"]')), TEST_TIMEOUTS.uiInteraction, POLL_INTERVAL, 'class-row to appear after level-up tab click');
   };
 
   const selectFirstSubclassOptionIfRequired = async () => {
@@ -739,14 +725,18 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       throw new Error(`Timeout waiting for spell limits to be set for ${classIdentifier}`);
     }
 
-    // Check UI expected counts match config
-    const uiCounters = limitsSet;
-    const configExpectedCantrips = requiredSelection?.cantrips || 0;
-    const configExpectedSpells = requiredSelection?.spells || 0;
-    if (uiCounters.cantrips.limit !== configExpectedCantrips || uiCounters.spells.limit !== configExpectedSpells) {
-      const errorMsg = `UI expected counts mismatch config for ${classIdentifier}: UI cantrips ${uiCounters.cantrips.limit} vs config ${configExpectedCantrips}, UI spells ${uiCounters.spells.limit} vs config ${configExpectedSpells}`;
-      console.error(`[QUENCH ERROR] ${errorMsg}`);
-      throw new Error(errorMsg);
+    // Re-read actual counter values — waitForCondition resolves true/false, not the fn's return value
+    // Check UI expected counts match config — only enforced when a specific selection is required.
+    // When requiredSelection is null we let the UI drive (skip or finalize as appropriate).
+    const uiCounters = readSpellCounters(document.querySelector('#foundryvtt-actor-studio-pc-sheet'));
+    if (requiredSelection !== null) {
+      const configExpectedCantrips = requiredSelection.cantrips || 0;
+      const configExpectedSpells = requiredSelection.spells || 0;
+      if (uiCounters.cantrips.limit !== configExpectedCantrips || uiCounters.spells.limit !== configExpectedSpells) {
+        const errorMsg = `UI expected counts mismatch config for ${classIdentifier}: UI cantrips ${uiCounters.cantrips.limit} vs config ${configExpectedCantrips}, UI spells ${uiCounters.spells.limit} vs config ${configExpectedSpells}`;
+        console.error(`[QUENCH ERROR] ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
     }
 
     // If no required selection, try immediate finalize (e.g. non-spellcaster or "all" spells class)

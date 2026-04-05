@@ -10,8 +10,8 @@ const wizardConfig = {
     format: 'TOON-1',
     levels: {
       1: { '2014': { cantrips: 3, spells: 6, maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 6, maxSpellLevel: 1 } },
-      2: { '2014': { cantrips: 3, spells: 8, maxSpellLevel: 1 }, '2024': { cantrips: 3, spells: 8, maxSpellLevel: 1 } },
-      3: { '2014': { cantrips: 3, spells: 10, maxSpellLevel: 2 }, '2024': { cantrips: 3, spells: 10, maxSpellLevel: 2 } }
+      2: { '2014': { cantrips: 0, spells: 2, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 2, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 0, spells: 2, maxSpellLevel: 2 }, '2024': { cantrips: 0, spells: 2, maxSpellLevel: 2 } }
     }
   }
 };
