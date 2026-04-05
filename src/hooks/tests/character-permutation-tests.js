@@ -731,7 +731,9 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const uiCounters = readSpellCounters(document.querySelector('#foundryvtt-actor-studio-pc-sheet'));
     if (requiredSelection !== null) {
       const configExpectedCantrips = requiredSelection.cantrips || 0;
-      const configExpectedSpells = requiredSelection.spells || 0;
+      // For "All" spells classes (prepared casters), the expected spell count is whatever
+      // the UI reports as available — any non-zero limit is valid and all must be finalised.
+      const configExpectedSpells = requiredSelection.hasAllSpells === true ? uiCounters.spells.limit : (requiredSelection.spells || 0);
       if (uiCounters.cantrips.limit !== configExpectedCantrips || uiCounters.spells.limit !== configExpectedSpells) {
         const errorMsg = `UI expected counts mismatch config for ${classIdentifier}: UI cantrips ${uiCounters.cantrips.limit} vs config ${configExpectedCantrips}, UI spells ${uiCounters.spells.limit} vs config ${configExpectedSpells}`;
         console.error(`[QUENCH ERROR] ${errorMsg}`);
@@ -1013,7 +1015,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       const level1Raw = level1TOONEntry?.[rulesVersion] ?? level1TOONEntry?.default;
       const level1Parsed = level1Raw ? parseSpellProgressionValue(level1Raw) : null;
       const creationRequiredSelection = (level1Parsed && (level1Parsed.cantrips > 0 || (level1Parsed.spells > 0 && !level1Parsed.hasAllSpells)))
-        ? { cantrips: level1Parsed.cantrips, spells: level1Parsed.spells }
+        ? { cantrips: level1Parsed.cantrips, spells: level1Parsed.spells, hasAllSpells: level1Parsed.hasAllSpells === true }
         : null;
       logSubclassDebug('creation spell required selection', { rulesVersion, level1Raw, creationRequiredSelection });
 
