@@ -18,12 +18,34 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     throw new Error(`Character permutation tests require complete config for ${classIdentifier}`);
   }
 
+  const DEBUG_MODE = ['sorcerer', 'artificer'].includes(classIdentifier); // Only debug failing classes
+
   const TEST_TIMEOUTS = getTestTimeouts();
-  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const POLL_INTERVAL = TEST_TIMEOUTS.pollingInterval;
   const WAIT_SHORT = TEST_TIMEOUTS.waitShort;
   const WAIT_MEDIUM = TEST_TIMEOUTS.waitMedium;
   const WAIT_LONG = TEST_TIMEOUTS.waitLong;
+
+  // ── Abort support ──────────────────────────────────────────────────────
+  // Quench sets runner._abort = true when the user clicks "Abort".
+  // globalThis._gasQuenchIsAborted is wired in src/index.js during quenchReady.
+  const isAborted = () => typeof globalThis._gasQuenchIsAborted === 'function' && globalThis._gasQuenchIsAborted();
+
+  class AbortError extends Error {
+    constructor() { super('Test run aborted by user'); this.name = 'AbortError'; }
+  }
+
+  /** Throw AbortError if the Quench run has been aborted. */
+  const checkAbort = () => { if (isAborted()) throw new AbortError(); };
+
+  /** Abort-aware delay. Rejects with AbortError if abort is signalled while waiting. */
+  const wait = (ms) => new Promise((resolve, reject) => {
+    if (isAborted()) { reject(new AbortError()); return; }
+    const timer = setTimeout(() => { clearInterval(poller); resolve(); }, ms);
+    const poller = setInterval(() => {
+      if (isAborted()) { clearTimeout(timer); clearInterval(poller); reject(new AbortError()); }
+    }, Math.min(ms, POLL_INTERVAL));
+  });
 
   let savedDebugState = {};
   let originalMilestoneLeveling = false;
@@ -32,21 +54,36 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   let classActor = null;
   const testActorName = `Quench ${classConfig.displayName} Automation ${Date.now()}`;
 
-  const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.uiInteraction, intervalMs = TEST_TIMEOUTS.pollingInterval) => {
-    const start = Date.now();
-    while (Date.now() - start < timeoutMs) {
-      try {
-        if (await fn()) return true;
-      } catch (error) {
-        // Keep polling until timeout.
-      }
-      await wait(intervalMs);
-    }
-    return false;
+  const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.uiInteraction, intervalMs = TEST_TIMEOUTS.pollingInterval, description = 'condition') => {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const interval = setInterval(async () => {
+        if (isAborted()) {
+          clearInterval(interval);
+          reject(new AbortError());
+          return;
+        }
+        try {
+          if (await fn()) {
+            clearInterval(interval);
+            resolve(true);
+          } else if (Date.now() - start >= timeoutMs) {
+            clearInterval(interval);
+            console.error(`[QUENCH ERROR] Timeout waiting for ${description} after ${timeoutMs}ms`);
+            resolve(false);
+          }
+        } catch (error) {
+          clearInterval(interval);
+          reject(error);
+        }
+      }, intervalMs);
+    });
   };
 
   const logSubclassDebug = (...args) => {
-    console.log('[QUENCH subclass]', ...args);
+    if (DEBUG_MODE) {
+      console.log('[QUENCH subclass]', ...args);
+    }
   };
 
   const parseSpellProgressionValue = (value) => {
@@ -199,6 +236,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
 
     let attempts = 0;
     while (document.querySelector('#foundryvtt-actor-studio-pc-sheet') && attempts < 20) {
+      checkAbort();
       await wait(WAIT_SHORT);
       attempts++;
     }
@@ -491,7 +529,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         || Array.from(document.querySelectorAll(`${root} .footer-container .button-container button`))
           .some((button) => (button.textContent || '').toLowerCase().includes('finalize'))
       );
-    }, TEST_TIMEOUTS.spellWorkflow, POLL_INTERVAL);
+    }, TEST_TIMEOUTS.spellWorkflow, POLL_INTERVAL, 'spells tab to load');
   };
 
   const parseCounterValue = (valueText = '') => {
@@ -504,6 +542,38 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const readSpellCounters = (root) => {
+    // Try spells-tab grid first (visible in tests)
+    const spellsTabGrid = root.querySelector('.spells-tab .panel-header-grid');
+    if (spellsTabGrid) {
+      const items = spellsTabGrid.querySelectorAll('.grid-item.value');
+      if (items.length >= 2) {
+        const cantripText = items[0].textContent;
+        const spellText = items[1].textContent;
+
+        const cantripMatch = cantripText.match(/(\d+)\/(\d+)/);
+        const spellMatch = spellText.match(/(\d+)\/(\d+)/);
+
+        const cantrips = cantripMatch ? { current: parseInt(cantripMatch[1]), limit: parseInt(cantripMatch[2]) } : { current: 0, limit: 0 };
+        const spells = spellMatch ? { current: parseInt(spellMatch[1]), limit: parseInt(spellMatch[2]) } : { current: 0, limit: 0 };
+
+        return { cantrips, spells };
+      }
+    }
+
+    // Fallback to panel-header-grid (sticky header)
+    const panelGridItems = Array.from(root.querySelectorAll('.panel-header-grid .grid-item'));
+    if (panelGridItems.length >= 4) {
+      const selectedCantrips = Number(panelGridItems[0]?.textContent?.trim()) || 0;
+      const expectedCantrips = Number(panelGridItems[1]?.textContent?.trim()) || 0;
+      const selectedSpells = Number(panelGridItems[2]?.textContent?.trim()) || 0;
+      const expectedSpells = Number(panelGridItems[3]?.textContent?.trim()) || 0;
+      return {
+        cantrips: { current: selectedCantrips, limit: expectedCantrips },
+        spells: { current: selectedSpells, limit: expectedSpells }
+      };
+    }
+
+    // Fallback to existing logic
     const labels = Array.from(root.querySelectorAll('.spells-tab-container .grid-item.label'));
     const values = Array.from(root.querySelectorAll('.spells-tab-container .grid-item.value'));
 
@@ -543,8 +613,9 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const logSpellStepDiagnostics = (stage, root = document.querySelector('#foundryvtt-actor-studio-pc-sheet')) => {
+    if (!DEBUG_MODE) return; // Skip diagnostics unless debugging
     if (!root) {
-      logSubclassDebug(`[spells diagnostics] ${stage}: actor studio root missing`);
+      console.error(`[QUENCH ERROR] [spells diagnostics] ${stage}: actor studio root missing`);
       return;
     }
 
@@ -567,7 +638,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const selectedSpellRows = root.querySelectorAll('.selected-spells .selected-spell').length;
     const availableSpellRows = root.querySelectorAll('.spell-level-group .spell-row').length;
 
-    logSubclassDebug(`[spells diagnostics] ${stage}`, {
+    console.log(`[QUENCH DEBUG] [spells diagnostics] ${stage}`, {
       activeTab,
       tabs,
       counters,
@@ -631,15 +702,22 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   const completeSpellsStepIfVisible = async ({ timeoutMs = TEST_TIMEOUTS.spellWorkflow, allowSkip = true, requiredSelection = null } = {}) => {
     const allTabs = Array.from(document.querySelectorAll('#foundryvtt-actor-studio-pc-sheet .tabs-list button')).map((button) => (button.textContent || '').trim());
     logSubclassDebug('checking for spells tab, all tabs:', allTabs);
-    const spellsVisible = await waitForCondition(() => hasSpellsTabVisible() || hasSpellUiVisible(), timeoutMs, POLL_INTERVAL);
+    const spellsVisible = await waitForCondition(() => hasSpellsTabVisible() || hasSpellUiVisible(), timeoutMs, POLL_INTERVAL, 'spells tab or UI to be visible');
     if (!spellsVisible) {
-      logSubclassDebug('spells tab not visible and spell UI not present');
+      console.error(`[QUENCH ERROR] Spells UI not visible for ${classIdentifier}`);
       return { visible: false, completed: false, finalCounters: { spells: { current: 0, limit: 0 }, cantrips: { current: 0, limit: 0 } } };
     }
 
     if (hasSpellsTabVisible()) {
       logSubclassDebug('spells tab visible, clicking Spells tab');
       await clickTabByLabel('Spells');
+
+      // Trigger scroll to show sticky header
+      const spellsTabContent = document.querySelector('#foundryvtt-actor-studio-pc-sheet .spells-tab');
+      if (spellsTabContent) {
+        spellsTabContent.scrollTop = 10;
+        spellsTabContent.dispatchEvent(new Event('scroll', { bubbles: true }));
+      }
     } else {
       logSubclassDebug('spells tab button missing but spell UI is present; continuing with direct UI automation');
     }
@@ -652,12 +730,32 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
 
     logSpellStepDiagnostics('spells tab actionable');
 
+    // Wait for spell limits to be set correctly
+    const limitsSet = await waitForCondition(() => {
+      const uiCounters = readSpellCounters(document.querySelector('#foundryvtt-actor-studio-pc-sheet'));
+      return (uiCounters.cantrips.limit > 0 || uiCounters.spells.limit > 0) ? uiCounters : null;
+    }, TEST_TIMEOUTS.spellUiLoad, POLL_INTERVAL, 'Spell limits to be set');
+    if (!limitsSet) {
+      throw new Error(`Timeout waiting for spell limits to be set for ${classIdentifier}`);
+    }
+
+    // Check UI expected counts match config
+    const uiCounters = limitsSet;
+    const configExpectedCantrips = requiredSelection?.cantrips || 0;
+    const configExpectedSpells = requiredSelection?.spells || 0;
+    if (uiCounters.cantrips.limit !== configExpectedCantrips || uiCounters.spells.limit !== configExpectedSpells) {
+      const errorMsg = `UI expected counts mismatch config for ${classIdentifier}: UI cantrips ${uiCounters.cantrips.limit} vs config ${configExpectedCantrips}, UI spells ${uiCounters.spells.limit} vs config ${configExpectedSpells}`;
+      console.error(`[QUENCH ERROR] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
     // If no required selection, try immediate finalize (e.g. non-spellcaster or "all" spells class)
     if (!requiredSelection || (requiredSelection.cantrips === 0 && requiredSelection.spells === 0)) {
       const finalizedImmediately = await waitForCondition(
         () => clickFinalizeButton() || clickFooterButtonContaining('finalize'),
         TEST_TIMEOUTS.uiInteraction,
-        POLL_INTERVAL
+        POLL_INTERVAL,
+        'immediate finalize button'
       );
       if (finalizedImmediately) {
         return { visible: true, completed: true, finalCounters: { spells: { current: 0, limit: 0 }, cantrips: { current: 0, limit: 0 } } };
@@ -666,7 +764,8 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         const skipped = await waitForCondition(
           () => clickFooterButtonContaining('skip') || clickFooterButtonContaining('continue'),
           TEST_TIMEOUTS.uiInteraction,
-          POLL_INTERVAL
+          POLL_INTERVAL,
+          'skip button'
         );
         return { visible: true, completed: skipped, finalCounters: { spells: { current: 0, limit: 0 }, cantrips: { current: 0, limit: 0 } } };
       }
@@ -688,7 +787,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       for (const header of headers) {
         logSubclassDebug('expanding collapsed group', String(header.textContent || '').replace(/\s+/g, ' ').trim());
         header.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-        await wait(WAIT_SHORT);
+        await wait(WAIT_MEDIUM);
       }
       return headers.length;
     };
@@ -696,9 +795,20 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     // Helper: click N add-btn buttons within groups matching a header predicate
     const selectFromGroup = async (root, count, headerMatchFn) => {
       let selected = 0;
-      const deadline = Date.now() + TEST_TIMEOUTS.uiStateChange;
+      const deadline = Date.now() + TEST_TIMEOUTS.spellWorkflow;
+
+      // Log initial state
+      const allGroups = Array.from(root.querySelectorAll('.spell-level-group'));
+      const matchingGroups = allGroups.filter((group) => {
+        const headerText = String(group.querySelector('.spell-level-header')?.textContent || '').toLowerCase();
+        return headerMatchFn(headerText);
+      });
+      const totalAddButtons = matchingGroups.reduce((sum, group) => sum + group.querySelectorAll('button.add-btn').length, 0);
+      const enabledAddButtons = matchingGroups.reduce((sum, group) => sum + group.querySelectorAll('button.add-btn:not([disabled])').length, 0);
+      logSubclassDebug('selectFromGroup initial state', { count, matchingGroups: matchingGroups.length, totalAddButtons, enabledAddButtons });
 
       while (selected < count && Date.now() < deadline) {
+        checkAbort();
         const currentRoot = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
         if (!currentRoot) break;
 
@@ -717,14 +827,14 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
 
         if (!targetButton) {
           logSubclassDebug('no add button found in any matching group, waiting', { selected, count });
-          await wait(WAIT_SHORT);
+          await wait(WAIT_MEDIUM);
           continue;
         }
 
         targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
         selected++;
         logSubclassDebug('clicked add button', { selected, count });
-        await wait(WAIT_SHORT);
+        await wait(WAIT_MEDIUM);
       }
 
       logSubclassDebug('group selection complete', { selected, required: count });
@@ -759,22 +869,26 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const finalized = await waitForCondition(
       () => clickFinalizeButton() || clickFooterButtonContaining('finalize'),
       TEST_TIMEOUTS.uiStateChange,
-      POLL_INTERVAL
+      POLL_INTERVAL,
+      'finalize button after spell selection'
     );
 
     if (finalized) {
       const closedAfterFinalize = await waitForCondition(
         () => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'),
         TEST_TIMEOUTS.appClosure,
-        POLL_INTERVAL
+        POLL_INTERVAL,
+        'app to close after finalize'
       );
       const finalCounters = { cantrips: { current: cantripsSelected, limit: requiredCantrips }, spells: { current: spellsSelected, limit: requiredSpells } };
       if (closedAfterFinalize) {
         return { visible: true, completed: true, finalCounters };
       }
+      console.warn(`[QUENCH WARN] App finalized but did not close for ${classIdentifier}`);
       return { visible: true, completed: true, finalCounters };
     }
 
+    console.error(`[QUENCH ERROR] Finalize button not available after spell selection for ${classIdentifier}`);
     logSpellStepDiagnostics('finalize button unavailable after selection');
 
     if (!allowSkip) {
@@ -788,8 +902,11 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         '#foundryvtt-actor-studio-pc-sheet .footer-container .button-container .secondary'
       ];
       return selectors.some((selector) => clickFooterButtonBySelector(selector)) || clickFooterButtonContaining('skip') || clickFooterButtonContaining('continue');
-    }, TEST_TIMEOUTS.uiInteraction, POLL_INTERVAL);
+    }, TEST_TIMEOUTS.uiInteraction, POLL_INTERVAL, 'skip button');
 
+    if (!skipped) {
+      console.error(`[QUENCH ERROR] Skip button not available for ${classIdentifier}`);
+    }
     return { visible: true, completed: skipped, finalCounters: { cantrips: { current: cantripsSelected, limit: requiredCantrips }, spells: { current: spellsSelected, limit: requiredSpells } } };
   };
 
@@ -864,6 +981,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const runCreationTest = async () => {
+    checkAbort();
     await game.settings.set(MODULE_ID, 'allowManualInput', true);
     await game.settings.set(MODULE_ID, 'allowStandardArray', false);
     await game.settings.set(MODULE_ID, 'allowPointBuy', false);
@@ -935,6 +1053,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const runOpenLevelUpAppTest = async () => {
+    checkAbort();
     const actor = getCurrentActor();
     assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up tests`);
 
@@ -952,6 +1071,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const runLevelTest = async (targetLevel) => {
+    checkAbort();
     const actor = getCurrentActor();
     assert.ok(actor, `Existing created ${classIdentifier} actor should be available for level-up to ${targetLevel}`);
 
@@ -1092,8 +1212,9 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       assert.ok(spellStepResult.completed, `If spells UI appears for ${classIdentifier} level ${targetLevel}, it should complete`);
     }
 
-    const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.appLifecycleComplete, POLL_INTERVAL);
+    const appClosed = await waitForCondition(() => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'), TEST_TIMEOUTS.appLifecycleComplete, POLL_INTERVAL, 'level-up app to close');
     if (!appClosed) {
+      console.error(`[QUENCH ERROR] Level-up app did not close for ${classIdentifier} level ${targetLevel}`);
       logSpellStepDiagnostics(`level-up app did not close for ${classIdentifier} level ${targetLevel}`);
       const levelUpState = window.GAS?.levelUpFSM?.getCurrentState?.();
       logSubclassDebug('level-up close failure state snapshot', {

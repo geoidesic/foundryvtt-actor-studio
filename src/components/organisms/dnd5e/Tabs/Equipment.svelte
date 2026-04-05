@@ -13,9 +13,6 @@
   import { characterClass, characterSubClass, background, readOnlyTabs } from "~/src/stores/index";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
   import StartingGoldv4 from "~/src/components/molecules/dnd5e/v4/StartingGold.svelte";
-
-  export let sheet;
-  
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import EquipmentSelectorDetail from "~/src/components/molecules/dnd5e/EquipmentSelection/EquipmentSelectorDetail.svelte";
   import PlannedInventory from "~/src/components/molecules/dnd5e/EquipmentSelection/PlannedInventory.svelte";

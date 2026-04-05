@@ -18,7 +18,6 @@
   import Biography from "~/src/components/organisms/dnd5e/Tabs/Biography.svelte";
 
   export let tabs = [];
-  export let sheet;
   export let activeTab = void 0;
   export let efx = ripple();
 
@@ -82,7 +81,7 @@
         {:else if tab.component === 'Spells'}
           <svelte:component this={tabComponents[tab.component]} />
         {:else}
-          <svelte:component this={tabComponents[tab.component]} {sheet} />
+          <svelte:component this={tabComponents[tab.component]} />
         {/if}
       {/if}
     {/each}

@@ -4,7 +4,9 @@ globs: ["src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]
 alwaysApply: true
 ---
 
-- Never hard-code timeout or polling durations (for example `5000`, `20000`, `150`) in async waits, retries, or test assertions.
+- **ABSOLUTELY FORBIDDEN**: Never hard-code timeout or polling durations (for example `5000`, `20000`, `150`) in async waits, retries, or test assertions.
 - Always source timing values from settings-backed helpers or stores.
 - For Quench/integration tests, use `getTestTimeouts()` from `src/helpers/testTimeouts.js` and derive named constants from those settings.
 - If you need a different timing behavior, add a new setting-backed timeout key instead of introducing a literal millisecond value.
+- **NO EXCEPTIONS**: Even for "temporary" or "debug" code, use settings. Hardcoded values will be rejected in code review.
+- **FORBIDDEN: NO MODIFICATIONS** - Never modify timeout values with math, conditionals, or transformations (e.g., no `Math.max(timeout, 500)`, `timeout * 2`, or `timeout > 1000 ? timeout : 1000`). Use the exact value from settings. Adjust the setting if needed.

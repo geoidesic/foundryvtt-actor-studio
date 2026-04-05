@@ -606,13 +606,17 @@ export const spellLimits = derived(
 
     let normalizedClassName = resolvedClassName;
     if (looksLikeDocumentUuid(normalizedClassName)) {
-      normalizedClassName =
-        $levelUpClassObject?.system?.identifier
-        || $levelUpClassObject?.name
-        || $characterClass?.system?.identifier
-        || $characterClass?.name
-        || getFirstActorClassIdentifier()
-        || normalizedClassName;
+      const doc = fromUuidSync(normalizedClassName);
+      if (doc) {
+        normalizedClassName = doc.system?.identifier || doc.name || normalizedClassName;
+      } else {
+        // Fallback: extract identifier from UUID (e.g., 'sorcerer' from 'Compendium.dnd5e.classes.Item.sorcerer')
+        const uuidParts = normalizedClassName.split('.');
+        const potentialId = uuidParts[uuidParts.length - 1];
+        if (potentialId && potentialId !== 'Item') {
+          normalizedClassName = potentialId;
+        }
+      }
     }
 
     if (!normalizedClassName || !effectiveCharacterLevel) {

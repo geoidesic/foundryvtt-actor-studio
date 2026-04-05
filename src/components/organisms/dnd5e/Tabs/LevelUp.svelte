@@ -40,8 +40,6 @@ import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
 import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
 
-export let sheet;
-
 /** LOCAL VARIABLES */
 let 
   classValue = null,

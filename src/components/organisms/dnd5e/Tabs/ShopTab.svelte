@@ -14,7 +14,6 @@
   let loading = true;
   let cartItems = [];
 
-  export let sheet;
   let keywordFilter = ''; // Add variable for keyword filter
   let expandedCategories = {}; // Track which categories are expanded
 

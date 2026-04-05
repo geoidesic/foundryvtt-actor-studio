@@ -205,14 +205,14 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     if (quenchActive) {
       uiInteraction = 5000;
       uiStateChange = 20000;
-      spellUiLoad = 5000;
+      spellUiLoad = 7000;
       spellWorkflow = 30000;
       appClosure = 4000;
       appLifecycleComplete = 32000;
       advancementProcessing = 1500;
       advancementPostLevel = 3000;
       actorDataUpdate = 50000;
-      pollingInterval = 100;
+      pollingInterval = 500;
     }
   }
 </script>

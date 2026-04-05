@@ -10,8 +10,8 @@ const sorcererConfig = {
     format: 'TOON-1',
     levels: {
       1: { '2014': { cantrips: 4, spells: 2, maxSpellLevel: 1 }, '2024': { cantrips: 4, spells: 2, maxSpellLevel: 1 } },
-      2: { '2014': { cantrips: 4, spells: 3, maxSpellLevel: 1 }, '2024': { cantrips: 4, spells: 4, maxSpellLevel: 1 } },
-      3: { '2014': { cantrips: 4, spells: 4, maxSpellLevel: 2 }, '2024': { cantrips: 4, spells: 6, maxSpellLevel: 2 } }
+      2: { '2014': { cantrips: 0, spells: 1, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 2, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 0, spells: 1, maxSpellLevel: 2 }, '2024': { cantrips: 0, spells: 2, maxSpellLevel: 2 } }
     }
   }
 };

@@ -5,7 +5,23 @@ export function registerActorStudioTests(context) {
 
   const MODULE_ID = 'foundryvtt-actor-studio';
 
-  const wait = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
+  // ── Abort support ──────────────────────────────────────────────────────
+  const isAborted = () => typeof globalThis._gasQuenchIsAborted === 'function' && globalThis._gasQuenchIsAborted();
+
+  class AbortError extends Error {
+    constructor() { super('Test run aborted by user'); this.name = 'AbortError'; }
+  }
+
+  const ABORT_POLL_MS = 100;
+
+  /** Abort-aware delay. */
+  const wait = (ms = 100) => new Promise((resolve, reject) => {
+    if (isAborted()) { reject(new AbortError()); return; }
+    const timer = setTimeout(() => { clearInterval(poller); resolve(); }, ms);
+    const poller = setInterval(() => {
+      if (isAborted()) { clearTimeout(timer); clearInterval(poller); reject(new AbortError()); }
+    }, Math.min(ms, ABORT_POLL_MS));
+  });
 
   const activateActorsSidebar = async () => {
     if (ui.sidebar?.activateTab) {

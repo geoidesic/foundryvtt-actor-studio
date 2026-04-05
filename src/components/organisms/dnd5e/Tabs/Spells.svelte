@@ -15,7 +15,6 @@
   
   const actor = getContext("#doc");
   
-  export let sheet;
   let loading = true;
   let keywordFilter = '';
   let expandedLevels = {};

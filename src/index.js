@@ -26,6 +26,11 @@ Hooks.once("init", (app, html, data) => {
 
 // Register Quench tests — dynamic import so test code is never bundled for non-Quench users
 Hooks.on("quenchReady", async (quench) => {
+  // Expose abort-check function so test helpers can detect Quench abort without
+  // depending on Quench internals directly.  The runner reference is set by Quench
+  // when a batch run begins and cleared when it ends.
+  globalThis._gasQuenchIsAborted = () => Boolean(quench._currentRunner?._abort);
+
   console.log("Quench ready, registering Actor Studio test batches");
   const testBatchTimeout = Number(safeGetSetting(MODULE_ID, 'testTimeoutActorDataUpdate'));
   if (!Number.isFinite(testBatchTimeout) || testBatchTimeout <= 0) {

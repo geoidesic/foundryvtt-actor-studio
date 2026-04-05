@@ -16,8 +16,6 @@
 
 
   import { getContext, onDestroy, onMount, tick } from "svelte";
-
-  export let sheet;
   import {
     characterClass,
     characterSubClass,

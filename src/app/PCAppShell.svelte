@@ -360,7 +360,7 @@
     //- img(class="break-out" src="/modules/foundryvtt-actor-studio/assets/xmas-hat.webp" alt="icon")
     main
       section.a
-        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" sheet="PC" on:confirm!="{handleWealthChoiceConfirm}" on:edit!="{handleWealthChoiceEdit}")
+        Tabs.gas-tabs( tabs="{filteredTabs}" bind:activeTab="{$activeTab}" on:confirm!="{handleWealthChoiceConfirm}" on:edit!="{handleWealthChoiceEdit}")
 
       section.b
         Footer
