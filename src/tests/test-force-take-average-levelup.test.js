@@ -493,4 +493,78 @@ describe('forceTakeAverageHitPoints level-up fallback', () => {
     expect(rollClickEvent.defaultPrevented).toBe(true);
     expect(ui.notifications.error).toHaveBeenCalledWith('The Game Master has disabled this choice.');
   });
+
+  it('supports the v14 dnd5e 5.3 useAverage checkbox element', async () => {
+    const document = createDocument();
+    global.document = document;
+    global.window.document = document;
+
+    const actorStudioRoot = document.createElement('div');
+    actorStudioRoot.setAttribute('id', 'foundryvtt-actor-studio-pc-sheet');
+    const windowContent = document.createElement('div');
+    windowContent.setAttribute('class', 'window-content');
+    const main = document.createElement('main');
+    const section = document.createElement('section');
+    section.setAttribute('class', 'a');
+    const tabContent = document.createElement('div');
+    tabContent.setAttribute('class', 'tab-content');
+    const content = document.createElement('div');
+    content.setAttribute('class', 'content');
+    tabContent.appendChild(content);
+    section.appendChild(tabContent);
+    main.appendChild(section);
+    windowContent.appendChild(main);
+    actorStudioRoot.appendChild(windowContent);
+    document.body.appendChild(actorStudioRoot);
+
+    global.$ = vi.fn((input) => {
+      if (typeof input === 'string') {
+        return new JQueryWrapper(Array.from(document.querySelectorAll(input)));
+      }
+
+      if (input instanceof JQueryWrapper) {
+        return input;
+      }
+
+      if (input instanceof MockHTMLElement) {
+        return new JQueryWrapper([input]);
+      }
+
+      return new JQueryWrapper([]);
+    });
+
+    window.GAS.dnd5eVersion = 5.3;
+
+    const advancementRoot = document.createElement('div');
+    const useAverageCheckbox = document.createElement('dnd5e-checkbox');
+    const rollButton = document.createElement('button');
+    useAverageCheckbox.setAttribute('name', 'useAverage');
+    useAverageCheckbox.setAttribute('id', 'app-actor-test-advancement-useAverage');
+    rollButton.setAttribute('type', 'button');
+    rollButton.setAttribute('data-action', 'roll');
+    advancementRoot.appendChild(useAverageCheckbox);
+    advancementRoot.appendChild(rollButton);
+
+    currentProcessStore.value = {
+      id: 'levelup-hp-process-v14',
+      app: {
+        element: advancementRoot,
+        step: {
+          flow: {
+            advancement: {
+              type: 'ScaleValue',
+              title: 'Class Advancement',
+              hint: 'Choose how to apply your level increase'
+            }
+          }
+        }
+      }
+    };
+
+    const module = await import('../hooks/captureAdvancement.js');
+    module.captureAdvancement();
+
+    expect(useAverageCheckbox.checked).toBe(true);
+    expect(useAverageCheckbox.getAttribute('checked')).toBe('checked');
+  });
 });

@@ -49,6 +49,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   });
 
   let savedDebugState = {};
+  let originalEnableLevelUp = true;
   let originalMilestoneLeveling = false;
   let originalForceTakeAverageHitPoints = false;
   let classActorId = null;
@@ -865,7 +866,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     return actorFromName;
   };
 
-  const beforeAll = function () {
+  const beforeAll = async function () {
     window.GAS = window.GAS || {};
     savedDebugState = {};
     for (const key of DEBUG_ROOT_KEYS) {
@@ -874,24 +875,34 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
         delete window.GAS[key];
       }
     }
+    originalEnableLevelUp = safeGetSetting(MODULE_ID, 'enableLevelUp', true);
     originalMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
     originalForceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
+
+    await game.settings.set(MODULE_ID, 'enableLevelUp', true);
+    await game.settings.set(MODULE_ID, 'milestoneLeveling', true);
+    await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', true);
   };
 
   const afterAll = async function () {
     this.timeout(TEST_TIMEOUTS.perTest);
-    if (window?.GAS?.quenchAutomation) delete window.GAS.quenchAutomation;
-    await closeActorStudioIfOpen();
-    const actorToCleanup = classActorId ? game.actors.get(classActorId) : (classActor || findActorByName());
+
     try {
-      await actorToCleanup?.sheet?.close?.();
-    } catch (error) {
-      // ignore
+      if (window?.GAS?.quenchAutomation) delete window.GAS.quenchAutomation;
+      await closeActorStudioIfOpen();
+      const actorToCleanup = classActorId ? game.actors.get(classActorId) : (classActor || findActorByName());
+      try {
+        await actorToCleanup?.sheet?.close?.();
+      } catch (error) {
+        // ignore
+      }
+      if (actorToCleanup && !actorToCleanup.deleted) await actorToCleanup.delete();
+    } finally {
+      await game.settings.set(MODULE_ID, 'enableLevelUp', originalEnableLevelUp);
+      await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
+      await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
+      for (const [key, value] of Object.entries(savedDebugState)) window.GAS[key] = value;
     }
-    if (actorToCleanup && !actorToCleanup.deleted) await actorToCleanup.delete();
-    await game.settings.set(MODULE_ID, 'milestoneLeveling', originalMilestoneLeveling);
-    await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', originalForceTakeAverageHitPoints);
-    for (const [key, value] of Object.entries(savedDebugState)) window.GAS[key] = value;
   };
 
   const runCreationTest = async () => {

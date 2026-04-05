@@ -69,7 +69,10 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
   },
   5: {
     checkboxSelectors: [
-      'dnd5e-checkbox.average-checkbox'
+      'dnd5e-checkbox.average-checkbox',
+      'dnd5e-checkbox[name="useAverage"]',
+      'dnd5e-checkbox[id$="-useAverage"]',
+      'dnd5e-checkbox[id*="useAverage"]'
     ],
     rollInputSelectors: [
       'input.roll-result'
@@ -266,8 +269,13 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
 
         checkboxElement.prop('checked', true);
         checkboxElement.attr('checked', 'checked');
+        checkboxElement.attr('aria-checked', 'true');
         if (rawCheckbox && 'checked' in rawCheckbox) {
           rawCheckbox.checked = true;
+        }
+        if (rawCheckbox && typeof rawCheckbox.setAttribute === 'function') {
+          rawCheckbox.setAttribute('checked', 'checked');
+          rawCheckbox.setAttribute('aria-checked', 'true');
         }
 
         checkboxElement.trigger('input');
