@@ -4,11 +4,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  * Tests for tcr-main-module compatibility: spell class filtering via item flags
  * for D&D 5e v3.x (FoundryVTT V12, D&D 3.3.1).
  *
- * tcr-main-module stores `flags["tcr-main-module"]["spellClasses"]` on spell items
- * as an object where keys are class/subclass UUIDs and values are document names:
- *   { "Compendium.dnd5e.classes.Item.XXXXX": "Wizard", ... }
+ * tcr-main-module stores `flags["tcr-main-module"]["spellClasses"]` on spell items.
+ * The flag can be either:
+ *   - An ARRAY of class/subclass UUID strings (actual format from the module):
+ *     ["Compendium.world.tcr-class.Item.XXXXX", ...]
+ *   - An OBJECT where keys are class/subclass UUIDs and values are document names:
+ *     { "Compendium.dnd5e.classes.Item.XXXXX": "Wizard", ... }
  *
- * Spells with no TCR flag (or an empty flag object) have no class restriction
+ * Spells with no TCR flag (or an empty flag) have no class restriction
  * and should be available to all classes.
  */
 describe('tcr-main-module spell class flag filtering', () => {
@@ -23,13 +26,24 @@ describe('tcr-main-module spell class flag filtering', () => {
     return docs.filter(doc => {
       if (doc.type !== 'spell') return false;
       const tcrSpellClasses = doc.flags?.['tcr-main-module']?.spellClasses;
-      if (!tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0) {
+
+      // spellClasses can be an array of UUID strings OR an object with UUID keys
+      const isArray = Array.isArray(tcrSpellClasses);
+      const isEmpty = isArray
+        ? tcrSpellClasses.length === 0
+        : !tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0;
+
+      if (isEmpty) {
         // No restriction – include for all classes
         return true;
       }
       if (uuidSet.size === 0) {
         // No character class UUID known – do not include restricted spells
         return false;
+      }
+      // Match against either array values or object keys
+      if (isArray) {
+        return [...uuidSet].some(uuid => tcrSpellClasses.includes(uuid));
       }
       return [...uuidSet].some(uuid => uuid in tcrSpellClasses);
     });
@@ -161,6 +175,108 @@ describe('tcr-main-module spell class flag filtering', () => {
     // If we only pass the embedded UUID (no compendium UUID) it won't match
     expect(filterSpellsByTCRFlag(spells, [embeddedWizardUUID]).length).toBe(0);
     // If we also include the compendium UUID (from flags.core.sourceId) it matches
+    expect(filterSpellsByTCRFlag(spells, [embeddedWizardUUID, WIZARD_UUID]).length).toBe(1);
+  });
+
+  // --- Array format tests (actual tcr-main-module data structure) ---
+  // tcr-main-module stores spellClasses as an ARRAY of UUID strings, not an object
+
+  const arrayMockSpells = [
+    {
+      id: '1', name: 'Mage Armor', type: 'spell',
+      flags: { 'tcr-main-module': { spellClasses: [WIZARD_UUID] } },
+      system: { level: 1, school: 'abj' }
+    },
+    {
+      id: '2', name: 'Healing Word', type: 'spell',
+      flags: { 'tcr-main-module': { spellClasses: [CLERIC_UUID, BARD_UUID] } },
+      system: { level: 1, school: 'evo' }
+    },
+    {
+      id: '3', name: 'Prestidigitation', type: 'spell',
+      flags: { 'tcr-main-module': { spellClasses: [WIZARD_UUID, BARD_UUID] } },
+      system: { level: 0, school: 'tra' }
+    },
+    {
+      id: '4', name: 'Homebrew Cantrip', type: 'spell',
+      flags: {},  // No TCR flag – available to all
+      system: { level: 0, school: 'div' }
+    },
+    {
+      id: '5', name: 'Unrestricted Spell', type: 'spell',
+      flags: { 'tcr-main-module': { spellClasses: [] } }, // Empty array – available to all
+      system: { level: 1, school: 'evo' }
+    },
+    {
+      id: '6', name: 'Subclass Special', type: 'spell',
+      flags: { 'tcr-main-module': { spellClasses: [SUBCLASS_UUID] } },
+      system: { level: 2, school: 'evo' }
+    }
+  ];
+
+  it('should filter array-format spellClasses for Wizard', () => {
+    const result = filterSpellsByTCRFlag(arrayMockSpells, [WIZARD_UUID]);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Mage Armor');
+    expect(names).toContain('Prestidigitation');   // Wizard + Bard
+    expect(names).toContain('Homebrew Cantrip');    // No TCR flag → all classes
+    expect(names).toContain('Unrestricted Spell');  // Empty array → all classes
+    expect(names).not.toContain('Healing Word');    // Cleric/Bard only
+    expect(names).not.toContain('Subclass Special');
+    expect(result.length).toBe(4);
+  });
+
+  it('should filter array-format spellClasses for Cleric', () => {
+    const result = filterSpellsByTCRFlag(arrayMockSpells, [CLERIC_UUID]);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Healing Word');
+    expect(names).toContain('Homebrew Cantrip');
+    expect(names).toContain('Unrestricted Spell');
+    expect(names).not.toContain('Mage Armor');
+    expect(names).not.toContain('Prestidigitation');
+    expect(result.length).toBe(3);
+  });
+
+  it('should include subclass spells with array-format when subclass UUID provided', () => {
+    const result = filterSpellsByTCRFlag(arrayMockSpells, [WIZARD_UUID, SUBCLASS_UUID]);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Mage Armor');
+    expect(names).toContain('Prestidigitation');
+    expect(names).toContain('Subclass Special');
+    expect(names).toContain('Homebrew Cantrip');
+    expect(names).toContain('Unrestricted Spell');
+    expect(names).not.toContain('Healing Word');
+    expect(result.length).toBe(5);
+  });
+
+  it('should treat empty spellClasses array as unrestricted', () => {
+    const spell = [
+      { id: 'e', name: 'Open Spell', type: 'spell',
+        flags: { 'tcr-main-module': { spellClasses: [] } },
+        system: { level: 0 } }
+    ];
+    const result = filterSpellsByTCRFlag(spell, [WIZARD_UUID]);
+    expect(result.length).toBe(1);
+  });
+
+  it('should return only unrestricted spells from array-format when no class UUIDs known', () => {
+    const result = filterSpellsByTCRFlag(arrayMockSpells, []);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Homebrew Cantrip');
+    expect(names).toContain('Unrestricted Spell');
+    expect(names).not.toContain('Mage Armor');
+    expect(names).not.toContain('Healing Word');
+    expect(result.length).toBe(2);
+  });
+
+  it('should handle sourceId aliases with array-format spellClasses', () => {
+    const embeddedWizardUUID = 'Actor.abc123.Item.def456';
+    const spells = [
+      { id: '1', name: 'Mage Armor', type: 'spell',
+        flags: { 'tcr-main-module': { spellClasses: [WIZARD_UUID] } },
+        system: { level: 1 } }
+    ];
+    expect(filterSpellsByTCRFlag(spells, [embeddedWizardUUID]).length).toBe(0);
     expect(filterSpellsByTCRFlag(spells, [embeddedWizardUUID, WIZARD_UUID]).length).toBe(1);
   });
 });

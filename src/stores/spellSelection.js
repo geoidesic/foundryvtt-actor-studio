@@ -63,19 +63,25 @@ function filterDocumentsByDT(pack, documents) {
 
   // Filter documents
   return documents.filter(doc => {
+    // Normalize folder to string ID: full Document objects loaded via
+    // pack.getDocuments() may have doc.folder as a Folder instance
+    // (Foundry's ForeignDocumentField resolves it), whereas the
+    // allowedDTFolderIds array contains plain string IDs.
+    const folderId = doc.folder?.id ?? doc.folder;
+
     // If item is not in a folder
-    if (!doc.folder) {
+    if (!folderId) {
       return unregisteredAccess;
     }
 
     // If the item is in a folder that is not a real folder
-    if (!pack.folders.get(doc.folder)) return false;
+    if (!pack.folders.get(folderId)) return false;
 
     // If the item is in a DT folder tree, include it
-    if (allowedDTFolderIds.includes(doc.folder)) return true;
+    if (allowedDTFolderIds.includes(folderId)) return true;
 
     // If item is in a folder that is not a DT folder
-    if (!allDTFolderIds.includes(doc.folder)) {
+    if (!allDTFolderIds.includes(folderId)) {
       return unregisteredAccess;
     }
 
@@ -1285,15 +1291,25 @@ export async function loadAvailableSpells(characterClassName = null) {
               const tcrSpellClasses = doc.flags?.["tcr-main-module"]?.spellClasses;
               let availableToClass;
 
-              if (!tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0) {
+              // spellClasses can be an array of UUID strings OR an object with UUID keys
+              const isArray = Array.isArray(tcrSpellClasses);
+              const isEmpty = isArray
+                ? tcrSpellClasses.length === 0
+                : !tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0;
+
+              if (isEmpty) {
                 // Spell has no TCR class restriction – include it for all classes.
                 availableToClass = true;
               } else if (classUuidsToCheck.size === 0) {
                 // No character class UUID available – do not include restricted spells.
                 availableToClass = false;
               } else {
-                // Include only if one of the character's class/subclass UUIDs is in the flag.
-                availableToClass = [...classUuidsToCheck].some(uuid => uuid in tcrSpellClasses);
+                // Include only if one of the character's class/subclass UUIDs matches.
+                if (isArray) {
+                  availableToClass = [...classUuidsToCheck].some(uuid => tcrSpellClasses.includes(uuid));
+                } else {
+                  availableToClass = [...classUuidsToCheck].some(uuid => uuid in tcrSpellClasses);
+                }
               }
 
               if (availableToClass) {
