@@ -2,6 +2,7 @@ import { get } from 'svelte/store';
 import { actorInGame } from '~/src/stores/index';
 import { safeGetSetting } from '~/src/helpers/Utility';
 import { getTestTimeout, getTestTimeouts } from '~/src/helpers/testTimeouts';
+import { parseSpellProgressionValue, shouldExpectSpellsForLevel, getExpectedSpellSelectionDelta, spellUiMayAppearForLevel } from '~/src/hooks/tests/toonSpellHelpers.js';
 
 const MODULE_ID = 'foundryvtt-actor-studio';
 const DEBUG_ROOT_KEYS = ['debug', 'race', 'background', 'characterClass', 'characterSubClass'];
@@ -18,7 +19,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     throw new Error(`Character permutation tests require complete config for ${classIdentifier}`);
   }
 
-  const DEBUG_MODE = ['sorcerer', 'artificer'].includes(classIdentifier); // Only debug failing classes
+  const DEBUG_MODE = ['sorcerer', 'artificer', 'fighter'].includes(classIdentifier); // Only debug failing classes
 
   const TEST_TIMEOUTS = getTestTimeouts();
   const POLL_INTERVAL = TEST_TIMEOUTS.pollingInterval;
@@ -86,35 +87,6 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     }
   };
 
-  const parseSpellProgressionValue = (value) => {
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      const cantrips = Number.parseInt(value.cantrips, 10) || 0;
-      const rawSpells = value.spells;
-      const hasAllSpells = String(rawSpells || '').toLowerCase() === 'all' || value.hasAllSpells === true;
-      const spells = hasAllSpells ? 0 : (Number.parseInt(rawSpells, 10) || 0);
-
-      return {
-        cantrips,
-        spells,
-        hasAllSpells,
-        maxSpellLevel: Number.parseInt(value.maxSpellLevel, 10) || 0,
-        uiRequired: typeof value.uiRequired === 'boolean' ? value.uiRequired : undefined
-      };
-    }
-
-    if (typeof value !== 'string') return null;
-    const [cantripsRaw, spellsRaw] = value.split('/').map((entry) => String(entry ?? '').trim());
-    if (!cantripsRaw || !spellsRaw) return null;
-
-    return {
-      cantrips: Number.parseInt(cantripsRaw, 10) || 0,
-      spells: Number.parseInt(spellsRaw, 10) || 0,
-      hasAllSpells: spellsRaw.toLowerCase() === 'all',
-      maxSpellLevel: 0,
-      uiRequired: undefined
-    };
-  };
-
   const inferSpellcastingProgression = (identifier) => {
     const normalized = String(identifier || '').toLowerCase();
     if (['bard', 'cleric', 'druid', 'sorcerer', 'wizard'].includes(normalized)) return 'full';
@@ -149,67 +121,11 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     }
   };
 
-  const shouldExpectSpellsForLevelDynamic = ({ classIdentifier, targetLevel, rulesVersion }) => {
-    const numericTargetLevel = Number(targetLevel) || 0;
-    if (numericTargetLevel <= 1) return false;
+  const shouldExpectSpellsForLevelDynamic = ({ classIdentifier: _ci, targetLevel, rulesVersion }) =>
+    shouldExpectSpellsForLevel({ classConfig, classIdentifier, targetLevel, rulesVersion });
 
-    const progressionTOON = classConfig?.spellProgressionTOON?.levels;
-
-    const readTOONValue = (levelNumber) => {
-      const levelData = progressionTOON?.[String(levelNumber)] || progressionTOON?.[Number(levelNumber)] || null;
-      if (!levelData) return undefined;
-      return levelData?.[rulesVersion] ?? levelData?.default;
-    };
-
-    // For levels > 1, the TOON value IS the delta (new spells to pick at this level).
-    // Level 1 contains the cumulative initial selection; levels 2+ contain per-level increments.
-    const levelValue = readTOONValue(numericTargetLevel);
-    if (!levelValue) {
-      logSubclassDebug('missing TOON spell progression row; defaulting to no required spells UI', {
-        classIdentifier,
-        rulesVersion,
-        targetLevel: numericTargetLevel,
-        hasTOON: Boolean(progressionTOON)
-      });
-      return false;
-    }
-
-    const parsed = parseSpellProgressionValue(levelValue);
-    if (!parsed) return false;
-
-    if (typeof parsed.uiRequired === 'boolean') return parsed.uiRequired;
-
-    // For classes that auto-gain all spells, the UI step is only needed when cantrips increase.
-    if (parsed.hasAllSpells) return false;
-
-    return parsed.cantrips > 0 || parsed.spells > 0;
-  };
-
-  const getExpectedSpellSelectionDeltaDynamic = ({ targetLevel, rulesVersion }) => {
-    const numericTargetLevel = Number(targetLevel) || 0;
-    if (numericTargetLevel <= 1) return { cantrips: 0, spells: 0, required: false };
-
-    const progressionTOON = classConfig?.spellProgressionTOON?.levels;
-    const readTOONValue = (levelNumber) => {
-      const levelData = progressionTOON?.[String(levelNumber)] || progressionTOON?.[Number(levelNumber)] || null;
-      if (!levelData) return undefined;
-      return levelData?.[rulesVersion] ?? levelData?.default;
-    };
-
-    // For levels > 1, the TOON value IS the delta — it directly states how many new
-    // spells/cantrips the player must pick at this level, not a cumulative total.
-    const parsed = parseSpellProgressionValue(readTOONValue(numericTargetLevel));
-    if (!parsed) return { cantrips: 0, spells: 0, required: false };
-
-    const cantrips = parsed.hasAllSpells ? 0 : (parsed.cantrips || 0);
-    const spells = parsed.hasAllSpells ? 0 : (parsed.spells || 0);
-
-    return {
-      cantrips,
-      spells,
-      required: cantrips > 0 || spells > 0
-    };
-  };
+  const getExpectedSpellSelectionDeltaDynamic = ({ targetLevel, rulesVersion }) =>
+    getExpectedSpellSelectionDelta({ classConfig, targetLevel, rulesVersion });
 
   const closeActorStudioIfOpen = async () => {
     const app = Object.values(ui.windows).find((windowApp) => windowApp?.id === 'foundryvtt-actor-studio-pc-sheet');
@@ -958,6 +874,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const afterAll = async function () {
+    this.timeout(TEST_TIMEOUTS.perTest);
     if (window?.GAS?.quenchAutomation) delete window.GAS.quenchAutomation;
     await closeActorStudioIfOpen();
     const actorToCleanup = classActorId ? game.actors.get(classActorId) : (classActor || findActorByName());
@@ -1020,7 +937,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       logSubclassDebug('creation spell required selection', { rulesVersion, level1Raw, creationRequiredSelection });
 
       const spellStepResult = await completeSpellsStepIfVisible({
-        timeoutMs: TEST_TIMEOUTS.spellWorkflow,
+        timeoutMs: creationRequiredSelection ? TEST_TIMEOUTS.spellWorkflow : TEST_TIMEOUTS.uiInteraction,
         allowSkip: !creationRequiredSelection,
         requiredSelection: creationRequiredSelection
       });
@@ -1146,6 +1063,11 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const subclassHandled = await selectFirstSubclassOptionIfRequired();
     assert.ok(subclassHandled, `Subclass choice should be handled when required for ${classIdentifier} at level ${targetLevel}`);
 
+    // Wait for FSM to settle after subclass selection before clicking Add Level.
+    // Without this, the FSM may still be in a transitional state and log
+    // "FSM not in idle state after reset" which triggers unwanted reset cycles.
+    await wait(WAIT_MEDIUM);
+
     const addLevelClicked = await waitForCondition(() => clickFooterButtonBySelector('#foundryvtt-actor-studio-pc-sheet .footer-container .gas-add-level-btn'), TEST_TIMEOUTS.uiStateChange, POLL_INTERVAL);
     assert.ok(addLevelClicked, `Add Level button should be clickable for ${classIdentifier} progression`);
 
@@ -1158,8 +1080,10 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const rulesVersion = String(window.GAS?.dnd5eRules || '').trim() || rulesVersionFromSettings || '2014';
     const expectSpells = shouldExpectSpellsForLevelDynamic({ classIdentifier, targetLevel, rulesVersion });
     const expectedSelection = getExpectedSpellSelectionDeltaDynamic({ targetLevel, rulesVersion });
+    // Use long timeout when spell UI may appear: either explicit selection required,
+    // or class auto-gains all prepared spells (hasAllSpells) which still renders a spell UI.
     const spellStepResult = await completeSpellsStepIfVisible({
-      timeoutMs: TEST_TIMEOUTS.spellWorkflow,
+      timeoutMs: spellUiMayAppearForLevel({ classConfig, classIdentifier, targetLevel, rulesVersion }) ? TEST_TIMEOUTS.spellWorkflow : TEST_TIMEOUTS.uiInteraction,
       allowSkip: !expectSpells,
       requiredSelection: expectSpells ? expectedSelection : null
     });
