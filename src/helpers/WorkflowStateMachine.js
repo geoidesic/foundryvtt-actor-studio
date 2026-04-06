@@ -603,13 +603,13 @@ export function createWorkflowStateMachine() {
     const startedFsm = fsm
       .global()
         .onStateEnter((context, state) => {
-          console.log('[WORKFLOW] Entering state:', state);
+          window.GAS.log.d('[WORKFLOW] Entering state:', state);
         })
         .onStateExit((context, state) => {
-          console.log('[WORKFLOW] Exiting state:', state);
+          window.GAS.log.d('[WORKFLOW] Exiting state:', state);
         })
         .onTransition((context, fromState, toState) => {
-          console.log('[WORKFLOW] Transitioning from', fromState, 'to', toState);
+          window.GAS.log.d('[WORKFLOW] Transitioning from', fromState, 'to', toState);
         })
       .start();
 
@@ -643,7 +643,7 @@ export function getWorkflowFSM() {
     if (typeof window !== 'undefined') {
       window.GAS = window.GAS || {};
       window.GAS.workflowFSM = workflowFSM;
-      console.log('window.GAS.workflowFSM assigned:', window.GAS.workflowFSM);
+      window.GAS.log.d('window.GAS.workflowFSM assigned:', window.GAS.workflowFSM);
     }
   }
   return workflowFSM;

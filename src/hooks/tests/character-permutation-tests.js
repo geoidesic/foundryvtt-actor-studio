@@ -83,7 +83,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
 
   const logSubclassDebug = (...args) => {
     if (DEBUG_MODE) {
-      console.log('[QUENCH subclass]', ...args);
+      window.GAS.log.d('[QUENCH subclass]', ...args);
     }
   };
 
@@ -540,7 +540,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const selectedSpellRows = root.querySelectorAll('.selected-spells .selected-spell').length;
     const availableSpellRows = root.querySelectorAll('.spell-level-group .spell-row').length;
 
-    console.log(`[QUENCH DEBUG] [spells diagnostics] ${stage}`, {
+    window.GAS.log.d(`[QUENCH DEBUG] [spells diagnostics] ${stage}`, {
       activeTab,
       tabs,
       counters,
@@ -606,7 +606,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     logSubclassDebug('checking for spells tab, all tabs:', allTabs);
     const spellsVisible = await waitForCondition(() => hasSpellsTabVisible() || hasSpellUiVisible(), timeoutMs, POLL_INTERVAL, 'spells tab or UI to be visible');
     if (!spellsVisible) {
-      console.error(`[QUENCH ERROR] Spells UI not visible for ${classIdentifier}`);
+      window.GAS.log.d(`[QUENCH GATE] Spells UI not visible for ${classIdentifier}`);
       return { visible: false, completed: false, finalCounters: { spells: { current: 0, limit: 0 }, cantrips: { current: 0, limit: 0 } } };
     }
 
@@ -632,9 +632,14 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
 
     logSpellStepDiagnostics('spells tab actionable');
 
-    // Wait for spell limits to be set correctly
+    // Wait for spell limits to be set correctly.
+    // Exception: prepared casters with no cantrips (e.g. Paladin 2024 at L1) have a
+    // spell limit that may genuinely be 0 at low levels — bypass the > 0 guard and
+    // proceed directly to the Finalize attempt.
+    const isPreparedNoCantripClass = requiredSelection?.hasAllSpells === true && (requiredSelection.cantrips || 0) === 0;
     const limitsSet = await waitForCondition(() => {
       const uiCounters = readSpellCounters(document.querySelector('#foundryvtt-actor-studio-pc-sheet'));
+      if (isPreparedNoCantripClass) return uiCounters;
       return (uiCounters.cantrips.limit > 0 || uiCounters.spells.limit > 0) ? uiCounters : null;
     }, TEST_TIMEOUTS.spellUiLoad, POLL_INTERVAL, 'Spell limits to be set');
     if (!limitsSet) {
@@ -931,7 +936,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
       const level1TOONEntry = progressionTOON?.['1'] || progressionTOON?.[1];
       const level1Raw = level1TOONEntry?.[rulesVersion] ?? level1TOONEntry?.default;
       const level1Parsed = level1Raw ? parseSpellProgressionValue(level1Raw) : null;
-      const creationRequiredSelection = (level1Parsed && (level1Parsed.cantrips > 0 || (level1Parsed.spells > 0 && !level1Parsed.hasAllSpells)))
+      const creationRequiredSelection = (level1Parsed && (level1Parsed.cantrips > 0 || level1Parsed.spells > 0 || level1Parsed.hasAllSpells))
         ? { cantrips: level1Parsed.cantrips, spells: level1Parsed.spells, hasAllSpells: level1Parsed.hasAllSpells === true }
         : null;
       logSubclassDebug('creation spell required selection', { rulesVersion, level1Raw, creationRequiredSelection });

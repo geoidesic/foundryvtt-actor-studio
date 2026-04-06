@@ -9,9 +9,9 @@ const artificerConfig = {
   spellProgressionTOON: {
     format: 'TOON-1',
     levels: {
-      1: { '2014': { cantrips: 2, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 2, spells: 0, maxSpellLevel: 0 } },
-      2: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 1 } },
-      3: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 0, maxSpellLevel: 1 } }
+      1: { '2014': { cantrips: 2, spells: 2, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 2, maxSpellLevel: 1 } },
+      2: { '2014': { cantrips: 0, spells: 1, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 1, maxSpellLevel: 1 } },
+      3: { '2014': { cantrips: 0, spells: 1, maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 1, maxSpellLevel: 1 } }
     }
   }
 };

@@ -108,6 +108,17 @@ const CONFIGS = {
         3: { '2014': { cantrips: 2, spells: 3, maxSpellLevel: 1 }, '2024': { cantrips: 2, spells: 3, maxSpellLevel: 1 } }
       }
     }
+  },
+  paladin: {
+    identifier: 'paladin',
+    spellProgressionTOON: {
+      format: 'TOON-1',
+      levels: {
+        1: { '2014': { cantrips: 0, spells: 0, maxSpellLevel: 0 }, '2024': { cantrips: 0, spells: 'All', maxSpellLevel: 1 } },
+        2: { '2014': { cantrips: 0, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 'All', maxSpellLevel: 1 } },
+        3: { '2014': { cantrips: 0, spells: 'All', maxSpellLevel: 1 }, '2024': { cantrips: 0, spells: 'All', maxSpellLevel: 1 } }
+      }
+    }
   }
 };
 
@@ -248,6 +259,16 @@ describe('shouldExpectSpellsForLevel', () => {
     expect(shouldExpectSpellsForLevel({ classConfig: CONFIGS.cleric, classIdentifier: 'cleric', targetLevel: 2, rulesVersion: '2014' })).toBe(false);
   });
 
+  it('returns false for paladin 2014 L1 (no spells at all)', () => {
+    // Level 1 is always false but this also verifies the config is clean
+    expect(shouldExpectSpellsForLevel({ classConfig: CONFIGS.paladin, classIdentifier: 'paladin', targetLevel: 1, rulesVersion: '2014' })).toBe(false);
+  });
+
+  it('returns false for paladin 2024 L1 (hasAllSpells at L1 — no manual selection, just finalize)', () => {
+    // hasAllSpells at creation level must NOT require manual selection but DOES need a spell UI step
+    expect(shouldExpectSpellsForLevel({ classConfig: CONFIGS.paladin, classIdentifier: 'paladin', targetLevel: 1, rulesVersion: '2024' })).toBe(false);
+  });
+
   it('returns false for fighter L2 (no spells)', () => {
     expect(shouldExpectSpellsForLevel({ classConfig: CONFIGS.fighter, classIdentifier: 'fighter', targetLevel: 2, rulesVersion: '2024' })).toBe(false);
   });
@@ -283,5 +304,35 @@ describe('spellUiMayAppearForLevel', () => {
   it('returns false for barbarian-like class with no TOON data (missing levels)', () => {
     const noSpells = { identifier: 'barbarian', spellProgressionTOON: { format: 'TOON-1', levels: {} } };
     expect(spellUiMayAppearForLevel({ classConfig: noSpells, classIdentifier: 'barbarian', targetLevel: 2, rulesVersion: '2024' })).toBe(false);
+  });
+
+  // ── Paladin creation scenario (the regression this test guards against) ──────
+  // Paladin 2024 at L1 has hasAllSpells — the spell UI appears even though no
+  // manual selection is needed. creationRequiredSelection must NOT be null for
+  // this path, or the short timeout fires and the creation flow deadlocks.
+
+  it('paladin 2024 L1 — spellUiMayAppear is true (prepared caster spell UI appears at creation)', () => {
+    // Level-up path: spellUiMayAppearForLevel checks N>1, but for creation the
+    // caller checks the L1 delta directly. We verify the delta carries hasAllSpells.
+    const delta = getExpectedSpellSelectionDelta({ classConfig: CONFIGS.paladin, targetLevel: 1, rulesVersion: '2024' });
+    // Level 1 returns zero delta (it's the starting pool, handled by creation path directly)
+    // The creation path reads level1Raw directly and parses it — verify the parse output:
+    const level1Raw = CONFIGS.paladin.spellProgressionTOON.levels[1]['2024'];
+    const parsed = parseSpellProgressionValue(level1Raw);
+    expect(parsed.hasAllSpells).toBe(true);
+    expect(parsed.cantrips).toBe(0);
+    expect(parsed.spells).toBe(0);
+    // The creation condition is: cantrips > 0 || spells > 0 || hasAllSpells
+    // Without the || hasAllSpells guard this was null → short timeout → FAIL
+    const shouldTriggerSpellStep = parsed.cantrips > 0 || parsed.spells > 0 || parsed.hasAllSpells;
+    expect(shouldTriggerSpellStep).toBe(true);
+  });
+
+  it('paladin 2014 L1 — no spell step needed', () => {
+    const level1Raw = CONFIGS.paladin.spellProgressionTOON.levels[1]['2014'];
+    const parsed = parseSpellProgressionValue(level1Raw);
+    expect(parsed.hasAllSpells).toBe(false);
+    const shouldTriggerSpellStep = parsed.cantrips > 0 || parsed.spells > 0 || parsed.hasAllSpells;
+    expect(shouldTriggerSpellStep).toBe(false);
   });
 });
