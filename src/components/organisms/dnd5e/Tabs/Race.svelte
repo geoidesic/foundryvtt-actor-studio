@@ -187,17 +187,17 @@ StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="ra
       .flex3 
         IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
-      +if("source")
+      +if("source && !hideAdvancementList")
         //- h3.left {t('Source')}
         ol.properties-list
           li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-      +if("filteredMovement")
+      +if("filteredMovement && !hideAdvancementList")
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
             li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
-      +if("filteredSenses.length")
+      +if("filteredSenses.length && !hideAdvancementList")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
           +each("filteredSenses as senses")

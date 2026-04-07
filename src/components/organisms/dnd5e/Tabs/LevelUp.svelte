@@ -60,11 +60,8 @@ let
   classAdvancementComponents = {}
 ;
 
-const hideAdvancementList = safeGetSetting(
-  MODULE_ID,
-  "hideAdvancementList",
-  false
-);
+const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
 window.GAS.log.d('[DEBUG] compendiumSources settings:', safeGetSetting(MODULE_ID, 'compendiumSources', {}));
