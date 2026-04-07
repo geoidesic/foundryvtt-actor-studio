@@ -24,7 +24,14 @@ vi.mock('~/src/helpers/constants', () => ({
 
 vi.mock('~/src/helpers/Utility', () => ({
   getFilteredFeats: vi.fn(async () => []),
-  localize: vi.fn((key) => key)
+  localize: vi.fn((key) => key),
+  safeGetSetting: (module, key, defaultValue) => {
+    if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+      const val = global.game.settings.get(module, key);
+      return typeof val === 'undefined' ? defaultValue : val;
+    }
+    return defaultValue;
+  }
 }));
 
 vi.mock('~/src/stores/index', () => ({
@@ -42,17 +49,6 @@ vi.mock('~/src/stores/index', () => ({
   characterClass: { set: vi.fn() },
   characterSubClass: { set: vi.fn() }
 }));
-
-// Mock the FeatSelector component
-const mockFeatSelector = class {
-  constructor(options) {
-    // Store props for inspection if needed
-    this.target = options.target;
-    this.props = options.props;
-  }
-  $destroy = vi.fn();
-};
-vi.mock('../components/molecules/dnd5e/Feats/FeatSelector.svelte', () => ({ default: mockFeatSelector }));
 
 // Global Foundry stubs
 const createNotificationMock = () => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() });
@@ -359,17 +355,6 @@ beforeEach(() => {
       })
     }
   };
-
-  // Ensure Utility.safeGetSetting uses our game.settings mock
-  vi.mock('~/src/helpers/Utility', () => ({
-    safeGetSetting: (module, key, defaultValue) => {
-      if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
-        const val = global.game.settings.get(module, key);
-        return typeof val === 'undefined' ? defaultValue : val;
-      }
-      return defaultValue;
-    }
-  }));
 
   global.window.document = global.document;
 

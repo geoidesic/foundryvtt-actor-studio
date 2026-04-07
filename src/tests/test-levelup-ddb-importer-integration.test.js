@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+vi.mock('~/src/helpers/constants', () => ({
+  MODULE_ID: 'foundryvtt-actor-studio'
+}));
+
 describe('Level Up Button DDB Importer Integration', () => {
   let mockActor;
   let mockApp;
@@ -33,10 +37,6 @@ describe('Level Up Button DDB Importer Integration', () => {
     // Mock document.querySelector
     global.document.querySelector = vi.fn();
 
-    // Mock MODULE_ID
-    vi.mock('~/src/helpers/constants', () => ({
-      MODULE_ID: 'foundryvtt-actor-studio'
-    }));
   });
 
   it('should allow level-up for non-DDB Importer character without warning', async () => {

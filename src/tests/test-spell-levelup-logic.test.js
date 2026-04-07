@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Mock vitest environment globals
-vi.stubGlobal('setTimeout', vi.fn((fn, delay) => {
-  if (typeof fn === 'function') fn();
-  return 1;
-}));
-vi.stubGlobal('clearTimeout', vi.fn());
+// Keep native timer behavior; eager timer mocks can break Vitest internals.
 
 // Mock FoundryVTT globals
 vi.stubGlobal('game', {
