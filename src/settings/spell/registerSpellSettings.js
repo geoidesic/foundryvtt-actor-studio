@@ -22,6 +22,7 @@ export function registerSpellSettings() {
   });
 
   game.settings.register(MODULE_ID, 'enableCustomSpellListFiltering', {
+    // Backward-compatible key retained; label / hint clarify strict vs extended behavior.
     name: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Name'),
     hint: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Hint'),
     scope: 'world',

@@ -11,8 +11,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
  *   - An OBJECT where keys are class/subclass UUIDs and values are document names:
  *     { "Compendium.dnd5e.classes.Item.XXXXX": "Wizard", ... }
  *
- * Spells with no TCR flag (or an empty flag) have no class restriction
- * and should be available to all classes.
+ * Spells with no TCR flag (or an empty flag) are treated as unassigned.
+ * They are only included when the "custom spell lists / unassigned spells" option is enabled.
  */
 describe('tcr-main-module spell class flag filtering', () => {
   const WIZARD_UUID = 'Compendium.dnd5e.classes.Item.wizard-uuid-001';
@@ -21,7 +21,7 @@ describe('tcr-main-module spell class flag filtering', () => {
   const SUBCLASS_UUID = 'Compendium.dnd5e.subclasses.Item.evocation-uuid-004';
 
   // Simulate the flag-based filtering logic extracted from loadAvailableSpells
-  function filterSpellsByTCRFlag(docs, classUuidsToCheck) {
+  function filterSpellsByTCRFlag(docs, classUuidsToCheck, includeUnassigned = true) {
     const uuidSet = new Set(classUuidsToCheck);
     return docs.filter(doc => {
       if (doc.type !== 'spell') return false;
@@ -34,8 +34,7 @@ describe('tcr-main-module spell class flag filtering', () => {
         : !tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0;
 
       if (isEmpty) {
-        // No restriction – include for all classes
-        return true;
+        return includeUnassigned;
       }
       if (uuidSet.size === 0) {
         // No character class UUID known – do not include restricted spells
@@ -161,6 +160,15 @@ describe('tcr-main-module spell class flag filtering', () => {
     expect(result.every(d => d.type === 'spell')).toBe(true);
   });
 
+  it('should exclude unassigned spells when includeUnassigned is false', () => {
+    const result = filterSpellsByTCRFlag(mockSpells, [WIZARD_UUID], false);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Fireball');
+    expect(names).toContain('Magic Missile');
+    expect(names).not.toContain('Guidance');
+    expect(names).not.toContain('Sacred Flame');
+  });
+
   it('should handle sourceId aliases for the same class (e.g. embedded actor items)', () => {
     // When a class is embedded in an actor its UUID changes to Actor.X.Item.Y,
     // but the original compendium UUID may be stored in flags.core.sourceId.
@@ -257,6 +265,15 @@ describe('tcr-main-module spell class flag filtering', () => {
     ];
     const result = filterSpellsByTCRFlag(spell, [WIZARD_UUID]);
     expect(result.length).toBe(1);
+  });
+
+  it('should exclude empty/no spellClasses entries when includeUnassigned is false', () => {
+    const result = filterSpellsByTCRFlag(arrayMockSpells, [WIZARD_UUID], false);
+    const names = result.map(s => s.name);
+    expect(names).toContain('Mage Armor');
+    expect(names).toContain('Prestidigitation');
+    expect(names).not.toContain('Homebrew Cantrip');
+    expect(names).not.toContain('Unrestricted Spell');
   });
 
   it('should return only unrestricted spells from array-format when no class UUIDs known', () => {

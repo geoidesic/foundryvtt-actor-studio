@@ -1306,8 +1306,9 @@ export async function loadAvailableSpells(characterClassName = null) {
                 : !tcrSpellClasses || Object.keys(tcrSpellClasses).length === 0;
 
               if (isEmpty) {
-                // Spell has no TCR class restriction – include it for all classes.
-                availableToClass = true;
+                // Strict mode: require explicit class assignment and exclude classless spells.
+                // Extended mode: classless / unassigned spells are available to all classes.
+                availableToClass = isCustomSpellListFilteringEnabled();
               } else if (classUuidsToCheck.size === 0) {
                 // No character class UUID available – do not include restricted spells.
                 availableToClass = false;

@@ -347,8 +347,8 @@
         "Hint": "Allows players to select their spells during character creation. If disabled, spells will need to be added manually after creation."
       },
       "EnableCustomSpellListFiltering": {
-        "Name": "Enable Custom Spell List Filtering",
-        "Hint": "If enabled, custom spell list flags and classless spells are supported during spell filtering. Disable this to use standard class-assignment filtering only."
+        "Name": "Spells that are not assigned to any character class will be available to all characters.",
+        "Hint": "If enabled, spells can match custom spell-list flags and spells without class assignments are included. If disabled, only spells explicitly assigned to the selected class/subclass are shown."
       },
       "ShowLevelPreviewDropdown": {
         "Name": "Show Level Preview Dropdown",
