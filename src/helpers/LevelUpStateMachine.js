@@ -28,6 +28,15 @@ const fromUuidSync = (uuid) => {
   }
 };
 
+function isCustomSpellListFilteringEnabled() {
+  try {
+    return game?.settings?.get(MODULE_ID, 'enableCustomSpellListFiltering') !== false;
+  } catch (error) {
+    window.GAS?.log?.w?.('[LEVELUP] Error reading enableCustomSpellListFiltering setting, defaulting to enabled:', error);
+    return true;
+  }
+}
+
 // Helper to suppress Tidy5e auto-reopen during level up
 const suppressTidy5eAutoReopen = (suppress = true) => {
   try {
@@ -109,8 +118,9 @@ function determineSpellListClass(actor) {
   // Standard D&D classes will NOT have this flag and will use existing logic below
   // ============================================================================
   const droppedItems = actor.getFlag(MODULE_ID, 'droppedItems');
+  const customSpellListFilteringEnabled = isCustomSpellListFilteringEnabled();
   
-  if (droppedItems) {
+  if (customSpellListFilteringEnabled && droppedItems) {
     // Check subclass first (subclass spell lists override class spell lists)
     let subclassItems = [];
     if (Array.isArray(droppedItems)) {

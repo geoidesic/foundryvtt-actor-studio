@@ -42,6 +42,7 @@ export function registerSettings(app: Game): void {
   sourcesConfiguration();
   donationTracker();
   usageTracking();
+  customSpellListFiltering();
   customSpellLists();
   dontShowWelcome();
 }
@@ -164,5 +165,16 @@ function customSpellLists() {
     icon: 'fas fa-scroll',
     type: SpellListManagerButton,
     restricted: true
+  });
+}
+
+function customSpellListFiltering() {
+  game.settings.register(MODULE_ID, 'enableCustomSpellListFiltering', {
+    name: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Name'),
+    hint: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Hint'),
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: true
   });
 }

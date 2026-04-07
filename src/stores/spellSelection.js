@@ -116,6 +116,14 @@ function spellHasClassAssignment(doc) {
   }
 }
 
+function isCustomSpellListFilteringEnabled() {
+  try {
+    return game?.settings?.get(MODULE_ID, 'enableCustomSpellListFiltering') !== false;
+  } catch (e) {
+    return true;
+  }
+}
+
 // Helper: summarize class information found on a spell document (labels, system, _lazy)
 function inspectSpellClasses(doc) {
   try {
@@ -1080,7 +1088,7 @@ export async function loadAvailableSpells(characterClassName = null) {
               let availableToClass = false;
 
               // Custom compendium spells often have no labels.classes / system.classes — include them for any class
-              if (!spellHasClassAssignment(doc)) {
+              if (isCustomSpellListFilteringEnabled() && !spellHasClassAssignment(doc)) {
                 availableToClass = true;
               }
 
