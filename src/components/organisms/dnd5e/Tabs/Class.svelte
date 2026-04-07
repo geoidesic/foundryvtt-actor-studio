@@ -260,8 +260,14 @@
 
   $: combinedHtml = $characterClass
     ? `
-      ${richHTML}
-      ${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}
+    <div class="flexrow" style="gap: 1rem;">
+      <div class="flex1">
+        ${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}
+      </div>
+      <div class="flex2">
+        ${richHTML}
+      </div>
+    </div>
   `
     : "";
 
@@ -360,12 +366,6 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
                     .flex2 {advancement.title}
                   .flexrow
                     svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-        +if("hideAdvancementList")
-          .description-fill.mt-sm
-            +if("$characterSubClass")
-              | {@html richSubClassHTML}
-              +else()
-                | {@html richHTML}
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
         +if("!hideAdvancementList")
@@ -390,6 +390,9 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
                       .flex2 {advancement.title}
                     .flexrow
                       svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
+        +if("hideAdvancementList")
+          .description-fill.mt-sm
+            | {@html combinedHtml || richHTML}
   div(slot="right") {@html combinedHtml}
 </template>
 
