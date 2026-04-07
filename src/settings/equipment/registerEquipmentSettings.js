@@ -40,12 +40,4 @@ export function registerEquipmentSettings() {
     type: Boolean,
   });
 
-  game.settings.register(MODULE_ID, 'enableSpellSelection', {
-    name: game.i18n.localize('GAS.Setting.EnableSpellSelection.Name'),
-    hint: game.i18n.localize('GAS.Setting.EnableSpellSelection.Hint'),
-    scope: 'world',
-    config: false,
-    default: false,
-    type: Boolean,
-  });
 }

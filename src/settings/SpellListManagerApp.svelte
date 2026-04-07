@@ -387,7 +387,8 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
   .list-entry
     display: flex
-    align-items: center
+    align-items: flex-start
+    gap: 0.5rem
     padding: 0.5rem 0.6rem
     border: 1px solid #555
     border-radius: 4px
@@ -418,11 +419,13 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     font-size: 0.8em
     color: #999
     text-transform: capitalize
+    line-height: 1.2
 
   .list-entry-count
-    font-size: 0.75em
+    font-size: 0.8em
     color: var(--dnd5e-color-gold, #b59e54)
-    margin-top: 0.15rem
+    margin-top: 0.2rem
+    line-height: 1.2
 
     i
       font-size: 0.8em
@@ -430,6 +433,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   .list-entry-description
     font-size: 0.75rem
     color: #888
+    line-height: 1.2
 
 
   .delete-btn
@@ -440,6 +444,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     padding: 0.25rem
     border-radius: 3px
     line-height: 1
+    display: inline-flex
+    align-items: center
+    justify-content: center
+    flex: 0 0 auto
+    width: auto
+    min-width: 1.75rem
+    max-width: 1.75rem
+    height: 1.75rem
+    margin: 0
 
     &:hover
       color: #cc4444

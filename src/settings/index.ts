@@ -1,6 +1,5 @@
 import CompendiumSourcesButton from './CompendiumSourcesButton';
 import DonationTrackerSettingsButton from './DonationTrackerSettingsButton';
-import SpellListManagerButton from './SpellListManagerButton';
 import { MODULE_ID, DEFAULT_SOURCES } from '../helpers/constants';
 import { showReloadRequiredConfirm, showSettingsConfirm } from './confirmationHelpers';
 
@@ -12,6 +11,7 @@ import { registerUISettings } from './ui/registerUISettings';
 import { registerAccessControlSettings } from './accessControl/registerAccessControlSettings';
 import { registerCompendiumDisplaySettings } from './compendiumDisplay/registerCompendiumDisplaySettings';
 import { registerDiagnosticsSettings } from './diagnostics/registerDiagnosticsSettings';
+import { registerSpellSettings } from './spell/registerSpellSettings';
 
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
@@ -30,20 +30,18 @@ export function registerSettings(app: Game): void {
   lastMigration();
   
   // Register domain-specific settings modules (each creates its own menu)
+  sourcesConfiguration();
   registerAbilityScoresSettings();
   registerEquipmentSettings();
   registerProgressionSettings();
   registerUISettings();
   registerAccessControlSettings();
   registerCompendiumDisplaySettings();
-  registerDiagnosticsSettings();
+  registerSpellSettings();
   
-  // Legacy settings that remain in main config
-  sourcesConfiguration();
   donationTracker();
+  registerDiagnosticsSettings();
   usageTracking();
-  customSpellListFiltering();
-  customSpellLists();
   dontShowWelcome();
 }
 
@@ -148,33 +146,3 @@ function usageTracking() {
   });
 }
 
-function customSpellLists() {
-  game.settings.register(MODULE_ID, 'customSpellLists', {
-    name: 'Custom Spell Lists',
-    hint: 'Manage custom spell lists for classes/subclasses',
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: []
-  });
-
-  game.settings.registerMenu(MODULE_ID, 'customSpellLists', {
-    name: 'Custom Spell Lists',
-    label: 'Manage Spell Lists',
-    hint: 'Create and edit custom spell lists',
-    icon: 'fas fa-scroll',
-    type: SpellListManagerButton,
-    restricted: true
-  });
-}
-
-function customSpellListFiltering() {
-  game.settings.register(MODULE_ID, 'enableCustomSpellListFiltering', {
-    name: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Name'),
-    hint: game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Hint'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true
-  });
-}

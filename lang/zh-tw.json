@@ -408,6 +408,21 @@
         "StartingGold": "起始金幣",
         "SelectionOptions": "選擇選項"
       },
+      "Spell": {
+        "Name": "法術",
+        "Hint": "配置法術選擇與自訂法術清單行為",
+        "Label": "配置法術",
+        "Title": "法術配置",
+        "Description": "控制法術選擇與自訂法術清單功能",
+        "SelectionOptions": "選擇選項",
+        "CustomLists": "自訂法術清單"
+      },
+      "CustomSpellLists": {
+        "Name": "自訂法術清單",
+        "Hint": "建立與編輯用於法術篩選的自訂法術清單。",
+        "Label": "管理法術清單",
+        "MenuHint": "開啟法術清單管理器以建立與編輯自訂清單。"
+      },
       "Progression": {
         "Name": "升級與升級特性",
         "Hint": "設定升級與升級特性相關選項",

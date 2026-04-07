@@ -408,6 +408,21 @@
         "StartingGold": "Starting Gold",
         "SelectionOptions": "Selection Options"
       },
+      "Spell": {
+        "Name": "Spells",
+        "Hint": "Configure spell selection and custom spell list behavior",
+        "Label": "Configure spells",
+        "Title": "Spell Configuration",
+        "Description": "Control spell selection and custom spell list features",
+        "SelectionOptions": "Selection Options",
+        "CustomLists": "Custom Spell Lists"
+      },
+      "CustomSpellLists": {
+        "Name": "Custom Spell Lists",
+        "Hint": "Create and edit custom spell lists used for spell filtering.",
+        "Label": "Manage Spell Lists",
+        "MenuHint": "Open the Spell List Manager to create and edit custom lists."
+      },
       "Progression": {
         "Name": "Progression",
         "Hint": "Configure level-up and advancement options",

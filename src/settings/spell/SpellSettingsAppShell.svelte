@@ -5,38 +5,33 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   main.gas-settings-app
     .settings-content
       .setting-group
-        h3 Starting Gold
-        
+        h3 {game.i18n.localize('GAS.Setting.Spell.SelectionOptions')}
+
         .setting-item
           label
-            span {game.i18n.localize('GAS.Setting.defaultGoldDice.Name')}
             input(
-              type="text"
-              bind:value="{defaultGoldDice}"
-              class="gold-dice-input"
+              type="checkbox"
+              bind:checked="{enableSpellSelection}"
             )
-          p.hint {game.i18n.localize('GAS.Setting.defaultGoldDice.Hint')}
+            span {game.i18n.localize('GAS.Setting.EnableSpellSelection.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.EnableSpellSelection.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{enableCustomSpellListFiltering}"
+            )
+            span {game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.EnableCustomSpellListFiltering.Hint')}
 
       .setting-group
-        h3 Selection Options
-        
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{enableEquipmentSelection}"
-            )
-            span {game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.EnableEquipmentSelection.Hint')}
+        h3 {game.i18n.localize('GAS.Setting.Spell.CustomLists')}
 
         .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{enableEquipmentPurchase}"
-            )
-            span {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint')}
+          p.hint {game.i18n.localize('GAS.Setting.CustomSpellLists.Hint')}
+          button.manage-lists-button(type="button" on:click="{openSpellListManager}")
+            | {game.i18n.localize('GAS.Setting.CustomSpellLists.Label')}
 
     footer.settings-footer
       button.cancel-button(on:click="{cancelSettings}") Cancel
@@ -46,42 +41,32 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 <script>
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
-  import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { MODULE_ID } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
+  import SpellListManagerButton from '../SpellListManagerButton';
 
   export let elementRoot;
 
   const { application } = getContext('#external');
 
-  // Load current settings
-  let defaultGoldDice = safeGetSetting(MODULE_ID, 'defaultGoldDice', '5d4 * 10');
-  let enableEquipmentSelection = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
-  let enableEquipmentPurchase = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
+  let enableSpellSelection = safeGetSetting(MODULE_ID, 'enableSpellSelection', false);
+  let enableCustomSpellListFiltering = safeGetSetting(MODULE_ID, 'enableCustomSpellListFiltering', true);
 
   async function saveSettings() {
     try {
-      await game.settings.set(MODULE_ID, 'defaultGoldDice', defaultGoldDice);
-      await game.settings.set(MODULE_ID, 'enableEquipmentSelection', enableEquipmentSelection);
-      await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', enableEquipmentPurchase);
+      await game.settings.set(MODULE_ID, 'enableSpellSelection', enableSpellSelection);
+      await game.settings.set(MODULE_ID, 'enableCustomSpellListFiltering', enableCustomSpellListFiltering);
 
-      ui.notifications.info('Equipment settings saved successfully');
-      
-      const result = await TJSDialog.confirm({
-        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
-        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-        defaultYes: true
-      });
-
-      if (result) {
-        window.location.reload();
-      } else {
-        application.close();
-      }
+      ui.notifications.info(game.i18n.localize('GAS.Notification.SettingsSaved'));
+      application.close();
     } catch (error) {
-      console.error('Error saving equipment settings:', error);
-      ui.notifications.error('Failed to save equipment settings');
+      console.error('Error saving spell settings:', error);
+      ui.notifications.error(game.i18n.localize('GAS.Notification.SettingsSaveFailed'));
     }
+  }
+
+  function openSpellListManager() {
+    SpellListManagerButton.showManager();
   }
 
   function cancelSettings() {
@@ -90,11 +75,11 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 </script>
 
 <style lang="sass">
-  :global(#gas-equipment-settings)
+  :global(#gas-spell-settings)
     background-color: rgba(0, 0, 0, 0.9)
     color: white
 
-  :global(#gas-equipment-settings .window-content)
+  :global(#gas-spell-settings .window-content)
     padding: 0
     overflow: hidden
 
@@ -105,16 +90,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     padding: 0
     color: white
     background-color: rgba(0, 0, 0, 0.9)
-
-  .settings-header
-    padding: 1rem
-    border-bottom: 1px solid #666
-    background: #222
-
-    h2
-      margin: 0
-      font-size: 1.3rem
-      color: white
 
   .settings-content
     flex: 1
@@ -151,22 +126,17 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             height: 1.2rem
             cursor: pointer
 
-            &:disabled
-              opacity: 0.5
-              cursor: not-allowed
+        .manage-lists-button
+          background: #2a3f60
+          border: 1px solid #4a6ba0
+          color: white
+          padding: 0.4rem 0.8rem
+          border-radius: 3px
+          cursor: pointer
+          margin-top: 0.5rem
 
-          input[type="text"]
-            flex: 1
-            padding: 0.25rem 0.5rem
-            border: 1px solid #666
-            border-radius: 3px
-            background: #333
-            color: white
-            font-family: inherit
-
-            &:focus
-              outline: 2px solid #4a9eff
-              outline-offset: 1px
+          &:hover
+            background: #3a5a8a
 
         p.hint
           margin: 0.25rem 0 0 0

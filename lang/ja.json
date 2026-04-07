@@ -408,6 +408,21 @@
         "StartingGold": "初期ゴールド",
         "SelectionOptions": "選択オプション"
       },
+      "Spell": {
+        "Name": "呪文",
+        "Hint": "呪文選択とカスタム呪文リストの動作を設定します",
+        "Label": "呪文を設定",
+        "Title": "呪文設定",
+        "Description": "呪文選択とカスタム呪文リスト機能を制御します",
+        "SelectionOptions": "選択オプション",
+        "CustomLists": "カスタム呪文リスト"
+      },
+      "CustomSpellLists": {
+        "Name": "カスタム呪文リスト",
+        "Hint": "呪文フィルタリングで使用するカスタム呪文リストを作成・編集します。",
+        "Label": "呪文リストを管理",
+        "MenuHint": "呪文リストマネージャーを開いてカスタムリストを作成・編集します。"
+      },
       "Progression": {
         "Name": "進行",
         "Hint": "レベルアップと進展オプションを設定します",

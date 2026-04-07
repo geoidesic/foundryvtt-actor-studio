@@ -6,6 +6,7 @@ export default class SpellListManagerApp extends SvelteApplication {
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'spell-list-manager',
       title: 'Spell List Manager',
+      headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-white.png',
       resizable: true,
       width: 800,
       height: 600,
