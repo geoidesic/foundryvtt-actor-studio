@@ -2,7 +2,7 @@
     "description": "Easily create Heroes, Villains and everything in between.",
     "license": "MIT",
     "private": false,
-    "version": "2.6.5",
+    "version": "2.6.6",
     "type": "module",
     "debug": false,
     "engines": {
@@ -96,5 +96,5 @@
             "script": "Standard JavaScript"
         }
     },
-    "env": "dev"
+    "env": "production"
 }
