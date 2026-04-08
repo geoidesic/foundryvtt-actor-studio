@@ -79,6 +79,15 @@
       || 'bard';
   })();
 
+  // Display label for UI headings/notices. Keep this as the class name while
+  // internal filtering uses identifiers.
+  $: displayClassName = (() => {
+    if ($isLevelUp && $levelUpClassObject?.name) return $levelUpClassObject.name;
+    if ($characterClass?.name) return $characterClass.name;
+    if (Array.isArray(characterClassName)) return String(characterClassName[0] || '');
+    return String(characterClassName || '');
+  })();
+
   // Debug: log which class we think is being used for spell selection
   $: window.GAS?.log?.d?.('[SPELLS] selected class for spell tab:', {
     isLevelUp: $isLevelUp,
@@ -602,13 +611,13 @@ spells-tab-container(clas:readonlys="{isDisabled}")
         p 
           strong No spell updates needed for this level-up
         p
-          span.capitalise {characterClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
+          span.capitalise {displayClassName}s have access to all spells of appropriate level. At level {$newLevelValueForExistingClass}, you still have access to the same spell levels (1-{effectiveMaxSpellLevel}) as before.
         p 
           em Your spell selection is complete - no changes needed.
     +elseif("shouldShowAllSpellsNotice")
       .info-message.all-spells-notice
         p
-          strong.capitalise {characterClassName}s 
+          strong.capitalise {displayClassName}s 
           +if("$isLevelUp")
             | automatically gain all newly available spells for this level.
             +else()
@@ -653,7 +662,7 @@ spells-tab-container(clas:readonlys="{isDisabled}")
         )
 
       AvailableSpellsPanel(
-        className="{characterClassName}"
+        className="{displayClassName}"
         loading="{loading}"
         isDisabled="{isDisabled}"
         shouldHideAvailableSpellsPanel="{shouldHideAvailableSpellsPanel}"
