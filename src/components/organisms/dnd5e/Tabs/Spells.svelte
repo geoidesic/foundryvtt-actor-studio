@@ -2,6 +2,7 @@
   import { get } from 'svelte/store';
   import { readOnlyTabs, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
   import { characterClass } from '~/src/stores/storeDefinitions';
+  import { MODULE_ID } from '~/src/helpers/constants';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { availableSpells, selectedSpells, maxSpellLevel, 
@@ -31,10 +32,26 @@
   // CRITICAL: During level-up, first check if the character has subclass spellcasting (e.g., Eldritch Knight)
   // Only use levelUpClassObject if it actually grants spellcasting
   $: characterClassName = (() => {
+    const resolveCustomSpellListIdsFromClassStore = () => {
+      try {
+        const rawSpellLists = $characterClass?.getFlag?.(MODULE_ID, 'spellLists');
+        const lists = Array.isArray(rawSpellLists)
+          ? rawSpellLists
+          : (rawSpellLists && typeof rawSpellLists === 'object' && Array.isArray(rawSpellLists.lists)
+            ? rawSpellLists.lists
+            : null);
+        if (!lists || lists.length === 0) return null;
+        return lists.map((entry) => String(entry || '').trim().toLowerCase()).filter(Boolean);
+      } catch (error) {
+        window.GAS?.log?.w?.('[SPELLS] Failed to resolve spellLists from class store:', error);
+        return null;
+      }
+    };
+
     if ($isLevelUp && $actor) {
       // First, try to determine spell list from subclass/features
       const spellListFromActor = determineSpellListClass($actor);
-      if (spellListFromActor && typeof spellListFromActor === 'string') {
+      if (spellListFromActor && (typeof spellListFromActor === 'string' || Array.isArray(spellListFromActor))) {
         window.GAS?.log?.d?.('[SPELLS] Using spell list from subclass/features:', spellListFromActor);
         return spellListFromActor;
       }
@@ -49,8 +66,17 @@
       }
     }
     
-    // Fallback: use determineSpellListClass for non-level-up or when no class spellcasting
-    return determineSpellListClass($actor) || $characterClass?.name || 'Bard';
+    // Character creation: custom class may define explicit spell lists via flag.
+    const classStoreSpellLists = resolveCustomSpellListIdsFromClassStore();
+    if (classStoreSpellLists) {
+      return classStoreSpellLists;
+    }
+
+    // Fallback: use actor-derived spell list, then class system identifier, then display name.
+    return determineSpellListClass($actor)
+      || $characterClass?.system?.identifier
+      || $characterClass?.name
+      || 'bard';
   })();
 
   // Debug: log which class we think is being used for spell selection

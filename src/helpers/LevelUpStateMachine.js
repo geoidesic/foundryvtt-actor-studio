@@ -120,6 +120,34 @@ function determineSpellListClass(actor) {
   const droppedItems = actor.getFlag(MODULE_ID, 'droppedItems');
   const customSpellListFilteringEnabled = isCustomSpellListFilteringEnabled();
   
+  const normalizeSpellListIdentifiers = (lists) => {
+    if (!Array.isArray(lists)) return null;
+
+    // Backward compatibility: older data may store class names ("Wizard"),
+    // while new behavior stores identifiers ("wizard").
+    const NAME_TO_IDENTIFIER = {
+      artificer: 'artificer',
+      bard: 'bard',
+      cleric: 'cleric',
+      druid: 'druid',
+      paladin: 'paladin',
+      ranger: 'ranger',
+      sorcerer: 'sorcerer',
+      warlock: 'warlock',
+      wizard: 'wizard'
+    };
+
+    const normalized = lists
+      .map((entry) => String(entry || '').trim())
+      .filter(Boolean)
+      .map((entry) => {
+        const lower = entry.toLowerCase();
+        return NAME_TO_IDENTIFIER[lower] || lower;
+      });
+
+    return normalized.length > 0 ? normalized : null;
+  };
+
   if (customSpellListFilteringEnabled && droppedItems) {
     // Check subclass first (subclass spell lists override class spell lists)
     let subclassItems = [];
@@ -141,9 +169,10 @@ function determineSpellListClass(actor) {
               : (rawSpellLists && typeof rawSpellLists === 'object' && Array.isArray(rawSpellLists.lists)
                 ? rawSpellLists.lists
                 : null);
-            if (customSpellLists && customSpellLists.length > 0) {
-              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on subclass:', subclassItem.name, '->', customSpellLists);
-              return customSpellLists; // Return array of spell lists for custom subclasses
+            const normalizedSpellListIds = normalizeSpellListIdentifiers(customSpellLists);
+            if (normalizedSpellListIds && normalizedSpellListIds.length > 0) {
+              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on subclass:', subclassItem.name, '->', normalizedSpellListIds);
+              return normalizedSpellListIds; // Return identifier array for custom subclasses
             }
           }
         } catch (error) {
@@ -172,9 +201,10 @@ function determineSpellListClass(actor) {
               : (rawSpellLists && typeof rawSpellLists === 'object' && Array.isArray(rawSpellLists.lists)
                 ? rawSpellLists.lists
                 : null);
-            if (customSpellLists && customSpellLists.length > 0) {
-              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on class:', classItem.name, '->', customSpellLists);
-              return customSpellLists; // Return array of spell lists for custom classes
+            const normalizedSpellListIds = normalizeSpellListIdentifiers(customSpellLists);
+            if (normalizedSpellListIds && normalizedSpellListIds.length > 0) {
+              window.GAS.log.d('[LEVELUP] Found CUSTOM spell lists flag on class:', classItem.name, '->', normalizedSpellListIds);
+              return normalizedSpellListIds; // Return identifier array for custom classes
             }
           }
         } catch (error) {

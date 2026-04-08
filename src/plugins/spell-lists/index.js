@@ -195,22 +195,33 @@ export default class SpellListsPlugin {
    * @param {Item} item - The class or subclass item
    */
   static async _showSpellListsDialog(item) {
-    // Core D&D 5e spell list classes
+    // Core D&D 5e spell list classes by identifier.
     const spellListClasses = [
-      'Artificer',
-      'Bard',
-      'Cleric',
-      'Druid',
-      'Paladin',
-      'Ranger',
-      'Sorcerer',
-      'Warlock',
-      'Wizard'
+      { id: 'artificer', label: 'Artificer' },
+      { id: 'bard', label: 'Bard' },
+      { id: 'cleric', label: 'Cleric' },
+      { id: 'druid', label: 'Druid' },
+      { id: 'paladin', label: 'Paladin' },
+      { id: 'ranger', label: 'Ranger' },
+      { id: 'sorcerer', label: 'Sorcerer' },
+      { id: 'warlock', label: 'Warlock' },
+      { id: 'wizard', label: 'Wizard' }
     ];
+
+    const normalizeStoredSpellListIds = (lists) => {
+      if (!Array.isArray(lists)) return [];
+      const NAME_TO_IDENTIFIER = Object.fromEntries(
+        spellListClasses.map(({ id, label }) => [label.toLowerCase(), id])
+      );
+      return lists
+        .map((entry) => String(entry || '').trim().toLowerCase())
+        .filter(Boolean)
+        .map((entry) => NAME_TO_IDENTIFIER[entry] || entry);
+    };
 
     const currentLists = this.getSpellListsData(item);
     const currentLevel = currentLists?.level || 1;
-    const selectedLists = currentLists?.lists || [];
+    const selectedLists = normalizeStoredSpellListIds(currentLists?.lists || []);
     
     window.GAS.log.d('[SPELL LISTS PLUGIN] Current spell lists for', item.name, ':', selectedLists, 'at level', currentLevel);
 
@@ -231,15 +242,15 @@ export default class SpellListsPlugin {
             This is only needed for custom/homebrew classes.
           </p>
           <div class="spell-list-checkboxes" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5em;">
-            ${spellListClasses.map(className => `
+            ${spellListClasses.map(({ id, label }) => `
               <div style="display: flex; align-items: center;">
                 <input type="checkbox" 
                        name="spell-list" 
-                       value="${className}" 
-                       id="spell-list-${className}"
-                       ${selectedLists.includes(className) ? 'checked' : ''}
+                       value="${id}" 
+                       id="spell-list-${id}"
+                       ${selectedLists.includes(id) ? 'checked' : ''}
                        style="margin-right: 0.5em;">
-                <label for="spell-list-${className}" style="margin: 0;">${className}</label>
+                <label for="spell-list-${id}" style="margin: 0;">${label}</label>
               </div>
             `).join('')}
           </div>
@@ -408,7 +419,7 @@ export default class SpellListsPlugin {
               <div class="title">Spell Lists</div>
             </div>
             <div class="tags">
-              <span class="tag">${spellListsData.lists.join(', ')}</span>
+              <span class="tag">${spellListsData.lists.map((entry) => String(entry)).join(', ')}</span>
             </div>
           </div>
           
