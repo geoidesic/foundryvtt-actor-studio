@@ -213,7 +213,14 @@
   const clickCreateHandler = async () => {
     // Initialize workflow state machine for character creation
     const fsm = getWorkflowFSM();
-    fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    const currentState = fsm.getCurrentState?.();
+    const canStartFromState = currentState === 'idle' || currentState === 'creating_character';
+    if (canStartFromState) {
+      fsm.handle(WORKFLOW_EVENTS.START_CHARACTER_CREATION);
+    } else {
+      // Prevent Finity unhandled-event errors when users click Create while already mid-workflow.
+      window.GAS?.log?.w?.('[FOOTER] Ignoring start_character_creation in state:', currentState);
+    }
     
     // Check if biography tab is enabled (new setting). Fall back to LLM name generation for backward compatibility.
     const enableBiography = safeGetSetting(MODULE_ID, 'EnableBiographyTab', undefined);

@@ -41,26 +41,27 @@ describe('Ranger Level 2→3 Spell Limits Calculation Bug', () => {
     console.log(`  newClassData: "${newClassData}"`);
     console.log('');
     
-    // Parse old level limits
-    const [oldCantrips, oldSpells] = oldClassData.split(' / ');
-    const oldCantripCount = parseInt(oldCantrips) || 0;
-    const oldSpellCount = parseInt(oldSpells) || 0;
+    const parseSpellsOnly = (rawValue) => {
+      if (typeof rawValue !== 'string') return 0;
+      const compact = rawValue.replace(/\s+/g, '');
+      const spellsToken = compact.includes('/') ? compact.split('/')[1] : compact;
+      return Number.parseInt(spellsToken, 10) || 0;
+    };
+
+    // Parse old level limits (spellsKnown now stores spells-only values)
+    const oldCantripCount = 0;
+    const oldSpellCount = parseSpellsOnly(oldClassData);
     
     console.log('📝 Old level (2) parsed values:');
-    console.log(`  oldCantrips string: "${oldCantrips}"`);
-    console.log(`  oldSpells string: "${oldSpells}"`);
     console.log(`  oldCantripCount: ${oldCantripCount}`);
     console.log(`  oldSpellCount: ${oldSpellCount}`);
     console.log('');
     
     // Parse new level limits
-    const [newCantrips, newSpells] = newClassData.split(' / ');
-    const newCantripCount = parseInt(newCantrips) || 0;
-    const newSpellCount = parseInt(newSpells) || 0;
+    const newCantripCount = 0;
+    const newSpellCount = parseSpellsOnly(newClassData);
     
     console.log('📝 New level (3) parsed values:');
-    console.log(`  newCantrips string: "${newCantrips}"`);
-    console.log(`  newSpells string: "${newSpells}"`);
     console.log(`  newCantripCount: ${newCantripCount}`);
     console.log(`  newSpellCount: ${newSpellCount}`);
     console.log('');

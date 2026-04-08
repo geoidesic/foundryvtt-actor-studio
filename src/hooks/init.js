@@ -5,6 +5,7 @@ import { initEquipmentPurchase } from '~/src/plugins/equipment-purchase';
 import { log, getDnd5eVersion, getDndRulesVersion, hasSourcesAssigned, autoAssignSources, safeGetSetting } from '~/src/helpers/Utility' 
 import SubclassLevelPlugin from '~/src//plugins/subclass-level';
 import SpellListsPlugin from '~/src/plugins/spell-lists';
+import SpellsKnownPlugin from '~/src/plugins/spells-known';
 import WelcomeApplication from '~/src/app/WelcomeApplication.js';
 import CompendiumSourcesButton from '~/src/settings/CompendiumSourcesButton.js';
 import { getWorkflowFSM } from '~/src/helpers/WorkflowStateMachine.js';
@@ -146,6 +147,7 @@ export const ready = async (app, html, data) => {
   // Initialize plugins
   SubclassLevelPlugin.init();
   SpellListsPlugin.init();
+  SpellsKnownPlugin.init();
 }
 
 /**

@@ -7,29 +7,15 @@ import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
 import { actorInGame, startingWealthChoice } from '~/src/stores/storeDefinitions';
 import { handleAdvancementCompletion } from '~/src/lib/workflow.js';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
-import spellsKnownData from '~/src/stores/spellsKnown.json';
+import { getSpellLimitsForClassLevel } from '~/src/helpers/spellProgression';
 import Finity from 'finity';
 
-function parseSpellProgressionValue(value) {
-  if (typeof value !== 'string') return null;
-
-  const [cantripsRaw, spellsRaw] = value.split('/').map((entry) => String(entry ?? '').trim());
-  if (!cantripsRaw || !spellsRaw) return null;
-
-  return {
-    cantrips: Number.parseInt(cantripsRaw, 10) || 0,
-    spells: Number.parseInt(spellsRaw, 10) || 0,
-    hasAllSpells: spellsRaw.toLowerCase() === 'all'
-  };
-}
-
 function classHasSpellSelectionAtLevel(classIdentifier, level, rulesVersion) {
-  const normalizedClass = String(classIdentifier || '').toLowerCase();
-  const numericLevel = Number(level) || 0;
-
-  const levelData = spellsKnownData.levels.find((entry) => Number(entry.level) === numericLevel);
-  const rawValue = levelData?.[normalizedClass]?.[rulesVersion] ?? levelData?.[normalizedClass];
-  const parsedValue = parseSpellProgressionValue(rawValue);
+  const parsedValue = getSpellLimitsForClassLevel({
+    classIdentifier,
+    level,
+    rulesVersion
+  });
 
   if (!parsedValue) return false;
 

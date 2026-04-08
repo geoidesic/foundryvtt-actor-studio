@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import spellsKnownData from '../stores/spellsKnown.json';
 
 // Official spell progression tables sourced from PHB 2014 and PHB 2024.
-// Format: cantrips known / spells known (or "All" for prepared casters)
-// "0 / N" = no cantrips, N spells known (ranger / paladin)
+// Legacy fixture format kept as "cantrips/spells"; assertions below normalize
+// to spells-only because spellsKnown.json now stores spells-only values.
 
 const OFFICIAL_2014 = {
   sorcerer:  [null,'4/2','4/3','4/4','5/5','5/6','5/7','5/8','5/9','5/10','6/11','6/12','6/12','6/13','6/13','6/14','6/14','6/15','6/15','6/15','6/15'],
@@ -40,6 +40,12 @@ function normalize(raw) {
   return raw.replace(/\s+/g, '');
 }
 
+function normalizeExpectedSpellsOnly(rawExpected) {
+  if (typeof rawExpected !== 'string') return null;
+  const compact = normalize(rawExpected);
+  return compact.includes('/') ? compact.split('/')[1] : compact;
+}
+
 function getLevelEntry(level) {
   return spellsKnownData.levels.find((e) => e.level === level);
 }
@@ -52,7 +58,7 @@ describe('spellsKnown.json — 2014 progression', () => {
           const entry = getLevelEntry(lvl);
           expect(entry, `no entry for level ${lvl}`).toBeDefined();
           const actual = normalize(entry[className]?.['2014'] ?? entry[className]);
-          expect(actual).toBe(expected[lvl]);
+          expect(actual).toBe(normalizeExpectedSpellsOnly(expected[lvl]));
         });
       }
     });
@@ -67,7 +73,7 @@ describe('spellsKnown.json — 2024 progression', () => {
           const entry = getLevelEntry(lvl);
           expect(entry, `no entry for level ${lvl}`).toBeDefined();
           const actual = normalize(entry[className]?.['2024']);
-          expect(actual).toBe(expected[lvl]);
+          expect(actual).toBe(normalizeExpectedSpellsOnly(expected[lvl]));
         });
       }
     });

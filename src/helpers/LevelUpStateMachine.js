@@ -16,7 +16,7 @@ import { actorInGame } from '~/src/stores/storeDefinitions';
 import { destroyAdvancementManagers } from '~/src/helpers/AdvancementManager';
 import { dropItemRegistry } from '~/src/stores/index';
 import Finity from 'finity';
-import spellsKnownData from '~/src/stores/spellsKnown.json';
+import { getSpellLimitsForClassLevel, getSpellDeltaForClassLevel } from '~/src/helpers/spellProgression';
 
 // Helper to safely get fromUuidSync
 const fromUuidSync = (uuid) => {
@@ -375,18 +375,6 @@ export const levelUpFSMContext = {
   isProcessing: writable(false),
   actor: undefined,
 
-  _parseSpellProgressionValue: function (value) {
-    if (typeof value !== 'string') return null;
-    const [cantripsRaw, spellsRaw] = value.split('/').map((entry) => String(entry ?? '').trim());
-    if (!cantripsRaw || !spellsRaw) return null;
-
-    return {
-      cantrips: Number.parseInt(cantripsRaw, 10) || 0,
-      spells: Number.parseInt(spellsRaw, 10) || 0,
-      hasAllSpells: spellsRaw.toLowerCase() === 'all'
-    };
-  },
-
   _getMaxSpellLevelForProgression: function (level, progression, classIdentifier = '') {
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
     const is2024Rules = rulesVersion === '2024';
@@ -439,19 +427,30 @@ export const levelUpFSMContext = {
     const oldLevel = Math.max(1, targetLevel - 1);
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
     console.log('[LEVELUP] _shouldRequireSpellSelectionForLevelUp:', { targetLevel, classIdentifier, oldLevel, rulesVersion });
-    const oldLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === oldLevel);
-    const newLevelData = spellsKnownData.levels.find((entry) => Number(entry.level) === targetLevel);
-
-    const oldValue = oldLevelData?.[classIdentifier]?.[rulesVersion] ?? oldLevelData?.[classIdentifier];
-    const newValue = newLevelData?.[classIdentifier]?.[rulesVersion] ?? newLevelData?.[classIdentifier];
-    console.log('[LEVELUP] Spell values:', { oldValue, newValue });
-    const oldParsed = levelUpFSMContext._parseSpellProgressionValue(oldValue);
-    const newParsed = levelUpFSMContext._parseSpellProgressionValue(newValue);
+    const oldParsed = getSpellLimitsForClassLevel({
+      classIdentifier,
+      classItem: selectedClass,
+      level: oldLevel,
+      rulesVersion
+    });
+    const newParsed = getSpellLimitsForClassLevel({
+      classIdentifier,
+      classItem: selectedClass,
+      level: targetLevel,
+      rulesVersion
+    });
     console.log('[LEVELUP] Parsed values:', { oldParsed, newParsed });
 
     if (!oldParsed || !newParsed) return null;
 
-    const cantripDifference = Math.max(0, newParsed.cantrips - oldParsed.cantrips);
+    const parsedDelta = getSpellDeltaForClassLevel({
+      classIdentifier,
+      classItem: selectedClass,
+      oldLevel,
+      newLevel: targetLevel,
+      rulesVersion
+    }) || { cantrips: 0, spells: 0, hasAllSpells: false };
+    const cantripDifference = parsedDelta.cantrips;
 
     if (oldParsed.hasAllSpells || newParsed.hasAllSpells) {
       const classEntry = Object.values(actor?.classes || {}).find((entry) =>
@@ -469,7 +468,7 @@ export const levelUpFSMContext = {
       return result;
     }
 
-    const spellDifference = Math.max(0, newParsed.spells - oldParsed.spells);
+    const spellDifference = parsedDelta.spells;
     const result = cantripDifference > 0 || spellDifference > 0;
     console.log('[LEVELUP] Level-up spell selection result:', result);
     return result;

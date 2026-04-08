@@ -4,10 +4,9 @@ import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/
 import { readOnlyTabs, characterClass, characterSubClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
 import DTPlugin from '~/src/plugins/donation-tracker';
+import { getSpellLimitsForClassLevel, getSpellDeltaForClassLevel } from '~/src/helpers/spellProgression';
 
 // Import spellsKnown data for determining spell limits
-import spellsKnownData from './spellsKnown.json';
-
 // Safe logging shim to avoid test failures when certain log methods (g/p) are missing
 if (typeof window !== 'undefined') {
   window.GAS = window.GAS || {};
@@ -715,11 +714,12 @@ export const spellLimits = derived(
       window.GAS.log.d('⏭️ [spellLimits] No subclass limits found, falling back to BASE CLASS calculation');
     }
 
-    // Fallback to base class data from spellsKnown.json
+    // Fallback to class progression resolver (advancement-aware with JSON fallback)
     // For level-up scenarios, calculate the difference between old and new levels
     if ($isLevelUp && $newLevelValueForExistingClass) {
       const oldLevel = $newLevelValueForExistingClass - 1; // Current level is new level - 1
       const newLevel = $newLevelValueForExistingClass;
+      const classItem = $levelUpClassObject || $characterClass;
 
       window.GAS.log.d('📚 [spellLimits] BASE CLASS CALCULATION (level-up):', {
         classNameLower,
@@ -728,88 +728,41 @@ export const spellLimits = derived(
         newLevel
       });
 
-      // Get spell data for both levels
-      const oldLevelData = spellsKnownData.levels.find(l => l.level === oldLevel);
-      const newLevelData = spellsKnownData.levels.find(l => l.level === newLevel);
-
-      window.GAS.log.d('📚 [spellLimits] Level data found:', {
-        hasOldData: !!oldLevelData,
-        hasNewData: !!newLevelData,
-        oldDataHasClass: oldLevelData ? !!oldLevelData[classNameLower] : false,
-        newDataHasClass: newLevelData ? !!newLevelData[classNameLower] : false
+      const deltaLimits = getSpellDeltaForClassLevel({
+        classIdentifier: classNameLower,
+        classItem,
+        oldLevel,
+        newLevel,
+        rulesVersion
       });
-
-      if (!oldLevelData || !newLevelData || !oldLevelData[classNameLower] || !newLevelData[classNameLower]) {
+      if (!deltaLimits) {
         window.GAS.log.w('⚠️ [spellLimits] No spell data found for class:', classNameLower, 'at levels:', oldLevel, newLevel);
         return { cantrips: 0, spells: 0 };
       }
-
-      // Get version-specific data
-      const oldClassData = oldLevelData[classNameLower][rulesVersion] || oldLevelData[classNameLower];
-      const newClassData = newLevelData[classNameLower][rulesVersion] || newLevelData[classNameLower];
-
-      window.GAS.log.d('📊 [spellLimits] Raw class data:', {
-        oldClassData,
-        newClassData
-      });
-
-      // Parse old level limits
-      const [oldCantrips, oldSpells] = oldClassData.split(' / ');
-      const oldCantripCount = parseInt(oldCantrips) || 0;
-      const oldSpellCount = parseInt(oldSpells) || 0;
-      const oldHasAllSpells = oldSpells === 'All';
-
-      // Parse new level limits
-      const [newCantrips, newSpells] = newClassData.split(' / ');
-      const newCantripCount = parseInt(newCantrips) || 0;
-      const newSpellCount = parseInt(newSpells) || 0;
-      const newHasAllSpells = newSpells === 'All';
-
-      window.GAS.log.d('🔢 [spellLimits] Parsed values:', {
-        oldParsed: { cantrips: oldCantripCount, spells: oldSpellCount, hasAll: oldHasAllSpells },
-        newParsed: { cantrips: newCantripCount, spells: newSpellCount, hasAll: newHasAllSpells }
-      });
-
-      // Calculate the difference (new spells gained on level up)
-      const cantripDifference = Math.max(0, newCantripCount - oldCantripCount);
-      const spellDifference = oldHasAllSpells || newHasAllSpells ? 0 : Math.max(0, newSpellCount - oldSpellCount);
-
-      const result = {
-        cantrips: cantripDifference,
-        spells: spellDifference,
-        hasAllSpells: newHasAllSpells
-      };
 
       window.GAS.log.d('✅ [spellLimits] BASE CLASS CALCULATION RESULT (level-up difference):', {
         oldLevel, 
         newLevel, 
         className: classNameLower,
-        oldValues: { cantrips: oldCantripCount, spells: oldSpellCount },
-        newValues: { cantrips: newCantripCount, spells: newSpellCount },
-        result
+        result: deltaLimits
       });
 
-      return result;
+      return deltaLimits;
     } else {
       // Character creation scenario - use total spells for level 1
-      const levelData = spellsKnownData.levels.find(l => l.level === 1);
-      if (!levelData || !levelData[classNameLower]) {
+      const limits = getSpellLimitsForClassLevel({
+        classIdentifier: classNameLower,
+        classItem: $characterClass,
+        level: 1,
+        rulesVersion
+      });
+      if (!limits) {
         window.GAS.log.w('[SPELLS] No spell data found for class:', classNameLower, 'at level 1');
         return { cantrips: 0, spells: 0 };
       }
-
-      // Get version-specific data
-      const classData = levelData[classNameLower][rulesVersion] || levelData[classNameLower];
-
-      const [cantrips, spells] = classData.split(' / ');
-      const result = {
-        cantrips: parseInt(cantrips) || 0,
-        spells: parseInt(spells) || 0,
-        hasAllSpells: spells === 'All'
-      };
       
-      window.GAS.log.d('[SPELLS] Using base class limits (character creation):', result);
-      return result;
+      window.GAS.log.d('[SPELLS] Using base class limits (character creation):', limits);
+      return limits;
     }
   }
 );

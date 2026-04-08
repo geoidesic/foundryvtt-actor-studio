@@ -67,7 +67,7 @@
 - **CRITICAL for class progression tests**: Always set `game.settings.set(MODULE_ID, 'milestoneLeveling', true)` before any level-up flow assertions or interactions.
 - **CRITICAL timeout rule**: Never hard-code timeout / polling millisecond values in test helpers or Quench flows. Always read from settings-driven helpers (for Quench use `getTestTimeouts()` from `src/helpers/testTimeouts.js` and derive named constants from those values).
 ```bash
-bun run test      # Run all tests without watch (uses package.json script)
+nvm use 24; bun run test      # Run all tests without watch (uses package.json script)
 ```
 
 **Development**:
