@@ -777,46 +777,50 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
     }
 
     const item = await fromUuid(selectedFeat.uuid);
-    
-    // Check if this is an AbilityScoreImprovement flow (uses `feat` property)
-    // or an ItemChoice flow (uses `selected` Set)
-    if (flow.advancement?.type === 'AbilityScoreImprovement') {
-      // ASI flow - store the selected feat in actor flags and use advancement.apply() method for V14 compatibility
-      const actor = flow.advancement.actor;
-      try {
-        const itemRecord = {
-          name: selectedFeat.name,
-          uuid: selectedFeat.uuid
-        };
-        const existingFeats = actor.getFlag(MODULE_ID, 'droppedItems.feat') || [];
-        const updatedFeats = [...existingFeats, itemRecord];
-        await actor.setFlag(MODULE_ID, 'droppedItems.feat', updatedFeats);
-        window.GAS.log.d('[handleFeatSelection] Stored feat in actor flags:', selectedFeat.name);
-      } catch (error) {
-        window.GAS.log.e('[handleFeatSelection] Error storing feat in actor flags:', error);
-      }
-
-      await flow.advancement.apply(flow.level, {
-        type: "feat",
-        uuid: selectedFeat.uuid
-      });
-      window.GAS.log.d('[handleFeatSelection] Applied feat via advancement.apply() for ASI advancement');
-    } else {
-      // ItemChoice flow - add to selected set
-      flow.selected ??= new Set();
-      flow.selected.add(selectedFeat.uuid);
-      window.GAS.log.d('[handleFeatSelection] Added feat to selected set:', Array.from(flow.selected));
-
-      // If the item is not in the pool, add it to dropped (only if pool exists)
-      if (flow.pool && !flow.pool.find(i => i.uuid === selectedFeat.uuid)) {
-        flow.dropped ??= [];
-        flow.dropped.push(item);
-        item.dropped = true;
-        window.GAS.log.d('[handleFeatSelection] Added feat to dropped items');
-      }
+    const isValid = item?.system?.validatePrerequisites?.(flow.advancement?.actor, { showMessage: true });
+    if ((isValid !== undefined) && (isValid !== true)) {
+      window.GAS.log.w('[handleFeatSelection] Feat prerequisites not met for selection:', selectedFeat.uuid);
+      return;
     }
 
-    // Re-render the advancement form to show the selected feat
+    // Mirror the native dnd5e flow behavior so V14 updates the visible selection correctly.
+    if (typeof flow.advancement?.apply === 'function') {
+      if (flow.advancement?.type === 'AbilityScoreImprovement') {
+        await flow.advancement.apply(flow.level, {
+          retainedItems: flow.retainedData?.retainedItems,
+          type: 'feat',
+          uuid: selectedFeat.uuid
+        });
+        window.GAS.log.d('[handleFeatSelection] Applied feat via advancement.apply() for ASI advancement');
+      } else {
+        await flow.advancement.apply(flow.level, {
+          selected: [selectedFeat.uuid]
+        });
+        window.GAS.log.d('[handleFeatSelection] Applied feat selection via advancement.apply() for ItemChoice advancement');
+      }
+
+      if (typeof flow.render === 'function') {
+        await flow.render();
+        window.GAS.log.d('[handleFeatSelection] Re-rendered advancement flow to show selection');
+      } else {
+        await advancementManager.render();
+        window.GAS.log.d('[handleFeatSelection] Re-rendered advancement manager to show selection');
+      }
+      return;
+    }
+
+    // Legacy fallback for older flows without advancement.apply().
+    flow.selected ??= new Set();
+    flow.selected.add(selectedFeat.uuid);
+    window.GAS.log.d('[handleFeatSelection] Added feat to selected set:', Array.from(flow.selected));
+
+    if (flow.pool && !flow.pool.find(i => i.uuid === selectedFeat.uuid)) {
+      flow.dropped ??= [];
+      flow.dropped.push(item);
+      item.dropped = true;
+      window.GAS.log.d('[handleFeatSelection] Added feat to dropped items');
+    }
+
     await advancementManager.render();
     window.GAS.log.d('[handleFeatSelection] Re-rendered advancement manager to show selection');
 

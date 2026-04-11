@@ -295,18 +295,27 @@ global.document = {
 const createMockFlow = (id, type) => {
   const selectedSet = new Set();
   const flow = {
-    advancement: { 
-      id, 
+    level: 4,
+    retainedData: {
+      retainedItems: {}
+    },
+    advancement: {
+      id,
       type,
+      actor: {
+        getFlag: vi.fn(() => []),
+        setFlag: vi.fn()
+      },
       configuration: {
         choices: [{ count: 1 }] // Default to allowing 1 selection
-      }
+      },
+      apply: vi.fn().mockResolvedValue(undefined)
     },
     selected: selectedSet,
     dropped: [],
     pool: [],
     _evaluatePrerequisites: vi.fn(),
-    render: vi.fn(),
+    render: vi.fn().mockResolvedValue(undefined),
     updateSource: vi.fn(),
     _updateObject: vi.fn()
   };
@@ -632,10 +641,10 @@ describe('Feat Selector Integration', () => {
   });
 
   describe('handleFeatSelection', () => {
-    it('updates the advancement flow when selecting a feat', async () => {
+    it('updates item-choice advancements when selecting a feat', async () => {
       const module = await import('../hooks/captureAdvancement.js');
 
-      const flow = createMockFlow('feat-adv-id', 'feat');
+      const flow = createMockFlow('feat-adv-id', 'ItemChoice');
 
       const mockActor = {
         system: {
@@ -668,16 +677,60 @@ describe('Feat Selector Integration', () => {
         img: 'test.png'
       };
 
-      // Mock global fromUuid to return the selected feat
-      global.fromUuid.mockResolvedValue(selectedFeat);
+      global.fromUuid.mockResolvedValue({
+        ...selectedFeat,
+        system: { validatePrerequisites: vi.fn(() => true) }
+      });
 
       await module.handleFeatSelection(selectedFeat, mockCurrentProcess);
 
-      // Verify the feat was added to selected
-      expect(flow.selected.has(selectedFeat.uuid)).toBe(true);
-      
-      // Verify render was called to update the UI
-      expect(mockAdvancementManager.render).toHaveBeenCalledTimes(1);
+      expect(flow.advancement.apply).toHaveBeenCalledWith(flow.level, {
+        selected: [selectedFeat.uuid]
+      });
+      expect(flow.render).toHaveBeenCalledTimes(1);
+      expect(mockAdvancementManager.render).not.toHaveBeenCalled();
+    });
+
+    it('updates ability score improvement advancements when selecting a feat', async () => {
+      const module = await import('../hooks/captureAdvancement.js');
+
+      const flow = createMockFlow('asi-adv-id', 'AbilityScoreImprovement');
+      flow.retainedData = {
+        retainedItems: {
+          'Compendium.test-pack.test-feat': { _id: 'feat123', name: 'Test Feat' }
+        }
+      };
+
+      const mockAdvancementManager = {
+        actor: { system: { details: { level: 3 } }, items: [] },
+        step: { flow },
+        render: vi.fn()
+      };
+
+      const mockCurrentProcess = {
+        app: mockAdvancementManager
+      };
+
+      const selectedFeat = {
+        uuid: 'Compendium.test-pack.test-feat',
+        name: 'Test Feat',
+        img: 'test.png'
+      };
+
+      global.fromUuid.mockResolvedValue({
+        ...selectedFeat,
+        system: { validatePrerequisites: vi.fn(() => true) }
+      });
+
+      await module.handleFeatSelection(selectedFeat, mockCurrentProcess);
+
+      expect(flow.advancement.apply).toHaveBeenCalledWith(flow.level, {
+        retainedItems: flow.retainedData.retainedItems,
+        type: 'feat',
+        uuid: selectedFeat.uuid
+      });
+      expect(flow.render).toHaveBeenCalledTimes(1);
+      expect(mockAdvancementManager.render).not.toHaveBeenCalled();
     });
   });
 });
