@@ -781,7 +781,21 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
     // Check if this is an AbilityScoreImprovement flow (uses `feat` property)
     // or an ItemChoice flow (uses `selected` Set)
     if (flow.advancement?.type === 'AbilityScoreImprovement') {
-      // ASI flow - use advancement.apply() method for V14 compatibility
+      // ASI flow - store the selected feat in actor flags and use advancement.apply() method for V14 compatibility
+      const actor = flow.advancement.actor;
+      try {
+        const itemRecord = {
+          name: selectedFeat.name,
+          uuid: selectedFeat.uuid
+        };
+        const existingFeats = actor.getFlag(MODULE_ID, 'droppedItems.feat') || [];
+        const updatedFeats = [...existingFeats, itemRecord];
+        await actor.setFlag(MODULE_ID, 'droppedItems.feat', updatedFeats);
+        window.GAS.log.d('[handleFeatSelection] Stored feat in actor flags:', selectedFeat.name);
+      } catch (error) {
+        window.GAS.log.e('[handleFeatSelection] Error storing feat in actor flags:', error);
+      }
+
       await flow.advancement.apply(flow.level, {
         type: "feat",
         uuid: selectedFeat.uuid
