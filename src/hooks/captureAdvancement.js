@@ -781,9 +781,12 @@ export const handleFeatSelection = async (selectedFeat, currentProcess) => {
     // Check if this is an AbilityScoreImprovement flow (uses `feat` property)
     // or an ItemChoice flow (uses `selected` Set)
     if (flow.advancement?.type === 'AbilityScoreImprovement') {
-      // ASI flow - set the feat property directly
-      flow.feat = item;
-      window.GAS.log.d('[handleFeatSelection] Set feat property for ASI advancement');
+      // ASI flow - use advancement.apply() method for V14 compatibility
+      await flow.advancement.apply(flow.level, {
+        type: "feat",
+        uuid: selectedFeat.uuid
+      });
+      window.GAS.log.d('[handleFeatSelection] Applied feat via advancement.apply() for ASI advancement');
     } else {
       // ItemChoice flow - add to selected set
       flow.selected ??= new Set();
