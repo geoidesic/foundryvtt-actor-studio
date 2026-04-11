@@ -42,6 +42,22 @@ function getScaleValueAtLevel(advancement, level) {
       return Number.isFinite(parsed) ? parsed : null;
     };
 
+    // Handle Map objects (dnd5e 5.3+)
+    if (mapLike instanceof Map) {
+      const exact = mapLike.get(numericLevel) ?? mapLike.get(String(numericLevel));
+      if (exact !== undefined && exact !== null) {
+        const parsed = extractNumeric(exact);
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      // Fallback: find closest lower level
+      const keys = Array.from(mapLike.keys()).map(k => Number(k)).filter(k => Number.isFinite(k) && k <= numericLevel).sort((a, b) => b - a);
+      for (const key of keys) {
+        const parsed = extractNumeric(mapLike.get(key));
+        if (Number.isFinite(parsed)) return parsed;
+      }
+      return null;
+    }
+
     const exact = mapLike[String(numericLevel)] ?? mapLike[numericLevel];
     if (exact !== undefined && exact !== null) {
       const parsed = extractNumeric(exact);
