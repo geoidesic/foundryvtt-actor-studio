@@ -35,8 +35,8 @@
     ],
     "compatibility": {
         "minimum": "11",
-        "verified": "13",
-        "maximum": "14"
+        "verified": "14",
+        "maximum": "15"
     },
     "flags": {
         "hotReload": {
