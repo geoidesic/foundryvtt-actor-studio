@@ -7,9 +7,11 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
+    advancementEntriesToArray,
     illuminatedDescription,
     isSelectionAutomationEnabled,
-    getSelectionAutomationValue
+    getSelectionAutomationValue,
+    getDndRulesVersion
   } from "~/src/helpers/Utility.js";
   import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext, onDestroy, onMount, tick } from "svelte";
@@ -22,7 +24,6 @@
 
   let active = null,
     value = null,
-    placeHolder = t('Tabs.Races.Placeholder'),
     richHTML = "";
   let packs = getPacksFromSettings("races");
   let allRaceItems = extractItemsFromPacksSync(packs, [
@@ -76,8 +77,8 @@
   // Get the advancement array safely
   function getAdvancements(race) {
     if (!race || !race.system || !race.system.advancement) return [];
-    
-    return race.system.advancement.filter(
+
+    return advancementEntriesToArray(race.system.advancement).filter(
       (value) => !(value.type == "Trait" && value.title == "Dwarven Resilience")
     );
   }
@@ -104,6 +105,22 @@
   
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
+  
+  // Dynamic title and placeholder based on D&D rules version
+  $: tabTitle = (() => {
+    try {
+      return getDndRulesVersion() === '2024' ? t('Tabs.Races.Title2024') : t('Tabs.Races.Title');
+    } catch (e) {
+      return 'Race';
+    }
+  })();
+  $: placeHolder = (() => {
+    try {
+      return getDndRulesVersion() === '2024' ? t('Tabs.Races.Placeholder2024') : t('Tabs.Races.Placeholder');
+    } catch (e) {
+      return 'Races';
+    }
+  })();
   
   // Make sure to update active/value when race changes to ensure display in readonly mode
   $: if ($race && (!active || !value)) {
@@ -140,11 +157,18 @@
         .filter(item => item !== null)
     : [];
 
-  $: filteredSenses = senses
-    ? Object.keys(senses)
-        .filter((key) => key !== "units" && senses[key])
-        .map((key) => ({ label: key, value: senses[key] }))
-    : [];
+  $: filteredSenses = (() => {
+    if (!senses) return [];
+    const ranges = senses.ranges;
+    if (ranges && typeof ranges === "object") {
+      return Object.keys(ranges)
+        .filter((key) => ranges[key])
+        .map((key) => ({ label: key, value: ranges[key] }));
+    }
+    return Object.keys(senses)
+      .filter((key) => key !== "units" && key !== "ranges" && senses[key])
+      .map((key) => ({ label: key, value: senses[key] }));
+  })();
 
   // Debug logs
   // $: window.GAS.log.d("Race component:", { 
@@ -180,7 +204,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Races.Title')}" showTitle="{true}" tabName="race" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideAdvancementList}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *

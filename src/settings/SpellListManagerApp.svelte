@@ -5,7 +5,7 @@
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { MODULE_ID } from '~/src/helpers/constants';
-  import { localize } from '~/src/helpers/Utility';
+  import { localize, getDndRulesVersion } from '~/src/helpers/Utility';
 
   export let elementRoot;
 
@@ -30,6 +30,15 @@
       resolveSpell(uuid);
     }
   });
+
+  // Dynamic label for race type based on D&D rules version
+  $: typeRaceLabel = (() => {
+    try {
+      return getDndRulesVersion() === '2024' ? localize('SpellListManager.TypeRace2024') : localize('SpellListManager.TypeRace');
+    } catch (e) {
+      return 'Race';
+    }
+  })();
 
   async function resolveSpell(uuid) {
     // Only skip if already successfully resolved (not null/undefined)
@@ -242,7 +251,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
                 select.form-input(bind:value="{selectedList.type}")
                   option(value="class") {localize('SpellListManager.TypeClass')}
                   option(value="subclass") {localize('SpellListManager.TypeSubclass')}
-                  option(value="race") {localize('SpellListManager.TypeRace')}
+                  option(value="race") {typeRaceLabel}
                   option(value="background") {localize('SpellListManager.TypeBackground')}
                   option(value="feat") {localize('SpellListManager.TypeFeat')}
             .form-row

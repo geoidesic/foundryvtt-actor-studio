@@ -18,6 +18,33 @@ export function getItemsArray(collection) {
   try { return Array.from(collection); } catch (e) { return []; }
 }
 
+/**
+ * Entry count for dnd5e item embedded advancements (array in older dnd5e; Collection with .size in 5.2+).
+ * Prefer .size — reading .length on a Collection logs a compatibility warning.
+ */
+export function getAdvancementEntryCount(advancement) {
+  if (!advancement) return 0;
+  if (!Array.isArray(advancement) && typeof advancement.size === 'number') {
+    return advancement.size;
+  }
+  if (Array.isArray(advancement)) return advancement.length;
+  return 0;
+}
+
+/**
+ * Normalize embedded advancements to a plain array for .filter / iteration.
+ */
+export function advancementEntriesToArray(advancement) {
+  if (!advancement) return [];
+  if (Array.isArray(advancement)) return advancement;
+  try {
+    if (typeof advancement.values === 'function') return Array.from(advancement.values());
+    return Array.from(advancement);
+  } catch (e) {
+    return [];
+  }
+}
+
   /**
    * Get the current items from the actor in the correct format
    */
@@ -193,7 +220,14 @@ export const getDndRulesVersion = () => {
     : getDnd5eVersion();
 
   if (ver === 3) return '2014';
-  return game.settings.get('dnd5e', 'rulesVersion') === 'modern' ? '2024' : '2014';
+
+  // Safely check dnd5e rules version
+  try {
+    if (!globalThis?.game?.settings?.get) return '2014';
+    return game.settings.get('dnd5e', 'rulesVersion') === 'modern' ? '2024' : '2014';
+  } catch (e) {
+    return '2014';
+  }
 };
 
 /**
@@ -1546,11 +1580,11 @@ export function autoAssignSources() {
   
   // Define the source type configurations with their inclusion/exclusion keywords
   const sourceConfigs = {
-    races: { inclusions: ['race'], exclusions: [] },
-    racialFeatures: { inclusions: ['race'], exclusions: [] },
+    races: { inclusions: ['race', 'species', 'origin'], exclusions: [] },
+    racialFeatures: { inclusions: ['race', 'species', 'origin'], exclusions: [] },
     classes: { inclusions: ['class'], exclusions: ['subclass'] },
     subclasses: { inclusions: ['subclass'], exclusions: [] },
-    backgrounds: { inclusions: ['background'], exclusions: [] },
+    backgrounds: { inclusions: ['background', 'origin'], exclusions: [] },
     equipment: { inclusions: ['item', 'equipment'], exclusions: [] },
     spells: { inclusions: ['spell'], exclusions: [] },
     feats: { inclusions: ['feat'], exclusions: [] },

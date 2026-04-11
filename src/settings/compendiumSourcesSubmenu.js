@@ -1,5 +1,5 @@
 import { DEFAULT_SOURCES, LOG_PREFIX, MODULE_ID } from '../helpers/constants';
-import { safeGetSetting, packIndexHasDocumentType } from '~/src/helpers/Utility';
+import { safeGetSetting, packIndexHasDocumentType, getDndRulesVersion } from '~/src/helpers/Utility';
 
 export default class CompendiumSourcesSubmenu extends FormApplication {
   constructor() {
@@ -159,11 +159,22 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
   }
 
   buildTemplateData({ compendiaList, selectedCompendia }) {
+    let is2024 = false;
+    try {
+      is2024 = getDndRulesVersion() === '2024';
+    } catch (e) {
+      is2024 = false;
+    }
+
     return {
       source: {
         races: {
-          label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'),
-          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'races',['race'])
+          label: game.i18n.localize(is2024 ? 'GAS.Setting.Sources.RaceCompendia2024' : 'GAS.Setting.Sources.RaceCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'races',['race', 'species', 'origin'])
+        },
+        racialFeatures: {
+          label: game.i18n.localize(is2024 ? 'GAS.Setting.Sources.RacialFeatureCompendia2024' : 'GAS.Setting.Sources.RacialFeatureCompendia'),
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'racialFeatures',['race', 'species', 'origin'])
         },
         classes: {
           label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'),
@@ -175,7 +186,7 @@ export default class CompendiumSourcesSubmenu extends FormApplication {
         },
         backgrounds: {
           label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'),
-          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds', ['background'])
+          compendia: this.buildCompendiaList(compendiaList, selectedCompendia, 'backgrounds', ['background', 'origin'])
         },
         equipment: {
           label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'),

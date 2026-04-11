@@ -81,10 +81,12 @@
       },
       "Races": {
         "Title": "種族",
+        "Title2024": "種族",
         "Movement": "移動",
         "Senses": "感覚",
         "Type": "タイプ",
-        "Placeholder": "種族"
+        "Placeholder": "種族",
+        "Placeholder2024": "種族"
       },
       "Classes": {
         "Title": "クラス",
@@ -313,7 +315,9 @@
         "Label": "ソースを選択",
         "Save": "保存",
         "RaceCompendia": "種族コンペンディア",
+        "RaceCompendia2024": "種族コンペンディア",
         "RacialFeatureCompendia": "種族特性コンペンディア",
+        "RacialFeatureCompendia2024": "種族特性コンペンディア",
         "ClassCompendia": "クラスコンペンディア",
         "SubclassCompendia": "サブクラスコンペンディア",
         "ClassFeatureCompendia": "クラス特性コンペンディア",
@@ -364,6 +368,7 @@
         "Title": "キャラクター作成タブ順序",
         "Abilities": "能力値",
         "Race": "種族",
+        "Race2024": "種族",
         "Background": "背景",
         "Class": "クラス"
       },
@@ -523,6 +528,7 @@
       "TypeClass": "クラス",
       "TypeSubclass": "サブクラス",
       "TypeRace": "種族",
+      "TypeRace2024": "種族",
       "TypeBackground": "背景",
       "TypeFeat": "特徴",
       "Identifier": "識別子",

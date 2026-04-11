@@ -81,10 +81,12 @@
       },
       "Races": {
         "Title": "Races",
+        "Title2024": "Species",
         "Movement": "Movement",
         "Senses": "Senses",
         "Type": "Type",
-        "Placeholder": "Races"
+        "Placeholder": "Races",
+        "Placeholder2024": "Species"
       },
       "Classes": {
         "Title": "Classes",
@@ -313,7 +315,9 @@
         "Label": "Select sources",
         "Save": "Save",
         "RaceCompendia": "Race Compendia",
+        "RaceCompendia2024": "Species Compendia",
         "RacialFeatureCompendia": "Racial Features Compendia",
+        "RacialFeatureCompendia2024": "Species Features Compendia",
         "ClassCompendia": "Class Compendia",
         "SubclassCompendia": "Subclass Compendia",
         "ClassFeatureCompendia": "Class Features Compendia",
@@ -364,6 +368,7 @@
         "Title": "Character Creation Tab Order",
         "Abilities": "Abilities",
         "Race": "Race",
+        "Race2024": "Species",
         "Background": "Background",
         "Class": "Class"
       },
@@ -523,6 +528,7 @@
       "TypeClass": "Class",
       "TypeSubclass": "Subclass", 
       "TypeRace": "Race",
+      "TypeRace2024": "Species",
       "TypeBackground": "Background",
       "TypeFeat": "Feat",
       "Identifier": "Identifier",

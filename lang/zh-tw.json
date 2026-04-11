@@ -81,10 +81,12 @@
       },
       "Races": {
         "Title": "種族",
+        "Title2024": "種族",
         "Movement": "移動速度",
         "Senses": "感官",
         "Type": "類型",
-        "Placeholder": "種族"
+        "Placeholder": "種族",
+        "Placeholder2024": "種族"
       },
       "Classes": {
         "Title": "職業",
@@ -313,7 +315,9 @@
         "Label": "選擇來源",
         "Save": "儲存",
         "RaceCompendia": "種族合集包",
+        "RaceCompendia2024": "種族合集包",
         "RacialFeatureCompendia": "種族特性合集包",
+        "RacialFeatureCompendia2024": "種族特性合集包",
         "ClassCompendia": "職業列表合集包",
         "SubclassCompendia": "子職列表合集包",
         "ClassFeatureCompendia": "職業特性合集包",
@@ -364,6 +368,7 @@
         "Title": "角色建立分頁順序",
         "Abilities": "屬性",
         "Race": "種族",
+        "Race2024": "種族",
         "Background": "背景",
         "Class": "職業"
       },
@@ -523,6 +528,7 @@
       "TypeClass": "職業",
       "TypeSubclass": "子職業",
       "TypeRace": "種族",
+      "TypeRace2024": "種族",
       "TypeBackground": "背景",
       "TypeFeat": "特徵",
       "Identifier": "識別碼",

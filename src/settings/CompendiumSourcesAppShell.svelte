@@ -6,7 +6,7 @@
   import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
   import { Timing } from '@typhonjs-fvtt/runtime/util';
   import { MODULE_ID, DEFAULT_SOURCES } from '~/src/helpers/constants';
-  import { safeGetSetting, packIndexHasDocumentType } from '~/src/helpers/Utility';
+  import { safeGetSetting, packIndexHasDocumentType, getDndRulesVersion } from '~/src/helpers/Utility';
 
   export let elementRoot;
 
@@ -33,11 +33,19 @@
   let showOnlySelected = true;
 
   // Build source categories (races, classes, etc.)
-  const sourceCategories = [
-    { key: 'races', label: game.i18n.localize('GAS.Setting.Sources.RaceCompendia'), inclusions: ['race'], exclusions: [] },
+  $: is2024 = (() => {
+    try {
+      return getDndRulesVersion() === '2024';
+    } catch (e) {
+      return false;
+    }
+  })();
+  $: sourceCategories = [
+    { key: 'races', label: game.i18n.localize(is2024 ? 'GAS.Setting.Sources.RaceCompendia2024' : 'GAS.Setting.Sources.RaceCompendia'), inclusions: ['race', 'species', 'origin'], exclusions: [] },
+    { key: 'racialFeatures', label: game.i18n.localize(is2024 ? 'GAS.Setting.Sources.RacialFeatureCompendia2024' : 'GAS.Setting.Sources.RacialFeatureCompendia'), inclusions: ['race', 'species', 'origin'], exclusions: [] },
     { key: 'classes', label: game.i18n.localize('GAS.Setting.Sources.ClassCompendia'), inclusions: ['class'], exclusions: ['subclass'] },
     { key: 'subclasses', label: game.i18n.localize('GAS.Setting.Sources.SubclassCompendia'), inclusions: ['subclass'], exclusions: [] },
-    { key: 'backgrounds', label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'), inclusions: ['background'], exclusions: [] },
+    { key: 'backgrounds', label: game.i18n.localize('GAS.Setting.Sources.BackgroundCompendia'), inclusions: ['background', 'origin'], exclusions: [] },
     { key: 'equipment', label: game.i18n.localize('GAS.Setting.Sources.EquipmentCompendia'), inclusions: ['item', 'equipment'], exclusions: [] },
     { key: 'spells', label: game.i18n.localize('GAS.Setting.Sources.SpellCompendia'), inclusions: ['spell'], exclusions: [] },
     { key: 'feats', label: game.i18n.localize('GAS.Setting.Sources.FeatCompendia'), inclusions: ['feat'], exclusions: [] }

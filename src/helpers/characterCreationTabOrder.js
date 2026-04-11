@@ -5,12 +5,43 @@ export const DEFAULT_CHARACTER_CREATION_TAB_ORDER = Object.freeze([
   'class',
 ]);
 
-export const CHARACTER_CREATION_TAB_DEFINITIONS = Object.freeze({
-  abilities: { label: 'Abilities', id: 'abilities', component: 'Abilities' },
-  race: { label: 'Race', id: 'race', component: 'Race' },
-  background: { label: 'Background', id: 'background', component: 'Background' },
-  class: { label: 'Class', id: 'class', component: 'Class' },
-});
+// Import the localize function and getDndRulesVersion
+import { localize } from './Utility.js';
+import { getDndRulesVersion } from './Utility.js';
+
+export function getCharacterCreationTabDefinitions() {
+  let is2024 = false;
+  try {
+    is2024 = getDndRulesVersion() === '2024';
+  } catch (e) {
+    // If game is not ready, default to 2014
+    is2024 = false;
+  }
+
+  const raceLabel = is2024 ? 'Species' : 'Race';
+
+  return Object.freeze({
+    abilities: { label: 'Abilities', id: 'abilities', component: 'Abilities' },
+    race: { label: raceLabel, id: 'race', component: 'Race' },
+    background: { label: 'Background', id: 'background', component: 'Background' },
+    class: { label: 'Class', id: 'class', component: 'Class' },
+  });
+}
+
+// For backward compatibility, provide a static version that uses current settings
+export const CHARACTER_CREATION_TAB_DEFINITIONS = (() => {
+  try {
+    return getCharacterCreationTabDefinitions();
+  } catch (e) {
+    // Fallback to 2014 defaults if game is not ready
+    return Object.freeze({
+      abilities: { label: 'Abilities', id: 'abilities', component: 'Abilities' },
+      race: { label: 'Race', id: 'race', component: 'Race' },
+      background: { label: 'Background', id: 'background', component: 'Background' },
+      class: { label: 'Class', id: 'class', component: 'Class' },
+    });
+  }
+})();
 
 function coerceToArray(order) {
   if (Array.isArray(order)) return order;
@@ -45,7 +76,8 @@ export function normalizeCharacterCreationTabOrder(order) {
 
 export function getCharacterCreationTabsFromOrder(order) {
   const normalizedOrder = normalizeCharacterCreationTabOrder(order);
-  return normalizedOrder.map((tabId) => ({ ...CHARACTER_CREATION_TAB_DEFINITIONS[tabId] }));
+  const definitions = getCharacterCreationTabDefinitions();
+  return normalizedOrder.map((tabId) => ({ ...definitions[tabId] }));
 }
 
 export function getCoreCreationReadOnlyTabs(includeBiography = false) {

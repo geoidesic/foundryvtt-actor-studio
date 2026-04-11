@@ -123,7 +123,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
   import { MODULE_ID } from '~/src/helpers/constants';
-  import { safeGetSetting } from '~/src/helpers/Utility';
+  import { safeGetSetting, getDndRulesVersion } from '~/src/helpers/Utility';
   import {
     DEFAULT_CHARACTER_CREATION_TAB_ORDER,
     normalizeCharacterCreationTabOrder,
@@ -133,9 +133,17 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
   const { application } = getContext('#external');
 
-  const characterCreationTabOrderLabelKeys = {
+  // Dynamic label keys based on D&D rules version
+  $: is2024 = (() => {
+    try {
+      return getDndRulesVersion() === '2024';
+    } catch (e) {
+      return false;
+    }
+  })();
+  $: characterCreationTabOrderLabelKeys = {
     abilities: 'GAS.Setting.CharacterCreationTabOrder.Abilities',
-    race: 'GAS.Setting.CharacterCreationTabOrder.Race',
+    race: is2024 ? 'GAS.Setting.CharacterCreationTabOrder.Race2024' : 'GAS.Setting.CharacterCreationTabOrder.Race',
     background: 'GAS.Setting.CharacterCreationTabOrder.Background',
     class: 'GAS.Setting.CharacterCreationTabOrder.Class'
   };
