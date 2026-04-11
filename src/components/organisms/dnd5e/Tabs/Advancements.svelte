@@ -1,14 +1,14 @@
 <script>
   import { onMount } from "svelte";
-  import { dropItemOnCharacter } from "~/src/helpers/Utility";
+  import { dropItemOnCharacter, getAdvancementEntryCount } from "~/src/helpers/Utility";
   import { dropItemRegistry, isLevelUp, readOnlyTabs, getCoreCreationReadOnlyTabs } from "~/src/stores/index.js";
   import { getContext } from "svelte";
 
   const doc = getContext("#doc");
 
   $: currentDrops = $dropItemRegistry?.currentProcess || [];
-  $: itemsWithoutAdvancements = currentDrops.filter(drop => 
-    !drop.itemData.advancement || drop.itemData.advancement.length === 0
+  $: itemsWithoutAdvancements = currentDrops.filter(drop =>
+    getAdvancementEntryCount(drop.itemData?.advancement) === 0
   );
 
   // $: console.log('currentDrops', currentDrops);

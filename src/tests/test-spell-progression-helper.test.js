@@ -211,4 +211,67 @@ describe('spellProgression helper', () => {
     expect(level1?.cantrips).toBe(3);
     expect(level4?.cantrips).toBe(4);
   });
+
+  it('reads dnd5e 5.3+ embedded advancements from Collection-like system.advancement (not an array)', () => {
+    const embedded = [
+      { type: 'ScaleValue', title: 'Cantrips Known', level: 1, value: 3 },
+      { type: 'ScaleValue', title: 'Max Prepared Spells', level: 1, value: 6 }
+    ];
+    const classItem = {
+      system: {
+        advancement: {
+          size: embedded.length,
+          values: () => embedded.values()
+        }
+      }
+    };
+
+    const limits = getSpellLimitsForClassLevel({
+      classIdentifier: 'wizard',
+      classItem,
+      level: 1,
+      rulesVersion: '2014'
+    });
+
+    expect(limits).toEqual({
+      cantrips: 3,
+      spells: 6,
+      hasAllSpells: false
+    });
+  });
+
+  it('reads configuration.scale when stored as a Map (dnd5e 5.3+)', () => {
+    const scale = new Map([
+      [1, { value: 3 }],
+      [4, { value: 4 }]
+    ]);
+    const classItem = {
+      system: {
+        advancement: [
+          {
+            type: 'ScaleValue',
+            title: 'Cantrips Known',
+            level: 1,
+            configuration: { scale }
+          }
+        ]
+      }
+    };
+
+    const level1 = getSpellLimitsForClassLevel({
+      classIdentifier: 'wizard',
+      classItem,
+      level: 1,
+      rulesVersion: '2014'
+    });
+    const level4 = getSpellLimitsForClassLevel({
+      classIdentifier: 'wizard',
+      classItem,
+      level: 4,
+      rulesVersion: '2014'
+    });
+
+    expect(level1?.cantrips).toBe(3);
+    expect(level4?.cantrips).toBe(4);
+  });
 });

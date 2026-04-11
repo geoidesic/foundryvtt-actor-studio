@@ -32,7 +32,8 @@ import {
   extractItemsFromPacksAsync,
   safeGetSetting,
   isSelectionAutomationEnabled,
-  getSelectionAutomationValue
+  getSelectionAutomationValue,
+  getAdvancementEntryCount
 } from "~/src/helpers/Utility.js";
 
 import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
@@ -365,8 +366,8 @@ $: if($classUuidForLevelUp) {
  * Filters class advancements for the current level
  * Maps advancement data to include IDs for component rendering
  */
-   $: if ($levelUpClassObject?.system?.advancement.length) {
-    classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel[newLevel]
+   $: if (getAdvancementEntryCount($levelUpClassObject?.system?.advancement)) {
+    classAdvancementArrayFiltered = $levelUpClassObject?.advancement?.byLevel?.[newLevel] ?? [];
   } else {
     classAdvancementArrayFiltered = [];
   }

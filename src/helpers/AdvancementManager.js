@@ -18,6 +18,8 @@ export class AdvancementManager {
     this.monitoringPromise = null;
     this.stopAutoAdvance = false;
     this.clickedLastTime = false; // Flag to prevent consecutive clicks that could trigger errors
+    /** True once the advancements panel has had captured DOM; avoids treating pre-capture emptiness as "done" (race on fast hosts e.g. Foundry 14). */
+    this._advancementPanelHadContent = false;
     // Allow injection of a custom DOM query function for testability
     this._getPanel = getPanel || (() => {
       if (typeof $ !== 'function') return null;
@@ -46,7 +48,17 @@ export class AdvancementManager {
     if (!panel || typeof panel.html !== 'function') {
       return false;
     }
-    return !Boolean(panel.html()?.trim());
+    const trimmed = panel.html()?.trim() ?? '';
+    if (trimmed) {
+      this._advancementPanelHadContent = true;
+      return false;
+    }
+    const proc = get(this.inProcessStore);
+    const inFlight = proc && proc !== false;
+    if (inFlight && !this._advancementPanelHadContent) {
+      return false;
+    }
+    return true;
   }
 
   checkTabContent(resolve, tabName = 'advancements', timeout = 600) {
@@ -275,6 +287,7 @@ export class AdvancementManager {
     // Reset auto-advance flag when starting monitoring
     this.stopAutoAdvance = false;
     this.clickedLastTime = false;
+    this._advancementPanelHadContent = false;
 
     // Create new monitoring promise
     this.monitoringPromise = new Promise(resolve => {

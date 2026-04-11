@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { levelUpSubClassObject } from '~/src/stores/storeDefinitions';
+import { characterSubClass, levelUpSubClassObject } from '~/src/stores/storeDefinitions';
 import PCApplication from '~/src/app/PCApplication.js';
 import { bringActorStudioToFront, safeGetSetting } from '~/src/helpers/Utility';
 
@@ -283,25 +283,34 @@ export function initLevelup() {
     tidy5eSheetUI(app, element, data);
   });
 
-  //- potentially hook into the subclass flow
-  Hooks.on("renderSubclassFlow", (SubClassFlow, html, app) => {
-    
-    html.find('.pill-lg').text(get(levelUpSubClassObject)?.name)
+  //- Subclass advancement flow (dnd5e 5.3+): html may be a raw HTMLElement on Foundry 14 / ApplicationV2 hooks
+  Hooks.on("renderSubclassFlow", (app, html) => {
+    const $html = html && typeof html.find === 'function' ? html : $(html);
+    const subFromCreation = get(characterSubClass);
+    const subFromLevelUp = get(levelUpSubClassObject);
+    const sub =
+      (subFromCreation && subFromCreation !== false ? subFromCreation : null) ||
+      subFromLevelUp ||
+      null;
+    const name = sub?.name ?? '';
+
+    if (name) {
+      $html.find('.pill-lg').text(name);
+    }
     //- remove drop listener
-    html.find('.pill-lg').off('drop');
-    html.find('.pill-lg').off('dragover');
-    html.find('.pill-lg').off('dragleave');
-    html.find('.pill-lg').off('dragenter');
-    html.find('.pill-lg').off('dragend');
-    html.find('.pill-lg').off('dragstart');
+    $html.find('.pill-lg').off('drop');
+    $html.find('.pill-lg').off('dragover');
+    $html.find('.pill-lg').off('dragleave');
+    $html.find('.pill-lg').off('dragenter');
+    $html.find('.pill-lg').off('dragend');
+    $html.find('.pill-lg').off('dragstart');
     //- remove the click listener
-    html.find('div.pill-lg.roboto-upper.empty').off('click');
-    
+    $html.find('div.pill-lg.roboto-upper.empty').off('click');
+
     // Remove the handler via the element's onclick property
-    const pillElement = html.find('.pill-lg')[0];
+    const pillElement = $html.find('.pill-lg')[0];
     if (pillElement) {
       pillElement.onclick = null;
-      // If data-action attribute is triggering the event, remove it too
       pillElement.removeAttribute('data-action');
     }
   });

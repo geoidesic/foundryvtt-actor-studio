@@ -9,6 +9,8 @@
     getPacksFromSettings,
     getAdvancementValue,
     getSubclassLevel,
+    getAdvancementEntryCount,
+    advancementEntriesToArray,
     illuminatedDescription, safeGetSetting,
     isSelectionAutomationEnabled,
     getSelectionAutomationValue,
@@ -283,19 +285,18 @@
     classAdvancementExpanded = true;
   }
 
-  $: if ($characterSubClass?.system?.advancement.length) {
-    subClassAdvancementArrayFiltered =
-      $characterSubClass.system.advancement.filter(
-        (value) => value.level === $level,
-      );
+  $: if (getAdvancementEntryCount($characterSubClass?.system?.advancement)) {
+    subClassAdvancementArrayFiltered = advancementEntriesToArray(
+      $characterSubClass.system.advancement,
+    ).filter((value) => value.level === $level);
   } else {
     subClassAdvancementArrayFiltered = [];
   }
 
-  $: if ($characterClass?.system?.advancement.length) {
-    classAdvancementArrayFiltered = $characterClass.system.advancement.filter(
-      (value) => value.level === $level,
-    );
+  $: if (getAdvancementEntryCount($characterClass?.system?.advancement)) {
+    classAdvancementArrayFiltered = advancementEntriesToArray(
+      $characterClass.system.advancement,
+    ).filter((value) => value.level === $level);
   } else {
     classAdvancementArrayFiltered = [];
   }
