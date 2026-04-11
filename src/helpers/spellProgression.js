@@ -1,5 +1,5 @@
 import spellsKnownData from '~/src/stores/spellsKnown.json';
-import { advancementEntriesToArray, getAdvancementEntryCount } from '~/src/helpers/Utility.js';
+import { advancementEntriesToArray, getAdvancementEntryCount } from '~/src/helpers/Utility';
 
 function getSpellsFromTable(classIdentifier, level, rulesVersion) {
   const normalizedClass = String(classIdentifier || '').toLowerCase();
@@ -30,8 +30,7 @@ function getScaleValueAtLevel(advancement, level) {
   const numericLevel = Number(level) || 0;
 
   const getFromLevelMap = (mapLike) => {
-    if (mapLike == null || typeof mapLike !== 'object' || Array.isArray(mapLike)) return null;
-
+    if (!mapLike || typeof mapLike !== 'object' || Array.isArray(mapLike)) return null;
     const extractNumeric = (entry) => {
       if (entry === undefined || entry === null) return null;
       if (typeof entry === 'object') {
@@ -42,30 +41,6 @@ function getScaleValueAtLevel(advancement, level) {
       const parsed = Number.parseInt(entry, 10);
       return Number.isFinite(parsed) ? parsed : null;
     };
-
-    // dnd5e 5.x may use Map / Collection-like objects (Object.keys() is empty).
-    if (typeof mapLike.get === 'function') {
-      const tryKeys = [numericLevel, String(numericLevel)];
-      for (const key of tryKeys) {
-        const has = typeof mapLike.has === 'function' ? mapLike.has(key) : mapLike.get(key) !== undefined;
-        if (!has) continue;
-        const parsed = extractNumeric(mapLike.get(key));
-        if (Number.isFinite(parsed)) return parsed;
-      }
-      const numericKeys = [];
-      if (typeof mapLike.keys === 'function') {
-        for (const k of mapLike.keys()) {
-          const n = Number.parseInt(String(k), 10);
-          if (Number.isFinite(n) && n <= numericLevel) numericKeys.push(n);
-        }
-      }
-      numericKeys.sort((a, b) => b - a);
-      for (const key of numericKeys) {
-        const parsed = extractNumeric(mapLike.get(key) ?? mapLike.get(String(key)));
-        if (Number.isFinite(parsed)) return parsed;
-      }
-      return null;
-    }
 
     const exact = mapLike[String(numericLevel)] ?? mapLike[numericLevel];
     if (exact !== undefined && exact !== null) {
@@ -118,10 +93,7 @@ function getScaleValueAtLevel(advancement, level) {
 }
 
 function getSpellLimitsFromAdvancements(classItem, level) {
-  const rawAdvancements = classItem?.system?.advancement;
-  if (getAdvancementEntryCount(rawAdvancements) === 0) return null;
-
-  const advancements = advancementEntriesToArray(rawAdvancements);
+  const advancements = advancementEntriesToArray(classItem?.system?.advancement);
   if (advancements.length === 0) return null;
 
   const numericLevel = Number(level) || 0;

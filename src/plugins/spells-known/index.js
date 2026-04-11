@@ -1,4 +1,5 @@
 import { MODULE_ID } from '../../helpers/constants';
+import { advancementEntriesToArray } from '../../helpers/Utility';
 
 export default class SpellsKnownPlugin {
   static ID = 'spells-known';
@@ -116,9 +117,9 @@ export default class SpellsKnownPlugin {
   }
 
   static async upsertSpellsKnownAdvancement(item, level, value) {
-    const advancements = Array.isArray(item.system?.advancement)
-      ? foundry.utils.deepClone(item.system.advancement)
-      : [];
+    const advancements = foundry.utils.deepClone(
+      advancementEntriesToArray(item.system?.advancement)
+    );
 
     const existingIndex = advancements.findIndex((adv) =>
       adv?.type === 'ScaleValue'

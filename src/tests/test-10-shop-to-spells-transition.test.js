@@ -137,23 +137,24 @@ describe('Shop to Spells Transition for Bard User Journey', () => {
     vi.doMock('~/src/lib/workflow.js', () => ({ handleAdvancementCompletion: vi.fn() }));
     vi.doMock('~/src/helpers/AdvancementManager', () => ({ destroyAdvancementManagers: vi.fn() }));
     vi.doMock('~/src/helpers/constants', () => ({ MODULE_ID: 'foundryvtt-actor-studio' }));
-    vi.doMock('~/src/helpers/Utility', async (importOriginal) => {
-      const actual = await importOriginal();
-      return {
-        ...actual,
-        handleContainerContents: vi.fn(),
-        delay: vi.fn(() => Promise.resolve()),
-        prepareItemForDrop: vi.fn(() => Promise.resolve({})),
-        dropItemOnCharacter: vi.fn(() => Promise.resolve({})),
-        safeGetSetting: (module, key, defaultValue) => {
-          if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
-            const val = global.game.settings.get(module, key);
-            return typeof val === 'undefined' ? defaultValue : val;
-          }
-          return defaultValue;
+    vi.doMock('~/src/helpers/Utility', () => ({ 
+      handleContainerContents: vi.fn(),
+      delay: vi.fn(() => Promise.resolve()),
+      prepareItemForDrop: vi.fn(() => Promise.resolve({})),
+      dropItemOnCharacter: vi.fn(() => Promise.resolve({})),
+      advancementEntriesToArray: (adv) => {
+        if (!adv) return [];
+        if (Array.isArray(adv)) return adv;
+        try { return Array.from(adv); } catch (e) { return []; }
+      },
+      safeGetSetting: (module, key, defaultValue) => {
+        if (global.game && global.game.settings && typeof global.game.settings.get === 'function') {
+          const val = global.game.settings.get(module, key);
+          return typeof val === 'undefined' ? defaultValue : val;
         }
-      };
-    });
+        return defaultValue;
+      }
+    }));
   });
 
   afterEach(() => {

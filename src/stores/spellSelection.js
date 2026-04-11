@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { getPacksFromSettings, extractItemsFromPacksAsync } from '~/src/helpers/Utility';
+import { getPacksFromSettings, extractItemsFromPacksAsync, advancementEntriesToArray } from '~/src/helpers/Utility';
 import { readOnlyTabs, characterClass, characterSubClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
 import DTPlugin from '~/src/plugins/donation-tracker';
@@ -527,8 +527,8 @@ function parseSpellLimitsFromAdvancement(subclassItem, level) {
   
   // Fallback to old advancement table structure
   if (subclassItem.system?.advancement) {
-    const advancement = subclassItem.system.advancement;
-    if (!Array.isArray(advancement)) {
+    const advancement = advancementEntriesToArray(subclassItem.system.advancement);
+    if (advancement.length === 0) {
       return null;
     }
     
