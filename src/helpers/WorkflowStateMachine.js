@@ -352,7 +352,20 @@ export function createWorkflowStateMachine() {
           })
           .transitionTo('selecting_equipment').withCondition((context) => workflowFSMContext._shouldShowEquipmentSelection())
           .transitionTo('shopping').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && workflowFSMContext._shouldShowShopping())
-          .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowEquipmentSelection() && !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
+          .transitionTo('selecting_spells').withCondition((context) => {
+            const shouldShowEquipment = workflowFSMContext._shouldShowEquipmentSelection();
+            const shouldShowShopping = workflowFSMContext._shouldShowShopping();
+            const shouldShowSpells = workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor);
+            const condition = !shouldShowEquipment && !shouldShowShopping && shouldShowSpells;
+            if (!condition && shouldShowSpells) {
+              window.GAS.log.d('[FSM] Spells tab skipped from processing_advancements because equipment or shopping is enabled:', {
+                shouldShowEquipment,
+                shouldShowShopping,
+                shouldShowSpells
+              });
+            }
+            return condition;
+          })
           .transitionTo('completed') // Default fallback - no other features enabled
         .onFailure().transitionTo('error')
       .on('reset').transitionTo('idle')
@@ -421,10 +434,27 @@ export function createWorkflowStateMachine() {
             const actorToCheck = workflowFSMContext.actor || get(actorInGame);
             const shouldShowSpells = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
             window.GAS.log.d('[FSM] equipment_complete -> selecting_spells (skipped shopping) condition:', { shouldShowSpells });
+            if (!shouldShowSpells) {
+              window.GAS.log.d('[FSM] Spells tab skipped from equipment_complete because actor is not a spellcaster');
+            }
             return shouldShowSpells;
           }
           // Otherwise, do not go directly to spells from equipment
           return false;
+        })
+        .transitionTo('selecting_spells').withCondition((context) => {
+          // If shopping is disabled but spells should be shown, go to spell selection
+          const shouldShowShopping = workflowFSMContext._shouldShowShopping();
+          const actorToCheck = workflowFSMContext.actor || get(actorInGame);
+          const shouldShowSpells = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
+          const condition = !shouldShowShopping && shouldShowSpells;
+          if (!condition && shouldShowSpells) {
+            window.GAS.log.d('[FSM] Spells tab skipped from equipment_complete because shopping is enabled:', {
+              shouldShowShopping,
+              shouldShowSpells
+            });
+          }
+          return condition;
         })
         .transitionTo('completed') // Fallback if something goes wrong
       .on('shopping_complete')
@@ -435,12 +465,26 @@ export function createWorkflowStateMachine() {
           const actorToCheck = currentActor || workflowFSMContext.actor;
           const shouldShow = workflowFSMContext._shouldShowSpellSelection(actorToCheck);
           window.GAS.log.d('[FSM] shopping_complete (from selecting_equipment) -> selecting_spells condition:', shouldShow);
+          if (!shouldShow) {
+            window.GAS.log.d('[FSM] Spells tab skipped from shopping_complete because actor is not a spellcaster');
+          }
           return shouldShow;
         })
         .transitionTo('completed') // Default fallback when spell selection is not needed
       .on('skip_equipment')
         .transitionTo('shopping').withCondition((context) => workflowFSMContext._shouldShowShopping())
-        .transitionTo('selecting_spells').withCondition((context) => !workflowFSMContext._shouldShowShopping() && workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor))
+        .transitionTo('selecting_spells').withCondition((context) => {
+          const shouldShowShopping = workflowFSMContext._shouldShowShopping();
+          const shouldShowSpells = workflowFSMContext._shouldShowSpellSelection(workflowFSMContext.actor);
+          const condition = !shouldShowShopping && shouldShowSpells;
+          if (!condition && shouldShowSpells) {
+            window.GAS.log.d('[FSM] Spells tab skipped from skip_equipment because shopping is enabled:', {
+              shouldShowShopping,
+              shouldShowSpells
+            });
+          }
+          return condition;
+        })
         .transitionTo('completed') // Default fallback
       .on('error').transitionTo('error')
       .on('reset').transitionTo('idle')

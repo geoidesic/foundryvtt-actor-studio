@@ -765,6 +765,9 @@ export function createLevelUpStateMachine() {
                 slot.type === 'spell' && slot.max > 0
               )
             });
+            if (!shouldShow) {
+              window.GAS.log.d('[LEVELUP] Spells tab skipped from advancements_complete because actor is not a spellcaster');
+            }
             return shouldShow;
           })
           .transitionTo('completed') // Default fallback - no spell selection needed

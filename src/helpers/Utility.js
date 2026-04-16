@@ -230,6 +230,19 @@ export const getDndRulesVersion = () => {
   }
 };
 
+export const getPhbVersion = () => {
+  try {
+    // Try to get the version from the dnd-players-handbook module
+    const phbModule = game.modules.get('dnd-players-handbook');
+    if (phbModule) {
+      return phbModule.data?.version || phbModule.version || null;
+    }
+    return null;
+  } catch (e) {
+    return null;
+  }
+};
+
 /**
  * Checks if an actor was imported from D&D Beyond using the DDB Importer module
  * @param {Actor} actor - The actor to check

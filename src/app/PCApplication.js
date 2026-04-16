@@ -2,7 +2,7 @@ import PCAppShell from './PCAppShell.svelte';
 import { SvelteApplication } from "@typhonjs-fvtt/runtime/svelte/application";
 import { TJSDocument } from "@typhonjs-fvtt/runtime/svelte/store/fvtt/document";
 import { MODULE_ID, MODULE_CODE } from "~/src/helpers/constants"
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { safeGetSetting, getPhbVersion } from '~/src/helpers/Utility';
 import { activeTab, actorInGame, isAdvancementInProgress } from "~/src/stores/index";
 import { get } from 'svelte/store';
 import { version } from "../../module.json";
@@ -48,11 +48,13 @@ export default class PCApplication extends SvelteApplication {
     const title = this.title;
     // Get dnd5e version, foundry version, and dnd5e rule set from window.GAS (set in init.js)
     const dnd5eVersion = window.GAS?.dnd5eVersion || '';
+    const dnd5eFullVersion = game.system?.version || '';
     const foundryVersion = game.version || '';
     const dnd5eRules = window.GAS?.dnd5eRules || '';
+    const phbVersion = getPhbVersion() || '';
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'foundryvtt-actor-studio-pc-sheet',
-      title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eVersion} | Rules: ${dnd5eRules}`,
+      title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eFullVersion} | Rules: ${dnd5eRules}${phbVersion ? ` | PHB: ${phbVersion}` : ''}`,
       classes: [MODULE_CODE],
       width: Number(safeGetSetting(MODULE_ID, 'windowX', 700)) || 700,
       height: Number(safeGetSetting(MODULE_ID, 'windowY', 800)) || 800,
