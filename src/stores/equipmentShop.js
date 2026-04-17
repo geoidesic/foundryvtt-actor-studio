@@ -138,6 +138,25 @@ export async function loadShopItems() {
   }
 }
 
+// Get the copper multiplier for a currency denomination.
+// Prefers CONFIG.DND5E.currencies so custom/renamed currencies (e.g. "credits")
+// from other modules are handled correctly, with a hardcoded fallback.
+function getDenominationMultiplier(denomination) {
+  const currencyConfig = CONFIG?.DND5E?.currencies?.[denomination];
+  if (currencyConfig?.conversion !== undefined) {
+    // conversion is in gold-piece units (e.g. cp=0.01, sp=0.1, gp=1, pp=10)
+    return currencyConfig.conversion * 100;
+  }
+  // Fallback for environments where CONFIG is unavailable
+  switch (denomination) {
+    case 'gp': return 100;
+    case 'sp': return 10;
+    case 'pp': return 1000;
+    case 'ep': return 50;
+    default: return 1; // cp
+  }
+}
+
 // Calculate the total cost in copper for an item
 // This function now expects the full item data, which will be retrieved when adding to cart
 function getItemCostInCopper(itemData, quantity) {
@@ -146,15 +165,7 @@ function getItemCostInCopper(itemData, quantity) {
   const value = itemData.system.price.value || 0;
   const denomination = itemData.system.price.denomination || 'cp';
   
-  // Convert to copper based on denomination
-  let multiplier = 1;
-  switch (denomination) {
-    case 'gp': multiplier = 100; break;
-    case 'sp': multiplier = 10; break;
-    case 'pp': multiplier = 1000; break;
-    case 'ep': multiplier = 50; break;
-    default: multiplier = 1; // cp
-  }
+  const multiplier = getDenominationMultiplier(denomination);
   
   // Get the base quantity of the item (if it comes in a pack/bundle)
   const baseQuantity = itemData.system.quantity || 1;
