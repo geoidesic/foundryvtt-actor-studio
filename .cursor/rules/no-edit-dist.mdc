@@ -1,0 +1,10 @@
+---
+description: never edit generated dist output
+globs:
+alwaysApply: true
+---
+
+- Never edit anything under dist/
+- dist/ is dynamically generated output and manual changes there are a waste of time
+- Always make code changes in src/ or the relevant source/config files instead
+- If runtime behavior must change, update the source and let HMR or the normal generation process refresh dist/

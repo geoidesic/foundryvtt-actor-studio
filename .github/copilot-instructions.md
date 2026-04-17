@@ -14,6 +14,7 @@
 - NB: ensure you run the tests before claiming success
 - **CRITICAL: NO HARDCODED TIMEOUTS** - Never use literal millisecond values (e.g., `5000`, `20000`) for timeouts, polling, or waits. Always use settings-driven values from `getTestTimeouts()` or equivalent helpers. If a new timeout is needed, add it to the settings system first.
 - **CRITICAL: NO TIMEOUT MODIFICATIONS** - Never modify, multiply, add to, or otherwise alter timeout values from settings (e.g., no `Math.max(timeout, 500)` or `timeout * 2`). Use the exact value from settings. If the default isn't suitable, change the setting value itself.
+- **CRITICAL: NEVER EDIT dist/** - The `dist/` folder is dynamically generated output. Do not patch compiled bundles there. Make all changes in `src/` or other source/config files and let HMR / the normal generation process refresh `dist/`.
 
 **Frontend Stack**:
 - **CRITICAL**: ALL Svelte components MUST use Pug templates with `<template lang="pug">` - NEVER use standard HTML markup
