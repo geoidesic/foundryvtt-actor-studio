@@ -54,18 +54,25 @@
   // Get proficiencies from actor
   $: proficiencies = $doc.system?.proficiencies || {};
 
-  $: window.GAS.log.d("Equipment goldChoices", $goldChoices);
+  // Only log when equipment selection is enabled to avoid spam when feature is disabled
+  $: if (equipmentSelectionEnabled) {
+    window.GAS.log.d("Equipment goldChoices", $goldChoices);
+  }
 
-  $: window.GAS.log.d("Equipment compatibleStartingEquipment", $compatibleStartingEquipment);
+  $: if (equipmentSelectionEnabled) {
+    window.GAS.log.d("Equipment compatibleStartingEquipment", $compatibleStartingEquipment);
+  }
 
-  $: window.GAS.log.d("Equipment component:", {
-    isDisabled,
-    readOnlyTabs: $readOnlyTabs,
-    characterClass: $characterClass,
-    background: $background,
-    classWealth: $characterClass?.system?.wealth,
-    goldRoll: $goldRoll
-  });
+  $: if (equipmentSelectionEnabled) {
+    window.GAS.log.d("Equipment component:", {
+      isDisabled,
+      readOnlyTabs: $readOnlyTabs,
+      characterClass: $characterClass,
+      background: $background,
+      classWealth: $characterClass?.system?.wealth,
+      goldRoll: $goldRoll
+    });
+  }
 
   onMount(() => {
     if (safeGetSetting(MODULE_ID, 'disableAdvancementCapture', false)) {

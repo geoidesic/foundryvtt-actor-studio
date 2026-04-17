@@ -247,7 +247,10 @@ const startingEquipment = derived(
 
 // Derived stores for specific sources
 const classStartingEquipment = derived(startingEquipment, ($startingEquipment) => {
-  window.GAS.log.d('[StartingEquipment] startingEquipment', $startingEquipment);
+  // Only log when there's actual equipment data
+  if ($startingEquipment && ($startingEquipment.fromClass?.length > 0 || $startingEquipment.fromBackground?.length > 0)) {
+    window.GAS.log.d('[StartingEquipment] startingEquipment', $startingEquipment);
+  }
   return $startingEquipment.fromClass;
 });
 
@@ -261,10 +264,16 @@ const flattenedStartingEquipment = derived(startingEquipment, ($startingEquipmen
 });
 
 const compatibleStartingEquipment = derived([classStartingEquipment, backgroundStartingEquipment, goldChoices], ([$classStartingEquipment, $backgroundStartingEquipment, $goldChoices]) => {
-  window.GAS.log.d('[StartingEquipment] compatibleStartingEquipment inputs', {
-    classStartingEquipment: $classStartingEquipment,
-    goldChoices: $goldChoices
-  });
+  // Only log when there's actual equipment data to process
+  const hasEquipmentData = ($classStartingEquipment && $classStartingEquipment.length > 0) || 
+                          ($backgroundStartingEquipment && $backgroundStartingEquipment.length > 0);
+  
+  if (hasEquipmentData) {
+    window.GAS.log.d('[StartingEquipment] compatibleStartingEquipment inputs', {
+      classStartingEquipment: $classStartingEquipment,
+      goldChoices: $goldChoices
+    });
+  }
   
   if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules === "2014") {
     return $classStartingEquipment;
