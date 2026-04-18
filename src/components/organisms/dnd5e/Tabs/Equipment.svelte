@@ -123,8 +123,8 @@ StandardTabLayout(tabName="equipment")
         )
   div(slot="right")
     +if("!(is2014Rules && userChose2014Gold)")
-      PlannedInventory
       EquipmentSelectorDetail
+      PlannedInventory
 </template>
 
 <style lang="sass">
