@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { safeGetSetting } from '../helpers/Utility.js';
+import { safeGetSetting, getLevelByDropType } from '../helpers/Utility.js';
 
 describe('safeGetSetting', () => {
   let origGame;
@@ -35,5 +35,33 @@ describe('safeGetSetting', () => {
     global.game = { settings: { get: () => { throw new Error('assert'); } } };
     const val = safeGetSetting('mod', 'key', 'fallback');
     expect(val).toBe('fallback');
+  });
+
+  it('returns level 1 for a newly added multiclass when the actor does not already have that class', () => {
+    const actor = {
+      classes: {},
+      system: { details: { level: 2 } }
+    };
+
+    const droppedItem = {
+      type: 'class',
+      system: { identifier: 'wizard' }
+    };
+
+    expect(getLevelByDropType(actor, droppedItem)).toBe(1);
+  });
+
+  it('returns level 1 for a subclass when its parent class is not yet on the actor', () => {
+    const actor = {
+      classes: {},
+      system: { details: { level: 2 } }
+    };
+
+    const droppedItem = {
+      type: 'subclass',
+      system: { classIdentifier: 'wizard' }
+    };
+
+    expect(getLevelByDropType(actor, droppedItem)).toBe(1);
   });
 });
