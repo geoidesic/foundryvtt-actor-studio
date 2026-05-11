@@ -16,12 +16,31 @@ const NEXT_MANIFEST_URL = 'https://raw.githubusercontent.com/geoidesic/foundryvt
 const STABLE_MANIFEST_URL = `${REPO_BASE}/releases/latest/download/module.json`;
 
 const args = process.argv.slice(2);
-const versionType = args[0];
+const suffixArg = args.find((arg) => arg.startsWith('--suffix='));
+const suffixArgIndex = args.indexOf('--suffix');
+const suffixFromEquals = suffixArg ? suffixArg.split('=')[1] : null;
+const suffixFromPositional = suffixArgIndex !== -1 ? args[suffixArgIndex + 1] : null;
+const releaseSuffix = suffixFromEquals || suffixFromPositional || null;
+const isSuffixRelease = Boolean(releaseSuffix);
 const isDraft = args.includes('draft') || args.includes('--draft');
 const isPreRelease = args.includes('pre') || args.includes('--pre');
 const isFinalize = args.includes('finalize') || args.includes('--finalize');
 const isDryRun = args.includes('--dry-run') || args.includes('--dryrun');
+const versionType = args.find((arg, index) => {
+    if (arg.startsWith('--')) return false;
+    if (['draft', 'pre', 'finalize'].includes(arg)) return false;
+    if (suffixArgIndex !== -1 && index === suffixArgIndex + 1) return false;
+    return ['major', 'minor', 'patch'].includes(arg);
+});
 const isTestRelease = isDraft || isPreRelease;
+
+const reinstallDependenciesForBranch = (branchName) => {
+    const nodeModulesPath = path.join(__dirname, 'node_modules');
+    console.log(`🧹 ${branchName}: removing node_modules...`);
+    fs.rmSync(nodeModulesPath, { recursive: true, force: true });
+    console.log(`📦 ${branchName}: running bun i...`);
+    execSync('bun i', { stdio: 'inherit' });
+};
 
 // Check for uncommitted changes (must be before any branch switching or merging)
 if (!isDryRun) {
@@ -39,14 +58,20 @@ if (!isDryRun) {
     }
 }
 
-if (!versionType) {
-    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--dry-run]');
+if (suffixArgIndex !== -1 && !suffixFromPositional) {
+    console.error('❌ --suffix requires a value. Example: --suffix aura');
+    process.exit(1);
+}
+
+if (!versionType && !isSuffixRelease) {
+    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--suffix <name>] [--dry-run]');
     console.error('');
     console.error('Release Types:');
     console.error('  (none)    - Public release on main branch (triggers GitHub Actions)');
     console.error('  draft     - Draft release on next branch (private, triggers GitHub Actions)');
     console.error('  pre       - Pre-release on next branch (public preview, triggers GitHub Actions)');
     console.error('  finalize  - Promote current pre-release to final release (explicit only)');
+    console.error('  --suffix  - Special branch pre-release (no version/file bump, never latest)');
     console.error('  --dry-run - Preview what would happen without making any changes');
     console.error('');
     console.error('Examples:');
@@ -55,14 +80,20 @@ if (!versionType) {
     console.error('  node release.js patch finalize     # Finalize pre-release (2.3.0-beta.3 → 2.3.0)');
     console.error('  node release.js minor draft        # Private draft for internal testing');
     console.error('  node release.js major pre          # Public pre-release for beta testing');
+    console.error('  node release.js --suffix aura      # Pre-release tag 2.9.5-aura from aura branch');
     process.exit(1);
 }
 
 // Validate version type
 const validTypes = ['major', 'minor', 'patch'];
-if (!validTypes.includes(versionType)) {
+if (!isSuffixRelease && !validTypes.includes(versionType)) {
     console.error(`Invalid version type: ${versionType}. Valid types are: ${validTypes.join(', ')}`);
-    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--dry-run]');
+    console.error('Usage: node release.js <major|minor|patch> [draft|pre|finalize] [--suffix <name>] [--dry-run]');
+    process.exit(1);
+}
+
+if (isSuffixRelease && !/^[0-9A-Za-z][0-9A-Za-z.-]*$/.test(releaseSuffix)) {
+    console.error(`❌ Invalid suffix "${releaseSuffix}". Use letters, numbers, dots, or dashes.`);
     process.exit(1);
 }
 
@@ -70,6 +101,11 @@ if (!validTypes.includes(versionType)) {
 const releaseModifiers = [isDraft, isPreRelease, isFinalize].filter(Boolean);
 if (releaseModifiers.length > 1) {
     console.error('❌ Cannot specify multiple release modifiers (draft/pre/finalize). Choose one.');
+    process.exit(1);
+}
+
+if (isSuffixRelease && releaseModifiers.length > 0) {
+    console.error('❌ Cannot combine --suffix with draft/pre/finalize. Suffix releases are pre-release only.');
     process.exit(1);
 }
 
@@ -302,7 +338,7 @@ const getPreviousTag = () => {
 };
 
 // Determine target branch
-const targetBranch = isTestRelease ? 'next' : 'main';
+const targetBranch = isSuffixRelease ? releaseSuffix : (isTestRelease ? 'next' : 'main');
 
 if (isDryRun) {
     console.log('\n🔍 DRY RUN MODE - No changes will be made\n');
@@ -314,7 +350,30 @@ console.log(`🎯 Target branch: ${targetBranch}`);
 try {
     const currentBranch = execSync('git branch --show-current').toString().trim();
     console.log(`📍 Current branch: ${currentBranch}`);
-    if (isTestRelease) {
+    if (isSuffixRelease) {
+        // For suffix releases: ensure suffix branch exists and has latest main changes
+        const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
+        if (!branches.includes(targetBranch)) {
+            console.log(isDryRun ? `🔍 Would create ${targetBranch} branch` : `🔄 Creating ${targetBranch} branch...`);
+            if (!isDryRun) execSync(`git checkout -b ${targetBranch}`);
+        } else if (currentBranch !== targetBranch) {
+            console.log(isDryRun ? `🔍 Would switch to ${targetBranch} branch` : `🔄 Switching to ${targetBranch} branch...`);
+            if (!isDryRun) execSync(`git checkout ${targetBranch}`);
+        }
+
+        console.log(isDryRun ? `🔍 Would merge latest main into ${targetBranch} branch` : `📥 Merging latest main into ${targetBranch} branch...`);
+        if (!isDryRun) {
+            try {
+                execSync('git merge main');
+                console.log(`✅ Successfully merged main into ${targetBranch}`);
+            } catch (error) {
+                console.error(`❌ Merge conflict detected while merging main into ${targetBranch}. Please resolve conflicts and re-run the release script.`);
+                process.exit(1);
+            }
+
+            reinstallDependenciesForBranch(targetBranch);
+        }
+    } else if (isTestRelease) {
         // For pre/draft releases: ensure next branch exists and has latest main changes
         const branches = execSync('git branch --list').toString().split('\n').map(b => b.trim().replace('* ', ''));
         if (!branches.includes('next')) {
@@ -351,7 +410,7 @@ try {
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 const currentVersion = packageJson.version;
 
-if (!isDraft && !isPreRelease && !isFinalize && !isStableVersion(currentVersion)) {
+if (!isDraft && !isPreRelease && !isFinalize && !isSuffixRelease && !isStableVersion(currentVersion)) {
     console.error(`❌ Normal ${versionType} release requires a stable version (x.y.z). Found: ${currentVersion}`);
     console.error(`Use explicit pre-release actions instead:`);
     console.error(`  node release.js ${versionType} pre`);
@@ -363,6 +422,13 @@ let newVersion;
 if (isDraft) {
     newVersion = currentVersion; // Drafts use current version, no increment
     console.log(`🚀 Creating draft release with current version: ${currentVersion} (DRAFT - no version bump)`);
+} else if (isSuffixRelease) {
+    if (!isStableVersion(currentVersion)) {
+        console.error(`❌ Suffix release requires stable package version x.y.z. Found: ${currentVersion}`);
+        process.exit(1);
+    }
+    newVersion = `${currentVersion}-${releaseSuffix}`;
+    console.log(`🚀 Creating suffix release tag: ${newVersion} (no semver bump)`);
 } else {
     newVersion = incrementVersion(currentVersion, versionType, isPreRelease, isFinalize);
     const releaseTypeLabel = isPreRelease ? ' (PRE-RELEASE)' : isFinalize ? ' (FINALIZED)' : '';
@@ -384,93 +450,102 @@ if (!isDraft) {
             console.log(`✅ Version ${newVersion} is available`);
         }
         
-        // Save original versions for potential revert
-        const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        const originalModuleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
-        
-        // Update files and build for published releases only
-        packageJson.version = newVersion;
-        if (packageJson.debug !== undefined) {
-            packageJson.debug = false; // Set debug to false for releases
-        }
-        fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
+        if (!isSuffixRelease) {
+            // Save original versions for potential revert
+            const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            const originalModuleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+            
+            // Update files and build for published releases only
+            packageJson.version = newVersion;
+            if (packageJson.debug !== undefined) {
+                packageJson.debug = false; // Set debug to false for releases
+            }
+            fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 4));
 
-        // Update module.json
-        const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
-        moduleJson.version = newVersion;
-        // Release channel manifest strategy:
-        // - stable/finalized releases must point at "latest" so update checks move forward
-        // - pre-releases stay on the "next" channel
-        moduleJson.manifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
-        if (moduleJson.download) {
-            moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
-        }
-        fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
-        console.log(`📦 module.json manifest channel set to: ${moduleJson.manifest}`);
+            // Update module.json
+            const moduleJson = JSON.parse(fs.readFileSync(moduleJsonPath, 'utf8'));
+            moduleJson.version = newVersion;
+            // Release channel manifest strategy:
+            // - stable/finalized releases must point at "latest" so update checks move forward
+            // - pre-releases stay on the "next" channel
+            moduleJson.manifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
+            if (moduleJson.download) {
+                moduleJson.download = moduleJson.download.replace(/\/releases\/download\/[^/]+\//, `/releases/download/${newVersion}/`);
+            }
+            fs.writeFileSync(moduleJsonPath, JSON.stringify(moduleJson, null, 4));
+            console.log(`📦 module.json manifest channel set to: ${moduleJson.manifest}`);
 
-        try {
-            // Build after version update so the new version is included in the build
-            console.log('🔨 Building project...');
-            execSync('npm run build', { stdio: 'inherit' });
-
-            // Ensure dist/style.css exists so Foundry's installer won't reject the package
-            // If Vite produced a hashed CSS file, copy it to dist/style.css. If no CSS was emitted, abort the release
             try {
-                const distDir = path.join(__dirname, 'dist');
-                if (!fs.existsSync(distDir)) {
-                    throw new Error('dist directory not found after build. Run `npm run build` and verify output.');
+                // Build after version update so the new version is included in the build
+                console.log('🔨 Building project...');
+                execSync('npm run build', { stdio: 'inherit' });
+
+                // Ensure dist/style.css exists so Foundry's installer won't reject the package
+                // If Vite produced a hashed CSS file, copy it to dist/style.css. If no CSS was emitted, abort the release
+                try {
+                    const distDir = path.join(__dirname, 'dist');
+                    if (!fs.existsSync(distDir)) {
+                        throw new Error('dist directory not found after build. Run `npm run build` and verify output.');
+                    }
+
+                    const cssFiles = fs.readdirSync(distDir).filter(f => f.endsWith('.css'));
+                    if (cssFiles.length === 0) {
+                        throw new Error('Build produced no CSS files. Aborting release to avoid shipping a package without styles. Check your Vite/SASS setup and run `npm run build` locally to reproduce.');
+                    }
+
+                    // Copy the first found CSS file to dist/style.css if needed
+                    if (!cssFiles.includes('style.css')) {
+                        const src = path.join(distDir, cssFiles[0]);
+                        const dest = path.join(distDir, 'style.css');
+                        fs.copyFileSync(src, dest);
+                        console.log(`✅ Copied ${cssFiles[0]} → dist/style.css for Foundry compatibility`);
+                    } else {
+                        console.log('✅ dist/style.css already exists');
+                    }
+                } catch (err) {
+                    console.error('❌ CSS check failed:', err.message);
+                    // Revert version changes before exiting
+                    fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
+                    fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
+                    console.log('Reverted version changes due to CSS check failure.');
+                    process.exit(1);
                 }
 
-                const cssFiles = fs.readdirSync(distDir).filter(f => f.endsWith('.css'));
-                if (cssFiles.length === 0) {
-                    throw new Error('Build produced no CSS files. Aborting release to avoid shipping a package without styles. Check your Vite/SASS setup and run `npm run build` locally to reproduce.');
+                // Commit changes
+                console.log('💾 Staging files for commit...');
+                // Force-add built dist files (dist is usually gitignored) so the release zip will include them
+                try {
+                    execSync('git add -f dist/style.css');
+                    console.log('✅ Force-added dist/style.css to the commit');
+                } catch (addErr) {
+                    console.warn('⚠️  Could not force-add dist/style.css (it may not exist):', addErr.message);
                 }
 
-                // Copy the first found CSS file to dist/style.css if needed
-                if (!cssFiles.includes('style.css')) {
-                    const src = path.join(distDir, cssFiles[0]);
-                    const dest = path.join(distDir, 'style.css');
-                    fs.copyFileSync(src, dest);
-                    console.log(`✅ Copied ${cssFiles[0]} → dist/style.css for Foundry compatibility`);
-                } else {
-                    console.log('✅ dist/style.css already exists');
-                }
-            } catch (err) {
-                console.error('❌ CSS check failed:', err.message);
-                // Revert version changes before exiting
+                execSync('git add .');
+                execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
+            } catch (error) {
+                console.error('❌ Build or commit failed:', error.message);
+                // Revert version changes
                 fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
                 fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
-                console.log('Reverted version changes due to CSS check failure.');
+                console.log('Reverted version changes due to error.');
                 process.exit(1);
             }
-
-            // Commit changes
-            console.log('💾 Staging files for commit...');
-            // Force-add built dist files (dist is usually gitignored) so the release zip will include them
-            try {
-                execSync('git add -f dist/style.css');
-                console.log('✅ Force-added dist/style.css to the commit');
-            } catch (addErr) {
-                console.warn('⚠️  Could not force-add dist/style.css (it may not exist):', addErr.message);
-            }
-
-            execSync('git add .');
-            execSync(`git commit -m "chore: build and bump version to ${newVersion}"`);
-        } catch (error) {
-            console.error('❌ Build or commit failed:', error.message);
-            // Revert version changes
-            fs.writeFileSync(packageJsonPath, JSON.stringify(originalPackageJson, null, 4));
-            fs.writeFileSync(moduleJsonPath, JSON.stringify(originalModuleJson, null, 4));
-            console.log('Reverted version changes due to error.');
-            process.exit(1);
+        } else {
+            console.log('✅ Suffix release mode - skipping package/module updates, build, and commit');
         }
     } else {
         // Dry run mode - just show what would happen
         const dryRunManifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
         console.log(`🔍 Would check if tag ${newVersion} exists`);
-        console.log(`🔍 Would update package.json version to ${newVersion}`);
-        console.log(`🔍 Would update module.json version to ${newVersion}`);
-        console.log(`🔍 Would set module.json manifest to ${dryRunManifest}`);
+        if (isSuffixRelease) {
+            console.log('🔍 Would skip package.json/module.json changes');
+            console.log('🔍 Would skip build and commit');
+        } else {
+            console.log(`🔍 Would update package.json version to ${newVersion}`);
+            console.log(`🔍 Would update module.json version to ${newVersion}`);
+            console.log(`🔍 Would set module.json manifest to ${dryRunManifest}`);
+        }
     }
 } else {
     console.log(`✅ Draft release - no file changes or build needed`);
@@ -519,10 +594,10 @@ const releaseNotesPath = path.join(__dirname, 'release-notes.md');
 fs.writeFileSync(releaseNotesPath, ogSafeReleaseNotes);
 
 // Create GitHub release
-const releaseTypeText = isDraft ? ' (draft)' : isPreRelease ? ' (pre-release)' : '';
+const releaseTypeText = isDraft ? ' (draft)' : (isPreRelease || isSuffixRelease) ? ' (pre-release)' : '';
 if (isDryRun) {
     console.log(`🔍 Would create GitHub release${releaseTypeText}`);
-    console.log(`🔍 Command: gh release create ${newVersion} --title "Version ${newVersion}"${isDraft ? ' --draft' : ''}${isPreRelease ? ' --prerelease' : ''}`);
+    console.log(`🔍 Command: gh release create ${newVersion} --title "Version ${newVersion}"${isDraft ? ' --draft' : ''}${(isPreRelease || isSuffixRelease) ? ' --prerelease' : ''}${isSuffixRelease ? ' --latest=false' : ''}`);
 } else {
     console.log(`📦 Creating GitHub release${releaseTypeText}...`);
     try {
@@ -530,12 +605,15 @@ if (isDryRun) {
         if (isDraft) {
             ghCommand += ' --draft';
         }
-        if (isPreRelease) {
+        if (isPreRelease || isSuffixRelease) {
             ghCommand += ' --prerelease';
+        }
+        if (isSuffixRelease) {
+            ghCommand += ' --latest=false';
         }
         execSync(ghCommand);
         
-        const releaseTypeMsg = isDraft ? 'draft' : isPreRelease ? 'pre-release' : 'release';
+        const releaseTypeMsg = isDraft ? 'draft' : (isPreRelease || isSuffixRelease) ? 'pre-release' : 'release';
         console.log(`✅ GitHub ${releaseTypeMsg} created for ${newVersion}`);
     } catch (error) {
         console.error('❌ Error creating GitHub release:', error.message);
@@ -552,13 +630,23 @@ try {
     console.error('❌ Error removing temporary release notes file:', error);
 }
 
-const actionText = isDraft ? 'drafted' : isPreRelease ? 'pre-released' : 'released';
+if (isSuffixRelease) {
+    if (isDryRun) {
+        console.log('🔍 Would switch back to main and reinstall dependencies');
+    } else {
+        console.log('🔄 Restoring local main branch dependency state...');
+        execSync('git checkout main');
+        reinstallDependenciesForBranch('main');
+    }
+}
+
+const actionText = isDraft ? 'drafted' : (isPreRelease || isSuffixRelease) ? 'pre-released' : 'released';
 if (isDryRun) {
     console.log(`\n🔍 DRY RUN COMPLETE`);
     console.log(`\n📊 Summary of what would happen:`);
     console.log(`   Branch: ${targetBranch}`);
     console.log(`   Version: ${currentVersion} → ${newVersion}`);
-    console.log(`   Type: ${isDraft ? 'Draft' : isPreRelease ? 'Pre-release' : 'Release'}`);
+    console.log(`   Type: ${isDraft ? 'Draft' : (isPreRelease || isSuffixRelease) ? 'Pre-release' : 'Release'}`);
     console.log(`\n📄 Release notes would be:\n${ogSafeReleaseNotes}`);
     console.log(`\n💡 Run without --dry-run to execute the release`);
 } else {
@@ -572,6 +660,10 @@ if (isDraft && !isDryRun) {
     console.log(`❌ GitHub Actions will NOT run - no install files generated.`);
     console.log(`🔒 No version bump, no commits, no tags - purely tentative.`);
     console.log(`🔄 Publish the draft to trigger Actions and generate install files.`);
+} else if (isSuffixRelease && !isDryRun) {
+    console.log(`📝 Note: This is a SUFFIX PRE-RELEASE on '${targetBranch}'.`);
+    console.log(`✅ Branch was updated from main and dependencies were reinstalled on both '${targetBranch}' and 'main'.`);
+    console.log(`🔒 No semver/file bump was performed; release is marked pre-release and not latest.`);
 } else if (isPreRelease && !isDryRun) {
     console.log(`📝 Note: This is a PRE-RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run and update the next branch manifest!`);
