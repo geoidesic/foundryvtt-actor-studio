@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';
-import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
+import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass, newLevelValueForExistingClass } from '~/src/stores/index.js';
 import FeatSelector from '~/src/components/molecules/dnd5e/Feats/FeatSelector.svelte';
 
 const BROWSE_TARGET_SELECTOR = [
@@ -91,6 +91,128 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
 const isAppElementAppended = (appId) => {
   const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
   return panelElement.find(`[data-appid="${appId}"]`).length > 0;
+};
+
+const getLevelProgressionForSubtitle = (currentProcess, subtitleText) => {
+  const text = String(subtitleText || '').trim();
+  if (!text) return null;
+
+  const classMatch = text.match(/^\s*([^•]+?)\s*•/);
+  const className = classMatch?.[1]?.trim();
+
+  const actor = currentProcess?.app?.actor;
+  const actorItems = actor?.items;
+  const actorClasses = Array.isArray(actorItems)
+    ? actorItems.filter((item) => item?.type === 'class')
+    : actorItems?.filter?.((item) => item?.type === 'class') ?? [];
+
+  if (className && actorClasses?.length) {
+    const classItem = actorClasses.find((item) => String(item?.name || '').trim().toLowerCase() === className.toLowerCase());
+    const actorClassLevel = Number(classItem?.system?.levels ?? classItem?.system?.level ?? 0);
+    if (Number.isFinite(actorClassLevel) && actorClassLevel >= 1) {
+      return {
+        currentLevel: actorClassLevel,
+        targetLevel: actorClassLevel + 1,
+        source: 'actor-class-level'
+      };
+    }
+  }
+
+  const targetLevelFromStore = Number(get(newLevelValueForExistingClass) || 0);
+  if (Number.isFinite(targetLevelFromStore) && targetLevelFromStore > 1) {
+    return {
+      currentLevel: targetLevelFromStore - 1,
+      targetLevel: targetLevelFromStore,
+      source: 'store-target-level'
+    };
+  }
+
+  return null;
+};
+
+const LEVEL_TOKEN_REGEX = /(\bLevel(?:\s|\u00A0|\u202F)*)(\d+)\b/i;
+const LEVEL_PROGRESSION_REGEX = /\bLevel(?:\s|\u00A0|\u202F)*\d+\s*(?:->|→)\s*\d+\b/i;
+
+const normalizeAdvancementSubtitleLevel = (element, currentProcess) => {
+  try {
+    if (!element?.length) return;
+
+    const subtitleElements = element.find('.window-subtitle');
+    if (!subtitleElements.length) return;
+
+    let rewrites = 0;
+    subtitleElements.each((_, subtitleNode) => {
+      const subtitleElement = $(subtitleNode);
+      const originalText = String(subtitleElement.text() || '').trim();
+      if (!originalText) return;
+
+      // Preserve future dnd5e formats that already include progression.
+      if (LEVEL_PROGRESSION_REGEX.test(originalText)) return;
+
+      const levelMatch = originalText.match(LEVEL_TOKEN_REGEX);
+      if (!levelMatch) return;
+
+      const shownLevel = Number(levelMatch[2]);
+      if (!Number.isFinite(shownLevel)) return;
+
+      const progression = getLevelProgressionForSubtitle(currentProcess, originalText);
+      const currentLevel = Number.isFinite(progression?.currentLevel) ? progression.currentLevel : shownLevel;
+      const targetLevel = Number.isFinite(progression?.targetLevel) && progression.targetLevel > currentLevel
+        ? progression.targetLevel
+        : (currentLevel + 1);
+      const source = progression?.source ?? 'subtitle-token-fallback';
+
+      const replacementToken = `${levelMatch[1]}${currentLevel} -> ${targetLevel}`;
+      const correctedText = originalText.replace(LEVEL_TOKEN_REGEX, replacementToken);
+      if (correctedText === originalText) return;
+
+      subtitleElement.text(correctedText);
+      rewrites += 1;
+      window.GAS?.log?.d?.('[gas.captureAdvancement] Subtitle level token rewrite', {
+        originalText,
+        correctedText,
+        currentLevel,
+        targetLevel,
+        source,
+        processId: currentProcess?.id
+      });
+    });
+
+    if (rewrites > 0) {
+      window.GAS?.log?.i?.('[gas.captureAdvancement] Subtitle rewrites applied', { rewrites, processId: currentProcess?.id });
+    }
+  } catch (error) {
+    window.GAS?.log?.w?.('[gas.captureAdvancement] Failed to normalize advancement subtitle level:', error);
+  }
+};
+
+const scheduleAdvancementSubtitleNormalization = (element, currentProcess) => {
+  normalizeAdvancementSubtitleLevel(element, currentProcess);
+  queueMicrotask(() => normalizeAdvancementSubtitleLevel(element, currentProcess));
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(() => normalizeAdvancementSubtitleLevel(element, currentProcess));
+  }
+};
+
+const watchAdvancementSubtitleLevel = (element, currentProcess) => {
+  try {
+    const root = element?.[0];
+    if (!root || typeof MutationObserver !== 'function') return;
+
+    root.gasSubtitleObserver?.disconnect?.();
+
+    root.gasSubtitleObserver = new MutationObserver(() => {
+      scheduleAdvancementSubtitleNormalization(element, currentProcess);
+    });
+
+    root.gasSubtitleObserver.observe(root, {
+      subtree: true,
+      childList: true,
+      characterData: true
+    });
+  } catch (error) {
+    window.GAS?.log?.w?.('[gas.captureAdvancement] Failed to attach subtitle observer:', error);
+  }
 };
 
 const getSystemMajorVersion = () => {
@@ -876,6 +998,8 @@ export const captureAdvancement = (initial = false) => {
         element.addClass('gas-advancements')
         element.attr('gas-appid', currentProcess.id);
         element.appendTo(panelElement);
+        scheduleAdvancementSubtitleNormalization(element, currentProcess);
+        watchAdvancementSubtitleLevel(element, currentProcess);
         window.GAS.log.d('[gas.captureAdvancement] Element appended successfully');
 
         // Intercept browse buttons for feat selections
@@ -891,6 +1015,8 @@ export const captureAdvancement = (initial = false) => {
     } else {
       window.GAS.log.d('[gas.captureAdvancement] Element already appended for', currentProcess.id);
       const existingElement = panelElement.find(`[gas-appid="${currentProcess.id}"]`);
+      scheduleAdvancementSubtitleNormalization(existingElement, currentProcess);
+      watchAdvancementSubtitleLevel(existingElement, currentProcess);
       interceptForcedAverageClicks(existingElement);
       forceTakeAverageHitPoints(existingElement, currentProcess);
     }

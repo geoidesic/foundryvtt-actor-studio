@@ -38,11 +38,11 @@ export const renderAdvancementManager = async (app, html, data) => {
       bringActorStudioToFront();
       
       const advancementsTab = get(isLevelUp) ? get(levelUpTabs).find(x => x.id === "advancements") : get(tabs).find(x => x.id === "advancements");
-      // console.log('advancementsTab', advancementsTab)
-      if (advancementsTab) {
-        Hooks.call("gas.captureAdvancement");
-        bringActorStudioToFront();
-      } else {
+      // Always recapture on each render cycle so per-step UI corrections run for every advancement.
+      Hooks.call("gas.captureAdvancement");
+      bringActorStudioToFront();
+
+      if (!advancementsTab) {
         window.GAS.log.i('Advancements tab not found, adding it to the tabs')
         // @why,- add the advancements tab to the store, which will trigger it's component to render, which will in turn call gas.captureAdvancement
         if(get(isLevelUp)) {
@@ -51,6 +51,7 @@ export const renderAdvancementManager = async (app, html, data) => {
           await tabs.update(t => [...t, { label: "Advancements", id: "advancements", component: "Advancements" }]);
         }
         activeTab.set('advancements');
+        Hooks.call("gas.captureAdvancement");
         bringActorStudioToFront();
       }
     }
