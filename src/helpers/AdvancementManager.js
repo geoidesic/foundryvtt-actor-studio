@@ -375,12 +375,22 @@ export class AdvancementManager {
     this.inProcessStore.set(next);
     this.store.remove(next.id);
     const item = await prepareItemForDrop(next);
+    if (!item) {
+      throw new Error(`[ADVANCEMENT MANAGER] prepareItemForDrop returned no item for ${next?.id || 'unknown-id'}`);
+    }
     const currentActor = get(this.inProcessStore)?.actor;
+    if (!currentActor) {
+      throw new Error('[ADVANCEMENT MANAGER] No actor available while processing queue item');
+    }
     // window.GAS.log.d('[ADVANCEMENT MANAGER] handling next item', next);
     // window.GAS.log.d('[ADVANCEMENT MANAGER] currentActor', currentActor);
     
     //- Drop Item on Actor
     const result = await dropItemOnCharacter(currentActor, item);
+    // Some Foundry drop handlers complete successfully without returning a truthy value.
+    if (result === false) {
+      throw new Error(`[ADVANCEMENT MANAGER] dropItemOnCharacter failed for ${next?.id || 'unknown-id'}`);
+    }
     return result;
   }
 
@@ -415,6 +425,11 @@ export class AdvancementManager {
       this.handleEmptyQueue();
       return true;
     } catch (error) {
+      window.GAS.log.e('[ADVANCEMENT MANAGER] advanceQueue failed:', error);
+      console.error('[GAS_LEVELUP_FSM_TRACE] advanceQueue_failed', {
+        message: error?.message || String(error),
+        stack: error?.stack || null
+      });
       return false
     }
   }

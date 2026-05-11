@@ -617,17 +617,37 @@ export const spellLimits = derived(
       return lower.startsWith('actor.') || lower.includes('.item.') || lower.startsWith('compendium.');
     };
 
+    const getClassIdentifierFromActorItemUuid = (uuid, actor) => {
+      if (typeof uuid !== 'string' || !actor?.items) return null;
+
+      const uuidParts = uuid.split('.');
+      const itemIndex = uuidParts.findIndex((part) => String(part).toLowerCase() === 'item');
+      const itemId = itemIndex >= 0 ? uuidParts[itemIndex + 1] : null;
+      if (!itemId) return null;
+
+      const classItem = typeof actor.items.find === 'function'
+        ? actor.items.find((item) => item?.id === itemId && item?.type === 'class')
+        : null;
+
+      return classItem?.system?.identifier || classItem?.name || null;
+    };
+
     let normalizedClassName = resolvedClassName;
     if (looksLikeDocumentUuid(normalizedClassName)) {
       const doc = fromUuidSync(normalizedClassName);
       if (doc) {
         normalizedClassName = doc.system?.identifier || doc.name || normalizedClassName;
       } else {
-        // Fallback: extract identifier from UUID (e.g., 'sorcerer' from 'Compendium.dnd5e.classes.Item.sorcerer')
-        const uuidParts = normalizedClassName.split('.');
-        const potentialId = uuidParts[uuidParts.length - 1];
-        if (potentialId && potentialId !== 'Item') {
-          normalizedClassName = potentialId;
+        const actorItemIdentifier = getClassIdentifierFromActorItemUuid(normalizedClassName, $currentCharacter);
+        if (actorItemIdentifier) {
+          normalizedClassName = actorItemIdentifier;
+        } else {
+          // Fallback: extract identifier from UUID (e.g., 'sorcerer' from 'Compendium.dnd5e.classes.Item.sorcerer')
+          const uuidParts = normalizedClassName.split('.');
+          const potentialId = uuidParts[uuidParts.length - 1];
+          if (potentialId && potentialId !== 'Item') {
+            normalizedClassName = potentialId;
+          }
         }
       }
     }
@@ -952,7 +972,9 @@ export const spellProgress = derived(
 // Helper to safely get fromUuidSync
 const fromUuidSync = (uuid) => {
   try {
-    return foundry.utils?.fromUuidSync?.(uuid) || null;
+    const resolver = foundry?.utils?.fromUuidSync || globalThis?.fromUuidSync;
+    if (typeof resolver !== 'function') return null;
+    return resolver(uuid) || null;
   } catch (error) {
     window.GAS.log.w('[SPELLS] Error in fromUuidSync:', error);
     return null;

@@ -760,12 +760,10 @@ export function camelCaseToTitleCase(camelCaseStr) {
 
 export const getCompendiumSource = (item) => {
   // window.GAS.log.d('getCompendiumSource', item);
-  let sourceId;
-  if (game.version < 12) {
-    sourceId = item.flags.core.sourceId;
-  } else {
-    sourceId = item._stats.compendiumSource;
-  }
+  const sourceId = item?._stats?.compendiumSource
+    || item?.flags?.core?.sourceId
+    || item?.system?.source
+    || null;
   // window.GAS.log.d('sourceId', sourceId);
   return sourceId;
 }
@@ -1023,16 +1021,128 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
   // window.GAS.log.d('isNewMultiClass? ', isNewMultiClass);
   // window.GAS.log.d('itemData', itemData);
 
+  const tryResolveItemDocumentByUuid = async (uuid) => {
+    if (!uuid || typeof uuid !== 'string') return null;
+
+    try {
+      const asyncResolver = foundry?.utils?.fromUuid || globalThis?.fromUuid;
+      if (typeof asyncResolver === 'function') {
+        const resolved = await asyncResolver(uuid);
+        if (resolved) return resolved;
+      }
+    } catch (error) {
+      window.GAS?.log?.w?.('[UTILITY] fromUuid failed for UUID', { uuid, error });
+    }
+
+    // Fallback for environments where fromUuid cannot resolve world compendium UUIDs.
+    // UUID shape: Compendium.<packKey>.Item.<documentId>
+    try {
+      const parts = uuid.split('.');
+      const compendiumIndex = parts.findIndex((part) => part === 'Compendium');
+      const itemIndex = parts.findIndex((part) => part === 'Item');
+      if (compendiumIndex === 0 && itemIndex > 1) {
+        const packKey = parts.slice(1, itemIndex).join('.');
+        const documentId = parts[itemIndex + 1];
+        const pack = game?.packs?.get(packKey);
+        if (pack && documentId) {
+          const resolved = await pack.getDocument(documentId);
+          if (resolved) return resolved;
+        }
+      }
+    } catch (error) {
+      window.GAS?.log?.w?.('[UTILITY] Direct pack lookup failed for UUID', { uuid, error });
+    }
+
+    return null;
+  };
+
+  const tryFromDropDataData = async (data) => {
+    if (!data || typeof data !== 'object') return null;
+    try {
+      const viaDropData = await Item.implementation.fromDropData({ type: 'Item', data });
+      if (viaDropData) return viaDropData;
+    } catch (error) {
+      window.GAS?.log?.w?.('[UTILITY] fromDropData failed for item data payload', { error, name: data?.name, type: data?.type });
+    }
+    return null;
+  };
+
+  const tryFromDropData = async (uuid) => {
+    if (!uuid) return null;
+    try {
+      const viaDropData = await Item.implementation.fromDropData({ type: 'Item', uuid });
+      if (viaDropData) return viaDropData;
+    } catch (error) {
+      window.GAS?.log?.w?.('[UTILITY] fromDropData failed for UUID', { uuid, error });
+    }
+
+    const viaUuid = await tryResolveItemDocumentByUuid(uuid);
+    if (viaUuid) return viaUuid;
+
+    return null;
+  };
+
+  const isActorItemUuid = (uuid) => {
+    if (typeof uuid !== 'string') return false;
+    const lower = uuid.toLowerCase();
+    return lower.startsWith('actor.') && lower.includes('.item.');
+  };
+
   let item
   if (isLevelUp && itemData.type === 'class') {
     if (isNewMultiClass) {
-      item = await Item.implementation.fromDropData({ type: 'Item', uuid: itemData.uuid });
+      item = await tryFromDropData(itemData?.uuid);
     } else {
-      item = await Item.implementation.fromDropData({ type: 'Item', uuid: getCompendiumSource(itemData) });
+      const classUuid = itemData?.uuid;
+
+      // Prefer constructing drop data from the selected class document itself.
+      // This mirrors 2.6.10 behavior while forcing level increment payload to 1.
+      let selectedClassDoc = null;
+      if (isActorItemUuid(classUuid)) {
+        try {
+          selectedClassDoc = await tryResolveItemDocumentByUuid(classUuid);
+        } catch (error) {
+          window.GAS?.log?.w?.('[UTILITY] Could not resolve selected actor class doc', { classUuid, error });
+        }
+      }
+
+      const selectedClassData = selectedClassDoc && typeof selectedClassDoc?.toObject === 'function'
+        ? selectedClassDoc.toObject()
+        : (typeof itemData?.toObject === 'function' ? itemData.toObject() : null);
+
+      if (selectedClassData) {
+        if (selectedClassData._id) delete selectedClassData._id;
+        selectedClassData.system = selectedClassData.system || {};
+        selectedClassData.system.levels = 1;
+        item = await tryFromDropDataData(selectedClassData);
+      }
+
+      // Fallback to source UUID resolution if selected class data path didn't work.
+      let sourceUuid = getCompendiumSource(itemData)
+        || itemData?.flags?.[MODULE_ID]?.sourceUuid
+        || (selectedClassDoc ? getCompendiumSource(selectedClassDoc) : null)
+        || null;
+
+      // Only use non-actor source UUIDs for existing-class level-up drops.
+      const candidateUuids = [sourceUuid, classUuid]
+        .filter((uuid) => typeof uuid === 'string' && uuid.length > 0)
+        .filter((uuid) => !isActorItemUuid(uuid));
+
+      if (!item) {
+        for (const uuid of candidateUuids) {
+          item = await tryFromDropData(uuid);
+          if (item) break;
+        }
+      }
     }
 
     if (!item) {
-      log.e('Item not found in compendium', itemData._stats.compendiumSource);
+      log.e('Item not found for class level-up drop', {
+        compendiumSource: itemData?._stats?.compendiumSource,
+        flagSourceId: itemData?.flags?.core?.sourceId,
+        itemUuid: itemData?.uuid,
+        itemName: itemData?.name
+      });
       ui.notifications.error(game.i18n.localize('GAS.Error.ItemNotFoundInCompendium'));
       return
     }
@@ -1042,7 +1152,7 @@ export const prepareItemForDrop = async ({ itemData, isLevelUp, isNewMultiClass 
       uuid: itemData.uuid,
     }
     // window.GAS.log.d('dropData', dropData);
-    item = await Item.implementation.fromDropData(dropData);
+    item = await tryFromDropData(itemData?.uuid);
     // window.GAS.log.d('item', item);
   }
   return item;

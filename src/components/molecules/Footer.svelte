@@ -358,6 +358,21 @@
   async function handleFinalizeSpells() {
     // Prevent multiple clicks
     if (get(isProcessingSpells)) return;
+
+    const levelUpMode = get(isLevelUp);
+    let levelUpState = null;
+    if (levelUpMode) {
+      try {
+        levelUpState = getLevelUpFSM().getCurrentState();
+      } catch (error) {
+        levelUpState = 'state-read-error';
+      }
+    }
+
+    console.warn('[GAS_LEVELUP_FSM_TRACE] footer_handleFinalizeSpells', {
+      levelUpMode,
+      levelUpState
+    });
     
     await finalizeSpellsWorkflow({
       stores: storeRefs,
@@ -367,6 +382,21 @@
 
   // Handle skipping spells in level-up mode
   async function handleSkipSpells() {
+    const levelUpMode = get(isLevelUp);
+    let levelUpState = null;
+    if (levelUpMode) {
+      try {
+        levelUpState = getLevelUpFSM().getCurrentState();
+      } catch (error) {
+        levelUpState = 'state-read-error';
+      }
+    }
+
+    console.warn('[GAS_LEVELUP_FSM_TRACE] footer_handleSkipSpells', {
+      levelUpMode,
+      levelUpState
+    });
+
     await handleSkipSpellsLevelUp({
       stores: storeRefs
     });

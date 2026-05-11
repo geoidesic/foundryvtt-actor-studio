@@ -19,15 +19,38 @@ const TIMEOUT_SETTING_KEYS = {
   pollingInterval: 'testIntervalPolling',
 };
 
+const TIMEOUT_DEFAULTS = {
+  perTest: 120000,
+  waitShort: 100,
+  waitMedium: 200,
+  waitLong: 300,
+  uiInteraction: 5000,
+  uiStateChange: 20000,
+  spellUiLoad: 5000,
+  spellWorkflow: 30000,
+  appClosure: 4000,
+  appLifecycleComplete: 32000,
+  advancementProcessing: 1500,
+  advancementPostLevel: 3000,
+  actorDataUpdate: 50000,
+  pollingInterval: 100,
+};
+
 const getRequiredTimeoutSetting = (timeoutName) => {
   const settingKey = TIMEOUT_SETTING_KEYS[timeoutName];
   if (!settingKey) {
     throw new Error(`[TEST TIMEOUT] Unknown timeout name '${timeoutName}'`);
   }
 
-  const value = safeGetSetting(MODULE_ID, settingKey);
+  const defaultValue = TIMEOUT_DEFAULTS[timeoutName];
+  if (typeof defaultValue !== 'number' || Number.isNaN(defaultValue) || defaultValue <= 0) {
+    throw new Error(`[TEST TIMEOUT] Missing default for timeout '${timeoutName}'.`);
+  }
+
+  const value = safeGetSetting(MODULE_ID, settingKey, defaultValue);
   if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
-    throw new Error(`[TEST TIMEOUT] Missing or invalid setting '${MODULE_ID}.${settingKey}'. Expected a positive number.`);
+    console.warn(`[TEST TIMEOUT] Invalid setting '${MODULE_ID}.${settingKey}' -> ${value}. Falling back to default ${defaultValue}ms.`);
+    return defaultValue;
   }
 
   return value;

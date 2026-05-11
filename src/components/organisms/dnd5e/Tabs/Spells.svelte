@@ -264,7 +264,9 @@
   // Helper to safely get fromUuidSync
   const fromUuidSync = (uuid) => {
     try {
-      return foundry.utils?.fromUuidSync?.(uuid) || null;
+      const resolver = foundry?.utils?.fromUuidSync || globalThis?.fromUuidSync;
+      if (typeof resolver !== 'function') return null;
+      return resolver(uuid) || null;
     } catch (error) {
       window.GAS.log.w('[SPELLS] Error in fromUuidSync:', error);
       return null;

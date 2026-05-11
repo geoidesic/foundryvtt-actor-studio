@@ -21,7 +21,9 @@ import { getSpellLimitsForClassLevel, getSpellDeltaForClassLevel } from '~/src/h
 // Helper to safely get fromUuidSync
 const fromUuidSync = (uuid) => {
   try {
-    return foundry.utils?.fromUuidSync?.(uuid) || null;
+    const resolver = foundry?.utils?.fromUuidSync || globalThis?.fromUuidSync;
+    if (typeof resolver !== 'function') return null;
+    return resolver(uuid) || null;
   } catch (error) {
     window.GAS.log.w('[LEVELUP] Error in fromUuidSync:', error);
     return null;
@@ -404,6 +406,7 @@ function parseSpellcastingFromDescription(item) {
 export const levelUpFSMContext = {
   isProcessing: writable(false),
   actor: undefined,
+  lastFailure: null,
 
   _getMaxSpellLevelForProgression: function (level, progression, classIdentifier = '') {
     const rulesVersion = window.GAS?.dnd5eRules || '2014';
@@ -730,25 +733,46 @@ export function createLevelUpStateMachine() {
       .do(async (state, context) => {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(true);
         window.GAS.log.d('[LEVELUP] Entered PROCESSING_ADVANCEMENTS state');
-        
-        // Process advancement queue asynchronously
-        await dropItemRegistry.advanceQueue(true);
-        
-        // Add a longer delay to ensure actor is fully updated after advancements
-        // Advancements might update the actor's spellcasting system asynchronously
-        await new Promise(resolve => setTimeout(resolve, 500));
+        levelUpFSMContext.lastFailure = null;
 
-        const contextActor = levelUpFSMContext.actor || get(actorInGame);
-        const refreshedActor = contextActor?.id
-          ? (game.actors?.get(contextActor.id) || contextActor)
-          : contextActor;
+        try {
+          // Process advancement queue asynchronously
+          const queueProcessed = await dropItemRegistry.advanceQueue(true);
+          if (!queueProcessed) {
+            throw new Error('[LEVELUP] Failed to process advancement queue');
+          }
+          
+          // Add a longer delay to ensure actor is fully updated after advancements
+          // Advancements might update the actor's spellcasting system asynchronously
+          await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (refreshedActor) {
-          levelUpFSMContext.actor = refreshedActor;
-          actorInGame.set(refreshedActor);
+          const contextActor = levelUpFSMContext.actor || get(actorInGame);
+          const refreshedActor = contextActor?.id
+            ? (game.actors?.get(contextActor.id) || contextActor)
+            : contextActor;
+
+          if (refreshedActor) {
+            levelUpFSMContext.actor = refreshedActor;
+            actorInGame.set(refreshedActor);
+          }
+          
+          window.GAS.log.d('[LEVELUP] Advancement queue completed, checking for spellcasting...');
+        } catch (error) {
+          const message = error?.message || String(error);
+          levelUpFSMContext.lastFailure = {
+            state: 'processing_advancements',
+            message,
+            stack: error?.stack || null,
+            at: Date.now()
+          };
+
+          window.GAS.log.e('[LEVELUP] processing_advancements failed:', error);
+          console.error('[GAS_LEVELUP_FSM_TRACE] processing_advancements_error', {
+            message,
+            stack: error?.stack || null
+          });
+          throw error;
         }
-        
-        window.GAS.log.d('[LEVELUP] Advancement queue completed, checking for spellcasting...');
       })
         .onSuccess()
           .transitionTo('selecting_spells').withCondition((context) => {
@@ -884,23 +908,46 @@ export function createLevelUpStateMachine() {
         if (actor) {
           // Open actor sheet on completion.
           (async () => {
+            const closeTraceId = `lvlup-close-${Date.now()}`;
             const refreshedActor = actor?.id ? (game.actors?.get(actor.id) || actor) : actor;
             levelUpFSMContext.actor = refreshedActor;
             actorInGame.set(refreshedActor);
 
-            window.GAS.log.d('[LEVELUP] Opening actor sheet for:', refreshedActor.name);
-            refreshedActor.sheet.render(true);
+            window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED begin`, {
+              actorId: refreshedActor?.id || null,
+              actorName: refreshedActor?.name || null,
+              hasSheet: !!refreshedActor?.sheet
+            });
+
+            try {
+              window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED before_sheet_render`);
+              refreshedActor.sheet.render(true);
+              window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED after_sheet_render`);
+            } catch (error) {
+              window.GAS.log.e(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED sheet_render_error`, error);
+            }
+
             setTimeout(() => bringActorStudioToFront(), 0);
             setTimeout(() => bringActorStudioToFront(), 100);
             
             // Close Actor Studio immediately
-            window.GAS.log.d('[LEVELUP] Closing Actor Studio');
+            window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED before_hooks_call gas.close`);
+            console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] LEVELUP_COMPLETED before Hooks.call(gas.close)`, {
+              actorId: refreshedActor?.id || null,
+              actorName: refreshedActor?.name || null
+            });
             Hooks.call("gas.close");
+            window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED after_hooks_call gas.close`);
+            console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] LEVELUP_COMPLETED after Hooks.call(gas.close)`);
           })();
         } else {
           // No actor, just close Actor Studio
-          window.GAS.log.d('[LEVELUP] No actor, closing Actor Studio');
+          const closeTraceId = `lvlup-close-${Date.now()}`;
+          window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED no_actor_before_hooks_call gas.close`);
+          console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] LEVELUP_COMPLETED no_actor_before Hooks.call(gas.close)`);
           Hooks.call("gas.close");
+          window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED no_actor_after_hooks_call gas.close`);
+          console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] LEVELUP_COMPLETED no_actor_after Hooks.call(gas.close)`);
         }
       })
     
@@ -909,19 +956,32 @@ export function createLevelUpStateMachine() {
       .on('reset').transitionTo('idle')
       .onEnter((context) => {
         if (levelUpFSMContext.isProcessing) levelUpFSMContext.isProcessing.set(false);
-        window.GAS.log.e('[LEVELUP] Entered ERROR state:', context.error);
-        if (context.error) ui.notifications.error(context.error);
+        const lastFailureMessage = levelUpFSMContext.lastFailure?.message || null;
+        window.GAS.log.e('[LEVELUP] Entered ERROR state:', {
+          contextError: context?.error,
+          lastFailure: levelUpFSMContext.lastFailure
+        });
+        console.error('[GAS_LEVELUP_FSM_TRACE] entered_error_state', {
+          contextError: context?.error,
+          lastFailure: levelUpFSMContext.lastFailure
+        });
+
+        const errorMessage = context?.error || lastFailureMessage;
+        if (errorMessage) ui.notifications.error(errorMessage);
       })
     
     .global()
       .onStateEnter((context, state) => {
         console.log('[LEVELUP] Entering state:', state);
+        console.warn('[GAS_LEVELUP_FSM_TRACE] onStateEnter', { state });
       })
       .onStateExit((context, state) => {
         console.log('[LEVELUP] Exiting state:', state);
+        console.warn('[GAS_LEVELUP_FSM_TRACE] onStateExit', { state });
       })
       .onTransition((context, fromState, toState) => {
         console.log('[LEVELUP] Transitioning from', fromState, 'to', toState);
+        console.warn('[GAS_LEVELUP_FSM_TRACE] onTransition', { fromState, toState });
       })
     .start();
   
@@ -933,6 +993,46 @@ let levelUpFSM;
 export function getLevelUpFSM() {
   if (!levelUpFSM) {
     levelUpFSM = createLevelUpStateMachine();
+
+    // Wrap handle to expose every event sent to the LevelUp FSM.
+    try {
+      const originalHandle = levelUpFSM.handle;
+      levelUpFSM.handle = function(eventName, context) {
+        let currentState = 'unknown';
+        try {
+          currentState = levelUpFSM.getCurrentState ? levelUpFSM.getCurrentState() : 'unknown';
+        } catch (error) {
+          // Ignore diagnostic state-read failures.
+        }
+
+        console.warn('[GAS_LEVELUP_FSM_TRACE] handle', {
+          eventName,
+          currentState,
+          hasContext: !!context
+        });
+
+        try {
+          const result = originalHandle.call(this, eventName, context);
+          const nextState = levelUpFSM.getCurrentState ? levelUpFSM.getCurrentState() : 'unknown';
+          console.warn('[GAS_LEVELUP_FSM_TRACE] handle_result', {
+            eventName,
+            fromState: currentState,
+            toState: nextState
+          });
+          return result;
+        } catch (error) {
+          console.error('[GAS_LEVELUP_FSM_TRACE] handle_error', {
+            eventName,
+            currentState,
+            error
+          });
+          throw error;
+        }
+      };
+    } catch (error) {
+      console.error('[GAS_LEVELUP_FSM_TRACE] failed_to_wrap_handle', error);
+    }
+
     // Expose the FSM on window.GAS for debugging
     if (typeof window !== 'undefined') {
       window.GAS = window.GAS || {};

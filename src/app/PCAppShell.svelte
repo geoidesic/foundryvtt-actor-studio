@@ -20,6 +20,10 @@
 
   //- register hooks
   // console.log('[PCAPP] Registering gas.close hook (once)');
+  console.warn('[GAS_CLOSE_TRACE_CONSOLE] Registering gas.close hook in PCAppShell', {
+    levelUp,
+    hookType: 'once'
+  });
   Hooks.once("gas.close", gasClose);
   // console.log('[PCAPP] Registering gas.equipmentSelection hook (persistent)');
   Hooks.on("gas.equipmentSelection", handleEquipmentSelection);
@@ -54,6 +58,12 @@
   };
 
   onMount(async () => {
+    console.warn('[GAS_CLOSE_TRACE_CONSOLE] PCAppShell mounted', {
+      levelUp,
+      hasApplication: !!application,
+      actorIdFromDocumentStore: $documentStore?.id || null
+    });
+
     if(levelUp) {
       // Initialize LevelUp workflow
       $actorInGame = $documentStore
@@ -152,15 +162,36 @@
 
   function gasClose() {
     // console.log('[PCAPP] ====== gasClose CALLED ======');
+    const closeTraceId = `pcapp-close-${Date.now()}`;
+    console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] gasClose entered`, {
+      levelUp,
+      hasActorInGame: !!$actorInGame,
+      actorId: $actorInGame?.id || null,
+      hasApplication: !!application
+    });
+    window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER entered`, {
+      hasActorInGame: !!$actorInGame,
+      actorId: $actorInGame?.id || null,
+      actorName: $actorInGame?.name || null,
+      hasApplication: !!application
+    });
     window.GAS?.log?.d?.('gas.close')
     window.GAS?.log?.d?.($actorInGame);
     
     // Only try to access actor sheet if actor exists
     if ($actorInGame) {
-      window.GAS?.log?.d?.($actorInGame.sheet);
-      $actorInGame.sheet.render(true);
+      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER before_sheet_render`, {
+        hasSheet: !!$actorInGame?.sheet
+      });
+      try {
+        window.GAS?.log?.d?.($actorInGame.sheet);
+        $actorInGame.sheet.render(true);
+        window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER after_sheet_render`);
+      } catch (error) {
+        window.GAS?.log?.e?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER sheet_render_error`, error);
+      }
     } else {
-      console.log('[PCAPP] No actor in game - skipping sheet render');
+      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER no_actor_skip_sheet_render`);
     }
     
     // console.log('[PCAPP] Resetting stores and workflow state machine');
@@ -194,15 +225,35 @@
     // Set flag to indicate we're closing from the gas hook
     if (application && typeof application.setClosingFromGasHook === 'function') {
       application.setClosingFromGasHook(true);
+      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER setClosingFromGasHook true`);
       // console.log('[PCAPP] setClosingFromGasHook called on application instance');
     } else {
+      window.GAS?.log?.w?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER missing setClosingFromGasHook`, {
+        hasApplication: !!application,
+        hasClose: !!application?.close
+      });
       // console.warn('[PCAPP] application.setClosingFromGasHook is not a function or application is undefined:', application);
       // Fallback: try to close directly if possible
       if (application && typeof application.close === 'function') {
-        application.close();
+        try {
+          window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER fallback_before_application_close`);
+          application.close();
+          window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER fallback_after_application_close`);
+        } catch (error) {
+          window.GAS?.log?.e?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER fallback_application_close_error`, error);
+        }
       }
     }
-    application.close();
+    try {
+      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER before_application_close`);
+      console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] before application.close()`);
+      application.close();
+      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER after_application_close`);
+      console.warn(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] after application.close()`);
+    } catch (error) {
+      window.GAS?.log?.e?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER application_close_error`, error);
+      console.error(`[GAS_CLOSE_TRACE_CONSOLE] [${closeTraceId}] application.close() error`, error);
+    }
     // console.log('[PCAPP] ====== gasClose COMPLETE ======');
   }
 
