@@ -12,6 +12,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
   import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
+  import { observeFoundryBodyTheme } from '~/src/helpers/syncAppThemeFromFoundryBody';
 
   export let elementRoot; //- passed in by SvelteApplication
   export let documentStore; //- passed in by DocumentSheet.js where it attaches DocumentShell to the DOM body
@@ -57,6 +58,8 @@
     '--illuminated-initial-width': illuminatedWidth
   };
 
+  let disconnectFoundryTheme = () => {};
+
   onMount(async () => {
     console.warn('[GAS_CLOSE_TRACE_CONSOLE] PCAppShell mounted', {
       levelUp,
@@ -64,12 +67,8 @@
       actorIdFromDocumentStore: $documentStore?.id || null
     });
 
-    // Foundry v12: force light theme class on the app shell so Variables.sass light
-    // overrides apply (dnd5e 3.x may still set dark-adjacent classes on the window).
-    if (Number(game.version) < 13) {
-      elementRoot?.classList.remove('theme-dark');
-      elementRoot?.classList.add('theme-light');
-    }
+    // Foundry v12: mirror body theme-dark / theme-light onto the app shell (Foundry client setting).
+    disconnectFoundryTheme = observeFoundryBodyTheme(elementRoot);
 
     if(levelUp) {
       // Initialize LevelUp workflow
@@ -118,6 +117,7 @@
   });
 
   onDestroy(() => {
+    disconnectFoundryTheme();
     // console.log('[PCAPP] onDestroy called - cleaning up');
     // Don't reset stores here - let gasClose handle it
     // console.log('[PCAPP] Unregistering gas.close hook');

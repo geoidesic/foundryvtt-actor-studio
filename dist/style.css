@@ -38,21 +38,54 @@
   --color-shadow-primary: #416dbe;
   --tabs-list-background: #dbd9cd;
   --tabs-content-background: rgba(249, 249, 249, 0.8);
+  --tab-active-background: #f9f9f9;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgb(60, 60, 60);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --gas-color-text: #000;
   --button-background: #f0f0f0;
   --button-hover-background-color: #d8d8d8;
   --button-hover-border-color: #999;
   --color-border-dark: #426dbe;
   --color-border-light: #ccc;
+  --input-background: #f9f9f9;
+  --input-disabled-background: #ececec;
+  --input-border: #bbb;
+  --progress-track-background: #e0e0e0;
+  --progress-back-background: rgba(10, 144, 50, 0.5);
+  --progress-front-background: #ffffff;
+  --progress-front-text-color: #000000;
+  --progress-label-color: #ffffff;
+  --properties-list-border: #eeede0;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #000000;
+  --background-color: #1a1a1a;
   --tabs-list-background: transparent;
-  --tabs-content-background: rgba(24, 24, 24, 1);
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
   --color-text-dark-secondary: #893030;
   --button-background: rgba(24, 24, 24, 1);
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
   --button-hover-background-color: #877755;
@@ -63,13 +96,33 @@
 }
 
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container {
-  --background-color: #000000;
+  --background-color: #1a1a1a;
   --tabs-list-background: transparent;
-  --tabs-content-background: rgba(24, 24, 24, 1);
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
   --color-text-dark-secondary: #893030;
   --button-background: rgba(24, 24, 24, 1);
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
 }
 .theme-dark #foundryvtt-actor-studio-pc-sheet button, .theme-dark #foundryvtt-actor-studio-welcome button, .theme-dark #gas-feat-selector-container button {
   --button-hover-background-color: #877755;
@@ -79,19 +132,60 @@
   --table-background-color: rgba(0, 0, 0, 0.05);
 }
 
-#foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light,
-body:not(.theme-dark) #foundryvtt-actor-studio-pc-sheet,
-body:not(.theme-dark) #foundryvtt-actor-studio-welcome,
-body:not(.theme-dark) #gas-feat-selector-container {
+#foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light {
   --background-color: #cccccc;
   --tabs-list-background: #dbd9cd;
   --tabs-content-background: rgba(249, 249, 249, 0.8);
+  --tab-active-background: #f9f9f9;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgb(60, 60, 60);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: #e7eef1;
   --gas-color-text: #000;
   --button-background: #f0f0f0;
   --button-hover-background-color: #d8d8d8;
   --button-hover-border-color: #999;
   --color-text-dark-secondary: inherit;
+}
+
+#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
+  --background-color: #1a1a1a;
+  --tabs-list-background: transparent;
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-color-text: #fff;
+  --button-background: rgba(24, 24, 24, 1);
+  --button-hover-background-color: #877755;
+  --button-hover-border-color: #a18e66;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
+  --footer-input-background: rgba(255, 255, 255, 0.08);
+  --footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
+  --button-hover-background-color: #877755;
+  --button-hover-border-color: #a18e66;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
+  --table-background-color: rgba(255, 255, 255, 0.05);
 }
 /* Actor Studio */
 #foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container {
@@ -134,21 +228,54 @@ body:not(.theme-dark) #gas-feat-selector-container {
   --color-shadow-primary: #416dbe;
   --tabs-list-background: #dbd9cd;
   --tabs-content-background: rgba(249, 249, 249, 0.8);
+  --tab-active-background: #f9f9f9;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgb(60, 60, 60);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --gas-color-text: #000;
   --button-background: #f0f0f0;
   --button-hover-background-color: #d8d8d8;
   --button-hover-border-color: #999;
   --color-border-dark: #426dbe;
   --color-border-light: #ccc;
+  --input-background: #f9f9f9;
+  --input-disabled-background: #ececec;
+  --input-border: #bbb;
+  --progress-track-background: #e0e0e0;
+  --progress-back-background: rgba(10, 144, 50, 0.5);
+  --progress-front-background: #ffffff;
+  --progress-front-text-color: #000000;
+  --progress-label-color: #ffffff;
+  --properties-list-border: #eeede0;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #000000;
+  --background-color: #1a1a1a;
   --tabs-list-background: transparent;
-  --tabs-content-background: rgba(24, 24, 24, 1);
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
   --color-text-dark-secondary: #893030;
   --button-background: rgba(24, 24, 24, 1);
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
   --button-hover-background-color: #877755;
@@ -158,13 +285,33 @@ body:not(.theme-dark) #gas-feat-selector-container {
   --table-background-color: rgba(0, 0, 0, 0.05);
 }
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container {
-  --background-color: #000000;
+  --background-color: #1a1a1a;
   --tabs-list-background: transparent;
-  --tabs-content-background: rgba(24, 24, 24, 1);
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
   --color-text-dark-secondary: #893030;
   --button-background: rgba(24, 24, 24, 1);
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
 }
 .theme-dark #foundryvtt-actor-studio-pc-sheet button, .theme-dark #foundryvtt-actor-studio-welcome button, .theme-dark #gas-feat-selector-container button {
   --button-hover-background-color: #877755;
@@ -173,19 +320,59 @@ body:not(.theme-dark) #gas-feat-selector-container {
 .theme-dark #foundryvtt-actor-studio-pc-sheet table, .theme-dark #foundryvtt-actor-studio-welcome table, .theme-dark #gas-feat-selector-container table {
   --table-background-color: rgba(0, 0, 0, 0.05);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light,
-body:not(.theme-dark) #foundryvtt-actor-studio-pc-sheet,
-body:not(.theme-dark) #foundryvtt-actor-studio-welcome,
-body:not(.theme-dark) #gas-feat-selector-container {
+#foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light {
   --background-color: #cccccc;
   --tabs-list-background: #dbd9cd;
   --tabs-content-background: rgba(249, 249, 249, 0.8);
+  --tab-active-background: #f9f9f9;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgb(60, 60, 60);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --li-background-color: #e7eef1;
   --gas-color-text: #000;
   --button-background: #f0f0f0;
   --button-hover-background-color: #d8d8d8;
   --button-hover-border-color: #999;
   --color-text-dark-secondary: inherit;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
+  --background-color: #1a1a1a;
+  --tabs-list-background: transparent;
+  --tabs-content-background: #1a1a1a;
+  --tab-active-background: #2a2a2a;
+  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-color-text: #fff;
+  --button-background: rgba(24, 24, 24, 1);
+  --button-hover-background-color: #877755;
+  --button-hover-border-color: #a18e66;
+  --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
+  --tjs-select-option-background: #222;
+  --tjs-select-option-color: #fff;
+  --tjs-select-border: 1px solid #555;
+  --input-background: #2e2e2e;
+  --input-disabled-background: #383838;
+  --input-border: #555;
+  --progress-track-background: #3a3a3a;
+  --progress-back-background: rgba(27, 175, 27, 0.35);
+  --progress-front-background: #2d6e2d;
+  --progress-front-text-color: #ffffff;
+  --progress-label-color: #ffffff;
+  --properties-list-border: rgba(255, 255, 255, 0.2);
+  --li-inset-color: rgba(255, 255, 255, 0.12);
+  --sheet-chrome-border: #3a3a3a;
+  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
+  --footer-input-background: rgba(255, 255, 255, 0.08);
+  --footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
+  --button-hover-background-color: #877755;
+  --button-hover-border-color: #a18e66;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
+  --table-background-color: rgba(255, 255, 255, 0.05);
 }
 /* cyrillic-ext */
 @font-face {
@@ -574,6 +761,246 @@ body:not(.theme-dark) #gas-feat-selector-container {
   font-weight: 500;
   font-size: 0.9em;
 }
+#foundryvtt-actor-studio-pc-sheet.theme-dark,
+.theme-dark #foundryvtt-actor-studio-pc-sheet {
+  --footer-input-background: rgba(255, 255, 255, 0.08);
+  --footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark.window-app,
+.theme-dark #foundryvtt-actor-studio-pc-sheet.window-app {
+  background-color: var(--background-color) !important;
+  border-color: #333 !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs.tabs,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tabs.gas-tabs,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .gas-tabs.tabs,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .tabs.gas-tabs {
+  border: none !important;
+  border-color: transparent !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .gas-tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .tabs .tabs-list {
+  border-bottom-color: var(--sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .border-right.right-border-gradient-mask,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .border-right.right-border-gradient-mask {
+  border-right-color: var(--sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .window-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .window-content {
+  background: var(--background-color) !important;
+  background-image: none !important;
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark main,
+#foundryvtt-actor-studio-pc-sheet.theme-dark section.a,
+#foundryvtt-actor-studio-pc-sheet.theme-dark section.b,
+.theme-dark #foundryvtt-actor-studio-pc-sheet main,
+.theme-dark #foundryvtt-actor-studio-pc-sheet section.a,
+.theme-dark #foundryvtt-actor-studio-pc-sheet section.b {
+  background-color: transparent;
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .tab-content {
+  background-color: var(--tabs-content-background);
+  border-color: transparent;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .content,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-a,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .col-a,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .col-b {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button.active,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .gas-tabs .tabs-list button.active {
+  color: var(--tab-active-color) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark input,
+#foundryvtt-actor-studio-pc-sheet.theme-dark input[type=number],
+#foundryvtt-actor-studio-pc-sheet.theme-dark input[type=text],
+#foundryvtt-actor-studio-pc-sheet.theme-dark input[type=search],
+#foundryvtt-actor-studio-pc-sheet.theme-dark select,
+#foundryvtt-actor-studio-pc-sheet.theme-dark textarea,
+.theme-dark #foundryvtt-actor-studio-pc-sheet input,
+.theme-dark #foundryvtt-actor-studio-pc-sheet input[type=number],
+.theme-dark #foundryvtt-actor-studio-pc-sheet input[type=text],
+.theme-dark #foundryvtt-actor-studio-pc-sheet input[type=search],
+.theme-dark #foundryvtt-actor-studio-pc-sheet select,
+.theme-dark #foundryvtt-actor-studio-pc-sheet textarea {
+  background-color: var(--input-background) !important;
+  color: var(--gas-color-text) !important;
+  border-color: var(--input-border) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark input:disabled,
+#foundryvtt-actor-studio-pc-sheet.theme-dark input[disabled],
+.theme-dark #foundryvtt-actor-studio-pc-sheet input:disabled,
+.theme-dark #foundryvtt-actor-studio-pc-sheet input[disabled] {
+  background-color: var(--input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+  -webkit-text-fill-color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .score-cell,
+#foundryvtt-actor-studio-pc-sheet.theme-dark input.mainscore,
+#foundryvtt-actor-studio-pc-sheet.theme-dark input.score,
+#foundryvtt-actor-studio-pc-sheet.theme-dark table input,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .score-cell,
+.theme-dark #foundryvtt-actor-studio-pc-sheet input.mainscore,
+.theme-dark #foundryvtt-actor-studio-pc-sheet input.score,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table input {
+  background-color: var(--input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .properties-list > li,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .properties-list > li {
+  background: var(--li-background-color) !important;
+  border-color: var(--properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table {
+  border-color: var(--input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark table td,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table td,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table th,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table td,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table th,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table td {
+  border-color: var(--input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table thead th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table thead th,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table thead th,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table thead th {
+  background-color: var(--tab-active-background, #2a2a2a);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table tbody tr:nth-child(even) td,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-pc-sheet table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark hr,
+.theme-dark #foundryvtt-actor-studio-pc-sheet hr {
+  border-color: var(--sheet-chrome-border, #3a3a3a);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .custom-select .selected-option,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .custom-select .options-dropdown,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .custom-select .search-input,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .selected-option,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .options-dropdown,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .search-input {
+  background-color: var(--input-background) !important;
+  border-color: var(--input-border) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container {
+  background-color: var(--background-color);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container label.character-name-label,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container label.character-name-label {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container .character-name-input-container,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container .character-name-input-container {
+  background: var(--footer-input-background);
+  border-color: var(--footer-input-border);
+  color: var(--gas-color-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container .character-name-input-container input.character-name-input,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container .character-name-input-container input.character-name-input {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .content > .flexrow > .col-a:only-child,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .content > .flexrow > .flex2:only-child,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .content > .flexrow > .col-a:only-child,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .content > .flexrow > .flex2:only-child {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description {
+  width: 100%;
+  max-width: 100%;
+  color: var(--gas-color-text);
+  display: flow-root;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h1, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h2, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h3, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h4, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h5, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill h6,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h1,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h2,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h3,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h4,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h5,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description h6,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill p,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill li,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill span,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill div,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h1,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h2,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h3,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h4,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h5,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill h6,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description p,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description li,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description span,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description div,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h1,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h2,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h3,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h4,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h5,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description h6 {
+  color: inherit;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill a.content-link,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description a.content-link {
+  color: var(--tab-active-color);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill .journal-sheet,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill .journal-entry-content,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill .journal-page-content,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description .journal-sheet,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description .journal-entry-content,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description .journal-page-content {
+  background: transparent !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill img,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description img,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill img,
+.theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description img {
+  max-width: 100%;
+  height: auto;
+}
 /**
  * * Provides styles used across all demo applications. Take note that `classes: ['tjs-essential-svelte-esm']` is added to
  * * all applications and dialogs which allows targeting just the `essential-svelte-esm` GUI.
@@ -894,6 +1321,7 @@ body:not(.theme-dark) #gas-feat-selector-container {
 }
 .GAS .gas-tabs .tabs-list button {
   background-color: var(--button-background) !important;
+  color: var(--gas-color-text) !important;
 }
 .GAS .gas-tabs .tabs-list button:hover {
   box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important;
@@ -906,7 +1334,8 @@ body:not(.theme-dark) #gas-feat-selector-container {
   border-radius: 10px;
   background-color: var(--tabs-content-background);
   position: relative;
-  margin-top: -5px;
+  margin-top: 2.25rem;
+  color: var(--gas-color-text);
   position: relative;
   padding: 0;
 }
@@ -1011,7 +1440,9 @@ body:not(.theme-dark) #gas-feat-selector-container {
 }
 .GAS.theme-dark .npc-stat-block {
   --gas-text-header-color: var(--dnd5e-color-gold);
-  background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat;
+  background: var(--background-color);
+  background-image: none;
+  background-blend-mode: normal;
 }
 .GAS.theme-dark .npc-stat-block h2, .GAS.theme-dark .npc-stat-block .label {
   color: var(--dnd5e-color-gold) !important;
@@ -1060,6 +1491,13 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 }
 #gas-dialog-button, #gas-dialog-npc-button {
   background-color: white;
+}
+#foundryvtt-actor-studio-pc-sheet .window-content, #foundryvtt-actor-studio-welcome .window-content, #gas-feat-selector-container .window-content, #foundryvtt-actor-studio-npc-sheet .window-content, .gas-npc-sheet .window-content, .GAS .window-content {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .window-content, #foundryvtt-actor-studio-welcome.theme-dark .window-content, #gas-feat-selector-container.theme-dark .window-content, #foundryvtt-actor-studio-npc-sheet.theme-dark .window-content, .gas-npc-sheet.theme-dark .window-content, .GAS.theme-dark .window-content {
+  background: var(--background-color) !important;
+  background-image: none !important;
 }
 #foundryvtt-actor-studio-pc-sheet .window-header, #foundryvtt-actor-studio-welcome .window-header, #gas-feat-selector-container .window-header, #foundryvtt-actor-studio-npc-sheet .window-header, .gas-npc-sheet .window-header, .GAS .window-header {
   color: #fff;
@@ -1204,6 +1642,193 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .black-link a.content-link, #foundryvtt-actor-studio-welcome.theme-dark .black-link a.content-link, #gas-feat-selector-container.theme-dark .black-link a.content-link, #foundryvtt-actor-studio-npc-sheet.theme-dark .black-link a.content-link, .gas-npc-sheet.theme-dark .black-link a.content-link, .GAS.theme-dark .black-link a.content-link {
   color: var(--dnd5e-color-gold);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll, #foundryvtt-actor-studio-welcome.theme-dark .description-fill,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll, #gas-feat-selector-container.theme-dark .description-fill,
+#gas-feat-selector-container.theme-dark .illuminated-description,
+#gas-feat-selector-container.theme-dark .col-b,
+#gas-feat-selector-container.theme-dark .tab-content .scroll, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll, .gas-npc-sheet.theme-dark .description-fill,
+.gas-npc-sheet.theme-dark .illuminated-description,
+.gas-npc-sheet.theme-dark .col-b,
+.gas-npc-sheet.theme-dark .tab-content .scroll, .GAS.theme-dark .description-fill,
+.GAS.theme-dark .illuminated-description,
+.GAS.theme-dark .col-b,
+.GAS.theme-dark .tab-content .scroll {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill td, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description td,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b p,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b li,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b span,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b div,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b td,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll p,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll li,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll span,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll div,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll td,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll th, #foundryvtt-actor-studio-welcome.theme-dark .description-fill p, #foundryvtt-actor-studio-welcome.theme-dark .description-fill li, #foundryvtt-actor-studio-welcome.theme-dark .description-fill span, #foundryvtt-actor-studio-welcome.theme-dark .description-fill div, #foundryvtt-actor-studio-welcome.theme-dark .description-fill td, #foundryvtt-actor-studio-welcome.theme-dark .description-fill th,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description td,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description th,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b p,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b li,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b span,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b div,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b td,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b th,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll p,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll li,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll span,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll div,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll td,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll th, #gas-feat-selector-container.theme-dark .description-fill p, #gas-feat-selector-container.theme-dark .description-fill li, #gas-feat-selector-container.theme-dark .description-fill span, #gas-feat-selector-container.theme-dark .description-fill div, #gas-feat-selector-container.theme-dark .description-fill td, #gas-feat-selector-container.theme-dark .description-fill th,
+#gas-feat-selector-container.theme-dark .illuminated-description p,
+#gas-feat-selector-container.theme-dark .illuminated-description li,
+#gas-feat-selector-container.theme-dark .illuminated-description span,
+#gas-feat-selector-container.theme-dark .illuminated-description div,
+#gas-feat-selector-container.theme-dark .illuminated-description td,
+#gas-feat-selector-container.theme-dark .illuminated-description th,
+#gas-feat-selector-container.theme-dark .col-b p,
+#gas-feat-selector-container.theme-dark .col-b li,
+#gas-feat-selector-container.theme-dark .col-b span,
+#gas-feat-selector-container.theme-dark .col-b div,
+#gas-feat-selector-container.theme-dark .col-b td,
+#gas-feat-selector-container.theme-dark .col-b th,
+#gas-feat-selector-container.theme-dark .tab-content .scroll p,
+#gas-feat-selector-container.theme-dark .tab-content .scroll li,
+#gas-feat-selector-container.theme-dark .tab-content .scroll span,
+#gas-feat-selector-container.theme-dark .tab-content .scroll div,
+#gas-feat-selector-container.theme-dark .tab-content .scroll td,
+#gas-feat-selector-container.theme-dark .tab-content .scroll th, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill td, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description td,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b p,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b li,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b span,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b div,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b td,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll p,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll li,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll span,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll div,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll td,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll th, .gas-npc-sheet.theme-dark .description-fill p, .gas-npc-sheet.theme-dark .description-fill li, .gas-npc-sheet.theme-dark .description-fill span, .gas-npc-sheet.theme-dark .description-fill div, .gas-npc-sheet.theme-dark .description-fill td, .gas-npc-sheet.theme-dark .description-fill th,
+.gas-npc-sheet.theme-dark .illuminated-description p,
+.gas-npc-sheet.theme-dark .illuminated-description li,
+.gas-npc-sheet.theme-dark .illuminated-description span,
+.gas-npc-sheet.theme-dark .illuminated-description div,
+.gas-npc-sheet.theme-dark .illuminated-description td,
+.gas-npc-sheet.theme-dark .illuminated-description th,
+.gas-npc-sheet.theme-dark .col-b p,
+.gas-npc-sheet.theme-dark .col-b li,
+.gas-npc-sheet.theme-dark .col-b span,
+.gas-npc-sheet.theme-dark .col-b div,
+.gas-npc-sheet.theme-dark .col-b td,
+.gas-npc-sheet.theme-dark .col-b th,
+.gas-npc-sheet.theme-dark .tab-content .scroll p,
+.gas-npc-sheet.theme-dark .tab-content .scroll li,
+.gas-npc-sheet.theme-dark .tab-content .scroll span,
+.gas-npc-sheet.theme-dark .tab-content .scroll div,
+.gas-npc-sheet.theme-dark .tab-content .scroll td,
+.gas-npc-sheet.theme-dark .tab-content .scroll th, .GAS.theme-dark .description-fill p, .GAS.theme-dark .description-fill li, .GAS.theme-dark .description-fill span, .GAS.theme-dark .description-fill div, .GAS.theme-dark .description-fill td, .GAS.theme-dark .description-fill th,
+.GAS.theme-dark .illuminated-description p,
+.GAS.theme-dark .illuminated-description li,
+.GAS.theme-dark .illuminated-description span,
+.GAS.theme-dark .illuminated-description div,
+.GAS.theme-dark .illuminated-description td,
+.GAS.theme-dark .illuminated-description th,
+.GAS.theme-dark .col-b p,
+.GAS.theme-dark .col-b li,
+.GAS.theme-dark .col-b span,
+.GAS.theme-dark .col-b div,
+.GAS.theme-dark .col-b td,
+.GAS.theme-dark .col-b th,
+.GAS.theme-dark .tab-content .scroll p,
+.GAS.theme-dark .tab-content .scroll li,
+.GAS.theme-dark .tab-content .scroll span,
+.GAS.theme-dark .tab-content .scroll div,
+.GAS.theme-dark .tab-content .scroll td,
+.GAS.theme-dark .tab-content .scroll th {
+  color: inherit;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link, #foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link, #gas-feat-selector-container.theme-dark .description-fill a.content-link,
+#gas-feat-selector-container.theme-dark .illuminated-description a.content-link,
+#gas-feat-selector-container.theme-dark .col-b a.content-link,
+#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link, .gas-npc-sheet.theme-dark .description-fill a.content-link,
+.gas-npc-sheet.theme-dark .illuminated-description a.content-link,
+.gas-npc-sheet.theme-dark .col-b a.content-link,
+.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link, .GAS.theme-dark .description-fill a.content-link,
+.GAS.theme-dark .illuminated-description a.content-link,
+.GAS.theme-dark .col-b a.content-link,
+.GAS.theme-dark .tab-content .scroll a.content-link {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link i, #foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link i, #gas-feat-selector-container.theme-dark .description-fill a.content-link i,
+#gas-feat-selector-container.theme-dark .illuminated-description a.content-link i,
+#gas-feat-selector-container.theme-dark .col-b a.content-link i,
+#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link i, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link i, .gas-npc-sheet.theme-dark .description-fill a.content-link i,
+.gas-npc-sheet.theme-dark .illuminated-description a.content-link i,
+.gas-npc-sheet.theme-dark .col-b a.content-link i,
+.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link i, .GAS.theme-dark .description-fill a.content-link i,
+.GAS.theme-dark .illuminated-description a.content-link i,
+.GAS.theme-dark .col-b a.content-link i,
+.GAS.theme-dark .tab-content .scroll a.content-link i {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table, #foundryvtt-actor-studio-npc-sheet.theme-dark table, .gas-npc-sheet.theme-dark table, .GAS.theme-dark table {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table th, #foundryvtt-actor-studio-pc-sheet.theme-dark table td, #foundryvtt-actor-studio-welcome.theme-dark table th, #foundryvtt-actor-studio-welcome.theme-dark table td, #gas-feat-selector-container.theme-dark table th, #gas-feat-selector-container.theme-dark table td, #foundryvtt-actor-studio-npc-sheet.theme-dark table th, #foundryvtt-actor-studio-npc-sheet.theme-dark table td, .gas-npc-sheet.theme-dark table th, .gas-npc-sheet.theme-dark table td, .GAS.theme-dark table th, .GAS.theme-dark table td {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button, #foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button, #gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button, #foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button, .gas-npc-sheet.theme-dark .gas-tabs .tabs-list button, .GAS.theme-dark .gas-tabs .tabs-list button {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button.active, #foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button.active, #gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button.active, #foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button.active, .gas-npc-sheet.theme-dark .gas-tabs .tabs-list button.active, .GAS.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--tab-active-background) !important;
+  color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
 }
 #foundryvtt-actor-studio-pc-sheet .illuminated-description, #foundryvtt-actor-studio-welcome .illuminated-description, #gas-feat-selector-container .illuminated-description, #foundryvtt-actor-studio-npc-sheet .illuminated-description, .gas-npc-sheet .illuminated-description, .GAS .illuminated-description {
   position: relative;

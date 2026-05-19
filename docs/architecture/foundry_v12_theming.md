@@ -1,147 +1,83 @@
 # Foundry v12 / dnd5e 3.x theming (aura branch)
 
-Analysis of “dark mode” / black-panel issues on **Foundry v12 + dnd5e 3.3.1** with the **aura** dependency line (TJS **0.2.0**). Applies to unstaged work in `PCAppShell.svelte` and `styles/Variables.sass` as of 2026-05.
+How Actor Studio handles light/dark UI on **Foundry v12 + dnd5e 3.x** with TJS **0.2.0** (`aura`), without changing **Foundry 13+** behavior on `main`.
 
-## Symptoms (reported)
+## Foundry v12 client theme
 
-- Actor Studio windows look like **dark mode**: near-black backgrounds, poor contrast.
-- Often tied to **OS dark preference** or “no Foundry dark mode on v12” assumptions.
-- Recent mitigations (force `theme-light`, extra CSS variables) **did not change** the UI in testing.
+From **Foundry 12.320** onward, core provides a **client** setting (Configure Settings → Client): **System**, **Light**, or **Dark**. Foundry applies that to the DOM, typically as `theme-dark` or `theme-light` on `document.body` (and follows `prefers-color-scheme` when set to System).
 
-## Architecture: where theme classes matter
+Actor Studio does **not** add a separate “force theme” module setting. On v12 it **mirrors Foundry’s choice** onto its own app roots.
 
-### Application DOM
+## v12 policy (implemented)
 
-`ApplicationShell` (TJS) sets `elementRoot` to the outer window:
+[`src/helpers/syncAppThemeFromFoundryBody.js`](../../src/helpers/syncAppThemeFromFoundryBody.js):
 
-```html
-<div id="foundryvtt-actor-studio-pc-sheet"
-     class="app window-app GAS …">
-```
+- **`resolveFoundryTheme()`** — `body.theme-dark` → dark; `body.theme-light` → light; else `prefers-color-scheme`.
+- **`applyAppTheme(elementRoot, theme)`** — sets `theme-dark` / `theme-light` on the app shell element.
+- **`observeFoundryBodyTheme(elementRoot)`** — sync on mount, re-sync when `body` `class` changes (user changes client theme without reload). **No-op when `game.version >= 13`.**
+
+Wired in:
+
+- [`src/app/PCAppShell.svelte`](../../src/app/PCAppShell.svelte)
+- [`src/app/WelcomeAppShell.svelte`](../../src/app/WelcomeAppShell.svelte)
+- Feat selector container in [`captureAdvancement.js`](../../src/hooks/captureAdvancement.js) / [`captureAdvancement2.js`](../../src/hooks/captureAdvancement2.js) (one-shot `applyAppTheme` on v12)
+
+## Foundry 13+ policy (unchanged)
+
+No theme JS in app shells. Theme comes from **`body.theme-dark` / `body.theme-light`** plus TJS **0.3** and CSS ancestor selectors in [`styles/Variables.sass`](../../styles/Variables.sass).
+
+## CSS architecture
 
 Actor Studio styles target:
 
-1. **`#foundryvtt-actor-studio-pc-sheet`** (and welcome / feat selector) — CSS variables in `styles/Variables.sass`.
-2. **`.GAS.theme-dark`** — rules in `styles/init.sass` (selects, tabs, inputs, etc.).
+1. **`#foundryvtt-actor-studio-pc-sheet`** (and welcome / feat selector) — variables in `styles/Variables.sass`.
+2. **`.GAS.theme-dark`** — rules in `styles/init.sass`.
 
-### Two different dark-variable mechanisms
+| Mechanism | Selector | v12 | v13+ |
+|-----------|----------|-----|------|
+| **A. App-local** | `#id.theme-dark` (`&.theme-dark` under `#id`) | Yes — set by `observeFoundryBodyTheme` | Optional; body usually enough |
+| **B. Ancestor** | `.theme-dark #id` | Yes when `body` is dark | Primary |
 
-| Mechanism | Selector | When it applies |
-|-----------|----------|-----------------|
-| **A. App-local** (older) | `#foundryvtt-actor-studio-pc-sheet.theme-dark` (was `&.theme-dark` under `#id`) | `theme-dark` on the **same element** as the id |
-| **B. Ancestor** (current) | `.theme-dark #foundryvtt-actor-studio-pc-sheet` | `theme-dark` on **any ancestor** (e.g. `body` on Foundry 13+) |
+Light variable overrides are declared **after** dark blocks so `#id.theme-light` and `body:not(.theme-dark) #id` win when appropriate.
 
-Commit `0d8896be` moved mechanism **A → B** for Foundry 13 `body.theme-dark` support. On v12, mechanism **B** often never runs; mechanism **A** no longer exists in `Variables.sass` but **`.GAS.theme-dark` in `init.sass` still does**.
+Dark list rows use `--li-background-color: var(--dnd5e-color-sc-1, #abaabc)` for dnd5e 3.x when system tokens are missing.
 
-Dark variables include:
-
-```sass
---background-color: #000000
---li-background-color: var(--dnd5e-color-sc-1)  // may be undefined on dnd5e 3.3.x
-```
-
-If `--dnd5e-color-sc-1` is missing, list rows can fall back to transparent/black.
-
-## TJS version behavior (critical for aura)
+## TJS version behavior
 
 | | TJS 0.2.0 (`aura`) | TJS 0.3.0-next.x (`main`) |
 |--|-------------------|---------------------------|
-| `ThemeObserver` / `body` theme | **Not present** | Watches `body.theme-light` / `body.theme-dark` |
-| `FVTTAppTheme.appClasses()` on shell | **Not present** | Adds `themed` + `theme-*` to app `class` reactively |
-| OS `prefers-color-scheme` in TJS | **Not found** | **Not found** (theme follows **Foundry body class**, not OS directly) |
+| Auto theme on app shell | **No** — Actor Studio `observeFoundryBodyTheme` on v12 only | **Yes** — follows `body` |
+| `ThemeObserver` / `body` theme | Not in TJS 0.2 | Present |
 
-**Conclusion:** The comment in `PCAppShell.svelte` that “TJS detects OS dark preference” describes **main / TJS 0.3 + Foundry 13+ body theme**, not **aura / TJS 0.2.0 on Foundry 12**. On aura, something else must add `theme-dark` to `.GAS` or the problem is not theme-class-driven.
+## Dev: empty `dist/style.css`
 
-## Why the unstaged mitigations likely fail
+Foundry loads **`module.json` → `dist/style.css`**. If that file is 0 bytes, global Sass never applies and the UI looks broken regardless of theme classes.
 
-### 1. `PCAppShell` `onMount` class toggles
+**Fix:** `vite-foundry-style-css.mjs` emits `dist/style.css` on dev start and sass HMR. Restart `bun run dev` after pull and confirm `dist/style.css` is non-zero.
 
-```js
-if (Number(game.version) < 13) {
-  elementRoot?.classList.remove('theme-dark');
-  elementRoot?.classList.add('theme-light');
-}
-```
-
-- Only runs **once** on mount.
-- On TJS 0.2.0, nothing re-applies `theme-dark` to `elementRoot` afterward — so this is a **no-op** if the class was never there.
-- Does **not** remove `theme-dark` from `document.body` (relevant on v13, not typical on v12).
-- Does **not** affect `.GAS.theme-dark` rules if `theme-dark` is re-added by a future TJS upgrade without removing the override.
-
-### 2. `#id.theme-light` block in `Variables.sass`
-
-```sass
-#foundryvtt-actor-studio-pc-sheet.theme-light, …
-  --background-color: #cccccc
-  …
-.theme-dark #foundryvtt-actor-studio-pc-sheet, …
-  --background-color: #000000
-  …
-```
-
-**Specificity:** both selectors are **one ID + one class** → **tie**.
-
-**Cascade:** `.theme-dark #id` comes **after** `#id.theme-light` → **dark wins** whenever any ancestor has `theme-dark`, even if the app also has `theme-light`.
-
-The comment claiming `#id.theme-light` “beats parent-class+ID” is **incorrect** for equal-specificity rules; order decides.
-
-### 3. `init.sass` still keys off `.GAS.theme-dark`
-
-Even if `Variables.sass` variables were fixed, component rules under `.GAS.theme-dark` (selects, backdrop-filter, icon-select, etc.) still apply when that class pair exists.
-
-### 4. Empty `dist/style.css` during dev (primary cause of “all dark / layout mess”)
-
-Foundry always loads **`module.json` → `dist/style.css`**. The old dev script ran `> dist/style.css` before Vite, leaving a **0-byte** file; the Vite proxy serves that file from disk, so **no global** `Variables.sass` / `init.sass` rules applied. The UI looked like a broken dark theme (black panels, missing tab labels, half the ability rows invisible) while only scattered HMR-injected component CSS remained.
-
-**Fix:** `vite-foundry-style-css.mjs` emits `dist/style.css` on dev server start and on sass/css HMR; dev scripts no longer truncate the file. After pulling, restart `bun run dev` and confirm `dist/style.css` is non-zero (e.g. `wc -c dist/style.css`).
-
-## Diagnostic checklist (run in Foundry v12 devtools)
-
-With Actor Studio open, in the console:
+## Diagnostic checklist (Foundry v12 devtools)
 
 ```js
 const el = document.querySelector('#foundryvtt-actor-studio-pc-sheet');
 ({
   appClasses: el?.className,
   bodyClasses: document.body.className,
-  htmlClasses: document.documentElement.className,
   bg: getComputedStyle(el).getPropertyValue('--background-color'),
   liBg: getComputedStyle(el).getPropertyValue('--li-background-color'),
-  dnd5eSc1: getComputedStyle(document.documentElement).getPropertyValue('--dnd5e-color-sc-1'),
 });
 ```
 
-Interpretation:
+App `theme-*` should match `body` after sync. If variables are wrong but classes match, check `dist/style.css` size and dnd5e token fallbacks.
 
-| Observation | Likely cause |
-|-------------|----------------|
-| `theme-dark` on `#foundryvtt-actor-studio-pc-sheet` or `.GAS` | Mechanism A + `init.sass`; JS remove may have run too early or been overwritten |
-| `theme-dark` only on `body` (unusual on v12) | Mechanism B; `#id.theme-light` loses cascade tie |
-| No `theme-dark` anywhere but `--background-color` black | Missing/empty CSS bundle or another rule setting background |
-| `--li-background-color` empty/invalid | `--dnd5e-color-sc-1` unset on dnd5e 3.3.x |
+## Dark mode CSS (v12)
 
-## Recommended fix directions (not implemented here)
+Do **not** use `body:not(.theme-dark) #id` for light overrides — it beats `#id.theme-dark` when Foundry has not yet set `theme-dark` on `body`. Light overrides are `#id.theme-light` only; dark wins via `#id.theme-dark` after the light block in [`styles/Variables.sass`](../../styles/Variables.sass).
 
-1. **Restore dual selectors in `Variables.sass`**
-   - Keep `.theme-dark #id` for Foundry 13+.
-   - Re-add `#id.theme-dark { … }` (or `&.theme-dark` under `#id`) for app-local dark on v12.
-2. **Fix force-light override**
-   - Move light overrides **below** the dark block, **or** use higher specificity, e.g. `#foundryvtt-actor-studio-pc-sheet.theme-light` with `!important` on critical vars (sparingly), **or** `html:not(.theme-dark) #id` for v12-only paths.
-3. **dnd5e 3.x fallbacks**  
-   `--li-background-color: var(--dnd5e-color-sc-1, #abaabc)` (historical v12 value from git history).
-4. **v12-only gate in Sass or JS**  
-   `game.version < 13` → never apply dark variable block; document that v12 has no supported dark theme until dnd5e exposes stable tokens.
-5. **Correct the PCAppShell comment**  
-   Point to Foundry 13 `body` theme + TJS 0.3 `FVTTAppTheme`, not OS detection on aura.
-6. **Welcome app**  
-   Apply the same v12 policy in `WelcomeAppShell.svelte` if welcome is affected.
+Tab labels, enriched HTML, and window chrome use theme variables and [`.GAS.theme-dark` rules in `init.sass`](../../styles/init.sass).
 
-## Relation to other unstaged changes
-
-- **Ability entry spinner CSS** — unrelated to theme.
-- **`illuminatedDescription` / `enrichHTML`** — v12 enrichment; unrelated to panel background.
-- **Do not edit `dist/`** — fix source Sass/JS; let HMR rebuild `dist/style.css`.
+**Window background (dark):** Foundry core sets `background: url(../ui/parchment.jpg)` on `.window-app .window-content`. Setting only `background-color` does not remove that image. In dark mode, Actor Studio clears the image and uses solid `var(--background-color)` (see `init.sass` and `gas-dark-theme.sass`).
 
 ## See also
 
 - [Aura branch](./aura_branch.md)
+- Unit tests: [`src/tests/test-sync-app-theme-from-foundry-body.test.js`](../../src/tests/test-sync-app-theme-from-foundry-body.test.js)

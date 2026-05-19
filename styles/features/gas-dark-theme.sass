@@ -1,0 +1,145 @@
+// Cohesive dark sheet on Foundry v12/v13 when #foundryvtt-actor-studio-pc-sheet.theme-dark
+// (or body.theme-dark). Fixes light “frame”, tab label contrast, footer input, journal HTML.
+
+#foundryvtt-actor-studio-pc-sheet.theme-dark,
+.theme-dark #foundryvtt-actor-studio-pc-sheet
+  --footer-input-background: rgba(255, 255, 255, 0.08)
+  --footer-input-border: rgba(255, 255, 255, 0.28)
+
+  &.window-app
+    background-color: var(--background-color) !important
+    border-color: #333 !important
+
+  .gas-tabs.tabs,
+  .tabs.gas-tabs
+    border: none !important
+    border-color: transparent !important
+
+  .gas-tabs .tabs-list,
+  .tabs .tabs-list
+    border-bottom-color: var(--sheet-chrome-border, #3a3a3a) !important
+
+  .border-right.right-border-gradient-mask
+    border-right-color: var(--sheet-chrome-border, #3a3a3a) !important
+
+  .window-content
+    background: var(--background-color) !important
+    background-image: none !important
+    color: var(--gas-color-text)
+
+  main,
+  section.a,
+  section.b
+    background-color: transparent
+    color: var(--gas-color-text)
+
+  .tab-content
+    background-color: var(--tabs-content-background)
+    border-color: transparent
+
+  .content,
+  .col-a,
+  .col-b
+    color: var(--gas-color-text)
+
+  .gas-tabs .tabs-list button
+    &.active
+      color: var(--tab-active-color) !important
+
+  input,
+  input[type="number"],
+  input[type="text"],
+  input[type="search"],
+  select,
+  textarea
+    background-color: var(--input-background) !important
+    color: var(--gas-color-text) !important
+    border-color: var(--input-border) !important
+
+  input:disabled,
+  input[disabled]
+    background-color: var(--input-disabled-background) !important
+    color: var(--gas-color-text) !important
+    -webkit-text-fill-color: var(--gas-color-text)
+
+  .score-cell,
+  input.mainscore,
+  input.score,
+  table input
+    background-color: var(--input-disabled-background) !important
+    color: var(--gas-color-text) !important
+
+  .properties-list > li
+    background: var(--li-background-color) !important
+    border-color: var(--properties-list-border, rgba(255, 255, 255, 0.2)) !important
+    color: var(--gas-color-text)
+
+  table,
+  .attribute-entry table
+    border-color: var(--input-border) !important
+    background-color: transparent
+
+    th,
+    td
+      border-color: var(--input-border) !important
+      background-color: transparent
+
+    thead th
+      background-color: var(--tab-active-background, #2a2a2a)
+
+    tbody tr:nth-child(even) td
+      background-color: rgba(255, 255, 255, 0.03)
+
+  hr
+    border-color: var(--sheet-chrome-border, #3a3a3a)
+
+  .custom-select .selected-option,
+  .custom-select .options-dropdown,
+  .custom-select .search-input
+    background-color: var(--input-background) !important
+    border-color: var(--input-border) !important
+    color: var(--gas-color-text) !important
+
+  .footer-container
+    background-color: var(--background-color)
+
+    label.character-name-label
+      color: var(--dnd5e-color-gold, #b59e54)
+
+    .character-name-input-container
+      background: var(--footer-input-background)
+      border-color: var(--footer-input-border)
+      color: var(--gas-color-text)
+      box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35)
+
+      input.character-name-input
+        color: var(--gas-color-text) !important
+
+  .content > .flexrow > .col-a:only-child,
+  .content > .flexrow > .flex2:only-child
+    flex: 1 1 100%
+    max-width: 100%
+
+  .description-fill,
+  .illuminated-description
+    width: 100%
+    max-width: 100%
+    color: var(--gas-color-text)
+    display: flow-root
+
+    p, li, span, div, h1, h2, h3, h4, h5, h6
+      color: inherit
+
+    a.content-link
+      color: var(--tab-active-color)
+
+    // dnd5e journal / stat block embeds often ship light parchment backgrounds
+    .journal-sheet,
+    .journal-entry-content,
+    .journal-page-content
+      background: transparent !important
+      color: var(--gas-color-text) !important
+
+    img
+      max-width: 100%
+      height: auto

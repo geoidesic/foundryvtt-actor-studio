@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';
+import { applyAppTheme, resolveFoundryTheme } from '~/src/helpers/syncAppThemeFromFoundryBody';
 import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass } from '~/src/stores/index.js';
 
 const BROWSE_TARGET_SELECTOR = [
@@ -204,6 +205,9 @@ export const showFeatSelector = async (formElement, currentProcess) => {
     const container = document.createElement('div');
     container.id = 'gas-feat-selector-container';
     document.body.appendChild(container);
+    if (game.version < 13) {
+      applyAppTheme(container, resolveFoundryTheme());
+    }
 
     // Get the advancement flow instance from the form
     const advancementId = formElement.attr('data-advancement-id') || formElement.attr('data-id');

@@ -32,7 +32,7 @@
     position: relative
     display: flex
     border-radius: 5px
-    background-color: #e0e0e0
+    background-color: var(--progress-track-background, #e0e0e0)
     overflow: hidden
 
   .back
@@ -40,8 +40,8 @@
     justify-content: center
     align-items: center
     width: 100%
-    background-color: rgba(10, 144, 50, 0.5)
-    color: white
+    background-color: var(--progress-back-background, rgba(10, 144, 50, 0.5))
+    color: var(--progress-label-color, white)
 
   .front
     position: absolute
@@ -52,8 +52,8 @@
     right: 0
     top: 0
     bottom: 0
-    background: white
-    color: black
+    background: var(--progress-front-background, white)
+    color: var(--progress-front-text-color, black)
     transition: clip-path 1s linear
 
 

@@ -10,6 +10,7 @@
 // Features
 @import 'features/equipment-purchase.sass'
 @import 'features/npc-index-loading.sass'
+@import 'features/gas-dark-theme.sass'
 
 // Base
 /**
@@ -341,6 +342,7 @@
       padding-top: 1rem !important
       button
         background-color: var(--button-background) !important
+        color: var(--gas-color-text) !important
 
 
   // .gas-tabs .tabs-list::after
@@ -366,7 +368,8 @@
     border-radius: 10px 
     background-color: var(--tabs-content-background)
     position: relative 
-    margin-top: -5px
+    margin-top: 2.25rem
+    color: var(--gas-color-text)
 
     position: relative
     padding: 0
@@ -481,7 +484,9 @@
   &.theme-dark
     .npc-stat-block
       --gas-text-header-color: var(--dnd5e-color-gold)
-      background: url(/modules/foundryvtt-actor-studio/assets/RTG-parchment-leather.webp) repeat 
+      background: var(--background-color)
+      background-image: none
+      background-blend-mode: normal
       h2, .label
         color: var(--dnd5e-color-gold) !important
       hr
@@ -533,6 +538,15 @@ body.game #gas-settings-submenu.app.window-app
     background-color: white
     
 #foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet, .GAS
+  .window-content
+    color: var(--gas-color-text)
+
+  // Foundry core sets background: url(../ui/parchment.jpg) on .window-app .window-content.
+  // background-color alone does not remove that image — clear it in dark mode.
+  &.theme-dark .window-content
+    background: var(--background-color) !important
+    background-image: none !important
+
   // Header uses Foundry/dnd5e dark chrome; do not inherit --gas-color-text (black) from .GAS
   .window-header
     color: #fff
@@ -679,6 +693,35 @@ body.game #gas-settings-submenu.app.window-app
     .black-link
       a.content-link
         color: var(--dnd5e-color-gold)
+
+  &.theme-dark
+    .description-fill,
+    .illuminated-description,
+    .col-b,
+    .tab-content .scroll
+      color: var(--gas-color-text)
+
+      p, li, span, div, td, th
+        color: inherit
+
+      a.content-link
+        color: var(--dnd5e-color-gold, #b59e54)
+
+      a.content-link i
+        color: var(--dnd5e-color-gold, #b59e54)
+
+    table
+      color: var(--gas-color-text)
+
+      th, td
+        color: var(--gas-color-text)
+
+    .gas-tabs .tabs-list button
+      color: var(--gas-color-text) !important
+
+      &.active
+        background: var(--tab-active-background) !important
+        color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important
 
   .illuminated-description
     position: relative

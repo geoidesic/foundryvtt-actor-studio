@@ -9,10 +9,10 @@
   padding: 0.35rem 1.75rem 0.35rem 0.15rem
   font-size: 0.875rem
   font-weight: 400
-  color: #212529
-  background-color: #fff
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
+  color: var(--gas-color-text, #212529)
+  background-color: var(--input-background, #fff)
+  border: 1px solid var(--input-border, #ced4da)
+  border-radius: var(--tjs-select-border-radius, 0.25rem)
   cursor: pointer
   white-space: nowrap
   overflow: hidden
@@ -60,9 +60,9 @@ img
   max-height: var(--dropdown-max-height, 300px)
   overflow-y: auto
   overscroll-behavior: contain
-  background-color: #fff
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
+  background-color: var(--tjs-select-option-background, var(--input-background, #fff))
+  border: 1px solid var(--input-border, #ced4da)
+  border-radius: var(--tjs-select-border-radius, 0.25rem)
 
 .option
   display: flex
@@ -71,7 +71,7 @@ img
   font-size: 0.875rem
   font-weight: 400
   line-height: 1.5
-  color: #212529
+  color: var(--tjs-select-option-color, var(--gas-color-text, #212529))
   cursor: pointer
 
   &:hover
@@ -81,12 +81,14 @@ img
   width: calc(100% - 8px)
   padding: 4px 4px 4px 8px
   font-size: 0.875rem
-  border: 1px solid #ced4da
-  border-radius: 0.25rem
+  color: var(--gas-color-text, inherit)
+  background-color: var(--input-background, #fff)
+  border: 1px solid var(--input-border, #ced4da)
+  border-radius: var(--tjs-select-border-radius, 0.25rem)
   margin: 4px
   box-shadow: none
   transition: border-color 0.2s
 
   &:focus
     outline: none
-    border-color: #80bdff
+    border-color: var(--color-border-highlight, #80bdff)

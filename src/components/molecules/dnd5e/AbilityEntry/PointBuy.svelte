@@ -105,7 +105,7 @@
       +each("systemAbilitiesArray as ability, index")
         tr
           td.ability {ability[1].label}
-          td.center.relative
+          td.center.score-cell
             input.left.small.mainscore(disabled type="number" value="{$doc.system.abilities[ability[0]]?.value}" name="{ability[0]}" id="{ability[0]}" )
             .controls
               .up.chevron(on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) + 1}})}")
@@ -146,6 +146,8 @@
 </template>
 
 <style lang="sass">
+  @import './ability-entry-controls.sass'
+
   table
     width: 100%
     border-collapse: separate
@@ -171,34 +173,8 @@
     color: green
   .red
     color: red
-  .mainscore
-    min-width: 33px
-    max-width: 33px
-    // Remove spinner arrows on number input
-    -moz-appearance: textfield
-    &::-webkit-outer-spin-button,
-    &::-webkit-inner-spin-button
-      -webkit-appearance: none
-      margin: 0
   .score
     &.active
       animation: pulse 0.5s infinite
-  .controls
-    .chevron
-      position: absolute
-      font-size: 0.75rem
-      right: 0
-      cursor: pointer
-      background-color: rgba(0, 0, 0, 0.1)
-      &.up
-        padding: 1px 3px 0px 3px
-        top: 8px
-        &:hover
-          background-color: rgba(140, 90, 0, 0.2)
-      &.down
-        padding: 1px 3px 0px 3px
-        bottom: 8px
-        &:hover
-          background-color: rgba(140, 90, 0, 0.2)
 
 </style>

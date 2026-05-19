@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';
+import { applyAppTheme, resolveFoundryTheme } from '~/src/helpers/syncAppThemeFromFoundryBody';
 import {  dropItemRegistry, preAdvancementSelections, race, background, characterClass, characterSubClass, newLevelValueForExistingClass } from '~/src/stores/index.js';
 import FeatSelector from '~/src/components/molecules/dnd5e/Feats/FeatSelector.svelte';
 
@@ -854,6 +855,9 @@ export const showFeatSelector = async (formElement, currentProcess) => {
     const container = document.createElement('div');
     container.id = 'gas-feat-selector-container';
     document.body.appendChild(container);
+    if (game.version < 13) {
+      applyAppTheme(container, resolveFoundryTheme());
+    }
 
     // Get the actor from the advancement manager
     const actor = currentProcess?.app?.actor;

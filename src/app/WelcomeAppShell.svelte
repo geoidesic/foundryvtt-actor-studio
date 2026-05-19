@@ -1,7 +1,8 @@
 <svelte:options accessors={true} />
 
 <script>
-  import { onMount, getContext } from "svelte";
+  import { onMount, onDestroy, getContext } from "svelte";
+  import { observeFoundryBodyTheme } from "~/src/helpers/syncAppThemeFromFoundryBody";
   import { fade, scale } from "svelte/transition";
   import { ApplicationShell } from "@typhonjs-fvtt/runtime/svelte/component/application";
   import { localize as t } from "~/src/helpers/Utility";
@@ -23,8 +24,14 @@
   $: application.reactive.draggable = draggable;
   $: dontShowWelcome = safeGetSetting(MODULE_ID, "dontShowWelcome", false);
 
+  let disconnectFoundryTheme = () => {};
+
   onMount(async () => {
-    // Module initialization complete
+    disconnectFoundryTheme = observeFoundryBodyTheme(elementRoot);
+  });
+
+  onDestroy(() => {
+    disconnectFoundryTheme();
   });
 </script>
 

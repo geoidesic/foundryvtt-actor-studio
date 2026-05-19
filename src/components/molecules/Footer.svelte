@@ -913,14 +913,15 @@ button[disabled]
   padding: 1rem 1rem 1rem 1rem
   font-size: xx-large
   font-family: var(--dnd5e-font-modesto)
-  border: 1px solid #ccc
+  border: 1px solid var(--input-border, #ccc)
   border-radius: 5px
   display: flex
   align-items: center
   justify-content: flex-start
+  color: var(--gas-color-text, inherit)
   
   // Default non-experimental styling
-  background: rgba(1, 1, 1, 0.1)
+  background: var(--footer-input-background, rgba(1, 1, 1, 0.1))
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
 
 .footer-container .character-name-input-container input[type="text"].character-name-input

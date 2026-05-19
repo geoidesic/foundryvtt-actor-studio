@@ -124,6 +124,7 @@
         margin-bottom: -10px;
         padding: 10px 0;
         align-items: end;
+        color: var(--gas-color-text, #000);
 
         &:not(:first-child) {
           border-left: none;
@@ -132,7 +133,7 @@
         &:not(.active) {
           &:before {
             content: "";
-            border-top: 2px solid rgb(60, 60, 60);
+            border-top: 2px solid var(--tab-inactive-border, rgb(60, 60, 60));
             position: absolute;
             width: 100%;
             bottom: 5px;
@@ -152,18 +153,18 @@
         &.active {
           &:before {
             content: "";
-            border-top: 5px solid brown;
+            border-top: 5px solid var(--tab-active-indicator, brown);
             position: absolute;
             width: 100%;
             bottom: 5px;
           } 
           &:hover {
-            background: #f9f9f9;
+            background: var(--tab-active-background, #f9f9f9);
             box-shadow: none;
           }
           font-weight: bold;
-          background: #f9f9f9;
-          color: var(--dnd5e-color-gold)
+          background: var(--tab-active-background, #f9f9f9);
+          color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54));
         }
       }
     }
