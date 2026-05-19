@@ -40,21 +40,53 @@
   --tabs-list-background: #dbd9cd
   --tabs-content-background: rgba(249, 249, 249, 0.8)
   --gas-color-text: #000
+  --button-background: #f0f0f0
+  --button-hover-background-color: #d8d8d8
+  --button-hover-border-color: #999
   --color-border-dark: #426dbe
   --color-border-light: #ccc
+
+  // theme-dark on the app root (pre–Foundry 13 / no body theme)
+  &.theme-dark
+    --background-color: #000000
+    --tabs-list-background: transparent
+    --tabs-content-background: rgba(24, 24, 24, 1)
+    --li-background-color: var(--dnd5e-color-sc-1, #abaabc)
+    --gas-color-text: #fff
+    --color-text-dark-secondary: #893030
+    --button-background: rgba(24, 24, 24, 1)
+    button
+      --button-hover-background-color: #877755
+      --button-hover-border-color: #a18e66
+    table
+      --table-background-color: rgba(0, 0, 0, 0.05)
+
+// Foundry 13+ body.theme-dark (ancestor selector)
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container
   --background-color: #000000
   --tabs-list-background: transparent
-  --tabs-content-background:rgba(24,24,24, 1)
-  --li-background-color: var(--dnd5e-color-sc-1)
+  --tabs-content-background: rgba(24, 24, 24, 1)
+  --li-background-color: var(--dnd5e-color-sc-1, #abaabc)
   --gas-color-text: #fff
   --color-text-dark-secondary: #893030
-
-  --button-background: rgba(24,24,24, 1)
-
+  --button-background: rgba(24, 24, 24, 1)
   button
     --button-hover-background-color: #877755
     --button-hover-border-color: #a18e66
-
   table
     --table-background-color: rgba(0, 0, 0, 0.05)
+
+// After dark rules: wins on equal specificity when sheet is forced light (v12 PCAppShell) or body is light
+#foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light,
+body:not(.theme-dark) #foundryvtt-actor-studio-pc-sheet,
+body:not(.theme-dark) #foundryvtt-actor-studio-welcome,
+body:not(.theme-dark) #gas-feat-selector-container
+  --background-color: #cccccc
+  --tabs-list-background: #dbd9cd
+  --tabs-content-background: rgba(249, 249, 249, 0.8)
+  --li-background-color: #e7eef1
+  --gas-color-text: #000
+  --button-background: #f0f0f0
+  --button-hover-background-color: #d8d8d8
+  --button-hover-border-color: #999
+  --color-text-dark-secondary: inherit

@@ -1,6 +1,7 @@
 .idea
 .DS_Store
 .vite-cache/
+.style-dev-tmp/
 .vscode/**/*
 !.vscode/extensions.json
 *.code-workspace

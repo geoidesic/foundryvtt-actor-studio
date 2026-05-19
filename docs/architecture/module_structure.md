@@ -10,6 +10,8 @@ The module is organized into several key directories, each serving a specific pu
 
 - **docs/**: Contains all documentation related to the module, including architecture, features, setup instructions, and an overview.
   - **architecture/**: Holds documents that describe the internal workings and structure of the module.
+    - **aura_branch.md**: Long-lived `aura` branch, TJS 0.2.x pins, merge=ours manifests, suffix releases.
+    - **foundry_v12_theming.md**: Dark/light UI on Foundry v12 + dnd5e 3.x (why recent CSS/JS mitigations may not apply).
     - **data_flow.md**: Details the flow of data within the application.
     - **module_structure.md**: Describes the organization of the module.
   - **features/**: Contains documentation for each feature of the module.

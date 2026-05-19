@@ -64,6 +64,13 @@
       actorIdFromDocumentStore: $documentStore?.id || null
     });
 
+    // Foundry v12: force light theme class on the app shell so Variables.sass light
+    // overrides apply (dnd5e 3.x may still set dark-adjacent classes on the window).
+    if (Number(game.version) < 13) {
+      elementRoot?.classList.remove('theme-dark');
+      elementRoot?.classList.add('theme-light');
+    }
+
     if(levelUp) {
       // Initialize LevelUp workflow
       $actorInGame = $documentStore

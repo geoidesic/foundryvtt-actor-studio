@@ -64,7 +64,8 @@
         "not IE 11"
     ],
     "scripts": {
-        "dev": "npm pkg set env=dev && > dist/style.css; vite;",
+        "dev": "npm pkg set env=dev && vite",
+        "dev:clean": "rm -rf .vite-cache .style-dev-tmp && npm pkg set env=dev && vite",
         "build": "vite build",
         "eslint": "eslint .",
         "release": "node release.js patch",

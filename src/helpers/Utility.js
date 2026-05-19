@@ -63,19 +63,26 @@ export function advancementEntriesToArray(advancement) {
 
 
 export async function illuminatedDescription(html, store) {
-  const enriched = await enrichHTML(html);
+  // In v12, pass {async: true} to ensure proper dnd5e UUID enrichment
+  const enrichOptions = game.version < 13 ? { async: true } : {};
+  const enriched = await enrichHTML(html, enrichOptions);
+  
   if(!safeGetSetting(MODULE_ID, 'illuminatedDescription', true)) {
     return enriched;
   }
+  
   const jEnriched = jQuery(enriched);
   let content = enriched;
   
-  // Check if the content is wrapped in a div
+  // Check if the content is wrapped in a single div and extract its contents
   if (jEnriched.length === 1 && jEnriched[0].nodeName === 'DIV') {
-    content = jEnriched.html();
+    content = jEnriched.html() || enriched; // fallback to enriched if html() is empty
   }
 
-  if (!content) return null;
+  // Return enriched HTML if no setting or empty content
+  if (!content || !store?.img) {
+    return enriched || '';
+  }
   
   const richHTML = `
     <div class="illuminated-description">

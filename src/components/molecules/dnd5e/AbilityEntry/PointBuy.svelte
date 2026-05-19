@@ -174,6 +174,12 @@
   .mainscore
     min-width: 33px
     max-width: 33px
+    // Remove spinner arrows on number input
+    -moz-appearance: textfield
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button
+      -webkit-appearance: none
+      margin: 0
   .score
     &.active
       animation: pulse 0.5s infinite

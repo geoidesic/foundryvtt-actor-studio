@@ -177,10 +177,18 @@
 
     await tick();
     await importClassAdvancements();
-    richHTML = await illuminatedDescription(html, $characterClass);
-
-    Hooks.call('gas.richhtmlReady', richHTML);
+    await updateClassRichHTML();
   };
+
+  async function updateClassRichHTML() {
+    if (!$characterClass) {
+      richHTML = "";
+      return;
+    }
+    const descriptionHtml = $characterClass?.system?.description?.value || "";
+    richHTML = await illuminatedDescription(descriptionHtml, $characterClass);
+    Hooks.call("gas.richhtmlReady", richHTML);
+  }
 
   const importClassAdvancements = async () => {
     // Reset the components object first
@@ -260,6 +268,10 @@
   $: classGetsSubclassThisLevel = subClassLevel && subClassLevel === $level;
   // isDisabled now handled by StandardTabLayout
 
+  $: if ($characterClass && html) {
+    updateClassRichHTML();
+  }
+
   $: combinedHtml = $characterClass
     ? `
     <div class="flexrow" style="gap: 1rem;">
@@ -327,6 +339,9 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
       .flex3 
         IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
     +if("$characterClass")
+      +if("hideAdvancementList")
+        .description-fill.mt-sm
+          | {@html combinedHtml || richHTML}
       +if("subclasses.length && subClassLevel == 1")
         h2.left {t('SubClass')}
         .flexrow
@@ -391,9 +406,6 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
                       .flex2 {advancement.title}
                     .flexrow
                       svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
-        +if("hideAdvancementList")
-          .description-fill.mt-sm
-            | {@html combinedHtml || richHTML}
   div(slot="right") {@html combinedHtml}
 </template>
 
