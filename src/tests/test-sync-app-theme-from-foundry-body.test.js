@@ -56,6 +56,11 @@ describe('syncAppThemeFromFoundryBody', () => {
     it('returns light when body has no theme class and prefers light', () => {
       expect(resolveFoundryTheme()).toBe('light');
     });
+
+    it('returns dark when documentElement has theme-dark', () => {
+      document.documentElement.classList.add('theme-dark');
+      expect(resolveFoundryTheme()).toBe('dark');
+    });
   });
 
   describe('applyAppTheme', () => {
@@ -65,6 +70,7 @@ describe('syncAppThemeFromFoundryBody', () => {
       applyAppTheme(el, 'dark');
       expect(el.classList.contains('theme-dark')).toBe(true);
       expect(el.classList.contains('theme-light')).toBe(false);
+      expect(el.classList.contains('themed')).toBe(true);
     });
 
     it('applies theme-light and removes theme-dark', () => {
@@ -86,6 +92,7 @@ describe('syncAppThemeFromFoundryBody', () => {
       const el = document.createElement('div');
       const disconnect = observeFoundryBodyTheme(el);
       expect(el.classList.contains('theme-dark')).toBe(true);
+      expect(el.classList.contains('themed')).toBe(true);
       disconnect();
     });
 
@@ -107,13 +114,13 @@ describe('syncAppThemeFromFoundryBody', () => {
       disconnect();
     });
 
-    it('is a no-op on Foundry v13+', () => {
-      global.game.version = 13;
+    it('syncs on Foundry v13+ (TJS 0.2 does not set app theme)', () => {
+      global.game.version = 14;
       document.body.classList.add('theme-dark');
       const el = document.createElement('div');
       const disconnect = observeFoundryBodyTheme(el);
-      expect(el.classList.contains('theme-dark')).toBe(false);
-      expect(disconnect).toBeTypeOf('function');
+      expect(el.classList.contains('theme-dark')).toBe(true);
+      expect(el.classList.contains('themed')).toBe(true);
       disconnect();
     });
 

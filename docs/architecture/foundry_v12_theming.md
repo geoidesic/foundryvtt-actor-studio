@@ -14,7 +14,7 @@ Actor Studio does **not** add a separate “force theme” module setting. On v1
 
 - **`resolveFoundryTheme()`** — `body.theme-dark` → dark; `body.theme-light` → light; else `prefers-color-scheme`.
 - **`applyAppTheme(elementRoot, theme)`** — sets `theme-dark` / `theme-light` on the app shell element.
-- **`observeFoundryBodyTheme(elementRoot)`** — sync on mount, re-sync when `body` `class` changes (user changes client theme without reload). **No-op when `game.version >= 13`.**
+- **`observeFoundryBodyTheme(elementRoot)`** — sync on mount, re-sync when `body` / `documentElement` `class` changes. **Runs on all Foundry versions while on TJS 0.2** (runtime does not set theme on app shells for v13+).
 
 Wired in:
 
@@ -22,9 +22,9 @@ Wired in:
 - [`src/app/WelcomeAppShell.svelte`](../../src/app/WelcomeAppShell.svelte)
 - Feat selector container in [`captureAdvancement.js`](../../src/hooks/captureAdvancement.js) / [`captureAdvancement2.js`](../../src/hooks/captureAdvancement2.js) (one-shot `applyAppTheme` on v12)
 
-## Foundry 13+ policy (unchanged)
+## Foundry 13+ on TJS 0.2 (main until TJS 0.3 upgrade)
 
-No theme JS in app shells. Theme comes from **`body.theme-dark` / `body.theme-light`** plus TJS **0.3** and CSS ancestor selectors in [`styles/Variables.sass`](../../styles/Variables.sass).
+Same **`observeFoundryBodyTheme`** as v12 — TJS **0.2** does not copy theme onto app roots. CSS also targets **`.themed.theme-dark`** (Foundry 14 application chrome). When upgrading to TJS **0.3**, re-evaluate whether JS mirroring can be reduced to a no-op.
 
 ## CSS architecture
 
@@ -53,7 +53,7 @@ Dark list rows use `--li-background-color: var(--dnd5e-color-sc-1, #abaabc)` for
 
 Foundry loads **`module.json` → `dist/style.css`**. If that file is 0 bytes, global Sass never applies and the UI looks broken regardless of theme classes.
 
-**Fix:** `vite-foundry-style-css.mjs` emits `dist/style.css` on dev start and sass HMR. Restart `bun run dev` after pull and confirm `dist/style.css` is non-zero.
+**Fix:** Global Sass is imported from `src/index.js` (`styles/init.sass`). Vite bundles it to `dist/style.css` on build and tracks it for HMR in dev via the JS module graph. Restart `bun run dev` after pull if styles stop updating.
 
 ## Diagnostic checklist (Foundry v12 devtools)
 

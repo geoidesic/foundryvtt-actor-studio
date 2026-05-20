@@ -8,18 +8,22 @@ $gas-app-ids: '#foundryvtt-actor-studio-pc-sheet', '#foundryvtt-actor-studio-wel
     #{$id}
       @content
 
-// v12: theme-dark on app element; v13+: body.theme-dark ancestor
+// v12: theme-dark on app element; v13+: body.theme-dark or Foundry 14 .themed.theme-dark
 @mixin gas-app-themed-dark
   @each $id in $gas-app-ids
     #{$id}.theme-dark,
-    .theme-dark #{$id}
+    .theme-dark #{$id},
+    #{$id}.themed.theme-dark,
+    .themed.theme-dark #{$id}
       @content
 
 // Strip Foundry core parchment.jpg from Actor Studio windows only (never bare .theme-dark.window-app).
 @mixin gas-app-dark-window-shell
   @each $id in $gas-app-ids
     #{$id}.theme-dark.window-app,
-    .theme-dark #{$id}.window-app
+    .theme-dark #{$id}.window-app,
+    #{$id}.themed.theme-dark.window-app,
+    .themed.theme-dark #{$id}.window-app
       background-color: var(--gas-sheet-background, #1a1a1a) !important
 
       > .window-content

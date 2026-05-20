@@ -337,7 +337,7 @@
 
       background: var(--gas-tabs-list-background) !important
       position: fixed
-      top: 30px
+      top: var(--header-height, 30px)
       left: 0
       width: 100%
       height: 2.5rem !important
@@ -373,6 +373,9 @@
     z-index: 1
     margin-top: 0.5rem
     color: var(--gas-color-text)
+
+  &.gas-v13-plus .tabs.gas-tabs .tab-content
+    margin-top: 1rem
 
   .tab-content .scroll
     box-sizing: content-box
@@ -542,12 +545,18 @@ body.game #gas-settings-submenu.app.window-app
 
   // Dark window shell (no parchment): gas-app-dark-window-shell in gas-dark-theme.sass (app IDs only).
 
-  // Header uses Foundry/dnd5e dark chrome; do not inherit --gas-color-text (black) from .GAS
+  // Header uses Foundry/dnd5e chrome; do not inherit --gas-color-text from .GAS content rules
   .window-header
+    display: flex
+    align-items: center
     color: #fff
     border-bottom: 2px solid var(--gas-border-dark)
 
     .window-title
+      flex: 1
+      margin: 0
+      line-height: 1.25
+      align-self: center
       color: #fff
       text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45)
 

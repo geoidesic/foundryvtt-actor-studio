@@ -1,27 +1,32 @@
 /**
- * Foundry v12: mirror client theme (body.theme-dark / theme-light) onto Actor Studio app roots.
- * Foundry 13+: no-op — theme is driven by body ancestor selectors and TJS 0.3.
+ * Mirror Foundry client theme (body / documentElement) onto Actor Studio app roots.
+ * Required while on TJS 0.2 — runtime does not apply theme-dark / theme-light to app shells.
+ * When upgrading to TJS 0.3+, this can become a no-op if the runtime mirrors body theme.
  */
 
 const THEME_DARK = 'theme-dark';
 const THEME_LIGHT = 'theme-light';
 
-function isFoundryV12OrEarlier() {
-  return typeof game !== 'undefined' && Number(game.version) < 13;
+/** @returns {HTMLElement[]} */
+function themeRoots() {
+  const roots = [document.body, document.documentElement];
+  return roots.filter(Boolean);
 }
 
 function bodyHasExplicitTheme() {
-  const body = document.body;
-  return body.classList.contains(THEME_DARK) || body.classList.contains(THEME_LIGHT);
+  return themeRoots().some(
+    (el) => el.classList.contains(THEME_DARK) || el.classList.contains(THEME_LIGHT),
+  );
 }
 
 /**
  * @returns {'dark' | 'light'}
  */
 export function resolveFoundryTheme() {
-  const body = document.body;
-  if (body.classList.contains(THEME_DARK)) return 'dark';
-  if (body.classList.contains(THEME_LIGHT)) return 'light';
+  for (const el of themeRoots()) {
+    if (el.classList.contains(THEME_DARK)) return 'dark';
+    if (el.classList.contains(THEME_LIGHT)) return 'light';
+  }
   if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)')?.matches) {
     return 'dark';
   }
@@ -34,6 +39,7 @@ export function resolveFoundryTheme() {
  */
 export function applyAppTheme(elementRoot, theme) {
   if (!elementRoot) return;
+  elementRoot.classList.add('themed');
   if (theme === 'dark') {
     elementRoot.classList.add(THEME_DARK);
     elementRoot.classList.remove(THEME_LIGHT);
@@ -45,10 +51,10 @@ export function applyAppTheme(elementRoot, theme) {
 
 /**
  * @param {HTMLElement | null | undefined} elementRoot
- * @returns {() => void} disconnect (no-op on v13+ or missing element)
+ * @returns {() => void} disconnect
  */
 export function observeFoundryBodyTheme(elementRoot) {
-  if (!elementRoot || !isFoundryV12OrEarlier()) {
+  if (!elementRoot) {
     return () => {};
   }
 
@@ -56,7 +62,9 @@ export function observeFoundryBodyTheme(elementRoot) {
   sync();
 
   const bodyObserver = new MutationObserver(sync);
-  bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  for (const root of themeRoots()) {
+    bodyObserver.observe(root, { attributes: true, attributeFilter: ['class'] });
+  }
 
   let mediaQuery = null;
   let onMediaChange = null;

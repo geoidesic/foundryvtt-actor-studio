@@ -52,10 +52,14 @@ export default class PCApplication extends SvelteApplication {
     const foundryVersion = game.version || '';
     const dnd5eRules = window.GAS?.dnd5eRules || '';
     const phbVersion = getPhbVersion() || '';
+    const classes = [MODULE_CODE];
+    if (Number(game.version) >= 13) {
+      classes.push('gas-v13-plus');
+    }
     return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'foundryvtt-actor-studio-pc-sheet',
       title: `${game.i18n.localize('GAS.ActorStudio')} v${version} | Foundry: ${foundryVersion} | dnd5e: ${dnd5eFullVersion} | Rules: ${dnd5eRules}${phbVersion ? ` | PHB: ${phbVersion}` : ''}`,
-      classes: [MODULE_CODE],
+      classes,
       width: Number(safeGetSetting(MODULE_ID, 'windowX', 700)) || 700,
       height: Number(safeGetSetting(MODULE_ID, 'windowY', 800)) || 800,
       headerIcon: 'modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-blue.png',

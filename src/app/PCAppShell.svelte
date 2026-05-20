@@ -67,7 +67,7 @@
       actorIdFromDocumentStore: $documentStore?.id || null
     });
 
-    // Foundry v12: mirror body theme-dark / theme-light onto the app shell (Foundry client setting).
+    // Mirror Foundry client theme onto app shell (required on TJS 0.2 for v12–v14).
     disconnectFoundryTheme = observeFoundryBodyTheme(elementRoot);
 
     if(levelUp) {

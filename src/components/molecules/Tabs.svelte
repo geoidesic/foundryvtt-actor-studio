@@ -103,7 +103,6 @@
     .tabs-list {
       @include flex-row;
       @include flex-space-evenly;
-      @include border-bottom;
       @include panel-1;
       list-style: none;
       width: 100%;

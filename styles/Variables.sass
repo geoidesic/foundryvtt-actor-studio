@@ -115,8 +115,8 @@
     --gas-panel-1-background: var(--gas-tabs-list-background)
     --gas-panel-1-color: var(--gas-color-text)
 
-// v13+: body.theme-dark ancestor — tokens still apply only on the app root element.
-.theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container
+// v13+: body.theme-dark / Foundry 14 .themed.theme-dark ancestor — tokens on app root only.
+.theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container, .themed.theme-dark #foundryvtt-actor-studio-pc-sheet, .themed.theme-dark #foundryvtt-actor-studio-welcome, .themed.theme-dark #gas-feat-selector-container
   --gas-sheet-background: #1a1a1a
   --gas-tabs-list-background: transparent
   --gas-tabs-content-background: #1a1a1a
@@ -168,7 +168,7 @@
   --gas-button-hover-border: #999
   --gas-color-text-dark-secondary: inherit
 
-#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark
+#foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark, #foundryvtt-actor-studio-pc-sheet.themed.theme-dark, #foundryvtt-actor-studio-welcome.themed.theme-dark, #gas-feat-selector-container.themed.theme-dark
   --gas-sheet-background: #1a1a1a
   --gas-tabs-list-background: transparent
   --gas-tabs-content-background: #1a1a1a

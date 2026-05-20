@@ -7,7 +7,6 @@ import {
 import resolve from '@rollup/plugin-node-resolve'; // This resolves NPM modules from node_modules.
 import preprocess from 'svelte-preprocess';
 import * as path from "path";
-import { foundryStyleCssDev } from './vite-foundry-style-css.mjs';
 
 // ATTENTION!
 // Please modify the below variables: s_PACKAGE_ID and s_SVELTE_HASH_ID appropriately.
@@ -32,19 +31,6 @@ const s_RESOLVE_CONFIG = {
 };
 
 export default () => {
-   const styleEmitConfig = {
-      root: 'src/',
-      css: {
-         postcss: postcssConfig({ compress: s_COMPRESS, sourceMap: s_SOURCEMAPS })
-      },
-      resolve: {
-         conditions: ['import', 'browser'],
-         alias: {
-            '~': path.resolve(__dirname)
-         }
-      }
-   };
-
    /** @type {import('vite').UserConfig} */
    return {
       root: 'src/',                 // Source location / esbuild root.
@@ -104,6 +90,11 @@ export default () => {
             entry: './index.js',
             formats: ['es'],
             fileName: 'index'
+         },
+         rollupOptions: {
+            output: {
+               assetFileNames: 'style.css'
+            }
          }
       },
 
@@ -121,7 +112,6 @@ export default () => {
       },
 
       plugins: [
-         foundryStyleCssDev(styleEmitConfig),
          svelte({
             compilerOptions: {
                // Provides a custom hash adding the string defined in `s_SVELTE_HASH_ID` to scoped Svelte styles;
@@ -137,4 +127,3 @@ export default () => {
       ]
    };
 };
-

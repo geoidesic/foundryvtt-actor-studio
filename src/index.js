@@ -1,4 +1,4 @@
-// Global styles load via module.json → dist/style.css only (see src/style-dev-entry.js for dev emit).
+import '../styles/init.sass';
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';
