@@ -80,6 +80,8 @@
         "release:pre:patch": "node release.js patch pre",
         "release:pre:minor": "node release.js minor pre",
         "release:pre:major": "node release.js major pre",
+        "release:aura": "node release.js --suffix aura",
+        "release:aura:force": "node release.js --suffix aura --force",
         "test": "vitest run",
         "test:watch": "vitest",
         "test:ui": "vitest --ui",

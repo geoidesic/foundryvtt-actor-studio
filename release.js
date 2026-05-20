@@ -73,7 +73,7 @@ if (!versionType && !isSuffixRelease) {
     console.error('  pre       - Pre-release on next branch (public preview, triggers GitHub Actions)');
     console.error('  finalize  - Promote current pre-release to final release (explicit only)');
     console.error('  --suffix  - Special branch pre-release (no version/file bump, never latest)');
-    console.error('  --force   - Replace existing suffix tag and GitHub release (suffix only)');
+    console.error('  --force   - Optional alias for suffix re-publish (suffix auto-replaces existing tags)');
     console.error('  --dry-run - Preview what would happen without making any changes');
     console.error('');
     console.error('Examples:');
@@ -495,12 +495,13 @@ if (!isDraft) {
     const tagExistsAnywhere = existingLocalTag || existingRemoteTag;
 
     if (!isDryRun) {
-        if (isSuffixRelease && isForce) {
-            console.warn(`⚠️  --force: replacing existing tag and GitHub release for ${newVersion}`);
+        if (isSuffixRelease) {
+            if (tagExistsAnywhere) {
+                console.warn(`⚠️  Suffix re-publish: replacing existing tag and GitHub release for ${newVersion}`);
+            }
             replaceExistingSuffixRelease(newVersion);
         } else if (tagExistsAnywhere) {
             console.error(`❌ Tag ${newVersion} already exists! Please check your git history.`);
-            console.error(`Use --force with --suffix to replace an existing suffix release (e.g. node release.js --suffix aura --force).`);
             process.exit(1);
         } else {
             console.log(`✅ Version ${newVersion} is available`);
@@ -593,11 +594,13 @@ if (!isDraft) {
     } else {
         // Dry run mode - just show what would happen
         const dryRunManifest = isPreRelease ? NEXT_MANIFEST_URL : STABLE_MANIFEST_URL;
-        if (isSuffixRelease && isForce) {
-            console.log(`🔍 --force: would replace tag and GitHub release for ${newVersion}`);
+        if (isSuffixRelease) {
+            if (tagExistsAnywhere) {
+                console.log(`🔍 Suffix re-publish: would replace existing tag and GitHub release for ${newVersion}`);
+            }
             replaceExistingSuffixRelease(newVersion, true);
         } else if (tagExistsAnywhere) {
-            console.log(`🔍 Tag ${newVersion} exists — would abort (use --force with --suffix to replace)`);
+            console.log(`🔍 Tag ${newVersion} exists — would abort`);
         } else {
             console.log(`🔍 Would check if tag ${newVersion} exists`);
         }
@@ -629,10 +632,12 @@ const normalizeForOpenGraph = (text) => {
 };
 const ogSafeReleaseNotes = normalizeForOpenGraph(releaseNotes);
 
+const useForceTag = isSuffixRelease;
+
 // Create tag (skip for drafts)
 if (!isDraft) {
-    const tagCreateCmd = isForce ? `git tag -f ${newVersion}` : `git tag ${newVersion}`;
-    console.log(isDryRun ? `🔍 Would create tag ${newVersion}${isForce ? ' (force)' : ''}` : '🏷️  Creating tag...');
+    const tagCreateCmd = useForceTag ? `git tag -f ${newVersion}` : `git tag ${newVersion}`;
+    console.log(isDryRun ? `🔍 Would create tag ${newVersion}${useForceTag ? ' (force)' : ''}` : '🏷️  Creating tag...');
     if (!isDryRun) execSync(tagCreateCmd);
 } else {
     console.log('🏷️  Skipping tag creation for draft release...');
@@ -642,13 +647,13 @@ if (!isDraft) {
 if (!isDraft) {
     if (isDryRun) {
         console.log(`🔍 Would push to ${targetBranch} branch`);
-        console.log(`🔍 Would push tag ${newVersion}${isForce ? ' (--force)' : ''}`);
+        console.log(`🔍 Would push tag ${newVersion}${useForceTag ? ' (--force)' : ''}`);
     } else {
         console.log(`⬆️  Pushing to ${targetBranch} branch...`);
         execSync(`git push origin ${targetBranch}`);
-        const tagPushCmd = isForce ? `git push origin ${newVersion} --force` : `git push origin ${newVersion}`;
+        const tagPushCmd = useForceTag ? `git push origin ${newVersion} --force` : `git push origin ${newVersion}`;
         execSync(tagPushCmd);
-        console.log(`📌 Pushed tag ${newVersion}${isForce ? ' (force)' : ''}`);
+        console.log(`📌 Pushed tag ${newVersion}${useForceTag ? ' (force)' : ''}`);
     }
 } else {
     console.log('📌 No git changes to push for draft release');
@@ -729,9 +734,7 @@ if (isDraft && !isDryRun) {
     console.log(`📝 Note: This is a SUFFIX PRE-RELEASE on '${targetBranch}'.`);
     console.log(`✅ Branch was updated from main and dependencies were reinstalled on both '${targetBranch}' and 'main'.`);
     console.log(`🔒 No semver/file bump was performed; release is marked pre-release and not latest.`);
-    if (isForce) {
-        console.log(`🔄 Existing tag and GitHub release were replaced; GitHub Actions will rebuild artifacts.`);
-    }
+    console.log(`🔄 Existing tag/release were replaced if present; GitHub Actions will rebuild artifacts.`);
 } else if (isPreRelease && !isDryRun) {
     console.log(`📝 Note: This is a PRE-RELEASE on the '${targetBranch}' branch.`);
     console.log(`✅ GitHub Actions WILL run and update the next branch manifest!`);

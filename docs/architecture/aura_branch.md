@@ -37,8 +37,9 @@ After a merge into `aura`, run `bun i` so `node_modules` matches the lockfile (r
 ```bash
 # On aura, from a clean tree:
 node release.js --suffix aura
+# or: bun run release:aura
 
-# Re-publish same tag after more aura/main merges:
+# --force is optional; suffix releases auto-replace an existing tag/release
 node release.js --suffix aura --force
 ```
 
@@ -49,7 +50,7 @@ Behavior:
 - Tag form: `{package.json version}-{suffix}` (e.g. `2.9.5-aura`) — **no semver bump** in `package.json`.
 - Skips build/commit steps used for normal releases (suffix flow is tag-oriented).
 - Reinstalls dependencies on the suffix branch after merge.
-- `--force` replaces an existing suffix tag and GitHub release so CI rebuilds artifacts (suffix only). Always attempts release deletion and handles remote-only tags via force push.
+- Re-publishing the same suffix tag automatically deletes the old GitHub release, replaces the tag (force push), and recreates the pre-release so CI runs again.
 
 Normal `main` releases (`patch` / `minor` / `major`) stay on `main` and use TJS 0.3.x.
 
