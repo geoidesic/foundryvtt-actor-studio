@@ -22,7 +22,7 @@
   }
 
   button:hover {
-    background: radial-gradient(var(--button-background-highlight), var(--button-background));
+    background: radial-gradient(var(--gas-button-background-highlight, rgba(255, 255, 255, 0.2)), var(--gas-button-background, #f0f0f0));
     clip-path: var(--tjs-icon-button-clip-path-hover, var(--tjs-icon-button-clip-path, none));
   }
 </style>

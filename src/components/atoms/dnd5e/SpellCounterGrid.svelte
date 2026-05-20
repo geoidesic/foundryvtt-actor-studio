@@ -27,7 +27,7 @@
     gap: 4px
     margin-bottom: 0
     align-items: center
-    background-color: var(--li-background-color)
+    background-color: var(--gas-li-background)
     border-radius: var(--border-radius)
     border-collapse: none
     justify-content: space-evenly
@@ -47,5 +47,5 @@
       text-align: left
 
       &.at-limit
-        color: var(--color-positive)
+        color: var(--gas-color-positive)
 </style>

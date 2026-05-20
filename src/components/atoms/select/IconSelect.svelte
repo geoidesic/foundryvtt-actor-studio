@@ -364,6 +364,7 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
 
 <style lang="sass">
 @import './selectShared.sass'
+@import '../../../../styles/gas-app-scope.sass'
 
 .options-dropdown
   z-index: 999
@@ -386,16 +387,17 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
       background-color: rgba(0, 0, 0, 0.4)
 
   &.is-current-selection
-    background-color: var(--select-option-highlight-color, rgba(0, 0, 0, 0.08))
+    background-color: var(--gas-select-option-highlight, rgba(0, 0, 0, 0.08))
     cursor: default
     font-weight: bold
     pointer-events: none
     opacity: 0.75
 
-:global(.theme-dark) .option.highlighted
-  background-color: rgba(255, 255, 255, 0.3)
-  color: var(--gas-color-text)
+@include gas-app-themed-dark
+  .option.highlighted
+    background-color: rgba(255, 255, 255, 0.3)
+    color: var(--gas-color-text)
 
-  &:hover
-    background-color: rgba(255, 255, 255, 0.4)
+    &:hover
+      background-color: rgba(255, 255, 255, 0.4)
 </style>

@@ -75,7 +75,9 @@ Do **not** use `body:not(.theme-dark) #id` for light overrides — it beats `#id
 
 Tab labels, enriched HTML, and window chrome use theme variables and [`.GAS.theme-dark` rules in `init.sass`](../../styles/init.sass).
 
-**Window background (dark):** Foundry core sets `background: url(../ui/parchment.jpg)` on `.window-app .window-content`. Setting only `background-color` does not remove that image. In dark mode, Actor Studio clears the image and uses solid `var(--background-color)` (see `init.sass` and `gas-dark-theme.sass`).
+**CSS tokens:** Use `--gas-*` custom properties in `styles/Variables.sass` only on app root IDs. Do not redefine Foundry names (`--background-color`, `--button-background`, `--button-color`) — that polluted core UI. `styles/Mixins.sass` reads `--gas-*` tokens only.
+
+**Window background:** Foundry sets `parchment.jpg` on `.window-app > .window-content`. `background-color` alone does not remove it. Use `@mixin gas-app-dark-window-shell` in `styles/gas-app-scope.sass` (included from `gas-dark-theme.sass`) so only app root IDs get `background-image: none` on `.window-content`. Never use bare `.theme-dark.window-app` without an app `#id` — that broke core windows (e.g. Configure Game Settings).
 
 ## See also
 

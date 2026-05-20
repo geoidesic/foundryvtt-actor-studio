@@ -4,6 +4,7 @@
 @import 'Variables.sass'
 @import 'Fonts.sass'
 @import 'Mixins.sass'
+@import 'gas-app-scope.sass'
 @import 'Animations.sass'
 @import '_buttons.sass'
 
@@ -22,7 +23,7 @@
 
 .gas-settings-h4
   font-size: 1.1em
-  color: var(--color-highlight)
+  color: var(--gas-color-highlight)
 
 .GAS
   /* integration with popout module */
@@ -246,7 +247,7 @@
   warning
     display: block
     border: 1px solid var(--dnd5e-color-gold)
-    background: var(--color-negative)
+    background: var(--gas-color-negative)
     color: #fff
     margin: 1rem 0 0 0
     padding: 0.5rem 0.3rem
@@ -327,21 +328,22 @@
     --color-border-highlight: #416dbe
     transition: all 0.4s ease-in-out
     
-  .gas-tabs
+  .gas-tabs,
+  .tabs.gas-tabs
+    border: none
     position: relative 
     padding-top: 1rem
     .tabs-list 
 
-      background: var(--tabs-list-background) !important
+      background: var(--gas-tabs-list-background) !important
       position: fixed
       top: 30px
       left: 0
       width: 100%
-      z-index: 1
       height: 2.5rem !important
       padding-top: 1rem !important
       button
-        background-color: var(--button-background) !important
+        background-color: var(--gas-button-background) !important
         color: var(--gas-color-text) !important
 
 
@@ -358,21 +360,19 @@
   //   z-index: 1 
 
   .gas-tabs .tabs-list button:hover
-    box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important
+    box-shadow: 0px -5px 14px -8px var(--gas-color-shadow-primary) !important
     transition: all 0.4s ease-in-out
 
   .tab-content
     --tjs-app-overflow: visible
-    padding: 15px 0px 15px 15px
+    padding: 0
     border: 2px solid transparent
     border-radius: 10px 
-    background-color: var(--tabs-content-background)
-    position: relative 
-    margin-top: 2.25rem
-    color: var(--gas-color-text)
-
+    background-color: var(--gas-tabs-content-background)
     position: relative
-    padding: 0
+    z-index: 1
+    margin-top: 0.5rem
+    color: var(--gas-color-text)
 
   .tab-content .scroll
     box-sizing: content-box
@@ -397,7 +397,7 @@
     box-shadow: 0 0 0 1px var(--li-inset-color) inset
     padding: 0.5rem 0.3rem
     border-radius: var(--border-radius)
-    background: var(--li-background-color)
+    background: var(--gas-li-background)
 
   .tab-content ul.icon-list .image img.icon
     position: absolute
@@ -427,7 +427,7 @@
 
     input, input.keyword-filter
       color: var(--gas-color-text)
-      // background-color: var(--li-background-color) //- this interferes with welcome page checkbox
+      // background-color: var(--gas-li-background) //- this interferes with welcome page checkbox
     
     .icon-list
       .advancement
@@ -444,7 +444,7 @@
   .icon-list
     color: var(--gas-color-text)
     .advancement
-      background-color: var(--tabs-content-background)
+      background-color: var(--gas-tabs-content-background)
 
   .npc-stat-block
     background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat 
@@ -484,8 +484,7 @@
   &.theme-dark
     .npc-stat-block
       --gas-text-header-color: var(--dnd5e-color-gold)
-      background: var(--background-color)
-      background-image: none
+      background: var(--gas-sheet-background)
       background-blend-mode: normal
       h2, .label
         color: var(--dnd5e-color-gold) !important
@@ -537,20 +536,16 @@ body.game #gas-settings-submenu.app.window-app
 #gas-dialog-button, #gas-dialog-npc-button
     background-color: white
     
-#foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container, #foundryvtt-actor-studio-npc-sheet, .gas-npc-sheet, .GAS
+@include gas-app-roots
   .window-content
     color: var(--gas-color-text)
 
-  // Foundry core sets background: url(../ui/parchment.jpg) on .window-app .window-content.
-  // background-color alone does not remove that image — clear it in dark mode.
-  &.theme-dark .window-content
-    background: var(--background-color) !important
-    background-image: none !important
+  // Dark window shell (no parchment): gas-app-dark-window-shell in gas-dark-theme.sass (app IDs only).
 
   // Header uses Foundry/dnd5e dark chrome; do not inherit --gas-color-text (black) from .GAS
   .window-header
     color: #fff
-    border-bottom: 2px solid var(--color-border-dark)
+    border-bottom: 2px solid var(--gas-border-dark)
 
     .window-title
       color: #fff
@@ -572,7 +567,7 @@ body.game #gas-settings-submenu.app.window-app
   .content .properties-list > li
     padding: 4px
     color: var(--gas-color-text)
-    background-color: var(--li-background-color)
+    background-color: var(--gas-li-background)
     border: none
   p:has(a.content-link)
     line-height: 1.5rem
@@ -582,7 +577,7 @@ body.game #gas-settings-submenu.app.window-app
     color: var(--tjs-select-option-color) //- this makes dark theme advancments unreadable
     
   h2, h3, h4:not(.window-title), h5
-    color: var(--color-highlight)
+    color: var(--gas-color-highlight)
     text-shadow: none
 
   h1
@@ -597,7 +592,7 @@ body.game #gas-settings-submenu.app.window-app
   h5
     font-size: 1.15rem
   .border-right
-    border-right: 6px ridge var(--color-highlight)
+    border-right: 6px ridge var(--gas-color-highlight)
 
   .right-border-gradient-mask
     mask-image: linear-gradient(0deg, transparent 0%, black 100%)
@@ -650,19 +645,19 @@ body.game #gas-settings-submenu.app.window-app
   .required
     font-size: large
     margin-right: 2px
-    color: var(--color-positive)
+    color: var(--gas-color-positive)
     display: none
     &.active
       display: block
-      color: var(--color-negative)
+      color: var(--gas-color-negative)
       animation: pulse 0.5s infinite
 
   // Colours
   .negative
-    color: var(--color-negative)
+    color: var(--gas-color-negative)
 
   .positive
-    color: var(--color-positive)
+    color: var(--gas-color-positive)
 
   .pointer
     cursor: pointer
@@ -679,7 +674,7 @@ body.game #gas-settings-submenu.app.window-app
 
   a.button.active, button.active 
     outline: none
-    box-shadow: 0 -8px 16px -7px var(--color-shadow-primary)
+    box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary)
     
   .black-link
     white-space: pre-wrap
@@ -720,7 +715,7 @@ body.game #gas-settings-submenu.app.window-app
       color: var(--gas-color-text) !important
 
       &.active
-        background: var(--tab-active-background) !important
+        background: var(--gas-tab-active-background) !important
         color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important
 
   .illuminated-description

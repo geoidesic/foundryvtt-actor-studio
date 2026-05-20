@@ -1,3 +1,6 @@
+// Actor Studio design tokens — always use --gas-* names on app roots only.
+// Do not use Foundry core names (--background-color, --button-background, --button-color, etc.).
+
 #foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container
   --size-xxs: 0.1rem
   --size-xs: 0.2rem
@@ -7,16 +10,16 @@
   --size-lg: 1.5rem
   --size-xl: 2rem
 
-  --background-color: #cccccc
-  --li-background-color: #e7eef1
+  --gas-sheet-background: #cccccc
+  --gas-li-background: #e7eef1
   --border-radius: 3px
-  --li-inset-color: rgba(0, 0, 0, 0.1)
-  --color-highlight: brown
-  --select-option-highlight-color: #efc6a6
-  --as-blue: #426dbe
-  --color-negative: brown
-  --color-positive: #1baf1b
-  --color-text-disabled: #c4c7c9
+  --gas-li-inset: rgba(0, 0, 0, 0.1)
+  --gas-color-highlight: brown
+  --gas-select-option-highlight: #efc6a6
+  --gas-blue: #426dbe
+  --gas-color-negative: brown
+  --gas-color-positive: #1baf1b
+  --gas-color-text-disabled: #c4c7c9
   --tjs-select-appearance: none
   --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
   --tjs-select-background-size: 16px 16px
@@ -36,149 +39,169 @@
   --tjs-select-text-overflow: ellipsis
   --tjs-select-transition-focus-visible: box-shadow 0.2s ease
   --tjs-select-width: auto
-  --color-shadow-primary: #416dbe
-  --tabs-list-background: #dbd9cd
-  --tabs-content-background: rgba(249, 249, 249, 0.8)
-  --tab-active-background: #f9f9f9
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54)
-  --tab-inactive-border: rgb(60, 60, 60)
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
+  --gas-color-shadow-primary: #416dbe
+  --gas-tabs-list-background: #dbd9cd
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8)
+  --gas-tab-active-background: #f9f9f9
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54)
+  --gas-tab-inactive-border: rgb(60, 60, 60)
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
   --gas-color-text: #000
-  --button-background: #f0f0f0
-  --button-hover-background-color: #d8d8d8
-  --button-hover-border-color: #999
-  --color-border-dark: #426dbe
-  --color-border-light: #ccc
-  --input-background: #f9f9f9
-  --input-disabled-background: #ececec
-  --input-border: #bbb
-  --progress-track-background: #e0e0e0
-  --progress-back-background: rgba(10, 144, 50, 0.5)
-  --progress-front-background: #ffffff
-  --progress-front-text-color: #000000
-  --progress-label-color: #ffffff
-  --properties-list-border: #eeede0
+  --gas-button-background: #f0f0f0
+  --gas-button-hover-background: #d8d8d8
+  --gas-button-hover-border: #999
+  --gas-button-color: #000
+  --gas-button-border-style: solid
+  --gas-button-border-width: 1px
+  --gas-button-border-color: #bbb
+  --gas-button-font-size: inherit
+  --gas-button-font-weight: normal
+  --gas-button-padding: 0.25rem 0.5rem
+  --gas-button-line-height: normal
+  --gas-button-background-disabled: #ececec
+  --gas-border-dark: #426dbe
+  --gas-border-light: #ccc
+  --gas-border-style: solid
+  --gas-border-width: 1px
+  --gas-player-color: var(--gas-color-highlight)
+  --gas-panel-1-background: var(--gas-tabs-list-background)
+  --gas-panel-1-color: var(--gas-color-text)
+  --gas-sheet-color: rgba(0, 0, 0, 0.08)
+  --gas-input-background: #f9f9f9
+  --gas-input-disabled-background: #ececec
+  --gas-input-border: #bbb
+  --gas-progress-track-background: #e0e0e0
+  --gas-progress-back-background: rgba(10, 144, 50, 0.5)
+  --gas-progress-front-background: #ffffff
+  --gas-progress-front-text-color: #000000
+  --gas-progress-label-color: #ffffff
+  --gas-properties-list-border: #eeede0
+  --gas-table-background: rgba(0, 0, 0, 0.05)
 
-  // theme-dark on the app root (pre–Foundry 13 / no body theme)
   &.theme-dark
-    --background-color: #1a1a1a
-    --tabs-list-background: transparent
-    --tabs-content-background: #1a1a1a
-    --tab-active-background: #2a2a2a
-    --tab-active-color: var(--dnd5e-color-gold, #b59e54)
-    --tab-inactive-border: rgba(255, 255, 255, 0.35)
-    --tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
-    --li-background-color: var(--dnd5e-color-sc-1, #abaabc)
+    --gas-sheet-background: #1a1a1a
+    --gas-tabs-list-background: transparent
+    --gas-tabs-content-background: #1a1a1a
+    --gas-tab-active-background: #2a2a2a
+    --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54)
+    --gas-tab-inactive-border: rgba(255, 255, 255, 0.35)
+    --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
+    --gas-li-background: var(--dnd5e-color-sc-1, #abaabc)
     --gas-color-text: #fff
+    --gas-button-color: #fff
+    --gas-button-background: rgba(24, 24, 24, 1)
+    --gas-button-hover-background: #877755
+    --gas-button-hover-border: #a18e66
+    --gas-button-border-color: #555
+    --gas-button-background-disabled: #383838
     --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
     --tjs-select-option-background: #222
     --tjs-select-option-color: #fff
     --tjs-select-border: 1px solid #555
-    --color-text-dark-secondary: #893030
-    --button-background: rgba(24, 24, 24, 1)
-    button
-      --button-hover-background-color: #877755
-      --button-hover-border-color: #a18e66
-    table
-      --table-background-color: rgba(0, 0, 0, 0.05)
-    --input-background: #2e2e2e
-    --input-disabled-background: #383838
-    --input-border: #555
-    --progress-track-background: #3a3a3a
-    --progress-back-background: rgba(27, 175, 27, 0.35)
-    --progress-front-background: #2d6e2d
-    --progress-front-text-color: #ffffff
-    --progress-label-color: #ffffff
-    --properties-list-border: rgba(255, 255, 255, 0.2)
-    --li-inset-color: rgba(255, 255, 255, 0.12)
-    --sheet-chrome-border: #3a3a3a
-    --select-option-highlight-color: rgba(255, 255, 255, 0.12)
+    --gas-color-text-dark-secondary: #893030
+    --gas-table-background: rgba(0, 0, 0, 0.05)
+    --gas-input-background: #2e2e2e
+    --gas-input-disabled-background: #383838
+    --gas-input-border: #555
+    --gas-progress-track-background: #3a3a3a
+    --gas-progress-back-background: rgba(27, 175, 27, 0.35)
+    --gas-progress-front-background: #2d6e2d
+    --gas-progress-front-text-color: #ffffff
+    --gas-progress-label-color: #ffffff
+    --gas-properties-list-border: rgba(255, 255, 255, 0.2)
+    --gas-li-inset: rgba(255, 255, 255, 0.12)
+    --gas-sheet-chrome-border: #3a3a3a
+    --gas-select-option-highlight: rgba(255, 255, 255, 0.12)
+    --gas-panel-1-background: var(--gas-tabs-list-background)
+    --gas-panel-1-color: var(--gas-color-text)
 
-// Foundry 13+ body.theme-dark (ancestor selector)
+// v13+: body.theme-dark ancestor — tokens still apply only on the app root element.
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container
-  --background-color: #1a1a1a
-  --tabs-list-background: transparent
-  --tabs-content-background: #1a1a1a
-  --tab-active-background: #2a2a2a
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54)
-  --tab-inactive-border: rgba(255, 255, 255, 0.35)
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc)
+  --gas-sheet-background: #1a1a1a
+  --gas-tabs-list-background: transparent
+  --gas-tabs-content-background: #1a1a1a
+  --gas-tab-active-background: #2a2a2a
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54)
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35)
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc)
   --gas-color-text: #fff
+  --gas-button-color: #fff
+  --gas-button-background: rgba(24, 24, 24, 1)
+  --gas-button-hover-background: #877755
+  --gas-button-hover-border: #a18e66
+  --gas-button-border-color: #555
+  --gas-button-background-disabled: #383838
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
   --tjs-select-option-background: #222
   --tjs-select-option-color: #fff
   --tjs-select-border: 1px solid #555
-  --color-text-dark-secondary: #893030
-  --button-background: rgba(24, 24, 24, 1)
-  button
-    --button-hover-background-color: #877755
-    --button-hover-border-color: #a18e66
-  table
-    --table-background-color: rgba(0, 0, 0, 0.05)
-  --input-background: #2e2e2e
-  --input-disabled-background: #383838
-  --input-border: #555
-  --progress-track-background: #3a3a3a
-  --progress-back-background: rgba(27, 175, 27, 0.35)
-  --progress-front-background: #2d6e2d
-  --progress-front-text-color: #ffffff
-  --progress-label-color: #ffffff
-  --properties-list-border: rgba(255, 255, 255, 0.2)
-  --li-inset-color: rgba(255, 255, 255, 0.12)
-  --sheet-chrome-border: #3a3a3a
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12)
+  --gas-color-text-dark-secondary: #893030
+  --gas-table-background: rgba(0, 0, 0, 0.05)
+  --gas-input-background: #2e2e2e
+  --gas-input-disabled-background: #383838
+  --gas-input-border: #555
+  --gas-progress-track-background: #3a3a3a
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35)
+  --gas-progress-front-background: #2d6e2d
+  --gas-progress-front-text-color: #ffffff
+  --gas-progress-label-color: #ffffff
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2)
+  --gas-li-inset: rgba(255, 255, 255, 0.12)
+  --gas-sheet-chrome-border: #3a3a3a
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12)
+  --gas-panel-1-background: var(--gas-tabs-list-background)
+  --gas-panel-1-color: var(--gas-color-text)
 
-// Explicit light only — do not use body:not(.theme-dark); it overrides #id.theme-dark on v12 when body lacks the class.
 #foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light
-  --background-color: #cccccc
-  --tabs-list-background: #dbd9cd
-  --tabs-content-background: rgba(249, 249, 249, 0.8)
-  --tab-active-background: #f9f9f9
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54)
-  --tab-inactive-border: rgb(60, 60, 60)
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
-  --li-background-color: #e7eef1
+  --gas-sheet-background: #cccccc
+  --gas-tabs-list-background: #dbd9cd
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8)
+  --gas-tab-active-background: #f9f9f9
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54)
+  --gas-tab-inactive-border: rgb(60, 60, 60)
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
+  --gas-li-background: #e7eef1
   --gas-color-text: #000
-  --button-background: #f0f0f0
-  --button-hover-background-color: #d8d8d8
-  --button-hover-border-color: #999
-  --color-text-dark-secondary: inherit
+  --gas-button-background: #f0f0f0
+  --gas-button-hover-background: #d8d8d8
+  --gas-button-hover-border: #999
+  --gas-color-text-dark-secondary: inherit
 
-// App-local dark after light block so theme-dark wins on equal specificity (v12 body mirror).
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark
-  --background-color: #1a1a1a
-  --tabs-list-background: transparent
-  --tabs-content-background: #1a1a1a
-  --tab-active-background: #2a2a2a
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54)
-  --tab-inactive-border: rgba(255, 255, 255, 0.35)
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc)
+  --gas-sheet-background: #1a1a1a
+  --gas-tabs-list-background: transparent
+  --gas-tabs-content-background: #1a1a1a
+  --gas-tab-active-background: #2a2a2a
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54)
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35)
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54)
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc)
   --gas-color-text: #fff
-  --button-background: rgba(24, 24, 24, 1)
-  --button-hover-background-color: #877755
-  --button-hover-border-color: #a18e66
+  --gas-button-color: #fff
+  --gas-button-background: rgba(24, 24, 24, 1)
+  --gas-button-hover-background: #877755
+  --gas-button-hover-border: #a18e66
+  --gas-button-border-color: #555
+  --gas-button-background-disabled: #383838
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center
   --tjs-select-option-background: #222
   --tjs-select-option-color: #fff
   --tjs-select-border: 1px solid #555
-  button
-    --button-hover-background-color: #877755
-    --button-hover-border-color: #a18e66
-  table
-    --table-background-color: rgba(255, 255, 255, 0.05)
-  --input-background: #2e2e2e
-  --input-disabled-background: #383838
-  --input-border: #555
-  --progress-track-background: #3a3a3a
-  --progress-back-background: rgba(27, 175, 27, 0.35)
-  --progress-front-background: #2d6e2d
-  --progress-front-text-color: #ffffff
-  --progress-label-color: #ffffff
-  --properties-list-border: rgba(255, 255, 255, 0.2)
-  --li-inset-color: rgba(255, 255, 255, 0.12)
-  --sheet-chrome-border: #3a3a3a
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12)
-  --footer-input-background: rgba(255, 255, 255, 0.08)
-  --footer-input-border: rgba(255, 255, 255, 0.28)
+  --gas-table-background: rgba(255, 255, 255, 0.05)
+  --gas-input-background: #2e2e2e
+  --gas-input-disabled-background: #383838
+  --gas-input-border: #555
+  --gas-progress-track-background: #3a3a3a
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35)
+  --gas-progress-front-background: #2d6e2d
+  --gas-progress-front-text-color: #ffffff
+  --gas-progress-label-color: #ffffff
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2)
+  --gas-li-inset: rgba(255, 255, 255, 0.12)
+  --gas-sheet-chrome-border: #3a3a3a
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12)
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08)
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28)
+  --gas-panel-1-background: var(--gas-tabs-list-background)
+  --gas-panel-1-color: var(--gas-color-text)

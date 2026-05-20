@@ -6,16 +6,16 @@
   --size-md: 1rem;
   --size-lg: 1.5rem;
   --size-xl: 2rem;
-  --background-color: #cccccc;
-  --li-background-color: #e7eef1;
+  --gas-sheet-background: #cccccc;
+  --gas-li-background: #e7eef1;
   --border-radius: 3px;
-  --li-inset-color: rgba(0, 0, 0, 0.1);
-  --color-highlight: brown;
-  --select-option-highlight-color: #efc6a6;
-  --as-blue: #426dbe;
-  --color-negative: brown;
-  --color-positive: #1baf1b;
-  --color-text-disabled: #c4c7c9;
+  --gas-li-inset: rgba(0, 0, 0, 0.1);
+  --gas-color-highlight: brown;
+  --gas-select-option-highlight: #efc6a6;
+  --gas-blue: #426dbe;
+  --gas-color-negative: brown;
+  --gas-color-positive: #1baf1b;
+  --gas-color-text-disabled: #c4c7c9;
   --tjs-select-appearance: none;
   --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-background-size: 16px 16px;
@@ -35,157 +35,174 @@
   --tjs-select-text-overflow: ellipsis;
   --tjs-select-transition-focus-visible: box-shadow 0.2s ease;
   --tjs-select-width: auto;
-  --color-shadow-primary: #416dbe;
-  --tabs-list-background: #dbd9cd;
-  --tabs-content-background: rgba(249, 249, 249, 0.8);
-  --tab-active-background: #f9f9f9;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgb(60, 60, 60);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-color-shadow-primary: #416dbe;
+  --gas-tabs-list-background: #dbd9cd;
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8);
+  --gas-tab-active-background: #f9f9f9;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgb(60, 60, 60);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --gas-color-text: #000;
-  --button-background: #f0f0f0;
-  --button-hover-background-color: #d8d8d8;
-  --button-hover-border-color: #999;
-  --color-border-dark: #426dbe;
-  --color-border-light: #ccc;
-  --input-background: #f9f9f9;
-  --input-disabled-background: #ececec;
-  --input-border: #bbb;
-  --progress-track-background: #e0e0e0;
-  --progress-back-background: rgba(10, 144, 50, 0.5);
-  --progress-front-background: #ffffff;
-  --progress-front-text-color: #000000;
-  --progress-label-color: #ffffff;
-  --properties-list-border: #eeede0;
+  --gas-button-background: #f0f0f0;
+  --gas-button-hover-background: #d8d8d8;
+  --gas-button-hover-border: #999;
+  --gas-button-color: #000;
+  --gas-button-border-style: solid;
+  --gas-button-border-width: 1px;
+  --gas-button-border-color: #bbb;
+  --gas-button-font-size: inherit;
+  --gas-button-font-weight: normal;
+  --gas-button-padding: 0.25rem 0.5rem;
+  --gas-button-line-height: normal;
+  --gas-button-background-disabled: #ececec;
+  --gas-border-dark: #426dbe;
+  --gas-border-light: #ccc;
+  --gas-border-style: solid;
+  --gas-border-width: 1px;
+  --gas-player-color: var(--gas-color-highlight);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
+  --gas-sheet-color: rgba(0, 0, 0, 0.08);
+  --gas-input-background: #f9f9f9;
+  --gas-input-disabled-background: #ececec;
+  --gas-input-border: #bbb;
+  --gas-progress-track-background: #e0e0e0;
+  --gas-progress-back-background: rgba(10, 144, 50, 0.5);
+  --gas-progress-front-background: #ffffff;
+  --gas-progress-front-text-color: #000000;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: #eeede0;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --color-text-dark-secondary: #893030;
-  --button-background: rgba(24, 24, 24, 1);
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
-  --table-background-color: rgba(0, 0, 0, 0.05);
+  --gas-color-text-dark-secondary: #893030;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --color-text-dark-secondary: #893030;
-  --button-background: rgba(24, 24, 24, 1);
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-}
-.theme-dark #foundryvtt-actor-studio-pc-sheet button, .theme-dark #foundryvtt-actor-studio-welcome button, .theme-dark #gas-feat-selector-container button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-.theme-dark #foundryvtt-actor-studio-pc-sheet table, .theme-dark #foundryvtt-actor-studio-welcome table, .theme-dark #gas-feat-selector-container table {
-  --table-background-color: rgba(0, 0, 0, 0.05);
+  --gas-color-text-dark-secondary: #893030;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 
 #foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light {
-  --background-color: #cccccc;
-  --tabs-list-background: #dbd9cd;
-  --tabs-content-background: rgba(249, 249, 249, 0.8);
-  --tab-active-background: #f9f9f9;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgb(60, 60, 60);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: #e7eef1;
+  --gas-sheet-background: #cccccc;
+  --gas-tabs-list-background: #dbd9cd;
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8);
+  --gas-tab-active-background: #f9f9f9;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgb(60, 60, 60);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: #e7eef1;
   --gas-color-text: #000;
-  --button-background: #f0f0f0;
-  --button-hover-background-color: #d8d8d8;
-  --button-hover-border-color: #999;
-  --color-text-dark-secondary: inherit;
+  --gas-button-background: #f0f0f0;
+  --gas-button-hover-background: #d8d8d8;
+  --gas-button-hover-border: #999;
+  --gas-color-text-dark-secondary: inherit;
 }
 
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
-  --button-background: rgba(24, 24, 24, 1);
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-  --footer-input-background: rgba(255, 255, 255, 0.08);
-  --footer-input-border: rgba(255, 255, 255, 0.28);
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
-  --table-background-color: rgba(255, 255, 255, 0.05);
+  --gas-table-background: rgba(255, 255, 255, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 /* Actor Studio */
 #foundryvtt-actor-studio-pc-sheet, #foundryvtt-actor-studio-welcome, #gas-feat-selector-container {
@@ -196,16 +213,16 @@
   --size-md: 1rem;
   --size-lg: 1.5rem;
   --size-xl: 2rem;
-  --background-color: #cccccc;
-  --li-background-color: #e7eef1;
+  --gas-sheet-background: #cccccc;
+  --gas-li-background: #e7eef1;
   --border-radius: 3px;
-  --li-inset-color: rgba(0, 0, 0, 0.1);
-  --color-highlight: brown;
-  --select-option-highlight-color: #efc6a6;
-  --as-blue: #426dbe;
-  --color-negative: brown;
-  --color-positive: #1baf1b;
-  --color-text-disabled: #c4c7c9;
+  --gas-li-inset: rgba(0, 0, 0, 0.1);
+  --gas-color-highlight: brown;
+  --gas-select-option-highlight: #efc6a6;
+  --gas-blue: #426dbe;
+  --gas-color-negative: brown;
+  --gas-color-positive: #1baf1b;
+  --gas-color-text-disabled: #c4c7c9;
   --tjs-select-appearance: none;
   --tjs-select-background: #f9f9f9 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-background-size: 16px 16px;
@@ -225,154 +242,171 @@
   --tjs-select-text-overflow: ellipsis;
   --tjs-select-transition-focus-visible: box-shadow 0.2s ease;
   --tjs-select-width: auto;
-  --color-shadow-primary: #416dbe;
-  --tabs-list-background: #dbd9cd;
-  --tabs-content-background: rgba(249, 249, 249, 0.8);
-  --tab-active-background: #f9f9f9;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgb(60, 60, 60);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-color-shadow-primary: #416dbe;
+  --gas-tabs-list-background: #dbd9cd;
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8);
+  --gas-tab-active-background: #f9f9f9;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgb(60, 60, 60);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
   --gas-color-text: #000;
-  --button-background: #f0f0f0;
-  --button-hover-background-color: #d8d8d8;
-  --button-hover-border-color: #999;
-  --color-border-dark: #426dbe;
-  --color-border-light: #ccc;
-  --input-background: #f9f9f9;
-  --input-disabled-background: #ececec;
-  --input-border: #bbb;
-  --progress-track-background: #e0e0e0;
-  --progress-back-background: rgba(10, 144, 50, 0.5);
-  --progress-front-background: #ffffff;
-  --progress-front-text-color: #000000;
-  --progress-label-color: #ffffff;
-  --properties-list-border: #eeede0;
+  --gas-button-background: #f0f0f0;
+  --gas-button-hover-background: #d8d8d8;
+  --gas-button-hover-border: #999;
+  --gas-button-color: #000;
+  --gas-button-border-style: solid;
+  --gas-button-border-width: 1px;
+  --gas-button-border-color: #bbb;
+  --gas-button-font-size: inherit;
+  --gas-button-font-weight: normal;
+  --gas-button-padding: 0.25rem 0.5rem;
+  --gas-button-line-height: normal;
+  --gas-button-background-disabled: #ececec;
+  --gas-border-dark: #426dbe;
+  --gas-border-light: #ccc;
+  --gas-border-style: solid;
+  --gas-border-width: 1px;
+  --gas-player-color: var(--gas-color-highlight);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
+  --gas-sheet-color: rgba(0, 0, 0, 0.08);
+  --gas-input-background: #f9f9f9;
+  --gas-input-disabled-background: #ececec;
+  --gas-input-border: #bbb;
+  --gas-progress-track-background: #e0e0e0;
+  --gas-progress-back-background: rgba(10, 144, 50, 0.5);
+  --gas-progress-front-background: #ffffff;
+  --gas-progress-front-text-color: #000000;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: #eeede0;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --color-text-dark-secondary: #893030;
-  --button-background: rgba(24, 24, 24, 1);
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
-  --table-background-color: rgba(0, 0, 0, 0.05);
+  --gas-color-text-dark-secondary: #893030;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 .theme-dark #foundryvtt-actor-studio-pc-sheet, .theme-dark #foundryvtt-actor-studio-welcome, .theme-dark #gas-feat-selector-container {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --color-text-dark-secondary: #893030;
-  --button-background: rgba(24, 24, 24, 1);
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-}
-.theme-dark #foundryvtt-actor-studio-pc-sheet button, .theme-dark #foundryvtt-actor-studio-welcome button, .theme-dark #gas-feat-selector-container button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-.theme-dark #foundryvtt-actor-studio-pc-sheet table, .theme-dark #foundryvtt-actor-studio-welcome table, .theme-dark #gas-feat-selector-container table {
-  --table-background-color: rgba(0, 0, 0, 0.05);
+  --gas-color-text-dark-secondary: #893030;
+  --gas-table-background: rgba(0, 0, 0, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-light, #foundryvtt-actor-studio-welcome.theme-light, #gas-feat-selector-container.theme-light {
-  --background-color: #cccccc;
-  --tabs-list-background: #dbd9cd;
-  --tabs-content-background: rgba(249, 249, 249, 0.8);
-  --tab-active-background: #f9f9f9;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgb(60, 60, 60);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: #e7eef1;
+  --gas-sheet-background: #cccccc;
+  --gas-tabs-list-background: #dbd9cd;
+  --gas-tabs-content-background: rgba(249, 249, 249, 0.8);
+  --gas-tab-active-background: #f9f9f9;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgb(60, 60, 60);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: #e7eef1;
   --gas-color-text: #000;
-  --button-background: #f0f0f0;
-  --button-hover-background-color: #d8d8d8;
-  --button-hover-border-color: #999;
-  --color-text-dark-secondary: inherit;
+  --gas-button-background: #f0f0f0;
+  --gas-button-hover-background: #d8d8d8;
+  --gas-button-hover-border: #999;
+  --gas-color-text-dark-secondary: inherit;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark, #foundryvtt-actor-studio-welcome.theme-dark, #gas-feat-selector-container.theme-dark {
-  --background-color: #1a1a1a;
-  --tabs-list-background: transparent;
-  --tabs-content-background: #1a1a1a;
-  --tab-active-background: #2a2a2a;
-  --tab-active-color: var(--dnd5e-color-gold, #b59e54);
-  --tab-inactive-border: rgba(255, 255, 255, 0.35);
-  --tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
-  --li-background-color: var(--dnd5e-color-sc-1, #abaabc);
+  --gas-sheet-background: #1a1a1a;
+  --gas-tabs-list-background: transparent;
+  --gas-tabs-content-background: #1a1a1a;
+  --gas-tab-active-background: #2a2a2a;
+  --gas-tab-active-color: var(--dnd5e-color-gold, #b59e54);
+  --gas-tab-inactive-border: rgba(255, 255, 255, 0.35);
+  --gas-tab-active-indicator: var(--dnd5e-color-gold, #b59e54);
+  --gas-li-background: var(--dnd5e-color-sc-1, #abaabc);
   --gas-color-text: #fff;
-  --button-background: rgba(24, 24, 24, 1);
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
+  --gas-button-color: #fff;
+  --gas-button-background: rgba(24, 24, 24, 1);
+  --gas-button-hover-background: #877755;
+  --gas-button-hover-border: #a18e66;
+  --gas-button-border-color: #555;
+  --gas-button-background-disabled: #383838;
   --tjs-select-background: #222 url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"%3E%3Cpath d="M6 9l6 6 6-6"%3E%3C/path%3E%3C/svg%3E') no-repeat right 0.3rem center;
   --tjs-select-option-background: #222;
   --tjs-select-option-color: #fff;
   --tjs-select-border: 1px solid #555;
-  --input-background: #2e2e2e;
-  --input-disabled-background: #383838;
-  --input-border: #555;
-  --progress-track-background: #3a3a3a;
-  --progress-back-background: rgba(27, 175, 27, 0.35);
-  --progress-front-background: #2d6e2d;
-  --progress-front-text-color: #ffffff;
-  --progress-label-color: #ffffff;
-  --properties-list-border: rgba(255, 255, 255, 0.2);
-  --li-inset-color: rgba(255, 255, 255, 0.12);
-  --sheet-chrome-border: #3a3a3a;
-  --select-option-highlight-color: rgba(255, 255, 255, 0.12);
-  --footer-input-background: rgba(255, 255, 255, 0.08);
-  --footer-input-border: rgba(255, 255, 255, 0.28);
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark button, #foundryvtt-actor-studio-welcome.theme-dark button, #gas-feat-selector-container.theme-dark button {
-  --button-hover-background-color: #877755;
-  --button-hover-border-color: #a18e66;
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table {
-  --table-background-color: rgba(255, 255, 255, 0.05);
+  --gas-table-background: rgba(255, 255, 255, 0.05);
+  --gas-input-background: #2e2e2e;
+  --gas-input-disabled-background: #383838;
+  --gas-input-border: #555;
+  --gas-progress-track-background: #3a3a3a;
+  --gas-progress-back-background: rgba(27, 175, 27, 0.35);
+  --gas-progress-front-background: #2d6e2d;
+  --gas-progress-front-text-color: #ffffff;
+  --gas-progress-label-color: #ffffff;
+  --gas-properties-list-border: rgba(255, 255, 255, 0.2);
+  --gas-li-inset: rgba(255, 255, 255, 0.12);
+  --gas-sheet-chrome-border: #3a3a3a;
+  --gas-select-option-highlight: rgba(255, 255, 255, 0.12);
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+  --gas-panel-1-background: var(--gas-tabs-list-background);
+  --gas-panel-1-color: var(--gas-color-text);
 }
 /* cyrillic-ext */
 @font-face {
@@ -761,15 +795,65 @@
   font-weight: 500;
   font-size: 0.9em;
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark,
-.theme-dark #foundryvtt-actor-studio-pc-sheet {
-  --footer-input-background: rgba(255, 255, 255, 0.08);
-  --footer-input-border: rgba(255, 255, 255, 0.28);
-}
 #foundryvtt-actor-studio-pc-sheet.theme-dark.window-app,
 .theme-dark #foundryvtt-actor-studio-pc-sheet.window-app {
-  background-color: var(--background-color) !important;
-  border-color: #333 !important;
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark.window-app > .window-content,
+.theme-dark #foundryvtt-actor-studio-pc-sheet.window-app > .window-content {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark.window-app,
+.theme-dark #foundryvtt-actor-studio-welcome.window-app {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark.window-app > .window-content,
+.theme-dark #foundryvtt-actor-studio-welcome.window-app > .window-content {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#gas-feat-selector-container.theme-dark.window-app,
+.theme-dark #gas-feat-selector-container.window-app {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+}
+#gas-feat-selector-container.theme-dark.window-app > .window-content,
+.theme-dark #gas-feat-selector-container.window-app > .window-content {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark.window-app,
+.theme-dark #foundryvtt-actor-studio-npc-sheet.window-app {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark.window-app > .window-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet.window-app > .window-content {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+.gas-npc-sheet.theme-dark.window-app,
+.theme-dark .gas-npc-sheet.window-app {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+}
+.gas-npc-sheet.theme-dark.window-app > .window-content,
+.theme-dark .gas-npc-sheet.window-app > .window-content {
+  background-color: var(--gas-sheet-background, #1a1a1a) !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark,
+.theme-dark #foundryvtt-actor-studio-pc-sheet {
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs.tabs,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tabs.gas-tabs,
@@ -782,17 +866,11 @@
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tabs .tabs-list,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .gas-tabs .tabs-list,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .tabs .tabs-list {
-  border-bottom-color: var(--sheet-chrome-border, #3a3a3a) !important;
+  border-bottom-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .border-right.right-border-gradient-mask,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .border-right.right-border-gradient-mask {
-  border-right-color: var(--sheet-chrome-border, #3a3a3a) !important;
-}
-#foundryvtt-actor-studio-pc-sheet.theme-dark .window-content,
-.theme-dark #foundryvtt-actor-studio-pc-sheet .window-content {
-  background: var(--background-color) !important;
-  background-image: none !important;
-  color: var(--gas-color-text);
+  border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark main,
 #foundryvtt-actor-studio-pc-sheet.theme-dark section.a,
@@ -800,12 +878,12 @@
 .theme-dark #foundryvtt-actor-studio-pc-sheet main,
 .theme-dark #foundryvtt-actor-studio-pc-sheet section.a,
 .theme-dark #foundryvtt-actor-studio-pc-sheet section.b {
-  background-color: transparent;
+  background-color: var(--gas-sheet-background, #1a1a1a);
   color: var(--gas-color-text);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .tab-content {
-  background-color: var(--tabs-content-background);
+  background-color: var(--gas-tabs-content-background);
   border-color: transparent;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .content,
@@ -818,7 +896,7 @@
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button.active,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .gas-tabs .tabs-list button.active {
-  color: var(--tab-active-color) !important;
+  color: var(--gas-tab-active-color) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark input,
 #foundryvtt-actor-studio-pc-sheet.theme-dark input[type=number],
@@ -832,15 +910,15 @@
 .theme-dark #foundryvtt-actor-studio-pc-sheet input[type=search],
 .theme-dark #foundryvtt-actor-studio-pc-sheet select,
 .theme-dark #foundryvtt-actor-studio-pc-sheet textarea {
-  background-color: var(--input-background) !important;
+  background-color: var(--gas-input-background) !important;
   color: var(--gas-color-text) !important;
-  border-color: var(--input-border) !important;
+  border-color: var(--gas-input-border) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark input:disabled,
 #foundryvtt-actor-studio-pc-sheet.theme-dark input[disabled],
 .theme-dark #foundryvtt-actor-studio-pc-sheet input:disabled,
 .theme-dark #foundryvtt-actor-studio-pc-sheet input[disabled] {
-  background-color: var(--input-disabled-background) !important;
+  background-color: var(--gas-input-disabled-background) !important;
   color: var(--gas-color-text) !important;
   -webkit-text-fill-color: var(--gas-color-text);
 }
@@ -852,20 +930,20 @@
 .theme-dark #foundryvtt-actor-studio-pc-sheet input.mainscore,
 .theme-dark #foundryvtt-actor-studio-pc-sheet input.score,
 .theme-dark #foundryvtt-actor-studio-pc-sheet table input {
-  background-color: var(--input-disabled-background) !important;
+  background-color: var(--gas-input-disabled-background) !important;
   color: var(--gas-color-text) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .properties-list > li,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .properties-list > li {
-  background: var(--li-background-color) !important;
-  border-color: var(--properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  background: var(--gas-li-background) !important;
+  border-color: var(--gas-properties-list-border, rgba(255, 255, 255, 0.2)) !important;
   color: var(--gas-color-text);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark table,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table,
 .theme-dark #foundryvtt-actor-studio-pc-sheet table,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table {
-  border-color: var(--input-border) !important;
+  border-color: var(--gas-input-border) !important;
   background-color: transparent;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark table th,
@@ -876,14 +954,14 @@
 .theme-dark #foundryvtt-actor-studio-pc-sheet table td,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table th,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table td {
-  border-color: var(--input-border) !important;
+  border-color: var(--gas-input-border) !important;
   background-color: transparent;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark table thead th,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table thead th,
 .theme-dark #foundryvtt-actor-studio-pc-sheet table thead th,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .attribute-entry table thead th {
-  background-color: var(--tab-active-background, #2a2a2a);
+  background-color: var(--gas-tab-active-background, #2a2a2a);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark table tbody tr:nth-child(even) td,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
@@ -893,7 +971,7 @@
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark hr,
 .theme-dark #foundryvtt-actor-studio-pc-sheet hr {
-  border-color: var(--sheet-chrome-border, #3a3a3a);
+  border-color: var(--gas-sheet-chrome-border, #3a3a3a);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .custom-select .selected-option,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .custom-select .options-dropdown,
@@ -901,13 +979,13 @@
 .theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .selected-option,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .options-dropdown,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .custom-select .search-input {
-  background-color: var(--input-background) !important;
-  border-color: var(--input-border) !important;
+  background-color: var(--gas-input-background) !important;
+  border-color: var(--gas-input-border) !important;
   color: var(--gas-color-text) !important;
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container {
-  background-color: var(--background-color);
+  background-color: var(--gas-sheet-background);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container label.character-name-label,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container label.character-name-label {
@@ -915,8 +993,8 @@
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .footer-container .character-name-input-container,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .footer-container .character-name-input-container {
-  background: var(--footer-input-background);
-  border-color: var(--footer-input-border);
+  background: var(--gas-footer-input-background);
+  border-color: var(--gas-footer-input-border);
   color: var(--gas-color-text);
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
 }
@@ -977,7 +1055,7 @@
 #foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .description-fill a.content-link,
 .theme-dark #foundryvtt-actor-studio-pc-sheet .illuminated-description a.content-link {
-  color: var(--tab-active-color);
+  color: var(--gas-tab-active-color);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill .journal-sheet,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill .journal-entry-content,
@@ -1001,6 +1079,922 @@
   max-width: 100%;
   height: auto;
 }
+#foundryvtt-actor-studio-welcome.theme-dark,
+.theme-dark #foundryvtt-actor-studio-welcome {
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .gas-tabs.tabs,
+#foundryvtt-actor-studio-welcome.theme-dark .tabs.gas-tabs,
+.theme-dark #foundryvtt-actor-studio-welcome .gas-tabs.tabs,
+.theme-dark #foundryvtt-actor-studio-welcome .tabs.gas-tabs {
+  border: none !important;
+  border-color: transparent !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list,
+#foundryvtt-actor-studio-welcome.theme-dark .tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-welcome .gas-tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-welcome .tabs .tabs-list {
+  border-bottom-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .border-right.right-border-gradient-mask,
+.theme-dark #foundryvtt-actor-studio-welcome .border-right.right-border-gradient-mask {
+  border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark main,
+#foundryvtt-actor-studio-welcome.theme-dark section.a,
+#foundryvtt-actor-studio-welcome.theme-dark section.b,
+.theme-dark #foundryvtt-actor-studio-welcome main,
+.theme-dark #foundryvtt-actor-studio-welcome section.a,
+.theme-dark #foundryvtt-actor-studio-welcome section.b {
+  background-color: var(--gas-sheet-background, #1a1a1a);
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content,
+.theme-dark #foundryvtt-actor-studio-welcome .tab-content {
+  background-color: var(--gas-tabs-content-background);
+  border-color: transparent;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .content,
+#foundryvtt-actor-studio-welcome.theme-dark .col-a,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b,
+.theme-dark #foundryvtt-actor-studio-welcome .content,
+.theme-dark #foundryvtt-actor-studio-welcome .col-a,
+.theme-dark #foundryvtt-actor-studio-welcome .col-b {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button.active,
+.theme-dark #foundryvtt-actor-studio-welcome .gas-tabs .tabs-list button.active {
+  color: var(--gas-tab-active-color) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark input,
+#foundryvtt-actor-studio-welcome.theme-dark input[type=number],
+#foundryvtt-actor-studio-welcome.theme-dark input[type=text],
+#foundryvtt-actor-studio-welcome.theme-dark input[type=search],
+#foundryvtt-actor-studio-welcome.theme-dark select,
+#foundryvtt-actor-studio-welcome.theme-dark textarea,
+.theme-dark #foundryvtt-actor-studio-welcome input,
+.theme-dark #foundryvtt-actor-studio-welcome input[type=number],
+.theme-dark #foundryvtt-actor-studio-welcome input[type=text],
+.theme-dark #foundryvtt-actor-studio-welcome input[type=search],
+.theme-dark #foundryvtt-actor-studio-welcome select,
+.theme-dark #foundryvtt-actor-studio-welcome textarea {
+  background-color: var(--gas-input-background) !important;
+  color: var(--gas-color-text) !important;
+  border-color: var(--gas-input-border) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark input:disabled,
+#foundryvtt-actor-studio-welcome.theme-dark input[disabled],
+.theme-dark #foundryvtt-actor-studio-welcome input:disabled,
+.theme-dark #foundryvtt-actor-studio-welcome input[disabled] {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+  -webkit-text-fill-color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .score-cell,
+#foundryvtt-actor-studio-welcome.theme-dark input.mainscore,
+#foundryvtt-actor-studio-welcome.theme-dark input.score,
+#foundryvtt-actor-studio-welcome.theme-dark table input,
+.theme-dark #foundryvtt-actor-studio-welcome .score-cell,
+.theme-dark #foundryvtt-actor-studio-welcome input.mainscore,
+.theme-dark #foundryvtt-actor-studio-welcome input.score,
+.theme-dark #foundryvtt-actor-studio-welcome table input {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .properties-list > li,
+.theme-dark #foundryvtt-actor-studio-welcome .properties-list > li {
+  background: var(--gas-li-background) !important;
+  border-color: var(--gas-properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark table,
+#foundryvtt-actor-studio-welcome.theme-dark .attribute-entry table,
+.theme-dark #foundryvtt-actor-studio-welcome table,
+.theme-dark #foundryvtt-actor-studio-welcome .attribute-entry table {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-welcome.theme-dark table th,
+#foundryvtt-actor-studio-welcome.theme-dark table td,
+#foundryvtt-actor-studio-welcome.theme-dark .attribute-entry table th,
+#foundryvtt-actor-studio-welcome.theme-dark .attribute-entry table td,
+.theme-dark #foundryvtt-actor-studio-welcome table th,
+.theme-dark #foundryvtt-actor-studio-welcome table td,
+.theme-dark #foundryvtt-actor-studio-welcome .attribute-entry table th,
+.theme-dark #foundryvtt-actor-studio-welcome .attribute-entry table td {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-welcome.theme-dark table thead th,
+#foundryvtt-actor-studio-welcome.theme-dark .attribute-entry table thead th,
+.theme-dark #foundryvtt-actor-studio-welcome table thead th,
+.theme-dark #foundryvtt-actor-studio-welcome .attribute-entry table thead th {
+  background-color: var(--gas-tab-active-background, #2a2a2a);
+}
+#foundryvtt-actor-studio-welcome.theme-dark table tbody tr:nth-child(even) td,
+#foundryvtt-actor-studio-welcome.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-welcome table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-welcome .attribute-entry table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+#foundryvtt-actor-studio-welcome.theme-dark hr,
+.theme-dark #foundryvtt-actor-studio-welcome hr {
+  border-color: var(--gas-sheet-chrome-border, #3a3a3a);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .custom-select .selected-option,
+#foundryvtt-actor-studio-welcome.theme-dark .custom-select .options-dropdown,
+#foundryvtt-actor-studio-welcome.theme-dark .custom-select .search-input,
+.theme-dark #foundryvtt-actor-studio-welcome .custom-select .selected-option,
+.theme-dark #foundryvtt-actor-studio-welcome .custom-select .options-dropdown,
+.theme-dark #foundryvtt-actor-studio-welcome .custom-select .search-input {
+  background-color: var(--gas-input-background) !important;
+  border-color: var(--gas-input-border) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .footer-container,
+.theme-dark #foundryvtt-actor-studio-welcome .footer-container {
+  background-color: var(--gas-sheet-background);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .footer-container label.character-name-label,
+.theme-dark #foundryvtt-actor-studio-welcome .footer-container label.character-name-label {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .footer-container .character-name-input-container,
+.theme-dark #foundryvtt-actor-studio-welcome .footer-container .character-name-input-container {
+  background: var(--gas-footer-input-background);
+  border-color: var(--gas-footer-input-border);
+  color: var(--gas-color-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .footer-container .character-name-input-container input.character-name-input,
+.theme-dark #foundryvtt-actor-studio-welcome .footer-container .character-name-input-container input.character-name-input {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .content > .flexrow > .col-a:only-child,
+#foundryvtt-actor-studio-welcome.theme-dark .content > .flexrow > .flex2:only-child,
+.theme-dark #foundryvtt-actor-studio-welcome .content > .flexrow > .col-a:only-child,
+.theme-dark #foundryvtt-actor-studio-welcome .content > .flexrow > .flex2:only-child {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description {
+  width: 100%;
+  max-width: 100%;
+  color: var(--gas-color-text);
+  display: flow-root;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill p, #foundryvtt-actor-studio-welcome.theme-dark .description-fill li, #foundryvtt-actor-studio-welcome.theme-dark .description-fill span, #foundryvtt-actor-studio-welcome.theme-dark .description-fill div, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h1, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h2, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h3, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h4, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h5, #foundryvtt-actor-studio-welcome.theme-dark .description-fill h6,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h1,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h2,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h3,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h4,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h5,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description h6,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill p,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill li,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill span,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill div,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h1,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h2,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h3,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h4,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h5,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill h6,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description p,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description li,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description span,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description div,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h1,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h2,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h3,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h4,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h5,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description h6 {
+  color: inherit;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill a.content-link,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description a.content-link {
+  color: var(--gas-tab-active-color);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill .journal-sheet,
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill .journal-entry-content,
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill .journal-page-content,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description .journal-sheet,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description .journal-entry-content,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description .journal-page-content {
+  background: transparent !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill img,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description img,
+.theme-dark #foundryvtt-actor-studio-welcome .description-fill img,
+.theme-dark #foundryvtt-actor-studio-welcome .illuminated-description img {
+  max-width: 100%;
+  height: auto;
+}
+#gas-feat-selector-container.theme-dark,
+.theme-dark #gas-feat-selector-container {
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#gas-feat-selector-container.theme-dark .gas-tabs.tabs,
+#gas-feat-selector-container.theme-dark .tabs.gas-tabs,
+.theme-dark #gas-feat-selector-container .gas-tabs.tabs,
+.theme-dark #gas-feat-selector-container .tabs.gas-tabs {
+  border: none !important;
+  border-color: transparent !important;
+}
+#gas-feat-selector-container.theme-dark .gas-tabs .tabs-list,
+#gas-feat-selector-container.theme-dark .tabs .tabs-list,
+.theme-dark #gas-feat-selector-container .gas-tabs .tabs-list,
+.theme-dark #gas-feat-selector-container .tabs .tabs-list {
+  border-bottom-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#gas-feat-selector-container.theme-dark .border-right.right-border-gradient-mask,
+.theme-dark #gas-feat-selector-container .border-right.right-border-gradient-mask {
+  border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#gas-feat-selector-container.theme-dark main,
+#gas-feat-selector-container.theme-dark section.a,
+#gas-feat-selector-container.theme-dark section.b,
+.theme-dark #gas-feat-selector-container main,
+.theme-dark #gas-feat-selector-container section.a,
+.theme-dark #gas-feat-selector-container section.b {
+  background-color: var(--gas-sheet-background, #1a1a1a);
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark .tab-content,
+.theme-dark #gas-feat-selector-container .tab-content {
+  background-color: var(--gas-tabs-content-background);
+  border-color: transparent;
+}
+#gas-feat-selector-container.theme-dark .content,
+#gas-feat-selector-container.theme-dark .col-a,
+#gas-feat-selector-container.theme-dark .col-b,
+.theme-dark #gas-feat-selector-container .content,
+.theme-dark #gas-feat-selector-container .col-a,
+.theme-dark #gas-feat-selector-container .col-b {
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button.active,
+.theme-dark #gas-feat-selector-container .gas-tabs .tabs-list button.active {
+  color: var(--gas-tab-active-color) !important;
+}
+#gas-feat-selector-container.theme-dark input,
+#gas-feat-selector-container.theme-dark input[type=number],
+#gas-feat-selector-container.theme-dark input[type=text],
+#gas-feat-selector-container.theme-dark input[type=search],
+#gas-feat-selector-container.theme-dark select,
+#gas-feat-selector-container.theme-dark textarea,
+.theme-dark #gas-feat-selector-container input,
+.theme-dark #gas-feat-selector-container input[type=number],
+.theme-dark #gas-feat-selector-container input[type=text],
+.theme-dark #gas-feat-selector-container input[type=search],
+.theme-dark #gas-feat-selector-container select,
+.theme-dark #gas-feat-selector-container textarea {
+  background-color: var(--gas-input-background) !important;
+  color: var(--gas-color-text) !important;
+  border-color: var(--gas-input-border) !important;
+}
+#gas-feat-selector-container.theme-dark input:disabled,
+#gas-feat-selector-container.theme-dark input[disabled],
+.theme-dark #gas-feat-selector-container input:disabled,
+.theme-dark #gas-feat-selector-container input[disabled] {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+  -webkit-text-fill-color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark .score-cell,
+#gas-feat-selector-container.theme-dark input.mainscore,
+#gas-feat-selector-container.theme-dark input.score,
+#gas-feat-selector-container.theme-dark table input,
+.theme-dark #gas-feat-selector-container .score-cell,
+.theme-dark #gas-feat-selector-container input.mainscore,
+.theme-dark #gas-feat-selector-container input.score,
+.theme-dark #gas-feat-selector-container table input {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+}
+#gas-feat-selector-container.theme-dark .properties-list > li,
+.theme-dark #gas-feat-selector-container .properties-list > li {
+  background: var(--gas-li-background) !important;
+  border-color: var(--gas-properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark table,
+#gas-feat-selector-container.theme-dark .attribute-entry table,
+.theme-dark #gas-feat-selector-container table,
+.theme-dark #gas-feat-selector-container .attribute-entry table {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#gas-feat-selector-container.theme-dark table th,
+#gas-feat-selector-container.theme-dark table td,
+#gas-feat-selector-container.theme-dark .attribute-entry table th,
+#gas-feat-selector-container.theme-dark .attribute-entry table td,
+.theme-dark #gas-feat-selector-container table th,
+.theme-dark #gas-feat-selector-container table td,
+.theme-dark #gas-feat-selector-container .attribute-entry table th,
+.theme-dark #gas-feat-selector-container .attribute-entry table td {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#gas-feat-selector-container.theme-dark table thead th,
+#gas-feat-selector-container.theme-dark .attribute-entry table thead th,
+.theme-dark #gas-feat-selector-container table thead th,
+.theme-dark #gas-feat-selector-container .attribute-entry table thead th {
+  background-color: var(--gas-tab-active-background, #2a2a2a);
+}
+#gas-feat-selector-container.theme-dark table tbody tr:nth-child(even) td,
+#gas-feat-selector-container.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
+.theme-dark #gas-feat-selector-container table tbody tr:nth-child(even) td,
+.theme-dark #gas-feat-selector-container .attribute-entry table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+#gas-feat-selector-container.theme-dark hr,
+.theme-dark #gas-feat-selector-container hr {
+  border-color: var(--gas-sheet-chrome-border, #3a3a3a);
+}
+#gas-feat-selector-container.theme-dark .custom-select .selected-option,
+#gas-feat-selector-container.theme-dark .custom-select .options-dropdown,
+#gas-feat-selector-container.theme-dark .custom-select .search-input,
+.theme-dark #gas-feat-selector-container .custom-select .selected-option,
+.theme-dark #gas-feat-selector-container .custom-select .options-dropdown,
+.theme-dark #gas-feat-selector-container .custom-select .search-input {
+  background-color: var(--gas-input-background) !important;
+  border-color: var(--gas-input-border) !important;
+  color: var(--gas-color-text) !important;
+}
+#gas-feat-selector-container.theme-dark .footer-container,
+.theme-dark #gas-feat-selector-container .footer-container {
+  background-color: var(--gas-sheet-background);
+}
+#gas-feat-selector-container.theme-dark .footer-container label.character-name-label,
+.theme-dark #gas-feat-selector-container .footer-container label.character-name-label {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#gas-feat-selector-container.theme-dark .footer-container .character-name-input-container,
+.theme-dark #gas-feat-selector-container .footer-container .character-name-input-container {
+  background: var(--gas-footer-input-background);
+  border-color: var(--gas-footer-input-border);
+  color: var(--gas-color-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+#gas-feat-selector-container.theme-dark .footer-container .character-name-input-container input.character-name-input,
+.theme-dark #gas-feat-selector-container .footer-container .character-name-input-container input.character-name-input {
+  color: var(--gas-color-text) !important;
+}
+#gas-feat-selector-container.theme-dark .content > .flexrow > .col-a:only-child,
+#gas-feat-selector-container.theme-dark .content > .flexrow > .flex2:only-child,
+.theme-dark #gas-feat-selector-container .content > .flexrow > .col-a:only-child,
+.theme-dark #gas-feat-selector-container .content > .flexrow > .flex2:only-child {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+#gas-feat-selector-container.theme-dark .description-fill,
+#gas-feat-selector-container.theme-dark .illuminated-description,
+.theme-dark #gas-feat-selector-container .description-fill,
+.theme-dark #gas-feat-selector-container .illuminated-description {
+  width: 100%;
+  max-width: 100%;
+  color: var(--gas-color-text);
+  display: flow-root;
+}
+#gas-feat-selector-container.theme-dark .description-fill p, #gas-feat-selector-container.theme-dark .description-fill li, #gas-feat-selector-container.theme-dark .description-fill span, #gas-feat-selector-container.theme-dark .description-fill div, #gas-feat-selector-container.theme-dark .description-fill h1, #gas-feat-selector-container.theme-dark .description-fill h2, #gas-feat-selector-container.theme-dark .description-fill h3, #gas-feat-selector-container.theme-dark .description-fill h4, #gas-feat-selector-container.theme-dark .description-fill h5, #gas-feat-selector-container.theme-dark .description-fill h6,
+#gas-feat-selector-container.theme-dark .illuminated-description p,
+#gas-feat-selector-container.theme-dark .illuminated-description li,
+#gas-feat-selector-container.theme-dark .illuminated-description span,
+#gas-feat-selector-container.theme-dark .illuminated-description div,
+#gas-feat-selector-container.theme-dark .illuminated-description h1,
+#gas-feat-selector-container.theme-dark .illuminated-description h2,
+#gas-feat-selector-container.theme-dark .illuminated-description h3,
+#gas-feat-selector-container.theme-dark .illuminated-description h4,
+#gas-feat-selector-container.theme-dark .illuminated-description h5,
+#gas-feat-selector-container.theme-dark .illuminated-description h6,
+.theme-dark #gas-feat-selector-container .description-fill p,
+.theme-dark #gas-feat-selector-container .description-fill li,
+.theme-dark #gas-feat-selector-container .description-fill span,
+.theme-dark #gas-feat-selector-container .description-fill div,
+.theme-dark #gas-feat-selector-container .description-fill h1,
+.theme-dark #gas-feat-selector-container .description-fill h2,
+.theme-dark #gas-feat-selector-container .description-fill h3,
+.theme-dark #gas-feat-selector-container .description-fill h4,
+.theme-dark #gas-feat-selector-container .description-fill h5,
+.theme-dark #gas-feat-selector-container .description-fill h6,
+.theme-dark #gas-feat-selector-container .illuminated-description p,
+.theme-dark #gas-feat-selector-container .illuminated-description li,
+.theme-dark #gas-feat-selector-container .illuminated-description span,
+.theme-dark #gas-feat-selector-container .illuminated-description div,
+.theme-dark #gas-feat-selector-container .illuminated-description h1,
+.theme-dark #gas-feat-selector-container .illuminated-description h2,
+.theme-dark #gas-feat-selector-container .illuminated-description h3,
+.theme-dark #gas-feat-selector-container .illuminated-description h4,
+.theme-dark #gas-feat-selector-container .illuminated-description h5,
+.theme-dark #gas-feat-selector-container .illuminated-description h6 {
+  color: inherit;
+}
+#gas-feat-selector-container.theme-dark .description-fill a.content-link,
+#gas-feat-selector-container.theme-dark .illuminated-description a.content-link,
+.theme-dark #gas-feat-selector-container .description-fill a.content-link,
+.theme-dark #gas-feat-selector-container .illuminated-description a.content-link {
+  color: var(--gas-tab-active-color);
+}
+#gas-feat-selector-container.theme-dark .description-fill .journal-sheet,
+#gas-feat-selector-container.theme-dark .description-fill .journal-entry-content,
+#gas-feat-selector-container.theme-dark .description-fill .journal-page-content,
+#gas-feat-selector-container.theme-dark .illuminated-description .journal-sheet,
+#gas-feat-selector-container.theme-dark .illuminated-description .journal-entry-content,
+#gas-feat-selector-container.theme-dark .illuminated-description .journal-page-content,
+.theme-dark #gas-feat-selector-container .description-fill .journal-sheet,
+.theme-dark #gas-feat-selector-container .description-fill .journal-entry-content,
+.theme-dark #gas-feat-selector-container .description-fill .journal-page-content,
+.theme-dark #gas-feat-selector-container .illuminated-description .journal-sheet,
+.theme-dark #gas-feat-selector-container .illuminated-description .journal-entry-content,
+.theme-dark #gas-feat-selector-container .illuminated-description .journal-page-content {
+  background: transparent !important;
+  color: var(--gas-color-text) !important;
+}
+#gas-feat-selector-container.theme-dark .description-fill img,
+#gas-feat-selector-container.theme-dark .illuminated-description img,
+.theme-dark #gas-feat-selector-container .description-fill img,
+.theme-dark #gas-feat-selector-container .illuminated-description img {
+  max-width: 100%;
+  height: auto;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark,
+.theme-dark #foundryvtt-actor-studio-npc-sheet {
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs.tabs,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tabs.gas-tabs,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .gas-tabs.tabs,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .tabs.gas-tabs {
+  border: none !important;
+  border-color: transparent !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .gas-tabs .tabs-list,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .tabs .tabs-list {
+  border-bottom-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .border-right.right-border-gradient-mask,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .border-right.right-border-gradient-mask {
+  border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark main,
+#foundryvtt-actor-studio-npc-sheet.theme-dark section.a,
+#foundryvtt-actor-studio-npc-sheet.theme-dark section.b,
+.theme-dark #foundryvtt-actor-studio-npc-sheet main,
+.theme-dark #foundryvtt-actor-studio-npc-sheet section.a,
+.theme-dark #foundryvtt-actor-studio-npc-sheet section.b {
+  background-color: var(--gas-sheet-background, #1a1a1a);
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .tab-content {
+  background-color: var(--gas-tabs-content-background);
+  border-color: transparent;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .content,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-a,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .col-a,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .col-b {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button.active,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .gas-tabs .tabs-list button.active {
+  color: var(--gas-tab-active-color) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark input,
+#foundryvtt-actor-studio-npc-sheet.theme-dark input[type=number],
+#foundryvtt-actor-studio-npc-sheet.theme-dark input[type=text],
+#foundryvtt-actor-studio-npc-sheet.theme-dark input[type=search],
+#foundryvtt-actor-studio-npc-sheet.theme-dark select,
+#foundryvtt-actor-studio-npc-sheet.theme-dark textarea,
+.theme-dark #foundryvtt-actor-studio-npc-sheet input,
+.theme-dark #foundryvtt-actor-studio-npc-sheet input[type=number],
+.theme-dark #foundryvtt-actor-studio-npc-sheet input[type=text],
+.theme-dark #foundryvtt-actor-studio-npc-sheet input[type=search],
+.theme-dark #foundryvtt-actor-studio-npc-sheet select,
+.theme-dark #foundryvtt-actor-studio-npc-sheet textarea {
+  background-color: var(--gas-input-background) !important;
+  color: var(--gas-color-text) !important;
+  border-color: var(--gas-input-border) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark input:disabled,
+#foundryvtt-actor-studio-npc-sheet.theme-dark input[disabled],
+.theme-dark #foundryvtt-actor-studio-npc-sheet input:disabled,
+.theme-dark #foundryvtt-actor-studio-npc-sheet input[disabled] {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+  -webkit-text-fill-color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .score-cell,
+#foundryvtt-actor-studio-npc-sheet.theme-dark input.mainscore,
+#foundryvtt-actor-studio-npc-sheet.theme-dark input.score,
+#foundryvtt-actor-studio-npc-sheet.theme-dark table input,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .score-cell,
+.theme-dark #foundryvtt-actor-studio-npc-sheet input.mainscore,
+.theme-dark #foundryvtt-actor-studio-npc-sheet input.score,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table input {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .properties-list > li,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .properties-list > li {
+  background: var(--gas-li-background) !important;
+  border-color: var(--gas-properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .attribute-entry table,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .attribute-entry table {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark table td,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .attribute-entry table th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .attribute-entry table td,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table th,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table td,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .attribute-entry table th,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .attribute-entry table td {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table thead th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .attribute-entry table thead th,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table thead th,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .attribute-entry table thead th {
+  background-color: var(--gas-tab-active-background, #2a2a2a);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table tbody tr:nth-child(even) td,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-npc-sheet table tbody tr:nth-child(even) td,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .attribute-entry table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark hr,
+.theme-dark #foundryvtt-actor-studio-npc-sheet hr {
+  border-color: var(--gas-sheet-chrome-border, #3a3a3a);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .custom-select .selected-option,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .custom-select .options-dropdown,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .custom-select .search-input,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .custom-select .selected-option,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .custom-select .options-dropdown,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .custom-select .search-input {
+  background-color: var(--gas-input-background) !important;
+  border-color: var(--gas-input-border) !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .footer-container,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .footer-container {
+  background-color: var(--gas-sheet-background);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .footer-container label.character-name-label,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .footer-container label.character-name-label {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .footer-container .character-name-input-container,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .footer-container .character-name-input-container {
+  background: var(--gas-footer-input-background);
+  border-color: var(--gas-footer-input-border);
+  color: var(--gas-color-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .footer-container .character-name-input-container input.character-name-input,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .footer-container .character-name-input-container input.character-name-input {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .content > .flexrow > .col-a:only-child,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .content > .flexrow > .flex2:only-child,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .content > .flexrow > .col-a:only-child,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .content > .flexrow > .flex2:only-child {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description {
+  width: 100%;
+  max-width: 100%;
+  color: var(--gas-color-text);
+  display: flow-root;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h1, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h2, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h3, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h4, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h5, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill h6,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description p,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description li,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description span,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description div,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h1,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h2,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h3,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h4,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h5,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description h6,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill p,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill li,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill span,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill div,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h1,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h2,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h3,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h4,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h5,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill h6,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description p,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description li,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description span,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description div,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h1,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h2,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h3,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h4,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h5,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description h6 {
+  color: inherit;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill a.content-link,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description a.content-link {
+  color: var(--gas-tab-active-color);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill .journal-sheet,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill .journal-entry-content,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill .journal-page-content,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description .journal-sheet,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description .journal-entry-content,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill .journal-page-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description .journal-sheet,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description .journal-entry-content,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description .journal-page-content {
+  background: transparent !important;
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill img,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description img,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .description-fill img,
+.theme-dark #foundryvtt-actor-studio-npc-sheet .illuminated-description img {
+  max-width: 100%;
+  height: auto;
+}
+.gas-npc-sheet.theme-dark,
+.theme-dark .gas-npc-sheet {
+  --gas-footer-input-background: rgba(255, 255, 255, 0.08);
+  --gas-footer-input-border: rgba(255, 255, 255, 0.28);
+}
+.gas-npc-sheet.theme-dark .gas-tabs.tabs,
+.gas-npc-sheet.theme-dark .tabs.gas-tabs,
+.theme-dark .gas-npc-sheet .gas-tabs.tabs,
+.theme-dark .gas-npc-sheet .tabs.gas-tabs {
+  border: none !important;
+  border-color: transparent !important;
+}
+.gas-npc-sheet.theme-dark .gas-tabs .tabs-list,
+.gas-npc-sheet.theme-dark .tabs .tabs-list,
+.theme-dark .gas-npc-sheet .gas-tabs .tabs-list,
+.theme-dark .gas-npc-sheet .tabs .tabs-list {
+  border-bottom-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+.gas-npc-sheet.theme-dark .border-right.right-border-gradient-mask,
+.theme-dark .gas-npc-sheet .border-right.right-border-gradient-mask {
+  border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important;
+}
+.gas-npc-sheet.theme-dark main,
+.gas-npc-sheet.theme-dark section.a,
+.gas-npc-sheet.theme-dark section.b,
+.theme-dark .gas-npc-sheet main,
+.theme-dark .gas-npc-sheet section.a,
+.theme-dark .gas-npc-sheet section.b {
+  background-color: var(--gas-sheet-background, #1a1a1a);
+  color: var(--gas-color-text);
+}
+.gas-npc-sheet.theme-dark .tab-content,
+.theme-dark .gas-npc-sheet .tab-content {
+  background-color: var(--gas-tabs-content-background);
+  border-color: transparent;
+}
+.gas-npc-sheet.theme-dark .content,
+.gas-npc-sheet.theme-dark .col-a,
+.gas-npc-sheet.theme-dark .col-b,
+.theme-dark .gas-npc-sheet .content,
+.theme-dark .gas-npc-sheet .col-a,
+.theme-dark .gas-npc-sheet .col-b {
+  color: var(--gas-color-text);
+}
+.gas-npc-sheet.theme-dark .gas-tabs .tabs-list button.active,
+.theme-dark .gas-npc-sheet .gas-tabs .tabs-list button.active {
+  color: var(--gas-tab-active-color) !important;
+}
+.gas-npc-sheet.theme-dark input,
+.gas-npc-sheet.theme-dark input[type=number],
+.gas-npc-sheet.theme-dark input[type=text],
+.gas-npc-sheet.theme-dark input[type=search],
+.gas-npc-sheet.theme-dark select,
+.gas-npc-sheet.theme-dark textarea,
+.theme-dark .gas-npc-sheet input,
+.theme-dark .gas-npc-sheet input[type=number],
+.theme-dark .gas-npc-sheet input[type=text],
+.theme-dark .gas-npc-sheet input[type=search],
+.theme-dark .gas-npc-sheet select,
+.theme-dark .gas-npc-sheet textarea {
+  background-color: var(--gas-input-background) !important;
+  color: var(--gas-color-text) !important;
+  border-color: var(--gas-input-border) !important;
+}
+.gas-npc-sheet.theme-dark input:disabled,
+.gas-npc-sheet.theme-dark input[disabled],
+.theme-dark .gas-npc-sheet input:disabled,
+.theme-dark .gas-npc-sheet input[disabled] {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+  -webkit-text-fill-color: var(--gas-color-text);
+}
+.gas-npc-sheet.theme-dark .score-cell,
+.gas-npc-sheet.theme-dark input.mainscore,
+.gas-npc-sheet.theme-dark input.score,
+.gas-npc-sheet.theme-dark table input,
+.theme-dark .gas-npc-sheet .score-cell,
+.theme-dark .gas-npc-sheet input.mainscore,
+.theme-dark .gas-npc-sheet input.score,
+.theme-dark .gas-npc-sheet table input {
+  background-color: var(--gas-input-disabled-background) !important;
+  color: var(--gas-color-text) !important;
+}
+.gas-npc-sheet.theme-dark .properties-list > li,
+.theme-dark .gas-npc-sheet .properties-list > li {
+  background: var(--gas-li-background) !important;
+  border-color: var(--gas-properties-list-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--gas-color-text);
+}
+.gas-npc-sheet.theme-dark table,
+.gas-npc-sheet.theme-dark .attribute-entry table,
+.theme-dark .gas-npc-sheet table,
+.theme-dark .gas-npc-sheet .attribute-entry table {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+.gas-npc-sheet.theme-dark table th,
+.gas-npc-sheet.theme-dark table td,
+.gas-npc-sheet.theme-dark .attribute-entry table th,
+.gas-npc-sheet.theme-dark .attribute-entry table td,
+.theme-dark .gas-npc-sheet table th,
+.theme-dark .gas-npc-sheet table td,
+.theme-dark .gas-npc-sheet .attribute-entry table th,
+.theme-dark .gas-npc-sheet .attribute-entry table td {
+  border-color: var(--gas-input-border) !important;
+  background-color: transparent;
+}
+.gas-npc-sheet.theme-dark table thead th,
+.gas-npc-sheet.theme-dark .attribute-entry table thead th,
+.theme-dark .gas-npc-sheet table thead th,
+.theme-dark .gas-npc-sheet .attribute-entry table thead th {
+  background-color: var(--gas-tab-active-background, #2a2a2a);
+}
+.gas-npc-sheet.theme-dark table tbody tr:nth-child(even) td,
+.gas-npc-sheet.theme-dark .attribute-entry table tbody tr:nth-child(even) td,
+.theme-dark .gas-npc-sheet table tbody tr:nth-child(even) td,
+.theme-dark .gas-npc-sheet .attribute-entry table tbody tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+.gas-npc-sheet.theme-dark hr,
+.theme-dark .gas-npc-sheet hr {
+  border-color: var(--gas-sheet-chrome-border, #3a3a3a);
+}
+.gas-npc-sheet.theme-dark .custom-select .selected-option,
+.gas-npc-sheet.theme-dark .custom-select .options-dropdown,
+.gas-npc-sheet.theme-dark .custom-select .search-input,
+.theme-dark .gas-npc-sheet .custom-select .selected-option,
+.theme-dark .gas-npc-sheet .custom-select .options-dropdown,
+.theme-dark .gas-npc-sheet .custom-select .search-input {
+  background-color: var(--gas-input-background) !important;
+  border-color: var(--gas-input-border) !important;
+  color: var(--gas-color-text) !important;
+}
+.gas-npc-sheet.theme-dark .footer-container,
+.theme-dark .gas-npc-sheet .footer-container {
+  background-color: var(--gas-sheet-background);
+}
+.gas-npc-sheet.theme-dark .footer-container label.character-name-label,
+.theme-dark .gas-npc-sheet .footer-container label.character-name-label {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+.gas-npc-sheet.theme-dark .footer-container .character-name-input-container,
+.theme-dark .gas-npc-sheet .footer-container .character-name-input-container {
+  background: var(--gas-footer-input-background);
+  border-color: var(--gas-footer-input-border);
+  color: var(--gas-color-text);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.35);
+}
+.gas-npc-sheet.theme-dark .footer-container .character-name-input-container input.character-name-input,
+.theme-dark .gas-npc-sheet .footer-container .character-name-input-container input.character-name-input {
+  color: var(--gas-color-text) !important;
+}
+.gas-npc-sheet.theme-dark .content > .flexrow > .col-a:only-child,
+.gas-npc-sheet.theme-dark .content > .flexrow > .flex2:only-child,
+.theme-dark .gas-npc-sheet .content > .flexrow > .col-a:only-child,
+.theme-dark .gas-npc-sheet .content > .flexrow > .flex2:only-child {
+  flex: 1 1 100%;
+  max-width: 100%;
+}
+.gas-npc-sheet.theme-dark .description-fill,
+.gas-npc-sheet.theme-dark .illuminated-description,
+.theme-dark .gas-npc-sheet .description-fill,
+.theme-dark .gas-npc-sheet .illuminated-description {
+  width: 100%;
+  max-width: 100%;
+  color: var(--gas-color-text);
+  display: flow-root;
+}
+.gas-npc-sheet.theme-dark .description-fill p, .gas-npc-sheet.theme-dark .description-fill li, .gas-npc-sheet.theme-dark .description-fill span, .gas-npc-sheet.theme-dark .description-fill div, .gas-npc-sheet.theme-dark .description-fill h1, .gas-npc-sheet.theme-dark .description-fill h2, .gas-npc-sheet.theme-dark .description-fill h3, .gas-npc-sheet.theme-dark .description-fill h4, .gas-npc-sheet.theme-dark .description-fill h5, .gas-npc-sheet.theme-dark .description-fill h6,
+.gas-npc-sheet.theme-dark .illuminated-description p,
+.gas-npc-sheet.theme-dark .illuminated-description li,
+.gas-npc-sheet.theme-dark .illuminated-description span,
+.gas-npc-sheet.theme-dark .illuminated-description div,
+.gas-npc-sheet.theme-dark .illuminated-description h1,
+.gas-npc-sheet.theme-dark .illuminated-description h2,
+.gas-npc-sheet.theme-dark .illuminated-description h3,
+.gas-npc-sheet.theme-dark .illuminated-description h4,
+.gas-npc-sheet.theme-dark .illuminated-description h5,
+.gas-npc-sheet.theme-dark .illuminated-description h6,
+.theme-dark .gas-npc-sheet .description-fill p,
+.theme-dark .gas-npc-sheet .description-fill li,
+.theme-dark .gas-npc-sheet .description-fill span,
+.theme-dark .gas-npc-sheet .description-fill div,
+.theme-dark .gas-npc-sheet .description-fill h1,
+.theme-dark .gas-npc-sheet .description-fill h2,
+.theme-dark .gas-npc-sheet .description-fill h3,
+.theme-dark .gas-npc-sheet .description-fill h4,
+.theme-dark .gas-npc-sheet .description-fill h5,
+.theme-dark .gas-npc-sheet .description-fill h6,
+.theme-dark .gas-npc-sheet .illuminated-description p,
+.theme-dark .gas-npc-sheet .illuminated-description li,
+.theme-dark .gas-npc-sheet .illuminated-description span,
+.theme-dark .gas-npc-sheet .illuminated-description div,
+.theme-dark .gas-npc-sheet .illuminated-description h1,
+.theme-dark .gas-npc-sheet .illuminated-description h2,
+.theme-dark .gas-npc-sheet .illuminated-description h3,
+.theme-dark .gas-npc-sheet .illuminated-description h4,
+.theme-dark .gas-npc-sheet .illuminated-description h5,
+.theme-dark .gas-npc-sheet .illuminated-description h6 {
+  color: inherit;
+}
+.gas-npc-sheet.theme-dark .description-fill a.content-link,
+.gas-npc-sheet.theme-dark .illuminated-description a.content-link,
+.theme-dark .gas-npc-sheet .description-fill a.content-link,
+.theme-dark .gas-npc-sheet .illuminated-description a.content-link {
+  color: var(--gas-tab-active-color);
+}
+.gas-npc-sheet.theme-dark .description-fill .journal-sheet,
+.gas-npc-sheet.theme-dark .description-fill .journal-entry-content,
+.gas-npc-sheet.theme-dark .description-fill .journal-page-content,
+.gas-npc-sheet.theme-dark .illuminated-description .journal-sheet,
+.gas-npc-sheet.theme-dark .illuminated-description .journal-entry-content,
+.gas-npc-sheet.theme-dark .illuminated-description .journal-page-content,
+.theme-dark .gas-npc-sheet .description-fill .journal-sheet,
+.theme-dark .gas-npc-sheet .description-fill .journal-entry-content,
+.theme-dark .gas-npc-sheet .description-fill .journal-page-content,
+.theme-dark .gas-npc-sheet .illuminated-description .journal-sheet,
+.theme-dark .gas-npc-sheet .illuminated-description .journal-entry-content,
+.theme-dark .gas-npc-sheet .illuminated-description .journal-page-content {
+  background: transparent !important;
+  color: var(--gas-color-text) !important;
+}
+.gas-npc-sheet.theme-dark .description-fill img,
+.gas-npc-sheet.theme-dark .illuminated-description img,
+.theme-dark .gas-npc-sheet .description-fill img,
+.theme-dark .gas-npc-sheet .illuminated-description img {
+  max-width: 100%;
+  height: auto;
+}
 /**
  * * Provides styles used across all demo applications. Take note that `classes: ['tjs-essential-svelte-esm']` is added to
  * * all applications and dialogs which allows targeting just the `essential-svelte-esm` GUI.
@@ -1009,7 +2003,7 @@
  * */
 .gas-settings-h4 {
   font-size: 1.1em;
-  color: var(--color-highlight);
+  color: var(--gas-color-highlight);
 }
 .GAS {
   /* integration with popout module */
@@ -1229,7 +2223,7 @@
 .GAS warning {
   display: block;
   border: 1px solid var(--dnd5e-color-gold);
-  background: var(--color-negative);
+  background: var(--gas-color-negative);
   color: #fff;
   margin: 1rem 0 0 0;
   padding: 0.5rem 0.3rem;
@@ -1305,39 +2299,41 @@
   --color-border-highlight: #416dbe;
   transition: all 0.4s ease-in-out;
 }
-.GAS .gas-tabs {
+.GAS .gas-tabs,
+.GAS .tabs.gas-tabs {
+  border: none;
   position: relative;
   padding-top: 1rem;
 }
-.GAS .gas-tabs .tabs-list {
-  background: var(--tabs-list-background) !important;
+.GAS .gas-tabs .tabs-list,
+.GAS .tabs.gas-tabs .tabs-list {
+  background: var(--gas-tabs-list-background) !important;
   position: fixed;
   top: 30px;
   left: 0;
   width: 100%;
-  z-index: 1;
   height: 2.5rem !important;
   padding-top: 1rem !important;
 }
-.GAS .gas-tabs .tabs-list button {
-  background-color: var(--button-background) !important;
+.GAS .gas-tabs .tabs-list button,
+.GAS .tabs.gas-tabs .tabs-list button {
+  background-color: var(--gas-button-background) !important;
   color: var(--gas-color-text) !important;
 }
 .GAS .gas-tabs .tabs-list button:hover {
-  box-shadow: 0px -5px 14px -8px var(--color-shadow-primary) !important;
+  box-shadow: 0px -5px 14px -8px var(--gas-color-shadow-primary) !important;
   transition: all 0.4s ease-in-out;
 }
 .GAS .tab-content {
   --tjs-app-overflow: visible;
-  padding: 15px 0px 15px 15px;
+  padding: 0;
   border: 2px solid transparent;
   border-radius: 10px;
-  background-color: var(--tabs-content-background);
+  background-color: var(--gas-tabs-content-background);
   position: relative;
-  margin-top: 2.25rem;
+  z-index: 1;
+  margin-top: 0.5rem;
   color: var(--gas-color-text);
-  position: relative;
-  padding: 0;
 }
 .GAS .tab-content .scroll {
   box-sizing: content-box;
@@ -1360,7 +2356,7 @@
   box-shadow: 0 0 0 1px var(--li-inset-color) inset;
   padding: 0.5rem 0.3rem;
   border-radius: var(--border-radius);
-  background: var(--li-background-color);
+  background: var(--gas-li-background);
 }
 .GAS .tab-content ul.icon-list .image img.icon {
   position: absolute;
@@ -1402,7 +2398,7 @@
   color: var(--gas-color-text);
 }
 .GAS .icon-list .advancement {
-  background-color: var(--tabs-content-background);
+  background-color: var(--gas-tabs-content-background);
 }
 .GAS .npc-stat-block {
   background: url(/modules/foundryvtt-actor-studio/assets/parchment2.webp) repeat;
@@ -1440,8 +2436,7 @@
 }
 .GAS.theme-dark .npc-stat-block {
   --gas-text-header-color: var(--dnd5e-color-gold);
-  background: var(--background-color);
-  background-image: none;
+  background: var(--gas-sheet-background);
   background-blend-mode: normal;
 }
 .GAS.theme-dark .npc-stat-block h2, .GAS.theme-dark .npc-stat-block .label {
@@ -1492,176 +2487,157 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 #gas-dialog-button, #gas-dialog-npc-button {
   background-color: white;
 }
-#foundryvtt-actor-studio-pc-sheet .window-content, #foundryvtt-actor-studio-welcome .window-content, #gas-feat-selector-container .window-content, #foundryvtt-actor-studio-npc-sheet .window-content, .gas-npc-sheet .window-content, .GAS .window-content {
+#foundryvtt-actor-studio-pc-sheet .window-content {
   color: var(--gas-color-text);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .window-content, #foundryvtt-actor-studio-welcome.theme-dark .window-content, #gas-feat-selector-container.theme-dark .window-content, #foundryvtt-actor-studio-npc-sheet.theme-dark .window-content, .gas-npc-sheet.theme-dark .window-content, .GAS.theme-dark .window-content {
-  background: var(--background-color) !important;
-  background-image: none !important;
-}
-#foundryvtt-actor-studio-pc-sheet .window-header, #foundryvtt-actor-studio-welcome .window-header, #gas-feat-selector-container .window-header, #foundryvtt-actor-studio-npc-sheet .window-header, .gas-npc-sheet .window-header, .GAS .window-header {
+#foundryvtt-actor-studio-pc-sheet .window-header {
   color: #fff;
-  border-bottom: 2px solid var(--color-border-dark);
+  border-bottom: 2px solid var(--gas-border-dark);
 }
-#foundryvtt-actor-studio-pc-sheet .window-header .window-title, #foundryvtt-actor-studio-welcome .window-header .window-title, #gas-feat-selector-container .window-header .window-title, #foundryvtt-actor-studio-npc-sheet .window-header .window-title, .gas-npc-sheet .window-header .window-title, .GAS .window-header .window-title {
+#foundryvtt-actor-studio-pc-sheet .window-header .window-title {
   color: #fff;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
 }
-#foundryvtt-actor-studio-pc-sheet .window-header .header-control, #foundryvtt-actor-studio-welcome .window-header .header-control, #gas-feat-selector-container .window-header .header-control, #foundryvtt-actor-studio-npc-sheet .window-header .header-control, .gas-npc-sheet .window-header .header-control, .GAS .window-header .header-control {
+#foundryvtt-actor-studio-pc-sheet .window-header .header-control {
   color: #fff;
 }
-#foundryvtt-actor-studio-pc-sheet .window-header .header-control::before, #foundryvtt-actor-studio-welcome .window-header .header-control::before, #gas-feat-selector-container .window-header .header-control::before, #foundryvtt-actor-studio-npc-sheet .window-header .header-control::before, .gas-npc-sheet .window-header .header-control::before, .GAS .window-header .header-control::before {
+#foundryvtt-actor-studio-pc-sheet .window-header .header-control::before {
   color: #fff;
 }
-#foundryvtt-actor-studio-pc-sheet .window-header .tjs-app-icon, #foundryvtt-actor-studio-welcome .window-header .tjs-app-icon, #gas-feat-selector-container .window-header .tjs-app-icon, #foundryvtt-actor-studio-npc-sheet .window-header .tjs-app-icon, .gas-npc-sheet .window-header .tjs-app-icon, .GAS .window-header .tjs-app-icon {
+#foundryvtt-actor-studio-pc-sheet .window-header .tjs-app-icon {
   background: transparent;
 }
-#foundryvtt-actor-studio-pc-sheet table.core-class-traits th, #foundryvtt-actor-studio-pc-sheet table.core-class-traits td, #foundryvtt-actor-studio-welcome table.core-class-traits th, #foundryvtt-actor-studio-welcome table.core-class-traits td, #gas-feat-selector-container table.core-class-traits th, #gas-feat-selector-container table.core-class-traits td, #foundryvtt-actor-studio-npc-sheet table.core-class-traits th, #foundryvtt-actor-studio-npc-sheet table.core-class-traits td, .gas-npc-sheet table.core-class-traits th, .gas-npc-sheet table.core-class-traits td, .GAS table.core-class-traits th, .GAS table.core-class-traits td {
+#foundryvtt-actor-studio-pc-sheet table.core-class-traits th, #foundryvtt-actor-studio-pc-sheet table.core-class-traits td {
   vertical-align: top;
 }
-#foundryvtt-actor-studio-pc-sheet .content .properties-list > li, #foundryvtt-actor-studio-welcome .content .properties-list > li, #gas-feat-selector-container .content .properties-list > li, #foundryvtt-actor-studio-npc-sheet .content .properties-list > li, .gas-npc-sheet .content .properties-list > li, .GAS .content .properties-list > li {
+#foundryvtt-actor-studio-pc-sheet .content .properties-list > li {
   padding: 4px;
   color: var(--gas-color-text);
-  background-color: var(--li-background-color);
+  background-color: var(--gas-li-background);
   border: none;
 }
-#foundryvtt-actor-studio-pc-sheet p:has(a.content-link), #foundryvtt-actor-studio-welcome p:has(a.content-link), #gas-feat-selector-container p:has(a.content-link), #foundryvtt-actor-studio-npc-sheet p:has(a.content-link), .gas-npc-sheet p:has(a.content-link), .GAS p:has(a.content-link) {
+#foundryvtt-actor-studio-pc-sheet p:has(a.content-link) {
   line-height: 1.5rem;
 }
-#foundryvtt-actor-studio-pc-sheet select.tjs-select, #foundryvtt-actor-studio-welcome select.tjs-select, #gas-feat-selector-container select.tjs-select, #foundryvtt-actor-studio-npc-sheet select.tjs-select, .gas-npc-sheet select.tjs-select, .GAS select.tjs-select {
+#foundryvtt-actor-studio-pc-sheet select.tjs-select {
   color: var(--tjs-select-option-color);
 }
-#foundryvtt-actor-studio-pc-sheet h2, #foundryvtt-actor-studio-pc-sheet h3, #foundryvtt-actor-studio-pc-sheet h4:not(.window-title), #foundryvtt-actor-studio-pc-sheet h5, #foundryvtt-actor-studio-welcome h2, #foundryvtt-actor-studio-welcome h3, #foundryvtt-actor-studio-welcome h4:not(.window-title), #foundryvtt-actor-studio-welcome h5, #gas-feat-selector-container h2, #gas-feat-selector-container h3, #gas-feat-selector-container h4:not(.window-title), #gas-feat-selector-container h5, #foundryvtt-actor-studio-npc-sheet h2, #foundryvtt-actor-studio-npc-sheet h3, #foundryvtt-actor-studio-npc-sheet h4:not(.window-title), #foundryvtt-actor-studio-npc-sheet h5, .gas-npc-sheet h2, .gas-npc-sheet h3, .gas-npc-sheet h4:not(.window-title), .gas-npc-sheet h5, .GAS h2, .GAS h3, .GAS h4:not(.window-title), .GAS h5 {
-  color: var(--color-highlight);
+#foundryvtt-actor-studio-pc-sheet h2, #foundryvtt-actor-studio-pc-sheet h3, #foundryvtt-actor-studio-pc-sheet h4:not(.window-title), #foundryvtt-actor-studio-pc-sheet h5 {
+  color: var(--gas-color-highlight);
   text-shadow: none;
 }
-#foundryvtt-actor-studio-pc-sheet h1, #foundryvtt-actor-studio-welcome h1, #gas-feat-selector-container h1, #foundryvtt-actor-studio-npc-sheet h1, .gas-npc-sheet h1, .GAS h1 {
+#foundryvtt-actor-studio-pc-sheet h1 {
   font-size: 2.5rem;
 }
-#foundryvtt-actor-studio-pc-sheet h2, #foundryvtt-actor-studio-welcome h2, #gas-feat-selector-container h2, #foundryvtt-actor-studio-npc-sheet h2, .gas-npc-sheet h2, .GAS h2 {
+#foundryvtt-actor-studio-pc-sheet h2 {
   font-size: 2rem;
 }
-#foundryvtt-actor-studio-pc-sheet h3, #foundryvtt-actor-studio-welcome h3, #gas-feat-selector-container h3, #foundryvtt-actor-studio-npc-sheet h3, .gas-npc-sheet h3, .GAS h3 {
+#foundryvtt-actor-studio-pc-sheet h3 {
   font-size: 1.5rem;
 }
-#foundryvtt-actor-studio-pc-sheet h4, #foundryvtt-actor-studio-welcome h4, #gas-feat-selector-container h4, #foundryvtt-actor-studio-npc-sheet h4, .gas-npc-sheet h4, .GAS h4 {
+#foundryvtt-actor-studio-pc-sheet h4 {
   font-family: var(--dnd5e-font-modesto);
   font-size: 1.3rem;
 }
-#foundryvtt-actor-studio-pc-sheet h5, #foundryvtt-actor-studio-welcome h5, #gas-feat-selector-container h5, #foundryvtt-actor-studio-npc-sheet h5, .gas-npc-sheet h5, .GAS h5 {
+#foundryvtt-actor-studio-pc-sheet h5 {
   font-size: 1.15rem;
 }
-#foundryvtt-actor-studio-pc-sheet .border-right, #foundryvtt-actor-studio-welcome .border-right, #gas-feat-selector-container .border-right, #foundryvtt-actor-studio-npc-sheet .border-right, .gas-npc-sheet .border-right, .GAS .border-right {
-  border-right: 6px ridge var(--color-highlight);
+#foundryvtt-actor-studio-pc-sheet .border-right {
+  border-right: 6px ridge var(--gas-color-highlight);
 }
-#foundryvtt-actor-studio-pc-sheet .right-border-gradient-mask, #foundryvtt-actor-studio-welcome .right-border-gradient-mask, #gas-feat-selector-container .right-border-gradient-mask, #foundryvtt-actor-studio-npc-sheet .right-border-gradient-mask, .gas-npc-sheet .right-border-gradient-mask, .GAS .right-border-gradient-mask {
+#foundryvtt-actor-studio-pc-sheet .right-border-gradient-mask {
   mask-image: linear-gradient(0deg, transparent 0%, black 100%);
 }
-#foundryvtt-actor-studio-pc-sheet .white, #foundryvtt-actor-studio-welcome .white, #gas-feat-selector-container .white, #foundryvtt-actor-studio-npc-sheet .white, .gas-npc-sheet .white, .GAS .white {
+#foundryvtt-actor-studio-pc-sheet .white {
   color: #fff;
 }
-#foundryvtt-actor-studio-pc-sheet .black, #foundryvtt-actor-studio-welcome .black, #gas-feat-selector-container .black, #foundryvtt-actor-studio-npc-sheet .black, .gas-npc-sheet .black, .GAS .black {
+#foundryvtt-actor-studio-pc-sheet .black {
   color: #000000;
 }
-#foundryvtt-actor-studio-pc-sheet .gold, #foundryvtt-actor-studio-welcome .gold, #gas-feat-selector-container .gold, #foundryvtt-actor-studio-npc-sheet .gold, .gas-npc-sheet .gold, .GAS .gold {
+#foundryvtt-actor-studio-pc-sheet .gold {
   color: var(--dnd5e-color-gold);
 }
-#foundryvtt-actor-studio-pc-sheet .bold, #foundryvtt-actor-studio-welcome .bold, #gas-feat-selector-container .bold, #foundryvtt-actor-studio-npc-sheet .bold, .gas-npc-sheet .bold, .GAS .bold {
+#foundryvtt-actor-studio-pc-sheet .bold {
   font-weight: 700;
 }
-#foundryvtt-actor-studio-pc-sheet h1, #foundryvtt-actor-studio-pc-sheet h2, #foundryvtt-actor-studio-pc-sheet h3, #foundryvtt-actor-studio-pc-sheet h4, #foundryvtt-actor-studio-pc-sheet h5, #foundryvtt-actor-studio-welcome h1, #foundryvtt-actor-studio-welcome h2, #foundryvtt-actor-studio-welcome h3, #foundryvtt-actor-studio-welcome h4, #foundryvtt-actor-studio-welcome h5, #gas-feat-selector-container h1, #gas-feat-selector-container h2, #gas-feat-selector-container h3, #gas-feat-selector-container h4, #gas-feat-selector-container h5, #foundryvtt-actor-studio-npc-sheet h1, #foundryvtt-actor-studio-npc-sheet h2, #foundryvtt-actor-studio-npc-sheet h3, #foundryvtt-actor-studio-npc-sheet h4, #foundryvtt-actor-studio-npc-sheet h5, .gas-npc-sheet h1, .gas-npc-sheet h2, .gas-npc-sheet h3, .gas-npc-sheet h4, .gas-npc-sheet h5, .GAS h1, .GAS h2, .GAS h3, .GAS h4, .GAS h5 {
+#foundryvtt-actor-studio-pc-sheet h1, #foundryvtt-actor-studio-pc-sheet h2, #foundryvtt-actor-studio-pc-sheet h3, #foundryvtt-actor-studio-pc-sheet h4, #foundryvtt-actor-studio-pc-sheet h5 {
   font-family: var(--dnd5e-font-modesto);
 }
-#foundryvtt-actor-studio-pc-sheet .caption, #foundryvtt-actor-studio-welcome .caption, #gas-feat-selector-container .caption, #foundryvtt-actor-studio-npc-sheet .caption, .gas-npc-sheet .caption, .GAS .caption {
+#foundryvtt-actor-studio-pc-sheet .caption {
   font-size: smaller;
 }
-#foundryvtt-actor-studio-pc-sheet .light, #foundryvtt-actor-studio-welcome .light, #gas-feat-selector-container .light, #foundryvtt-actor-studio-npc-sheet .light, .gas-npc-sheet .light, .GAS .light {
+#foundryvtt-actor-studio-pc-sheet .light {
   opacity: 0.5;
 }
-#foundryvtt-actor-studio-pc-sheet .window-title, #foundryvtt-actor-studio-welcome .window-title, #gas-feat-selector-container .window-title, #foundryvtt-actor-studio-npc-sheet .window-title, .gas-npc-sheet .window-title, .GAS .window-title {
+#foundryvtt-actor-studio-pc-sheet .window-title {
   font-size: 1.5em;
   font-weight: 700;
 }
-#foundryvtt-actor-studio-pc-sheet .gap-4, #foundryvtt-actor-studio-welcome .gap-4, #gas-feat-selector-container .gap-4, #foundryvtt-actor-studio-npc-sheet .gap-4, .gas-npc-sheet .gap-4, .GAS .gap-4 {
+#foundryvtt-actor-studio-pc-sheet .gap-4 {
   gap: 4px;
 }
-#foundryvtt-actor-studio-pc-sheet .gap-10, #foundryvtt-actor-studio-welcome .gap-10, #gas-feat-selector-container .gap-10, #foundryvtt-actor-studio-npc-sheet .gap-10, .gas-npc-sheet .gap-10, .GAS .gap-10 {
+#foundryvtt-actor-studio-pc-sheet .gap-10 {
   gap: 10px;
 }
-#foundryvtt-actor-studio-pc-sheet .no-wrap, #foundryvtt-actor-studio-pc-sheet .nowrap, #foundryvtt-actor-studio-welcome .no-wrap, #foundryvtt-actor-studio-welcome .nowrap, #gas-feat-selector-container .no-wrap, #gas-feat-selector-container .nowrap, #foundryvtt-actor-studio-npc-sheet .no-wrap, #foundryvtt-actor-studio-npc-sheet .nowrap, .gas-npc-sheet .no-wrap, .gas-npc-sheet .nowrap, .GAS .no-wrap, .GAS .nowrap {
+#foundryvtt-actor-studio-pc-sheet .no-wrap, #foundryvtt-actor-studio-pc-sheet .nowrap {
   white-space: nowrap;
   flex-wrap: nowrap;
 }
-#foundryvtt-actor-studio-pc-sheet .pre-wrap, #foundryvtt-actor-studio-welcome .pre-wrap, #gas-feat-selector-container .pre-wrap, #foundryvtt-actor-studio-npc-sheet .pre-wrap, .gas-npc-sheet .pre-wrap, .GAS .pre-wrap {
+#foundryvtt-actor-studio-pc-sheet .pre-wrap {
   white-space: pre-wrap;
 }
-#foundryvtt-actor-studio-pc-sheet .no-padding, #foundryvtt-actor-studio-welcome .no-padding, #gas-feat-selector-container .no-padding, #foundryvtt-actor-studio-npc-sheet .no-padding, .gas-npc-sheet .no-padding, .GAS .no-padding {
+#foundryvtt-actor-studio-pc-sheet .no-padding {
   padding: 0px;
 }
-#foundryvtt-actor-studio-pc-sheet .no-margin, #foundryvtt-actor-studio-welcome .no-margin, #gas-feat-selector-container .no-margin, #foundryvtt-actor-studio-npc-sheet .no-margin, .gas-npc-sheet .no-margin, .GAS .no-margin {
+#foundryvtt-actor-studio-pc-sheet .no-margin {
   margin: 0px;
 }
-#foundryvtt-actor-studio-pc-sheet .required, #foundryvtt-actor-studio-welcome .required, #gas-feat-selector-container .required, #foundryvtt-actor-studio-npc-sheet .required, .gas-npc-sheet .required, .GAS .required {
+#foundryvtt-actor-studio-pc-sheet .required {
   font-size: large;
   margin-right: 2px;
-  color: var(--color-positive);
+  color: var(--gas-color-positive);
   display: none;
 }
-#foundryvtt-actor-studio-pc-sheet .required.active, #foundryvtt-actor-studio-welcome .required.active, #gas-feat-selector-container .required.active, #foundryvtt-actor-studio-npc-sheet .required.active, .gas-npc-sheet .required.active, .GAS .required.active {
+#foundryvtt-actor-studio-pc-sheet .required.active {
   display: block;
-  color: var(--color-negative);
+  color: var(--gas-color-negative);
   animation: pulse 0.5s infinite;
 }
-#foundryvtt-actor-studio-pc-sheet .negative, #foundryvtt-actor-studio-welcome .negative, #gas-feat-selector-container .negative, #foundryvtt-actor-studio-npc-sheet .negative, .gas-npc-sheet .negative, .GAS .negative {
-  color: var(--color-negative);
+#foundryvtt-actor-studio-pc-sheet .negative {
+  color: var(--gas-color-negative);
 }
-#foundryvtt-actor-studio-pc-sheet .positive, #foundryvtt-actor-studio-welcome .positive, #gas-feat-selector-container .positive, #foundryvtt-actor-studio-npc-sheet .positive, .gas-npc-sheet .positive, .GAS .positive {
-  color: var(--color-positive);
+#foundryvtt-actor-studio-pc-sheet .positive {
+  color: var(--gas-color-positive);
 }
-#foundryvtt-actor-studio-pc-sheet .pointer, #foundryvtt-actor-studio-welcome .pointer, #gas-feat-selector-container .pointer, #foundryvtt-actor-studio-npc-sheet .pointer, .gas-npc-sheet .pointer, .GAS .pointer {
+#foundryvtt-actor-studio-pc-sheet .pointer {
   cursor: pointer;
 }
-#foundryvtt-actor-studio-pc-sheet .bg-green, #foundryvtt-actor-studio-welcome .bg-green, #gas-feat-selector-container .bg-green, #foundryvtt-actor-studio-npc-sheet .bg-green, .gas-npc-sheet .bg-green, .GAS .bg-green {
+#foundryvtt-actor-studio-pc-sheet .bg-green {
   background-color: #008000;
 }
-#foundryvtt-actor-studio-pc-sheet dnd5e-checkbox, #foundryvtt-actor-studio-welcome dnd5e-checkbox, #gas-feat-selector-container dnd5e-checkbox, #foundryvtt-actor-studio-npc-sheet dnd5e-checkbox, .gas-npc-sheet dnd5e-checkbox, .GAS dnd5e-checkbox {
+#foundryvtt-actor-studio-pc-sheet dnd5e-checkbox {
   flex: 0;
 }
-#foundryvtt-actor-studio-pc-sheet a.button.active, #foundryvtt-actor-studio-pc-sheet button.active, #foundryvtt-actor-studio-welcome a.button.active, #foundryvtt-actor-studio-welcome button.active, #gas-feat-selector-container a.button.active, #gas-feat-selector-container button.active, #foundryvtt-actor-studio-npc-sheet a.button.active, #foundryvtt-actor-studio-npc-sheet button.active, .gas-npc-sheet a.button.active, .gas-npc-sheet button.active, .GAS a.button.active, .GAS button.active {
+#foundryvtt-actor-studio-pc-sheet a.button.active, #foundryvtt-actor-studio-pc-sheet button.active {
   outline: none;
-  box-shadow: 0 -8px 16px -7px var(--color-shadow-primary);
+  box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary);
 }
-#foundryvtt-actor-studio-pc-sheet .black-link, #foundryvtt-actor-studio-welcome .black-link, #gas-feat-selector-container .black-link, #foundryvtt-actor-studio-npc-sheet .black-link, .gas-npc-sheet .black-link, .GAS .black-link {
+#foundryvtt-actor-studio-pc-sheet .black-link {
   white-space: pre-wrap;
 }
-#foundryvtt-actor-studio-pc-sheet .black-link a.content-link, #foundryvtt-actor-studio-welcome .black-link a.content-link, #gas-feat-selector-container .black-link a.content-link, #foundryvtt-actor-studio-npc-sheet .black-link a.content-link, .gas-npc-sheet .black-link a.content-link, .GAS .black-link a.content-link {
+#foundryvtt-actor-studio-pc-sheet .black-link a.content-link {
   color: #000000;
 }
-#foundryvtt-actor-studio-pc-sheet .black-link:not(a.content-link), #foundryvtt-actor-studio-welcome .black-link:not(a.content-link), #gas-feat-selector-container .black-link:not(a.content-link), #foundryvtt-actor-studio-npc-sheet .black-link:not(a.content-link), .gas-npc-sheet .black-link:not(a.content-link), .GAS .black-link:not(a.content-link) {
+#foundryvtt-actor-studio-pc-sheet .black-link:not(a.content-link) {
   padding-left: 4px;
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .black-link a.content-link, #foundryvtt-actor-studio-welcome.theme-dark .black-link a.content-link, #gas-feat-selector-container.theme-dark .black-link a.content-link, #foundryvtt-actor-studio-npc-sheet.theme-dark .black-link a.content-link, .gas-npc-sheet.theme-dark .black-link a.content-link, .GAS.theme-dark .black-link a.content-link {
+#foundryvtt-actor-studio-pc-sheet.theme-dark .black-link a.content-link {
   color: var(--dnd5e-color-gold);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .col-b,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll, #foundryvtt-actor-studio-welcome.theme-dark .description-fill,
-#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description,
-#foundryvtt-actor-studio-welcome.theme-dark .col-b,
-#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll, #gas-feat-selector-container.theme-dark .description-fill,
-#gas-feat-selector-container.theme-dark .illuminated-description,
-#gas-feat-selector-container.theme-dark .col-b,
-#gas-feat-selector-container.theme-dark .tab-content .scroll, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll, .gas-npc-sheet.theme-dark .description-fill,
-.gas-npc-sheet.theme-dark .illuminated-description,
-.gas-npc-sheet.theme-dark .col-b,
-.gas-npc-sheet.theme-dark .tab-content .scroll, .GAS.theme-dark .description-fill,
-.GAS.theme-dark .illuminated-description,
-.GAS.theme-dark .col-b,
-.GAS.theme-dark .tab-content .scroll {
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll {
   color: var(--gas-color-text);
 }
 #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill td, #foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill th,
@@ -1682,7 +2658,201 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll span,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll div,
 #foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll td,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll th, #foundryvtt-actor-studio-welcome.theme-dark .description-fill p, #foundryvtt-actor-studio-welcome.theme-dark .description-fill li, #foundryvtt-actor-studio-welcome.theme-dark .description-fill span, #foundryvtt-actor-studio-welcome.theme-dark .description-fill div, #foundryvtt-actor-studio-welcome.theme-dark .description-fill td, #foundryvtt-actor-studio-welcome.theme-dark .description-fill th,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll th {
+  color: inherit;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link i {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark table th, #foundryvtt-actor-studio-pc-sheet.theme-dark table td {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--gas-tab-active-background) !important;
+  color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
+}
+#foundryvtt-actor-studio-pc-sheet .illuminated-description {
+  position: relative;
+}
+#foundryvtt-actor-studio-pc-sheet .illuminated-description .illuminated-initial {
+  float: left;
+  width: var(--illuminated-initial-width, 64px);
+  height: var(--illuminated-initial-height, 64px);
+  margin: 0 10px 5px 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+#foundryvtt-actor-studio-welcome .window-content {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome .window-header {
+  color: #fff;
+  border-bottom: 2px solid var(--gas-border-dark);
+}
+#foundryvtt-actor-studio-welcome .window-header .window-title {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
+}
+#foundryvtt-actor-studio-welcome .window-header .header-control {
+  color: #fff;
+}
+#foundryvtt-actor-studio-welcome .window-header .header-control::before {
+  color: #fff;
+}
+#foundryvtt-actor-studio-welcome .window-header .tjs-app-icon {
+  background: transparent;
+}
+#foundryvtt-actor-studio-welcome table.core-class-traits th, #foundryvtt-actor-studio-welcome table.core-class-traits td {
+  vertical-align: top;
+}
+#foundryvtt-actor-studio-welcome .content .properties-list > li {
+  padding: 4px;
+  color: var(--gas-color-text);
+  background-color: var(--gas-li-background);
+  border: none;
+}
+#foundryvtt-actor-studio-welcome p:has(a.content-link) {
+  line-height: 1.5rem;
+}
+#foundryvtt-actor-studio-welcome select.tjs-select {
+  color: var(--tjs-select-option-color);
+}
+#foundryvtt-actor-studio-welcome h2, #foundryvtt-actor-studio-welcome h3, #foundryvtt-actor-studio-welcome h4:not(.window-title), #foundryvtt-actor-studio-welcome h5 {
+  color: var(--gas-color-highlight);
+  text-shadow: none;
+}
+#foundryvtt-actor-studio-welcome h1 {
+  font-size: 2.5rem;
+}
+#foundryvtt-actor-studio-welcome h2 {
+  font-size: 2rem;
+}
+#foundryvtt-actor-studio-welcome h3 {
+  font-size: 1.5rem;
+}
+#foundryvtt-actor-studio-welcome h4 {
+  font-family: var(--dnd5e-font-modesto);
+  font-size: 1.3rem;
+}
+#foundryvtt-actor-studio-welcome h5 {
+  font-size: 1.15rem;
+}
+#foundryvtt-actor-studio-welcome .border-right {
+  border-right: 6px ridge var(--gas-color-highlight);
+}
+#foundryvtt-actor-studio-welcome .right-border-gradient-mask {
+  mask-image: linear-gradient(0deg, transparent 0%, black 100%);
+}
+#foundryvtt-actor-studio-welcome .white {
+  color: #fff;
+}
+#foundryvtt-actor-studio-welcome .black {
+  color: #000000;
+}
+#foundryvtt-actor-studio-welcome .gold {
+  color: var(--dnd5e-color-gold);
+}
+#foundryvtt-actor-studio-welcome .bold {
+  font-weight: 700;
+}
+#foundryvtt-actor-studio-welcome h1, #foundryvtt-actor-studio-welcome h2, #foundryvtt-actor-studio-welcome h3, #foundryvtt-actor-studio-welcome h4, #foundryvtt-actor-studio-welcome h5 {
+  font-family: var(--dnd5e-font-modesto);
+}
+#foundryvtt-actor-studio-welcome .caption {
+  font-size: smaller;
+}
+#foundryvtt-actor-studio-welcome .light {
+  opacity: 0.5;
+}
+#foundryvtt-actor-studio-welcome .window-title {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+#foundryvtt-actor-studio-welcome .gap-4 {
+  gap: 4px;
+}
+#foundryvtt-actor-studio-welcome .gap-10 {
+  gap: 10px;
+}
+#foundryvtt-actor-studio-welcome .no-wrap, #foundryvtt-actor-studio-welcome .nowrap {
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+#foundryvtt-actor-studio-welcome .pre-wrap {
+  white-space: pre-wrap;
+}
+#foundryvtt-actor-studio-welcome .no-padding {
+  padding: 0px;
+}
+#foundryvtt-actor-studio-welcome .no-margin {
+  margin: 0px;
+}
+#foundryvtt-actor-studio-welcome .required {
+  font-size: large;
+  margin-right: 2px;
+  color: var(--gas-color-positive);
+  display: none;
+}
+#foundryvtt-actor-studio-welcome .required.active {
+  display: block;
+  color: var(--gas-color-negative);
+  animation: pulse 0.5s infinite;
+}
+#foundryvtt-actor-studio-welcome .negative {
+  color: var(--gas-color-negative);
+}
+#foundryvtt-actor-studio-welcome .positive {
+  color: var(--gas-color-positive);
+}
+#foundryvtt-actor-studio-welcome .pointer {
+  cursor: pointer;
+}
+#foundryvtt-actor-studio-welcome .bg-green {
+  background-color: #008000;
+}
+#foundryvtt-actor-studio-welcome dnd5e-checkbox {
+  flex: 0;
+}
+#foundryvtt-actor-studio-welcome a.button.active, #foundryvtt-actor-studio-welcome button.active {
+  outline: none;
+  box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary);
+}
+#foundryvtt-actor-studio-welcome .black-link {
+  white-space: pre-wrap;
+}
+#foundryvtt-actor-studio-welcome .black-link a.content-link {
+  color: #000000;
+}
+#foundryvtt-actor-studio-welcome .black-link:not(a.content-link) {
+  padding-left: 4px;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .black-link a.content-link {
+  color: var(--dnd5e-color-gold);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill p, #foundryvtt-actor-studio-welcome.theme-dark .description-fill li, #foundryvtt-actor-studio-welcome.theme-dark .description-fill span, #foundryvtt-actor-studio-welcome.theme-dark .description-fill div, #foundryvtt-actor-studio-welcome.theme-dark .description-fill td, #foundryvtt-actor-studio-welcome.theme-dark .description-fill th,
 #foundryvtt-actor-studio-welcome.theme-dark .illuminated-description p,
 #foundryvtt-actor-studio-welcome.theme-dark .illuminated-description li,
 #foundryvtt-actor-studio-welcome.theme-dark .illuminated-description span,
@@ -1700,7 +2870,201 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 #foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll span,
 #foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll div,
 #foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll td,
-#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll th, #gas-feat-selector-container.theme-dark .description-fill p, #gas-feat-selector-container.theme-dark .description-fill li, #gas-feat-selector-container.theme-dark .description-fill span, #gas-feat-selector-container.theme-dark .description-fill div, #gas-feat-selector-container.theme-dark .description-fill td, #gas-feat-selector-container.theme-dark .description-fill th,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll th {
+  color: inherit;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link i {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-welcome.theme-dark table {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark table th, #foundryvtt-actor-studio-welcome.theme-dark table td {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--gas-tab-active-background) !important;
+  color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
+}
+#foundryvtt-actor-studio-welcome .illuminated-description {
+  position: relative;
+}
+#foundryvtt-actor-studio-welcome .illuminated-description .illuminated-initial {
+  float: left;
+  width: var(--illuminated-initial-width, 64px);
+  height: var(--illuminated-initial-height, 64px);
+  margin: 0 10px 5px 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+#gas-feat-selector-container .window-content {
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container .window-header {
+  color: #fff;
+  border-bottom: 2px solid var(--gas-border-dark);
+}
+#gas-feat-selector-container .window-header .window-title {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
+}
+#gas-feat-selector-container .window-header .header-control {
+  color: #fff;
+}
+#gas-feat-selector-container .window-header .header-control::before {
+  color: #fff;
+}
+#gas-feat-selector-container .window-header .tjs-app-icon {
+  background: transparent;
+}
+#gas-feat-selector-container table.core-class-traits th, #gas-feat-selector-container table.core-class-traits td {
+  vertical-align: top;
+}
+#gas-feat-selector-container .content .properties-list > li {
+  padding: 4px;
+  color: var(--gas-color-text);
+  background-color: var(--gas-li-background);
+  border: none;
+}
+#gas-feat-selector-container p:has(a.content-link) {
+  line-height: 1.5rem;
+}
+#gas-feat-selector-container select.tjs-select {
+  color: var(--tjs-select-option-color);
+}
+#gas-feat-selector-container h2, #gas-feat-selector-container h3, #gas-feat-selector-container h4:not(.window-title), #gas-feat-selector-container h5 {
+  color: var(--gas-color-highlight);
+  text-shadow: none;
+}
+#gas-feat-selector-container h1 {
+  font-size: 2.5rem;
+}
+#gas-feat-selector-container h2 {
+  font-size: 2rem;
+}
+#gas-feat-selector-container h3 {
+  font-size: 1.5rem;
+}
+#gas-feat-selector-container h4 {
+  font-family: var(--dnd5e-font-modesto);
+  font-size: 1.3rem;
+}
+#gas-feat-selector-container h5 {
+  font-size: 1.15rem;
+}
+#gas-feat-selector-container .border-right {
+  border-right: 6px ridge var(--gas-color-highlight);
+}
+#gas-feat-selector-container .right-border-gradient-mask {
+  mask-image: linear-gradient(0deg, transparent 0%, black 100%);
+}
+#gas-feat-selector-container .white {
+  color: #fff;
+}
+#gas-feat-selector-container .black {
+  color: #000000;
+}
+#gas-feat-selector-container .gold {
+  color: var(--dnd5e-color-gold);
+}
+#gas-feat-selector-container .bold {
+  font-weight: 700;
+}
+#gas-feat-selector-container h1, #gas-feat-selector-container h2, #gas-feat-selector-container h3, #gas-feat-selector-container h4, #gas-feat-selector-container h5 {
+  font-family: var(--dnd5e-font-modesto);
+}
+#gas-feat-selector-container .caption {
+  font-size: smaller;
+}
+#gas-feat-selector-container .light {
+  opacity: 0.5;
+}
+#gas-feat-selector-container .window-title {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+#gas-feat-selector-container .gap-4 {
+  gap: 4px;
+}
+#gas-feat-selector-container .gap-10 {
+  gap: 10px;
+}
+#gas-feat-selector-container .no-wrap, #gas-feat-selector-container .nowrap {
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+#gas-feat-selector-container .pre-wrap {
+  white-space: pre-wrap;
+}
+#gas-feat-selector-container .no-padding {
+  padding: 0px;
+}
+#gas-feat-selector-container .no-margin {
+  margin: 0px;
+}
+#gas-feat-selector-container .required {
+  font-size: large;
+  margin-right: 2px;
+  color: var(--gas-color-positive);
+  display: none;
+}
+#gas-feat-selector-container .required.active {
+  display: block;
+  color: var(--gas-color-negative);
+  animation: pulse 0.5s infinite;
+}
+#gas-feat-selector-container .negative {
+  color: var(--gas-color-negative);
+}
+#gas-feat-selector-container .positive {
+  color: var(--gas-color-positive);
+}
+#gas-feat-selector-container .pointer {
+  cursor: pointer;
+}
+#gas-feat-selector-container .bg-green {
+  background-color: #008000;
+}
+#gas-feat-selector-container dnd5e-checkbox {
+  flex: 0;
+}
+#gas-feat-selector-container a.button.active, #gas-feat-selector-container button.active {
+  outline: none;
+  box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary);
+}
+#gas-feat-selector-container .black-link {
+  white-space: pre-wrap;
+}
+#gas-feat-selector-container .black-link a.content-link {
+  color: #000000;
+}
+#gas-feat-selector-container .black-link:not(a.content-link) {
+  padding-left: 4px;
+}
+#gas-feat-selector-container.theme-dark .black-link a.content-link {
+  color: var(--dnd5e-color-gold);
+}
+#gas-feat-selector-container.theme-dark .description-fill,
+#gas-feat-selector-container.theme-dark .illuminated-description,
+#gas-feat-selector-container.theme-dark .col-b,
+#gas-feat-selector-container.theme-dark .tab-content .scroll {
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark .description-fill p, #gas-feat-selector-container.theme-dark .description-fill li, #gas-feat-selector-container.theme-dark .description-fill span, #gas-feat-selector-container.theme-dark .description-fill div, #gas-feat-selector-container.theme-dark .description-fill td, #gas-feat-selector-container.theme-dark .description-fill th,
 #gas-feat-selector-container.theme-dark .illuminated-description p,
 #gas-feat-selector-container.theme-dark .illuminated-description li,
 #gas-feat-selector-container.theme-dark .illuminated-description span,
@@ -1718,7 +3082,201 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 #gas-feat-selector-container.theme-dark .tab-content .scroll span,
 #gas-feat-selector-container.theme-dark .tab-content .scroll div,
 #gas-feat-selector-container.theme-dark .tab-content .scroll td,
-#gas-feat-selector-container.theme-dark .tab-content .scroll th, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill td, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill th,
+#gas-feat-selector-container.theme-dark .tab-content .scroll th {
+  color: inherit;
+}
+#gas-feat-selector-container.theme-dark .description-fill a.content-link,
+#gas-feat-selector-container.theme-dark .illuminated-description a.content-link,
+#gas-feat-selector-container.theme-dark .col-b a.content-link,
+#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#gas-feat-selector-container.theme-dark .description-fill a.content-link i,
+#gas-feat-selector-container.theme-dark .illuminated-description a.content-link i,
+#gas-feat-selector-container.theme-dark .col-b a.content-link i,
+#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link i {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#gas-feat-selector-container.theme-dark table {
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark table th, #gas-feat-selector-container.theme-dark table td {
+  color: var(--gas-color-text);
+}
+#gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button {
+  color: var(--gas-color-text) !important;
+}
+#gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--gas-tab-active-background) !important;
+  color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
+}
+#gas-feat-selector-container .illuminated-description {
+  position: relative;
+}
+#gas-feat-selector-container .illuminated-description .illuminated-initial {
+  float: left;
+  width: var(--illuminated-initial-width, 64px);
+  height: var(--illuminated-initial-height, 64px);
+  margin: 0 10px 5px 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+#foundryvtt-actor-studio-npc-sheet .window-content {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet .window-header {
+  color: #fff;
+  border-bottom: 2px solid var(--gas-border-dark);
+}
+#foundryvtt-actor-studio-npc-sheet .window-header .window-title {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
+}
+#foundryvtt-actor-studio-npc-sheet .window-header .header-control {
+  color: #fff;
+}
+#foundryvtt-actor-studio-npc-sheet .window-header .header-control::before {
+  color: #fff;
+}
+#foundryvtt-actor-studio-npc-sheet .window-header .tjs-app-icon {
+  background: transparent;
+}
+#foundryvtt-actor-studio-npc-sheet table.core-class-traits th, #foundryvtt-actor-studio-npc-sheet table.core-class-traits td {
+  vertical-align: top;
+}
+#foundryvtt-actor-studio-npc-sheet .content .properties-list > li {
+  padding: 4px;
+  color: var(--gas-color-text);
+  background-color: var(--gas-li-background);
+  border: none;
+}
+#foundryvtt-actor-studio-npc-sheet p:has(a.content-link) {
+  line-height: 1.5rem;
+}
+#foundryvtt-actor-studio-npc-sheet select.tjs-select {
+  color: var(--tjs-select-option-color);
+}
+#foundryvtt-actor-studio-npc-sheet h2, #foundryvtt-actor-studio-npc-sheet h3, #foundryvtt-actor-studio-npc-sheet h4:not(.window-title), #foundryvtt-actor-studio-npc-sheet h5 {
+  color: var(--gas-color-highlight);
+  text-shadow: none;
+}
+#foundryvtt-actor-studio-npc-sheet h1 {
+  font-size: 2.5rem;
+}
+#foundryvtt-actor-studio-npc-sheet h2 {
+  font-size: 2rem;
+}
+#foundryvtt-actor-studio-npc-sheet h3 {
+  font-size: 1.5rem;
+}
+#foundryvtt-actor-studio-npc-sheet h4 {
+  font-family: var(--dnd5e-font-modesto);
+  font-size: 1.3rem;
+}
+#foundryvtt-actor-studio-npc-sheet h5 {
+  font-size: 1.15rem;
+}
+#foundryvtt-actor-studio-npc-sheet .border-right {
+  border-right: 6px ridge var(--gas-color-highlight);
+}
+#foundryvtt-actor-studio-npc-sheet .right-border-gradient-mask {
+  mask-image: linear-gradient(0deg, transparent 0%, black 100%);
+}
+#foundryvtt-actor-studio-npc-sheet .white {
+  color: #fff;
+}
+#foundryvtt-actor-studio-npc-sheet .black {
+  color: #000000;
+}
+#foundryvtt-actor-studio-npc-sheet .gold {
+  color: var(--dnd5e-color-gold);
+}
+#foundryvtt-actor-studio-npc-sheet .bold {
+  font-weight: 700;
+}
+#foundryvtt-actor-studio-npc-sheet h1, #foundryvtt-actor-studio-npc-sheet h2, #foundryvtt-actor-studio-npc-sheet h3, #foundryvtt-actor-studio-npc-sheet h4, #foundryvtt-actor-studio-npc-sheet h5 {
+  font-family: var(--dnd5e-font-modesto);
+}
+#foundryvtt-actor-studio-npc-sheet .caption {
+  font-size: smaller;
+}
+#foundryvtt-actor-studio-npc-sheet .light {
+  opacity: 0.5;
+}
+#foundryvtt-actor-studio-npc-sheet .window-title {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+#foundryvtt-actor-studio-npc-sheet .gap-4 {
+  gap: 4px;
+}
+#foundryvtt-actor-studio-npc-sheet .gap-10 {
+  gap: 10px;
+}
+#foundryvtt-actor-studio-npc-sheet .no-wrap, #foundryvtt-actor-studio-npc-sheet .nowrap {
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+#foundryvtt-actor-studio-npc-sheet .pre-wrap {
+  white-space: pre-wrap;
+}
+#foundryvtt-actor-studio-npc-sheet .no-padding {
+  padding: 0px;
+}
+#foundryvtt-actor-studio-npc-sheet .no-margin {
+  margin: 0px;
+}
+#foundryvtt-actor-studio-npc-sheet .required {
+  font-size: large;
+  margin-right: 2px;
+  color: var(--gas-color-positive);
+  display: none;
+}
+#foundryvtt-actor-studio-npc-sheet .required.active {
+  display: block;
+  color: var(--gas-color-negative);
+  animation: pulse 0.5s infinite;
+}
+#foundryvtt-actor-studio-npc-sheet .negative {
+  color: var(--gas-color-negative);
+}
+#foundryvtt-actor-studio-npc-sheet .positive {
+  color: var(--gas-color-positive);
+}
+#foundryvtt-actor-studio-npc-sheet .pointer {
+  cursor: pointer;
+}
+#foundryvtt-actor-studio-npc-sheet .bg-green {
+  background-color: #008000;
+}
+#foundryvtt-actor-studio-npc-sheet dnd5e-checkbox {
+  flex: 0;
+}
+#foundryvtt-actor-studio-npc-sheet a.button.active, #foundryvtt-actor-studio-npc-sheet button.active {
+  outline: none;
+  box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary);
+}
+#foundryvtt-actor-studio-npc-sheet .black-link {
+  white-space: pre-wrap;
+}
+#foundryvtt-actor-studio-npc-sheet .black-link a.content-link {
+  color: #000000;
+}
+#foundryvtt-actor-studio-npc-sheet .black-link:not(a.content-link) {
+  padding-left: 4px;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .black-link a.content-link {
+  color: var(--dnd5e-color-gold);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill p, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill li, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill span, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill div, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill td, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill th,
 #foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description p,
 #foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description li,
 #foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description span,
@@ -1736,7 +3294,201 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 #foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll span,
 #foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll div,
 #foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll td,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll th, .gas-npc-sheet.theme-dark .description-fill p, .gas-npc-sheet.theme-dark .description-fill li, .gas-npc-sheet.theme-dark .description-fill span, .gas-npc-sheet.theme-dark .description-fill div, .gas-npc-sheet.theme-dark .description-fill td, .gas-npc-sheet.theme-dark .description-fill th,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll th {
+  color: inherit;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link i,
+#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link i {
+  color: var(--dnd5e-color-gold, #b59e54);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark table th, #foundryvtt-actor-studio-npc-sheet.theme-dark table td {
+  color: var(--gas-color-text);
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button {
+  color: var(--gas-color-text) !important;
+}
+#foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--gas-tab-active-background) !important;
+  color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
+}
+#foundryvtt-actor-studio-npc-sheet .illuminated-description {
+  position: relative;
+}
+#foundryvtt-actor-studio-npc-sheet .illuminated-description .illuminated-initial {
+  float: left;
+  width: var(--illuminated-initial-width, 64px);
+  height: var(--illuminated-initial-height, 64px);
+  margin: 0 10px 5px 0;
+  background-size: cover;
+  background-position: center;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+.gas-npc-sheet .window-content {
+  color: var(--gas-color-text);
+}
+.gas-npc-sheet .window-header {
+  color: #fff;
+  border-bottom: 2px solid var(--gas-border-dark);
+}
+.gas-npc-sheet .window-header .window-title {
+  color: #fff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.45);
+}
+.gas-npc-sheet .window-header .header-control {
+  color: #fff;
+}
+.gas-npc-sheet .window-header .header-control::before {
+  color: #fff;
+}
+.gas-npc-sheet .window-header .tjs-app-icon {
+  background: transparent;
+}
+.gas-npc-sheet table.core-class-traits th, .gas-npc-sheet table.core-class-traits td {
+  vertical-align: top;
+}
+.gas-npc-sheet .content .properties-list > li {
+  padding: 4px;
+  color: var(--gas-color-text);
+  background-color: var(--gas-li-background);
+  border: none;
+}
+.gas-npc-sheet p:has(a.content-link) {
+  line-height: 1.5rem;
+}
+.gas-npc-sheet select.tjs-select {
+  color: var(--tjs-select-option-color);
+}
+.gas-npc-sheet h2, .gas-npc-sheet h3, .gas-npc-sheet h4:not(.window-title), .gas-npc-sheet h5 {
+  color: var(--gas-color-highlight);
+  text-shadow: none;
+}
+.gas-npc-sheet h1 {
+  font-size: 2.5rem;
+}
+.gas-npc-sheet h2 {
+  font-size: 2rem;
+}
+.gas-npc-sheet h3 {
+  font-size: 1.5rem;
+}
+.gas-npc-sheet h4 {
+  font-family: var(--dnd5e-font-modesto);
+  font-size: 1.3rem;
+}
+.gas-npc-sheet h5 {
+  font-size: 1.15rem;
+}
+.gas-npc-sheet .border-right {
+  border-right: 6px ridge var(--gas-color-highlight);
+}
+.gas-npc-sheet .right-border-gradient-mask {
+  mask-image: linear-gradient(0deg, transparent 0%, black 100%);
+}
+.gas-npc-sheet .white {
+  color: #fff;
+}
+.gas-npc-sheet .black {
+  color: #000000;
+}
+.gas-npc-sheet .gold {
+  color: var(--dnd5e-color-gold);
+}
+.gas-npc-sheet .bold {
+  font-weight: 700;
+}
+.gas-npc-sheet h1, .gas-npc-sheet h2, .gas-npc-sheet h3, .gas-npc-sheet h4, .gas-npc-sheet h5 {
+  font-family: var(--dnd5e-font-modesto);
+}
+.gas-npc-sheet .caption {
+  font-size: smaller;
+}
+.gas-npc-sheet .light {
+  opacity: 0.5;
+}
+.gas-npc-sheet .window-title {
+  font-size: 1.5em;
+  font-weight: 700;
+}
+.gas-npc-sheet .gap-4 {
+  gap: 4px;
+}
+.gas-npc-sheet .gap-10 {
+  gap: 10px;
+}
+.gas-npc-sheet .no-wrap, .gas-npc-sheet .nowrap {
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+.gas-npc-sheet .pre-wrap {
+  white-space: pre-wrap;
+}
+.gas-npc-sheet .no-padding {
+  padding: 0px;
+}
+.gas-npc-sheet .no-margin {
+  margin: 0px;
+}
+.gas-npc-sheet .required {
+  font-size: large;
+  margin-right: 2px;
+  color: var(--gas-color-positive);
+  display: none;
+}
+.gas-npc-sheet .required.active {
+  display: block;
+  color: var(--gas-color-negative);
+  animation: pulse 0.5s infinite;
+}
+.gas-npc-sheet .negative {
+  color: var(--gas-color-negative);
+}
+.gas-npc-sheet .positive {
+  color: var(--gas-color-positive);
+}
+.gas-npc-sheet .pointer {
+  cursor: pointer;
+}
+.gas-npc-sheet .bg-green {
+  background-color: #008000;
+}
+.gas-npc-sheet dnd5e-checkbox {
+  flex: 0;
+}
+.gas-npc-sheet a.button.active, .gas-npc-sheet button.active {
+  outline: none;
+  box-shadow: 0 -8px 16px -7px var(--gas-color-shadow-primary);
+}
+.gas-npc-sheet .black-link {
+  white-space: pre-wrap;
+}
+.gas-npc-sheet .black-link a.content-link {
+  color: #000000;
+}
+.gas-npc-sheet .black-link:not(a.content-link) {
+  padding-left: 4px;
+}
+.gas-npc-sheet.theme-dark .black-link a.content-link {
+  color: var(--dnd5e-color-gold);
+}
+.gas-npc-sheet.theme-dark .description-fill,
+.gas-npc-sheet.theme-dark .illuminated-description,
+.gas-npc-sheet.theme-dark .col-b,
+.gas-npc-sheet.theme-dark .tab-content .scroll {
+  color: var(--gas-color-text);
+}
+.gas-npc-sheet.theme-dark .description-fill p, .gas-npc-sheet.theme-dark .description-fill li, .gas-npc-sheet.theme-dark .description-fill span, .gas-npc-sheet.theme-dark .description-fill div, .gas-npc-sheet.theme-dark .description-fill td, .gas-npc-sheet.theme-dark .description-fill th,
 .gas-npc-sheet.theme-dark .illuminated-description p,
 .gas-npc-sheet.theme-dark .illuminated-description li,
 .gas-npc-sheet.theme-dark .illuminated-description span,
@@ -1754,86 +3506,38 @@ body.game #gas-settings-submenu.app.window-app .flexrow .flex0, body.game #gas-s
 .gas-npc-sheet.theme-dark .tab-content .scroll span,
 .gas-npc-sheet.theme-dark .tab-content .scroll div,
 .gas-npc-sheet.theme-dark .tab-content .scroll td,
-.gas-npc-sheet.theme-dark .tab-content .scroll th, .GAS.theme-dark .description-fill p, .GAS.theme-dark .description-fill li, .GAS.theme-dark .description-fill span, .GAS.theme-dark .description-fill div, .GAS.theme-dark .description-fill td, .GAS.theme-dark .description-fill th,
-.GAS.theme-dark .illuminated-description p,
-.GAS.theme-dark .illuminated-description li,
-.GAS.theme-dark .illuminated-description span,
-.GAS.theme-dark .illuminated-description div,
-.GAS.theme-dark .illuminated-description td,
-.GAS.theme-dark .illuminated-description th,
-.GAS.theme-dark .col-b p,
-.GAS.theme-dark .col-b li,
-.GAS.theme-dark .col-b span,
-.GAS.theme-dark .col-b div,
-.GAS.theme-dark .col-b td,
-.GAS.theme-dark .col-b th,
-.GAS.theme-dark .tab-content .scroll p,
-.GAS.theme-dark .tab-content .scroll li,
-.GAS.theme-dark .tab-content .scroll span,
-.GAS.theme-dark .tab-content .scroll div,
-.GAS.theme-dark .tab-content .scroll td,
-.GAS.theme-dark .tab-content .scroll th {
+.gas-npc-sheet.theme-dark .tab-content .scroll th {
   color: inherit;
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link, #foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link,
-#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link,
-#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link,
-#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link, #gas-feat-selector-container.theme-dark .description-fill a.content-link,
-#gas-feat-selector-container.theme-dark .illuminated-description a.content-link,
-#gas-feat-selector-container.theme-dark .col-b a.content-link,
-#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link, .gas-npc-sheet.theme-dark .description-fill a.content-link,
+.gas-npc-sheet.theme-dark .description-fill a.content-link,
 .gas-npc-sheet.theme-dark .illuminated-description a.content-link,
 .gas-npc-sheet.theme-dark .col-b a.content-link,
-.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link, .GAS.theme-dark .description-fill a.content-link,
-.GAS.theme-dark .illuminated-description a.content-link,
-.GAS.theme-dark .col-b a.content-link,
-.GAS.theme-dark .tab-content .scroll a.content-link {
+.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link {
   color: var(--dnd5e-color-gold, #b59e54);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .description-fill a.content-link i,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .illuminated-description a.content-link i,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .col-b a.content-link i,
-#foundryvtt-actor-studio-pc-sheet.theme-dark .tab-content .scroll a.content-link i, #foundryvtt-actor-studio-welcome.theme-dark .description-fill a.content-link i,
-#foundryvtt-actor-studio-welcome.theme-dark .illuminated-description a.content-link i,
-#foundryvtt-actor-studio-welcome.theme-dark .col-b a.content-link i,
-#foundryvtt-actor-studio-welcome.theme-dark .tab-content .scroll a.content-link i, #gas-feat-selector-container.theme-dark .description-fill a.content-link i,
-#gas-feat-selector-container.theme-dark .illuminated-description a.content-link i,
-#gas-feat-selector-container.theme-dark .col-b a.content-link i,
-#gas-feat-selector-container.theme-dark .tab-content .scroll a.content-link i, #foundryvtt-actor-studio-npc-sheet.theme-dark .description-fill a.content-link i,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .illuminated-description a.content-link i,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .col-b a.content-link i,
-#foundryvtt-actor-studio-npc-sheet.theme-dark .tab-content .scroll a.content-link i, .gas-npc-sheet.theme-dark .description-fill a.content-link i,
+.gas-npc-sheet.theme-dark .description-fill a.content-link i,
 .gas-npc-sheet.theme-dark .illuminated-description a.content-link i,
 .gas-npc-sheet.theme-dark .col-b a.content-link i,
-.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link i, .GAS.theme-dark .description-fill a.content-link i,
-.GAS.theme-dark .illuminated-description a.content-link i,
-.GAS.theme-dark .col-b a.content-link i,
-.GAS.theme-dark .tab-content .scroll a.content-link i {
+.gas-npc-sheet.theme-dark .tab-content .scroll a.content-link i {
   color: var(--dnd5e-color-gold, #b59e54);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark table, #foundryvtt-actor-studio-welcome.theme-dark table, #gas-feat-selector-container.theme-dark table, #foundryvtt-actor-studio-npc-sheet.theme-dark table, .gas-npc-sheet.theme-dark table, .GAS.theme-dark table {
+.gas-npc-sheet.theme-dark table {
   color: var(--gas-color-text);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark table th, #foundryvtt-actor-studio-pc-sheet.theme-dark table td, #foundryvtt-actor-studio-welcome.theme-dark table th, #foundryvtt-actor-studio-welcome.theme-dark table td, #gas-feat-selector-container.theme-dark table th, #gas-feat-selector-container.theme-dark table td, #foundryvtt-actor-studio-npc-sheet.theme-dark table th, #foundryvtt-actor-studio-npc-sheet.theme-dark table td, .gas-npc-sheet.theme-dark table th, .gas-npc-sheet.theme-dark table td, .GAS.theme-dark table th, .GAS.theme-dark table td {
+.gas-npc-sheet.theme-dark table th, .gas-npc-sheet.theme-dark table td {
   color: var(--gas-color-text);
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button, #foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button, #gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button, #foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button, .gas-npc-sheet.theme-dark .gas-tabs .tabs-list button, .GAS.theme-dark .gas-tabs .tabs-list button {
+.gas-npc-sheet.theme-dark .gas-tabs .tabs-list button {
   color: var(--gas-color-text) !important;
 }
-#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-tabs .tabs-list button.active, #foundryvtt-actor-studio-welcome.theme-dark .gas-tabs .tabs-list button.active, #gas-feat-selector-container.theme-dark .gas-tabs .tabs-list button.active, #foundryvtt-actor-studio-npc-sheet.theme-dark .gas-tabs .tabs-list button.active, .gas-npc-sheet.theme-dark .gas-tabs .tabs-list button.active, .GAS.theme-dark .gas-tabs .tabs-list button.active {
-  background: var(--tab-active-background) !important;
+.gas-npc-sheet.theme-dark .gas-tabs .tabs-list button.active {
+  background: var(--gas-tab-active-background) !important;
   color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important;
 }
-#foundryvtt-actor-studio-pc-sheet .illuminated-description, #foundryvtt-actor-studio-welcome .illuminated-description, #gas-feat-selector-container .illuminated-description, #foundryvtt-actor-studio-npc-sheet .illuminated-description, .gas-npc-sheet .illuminated-description, .GAS .illuminated-description {
+.gas-npc-sheet .illuminated-description {
   position: relative;
 }
-#foundryvtt-actor-studio-pc-sheet .illuminated-description .illuminated-initial, #foundryvtt-actor-studio-welcome .illuminated-description .illuminated-initial, #gas-feat-selector-container .illuminated-description .illuminated-initial, #foundryvtt-actor-studio-npc-sheet .illuminated-description .illuminated-initial, .gas-npc-sheet .illuminated-description .illuminated-initial, .GAS .illuminated-description .illuminated-initial {
+.gas-npc-sheet .illuminated-description .illuminated-initial {
   float: left;
   width: var(--illuminated-initial-width, 64px);
   height: var(--illuminated-initial-height, 64px);

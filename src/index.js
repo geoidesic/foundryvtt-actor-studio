@@ -1,5 +1,4 @@
-import '../styles/Variables.sass'; // Import any styles as this includes them in the build.
-import '../styles/init.sass'; // Import any styles as this includes them in the build.
+// Global styles load via module.json → dist/style.css only (see src/style-dev-entry.js for dev emit).
 
 import { MODULE_ID } from '~/src/helpers/constants';
 import { safeGetSetting } from '~/src/helpers/Utility';

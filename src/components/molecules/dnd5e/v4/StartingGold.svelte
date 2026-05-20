@@ -359,7 +359,7 @@ button.option
   border: 1px solid rgba(255, 255, 255, 0.1)
   border-radius: 4px
   background: rgba(0, 0, 0, 0.4)
-  color: var(--li-background-color)
+  color: var(--gas-li-background)
   cursor: pointer
   transition: all 0.5s ease
   
@@ -392,8 +392,8 @@ button.option
     transition: opacity 0.5s ease
 
   &.confirm
-    background: var(--color-positive)
-    border-color: var(--color-positive)
+    background: var(--gas-color-positive)
+    border-color: var(--gas-color-positive)
     color: white
     &:hover
       background: var(--color-positive-dark)

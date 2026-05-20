@@ -16,7 +16,7 @@
   border-radius: 0.4rem
   box-shadow: 0 0 5px rgba(165,42,42,0.3) inset
 
-@mixin badge($background: var(--color-highlight), $size: 0.75rem)
+@mixin badge($background: var(--gas-color-highlight, brown), $size: 0.75rem)
   padding: 2px 4px !important
   border-radius: var(--border-radius)
   background: $background
@@ -187,26 +187,25 @@
   align-items: center
   justify-content: center
   text-align: center
-  border-style: var(--button-border-style)
-  border-radius: var(--button-border-radius)
-  border-width: var(--button-border-width)
-  border-color: var(--button-border-color)
-  background: var(--button-background)
-  font-size: var(--button-font-size)
-  font-weight: var(--button-font-weight)
-  padding: var(--button-padding)
-  color: var(--button-color)
-  line-height: var(--button-line-height)
+  border-style: var(--gas-button-border-style, solid)
+  border-radius: var(--gas-button-border-radius, 3px)
+  border-width: var(--gas-button-border-width, 1px)
+  border-color: var(--gas-button-border-color, #bbb)
+  background: var(--gas-button-background, #f0f0f0)
+  font-size: var(--gas-button-font-size, inherit)
+  font-weight: var(--gas-button-font-weight, normal)
+  padding: var(--gas-button-padding, 0.25rem 0.5rem)
+  color: var(--gas-button-color, var(--gas-color-text, inherit))
+  line-height: var(--gas-button-line-height, normal)
   margin: 0
-  background-color: transparent
 
   &:disabled
     cursor: default
-    background: var(--button-background-disabled)
+    background: var(--gas-button-background-disabled, #ececec)
 
   &:hover
     &:not(:disabled)
-      background: radial-gradient(var(--sheet-color), transparent)
+      background: radial-gradient(var(--gas-sheet-color, rgba(0, 0, 0, 0.08)), transparent)
 
 @mixin icon-button
   box-sizing: border-box
@@ -325,59 +324,56 @@
   background-color: var(--static-value-background)
 
 @mixin panel-1
-  background: var(--panel-1-background)
-  color: var(--panel-1-color)
-  --border-color: var(--panel-1-color)
+  background: var(--gas-panel-1-background, var(--gas-tabs-list-background, #dbd9cd))
+  color: var(--gas-panel-1-color, var(--gas-color-text, inherit))
 
 @mixin panel-2
-  background: var(--panel-2-background)
-  color: var(--panel-2-color)
-  --border-color: var(--panel-2-color)
+  background: var(--gas-panel-2-background, var(--gas-tabs-content-background, #f9f9f9))
+  color: var(--gas-panel-2-color, var(--gas-color-text, inherit))
 
 @mixin panel-3
-  background: var(--panel-3-background)
-  color: var(--panel-3-color)
-  --border-color: var(--panel-3-color)
+  background: var(--gas-panel-3-background, var(--gas-tabs-content-background, #f9f9f9))
+  color: var(--gas-panel-3-color, var(--gas-color-text, inherit))
 
 @mixin border
-  border-style: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--player-color)
+  border-style: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-player-color, var(--gas-color-highlight, #ccc))
 
 @mixin border-top
-  border-top: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-top: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-top-bottom
-  border-top: var(--border-style)
-  border-bottom: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-top: var(--gas-border-style, solid)
+  border-bottom: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-bottom
-  border-bottom: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-bottom: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-bottom-sides
-  border-right: var(--border-style)
-  border-left: var(--border-style)
-  border-bottom: var(--border-style)
+  border-right: var(--gas-border-style, solid)
+  border-left: var(--gas-border-style, solid)
+  border-bottom: var(--gas-border-style, solid)
   border-bottom-right-radius: var(--border-radius)
   border-bottom-left-radius: var(--border-radius)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-left
-  border-left: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-left: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-right
-  border-right: var(--border-style)
-  border-width: var(--border-width)
-  border-color: var(--border-color)
+  border-right: var(--gas-border-style, solid)
+  border-width: var(--gas-border-width, 1px)
+  border-color: var(--gas-input-border, #ccc)
 
 @mixin border-color-button
-  border-color: var(--button-border-color) 
+  border-color: var(--gas-button-border-color, #bbb) 

@@ -93,9 +93,12 @@
 
   .tabs {
     @include flex-column;
-    @include border;
     height: 100%;
     width: 100%;
+
+    &.gas-tabs {
+      border: none;
+    }
 
     .tabs-list {
       @include flex-row;
@@ -110,7 +113,7 @@
       flex: 0;
 
       button {
-        --button-border-radius: 5px;
+        --gas-button-border-radius: 5px;
         --button-line-height: var(--tab-line-height);
         --button-font-size: var(--tab-font-size);
         @include button;
@@ -159,7 +162,7 @@
             bottom: 5px;
           } 
           &:hover {
-            background: var(--tab-active-background, #f9f9f9);
+            background: var(--gas-tab-active-background, #f9f9f9);
             box-shadow: none;
           }
           font-weight: bold;
