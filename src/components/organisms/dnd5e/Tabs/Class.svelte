@@ -273,16 +273,7 @@
   }
 
   $: combinedHtml = $characterClass
-    ? `
-    <div class="flexrow" style="gap: 1rem;">
-      <div class="flex1">
-        ${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}
-      </div>
-      <div class="flex2">
-        ${richHTML}
-      </div>
-    </div>
-  `
+    ? `${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}${richHTML}`
     : "";
 
   $: if (subClassesIndex?.length) {
@@ -332,23 +323,23 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideAdvancementList}" contentClass="{hideAdvancementList ? 'class-tab-single-panel' : ''}")
   div(slot="left")
-    .flexrow
-      .flex0.required(class="{$characterClass ? '' : 'active'}") *
-      .flex3 
-        IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
-    +if("$characterClass")
-      +if("hideAdvancementList")
-        .description-fill.mt-sm
-          | {@html combinedHtml || richHTML}
-      +if("subclasses.length && subClassLevel == 1")
+    .class-tab-selects
+      .flexrow
+        .flex0.required(class="{$characterClass ? '' : 'active'}") *
+        .flex3 
+          IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
+      +if("$characterClass && subclasses.length && subClassLevel == 1")
         h2.left {t('SubClass')}
         .flexrow
           .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
           .flex3
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
-      
+    +if("$characterClass")
+      +if("hideAdvancementList")
+        .description-fill.mt-sm
+          | {@html combinedHtml || richHTML}
       +if("classAdvancementArrayFiltered")
         +if("!hideAdvancementList")
           h3.left.mt-sm.flexrow
@@ -426,10 +417,21 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     box-shadow: 0 0 5px rgba(0,0,0,0.3) inset
     font-size: smaller
 
+  .class-tab-selects
+    flex-shrink: 0
+
   .description-fill
     overflow-y: auto
     font-size: smaller
     :global(img)
       max-width: 100%
       height: auto
+
+  :global(.class-tab-single-panel .col-a)
+    flex: 1 1 100%
+    max-width: 100%
+    width: 100%
+
+  :global(.class-tab-single-panel .description-fill)
+    width: 100%
 </style>
