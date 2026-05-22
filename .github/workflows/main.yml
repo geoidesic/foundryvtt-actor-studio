@@ -30,12 +30,12 @@ jobs:
         run: echo "Full release substitution completed."
 
       # Substitute the Manifest and Download URLs in the module.json
-      # for a PRE RELEASE. Manifest pointing to live module.json on branch,
-      # which is updated after tag.
+      # for a PRE RELEASE (beta channel → next branch manifest).
       - name: Echo Start Pre Release Substitution
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         run: echo "Starting pre release substitution..."
       - name: Substitute Manifest and Download Links For Versioned Ones
-        if: "github.event.release.prerelease"
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         id: sub_prerelease_manifest_version
         uses: microsoft/variable-substitution@v1
         with:
@@ -46,8 +46,27 @@ jobs:
           manifest: https://raw.githubusercontent.com/${{github.repository}}/next/module.json
           download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
       - name: Echo End Pre Release Substitution
-        if: "github.event.release.prerelease"
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         run: echo "Pre release substitution completed."
+
+      # Suffix pre-releases (e.g. 2.9.5-aura) — tag-scoped manifest, no next branch.
+      - name: Echo Start Suffix Pre Release Substitution
+        if: "github.event.release.prerelease && !contains(github.event.release.tag_name, '-beta.')"
+        run: echo "Starting suffix pre release substitution..."
+      - name: Substitute Manifest and Download Links For Suffix Pre Release
+        if: "github.event.release.prerelease && !contains(github.event.release.tag_name, '-beta.')"
+        id: sub_suffix_prerelease_manifest_version
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: 'module.json'
+        env:
+          version: ${{github.event.release.tag_name}}
+          url: https://github.com/${{github.repository}}
+          manifest: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.json
+          download: https://github.com/${{github.repository}}/releases/download/${{github.event.release.tag_name}}/module.zip
+      - name: Echo End Suffix Pre Release Substitution
+        if: "github.event.release.prerelease && !contains(github.event.release.tag_name, '-beta.')"
+        run: echo "Suffix pre release substitution completed."
 
       # Build the project so the dist/ folder is available for zipping (dist is purposely gitignored)
       - name: Setup Node.js
@@ -155,24 +174,23 @@ jobs:
         if: "github.event.release.prerelease"
         run: echo "Pre release update completed."
 
-      # Update next branch
+      # Update next branch (beta pre-releases only; suffix tags e.g. 2.9.5-aura skip this)
       - name: Echo Start Repository Preparation
-        if: "github.event.release.prerelease"
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         run: echo "Starting repository preparation..."
       - name: Prepare repository
-        if: "github.event.release.prerelease"
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         run: |
           git config --global user.name '${{github.actor}}'
           git config --global user.email '${{github.actor}}@users.noreply.github.com'
           echo "Git config completed."
-          git status
-          echo "git status completed."
           
           # Save the modified module.json to a temporary file
           cp module.json /tmp/modified-module.json
           echo "Saved modified module.json to temp file."
           
-          git clean -f
+          git reset --hard
+          git clean -fd
           git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/$GITHUB_REPOSITORY"
           git fetch origin "next"
           git switch -c "next" "origin/next"
@@ -195,5 +213,5 @@ jobs:
             echo "Committed and pushed manifest update."
           fi
       - name: Echo End Repository Preparation
-        if: "github.event.release.prerelease"
+        if: "github.event.release.prerelease && contains(github.event.release.tag_name, '-beta.')"
         run: echo "Repository preparation completed."
