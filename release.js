@@ -411,6 +411,22 @@ try {
             if (!isDryRun) execSync(`git checkout ${targetBranch}`);
         }
 
+        // Node loads release.js from the starting branch; re-exec after checkout so suffix
+        // releases always run the target branch's release.js (e.g. aura), not main's copy.
+        if (!isDryRun && !process.env.RELEASE_JS_SUFFIX_REEXEC) {
+            const branchNow = execSync('git branch --show-current').toString().trim();
+            if (branchNow === targetBranch) {
+                console.log(`🔄 Re-running release script from ${targetBranch} branch...`);
+                const scriptPath = path.join(__dirname, 'release.js');
+                const forwardedArgs = process.argv.slice(2).map((arg) => JSON.stringify(arg)).join(' ');
+                execSync(`node ${JSON.stringify(scriptPath)} ${forwardedArgs}`, {
+                    stdio: 'inherit',
+                    env: { ...process.env, RELEASE_JS_SUFFIX_REEXEC: '1' },
+                });
+                process.exit(0);
+            }
+        }
+
         console.log(isDryRun ? `🔍 Would merge latest main into ${targetBranch} branch` : `📥 Merging latest main into ${targetBranch} branch...`);
         if (!isDryRun) {
             try {

@@ -35,12 +35,17 @@ After a merge into `aura`, run `bun i` so `node_modules` matches the lockfile (r
 `release.js` supports suffix pre-releases (see `d63d98a2`):
 
 ```bash
-# On aura, from a clean tree:
+# From main or aura, clean tree:
 node release.js --suffix aura
 # or: bun run release:aura
+```
 
+When started from `main`, the script checks out `aura` and re-runs itself from that branch's `release.js` so release tooling matches the suffix branch.
+
+```bash
 # --force is optional; suffix releases auto-replace an existing tag/release
 node release.js --suffix aura --force
+# or: bun run release:aura:force
 ```
 
 Behavior:
