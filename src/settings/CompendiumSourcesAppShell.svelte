@@ -30,7 +30,7 @@
   let selectedSources = safeGetSetting(MODULE_ID, 'compendiumSources', DEFAULT_SOURCES);
   let searchText = '';
   let showAllExpanded = true;
-  let showOnlySelected = true;
+  let showOnlySelected = false;
 
   // Build source categories (races, classes, etc.)
   $: is2024 = (() => {
