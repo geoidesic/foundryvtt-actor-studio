@@ -331,17 +331,24 @@
   .gas-tabs,
   .tabs.gas-tabs
     border: none
-    position: relative 
-    padding-top: 1rem
-    .tabs-list 
+    position: relative
+    display: flex
+    flex-direction: column
+    flex: 1
+    min-height: 0
+    overflow: hidden
+    padding-top: 0
+    .tabs-list
 
       background: var(--gas-tabs-list-background) !important
-      position: fixed
-      top: var(--header-height, 30px)
-      left: 0
+      position: relative
+      top: auto
+      left: auto
       width: 100%
       height: 2.5rem !important
-      padding-top: 1rem !important
+      padding-top: 0.25rem !important
+      flex-shrink: 0
+      z-index: 10
       button
         background-color: var(--gas-button-background) !important
         color: var(--gas-color-text) !important
@@ -364,18 +371,22 @@
     transition: all 0.4s ease-in-out
 
   .tab-content
-    --tjs-app-overflow: visible
+    --tjs-app-overflow: auto
     padding: 0
     border: 2px solid transparent
     border-radius: 10px 
     background-color: var(--gas-tabs-content-background)
     position: relative
-    z-index: 1
-    margin-top: 1rem
+    z-index: 0
+    flex: 1
+    min-height: 0
+    overflow-x: hidden
+    overflow-y: auto
+    margin-top: 0
     color: var(--gas-color-text)
 
   &.gas-v13-plus .tabs.gas-tabs .tab-content
-    margin-top: 1rem
+    margin-top: 0
 
   .tab-content .scroll
     box-sizing: content-box

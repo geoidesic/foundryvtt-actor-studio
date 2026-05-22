@@ -53,7 +53,7 @@
   const illuminatedWidth = Number(String(_illuminatedWidthRaw).replace(/[a-zA-Z]/g, '')) + 'px';
 
   $: stylesApp = {
-    '--tjs-app-overflow': 'visible',
+    '--tjs-app-overflow': 'hidden',
     '--illuminated-initial-height': illuminatedHeight,
     '--illuminated-initial-width': illuminatedWidth
   };
@@ -434,6 +434,23 @@ main
   display: flex
   flex-direction: column
   height: 100%
+  min-height: 0
+  overflow: hidden
+
+section 
+  padding: 0.5rem 0.2rem
+
+.a
+  flex: 1
+  min-width: 200px
+  min-height: 0
+  overflow: hidden
+  display: flex
+  flex-direction: column
+
+.b
+  flex-shrink: 0
+
 .break-out
   position: absolute
   height: 50px
@@ -442,25 +459,4 @@ main
   z-index: 4
   overflow: visible !important
   overflow-clip-margin: 30px
-section 
-  padding: 0.5rem 0.2rem
-
-.a
-  flex: 1
-  overflow-y: scroll
-    min-width: 200px
-
-  .b 
-    height: 65px
-
-
-  .flex-grow
-    flex: 1 // Make this section grow to fill available space
-    overflow-y: scroll
-    height: 90%
-
-  .section-bottom
-    // Add any additional styling for the bottom section
-
-  
 </style>
