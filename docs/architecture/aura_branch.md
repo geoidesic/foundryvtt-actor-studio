@@ -56,6 +56,7 @@ Behavior:
 - Skips build/commit steps used for normal releases (suffix flow is tag-oriented).
 - Reinstalls dependencies on the suffix branch after merge.
 - Re-publishing the same suffix tag automatically deletes the old GitHub release, replaces the tag (force push), and recreates the pre-release so CI runs again.
+- GitHub Actions uploads `module.zip` for suffix tags and **does not** update the `next` branch (that channel is for `-beta.` pre-releases only).
 
 Normal `main` releases (`patch` / `minor` / `major`) stay on `main` and use TJS 0.3.x.
 
