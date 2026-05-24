@@ -3,6 +3,7 @@ import { MODULE_ID } from '~/src/helpers/constants';
 import { getPacksFromSettings, extractItemsFromPacksAsync, advancementEntriesToArray } from '~/src/helpers/Utility';
 import { readOnlyTabs, characterClass, characterSubClass, isLevelUp, newLevelValueForExistingClass, levelUpClassObject, classUuidForLevelUp } from '~/src/stores/index';
 import { determineSpellListClass, parseSpellcastingFromDescription } from '~/src/helpers/LevelUpStateMachine';
+import { collectTcrSpellClassUuids } from '~/src/helpers/tcrSpellClassUuids';
 import DTPlugin from '~/src/plugins/donation-tracker';
 import { getSpellLimitsForClassLevel, getSpellDeltaForClassLevel } from '~/src/helpers/spellProgression';
 
@@ -1246,22 +1247,19 @@ export async function loadAvailableSpells(characterClassName = null) {
             const filteredSpells = [];
 
             // Collect all class/subclass UUIDs for the current character.
-            const classUuidsToCheck = new Set();
+            const activeActor = get(currentCharacter);
             const $isLevelUp = get(isLevelUp);
-            if ($isLevelUp) {
-              const levelUpClass = get(levelUpClassObject);
-              if (levelUpClass?.uuid) classUuidsToCheck.add(levelUpClass.uuid);
-              if (levelUpClass?.flags?.core?.sourceId) classUuidsToCheck.add(levelUpClass.flags.core.sourceId);
-              const levelUpUuid = get(classUuidForLevelUp);
-              if (levelUpUuid) classUuidsToCheck.add(levelUpUuid);
-            } else {
-              const charClass = get(characterClass);
-              if (charClass?.uuid) classUuidsToCheck.add(charClass.uuid);
-              if (charClass?.flags?.core?.sourceId) classUuidsToCheck.add(charClass.flags.core.sourceId);
-              const charSubClass = get(characterSubClass);
-              if (charSubClass?.uuid) classUuidsToCheck.add(charSubClass.uuid);
-              if (charSubClass?.flags?.core?.sourceId) classUuidsToCheck.add(charSubClass.flags.core.sourceId);
-            }
+            const levelUpClass = $isLevelUp ? get(levelUpClassObject) : null;
+            const levelUpUuid = $isLevelUp ? get(classUuidForLevelUp) : null;
+            const charClass = !$isLevelUp ? get(characterClass) : null;
+            const charSubClass = !$isLevelUp ? get(characterSubClass) : null;
+            const classUuidsToCheck = new Set(collectTcrSpellClassUuids({
+              actor: activeActor,
+              selectedClass: charClass,
+              selectedSubClass: charSubClass,
+              levelUpClass,
+              levelUpClassUuid: levelUpUuid
+            }));
 
             window.GAS.log.d('[SPELLS DEBUG] tcr-main-module – class UUIDs to check:', [...classUuidsToCheck]);
             if (classUuidsToCheck.size === 0) {
