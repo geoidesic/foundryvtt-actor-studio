@@ -421,7 +421,7 @@ onDestroy(() => {
 });
 </script>
 <template lang="pug">
-StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideAdvancementList}" contentClass="levelup-content" rightPanelClass="levelup-right")
   div(slot="left")
     +if("window.GAS.debug")
       //- pre classUuidForLevelUp {$classUuidForLevelUp}
@@ -555,6 +555,18 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
     color: inherit
     font-size: 0.9375rem
     line-height: 1.5
+
+  :global(.levelup-right)
+    min-height: 0
+    overflow-y: auto
+
+  // Prevent embedded compendium media from blowing up level-up layout height.
+  :global(.levelup-right img)
+    display: block
+    max-width: 100%
+    max-height: 240px
+    width: auto
+    height: auto
 
   :global(.icon-select)
     position: relative

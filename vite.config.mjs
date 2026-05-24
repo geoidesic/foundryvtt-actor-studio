@@ -36,7 +36,7 @@ export default () => {
       root: 'src/',                 // Source location / esbuild root.
       base: `/${s_PACKAGE_ID}/`,    // Base module path that 30001 / served dev directory.
       publicDir: false,             // No public resources to copy.
-      cacheDir: '../.vite-cache',   // Relative from root directory.
+      cacheDir: '../node_modules/.vite',   // Keep Vite cache in the default stable location.
 
       resolve: {
          conditions: ["import", "browser"],
@@ -95,6 +95,7 @@ export default () => {
 
       // Necessary when using the dev server for top-level await usage inside TRL.
       optimizeDeps: {
+         force: true,
          esbuildOptions: {
             target: 'es2022'
          }

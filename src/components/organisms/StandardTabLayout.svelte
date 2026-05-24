@@ -36,9 +36,25 @@ div.content(class="{contentClass}")
 
 .content 
   +mixins.staticOptions
+  height: 100%
+  min-height: 0
+
+  .flexrow
+    height: 100%
+    min-height: 0
+    align-items: stretch
 
   .col-a
-    // max-width: 325px
+    min-height: 0
+    overflow-y: auto
+
+  .col-b
+    min-height: 0
+    overflow-y: auto
+
+  .col-b :global(img)
+    max-width: 100%
+    height: auto
 
   
   .overlay

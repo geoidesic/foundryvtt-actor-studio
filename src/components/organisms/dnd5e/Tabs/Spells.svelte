@@ -146,9 +146,14 @@
     ? autoPopulateEligibleSpellCount
     : $spellLimits.spells;
 
+  $: hasGainedNewSpellLevels = $isLevelUp
+    && hasAllSpellsAccess
+    && levelUpAwareMaxSpellLevel > oldMaxSpellLevel;
+
   // Check if this is a level-up with no new auto-selected spells and no cantrip updates.
   $: isLevelUpWithNoSpellUpdates = $isLevelUp
     && hasAllSpellsAccess
+    && !hasGainedNewSpellLevels
     && autoPopulateEligibleSpellCount === 0
     && $spellLimits.cantrips === 0;
 
