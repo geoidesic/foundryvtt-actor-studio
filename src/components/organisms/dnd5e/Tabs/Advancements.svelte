@@ -100,6 +100,7 @@
 :global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .window-content button)
   background: rgba(0,0,0, 9)
   font-size: var(--font-size-16)
+  color: var(--dnd5e-color-gold)
 :global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .window-content)
   background: url("../modules/foundryvtt-actor-studio/assets/black-parchment.webp") repeat
 :global(.gas-advancements .step ol.trait-slots li.trait-slot label)
