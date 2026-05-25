@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
-import { safeGetSetting, bringActorStudioToFront } from '~/src/helpers/Utility';
+import { safeGetSetting, bringActorStudioToFront, resolveDefaultActorSheetId } from '~/src/helpers/Utility';
 import { activeTab, tabs, readOnlyTabs, getCoreCreationReadOnlyTabs } from '~/src/stores/index';
 import { compatibleStartingEquipment } from '~/src/stores/startingEquipment';
 import { preAdvancementSelections, dropItemRegistry } from '~/src/stores/index';
@@ -611,10 +611,29 @@ export function createWorkflowStateMachine() {
         
         const { actor } = workflowFSMContext;
         if (actor) {
-          window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', actor.name);
-          actor.sheet.render(true);
-          setTimeout(() => bringActorStudioToFront(), 0);
-          setTimeout(() => bringActorStudioToFront(), 100);
+          // Open actor sheet respecting the configured default from Core Settings.
+          // Mirror the level-up v14 approach: explicitly apply the default sheet class
+          // so users who have configured a non-dnd5e default (e.g. Tidy5e) see the
+          // correct sheet after character creation on all Foundry versions.
+          (async () => {
+            const refreshedActor = actor?.id ? (game.actors?.get(actor.id) || actor) : actor;
+            try {
+              const defaultSheetId = resolveDefaultActorSheetId(refreshedActor);
+              if (defaultSheetId) {
+                const currentFlag = refreshedActor.getFlag?.('core', 'sheetClass');
+                if (currentFlag !== defaultSheetId) {
+                  await refreshedActor.setFlag('core', 'sheetClass', defaultSheetId);
+                  window.GAS.log.d('[WORKFLOW] Applied default sheet class on completion:', defaultSheetId);
+                }
+              }
+            } catch (sheetError) {
+              window.GAS.log.w('[WORKFLOW] Failed to apply default sheet class on completion:', sheetError);
+            }
+            window.GAS.log.d('[WORKFLOW] Opening actor sheet for:', refreshedActor.name);
+            refreshedActor.sheet.render(true);
+            setTimeout(() => bringActorStudioToFront(), 0);
+            setTimeout(() => bringActorStudioToFront(), 100);
+          })();
         }
         setTimeout(() => {
           window.GAS.log.d('[WORKFLOW] Closing Actor Studio');

@@ -847,6 +847,42 @@ export const getCompendiumSource = (item) => {
 }
 
 /**
+ * Resolve the sheet id configured as the default for this actor type in Core Settings.
+ * Works across Foundry v12, v13, and v14.
+ * @param {Actor} actor
+ * @returns {string|undefined}
+ */
+export function resolveDefaultActorSheetId(actor) {
+  try {
+    const type = actor?.type ?? 'character';
+
+    // v14+: DocumentSheetConfig API
+    const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+    if (DSC?.getSheetClassesForSubType) {
+      const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
+      if (defaultClass) return defaultClass;
+    }
+
+    // v12/v13: read from the core 'sheetClasses' game setting
+    try {
+      const coreSheetClasses = game?.settings?.get?.('core', 'sheetClasses');
+      const configured = coreSheetClasses?.Actor?.[type];
+      if (configured) return configured;
+    } catch (_) {}
+
+    // Fallback: find the default-marked entry in the registered sheet classes
+    const config = CONFIG?.Actor?.sheetClasses?.[type] ?? {};
+    const defaultEntry = Object.entries(config).find(([, cfg]) => cfg?.default === true);
+    if (defaultEntry) return defaultEntry[0];
+
+    return undefined;
+  } catch (e) {
+    window.GAS?.log?.w?.('resolveDefaultActorSheetId failed', e);
+    return undefined;
+  }
+}
+
+/**
  * Resolve the sheet id for the core dnd5e character sheet in the current environment.
  * Returns something like `dnd5e.CharacterActorSheet` (v13/v4) or `dnd5e.ActorSheet5eCharacter2`/`dnd5e.ActorSheet5eCharacter` (older).
  * Falls back to the default registered sheet if a dnd5e sheet is not found.
