@@ -140,7 +140,7 @@ export default () => {
       },
 
       plugins: [
-         process.env.npm_package_env === 'dev' && foundryDevManifestStyleShim(s_PACKAGE_ID),
+         foundryDevManifestStyleShim(s_PACKAGE_ID),
 
          svelte({
             compilerOptions: {
@@ -154,6 +154,6 @@ export default () => {
          }),
 
          resolve(s_RESOLVE_CONFIG)  // Necessary when bundling npm-linked packages.
-      ].filter(Boolean)
+      ]
    };
 };
