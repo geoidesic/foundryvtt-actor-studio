@@ -550,6 +550,8 @@
       "Label": "裝備",
       "Choice": "選擇一個",
       "ChooseOne": "選擇一個...",
+      "NoSelectedSource": "目前沒有選擇任何裝備來源。",
+      "SourceMissing": "未設定起始裝備。",
       "EquipmentConfirmed": "裝備已確認並新增到角色表",
       "EquipmentReadOnly": "裝備選擇已完成，在升級特性選擇期間為唯讀",
       "Focus": "施法焦點",

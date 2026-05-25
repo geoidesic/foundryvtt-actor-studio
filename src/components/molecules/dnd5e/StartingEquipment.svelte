@@ -16,6 +16,7 @@
     isGroupFromSource,
     isGroupNonEditable,
   } from "~/src/stores/equipmentSelections";
+  import { goldChoices } from "~/src/stores/goldChoices";
   import { setEquipmentGoldChoice } from "~/src/stores/equipmentGold";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { safeGetSetting } from '~/src/helpers/Utility';
@@ -57,18 +58,26 @@
   // Group equipment by source for 2024 rules - main grouping function
   $: equipmentBySource = (() => {
     if (window.GAS.dnd5eVersion < 4 || window.GAS.dnd5eRules !== "2024") {
-      // For non-2024 rules, just return equipment without source grouping
-      return [{ source: null, equipment: startingEquipment }];
+      return characterClass
+        ? [{
+            source: "class",
+            label: characterClass?.name || "Class",
+            equipment: startingEquipment,
+            isMissing: startingEquipment.length === 0,
+          }]
+        : [];
     }
 
     const groups = [];
+    const classChoseEquipment = $goldChoices?.fromClass?.choice === 'equipment';
+    const backgroundChoseEquipment = $goldChoices?.fromBackground?.choice === 'equipment';
 
-    // Add class equipment if available
-    if (classEquipment?.length > 0) {
+    if (characterClass && classChoseEquipment) {
       const classGroup = {
         source: "class",
         label: characterClass?.name || "Class",
         equipment: classEquipment,
+        isMissing: classEquipment.length === 0,
       };
       
       // Add variable gold options for class if available
@@ -80,12 +89,12 @@
       groups.push(classGroup);
     }
 
-    // Add background equipment if available
-    if (backgroundEquipment?.length > 0) {
+    if (background && backgroundChoseEquipment) {
       const backgroundGroup = {
         source: "background",
         label: background?.name || "Background",
         equipment: backgroundEquipment,
+        isMissing: backgroundEquipment.length === 0,
       };
       
       // Add variable gold options for background if available (though unlikely)
@@ -268,7 +277,7 @@
 </script>
 
 <template lang="pug">
-  +if("startingEquipment?.length")
+  +if("equipmentBySource.length")
     section.starting-equipment
       .flexrow
         +if("!disabled")
@@ -301,6 +310,6 @@
         .flexrow
           .flex3
             h2.left {t('Equipment.Label')}
-        p {t('Error.EquipmentSelectionNotViable')}
+        p {t('Equipment.NoSelectedSource')}
 </template>
 

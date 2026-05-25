@@ -550,6 +550,8 @@
       "Label": "装備",
       "Choice": "1つ選択",
       "ChooseOne": "1つ選択...",
+      "NoSelectedSource": "現在選択されている装備ソースはありません。",
+      "SourceMissing": "には設定された初期装備がありません。",
       "EquipmentConfirmed": "装備が確認され、キャラクターシートに追加されました",
       "EquipmentReadOnly": "装備選択が完了し、進展選択中は読み取り専用になりました",
       "Focus": "呪文発動焦点具",

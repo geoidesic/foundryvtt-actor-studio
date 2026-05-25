@@ -550,6 +550,8 @@
       "Label": "Equipment",
       "Choice": "Choose one",
       "ChooseOne": "Choose one...",
+      "NoSelectedSource": "No equipment source is currently selected.",
+      "SourceMissing": "has no starting equipment configured.",
       "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
       "EquipmentReadOnly": "Equipment selections have been completed and are now read-only during advancement selection",
       "Focus": "Spellcasting Focus",
