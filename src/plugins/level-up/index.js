@@ -60,7 +60,7 @@ async function openActorStudioLevelUp(app, busyErrorCode) {
   }
 
   // Check if this is a DDB Importer character
-  const { isDDBImportedCharacter, showDDBImporterWarning } = await import('~/src/helpers/Utility.js');
+  const { isDDBImportedCharacter, showDDBImporterWarning, isCoreSheetSwitchRequiredForLevelUp } = await import('~/src/helpers/Utility.js');
   if (isDDBImportedCharacter(app.actor)) {
     const proceed = await showDDBImporterWarning(app.actor);
     if (!proceed) {
@@ -68,7 +68,9 @@ async function openActorStudioLevelUp(app, busyErrorCode) {
     }
   }
 
-  await storeOriginalSheetClassForLevelUp(app);
+  if (isCoreSheetSwitchRequiredForLevelUp()) {
+    await storeOriginalSheetClassForLevelUp(app);
+  }
 
   new PCApplication(app.actor, true).render(true, { focus: true });
 }

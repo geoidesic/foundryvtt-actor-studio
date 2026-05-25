@@ -1009,6 +1009,25 @@ export function bringActorStudioToFront() {
 }
 
 /**
+ * Whether level-up should temporarily force the actor onto the core dnd5e sheet.
+ *
+ * Historical behavior on Foundry v12/v13 with Tidy5e was stable without forcing
+ * a sheet swap. The enforced swap is only required for modern v14+ flows.
+ * @returns {boolean}
+ */
+export function isCoreSheetSwitchRequiredForLevelUp() {
+  try {
+    const generation = game?.release?.generation;
+    if (typeof generation === 'number') return generation >= 14;
+
+    const major = Number.parseInt(String(game?.version ?? ''), 10);
+    return Number.isFinite(major) && major >= 14;
+  } catch (_) {
+    return false;
+  }
+}
+
+/**
  * Ensure actor uses the core dnd5e sheet for level-up processing.
  * Persists previous effective sheet class to MODULE_ID.originalSheetClass for later restoration.
  * @param {Actor} actor
@@ -1016,6 +1035,7 @@ export function bringActorStudioToFront() {
  */
 export async function switchActorToDefaultDnd5eSheetForLevelUp(actor) {
   try {
+    if (!isCoreSheetSwitchRequiredForLevelUp()) return false;
     if (!actor) return false;
 
     const desiredSheetId = resolveDnd5eCoreCharacterSheetId(actor);

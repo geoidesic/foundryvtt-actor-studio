@@ -1,6 +1,6 @@
 import { get } from 'svelte/store';
 import { actorInGame } from '~/src/stores/index';
-import { safeGetSetting } from '~/src/helpers/Utility';
+import { safeGetSetting, isCoreSheetSwitchRequiredForLevelUp } from '~/src/helpers/Utility';
 import { getTestTimeout, getTestTimeouts } from '~/src/helpers/testTimeouts';
 import { parseSpellProgressionValue, shouldExpectSpellsForLevel, getExpectedSpellSelectionDelta, spellUiMayAppearForLevel } from '~/src/hooks/tests/toonSpellHelpers.js';
 
@@ -59,24 +59,34 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   const waitForCondition = async (fn, timeoutMs = TEST_TIMEOUTS.uiInteraction, intervalMs = TEST_TIMEOUTS.pollingInterval, description = 'condition') => {
     return new Promise((resolve, reject) => {
       const start = Date.now();
+      let settled = false;
+      let inFlight = false;
       const interval = setInterval(async () => {
+        if (settled || inFlight) return;
+        inFlight = true;
         if (isAborted()) {
           clearInterval(interval);
+          settled = true;
           reject(new AbortError());
           return;
         }
         try {
           if (await fn()) {
             clearInterval(interval);
+            settled = true;
             resolve(true);
           } else if (Date.now() - start >= timeoutMs) {
             clearInterval(interval);
             window.GAS.log.d(`[QUENCH] Timeout waiting for ${description} after ${timeoutMs}ms`);
+            settled = true;
             resolve(false);
           }
         } catch (error) {
           clearInterval(interval);
+          settled = true;
           reject(error);
+        } finally {
+          inFlight = false;
         }
       }, intervalMs);
     });
@@ -375,7 +385,17 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     await actor.sheet.render(true, { focus: true });
     await wait(WAIT_LONG);
 
-    const button = document.querySelector('button.level-up');
+    const selectors = [
+      'button.level-up',
+      '#gas-levelup-btn',
+      'button[data-action="gasLevelUp"]',
+      'button[aria-label="Level Up"]',
+      'button[data-action="levelUp"]',
+      'button[data-action="level-up"]'
+    ];
+    const button = selectors
+      .map((selector) => document.querySelector(selector))
+      .find((candidate) => candidate && !candidate.disabled);
     if (!button || button.disabled) return false;
 
     button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
@@ -995,6 +1015,150 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     await closeActorStudioIfOpen();
   };
 
+  const ensureCurrentActorOnDefaultSheet = async () => {
+    const actor = getCurrentActor();
+    if (!actor) return false;
+
+    const type = actor?.type || 'character';
+    const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+    const defaultSheetId = DSC?.getSheetClassesForSubType?.('Actor', type)?.defaultClass;
+    if (!defaultSheetId) return false;
+
+    await actor.setFlag('core', 'sheetClass', defaultSheetId);
+    if (typeof actor._onSheetChange === 'function') {
+      await actor._onSheetChange({ sheetOpen: false });
+    }
+
+    await actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
+
+    return waitForCondition(() => {
+      const refreshedActor = getCurrentActor();
+      if (!refreshedActor) return false;
+      return String(refreshedActor.getFlag('core', 'sheetClass') || '') === String(defaultSheetId);
+    }, TEST_TIMEOUTS.actorDataUpdate, POLL_INTERVAL, 'actor sheet class to reset to default dnd5e sheet');
+  };
+
+  const runSheetRestoreRegressionTest = async (targetLevel = 2) => {
+    checkAbort();
+    const actor = getCurrentActor();
+    assert.ok(actor, `Existing created ${classIdentifier} actor should be available for sheet-restore regression test`);
+
+    const tidyModule = game?.modules?.get?.('tidy5e-sheet') || game?.modules?.get?.('tidy5e');
+    if (!tidyModule?.active) {
+      assert.ok(true, `Skipping sheet-restore regression for ${classIdentifier}: Tidy5e module is not active`);
+      return;
+    }
+
+    if (!isCoreSheetSwitchRequiredForLevelUp()) {
+      assert.ok(true, `Skipping sheet-restore regression for ${classIdentifier}: sheet-switch restore assertions are only required on Foundry v14+`);
+      return;
+    }
+
+    const type = actor?.type || 'character';
+    const sheetClasses = CONFIG?.Actor?.sheetClasses?.[type] || {};
+    const tidySheetId = Object.keys(sheetClasses).find((id) => /tidy5e/i.test(String(id)));
+
+    if (!tidySheetId) {
+      assert.ok(true, `Skipping sheet-restore regression for ${classIdentifier}: no Tidy5e sheet registered in this environment`);
+      return;
+    }
+
+    const DSC = foundry?.applications?.apps?.DocumentSheetConfig;
+    const defaultSheetId = DSC?.getSheetClassesForSubType?.('Actor', type)?.defaultClass;
+    assert.ok(defaultSheetId, 'Default actor sheet class should resolve for regression test');
+    assert.notEqual(tidySheetId, defaultSheetId, 'Tidy5e sheet should differ from default sheet for regression test');
+
+    const wasOpen = !!actor.sheet?.rendered;
+    try {
+      // Clear any stale restore target from prior tests (e.g. open/close flows)
+      // so this regression test captures Tidy5e as the authoritative original.
+      await actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
+
+      if (wasOpen) {
+        await actor.sheet.close();
+      }
+
+      await actor.setFlag('core', 'sheetClass', tidySheetId);
+      if (typeof actor._onSheetChange === 'function') {
+        await actor._onSheetChange({ sheetOpen: false });
+      }
+
+      const tidySet = await waitForCondition(() => {
+        const refreshedActor = getCurrentActor();
+        if (!refreshedActor) return false;
+        return String(refreshedActor.getFlag('core', 'sheetClass') || '') === String(tidySheetId);
+      }, TEST_TIMEOUTS.actorDataUpdate, POLL_INTERVAL, 'actor sheet class to switch to Tidy5e before level-up');
+      assert.ok(tidySet, `Actor should be on Tidy5e sheet before ${classIdentifier} level-up regression flow`);
+
+      const staleOriginalCleared = await waitForCondition(() => {
+        const refreshedActor = getCurrentActor();
+        if (!refreshedActor) return false;
+        const pendingOriginal = refreshedActor.getFlag(MODULE_ID, 'originalSheetClass');
+        return pendingOriginal === undefined || pendingOriginal === null;
+      }, TEST_TIMEOUTS.actorDataUpdate, POLL_INTERVAL, 'stale originalSheetClass flag to clear before Tidy regression run');
+      assert.ok(staleOriginalCleared, 'Stale originalSheetClass flag should be cleared before Tidy regression run');
+
+      if (wasOpen) {
+        await actor.sheet.render(true, { focus: true });
+        await wait(WAIT_MEDIUM);
+      }
+
+      await runLevelTest(targetLevel);
+
+      // Level-up close hooks can complete slightly after app close; wait for
+      // the full lifecycle window before asserting sheet restoration.
+      await waitForCondition(
+        () => !document.querySelector('#foundryvtt-actor-studio-pc-sheet'),
+        TEST_TIMEOUTS.appLifecycleComplete,
+        POLL_INTERVAL,
+        'Actor Studio app to remain closed before sheet restore assertion'
+      );
+
+      const restoredToTidy = await waitForCondition(() => {
+        const refreshedActor = getCurrentActor();
+        if (!refreshedActor) return false;
+
+        const coreFlagMatches = String(refreshedActor.getFlag('core', 'sheetClass') || '') === String(tidySheetId);
+        const currentSheet = refreshedActor?.sheet;
+        const tidyApi = tidyModule?.api;
+        const tidyInstanceMatches = Boolean(
+          tidyApi?.isTidy5eCharacterSheet?.(currentSheet)
+          || /tidy5e/i.test(currentSheet?.constructor?.name || '')
+          || /tidy5e/i.test(currentSheet?.id || '')
+        );
+
+        return coreFlagMatches || tidyInstanceMatches;
+      }, TEST_TIMEOUTS.appLifecycleComplete, POLL_INTERVAL, 'actor sheet class to restore to Tidy5e after level-up');
+      assert.ok(restoredToTidy, `Actor sheet class should restore to Tidy5e after ${classIdentifier} level-up`);
+
+      const originalFlagCleared = await waitForCondition(() => {
+        const refreshedActor = getCurrentActor();
+        if (!refreshedActor) return false;
+        const pendingOriginal = refreshedActor.getFlag(MODULE_ID, 'originalSheetClass');
+        return pendingOriginal === undefined || pendingOriginal === null;
+      }, TEST_TIMEOUTS.actorDataUpdate, POLL_INTERVAL, 'pending originalSheetClass flag to clear after restore');
+      assert.ok(originalFlagCleared, 'Pending originalSheetClass flag should be cleared after sheet restoration');
+    } finally {
+      try {
+        await actor.setFlag('core', 'sheetClass', defaultSheetId);
+        if (typeof actor._onSheetChange === 'function') {
+          await actor._onSheetChange({ sheetOpen: false });
+        }
+      } catch (error) {
+        window.GAS?.log?.w?.('[QUENCH] Failed to restore default sheet after sheet-restore regression test', error);
+      }
+
+      if (wasOpen) {
+        try {
+          await actor.sheet.render(true, { focus: true });
+          await wait(WAIT_MEDIUM);
+        } catch (_) {
+          // no-op
+        }
+      }
+    }
+  };
+
   const runLevelTest = async (targetLevel) => {
     checkAbort();
     const actor = getCurrentActor();
@@ -1167,8 +1331,10 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     TEST_TIMEOUTS,
     beforeAll,
     afterAll,
+    ensureCurrentActorOnDefaultSheet,
     runCreationTest,
     runOpenLevelUpAppTest,
+    runSheetRestoreRegressionTest,
     runLevelTest
   };
 }

@@ -31,16 +31,18 @@ export function registerFighterTests(context) {
 
     it('should open level-up app from fighter actor sheet when milestone leveling is enabled', async function () {
       this.timeout(helpers.TEST_TIMEOUTS.perTest);
+      await helpers.ensureCurrentActorOnDefaultSheet();
       await helpers.runOpenLevelUpAppTest();
     });
 
-    it('should level fighter from 1 to 2', async function () {
+    it('should restore Tidy5e sheet after fighter levels from 1 to 2', async function () {
       this.timeout(helpers.TEST_TIMEOUTS.perTest);
-      await helpers.runLevelTest(2);
+      await helpers.runSheetRestoreRegressionTest(2);
     });
 
     it('should level fighter from 2 to 3', async function () {
       this.timeout(helpers.TEST_TIMEOUTS.perTest);
+      await helpers.ensureCurrentActorOnDefaultSheet();
       await helpers.runLevelTest(3);
     });
   });

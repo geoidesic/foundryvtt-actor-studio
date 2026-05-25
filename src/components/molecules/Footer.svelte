@@ -42,7 +42,7 @@
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { isGenerating } from '~/src/stores/biography';
   import { biographyContent, characterDetails } from '~/src/stores/biography';
-  import { updateSource, switchActorToDefaultDnd5eSheetForLevelUp } from '~/src/helpers/Utility';
+  import { updateSource, switchActorToDefaultDnd5eSheetForLevelUp, isCoreSheetSwitchRequiredForLevelUp } from '~/src/helpers/Utility';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
@@ -268,7 +268,7 @@
     // Ensure we are on core dnd5e sheet before starting level-up advancement flow.
     // If actor is currently on a custom sheet (e.g., Tidy5e), switch and wait first.
     const actorDoc = get(actorInGame) || get(actor);
-    if (actorDoc) {
+    if (actorDoc && isCoreSheetSwitchRequiredForLevelUp()) {
       await switchActorToDefaultDnd5eSheetForLevelUp(actorDoc);
     }
     

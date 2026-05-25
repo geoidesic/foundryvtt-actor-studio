@@ -157,14 +157,14 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
   const TIMEOUT_DEFAULTS = {
     uiInteraction: 5000,
-    uiStateChange: 20000,
-    spellUiLoad: 5000,
-    spellWorkflow: 30000,
-    appClosure: 4000,
-    appLifecycleComplete: 32000,
-    advancementProcessing: 1500,
-    advancementPostLevel: 3000,
-    actorDataUpdate: 50000,
+    uiStateChange: 10000,
+    spellUiLoad: 4000,
+    spellWorkflow: 20000,
+    appClosure: 3000,
+    appLifecycleComplete: 22000,
+    advancementProcessing: 300,
+    advancementPostLevel: 2000,
+    actorDataUpdate: 40000,
     pollingInterval: 100
   };
 
