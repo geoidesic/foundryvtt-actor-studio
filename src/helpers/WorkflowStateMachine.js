@@ -679,10 +679,47 @@ export function getWorkflowFSM() {
   return workflowFSM;
 }
 
+/**
+ * Reset the workflow FSM to a safe baseline for the next Actor Studio session.
+ * Optionally recreates the singleton instance to avoid stale in-flight state.
+ *
+ * @param {object} options
+ * @param {boolean} [options.recreate=true] - Recreate the singleton after reset.
+ */
+export function resetWorkflowFSM({ recreate = true } = {}) {
+  const currentFSM = workflowFSM;
+  if (currentFSM) {
+    try {
+      const currentState = currentFSM.getCurrentState?.();
+      if (currentState !== 'idle') {
+        currentFSM.handle(WORKFLOW_EVENTS.RESET);
+      }
+    } catch (error) {
+      window.GAS?.log?.w?.('[WORKFLOW] Error resetting FSM instance:', error);
+    }
+  }
+
+  // Always clear shared context values used across sessions.
+  try {
+    workflowFSMContext.isProcessing?.set(false);
+  } catch (error) {
+    window.GAS?.log?.w?.('[WORKFLOW] Error resetting isProcessing:', error);
+  }
+  workflowFSMContext.actor = undefined;
+
+  if (recreate) {
+    workflowFSM = undefined;
+    if (typeof window !== 'undefined' && window.GAS) {
+      delete window.GAS.workflowFSM;
+    }
+  }
+}
+
 // Only export the Finity-based FSM and context
 export default {
   createWorkflowStateMachine,
   getWorkflowFSM,
+  resetWorkflowFSM,
   workflowFSMContext,
   WORKFLOW_STATES,
   WORKFLOW_EVENTS,

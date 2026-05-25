@@ -10,7 +10,7 @@
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log, safeGetSetting } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { getWorkflowFSM, workflowFSMContext, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
+  import { getWorkflowFSM, resetWorkflowFSM } from '~/src/helpers/WorkflowStateMachine';
   import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
   import { observeFoundryBodyTheme } from '~/src/helpers/syncAppThemeFromFoundryBody';
 
@@ -204,29 +204,11 @@
     // console.log('[PCAPP] Resetting stores and workflow state machine');
     resetStores();
     
-    // Reset workflow state machine to idle, with error handling
+    // Always reset and recreate workflow FSM to prevent stale mid-workflow sessions.
     try {
-      const currentState = getWorkflowFSM().getCurrentState();
-      // console.log('[PCAPP] Current workflow state before reset:', currentState);
-      
-      // Only send reset if not in a state that can't handle it
-      if (currentState !== 'processing_advancements') {
-        getWorkflowFSM().handle(WORKFLOW_EVENTS.RESET);
-        // console.log('[PCAPP] Workflow state after reset:', getWorkflowFSM().getCurrentState());
-      } else {
-        // For processing_advancements, we'll let it complete naturally or force stop
-        // console.log('[PCAPP] Skipping reset for processing_advancements state - will be handled naturally');
-        // Force the processing flag to false to allow cleanup
-        if (workflowFSMContext?.isProcessing) {
-          workflowFSMContext.isProcessing.set(false);
-        }
-      }
+      resetWorkflowFSM({ recreate: true });
     } catch (error) {
       console.warn('[PCAPP] Error during workflow reset:', error);
-      // Force cleanup even if reset fails
-      if (workflowFSMContext?.isProcessing) {
-        workflowFSMContext.isProcessing.set(false);
-      }
     }
     
     // Set flag to indicate we're closing from the gas hook
