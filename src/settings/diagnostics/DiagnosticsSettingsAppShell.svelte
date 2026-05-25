@@ -33,7 +33,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutUiInteraction.Name')}
             input(
               type="number"
-              placeholder="10000"
+              placeholder="5000"
               bind:value="{uiInteraction}"
               min="1000"
               step="500"
@@ -55,7 +55,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             p.setting-label {game.i18n.localize('GAS.Setting.testTimeoutSpellUiLoad.Name')}
             input(
               type="number"
-              placeholder="10000"
+              placeholder="5000"
               bind:value="{spellUiLoad}"
               min="1000"
               step="500"
@@ -155,36 +155,60 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
   const { application } = getContext('#external');
 
+  const TIMEOUT_DEFAULTS = {
+    uiInteraction: 5000,
+    uiStateChange: 20000,
+    spellUiLoad: 5000,
+    spellWorkflow: 30000,
+    appClosure: 4000,
+    appLifecycleComplete: 32000,
+    advancementProcessing: 1500,
+    advancementPostLevel: 3000,
+    actorDataUpdate: 50000,
+    pollingInterval: 100
+  };
+
+  function readTimeoutSetting(key, fallback) {
+    const raw = safeGetSetting(MODULE_ID, key, fallback);
+    const numeric = Number(raw);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : fallback;
+  }
+
+  function toPositiveInt(value, fallback) {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  }
+
   // Load current settings
   const quenchActive = Boolean(game.modules.get('quench')?.active);
   let debug = safeGetSetting(MODULE_ID, 'debug', false);
   let debugHooks = safeGetSetting(MODULE_ID, 'debug.hooks', false);
-  let uiInteraction = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutUiInteraction') : null;
-  let uiStateChange = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutUiStateChange') : null;
-  let spellUiLoad = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellUiLoad') : null;
-  let spellWorkflow = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutSpellWorkflow') : null;
-  let appClosure = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAppClosure') : null;
-  let appLifecycleComplete = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAppLifecycleComplete') : null;
-  let advancementProcessing = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementProcessing') : null;
-  let advancementPostLevel = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutAdvancementPostLevel') : null;
-  let actorDataUpdate = quenchActive ? safeGetSetting(MODULE_ID, 'testTimeoutActorDataUpdate') : null;
-  let pollingInterval = quenchActive ? safeGetSetting(MODULE_ID, 'testIntervalPolling') : null;
+  let uiInteraction = quenchActive ? readTimeoutSetting('testTimeoutUiInteraction', TIMEOUT_DEFAULTS.uiInteraction) : null;
+  let uiStateChange = quenchActive ? readTimeoutSetting('testTimeoutUiStateChange', TIMEOUT_DEFAULTS.uiStateChange) : null;
+  let spellUiLoad = quenchActive ? readTimeoutSetting('testTimeoutSpellUiLoad', TIMEOUT_DEFAULTS.spellUiLoad) : null;
+  let spellWorkflow = quenchActive ? readTimeoutSetting('testTimeoutSpellWorkflow', TIMEOUT_DEFAULTS.spellWorkflow) : null;
+  let appClosure = quenchActive ? readTimeoutSetting('testTimeoutAppClosure', TIMEOUT_DEFAULTS.appClosure) : null;
+  let appLifecycleComplete = quenchActive ? readTimeoutSetting('testTimeoutAppLifecycleComplete', TIMEOUT_DEFAULTS.appLifecycleComplete) : null;
+  let advancementProcessing = quenchActive ? readTimeoutSetting('testTimeoutAdvancementProcessing', TIMEOUT_DEFAULTS.advancementProcessing) : null;
+  let advancementPostLevel = quenchActive ? readTimeoutSetting('testTimeoutAdvancementPostLevel', TIMEOUT_DEFAULTS.advancementPostLevel) : null;
+  let actorDataUpdate = quenchActive ? readTimeoutSetting('testTimeoutActorDataUpdate', TIMEOUT_DEFAULTS.actorDataUpdate) : null;
+  let pollingInterval = quenchActive ? readTimeoutSetting('testIntervalPolling', TIMEOUT_DEFAULTS.pollingInterval) : null;
 
   async function saveSettings() {
     try {
       await game.settings.set(MODULE_ID, 'debug', debug);
       await game.settings.set(MODULE_ID, 'debug.hooks', debugHooks);
       if (quenchActive) {
-        await game.settings.set(MODULE_ID, 'testTimeoutUiInteraction', parseInt(uiInteraction, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutUiStateChange', parseInt(uiStateChange, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutSpellUiLoad', parseInt(spellUiLoad, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutSpellWorkflow', parseInt(spellWorkflow, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutAppClosure', parseInt(appClosure, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutAppLifecycleComplete', parseInt(appLifecycleComplete, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementProcessing', parseInt(advancementProcessing, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementPostLevel', parseInt(advancementPostLevel, 10));
-        await game.settings.set(MODULE_ID, 'testTimeoutActorDataUpdate', parseInt(actorDataUpdate, 10));
-        await game.settings.set(MODULE_ID, 'testIntervalPolling', parseInt(pollingInterval, 10));
+        await game.settings.set(MODULE_ID, 'testTimeoutUiInteraction', toPositiveInt(uiInteraction, TIMEOUT_DEFAULTS.uiInteraction));
+        await game.settings.set(MODULE_ID, 'testTimeoutUiStateChange', toPositiveInt(uiStateChange, TIMEOUT_DEFAULTS.uiStateChange));
+        await game.settings.set(MODULE_ID, 'testTimeoutSpellUiLoad', toPositiveInt(spellUiLoad, TIMEOUT_DEFAULTS.spellUiLoad));
+        await game.settings.set(MODULE_ID, 'testTimeoutSpellWorkflow', toPositiveInt(spellWorkflow, TIMEOUT_DEFAULTS.spellWorkflow));
+        await game.settings.set(MODULE_ID, 'testTimeoutAppClosure', toPositiveInt(appClosure, TIMEOUT_DEFAULTS.appClosure));
+        await game.settings.set(MODULE_ID, 'testTimeoutAppLifecycleComplete', toPositiveInt(appLifecycleComplete, TIMEOUT_DEFAULTS.appLifecycleComplete));
+        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementProcessing', toPositiveInt(advancementProcessing, TIMEOUT_DEFAULTS.advancementProcessing));
+        await game.settings.set(MODULE_ID, 'testTimeoutAdvancementPostLevel', toPositiveInt(advancementPostLevel, TIMEOUT_DEFAULTS.advancementPostLevel));
+        await game.settings.set(MODULE_ID, 'testTimeoutActorDataUpdate', toPositiveInt(actorDataUpdate, TIMEOUT_DEFAULTS.actorDataUpdate));
+        await game.settings.set(MODULE_ID, 'testIntervalPolling', toPositiveInt(pollingInterval, TIMEOUT_DEFAULTS.pollingInterval));
       }
 
       ui.notifications.info('Diagnostics settings saved successfully');
@@ -203,16 +227,16 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
     debug = false;
     debugHooks = false;
     if (quenchActive) {
-      uiInteraction = 5000;
-      uiStateChange = 20000;
-      spellUiLoad = 7000;
-      spellWorkflow = 30000;
-      appClosure = 4000;
-      appLifecycleComplete = 32000;
-      advancementProcessing = 1500;
-      advancementPostLevel = 3000;
-      actorDataUpdate = 50000;
-      pollingInterval = 500;
+      uiInteraction = TIMEOUT_DEFAULTS.uiInteraction;
+      uiStateChange = TIMEOUT_DEFAULTS.uiStateChange;
+      spellUiLoad = TIMEOUT_DEFAULTS.spellUiLoad;
+      spellWorkflow = TIMEOUT_DEFAULTS.spellWorkflow;
+      appClosure = TIMEOUT_DEFAULTS.appClosure;
+      appLifecycleComplete = TIMEOUT_DEFAULTS.appLifecycleComplete;
+      advancementProcessing = TIMEOUT_DEFAULTS.advancementProcessing;
+      advancementPostLevel = TIMEOUT_DEFAULTS.advancementPostLevel;
+      actorDataUpdate = TIMEOUT_DEFAULTS.actorDataUpdate;
+      pollingInterval = TIMEOUT_DEFAULTS.pollingInterval;
     }
   }
 </script>
@@ -225,6 +249,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   :global(#gas-diagnostics-settings .window-content)
     padding: 0
     overflow: hidden
+
+  :global(#gas-diagnostics-settings .window-header)
+    color: white
+
+  :global(#gas-diagnostics-settings .window-header .window-title)
+    color: white
+
+  :global(#gas-diagnostics-settings .window-header a)
+    color: white
 
   .gas-settings-app
     display: flex
@@ -284,6 +317,20 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           font-size: 0.85rem
           color: #aaa
           font-style: italic
+
+        input[type="number"]
+          width: 100%
+          color: white
+          background: rgba(255, 255, 255, 0.06)
+          border: 1px solid #555
+
+          &::placeholder
+            color: #7d7d7d
+            opacity: 1
+
+          &:focus
+            outline: 1px solid #777
+            border-color: #777
 
   .settings-footer
     position: sticky
