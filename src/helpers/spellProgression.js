@@ -122,6 +122,7 @@ function getSpellLimitsFromAdvancements(classItem, level) {
 
   let cantrips = null;
   let spellsKnown = null;
+  let preparedSpells = null;
 
   for (const advancement of applicable) {
     const title = String(advancement?.title || '').toLowerCase();
@@ -138,16 +139,24 @@ function getSpellLimitsFromAdvancements(classItem, level) {
       continue;
     }
 
+    if (title.includes('spell') && title.includes('prepared')) {
+      preparedSpells = value;
+      continue;
+    }
+
     if (title.includes('spell') && !title.includes('prepared')) {
       spellsKnown = value;
     }
   }
 
-  if (cantrips === null && spellsKnown === null) return null;
+  if (cantrips === null && spellsKnown === null && preparedSpells === null) return null;
 
   return {
     cantrips: cantrips === null ? null : Math.max(0, cantrips),
-    spells: spellsKnown === null ? null : Math.max(0, spellsKnown),
+    // Prefer explicit "Spells Known" when present, otherwise use prepared-scale values.
+    spells: spellsKnown !== null
+      ? Math.max(0, spellsKnown)
+      : (preparedSpells === null ? null : Math.max(0, preparedSpells)),
     hasAllSpells: false
   };
 }
@@ -161,7 +170,7 @@ export function getSpellLimitsForClassLevel({ classIdentifier, classItem, level,
   return {
     // Cantrip limits come from advancements only; table cantrip data is intentionally ignored.
     cantrips: Math.max(0, fromAdvancements?.cantrips ?? 0),
-    // Spells-known comes from explicit Spells Known advancement, else fallback to spellsKnown.json.
+    // Spells come from advancement scale values (known/prepared), else fallback to spellsKnown.json.
     spells: Math.max(0, (fromAdvancements?.spells ?? fromTable?.spells ?? 0)),
     hasAllSpells: Boolean(fromAdvancements?.hasAllSpells || fromTable?.hasAllSpells)
   };

@@ -5,7 +5,7 @@ import {
 } from '~/src/helpers/spellProgression';
 
 describe('spellProgression helper', () => {
-  it('ignores Max Prepared Spells for Actor Studio limits', () => {
+  it('uses Max Prepared Spells advancement when Spells Known is absent', () => {
     const classItem = {
       system: {
         advancement: [
@@ -25,6 +25,79 @@ describe('spellProgression helper', () => {
     expect(limits).toEqual({
       cantrips: 3,
       spells: 6,
+      hasAllSpells: false
+    });
+  });
+
+  it('calculates level-up deltas from prepared spell progression', () => {
+    const classItem = {
+      system: {
+        advancement: [
+          { type: 'ScaleValue', title: 'Cantrips Known', level: 1, levels: [3, 3] },
+          { type: 'ScaleValue', title: 'Max Prepared Spells', level: 1, levels: [2, 3] }
+        ]
+      }
+    };
+
+    const delta = getSpellDeltaForClassLevel({
+      classIdentifier: 'my-prepared-caster',
+      classItem,
+      oldLevel: 1,
+      newLevel: 2,
+      rulesVersion: '2014'
+    });
+
+    expect(delta).toEqual({
+      cantrips: 0,
+      spells: 1,
+      hasAllSpells: false
+    });
+  });
+
+  it('sorcerer 2024 level-up uses Max Prepared Spells progression for spell selection delta', () => {
+    const sorcererClassItem = {
+      system: {
+        identifier: 'sorcerer',
+        advancement: [
+          {
+            type: 'ScaleValue',
+            title: 'Cantrips Known',
+            level: 1,
+            configuration: {
+              scale: {
+                1: { value: 4 },
+                2: { value: 4 },
+                3: { value: 4 }
+              }
+            }
+          },
+          {
+            type: 'ScaleValue',
+            title: 'Max Prepared Spells',
+            level: 1,
+            configuration: {
+              scale: {
+                1: { value: 2 },
+                2: { value: 3 },
+                3: { value: 4 }
+              }
+            }
+          }
+        ]
+      }
+    };
+
+    const delta = getSpellDeltaForClassLevel({
+      classIdentifier: 'sorcerer',
+      classItem: sorcererClassItem,
+      oldLevel: 1,
+      newLevel: 2,
+      rulesVersion: '2024'
+    });
+
+    expect(delta).toEqual({
+      cantrips: 0,
+      spells: 1,
       hasAllSpells: false
     });
   });
