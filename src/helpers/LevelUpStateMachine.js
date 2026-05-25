@@ -75,6 +75,7 @@ const suppressTidy5eAutoReopen = (suppress = true) => {
   }
 };
 
+
 /**
  * LevelUp workflow states
  */
@@ -717,12 +718,9 @@ export function createLevelUpStateMachine() {
         // Suppress Tidy5e auto-reopen during level up
         suppressTidy5eAutoReopen(true);
 
-        // Clear any stale sheet restore flag from older workflow logic.
-        // Sheet switching/restoration is now handled per-drop in Utility.js.
-        const actor = levelUpFSMContext.actor || get(actorInGame);
-        if (actor) {
-          actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
-        }
+        // Do not clear MODULE_ID.originalSheetClass here.
+        // It is captured when opening Actor Studio level-up from the sheet and
+        // must remain available until completion / gas.close restore.
         
         // Ensure we're on the level-up tab
         activeTab.set('level-up');
@@ -916,12 +914,28 @@ export function createLevelUpStateMachine() {
             window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED begin`, {
               actorId: refreshedActor?.id || null,
               actorName: refreshedActor?.name || null,
-              hasSheet: !!refreshedActor?.sheet
+              hasSheet: !!refreshedActor?.sheet,
+              coreSheetFlag: refreshedActor?.getFlag?.('core', 'sheetClass'),
+              originalSheetClassFlag: refreshedActor?.getFlag?.(MODULE_ID, 'originalSheetClass'),
+              sheetConstructor: refreshedActor?.sheet?.constructor?.name,
+              sheetInstanceId: refreshedActor?.sheet?.id
             });
+
+            // Restore original sheet class (e.g., Tidy5e) before opening the actor sheet.
+            // This mirrors the historical working behavior from prior Tidy5e fixes.
+            try {
+              const originalSheet = await refreshedActor.getFlag(MODULE_ID, 'originalSheetClass');
+              if (originalSheet !== undefined && originalSheet !== null) {
+                await refreshedActor.setFlag('core', 'sheetClass', originalSheet);
+                await refreshedActor.unsetFlag(MODULE_ID, 'originalSheetClass');
+              }
+            } catch (error) {
+              window.GAS.log.w(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED restore_original_sheet_error`, error);
+            }
 
             try {
               window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED before_sheet_render`);
-              refreshedActor.sheet.render(true);
+              await refreshedActor.sheet.render(true);
               window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED after_sheet_render`);
             } catch (error) {
               window.GAS.log.e(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED sheet_render_error`, error);

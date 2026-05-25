@@ -42,7 +42,7 @@
   import { spellProgress, spellLimits, currentSpellCounts } from '~/src/stores/spellSelection';
   import { isGenerating } from '~/src/stores/biography';
   import { biographyContent, characterDetails } from '~/src/stores/biography';
-  import { updateSource } from '~/src/helpers/Utility';
+  import { updateSource, switchActorToDefaultDnd5eSheetForLevelUp } from '~/src/helpers/Utility';
   import { getLevelUpFSM, LEVELUP_EVENTS } from "~/src/helpers/LevelUpStateMachine";
   import { getWorkflowFSM, WORKFLOW_EVENTS, workflowFSMContext } from "~/src/helpers/WorkflowStateMachine";
   import ProgressBar from "~/src/components/molecules/ProgressBar.svelte";
@@ -264,6 +264,13 @@
 
   const clickUpdateLevelUpHandler = async () => {
     window.GAS?.log?.d?.('[FOOTER] clickUpdateLevelUpHandler', $classUuidForLevelUp);
+
+    // Ensure we are on core dnd5e sheet before starting level-up advancement flow.
+    // If actor is currently on a custom sheet (e.g., Tidy5e), switch and wait first.
+    const actorDoc = get(actorInGame) || get(actor);
+    if (actorDoc) {
+      await switchActorToDefaultDnd5eSheetForLevelUp(actorDoc);
+    }
     
     await updateActorLevelUpWorkflow({
       actor,
@@ -888,9 +895,10 @@
     width: 100%
 
 .GAS.theme-dark
-  .button-container
-    .gas-create-character-btn
-      color: var(--color-text-dark-secondary)
+  .progress-container
+    .button-container
+      button
+        color: #000
 .gap-10
   gap: 10px
   justify-content: space-between

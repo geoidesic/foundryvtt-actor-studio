@@ -923,6 +923,32 @@ function getCurrentEffectiveSheetId(actor) {
     const currentSheet = actor?.sheet;
     if (currentSheet) {
       const config = CONFIG?.Actor?.sheetClasses?.[type] ?? {};
+
+      // Tidy5e can be active while core.sheetClass is unset; prefer identifying
+      // a tidy sheet id directly from registered sheet classes.
+      try {
+        const tidyModule = game?.modules?.get('tidy5e-sheet') || game?.modules?.get('tidy5e');
+        const tidyApi = tidyModule?.api;
+        const isTidySheet = Boolean(
+          tidyApi?.isTidy5eCharacterSheet?.(currentSheet)
+          || /tidy5e/i.test(currentSheet?.constructor?.name || '')
+          || /tidy5e/i.test(currentSheet?.id || '')
+        );
+
+        if (isTidySheet) {
+          const tidyByClass = Object.entries(config).find(([, cfg]) => {
+            const SheetClass = cfg?.cls;
+            return SheetClass && currentSheet instanceof SheetClass;
+          });
+          if (tidyByClass) return tidyByClass[0];
+
+          const tidyById = Object.entries(config).find(([id]) => /tidy5e/i.test(String(id)));
+          if (tidyById) return tidyById[0];
+        }
+      } catch (_) {
+        // Ignore tidy detection errors and continue with generic detection.
+      }
+
       for (const [id, cfg] of Object.entries(config)) {
         const SheetClass = cfg?.cls;
         if (SheetClass && currentSheet instanceof SheetClass) {
@@ -983,6 +1009,114 @@ export function bringActorStudioToFront() {
 }
 
 /**
+ * Ensure actor uses the core dnd5e sheet for level-up processing.
+ * Persists previous effective sheet class to MODULE_ID.originalSheetClass for later restoration.
+ * @param {Actor} actor
+ * @returns {Promise<boolean>} true if a switch occurred, false otherwise
+ */
+export async function switchActorToDefaultDnd5eSheetForLevelUp(actor) {
+  try {
+    if (!actor) return false;
+
+    const desiredSheetId = resolveDnd5eCoreCharacterSheetId(actor);
+    if (!desiredSheetId) return false;
+
+    const currentSheetId = getCurrentEffectiveSheetId(actor);
+
+    if (currentSheetId === desiredSheetId) return false;
+
+    const existingOriginal = actor.getFlag(MODULE_ID, 'originalSheetClass');
+    if (existingOriginal === undefined || existingOriginal === null) {
+      await actor.setFlag(MODULE_ID, 'originalSheetClass', currentSheetId ?? '');
+    }
+
+    const wasOpen = !!actor.sheet?.rendered;
+    if (wasOpen) {
+      await actor.sheet.close();
+    }
+
+    await actor.setFlag('core', 'sheetClass', desiredSheetId);
+    if (typeof actor._onSheetChange === 'function') {
+      await actor._onSheetChange({ sheetOpen: wasOpen });
+    }
+    await waitForSheetClass(actor, desiredSheetId);
+
+    if (wasOpen) {
+      await actor.sheet.render(true);
+    }
+
+    return true;
+  } catch (error) {
+    window.GAS?.log?.w?.('[UTILITY] Failed to switch actor to default dnd5e sheet for level-up', error);
+    return false;
+  }
+}
+
+/**
+ * Restore actor sheet class previously captured by switchActorToDefaultDnd5eSheetForLevelUp.
+ * Intended to be called from the gas.close hook.
+ * @param {Actor} actor
+ * @returns {Promise<boolean>} true if restore attempted, false if no stored original class
+ */
+export async function restoreActorSheetAfterLevelUp(actor) {
+  try {
+    if (!actor) return false;
+
+    const originalSheetClass = actor.getFlag(MODULE_ID, 'originalSheetClass');
+    if (originalSheetClass === undefined || originalSheetClass === null) return false;
+
+    const wasOpen = !!actor.sheet?.rendered;
+    if (wasOpen) {
+      await actor.sheet.close();
+    }
+
+    await actor.setFlag('core', 'sheetClass', originalSheetClass);
+    if (typeof actor._onSheetChange === 'function') {
+      await actor._onSheetChange({ sheetOpen: wasOpen });
+    }
+
+    if (originalSheetClass) {
+      await waitForSheetClass(actor, originalSheetClass);
+    }
+
+    if (wasOpen) {
+      await actor.sheet.render(true);
+    }
+
+    await actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
+    return true;
+  } catch (error) {
+    window.GAS?.log?.w?.('[UTILITY] Failed to restore actor sheet after level-up', error);
+    return false;
+  }
+}
+
+/**
+ * Restore sheet class for all actors that have a pending originalSheetClass flag.
+ * Useful when actorInGame store is unavailable during gas.close hook ordering.
+ * @returns {Promise<number>} number of actors restored
+ */
+export async function restorePendingActorSheetsAfterLevelUp() {
+  let restoredCount = 0;
+  try {
+    const actors = game?.actors?.contents || [];
+    for (const actor of actors) {
+      try {
+        const pending = actor?.getFlag?.(MODULE_ID, 'originalSheetClass');
+        if (pending === undefined || pending === null) continue;
+        const restored = await restoreActorSheetAfterLevelUp(actor);
+        if (restored) restoredCount += 1;
+      } catch (error) {
+        window.GAS?.log?.w?.('[UTILITY] Failed restoring pending sheet for actor', { actorId: actor?.id, error });
+      }
+    }
+  } catch (error) {
+    window.GAS?.log?.w?.('[UTILITY] Failed scanning actors for pending sheet restore', error);
+  }
+  return restoredCount;
+}
+
+/**
  * Temporarily switch an Actor's sheet to a target sheet id, then provide a restore function to revert.
  * Uses the same mechanism as the UI: sets the `core.sheetClass` flag on the document.
  * If the current sheet is already the target, no change is made.
@@ -997,10 +1131,7 @@ async function switchActorSheetTemporarily(actor, targetSheetId) {
   const currentFlag = actor.getFlag('core', 'sheetClass');
   const wasOpen = !!actor.sheet?.rendered;
 
-  // If a sheet is already open, do not switch classes at all.
-  // Switching here causes visible sheet flashes (core / legacy) and can override
-  // user-selected sheet UX (e.g. Tidy5e) during level-up flows.
-  // In this case, drop handlers will run against the currently active sheet.
+  // If a sheet is already open, do not switch classes.
   if (wasOpen) {
     return {
       currentSheetId: originalSheetId ?? currentFlag ?? '',
@@ -1008,7 +1139,7 @@ async function switchActorSheetTemporarily(actor, targetSheetId) {
     };
   }
 
-  let currentSheetId = currentFlag ?? '';
+  let currentSheetId = originalSheetId ?? currentFlag ?? '';
   if (!currentSheetId && DSC) {
     const { defaultClass } = DSC.getSheetClassesForSubType('Actor', type);
     currentSheetId = defaultClass;

@@ -2,7 +2,45 @@ import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { characterSubClass, levelUpSubClassObject } from '~/src/stores/storeDefinitions';
 import PCApplication from '~/src/app/PCApplication.js';
-import { bringActorStudioToFront, safeGetSetting } from '~/src/helpers/Utility';
+import { bringActorStudioToFront, safeGetSetting, restorePendingActorSheetsAfterLevelUp } from '~/src/helpers/Utility';
+
+let gasCloseSheetRestoreHookRegistered = false;
+
+function resolveSheetIdFromApp(actor, app) {
+  try {
+    const type = actor?.type ?? 'character';
+    const config = CONFIG?.Actor?.sheetClasses?.[type] ?? {};
+
+    for (const [id, cfg] of Object.entries(config)) {
+      const SheetClass = cfg?.cls;
+      if (SheetClass && app instanceof SheetClass) return id;
+    }
+
+    const appName = String(app?.constructor?.name || '').toLowerCase();
+    if (appName.includes('tidy5e')) {
+      const tidyEntry = Object.entries(config).find(([id]) => /tidy5e/i.test(String(id)));
+      if (tidyEntry) return tidyEntry[0];
+    }
+  } catch (_) {
+    // no-op
+  }
+  return actor?.getFlag?.('core', 'sheetClass') ?? '';
+}
+
+async function storeOriginalSheetClassForLevelUp(app) {
+  try {
+    const actor = app?.actor;
+    if (!actor) return;
+
+    const existing = actor.getFlag(MODULE_ID, 'originalSheetClass');
+    if (existing !== undefined && existing !== null) return;
+
+    const resolvedSheetId = resolveSheetIdFromApp(actor, app) || '';
+    await actor.setFlag(MODULE_ID, 'originalSheetClass', resolvedSheetId);
+  } catch (error) {
+    window.GAS?.log?.w?.('[GAS] Failed to store original sheet class for level up', error);
+  }
+}
 
 const pulseKeyframes = `
 @keyframes pulse {
@@ -14,6 +52,64 @@ const pulseKeyframes = `
   }
 }
 `;
+
+async function openActorStudioLevelUp(app, busyErrorCode) {
+  if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
+    ui.notifications.error(`${busyErrorCode}. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.`);
+    return;
+  }
+
+  // Check if this is a DDB Importer character
+  const { isDDBImportedCharacter, showDDBImporterWarning } = await import('~/src/helpers/Utility.js');
+  if (isDDBImportedCharacter(app.actor)) {
+    const proceed = await showDDBImporterWarning(app.actor);
+    if (!proceed) {
+      return;
+    }
+  }
+
+  await storeOriginalSheetClassForLevelUp(app);
+
+  new PCApplication(app.actor, true).render(true, { focus: true });
+}
+
+function rerouteNativeTidy5eLevelUpButtons(app, element) {
+  const root = $(element);
+  const buttonSet = new Set();
+
+  const directSelectors = [
+    'button[aria-label="Level Up"]',
+    'button[data-action="levelUp"]',
+    'button[data-action="level-up"]'
+  ];
+
+  for (const selector of directSelectors) {
+    root.find(selector).each((_, button) => buttonSet.add(button));
+  }
+
+  root.find('i.fa-square-up').each((_, icon) => {
+    const button = icon.closest('button');
+    if (button) buttonSet.add(button);
+  });
+
+  let reroutedCount = 0;
+  for (const button of buttonSet) {
+    if (!button || button.dataset.gasLevelupIntercepted === 'true') continue;
+    button.dataset.gasLevelupIntercepted = 'true';
+    button.setAttribute('data-gas-levelup-intercepted', 'true');
+
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      await openActorStudioLevelUp(app, 3);
+    }, { capture: true });
+
+    reroutedCount += 1;
+  }
+
+  return reroutedCount;
+}
 
 export function dnd5eSheet2UI(app, html, data) {
   const actor = data.actor;
@@ -64,23 +160,7 @@ export function dnd5eSheet2UI(app, html, data) {
   `);
 
   levelUpButton.on('click', async (event) => {
-    //- check if Actor Studio is already open
-    if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
-      ui.notifications.error('2. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
-      return;
-    }
-    
-    // Check if this is a DDB Importer character
-    const { isDDBImportedCharacter, showDDBImporterWarning } = await import('~/src/helpers/Utility.js');
-    if (isDDBImportedCharacter(app.actor)) {
-      const proceed = await showDDBImporterWarning(app.actor);
-      if (!proceed) {
-        return;
-      }
-    }
-    
-    //- render the level up UI
-    new PCApplication(app.actor, true).render(true, { focus: true });
+    await openActorStudioLevelUp(app, 2);
   })
 
   $('<style>')
@@ -153,6 +233,12 @@ export function tidy5eSheetUI(app, element, data) {
   window.GAS.log.g('actorHasLevellingXP', actorHasLevellingXP)
 
   if (!actorHasClasses || (!isMilestoneLeveling && actorHasLevellingXP)) return;
+
+  const reroutedNativeLevelUpButtons = rerouteNativeTidy5eLevelUpButtons(app, element);
+  if (reroutedNativeLevelUpButtons > 0) {
+    window.GAS?.log?.d?.('[GAS] tidy5eSheetUI: rerouted native Tidy5e level-up button(s):', reroutedNativeLevelUpButtons);
+  }
+
   // Find the Tidy5e header actions container (modern tidy5e)
   let actionsContainer = $(element).find('.sheet-header-actions');
   window.GAS.log.p('actionsContainer', actionsContainer)
@@ -205,23 +291,7 @@ export function tidy5eSheetUI(app, element, data) {
   window.GAS.log.g(2)
 
   levelUpButton.on("click", async (event) => {
-    //- check if Actor Studio is already open
-    if (document.querySelector('#foundryvtt-actor-studio-pc-sheet')) {
-      ui.notifications.error('3. Actor Studio is already open and busy with another task. Please close the existing Actor Studio window before attempting to opening a new one.');
-      return;
-    }
-    
-    // Check if this is a DDB Importer character
-    const { isDDBImportedCharacter, showDDBImporterWarning } = await import('~/src/helpers/Utility.js');
-    if (isDDBImportedCharacter(app.actor)) {
-      const proceed = await showDDBImporterWarning(app.actor);
-      if (!proceed) {
-        return;
-      }
-    }
-    
-    //- render the level up UI
-    new PCApplication(app.actor, true).render(true, { focus: true });
+    await openActorStudioLevelUp(app, 3);
   });
   window.GAS.log.g(3)
 
@@ -244,6 +314,13 @@ export function tidy5eSheetUI(app, element, data) {
 }
 
 export function initLevelup() {
+
+  if (!gasCloseSheetRestoreHookRegistered) {
+    Hooks.on('gas.close', async () => {
+      await restorePendingActorSheetsAfterLevelUp();
+    });
+    gasCloseSheetRestoreHookRegistered = true;
+  }
 
   Hooks.on("renderActorSheetV2", (app, html, data) => {
    
