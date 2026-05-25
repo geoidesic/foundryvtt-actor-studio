@@ -94,6 +94,8 @@
   .tabs {
     @include flex-column;
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
     width: 100%;
 
     &.gas-tabs {
@@ -175,9 +177,12 @@
 
   .tab-content {
     @include flex-column;
-    flex: 2;
+    flex: 1;
+    min-height: 0;
     width: 100%;
     position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .readonly-overlay {
