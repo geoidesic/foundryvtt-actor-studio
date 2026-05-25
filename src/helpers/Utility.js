@@ -129,6 +129,77 @@ export function normalizeList(val) {
   return [];
 }
 
+const DND5E_KEY_ALIASES = {
+  tool: {
+    thief: ['thief', 'thiefs', 'thieves', 'thiefstools', 'thievestools'],
+    thiefs: ['thief', 'thiefs', 'thieves', 'thiefstools', 'thievestools'],
+    thieves: ['thief', 'thiefs', 'thieves', 'thiefstools', 'thievestools'],
+    herb: ['herb', 'herbalism', 'herbalismkit'],
+    herbalism: ['herb', 'herbalism', 'herbalismkit'],
+    herbalismkit: ['herb', 'herbalism', 'herbalismkit']
+  }
+};
+
+export function normalizeDnd5eConfigKey(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+export function getCompatibleDnd5eKeys(key, category = null) {
+  const raw = String(key || '').trim();
+  if (!raw) return [];
+
+  const normalized = normalizeDnd5eConfigKey(raw);
+  const aliases = DND5E_KEY_ALIASES?.[category]?.[normalized] || [];
+
+  const keys = [raw, normalized, ...aliases];
+  return Array.from(new Set(keys.filter(Boolean)));
+}
+
+export function resolveDnd5eConfigValue(configMap, key, category = null) {
+  if (!configMap || !key) return null;
+
+  const candidates = getCompatibleDnd5eKeys(key, category);
+
+  for (const candidate of candidates) {
+    if (configMap[candidate] !== undefined) return configMap[candidate];
+  }
+
+  const normalizedCandidates = new Set(candidates.map(normalizeDnd5eConfigKey));
+  for (const [entryKey, entryValue] of Object.entries(configMap)) {
+    if (normalizedCandidates.has(normalizeDnd5eConfigKey(entryKey))) {
+      return entryValue;
+    }
+  }
+
+  return null;
+}
+
+export function resolveDnd5eConfigLabel(configMaps, key, category = null) {
+  const maps = Array.isArray(configMaps) ? configMaps : [configMaps];
+
+  for (const map of maps) {
+    const raw = resolveDnd5eConfigValue(map, key, category);
+    if (!raw) continue;
+    if (typeof raw === 'object') return raw.label || raw.name || null;
+    return raw;
+  }
+
+  return null;
+}
+
+export function dnd5eConfigKeyMatches(candidate, target, category = null) {
+  if (!candidate || !target) return false;
+
+  const candidateKeys = new Set(getCompatibleDnd5eKeys(candidate, category).map(normalizeDnd5eConfigKey));
+  const targetKeys = new Set(getCompatibleDnd5eKeys(target, category).map(normalizeDnd5eConfigKey));
+
+  for (const key of candidateKeys) {
+    if (targetKeys.has(key)) return true;
+  }
+
+  return false;
+}
+
 // Utility proficiency bonus by CR (fallback for UI; prefer CRCalculator when available)
 export function pbForCR(cr) {
   const n = Number(cr) ?? 0;

@@ -2,7 +2,7 @@
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { readOnlyTabs } from "~/src/stores/index";
-import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
+import { dnd5eConfigKeyMatches, localize as t, safeGetSetting } from "~/src/helpers/Utility";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -148,7 +148,7 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
           return item.system?.type?.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
         }
         if(type === 'tool' && group.selectedItem?.key) {
-          return item.type === type && item.system.type.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
+          return item.type === type && dnd5eConfigKeyMatches(item.system?.type?.value, group.selectedItem.key, 'tool') && !item.system.properties?.includes('mgc');
         }
         return true;
       })

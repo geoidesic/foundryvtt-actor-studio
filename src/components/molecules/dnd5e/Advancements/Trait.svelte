@@ -1,6 +1,6 @@
 <script>
   import { getContext, onDestroy, onMount, tick } from "svelte";
-  import { ucfirst } from "~/src/helpers/Utility";
+  import { ucfirst, resolveDnd5eConfigLabel, resolveDnd5eConfigValue } from "~/src/helpers/Utility";
   import { writable, derived } from "svelte/store";
 
   export let advancement = null;
@@ -52,6 +52,23 @@
     item.set(itemObj);
   };
 
+  const getConfig = () => game?.system?.config || CONFIG?.DND5E || {};
+
+  const getToolDisplayValue = (key) => {
+    const config = getConfig();
+    return resolveDnd5eConfigLabel([config.toolProficiencies, config.toolTypes], key, "tool") || "";
+  };
+
+  const getArmorDisplayValue = (key) => {
+    const config = getConfig();
+    return resolveDnd5eConfigLabel([config.armorProficiencies, config.armorTypes], key) || "";
+  };
+
+  const getWeaponDisplayValue = (key) => {
+    const config = getConfig();
+    return resolveDnd5eConfigLabel([config.weaponProficiencies, config.weaponTypes], key) || "";
+  };
+
   const processGrant = async (grant) => {
     const split = grant.split(":");
     // window.GAS.log.d('Trait split', split);
@@ -61,25 +78,29 @@
         return { label: ucfirst(split[1]), value: ucfirst(split[2]) };
       case "tool":
         if(split[2]) {
-          return { label: ucfirst(split[2]), value: game.system.config.toolProficiencies[split[1]] };
+          return { label: ucfirst(split[2]), value: getToolDisplayValue(split[1]) || null };
         } else {
-          const uuid = getBaseItemUUID(CONFIG.DND5E.toolIds[split[1]]);
+          const toolDisplay = getToolDisplayValue(split[1]);
+          const toolId = resolveDnd5eConfigValue(CONFIG?.DND5E?.toolIds, split[1], "tool");
+          const uuid = getBaseItemUUID(toolId);
           await fetchAndSetItem(uuid);
           let fetchedItem;
           item.subscribe(value => {
             fetchedItem = value;
           })();
-          return { label: fetchedItem?.name, value: game.system.config.toolProficiencies[split[1]] };
+          const label = fetchedItem?.name || toolDisplay || ucfirst(split[1]);
+          const value = fetchedItem?.name ? (toolDisplay || null) : null;
+          return { label, value };
         }
       case "saves":
         return { label: game.system.config.abilities[split[1]].label, value: null };
       case "armor":
-        return { label: game.system.config.armorProficiencies[split[1]], value: null };
+        return { label: getArmorDisplayValue(split[1]) || ucfirst(split[1]), value: null };
       case "weapon":
         if(split[2]) {
-          return { label: ucfirst(split[2]), value: game.system.config.weaponProficiencies[split[1]] };
+          return { label: ucfirst(split[2]), value: getWeaponDisplayValue(split[1]) || null };
         } else {
-          return { label: game.system.config.weaponProficiencies[split[1]], value: null };
+          return { label: getWeaponDisplayValue(split[1]) || ucfirst(split[1]), value: null };
         }
       case 'dr':
         return { label: game.system.config.damageTypes[split[1]].label, value: split[1] };
@@ -147,7 +168,8 @@
               .flex.left {pool.label}
               +if("pool.value")
                 +if("pool.type == 'tool'")
-                  .flex0.right.badge.inset.nowrap {game.system.config.toolProficiencies[pool.value] }
+                  +if("getToolDisplayValue(pool.value)")
+                    .flex0.right.badge.inset.nowrap {getToolDisplayValue(pool.value)}
                 
                   +else()
                     .flex0.right.badge.inset {ucfirst(pool.value)}

@@ -2,6 +2,7 @@ import { derived, get, writable } from 'svelte/store';
 // Import directly from storeDefinitions instead of index
 import { characterClass, background } from './storeDefinitions';
 import { goldChoices } from './goldChoices';
+import { resolveDnd5eConfigLabel } from '~/src/helpers/Utility';
 
 /**
  * Generate a label for an equipment entry using DND5e config.
@@ -45,14 +46,7 @@ function generateEquipmentLabel(entry, allEquipment) {
       // Get weapon type label from config
       const weaponTypes = CONFIG?.DND5E?.weaponTypes || {};
       const weaponProficiencies = CONFIG?.DND5E?.weaponProficiencies || {};
-      
-      // Check both weaponTypes and weaponProficiencies
-      let weaponLabel = weaponTypes[key] || weaponProficiencies[key];
-      
-      // Handle object-style config entries
-      if (weaponLabel && typeof weaponLabel === 'object') {
-        weaponLabel = weaponLabel.label || weaponLabel;
-      }
+      let weaponLabel = resolveDnd5eConfigLabel([weaponTypes, weaponProficiencies], key);
       
       if (weaponLabel) {
         label = weaponLabel;
@@ -64,11 +58,7 @@ function generateEquipmentLabel(entry, allEquipment) {
     case 'armor':
       const armorTypes = CONFIG?.DND5E?.armorTypes || {};
       const armorProficiencies = CONFIG?.DND5E?.armorProficiencies || {};
-      let armorLabel = armorTypes[key] || armorProficiencies[key];
-      
-      if (armorLabel && typeof armorLabel === 'object') {
-        armorLabel = armorLabel.label || armorLabel;
-      }
+      let armorLabel = resolveDnd5eConfigLabel([armorTypes, armorProficiencies], key);
       
       if (armorLabel) {
         label = armorLabel;
@@ -80,11 +70,7 @@ function generateEquipmentLabel(entry, allEquipment) {
     case 'tool':
       const toolTypes = CONFIG?.DND5E?.toolTypes || {};
       const toolProficiencies = CONFIG?.DND5E?.toolProficiencies || {};
-      let toolLabel = toolTypes[key] || toolProficiencies[key];
-      
-      if (toolLabel && typeof toolLabel === 'object') {
-        toolLabel = toolLabel.label || toolLabel;
-      }
+      let toolLabel = resolveDnd5eConfigLabel([toolTypes, toolProficiencies], key, 'tool');
       
       if (toolLabel) {
         label = toolLabel;
@@ -95,11 +81,7 @@ function generateEquipmentLabel(entry, allEquipment) {
       
     case 'focus':
       const focusTypes = CONFIG?.DND5E?.focusTypes || {};
-      let focusLabel = focusTypes[key];
-      
-      if (focusLabel && typeof focusLabel === 'object') {
-        focusLabel = focusLabel.label || focusLabel;
-      }
+      let focusLabel = resolveDnd5eConfigLabel(focusTypes, key);
       
       if (focusLabel) {
         label = focusLabel;
