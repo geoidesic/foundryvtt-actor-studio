@@ -97,6 +97,7 @@
     min-height: 0;
     overflow: hidden;
     width: 100%;
+    padding: 0.5rem 0 0 0;
 
     &.gas-tabs {
       border: none;
@@ -108,8 +109,7 @@
       @include panel-1;
       list-style: none;
       width: 100%;
-      margin: 0;
-      padding: 0.25rem;
+      margin: 0.5rem 0 0 0;
       height: 100%;
       flex: 0;
 
@@ -126,8 +126,8 @@
         font-weight: normal;
         font-size: larger;
         margin-bottom: -10px;
-        padding: 10px 0;
-        align-items: end;
+        padding: 11px 0;
+        align-items: start;
         color: var(--gas-color-text, #000);
 
         &:not(:first-child) {
@@ -163,8 +163,8 @@
             bottom: 5px;
           } 
           &:hover {
-            background: var(--gas-tab-active-background, #f9f9f9);
-            box-shadow: none;
+            background: var(--tab-active-hover-background, #efe7d6);
+            color: var(--tab-active-hover-color, var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)));
           }
           font-weight: bold;
           background: var(--tab-active-background, #f9f9f9);
@@ -176,6 +176,7 @@
 
 
   .tab-content {
+    @include inset;
     @include flex-column;
     flex: 1;
     min-height: 0;

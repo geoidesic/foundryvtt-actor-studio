@@ -923,7 +923,7 @@ button[disabled]
   margin-top: 0.5rem
 .character-name-input-container
   height: 51px
-  padding: 1rem 1rem 1rem 1rem
+  padding: 1rem 0.5rem
   font-size: xx-large
   font-family: var(--dnd5e-font-modesto)
   border: 1px solid var(--input-border, #ccc)
@@ -937,34 +937,35 @@ button[disabled]
   background: var(--footer-input-background, rgba(1, 1, 1, 0.1))
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2)
 
-.footer-container .character-name-input-container input[type="text"].character-name-input
-  border: none !important
-  background: none !important
-  height: auto !important
-  line-height: normal !important
-  padding: 0 !important
-  margin: 0 !important
-  color: inherit !important
-  font-family: inherit !important
-  font-size: 2rem
-  
-  &:focus
-    outline: none
-    box-shadow: none
-  
-  &:disabled
-    color: var(--color-text-dark-secondary)
-    cursor: not-allowed
-    opacity: 0.6
-  
-  // Experimental styling (when x-sign class is applied)
-  &.x-sign
-    text-shadow: 0 0 10px var(--sign-color1), 0 0 20px var(--sign-color2)
-    will-change: filter, color
-    filter: saturate(30%)
-    animation: flicker steps(100) var(--interval) 1s infinite
-    color: white
-    font-family: var(--random-font-family)
+.footer-container 
+  .character-name-input-container input[type="text"].character-name-input
+    border: none !important
+    background: none !important
+    height: auto !important
+    line-height: normal !important
+    padding: 0 0.3rem
+    margin: 0 !important
+    color: inherit !important
+    font-family: inherit !important
+    font-size: 2rem
+    
+    &:focus
+      outline: none
+      box-shadow: none
+    
+    &:disabled
+      color: var(--color-text-dark-secondary)
+      cursor: not-allowed
+      opacity: 0.6
+    
+    // Experimental styling (when x-sign class is applied)
+    &.x-sign
+      text-shadow: 0 0 10px var(--sign-color1), 0 0 20px var(--sign-color2)
+      will-change: filter, color
+      filter: saturate(30%)
+      animation: flicker steps(100) var(--interval) 1s infinite
+      color: white
+      font-family: var(--random-font-family)
 .character-name-label
   cursor: pointer
   font-size: 1.2rem

@@ -86,8 +86,6 @@
   @import "../styles/Mixins.sass"
   .theme-dark
     .bg-dark
-      background-color: rgba(0, 0, 0, 0.1)
-      padding: 1rem 1rem 0.5rem 1rem
 
   main
     overflow-y: auto
@@ -96,8 +94,10 @@
     .inset
       @include inset
     .bg-dark
-      background-color: rgba(0, 0, 0, 0.1)
+      background-color: rgba(0, 0, 0, 0.7)
       padding: 1rem 1rem 0.5rem 1rem
+      height: calc(100% - 4.5rem)
+
     h1
       margin-top: 0
     h4

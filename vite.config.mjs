@@ -30,6 +30,34 @@ const s_RESOLVE_CONFIG = {
 
 };
 
+// In dev, Foundry still requests module.json styles[0] (dist/style.css).
+// Return a tiny non-empty stylesheet for that single URL so visual styles come
+// only from Vite HMR (src import), avoiding mixed HMR + static CSS rendering.
+function foundryDevManifestStyleShim(packageId)
+{
+   const manifestStylePath = `/${packageId}/dist/style.css`;
+
+   return {
+      name: 'foundry-dev-manifest-style-shim',
+      apply: 'serve',
+      configureServer(server)
+      {
+         server.middlewares.use((req, res, next) =>
+         {
+            if (req.url?.startsWith(manifestStylePath))
+            {
+               res.statusCode = 200;
+               res.setHeader('Content-Type', 'text/css; charset=utf-8');
+               res.end('/* dev manifest CSS shim; styles are served by Vite HMR */\n:root{}\n');
+               return;
+            }
+
+            next();
+         });
+      }
+   };
+}
+
 export default () => {
    /** @type {import('vite').UserConfig} */
    return {
@@ -58,8 +86,8 @@ export default () => {
       // - Set to `open` to boolean `false` to not open a browser window automatically. This is useful if you set up a
       // debugger instance in your IDE and launch it with the URL: 'http://localhost:30001/game'.
       //
-      // - The top proxy entry redirects requests under the module path for `style.css` and following standard static
-      // directories: `assets`, `lang`, and `packs` and will pull those resources from the main Foundry / 30000 server.
+      // - The top proxy entry redirects requests under the module path for standard static directories: `assets`,
+      // `lang`, and `packs` and will pull those resources from the main Foundry / 30000 server.
       // This is necessary to reference the dev resources as the root is `/src` and there is no public / static
       // resources served with this particular Vite configuration. Modify the proxy rule as necessary for your
       // static resources / project.
@@ -68,7 +96,7 @@ export default () => {
          open: '/game',
          proxy: {
             // Serves static files from main Foundry server.
-            [`^(/${s_PACKAGE_ID}/(assets|lang|packs|dist/style.css))`]: 'http://localhost:30000',
+         [`^(/${s_PACKAGE_ID}/(assets|lang|packs))`]: 'http://localhost:30000',
 
             // All other paths besides package ID path are served from main Foundry server.
             [`^(?!/${s_PACKAGE_ID}/)`]: 'http://localhost:30000',
@@ -112,6 +140,8 @@ export default () => {
       },
 
       plugins: [
+         process.env.npm_package_env === 'dev' && foundryDevManifestStyleShim(s_PACKAGE_ID),
+
          svelte({
             compilerOptions: {
                // Provides a custom hash adding the string defined in `s_SVELTE_HASH_ID` to scoped Svelte styles;
@@ -124,6 +154,6 @@ export default () => {
          }),
 
          resolve(s_RESOLVE_CONFIG)  // Necessary when bundling npm-linked packages.
-      ]
+      ].filter(Boolean)
    };
 };

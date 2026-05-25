@@ -5,9 +5,6 @@
 @include gas-app-dark-window-shell
 
 @include gas-app-themed-dark
-  --gas-footer-input-background: rgba(255, 255, 255, 0.08)
-  --gas-footer-input-border: rgba(255, 255, 255, 0.28)
-
   .gas-tabs.tabs,
   .tabs.gas-tabs
     border: none !important
@@ -21,9 +18,13 @@
     border-right-color: var(--gas-sheet-chrome-border, #3a3a3a) !important
 
   main,
-  section.a,
-  section.b
+  section.a
     background-color: transparent
+    color: var(--gas-color-text)
+    
+  section.b
+    background-color: rgba(0,0,0,0.5)
+    border-radius: var(--border-radius)
     color: var(--gas-color-text)
 
   .tab-content

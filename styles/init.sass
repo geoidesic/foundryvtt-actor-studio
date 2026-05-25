@@ -366,9 +366,17 @@
   //   background: linear-gradient(0deg, rgba(219, 217, 205, 0) 0%, #f9f9f9 100%)
   //   z-index: 1 
 
-  .gas-tabs .tabs-list button:hover
-    box-shadow: 0px -5px 14px -8px var(--gas-color-shadow-primary) !important
-    transition: all 0.4s ease-in-out
+  .gas-tabs .tabs-list button:not(.active):hover
+    box-shadow: 0px -3px 11px -2px var(--gas-color-shadow-primary)
+    transition: all 0.3s ease-out
+
+  .gas-tabs .tabs-list button.active
+    color: var(--tab-active-color, var(--dnd5e-color-gold, #b59e54)) !important
+    box-shadow: 0px -2px 11px -2px var(--gas-color-shadow-secondary)
+
+  .gas-tabs .tabs-list button.active:hover
+    color: var(--tab-active-hover-color, var(--tab-active-color, var(--dnd5e-color-gold, #b59e54))) !important
+    box-shadow: 0px -4px 14px -2px var(--gas-color-shadow-secondary)
 
   .tab-content
     --tjs-app-overflow: auto
@@ -699,6 +707,13 @@ body.game #gas-settings-submenu.app.window-app
   a.button.active, button.active 
     outline: none
     box-shadow: 0px -3px 11px -2px var(--gas-color-shadow-primary)
+
+  // Keep gas tab active states distinct from the global active-button blue shadow.
+  .gas-tabs .tabs-list button.active
+    box-shadow: 0px -2px 8px -2px rgba(106, 57, 20, 0.55) !important
+
+  .gas-tabs .tabs-list button.active:hover
+    box-shadow: 0px -4px 14px -2px rgba(106, 57, 20, 0.75) !important
     
   .black-link
     white-space: pre-wrap
