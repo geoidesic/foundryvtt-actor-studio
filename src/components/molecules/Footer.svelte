@@ -886,6 +886,11 @@
   button
     white-space: nowrap
     width: 100%
+
+.GAS.theme-dark
+  .button-container
+    .gas-create-character-btn
+      color: var(--color-text-dark-secondary)
 .gap-10
   gap: 10px
   justify-content: space-between
