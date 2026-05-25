@@ -296,5 +296,11 @@
             disabled="{disabled}"
             selectedItems="{selectedItems}"
           )
+    +else()
+      section.starting-equipment.starting-equipment-empty
+        .flexrow
+          .flex3
+            h2.left {t('Equipment.Label')}
+        p {t('Error.EquipmentSelectionNotViable')}
 </template>
 

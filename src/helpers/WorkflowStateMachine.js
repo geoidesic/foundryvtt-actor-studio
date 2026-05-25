@@ -66,9 +66,17 @@ export const workflowFSMContext = {
     const enableEquipmentSelection = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
     if (!enableEquipmentSelection) return false;
     const preSelections = get(preAdvancementSelections);
-    if (!preSelections || Object.keys(preSelections).length === 0 || !preSelections.class || !preSelections.class.system || !preSelections.class.system.startingEquipment || preSelections.class.system.startingEquipment.length === 0 || preSelections.class.system.wealth === undefined) return false;
+    if (!preSelections || Object.keys(preSelections).length === 0 || !preSelections.class || !preSelections.class.system) return false;
+
+    const classStartingEquipment = preSelections.class.system.startingEquipment || [];
+    const backgroundStartingEquipment = preSelections.background?.system?.startingEquipment || [];
+    const hasStartingEquipment = classStartingEquipment.length > 0 || backgroundStartingEquipment.length > 0;
+    const hasWealth = preSelections.class.system.wealth !== undefined || preSelections.background?.system?.wealth !== undefined;
+
+    if (!hasStartingEquipment && !hasWealth) return false;
+
     const compatibleEquipment = get(compatibleStartingEquipment);
-    return compatibleEquipment.length > 0;
+    return compatibleEquipment.length > 0 || hasWealth;
   },
   _shouldShowSpellSelection: function (inGameActor) {
     const enableSpellSelection = safeGetSetting(MODULE_ID, 'enableSpellSelection', false);
