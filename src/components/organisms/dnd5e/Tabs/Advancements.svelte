@@ -87,6 +87,21 @@
 :global(.theme-dark #foundryvtt-actor-studio-pc-sheet .gas-advancements .step ol.trait-slots)
   border: 1px solid var(--dnd5e-color-gold)
 
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .window-content .item-controls)
+  align-items: stretch !important
+  padding: none
+
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .step ul li)
+  border: none
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .dnd5e2 .items-section .items-header h4)
+  padding: 0.5rem
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .dnd5e2 .card)
+  background: none
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .window-content button)
+  background: rgba(0,0,0, 9)
+  font-size: var(--font-size-16)
+:global(#foundryvtt-actor-studio-pc-sheet.theme-dark .gas-advancements .window-content)
+  background: url("../modules/foundryvtt-actor-studio/assets/black-parchment.webp") repeat
 :global(.gas-advancements .step ol.trait-slots li.trait-slot label)
   display: flex
   align-items: center
@@ -261,7 +276,6 @@
 :global(.gas-advancements form[data-type="ItemGrant"] .item-name)
   @include inset
   font-size: 1.5rem
-  padding: 0
   margin: 0.5rem 0
   border-radius: 4px
 
