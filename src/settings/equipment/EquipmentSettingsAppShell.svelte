@@ -38,6 +38,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             span {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Name')}
           p.hint {game.i18n.localize('GAS.Setting.EnableEquipmentPurchase.Hint')}
 
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{filterOutUnaffordables}"
+            )
+            span {game.i18n.localize('GAS.Setting.FilterOutUnaffordables.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.FilterOutUnaffordables.Hint')}
+
     footer.settings-footer
       button.cancel-button(on:click="{cancelSettings}") Cancel
       button.save-button(on:click="{saveSettings}") Save
@@ -58,12 +67,14 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let defaultGoldDice = safeGetSetting(MODULE_ID, 'defaultGoldDice', '5d4 * 10');
   let enableEquipmentSelection = safeGetSetting(MODULE_ID, 'enableEquipmentSelection', false);
   let enableEquipmentPurchase = safeGetSetting(MODULE_ID, 'enableEquipmentPurchase', false);
+  let filterOutUnaffordables = safeGetSetting(MODULE_ID, 'filterOutUnaffordables', true);
 
   async function saveSettings() {
     try {
       await game.settings.set(MODULE_ID, 'defaultGoldDice', defaultGoldDice);
       await game.settings.set(MODULE_ID, 'enableEquipmentSelection', enableEquipmentSelection);
       await game.settings.set(MODULE_ID, 'enableEquipmentPurchase', enableEquipmentPurchase);
+      await game.settings.set(MODULE_ID, 'filterOutUnaffordables', filterOutUnaffordables);
 
       ui.notifications.info('Equipment settings saved successfully');
       

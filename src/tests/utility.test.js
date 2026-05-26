@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { safeGetSetting, getLevelByDropType } from '../helpers/Utility.js';
+import { safeGetSetting, getLevelByDropType, extractMapIteratorObjectProperties } from '../helpers/Utility.js';
 
 describe('safeGetSetting', () => {
   let origGame;
@@ -63,5 +63,28 @@ describe('safeGetSetting', () => {
     };
 
     expect(getLevelByDropType(actor, droppedItem)).toBe(1);
+  });
+});
+
+describe('extractMapIteratorObjectProperties', () => {
+  it('normalizes flattened dotted fields into nested objects', () => {
+    const entries = new Map([
+      ['abc123', {
+        name: 'Rations',
+        'system.price.value': 5,
+        'system.price.denomination': 'sp'
+      }]
+    ]).entries();
+
+    const result = extractMapIteratorObjectProperties(entries, [
+      'name',
+      'system.price.value',
+      'system.price.denomination'
+    ]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('Rations');
+    expect(result[0].system?.price?.value).toBe(5);
+    expect(result[0].system?.price?.denomination).toBe('sp');
   });
 });

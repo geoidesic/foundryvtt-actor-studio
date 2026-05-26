@@ -338,6 +338,10 @@
         "Name": "Enable Equipment Purchase",
         "Hint": "If enabled, adds a 'Shop' tab after equipment selection for characters who received starting gold, allowing them to purchase items from designated compendiums. Note that if Equipment Selection is disabled, this setting is ignored."
       },
+      "FilterOutUnaffordables": {
+        "Name": "Filter out unaffordable equipment",
+        "Hint": "If enabled, the Shop hides items you cannot currently afford. If disabled, unaffordable items remain visible but are greyed out, and trying to add one shows a warning."
+      },
       "ExperimentalCharacterNameStyling": {
         "Name": "Experimental Character Name Styling",
         "Hint": "Enable experimental animated character name styling with random colors and fonts. This is an experimental feature that adds visual flair to the character name input."
@@ -552,8 +556,8 @@
       "ChooseOne": "Choose one...",
       "NoSelectedSource": "No equipment source is currently selected.",
       "SourceMissing": "has no starting equipment configured.",
-      "EquipmentConfirmed": "Equipment has been confirmed and now resides on the character sheet",
-      "EquipmentReadOnly": "Equipment selections have been completed and are now read-only during advancement selection",
+      "EquipmentConfirmed": "Starting Equipment has been confirmed and now resides on the character sheet",
+      "EquipmentReadOnly": "Starting Equipment selections have been completed and are now read-only during advancement selection",
       "Focus": "Spellcasting Focus",
       "SelectEquipment": "Select Equipment",
       "SelectOne": "Select one of the following options:",
@@ -591,7 +595,8 @@
       "ErrorUpdateQuantity": "Failed to update item quantity",
       "ErrorRemoveFromCart": "Failed to remove item from cart",
       "FilterPlaceholder": "Search items in the shop by keyword",
-      "NoMatchingEquipment": "No matching equipment was found."
+      "NoMatchingEquipment": "No matching equipment was found.",
+      "TooExpensive": "That item is too expensive for your remaining gold."
     },
     "AltText": {
       "MoveUp": "Move Up",

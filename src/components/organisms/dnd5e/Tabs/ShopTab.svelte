@@ -6,7 +6,8 @@
   import CollapsibleSectionHeader from '../../../atoms/dnd5e/CollapsibleSectionHeader.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
-  import { localize as t, enrichHTML } from "~/src/helpers/Utility";
+  import { localize as t, enrichHTML, safeGetSetting } from "~/src/helpers/Utility";
+  import { MODULE_ID } from '~/src/helpers/constants';
   import { get } from 'svelte/store';
 
   let availableCurrency = { gp: 0, sp: 0, cp: 0 };
@@ -17,6 +18,7 @@
 
   let keywordFilter = ''; // Add variable for keyword filter
   let expandedCategories = {}; // Track which categories are expanded
+  const filterOutUnaffordables = safeGetSetting(MODULE_ID, 'filterOutUnaffordables', true);
 
   $: isDisabled = $readOnlyTabs.includes('shop');
 
@@ -67,6 +69,11 @@
   // Add item to cart
   async function addToCart(item) {
     try {
+      if (!isItemAffordable(item)) {
+        ui.notifications?.warn(t('Shop.TooExpensive'));
+        return;
+      }
+
       const itemId = item.id || item._id;
       
       if (!itemId) {
@@ -94,6 +101,14 @@
       console.error("Error adding item to cart:", error);
       ui.notifications?.warn(t('Shop.ErrorAddToCart'));
     }
+  }
+
+  function getItemCostInCopper(item) {
+    return PurchaseHandler.getItemCopperValue(item, 1);
+  }
+
+  function isItemAffordable(item) {
+    return getItemCostInCopper(item) <= $remainingGold;
   }
   
   // Update item quantity in cart
@@ -123,10 +138,12 @@
   }
 
   // Filter and group items by category, applying keyword filter first
-  $: filteredItems = $shopItems.filter(item => 
-    item.name.toLowerCase().includes(keywordFilter.toLowerCase())
-    && PurchaseHandler.getItemCopperValue(item, 1) <= $remainingGold 
-  );
+  $: filteredItems = $shopItems.filter(item => {
+    const matchesKeyword = item.name.toLowerCase().includes(keywordFilter.toLowerCase());
+    if (!matchesKeyword) return false;
+    if (!filterOutUnaffordables) return true;
+    return isItemAffordable(item);
+  });
 
   $: categoryGroups = filteredItems.reduce((acc, item) => {
     const category = item.type.charAt(0).toUpperCase() + item.type.slice(1) + 's';
@@ -276,7 +293,7 @@
           />
           {#if expandedCategories[category]}
             {#each categoryGroups[category] as item (item.uuid || item._id)}
-              <div class="item-row">
+              <div class="item-row" class:unaffordable={!isItemAffordable(item)}>
                 <div class="item-details">
                   <img src={item.img} alt={item.name} class="item-icon" />
                   <span class="item-name">
@@ -291,7 +308,7 @@
                   <span class="item-price">
                     {item.system?.price?.value || 0} {item.system?.price?.denomination || 'cp'}
                   </span>
-                  <button class="add-btn" on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
+                  <button class="add-btn" class:unaffordable-add={!isItemAffordable(item)} on:click|preventDefault={() => addToCart(item)} disabled={isDisabled}>
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
@@ -471,6 +488,9 @@
     &:hover
       background: rgba(0, 0, 0, 0.05)
 
+    &.unaffordable
+      opacity: 0.45
+
   .item-details
     display: flex
     align-items: center
@@ -517,6 +537,12 @@
         cursor: not-allowed
         &:hover
           background: var(--dnd5e-color-gold, #b59e54)
+
+      &.unaffordable-add
+        background: #666
+        color: #ddd
+        &:hover
+          background: #777
           
   .filter-container
     padding: 0 0.25rem // Match item-row padding

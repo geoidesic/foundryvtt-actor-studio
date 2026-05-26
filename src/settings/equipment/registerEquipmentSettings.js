@@ -40,4 +40,13 @@ export function registerEquipmentSettings() {
     type: Boolean,
   });
 
+  game.settings.register(MODULE_ID, 'filterOutUnaffordables', {
+    name: game.i18n.localize('GAS.Setting.FilterOutUnaffordables.Name'),
+    hint: game.i18n.localize('GAS.Setting.FilterOutUnaffordables.Hint'),
+    scope: 'world',
+    config: false,
+    default: true,
+    type: Boolean,
+  });
+
 }

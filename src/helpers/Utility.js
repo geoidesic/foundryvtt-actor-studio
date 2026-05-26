@@ -687,7 +687,9 @@ export function extractMapIteratorObjectProperties(mapIterator, keys) {
         // For enhanced index data, the system fields are returned as flat properties
         // Check if the field exists directly in the data
         if (data.hasOwnProperty(k)) {
-          newObj[k] = data[k];
+          // Normalize flat index fields (e.g. "system.price.value") to nested
+          // objects so downstream code can always read item.system.price.value.
+          setNestedProperty(newObj, k, data[k]);
         } else {
           // Fallback to nested property extraction for backward compatibility
           const value = getNestedProperty(data, k);

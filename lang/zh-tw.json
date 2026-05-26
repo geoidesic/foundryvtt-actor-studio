@@ -338,6 +338,10 @@
         "Name": "啟用裝備購買",
         "Hint": "如果啟用，在裝備選擇後為收到起始金幣的角色新增「商店」標籤，允許他們從指定的合集包購買物品。注意，如果裝備選擇被停用，此設定將被忽略。"
       },
+      "FilterOutUnaffordables": {
+        "Name": "過濾無法負擔的裝備",
+        "Hint": "若啟用，商店會隱藏目前金額無法負擔的物品。若停用，無法負擔的物品會以灰色顯示，嘗試加入購物車時會顯示警告。"
+      },
       "ExperimentalCharacterNameStyling": {
         "Name": "實驗性角色名稱樣式",
         "Hint": "啟用具有隨機顏色和字型的實驗性動畫角色名稱樣式。這是一個為角色名稱輸入新增視覺效果的實驗性功能。"
@@ -591,7 +595,8 @@
       "ErrorUpdateQuantity": "無法更新物品數量",
       "ErrorRemoveFromCart": "無法從購物車移除物品",
       "FilterPlaceholder": "按關鍵字搜尋商店中的物品",
-      "NoMatchingEquipment": "未找到相符的裝備。"
+      "NoMatchingEquipment": "未找到相符的裝備。",
+      "TooExpensive": "此物品超出您目前可用的金額。"
     },
     "AltText": {
       "MoveUp": "上移",
