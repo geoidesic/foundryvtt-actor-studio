@@ -7,7 +7,7 @@
     onMount,
     tick,
   } from "svelte";
-  import { abilities, race, abilityRolls } from "~/src/stores/index";
+  import { abilities, abilityRolls } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { dnd5eModCalc, localize as t, safeGetSetting } from "~/src/helpers/Utility";
 
@@ -90,10 +90,6 @@
 
   $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
-  $: raceFeatScore = 0;
-  $: abilityAdvancements =
-    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
-      ?.fixed;
   $: allRolled = systemAbilitiesArray.every(
     (ability) => $abilityRolls[ability[0]] !== undefined,
   );
@@ -112,9 +108,6 @@
       tr
         th.ability Ability
         th.center Base
-        +if("window.GAS.dnd5eRules == '2014'")
-          th.center Origin
-        th.center Score
         th.center Mod
         th.center.roll-col
     tbody
@@ -131,17 +124,10 @@
                 .down.chevron
                   +if("index != systemAbilitiesArray.length - 1")
                     i.fas.fa-chevron-down(alt="{t('AltText.MoveDown')}" on:click!="{swapAbilities(ability[0], -1)}")
-          +if("window.GAS.dnd5eRules == '2014'")
-            td.center
-              +if("abilityAdvancements?.[ability[0]] > 0")
-                span +
-              span {abilityAdvancements?.[ability[0]] || 0}
           td.center
-            span {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
-          td.center
-            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value)) > 0")
               span +
-            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value))}
           td.center
             .buttons(class="{$abilityRolls[ability[0]] ? '' : 'active'}" alt="{t('AltText.Roll')}" on:click!="{roll(ability[0])}")
               i.fas.fa-dice

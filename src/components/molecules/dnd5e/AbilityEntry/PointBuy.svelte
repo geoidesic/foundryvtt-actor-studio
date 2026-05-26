@@ -10,7 +10,6 @@
   } from "svelte";
   import {
     abilities,
-    race,
     pointBuyScoreTotal,
     pointBuyLimit,
     abilityRolls,
@@ -71,10 +70,6 @@
 
   $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
-  $: raceFeatScore = 0;
-  $: abilityAdvancements =
-    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
-      ?.fixed;
   $: $pointBuyScoreTotal =
     systemAbilitiesArray?.reduce(
       (acc, ability) =>
@@ -97,9 +92,6 @@
       tr
         th.ability Ability
         th.center Base
-        +if("window.GAS.dnd5eRules == '2014'")
-          th.center Origin
-        th.center Score
         th.center Modifier
     tbody
       +each("systemAbilitiesArray as ability, index")
@@ -113,18 +105,12 @@
               .down.chevron( on:click!="{updateDebounce(ability[0], {target: {value: Number($doc.system.abilities[ability[0]]?.value) - 1}})}")
                 i.fas.fa-chevron-down(alt="{t('AltText.Decrease')}")
           
-          +if("window.GAS.dnd5eRules == '2014'")
-            td.center
-              +if("abilityAdvancements?.[ability[0]] > 0")
-                span +
-              span {abilityAdvancements?.[ability[0]] || 0}
-          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value)) > 0")
               span +
-            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value))}
       tr
-        td(colspan="5")
+        td(colspan="3")
           hr
           .flexrow.justify-flexrow-vertical
             .flex1 Points total: 
@@ -139,7 +125,7 @@
       
       +if("isNaN($pointBuyScoreTotal)")
         tr
-          td(colspan="5")
+          td(colspan="3")
             hr
             button.btn.btn-primary(on:click="{reset}") Reset scores
 

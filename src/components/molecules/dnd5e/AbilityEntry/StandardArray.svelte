@@ -3,7 +3,6 @@
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import {
     abilities,
-    race,
     isStandardArrayValues,
     abilityRolls,
   } from "~/src/stores/index";
@@ -112,9 +111,6 @@
 
   $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
-  $: abilityAdvancements =
-    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
-      ?.fixed;
   $: actorAbilities = Object.entries($doc.system.abilities);
   $: actorAbilityValues = Object.entries($doc.system.abilities).map(
     (x) => x[1].value,
@@ -171,9 +167,6 @@
         tr
           th.ability Ability
           th.center Base
-          +if("window.GAS.dnd5eRules == '2014'")
-            th.center Origin
-          th.center Score
           th.center Modifier
       tbody
         +each("systemAbilitiesArray as ability, index")
@@ -188,19 +181,13 @@
                 .down.chevron
                   +if("index != 5")
                     i.fas.fa-chevron-down(alt="{t('AltText.MoveDown')}" on:click!="{updateDebounce(ability[0], -1)}")
-            +if("window.GAS.dnd5eRules == '2014'")
-              td.center
-                +if("abilityAdvancements?.[ability[0]] > 0")
-                  span +
-                span {abilityAdvancements?.[ability[0]] || 0}
-            td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
             td.center
-              +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0)) > 0")
+              +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value)) > 0")
                 span +
-              span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value) + (Number(abilityAdvancements?.[ability[0]]) || 0))}
+              span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value))}
         +if("!isStandardArrayCurrent")
           tr
-            td(colspan="5")
+            td(colspan="3")
               hr
               button.btn.btn-primary(on:click="{reset}") Reset to Standard Array
 </template>

@@ -10,7 +10,7 @@
   import Equipment from "~/src/components/organisms/dnd5e/Tabs/Equipment.svelte";
   import { log, safeGetSetting } from '~/src/helpers/Utility';
   import { MODULE_ID } from "~/src/helpers/constants";
-  import { getWorkflowFSM, resetWorkflowFSM } from '~/src/helpers/WorkflowStateMachine';
+  import { getWorkflowFSM, resetWorkflowFSM, WORKFLOW_EVENTS } from '~/src/helpers/WorkflowStateMachine';
   import { getLevelUpFSM, levelUpFSMContext, LEVELUP_EVENTS } from '~/src/helpers/LevelUpStateMachine';
   import { observeFoundryBodyTheme } from '~/src/helpers/syncAppThemeFromFoundryBody';
 

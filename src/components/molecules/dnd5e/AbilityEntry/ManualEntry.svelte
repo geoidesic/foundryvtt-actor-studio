@@ -7,7 +7,8 @@
     onMount,
     tick,
   } from "svelte";
-  import { abilities, race } from "~/src/stores/index";
+  import { abilities } from "~/src/stores/index";
+  import { dnd5eModCalc } from "~/src/helpers/Utility";
 
   export let document = false;
 
@@ -28,12 +29,6 @@
 
   $: systemAbilities = game.system.config.abilities;
   $: systemAbilitiesArray = Object.entries(systemAbilities);
-  $: raceFeatScore = 0;
-  $: abilityAdvancements =
-    $race?.advancement?.byType?.AbilityScoreImprovement?.[0].configuration
-      ?.fixed;
-
-  $: console.log(systemAbilitiesArray);
   onMount(async () => {});
 </script>
 
@@ -44,9 +39,6 @@
       tr
         th.ability Ability
         th.center Base
-        +if("window.GAS.dnd5eRules == '2014'")
-          th.center Origin
-        th.center Score
         th.center Modifier
     tbody
       +each("systemAbilitiesArray as ability, index")
@@ -55,17 +47,10 @@
           td.center
             input.score.center.small(name="{ability[0]}" id="{ability[0]}" type="number" value="{$doc.system.abilities[ability[0]]?.value}" on:input!="{updateDebounce(ability[0], event)}")
           
-          +if("window.GAS.dnd5eRules == '2014'")
-            td.center
-              +if("abilityAdvancements?.[ability[0]] > 0")
-                span +
-              span {abilityAdvancements?.[ability[0]] || 0}
-          
-          td.center {(Number(abilityAdvancements?.[ability[0]]) || 0) + Number($doc.system.abilities[ability[0]]?.value || 0)}
           td.center
-            +if("Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0) > 0")
+            +if("dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value || 0)) > 0")
               span +
-            span {Number($doc.system.abilities[ability[0]]?.mod) + (Number(abilityAdvancements?.[ability[0]]) || 0)}
+            span {dnd5eModCalc(Number($doc.system.abilities[ability[0]]?.value || 0))}
 
 </template>
 
