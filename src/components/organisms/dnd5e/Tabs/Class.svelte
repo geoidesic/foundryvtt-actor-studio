@@ -31,6 +31,7 @@
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
+  import CollapsibleSectionHeader from "~/src/components/atoms/dnd5e/CollapsibleSectionHeader.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
 
   const isDisabled = getContext('isDisabled') || false;
@@ -342,13 +343,12 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
           | {@html combinedHtml || richHTML}
       +if("classAdvancementArrayFiltered")
         +if("!hideAdvancementList")
-          h3.left.mt-sm.flexrow
-            .flex0(on:click="{toggleClassAdvancements}")
-              +if("classAdvancementExpanded")
-                span [-]&nbsp;
-              +if("!classAdvancementExpanded")
-                span [+]&nbsp;
-            .flex {t('Tabs.Classes.LevelPreview')}
+          CollapsibleSectionHeader(
+            className="left mt-sm"
+            label="{t('Tabs.Classes.LevelPreview')}"
+            expanded="{classAdvancementExpanded}"
+            on:toggle="{toggleClassAdvancements}"
+          )
           ul.icon-list
             +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
               li.flexrow
@@ -376,14 +376,13 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
         +if("!hideAdvancementList")
-          h2.left.mt-sm.flexrow
-            .flex0.pointer(on:click="{toggleSubClassAdvancements}")
-              +if("subClassAdvancementExpanded")
-                span [-]
-              +if("!subClassAdvancementExpanded")
-                span [+]
-            .flex {t('Tabs.Classes.SubClass')} {t('Advancements')}
-            .flex0.div.badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
+          CollapsibleSectionHeader(
+            className="left mt-sm"
+            label="{`${t('Tabs.Classes.SubClass')} ${t('Advancements')}`}"
+            expanded="{subClassAdvancementExpanded}"
+            on:toggle="{toggleSubClassAdvancements}"
+          )
+            span(slot="right").badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
           ul.icon-list
             +if("!subClassAdvancementArrayFiltered.length")
               li.left {t('NoAdvancements')}

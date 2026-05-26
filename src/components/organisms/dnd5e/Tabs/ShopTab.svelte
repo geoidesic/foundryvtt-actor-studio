@@ -3,6 +3,7 @@
   import { actorInGame, readOnlyTabs } from '../../../../stores/index';
   import GoldDisplay from '../../../molecules/GoldDisplay.svelte';
   import StandardTabLayout from '../../../organisms/StandardTabLayout.svelte';
+  import CollapsibleSectionHeader from '../../../atoms/dnd5e/CollapsibleSectionHeader.svelte';
   import { PurchaseHandler } from '../../../../plugins/equipment-purchase/handlers/PurchaseHandler';
   import { onMount, onDestroy, tick } from 'svelte';
   import { localize as t, enrichHTML } from "~/src/helpers/Utility";
@@ -266,16 +267,13 @@
     {:else}
       {#each categories as category}
         <div class="category">
-          <button class="category-header left mt-sm flexrow pointer" on:click={() => toggleCategory(category)}>
-            <div class="flex0 mr-xs">
-              {#if expandedCategories[category]}
-                <span>[-]</span>
-              {:else}
-                <span>[+]</span>
-              {/if}
-            </div>
-            <div class="flex">{category}</div>
-          </button>
+          <CollapsibleSectionHeader
+            className="category-header left mt-sm"
+            label={category}
+            expanded={!!expandedCategories[category]}
+            disabled={isDisabled}
+            on:toggle={() => toggleCategory(category)}
+          />
           {#if expandedCategories[category]}
             {#each categoryGroups[category] as item (item.uuid || item._id)}
               <div class="item-row">
@@ -461,27 +459,7 @@
           background: none
 
   .category
-    .category-header
-      background: none
-      border: none
-      cursor: pointer
-      color: var(--color-highlight)
-      font-size: 1rem
-      margin-bottom: 0.2rem
-      padding-bottom: 0.1rem
-      border-bottom: 1px solid var(--color-border-light-highlight)
-      width: 100%
-      text-align: left
-      font-weight: bold
-
-      &:hover
-        background: rgba(0, 0, 0, 0.05)
-
-      &:disabled
-        opacity: 0.5
-        cursor: not-allowed
-        &:hover
-          background: none
+    margin-bottom: 0.1rem
 
   .item-row
     display: flex
@@ -561,11 +539,6 @@
       opacity: 0.7
       cursor: not-allowed
       background: rgba(0, 0, 0, 0.02)
-
-  .toggle-icon
-    margin-left: 0.5rem
-    font-size: 0.8rem
-    color: var(--color-text-dark-secondary)
 
   .gold-header
     position: sticky
