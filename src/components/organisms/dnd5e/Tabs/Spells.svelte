@@ -140,6 +140,33 @@
   function getSpellSelectionKey(spell) {
     return spell?.id || spell?._id || spell?.uuid || null;
   }
+
+  function mapSelectionsToList(selectionMap) {
+    if (!(selectionMap instanceof Map)) return [];
+
+    return Array.from(selectionMap.entries()).map(([spellId, { itemData }]) => ({
+      id: spellId,
+      spell: itemData
+    }));
+  }
+
+  function mergeAutoGrantedSelections(baseSelections, autoGrantedSpells) {
+    const mergedSelections = [...baseSelections];
+    const existingIds = new Set(baseSelections.map((selection) => selection.id));
+
+    for (const spell of autoGrantedSpells) {
+      const spellId = getSpellSelectionKey(spell);
+      if (!spellId || existingIds.has(spellId)) continue;
+
+      mergedSelections.push({
+        id: spellId,
+        spell
+      });
+      existingIds.add(spellId);
+    }
+
+    return mergedSelections;
+  }
   
   function getAutoSelectedSpells() {
     const spells = $availableSpells || [];
@@ -443,13 +470,14 @@
     }
   });
 
-  // Update selected spells list when selectedSpells changes
+  // Keep selected-spells UX consistent for all auto-granted classes by
+  // deriving both manual selections and auto-granted preview from one path.
   $: {
-    if ($selectedSpells) {
-      selectedSpellsList = Array.from($selectedSpells.entries()).map(([spellId, { itemData }]) => ({
-        id: spellId,
-        spell: itemData
-      }));
+    const mappedSelections = mapSelectionsToList($selectedSpells);
+    if (!hasAllSpellsAccess) {
+      selectedSpellsList = mappedSelections;
+    } else {
+      selectedSpellsList = mergeAutoGrantedSelections(mappedSelections, getAutoSelectedSpells());
     }
   }
   $: actorSpells = $actor.items.filter(item => item.type === 'spell');
@@ -597,8 +625,11 @@
       : 'Unknown';
   }
 
+  $: displayedSelectedSpellCount = selectedSpellsList.filter((entry) => (entry?.spell?.system?.level || 0) > 0).length
+  $: effectiveSelectedSpellCount = hasAllSpellsAccess ? displayedSelectedSpellCount : $currentSpellCounts.spells
+  $: uiSpellLimit = hasAllSpellsAccess ? Math.max(displaySpellLimit, effectiveSelectedSpellCount) : displaySpellLimit
   $: cantripCountAtLimit = $currentSpellCounts.cantrips >= $spellLimits.cantrips
-  $: spellCountAtLimit = $currentSpellCounts.spells >= displaySpellLimit
+  $: spellCountAtLimit = effectiveSelectedSpellCount >= displaySpellLimit
   $: shouldHideSpellSearch = hasAllSpellsAccess && spellCountAtLimit
   $: shouldHideAvailableSpellsPanel = hasAllSpellsAccess && spellCountAtLimit && $spellLimits.cantrips === 0
 </script>
@@ -639,8 +670,8 @@ spells-tab-container(clas:readonlys="{isDisabled}")
         spellLabel="{t('Spells.Spells')}"
         cantripCount="{$currentSpellCounts.cantrips}"
         cantripLimit="{$spellLimits.cantrips}"
-        spellCount="{$currentSpellCounts.spells}"
-        spellLimit="{displaySpellLimit}"
+        spellCount="{effectiveSelectedSpellCount}"
+        spellLimit="{uiSpellLimit}"
         cantripCountAtLimit="{cantripCountAtLimit}"
         spellCountAtLimit="{spellCountAtLimit}"
       )
@@ -651,9 +682,9 @@ spells-tab-container(clas:readonlys="{isDisabled}")
           cantripCountAtLimit="{cantripCountAtLimit}"
           spellCountAtLimit="{spellCountAtLimit}"
           currentCantrips="{$currentSpellCounts.cantrips}"
-          currentSpells="{$currentSpellCounts.spells}"
+          currentSpells="{effectiveSelectedSpellCount}"
           cantripLimit="{$spellLimits.cantrips}"
-          spellLimit="{displaySpellLimit}"
+          spellLimit="{uiSpellLimit}"
           selectedSpellsList="{selectedSpellsList}"
           isDisabled="{isDisabled}"
           isLockedAutoSelectedSpell="{isLockedAutoSelectedSpell}"
