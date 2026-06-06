@@ -274,4 +274,61 @@ describe('spellProgression helper', () => {
     expect(level1?.cantrips).toBe(3);
     expect(level4?.cantrips).toBe(4);
   });
+
+  it('uses prepared-spell advancement for 2024 sorcerer when spells-known advancement is absent', () => {
+    const classItem = {
+      system: {
+        advancement: [
+          {
+            type: 'ScaleValue',
+            title: 'Prepared Spells',
+            level: 1,
+            levels: [2, 4, 6]
+          }
+        ]
+      }
+    };
+
+    const level2 = getSpellLimitsForClassLevel({
+      classIdentifier: 'sorcerer',
+      classItem,
+      level: 2,
+      rulesVersion: '2024'
+    });
+    const delta = getSpellDeltaForClassLevel({
+      classIdentifier: 'sorcerer',
+      classItem,
+      oldLevel: 1,
+      newLevel: 2,
+      rulesVersion: '2024'
+    });
+
+    expect(level2?.spells).toBe(4);
+    expect(delta?.spells).toBe(2);
+  });
+
+  it('does not use prepared-spell advancement for 2014 sorcerer fallback logic', () => {
+    const classItem = {
+      system: {
+        advancement: [
+          {
+            type: 'ScaleValue',
+            title: 'Prepared Spells',
+            level: 1,
+            levels: [2, 4, 6]
+          }
+        ]
+      }
+    };
+
+    const level2 = getSpellLimitsForClassLevel({
+      classIdentifier: 'sorcerer',
+      classItem,
+      level: 2,
+      rulesVersion: '2014'
+    });
+
+    // Falls back to spellsKnown.json for 2014 sorcerer (L2 = 3)
+    expect(level2?.spells).toBe(3);
+  });
 });

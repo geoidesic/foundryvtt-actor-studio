@@ -108,7 +108,7 @@ function getScaleValueAtLevel(advancement, level) {
   return null;
 }
 
-function getSpellLimitsFromAdvancements(classItem, level) {
+function getSpellLimitsFromAdvancements(classItem, level, { classIdentifier, rulesVersion } = {}) {
   const advancements = advancementEntriesToArray(classItem?.system?.advancement);
   if (advancements.length === 0) return null;
 
@@ -122,6 +122,7 @@ function getSpellLimitsFromAdvancements(classItem, level) {
 
   let cantrips = null;
   let spellsKnown = null;
+  let preparedSpells = null;
 
   for (const advancement of applicable) {
     const title = String(advancement?.title || '').toLowerCase();
@@ -138,22 +139,36 @@ function getSpellLimitsFromAdvancements(classItem, level) {
       continue;
     }
 
+    if (title.includes('prepared') && title.includes('spell')) {
+      preparedSpells = value;
+      continue;
+    }
+
     if (title.includes('spell') && !title.includes('prepared')) {
       spellsKnown = value;
     }
   }
 
-  if (cantrips === null && spellsKnown === null) return null;
+  const normalizedClass = String(classIdentifier || '').toLowerCase();
+  const shouldUsePreparedAsSpellsKnown = (
+    rulesVersion === '2024'
+    && normalizedClass === 'sorcerer'
+    && spellsKnown === null
+    && preparedSpells !== null
+  );
+  const resolvedSpells = spellsKnown ?? (shouldUsePreparedAsSpellsKnown ? preparedSpells : null);
+
+  if (cantrips === null && resolvedSpells === null) return null;
 
   return {
     cantrips: cantrips === null ? null : Math.max(0, cantrips),
-    spells: spellsKnown === null ? null : Math.max(0, spellsKnown),
+    spells: resolvedSpells === null ? null : Math.max(0, resolvedSpells),
     hasAllSpells: false
   };
 }
 
 export function getSpellLimitsForClassLevel({ classIdentifier, classItem, level, rulesVersion = '2014' }) {
-  const fromAdvancements = getSpellLimitsFromAdvancements(classItem, level);
+  const fromAdvancements = getSpellLimitsFromAdvancements(classItem, level, { classIdentifier, rulesVersion });
   const fromTable = getSpellsFromTable(classIdentifier, level, rulesVersion);
 
   if (!fromAdvancements && !fromTable) return null;
