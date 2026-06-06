@@ -692,7 +692,7 @@ export const spellLimits = derived(
         
         const isFirstThirdCasterSpellLevel = oldLevel === 2 && $newLevelValueForExistingClass === 3;
         const spellcastingSubclassIdentifier = getSpellcastingSubclassIdentifier($currentCharacter);
-        const isKnownThirdCasterSubclass = ['eldritch-knight', 'eldritchknight', 'arcane-trickster', 'arcanetrickster']
+        const isKnownThirdCasterSubclass = ['eldritch-knight', 'eldritchknight', 'arcane-trickster', 'arcanetrickster', 'trickster']
           .includes(spellcastingSubclassIdentifier);
 
         if (oldSubclassLimits || (isFirstThirdCasterSpellLevel && isKnownThirdCasterSubclass)) {

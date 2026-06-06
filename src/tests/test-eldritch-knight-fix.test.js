@@ -105,7 +105,7 @@ describe('Eldritch Knight Spell Selection Fix', () => {
 
         const knownSpellcastingClasses = [
           'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-          'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+          'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight', 'trickster'
         ];
         const hasKnownSpellcastingClass = classNamesLower.some(className => 
           knownSpellcastingClasses.includes(className)
