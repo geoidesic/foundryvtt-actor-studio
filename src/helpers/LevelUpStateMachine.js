@@ -268,7 +268,7 @@ function determineSpellListClass(actor) {
       if (identifier === 'eldritch-knight' || identifier === 'eldritchknight') {
         window.GAS.log.d('[LEVELUP] Found Eldritch Knight by identifier -> Wizard');
         return 'Wizard';
-      } else if (identifier === 'arcane-trickster' || identifier === 'arcanetrickster') {
+      } else if (identifier === 'arcane-trickster' || identifier === 'arcanetrickster' || identifier == 'trickster') {
         window.GAS.log.d('[LEVELUP] Found Arcane Trickster by identifier -> Wizard');
         return 'Wizard';
       } else if (identifier === 'aberrant-mind' || identifier === 'aberrantmind') {
@@ -294,9 +294,9 @@ function determineSpellListClass(actor) {
     if (subclass) {
       // Check if this is a known spellcasting subclass
       const subclassLower = subclass.toLowerCase();
-      if (['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclassLower)) {
+      if (['eldritchknight', 'arcanetrickster', 'aberrantmind', 'trickster'].includes(subclassLower)) {
         // These subclasses use specific spell lists
-        if (subclassLower === 'eldritchknight' || subclassLower === 'arcanetrickster') {
+        if (subclassLower === 'eldritchknight' || subclassLower === 'arcanetrickster' || subclassLower == 'trickster') {
           window.GAS.log.d('[LEVELUP] Found subclass in class data:', subclass, '-> Wizard');
           return 'Wizard';
         } else if (subclassLower === 'aberrantmind') {
@@ -620,7 +620,7 @@ export const levelUpFSMContext = {
     // Method 3: Fallback check for known spellcasting classes/subclasses
     const knownSpellcastingClasses = [
       'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-      'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+      'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight', 'trickster'
     ];
     const hasKnownSpellcastingClass = classNamesLower.some(className => 
       knownSpellcastingClasses.includes(className)
@@ -630,13 +630,13 @@ export const levelUpFSMContext = {
     // This is a more aggressive check for cases where the actor system hasn't been updated yet
     const hasSubclassSpellcasting = classNamesLower.some(lowerClassName => {
       // Check for known spellcasting subclasses
-      return ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(lowerClassName);
+      return ['eldritchknight', 'arcanetrickster', 'aberrantmind', 'trickster'].includes(lowerClassName);
     });
     
     // Method 5: Check for subclass in the class data itself (e.g., fighter with eldritchknight subclass)
     const hasSubclassInClassData = classDataList.some(classData => {
       const subclass = classData?.system?.subclass;
-      return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind'].includes(subclass.toLowerCase());
+      return subclass && ['eldritchknight', 'arcanetrickster', 'aberrantmind', 'trickster'].includes(subclass.toLowerCase());
     });
     
     const isSpellcaster = hasClassSpellcasting || hasActorSpellcasting || hasKnownSpellcastingClass || hasSubclassSpellcasting || hasSubclassInClassData;

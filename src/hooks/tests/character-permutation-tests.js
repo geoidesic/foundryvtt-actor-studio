@@ -102,7 +102,7 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
     const normalized = String(identifier || '').toLowerCase();
     if (['bard', 'cleric', 'druid', 'sorcerer', 'wizard'].includes(normalized)) return 'full';
     if (['paladin', 'ranger', 'artificer'].includes(normalized)) return 'half';
-    if (['eldritchknight', 'arcanetrickster'].includes(normalized)) return 'third';
+    if (['eldritchknight', 'arcanetrickster', 'trickster'].includes(normalized)) return 'third';
     if (normalized === 'warlock') return 'pact';
     return 'none';
   };

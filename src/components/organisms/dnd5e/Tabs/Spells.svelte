@@ -376,7 +376,7 @@
     // Standard D&D 5e spellcasting progression for full casters
     const fullCasters = ['bard', 'cleric', 'druid', 'sorcerer', 'wizard'];
     const halfCasters = ['paladin', 'ranger'];
-    const thirdCasters = ['arcane trickster', 'arcane-trickster', 'eldritch knight', 'eldritch-knight'];
+    const thirdCasters = ['arcane trickster', 'arcane-trickster', 'eldritch knight', 'eldritch-knight', 'trickster'];
     const warlockProgression = ['warlock'];
     
     if (fullCasters.includes(normalizedClassName)) {

@@ -130,7 +130,7 @@ describe('Debug Shopping Spell Selection Condition', () => {
       if (!isSpellcaster) {
         const knownSpellcastingClasses = [
           'bard', 'cleric', 'druid', 'paladin', 'ranger', 'sorcerer', 'warlock', 'wizard',
-          'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight'
+          'artificer', 'aberrantmind', 'arcanetrickster', 'eldritchknight', 'trickster'
         ];
         const hasKnownSpellcastingClass = classKeys.some(className => knownSpellcastingClasses.includes(className.toLowerCase()));
         console.log('hasKnownSpellcastingClass:', hasKnownSpellcastingClass);
