@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { safeGetSetting, getLevelByDropType, extractMapIteratorObjectProperties } from '../helpers/Utility.js';
+import { safeGetSetting, getLevelByDropType, extractMapIteratorObjectProperties, itemHasProperty } from '../helpers/Utility.js';
 
 describe('safeGetSetting', () => {
   let origGame;
@@ -86,5 +86,47 @@ describe('extractMapIteratorObjectProperties', () => {
     expect(result[0].name).toBe('Rations');
     expect(result[0].system?.price?.value).toBe(5);
     expect(result[0].system?.price?.denomination).toBe('sp');
+  });
+});
+
+describe('itemHasProperty', () => {
+  it('returns true for Set containing the key (modern dnd5e shape)', () => {
+    const item = { system: { properties: new Set(['foc', 'mgc']) } };
+    expect(itemHasProperty(item, 'foc')).toBe(true);
+    expect(itemHasProperty(item, 'mgc')).toBe(true);
+  });
+
+  it('returns false for Set not containing the key', () => {
+    const item = { system: { properties: new Set(['foc']) } };
+    expect(itemHasProperty(item, 'mgc')).toBe(false);
+  });
+
+  it('returns true for Array containing the key (legacy shape)', () => {
+    const item = { system: { properties: ['foc', 'amm'] } };
+    expect(itemHasProperty(item, 'foc')).toBe(true);
+  });
+
+  it('returns false for Array not containing the key', () => {
+    const item = { system: { properties: ['foc'] } };
+    expect(itemHasProperty(item, 'mgc')).toBe(false);
+  });
+
+  it('returns false when properties is missing or falsy', () => {
+    expect(itemHasProperty({}, 'foc')).toBe(false);
+    expect(itemHasProperty({ system: {} }, 'foc')).toBe(false);
+    expect(itemHasProperty({ system: { properties: null } }, 'foc')).toBe(false);
+    expect(itemHasProperty({ system: { properties: undefined } }, 'foc')).toBe(false);
+  });
+
+  it('accepts raw properties collection directly (Set or Array)', () => {
+    expect(itemHasProperty(new Set(['foc']), 'foc')).toBe(true);
+    expect(itemHasProperty(['mgc'], 'mgc')).toBe(true);
+    expect(itemHasProperty(new Set(['foc']), 'mgc')).toBe(false);
+  });
+
+  it('returns false for null/undefined inputs', () => {
+    expect(itemHasProperty(null, 'foc')).toBe(false);
+    expect(itemHasProperty(undefined, 'foc')).toBe(false);
+    expect(itemHasProperty({ system: { properties: new Set(['foc']) } }, null)).toBe(false);
   });
 });

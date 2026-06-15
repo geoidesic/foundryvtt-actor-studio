@@ -725,6 +725,42 @@ export function setNestedProperty(obj, path, value) {
   lastObj[lastKey] = value;
 }
 
+/**
+ * Check if an item (or its system.properties) has a given dnd5e property tag.
+ * Robustly handles:
+ *  - Set (modern dnd5e 5.x / 2024, e.g. properties.has('foc'))
+ *  - Array (older data shape)
+ *  - String (comma-separated, e.g., "foc,amm" or "foc")
+ *  - falsy / missing
+ *  - raw properties collection passed directly
+ * @param {object|Set|Array|string|undefined} itemOrProps - Item object (with .system.properties) or the properties value itself
+ * @param {string} key - Property key such as 'foc', 'mgc', 'amm', etc.
+ * @returns {boolean}
+ */
+export function itemHasProperty(itemOrProps, key) {
+  if (!itemOrProps || !key) return false;
+  let props = itemOrProps;
+  // If it looks like an item with system, drill in
+  if (itemOrProps.system && 'properties' in itemOrProps.system) {
+    props = itemOrProps.system.properties;
+  } else if (itemOrProps.properties && !itemOrProps.system) {
+    // Sometimes callers might pass { properties: ... }
+    props = itemOrProps.properties;
+  }
+  if (!props) return false;
+  if (props instanceof Set) return props.has(key);
+  if (Array.isArray(props)) return props.includes(key);
+  // Handle string properties (comma-separated, e.g., "foc,amm" or "foc")
+  if (typeof props === 'string') {
+    return props.split(',').map(s => s.trim()).includes(key);
+  }
+  // Rare fallback: object-as-map
+  if (props && typeof props === 'object') {
+    return key in props || Object.prototype.hasOwnProperty.call(props, key) || Object.values(props).includes(key);
+  }
+  return false;
+}
+
 export function getFoldersFromMultiplePacks(packs, depth = 1) {
   const folders = [];
   for (const pack of packs) {

@@ -2,7 +2,7 @@
 import { getContext, onMount } from "svelte";
 import { equipmentSelections, addGranularSelection, removeGranularSelection, getEquipmentIcon, initializeGroup, addChildGranularSelection, getRequiredSelectionsCount, editGroup } from "~/src/stores/equipmentSelections";
 import { readOnlyTabs } from "~/src/stores/index";
-import { dnd5eConfigKeyMatches, localize as t, safeGetSetting } from "~/src/helpers/Utility";
+import { dnd5eConfigKeyMatches, localize as t, safeGetSetting, itemHasProperty } from "~/src/helpers/Utility";
 import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
 import { extractItemsFromPacksAsync, getPacksFromSettings } from "~/src/helpers/Utility.js";
 import { MODULE_ID } from "~/src/helpers/constants";
@@ -127,14 +127,14 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
           if (item.type !== type) return false;
           // Handle composite weapon types
           if (group.selectedItem.key === 'sim') {
-            return ['simpleM', 'simpleR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+            return ['simpleM', 'simpleR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !itemHasProperty(item, 'mgc');
           }
           if (group.selectedItem.key === 'mar') {
-            return ['martialM', 'martialR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+            return ['martialM', 'martialR'].includes(item.system?.type?.value) && !item.system?.magicalBonus && !itemHasProperty(item, 'mgc');
           }
           // Handle specific weapon types
           if (['martialM', 'martialR', 'simpleM', 'simpleR'].includes(group.selectedItem.key)) {
-            return item.system?.type?.value === group.selectedItem.key && !item.system?.magicalBonus && !item.system.properties?.includes('mgc');
+            return item.system?.type?.value === group.selectedItem.key && !item.system?.magicalBonus && !itemHasProperty(item, 'mgc');
           }
           // Handle base item matching
           return item.system?.baseItem === group.selectedItem.key;
@@ -142,13 +142,13 @@ $: equipmentByType = configurableSelections.reduce((acc, group) => {
         if(type === 'focus' && group.selectedItem?.key) {
           // window.GAS.log.d('EQUIPMENT DETAIL | Item matches type:', item, item.type, type );
 
-          return item.system?.properties?.includes('foc') && !item.system.properties?.includes('mgc');
+          return itemHasProperty(item, 'foc') && !itemHasProperty(item, 'mgc');
         }
         if(type === 'armor' && group.selectedItem?.key) {
-          return item.system?.type?.value === group.selectedItem.key && !item.system.properties?.includes('mgc');
+          return item.system?.type?.value === group.selectedItem.key && !itemHasProperty(item, 'mgc');
         }
         if(type === 'tool' && group.selectedItem?.key) {
-          return item.type === type && dnd5eConfigKeyMatches(item.system?.type?.value, group.selectedItem.key, 'tool') && !item.system.properties?.includes('mgc');
+          return item.type === type && dnd5eConfigKeyMatches(item.system?.type?.value, group.selectedItem.key, 'tool') && !itemHasProperty(item, 'mgc');
         }
         return true;
       })
