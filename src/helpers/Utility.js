@@ -1159,6 +1159,14 @@ export async function restoreActorSheetAfterLevelUp(actor) {
     const originalSheetClass = actor.getFlag(MODULE_ID, 'originalSheetClass');
     if (originalSheetClass === undefined || originalSheetClass === null) return false;
 
+    // If actor is already on the original sheet, skip close/re-open flicker entirely.
+    const currentSheetId = getCurrentEffectiveSheetId(actor);
+    if (currentSheetId === originalSheetClass) {
+      await actor.unsetFlag(MODULE_ID, 'originalSheetClass').catch(() => {});
+      window.GAS?.log?.d?.('[UTILITY] Actor already on original sheet, skipping close/re-open');
+      return true;
+    }
+
     const wasOpen = !!actor.sheet?.rendered;
     if (wasOpen) {
       await actor.sheet.close();

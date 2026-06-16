@@ -187,15 +187,26 @@
     
     // Only try to access actor sheet if actor exists
     if ($actorInGame) {
-      window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER before_sheet_render`, {
-        hasSheet: !!$actorInGame?.sheet
-      });
-      try {
-        window.GAS?.log?.d?.($actorInGame.sheet);
-        $actorInGame.sheet.render(true);
-        window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER after_sheet_render`);
-      } catch (error) {
-        window.GAS?.log?.e?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER sheet_render_error`, error);
+      // If the actor has a pending originalSheetClass flag, skip the render here and
+      // let restorePendingActorSheetsAfterLevelUp() handle the close+_onSheetChange flow
+      // (called by the level-up plugin's gas.close hook). This avoids a brief flash of
+      // the intermediate dnd5e sheet before the Tidy5e (or other custom) sheet replaces it.
+      const pendingRestore = $actorInGame.getFlag(MODULE_ID, 'originalSheetClass');
+      if (pendingRestore === undefined || pendingRestore === null) {
+        window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER before_sheet_render`, {
+          hasSheet: !!$actorInGame?.sheet
+        });
+        try {
+          window.GAS?.log?.d?.($actorInGame.sheet);
+          $actorInGame.sheet.render(true);
+          window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER after_sheet_render`);
+        } catch (error) {
+          window.GAS?.log?.e?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER sheet_render_error`, error);
+        }
+      } else {
+        window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER skip_render_pending_restore`, {
+          originalSheetClass: pendingRestore
+        });
       }
     } else {
       window.GAS?.log?.d?.(`[GAS_CLOSE_TRACE] [${closeTraceId}] GAS_CLOSE_HANDLER no_actor_skip_sheet_render`);

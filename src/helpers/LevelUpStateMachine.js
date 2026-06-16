@@ -921,24 +921,26 @@ export function createLevelUpStateMachine() {
               sheetInstanceId: refreshedActor?.sheet?.id
             });
 
-            // Restore original sheet class (e.g., Tidy5e) before opening the actor sheet.
-            // This mirrors the historical working behavior from prior Tidy5e fixes.
-            try {
-              const originalSheet = await refreshedActor.getFlag(MODULE_ID, 'originalSheetClass');
-              if (originalSheet !== undefined && originalSheet !== null) {
-                await refreshedActor.setFlag('core', 'sheetClass', originalSheet);
-                await refreshedActor.unsetFlag(MODULE_ID, 'originalSheetClass');
-              }
-            } catch (error) {
-              window.GAS.log.w(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED restore_original_sheet_error`, error);
-            }
+            // Do NOT restore sheet class here — leave originalSheetClass flag in place
+            // so the gas.close hook's restorePendingActorSheetsAfterLevelUp() can do it
+            // properly via _onSheetChange (avoiding orphaned sheet instances).
 
-            try {
-              window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED before_sheet_render`);
-              await refreshedActor.sheet.render(true);
-              window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED after_sheet_render`);
-            } catch (error) {
-              window.GAS.log.e(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED sheet_render_error`, error);
+            // If there's a pending originalSheetClass (non-default sheet like Tidy5e),
+            // skip rendering altogether to avoid a brief flash of the dnd5e sheet before
+            // restoreActorSheetAfterLevelUp closes it and re-opens with the correct class.
+            const pendingRestore = refreshedActor.getFlag(MODULE_ID, 'originalSheetClass');
+            if (pendingRestore === undefined || pendingRestore === null) {
+              try {
+                window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED before_sheet_render`);
+                await refreshedActor.sheet.render(true);
+                window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED after_sheet_render`);
+              } catch (error) {
+                window.GAS.log.e(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED sheet_render_error`, error);
+              }
+            } else {
+              window.GAS.log.d(`[GAS_CLOSE_TRACE] [${closeTraceId}] LEVELUP_COMPLETED skip_render_pending_restore`, {
+                originalSheetClass: pendingRestore
+              });
             }
 
             setTimeout(() => bringActorStudioToFront(), 0);
