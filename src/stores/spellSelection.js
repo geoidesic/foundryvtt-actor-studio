@@ -768,6 +768,28 @@ export const spellLimits = derived(
       });
 
       return deltaLimits;
+    } else if ($isLevelUp && !$newLevelValueForExistingClass && $levelUpClassObject) {
+      // NEW MULTICLASS scenario: adding a new spellcasting class (e.g. Rogue multiclassing into Bard)
+      // Treat as level 1 of the new spellcasting class, using the levelUpClassObject as classItem
+      window.GAS.log.d('📚 [spellLimits] NEW MULTICLASS CALCULATION:', {
+        classNameLower,
+        rulesVersion,
+        levelUpClassName: $levelUpClassObject.system?.identifier || $levelUpClassObject.name
+      });
+
+      const limits = getSpellLimitsForClassLevel({
+        classIdentifier: classNameLower,
+        classItem: $levelUpClassObject,
+        level: 1,
+        rulesVersion
+      });
+      if (!limits) {
+        window.GAS.log.w('⚠️ [spellLimits] No spell data found for new multiclass:', classNameLower, 'at level 1');
+        return { cantrips: 0, spells: 0 };
+      }
+
+      window.GAS.log.d('✅ [spellLimits] NEW MULTICLASS CALCULATION RESULT:', limits);
+      return limits;
     } else {
       // Character creation scenario - use total spells for level 1
       const limits = getSpellLimitsForClassLevel({

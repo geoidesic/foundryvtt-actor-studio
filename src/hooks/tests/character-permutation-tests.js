@@ -887,6 +887,18 @@ export function createCharacterPermutationTestHelpers(context, classConfig = {})
   };
 
   const beforeAll = async function () {
+    // Guard: package.json has "debug": true → init.js sets window.GAS root
+    // keys (debug, characterClass, race, background) which bypass quenchAutomation
+    // selections in getSelectionAutomationValue(). This will cause creation to
+    // use the debug defaults instead of the test's automation values.
+    // Set "debug" to false in package.json and reload Foundry.
+    if (window.GAS?.debug || window.GAS?.characterClass) {
+      const msg = `package.json has "debug": true — set it to false and reload Foundry before running ${classIdentifier} tests.`;
+      console.error(`[QUENCH] ${msg}`);
+      ui.notifications?.error?.(msg, { permanent: true });
+      assert.fail(msg);
+    }
+
     window.GAS = window.GAS || {};
     savedDebugState = {};
     for (const key of DEBUG_ROOT_KEYS) {

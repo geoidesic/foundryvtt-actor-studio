@@ -153,7 +153,7 @@ export function registerDiagnosticsSettings() {
     hint: game.i18n.localize('GAS.Setting.testTimeoutActorDataUpdate.Hint'),
     scope: 'world',
     config: false,
-    default: 50000,
+    default: 30000,
     type: Number,
   });
 
