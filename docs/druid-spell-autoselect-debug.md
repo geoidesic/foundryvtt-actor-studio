@@ -93,3 +93,28 @@ The offset means at level-up the code believes the new spells were already grant
 - All Svelte components use `<template lang="pug">` — never standard HTML.
 - i18n via `localize()` from `~/src/helpers/Utility`, key WITHOUT `GAS.` prefix.
 - ESM-only — never `require()`.
+
+
+# Conclusion
+
+What was wrong with Druid
+There were two distinct defects, both affecting "all-spells" full casters (Cleric, Druid, etc.), but Druid exposed the deeper one.
+
+## Bug 1
+Wrong count in the "all spells" notice (Cleric + Druid)
+The notice message in Spells.svelte used displaySpellLimit, which is derived from getAutoSelectedSpells().length. That function filters $availableSpells by spell level, but at render time the available-spells list is often empty or not yet scoped, so it returns 0. The left-hand "Expected Spell Selections" panel was correct (showing 15/15) because it used effectiveSelectedSpellCount. The fix was to make the notice use effectiveSelectedSpellCount instead of displaySpellLimit.
+
+## Bug 2 
+Druid level-up offset (the real Druid-specific defect)
+During level-up, spellProgress in spellSelection.js computes whether new spell levels were gained. It had a fallback helper getMaxSpellLevelByClassName that compared the class name against a capitalized list:
+
+But the incoming className for Druid was lowercase ('druid'), so the check failed and Druid was treated as a non-caster. That made newMaxSpellLevel compute as 0, so the noUpdatesNeeded branch triggered:
+
+Result: leveling Druid to 3 reported "no spell updates needed," showed 0/0, and skipped auto-selection of the newly available level-2 spells. Cleric happened to work because its identifier was already capitalized in the relevant path, masking the bug for that class.
+
+The fix normalized the class name to lowercase before comparison, so 'druid' now matches the full-caster list and the level-up correctly requires spell updates.
+
+## Verification
+Added failing tests first (Druid auto-populate parity, notice-count, Druid 2→3 level-up regression), confirmed them red.
+Applied both fixes.
+Full suite: 96 files, 780 tests passing (4 new tests added on top of the prior baseline).
