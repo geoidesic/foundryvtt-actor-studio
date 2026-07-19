@@ -890,14 +890,15 @@ export const spellProgress = derived(
 
       // Helper function to calculate max spell level by class name (fallback)
       const getMaxSpellLevelByClassName = (level, className, is2024Rules) => {
-        const fullCasters = ['Bard', 'Cleric', 'Druid', 'Sorcerer', 'Wizard'];
-        const halfCasters = ['Paladin', 'Ranger'];
-        const thirdCasters = ['Arcane Trickster', 'Eldritch Knight'];
-        const warlockProgression = ['Warlock'];
+        const normalizedClassName = String(className || '').toLowerCase().trim();
+        const fullCasters = ['bard', 'cleric', 'druid', 'sorcerer', 'wizard'];
+        const halfCasters = ['paladin', 'ranger'];
+        const thirdCasters = ['arcane trickster', 'eldritch knight'];
+        const warlockProgression = ['warlock'];
 
-        if (fullCasters.includes(className)) {
+        if (fullCasters.includes(normalizedClassName)) {
           return Math.min(9, Math.ceil(level / 2));
-        } else if (halfCasters.includes(className)) {
+        } else if (halfCasters.includes(normalizedClassName)) {
           // Half casters: Different progression for 2014 vs 2024 rules
           if (is2024Rules) {
             // 2024 rules: Half casters start spellcasting at level 1
@@ -906,9 +907,9 @@ export const spellProgress = derived(
             // 2014 rules: Half casters start spellcasting at level 2
             return Math.min(5, Math.ceil((level - 1) / 4));
           }
-        } else if (thirdCasters.includes(className)) {
+        } else if (thirdCasters.includes(normalizedClassName)) {
           return Math.min(4, Math.ceil((level - 2) / 6));
-        } else if (warlockProgression.includes(className)) {
+        } else if (warlockProgression.includes(normalizedClassName)) {
           // Warlocks have their own progression based on D&D 5e warlock table
           // Spell levels increase at 3, 5, 7, and 9
           if (level >= 9) return 5;
@@ -917,7 +918,7 @@ export const spellProgress = derived(
           if (level >= 3) return 2;
           if (level >= 1) return 1;
           return 0;
-        } else if (className === 'Artificer') {
+        } else if (normalizedClassName === 'artificer') {
           // Artificers: Different progression for 2014 vs 2024 rules
           if (is2024Rules) {
             // 2024 rules: Artificers start spellcasting at level 1

@@ -899,6 +899,7 @@
     .button-container
       button
         color: #000
+        background: var(--dnd5e-color-gold)
 .gap-10
   gap: 10px
   justify-content: space-between

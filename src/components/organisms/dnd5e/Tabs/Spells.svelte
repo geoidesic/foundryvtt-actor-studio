@@ -657,9 +657,9 @@ spells-tab-container(clas:readonlys="{isDisabled}")
               | automatically gain all available spells for this level.
         p
           +if("$spellLimits.cantrips")
-            em {displaySpellLimit} spells are auto-selected. You only need to choose cantrips.
+            em {effectiveSelectedSpellCount} spells are auto-selected. You only need to choose cantrips.
             +else()
-              em {displaySpellLimit} spells are auto-selected.
+              em {effectiveSelectedSpellCount} spells are auto-selected.
         +if("$spellLimits.cantrips")
           p 
             em Note: You still need to select your cantrips as they cannot be changed later.

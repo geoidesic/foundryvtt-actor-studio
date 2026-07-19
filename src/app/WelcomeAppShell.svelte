@@ -56,7 +56,7 @@
         
         p
           i.fa-solid.fa-star.mr-sm(style="color: #996600;")
-          | {t('Welcome.JoinDiscord')} <a href='https://discord.gg/sQgVnSGRUj'> {t('Welcome.DiscordLinkText')} </a>
+          | {t('Welcome.JoinDiscord')} <a href='https://discord.gg/fTwVqqxsJ6'> {t('Welcome.DiscordLinkText')} </a>
         hr
         p.usage-tracking-info
           i.fa-solid.fa-shield-halved.mr-sm(style="color: #416dbe;")
