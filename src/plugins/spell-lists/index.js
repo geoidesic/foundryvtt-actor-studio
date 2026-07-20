@@ -90,22 +90,32 @@ export default class SpellListsPlugin {
       </li>
     `;
     
-    typeList.append(spellListsOption);
+    // Idempotent: on Foundry v12 both renderAdvancementSelection and renderDialog
+    // can fire for the same window. Guard on the app instance (stable across
+    // every hook firing) so "Spell Lists" is appended exactly once.
+    if (!app._gasSpellListsAdded) {
+      app._gasSpellListsAdded = true;
+      typeList.append(spellListsOption);
+    }
 
-    // Store the original click handler
-    const button = html.find('[data-button="submit"]');
-    const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
-    
-    button.off('click').on('click', async function(event) {
-      const selectedType = html.find('input[name="type"]:checked').val();
-      if (selectedType === 'SpellLists') {
-        await SpellListsPlugin._showSpellListsDialog(item);
-        app.close();
-      } else if (originalClickHandler) {
-        // Call the original handler for non-SpellLists selections
-        originalClickHandler.call(this, event);
-      }
-    });
+    // Bind the submit handler only once per window.
+    if (!html.data('gas-spelllists-submit-bound')) {
+      html.data('gas-spelllists-submit-bound', true);
+      // Store the original click handler
+      const button = html.find('[data-button="submit"]');
+      const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
+
+      button.off('click').on('click', async function(event) {
+        const selectedType = html.find('input[name="type"]:checked').val();
+        if (selectedType === 'SpellLists') {
+          await SpellListsPlugin._showSpellListsDialog(item);
+          app.close();
+        } else if (originalClickHandler) {
+          // Call the original handler for non-SpellLists selections
+          originalClickHandler.call(this, event);
+        }
+      });
+    }
   }
 
   /**
@@ -169,31 +179,39 @@ export default class SpellListsPlugin {
       </li>
     `;
     
-    list.append(spellListsOption);
+    // Idempotent: avoid duplicate "Spell Lists" radios if this hook fires more than once.
+    // Guard on the app instance so it is appended exactly once per window.
+    if (!app._gasSpellListsAdded) {
+      app._gasSpellListsAdded = true;
+      list.append(spellListsOption);
+    }
     
     window.GAS.log.i('[SPELL LISTS PLUGIN] Spell Lists option added successfully');
 
-    // Intercept the dialog submit to handle our custom type
-    const originalSubmit = app.data.buttons.ok.callback;
-    app.data.buttons.ok.callback = async function(htmlArg) {
-      // Store the original html argument (might be jQuery or raw DOM)
-      const originalHtml = htmlArg;
-      
-      // Wrap in jQuery for our use
-      const html = htmlArg instanceof jQuery ? htmlArg : $(htmlArg);
-      
-      const selectedType = html.find('input[name="type"]:checked').val();
-      window.GAS.log.i('[SPELL LISTS PLUGIN] Selected type:', selectedType);
-      
-      if (selectedType === 'SpellLists') {
-        window.GAS.log.i('[SPELL LISTS PLUGIN] Opening spell lists dialog for item:', item.name);
-        await SpellListsPlugin._showSpellListsDialog(item);
-        return null; // Prevent default behavior
-      } else if (originalSubmit) {
-        // Pass the original html argument to the D&D 5e callback (don't pass jQuery-wrapped version)
-        return originalSubmit.call(this, originalHtml);
-      }
-    };
+    // Intercept the dialog submit to handle our custom type (only once per window).
+    if (!app._gasSpellListsSubmitBound) {
+      app._gasSpellListsSubmitBound = true;
+      const originalSubmit = app.data.buttons.ok.callback;
+      app.data.buttons.ok.callback = async function(htmlArg) {
+        // Store the original html argument (might be jQuery or raw DOM)
+        const originalHtml = htmlArg;
+        
+        // Wrap in jQuery for our use
+        const html = htmlArg instanceof jQuery ? htmlArg : $(htmlArg);
+        
+        const selectedType = html.find('input[name="type"]:checked').val();
+        window.GAS.log.i('[SPELL LISTS PLUGIN] Selected type:', selectedType);
+        
+        if (selectedType === 'SpellLists') {
+          window.GAS.log.i('[SPELL LISTS PLUGIN] Opening spell lists dialog for item:', item.name);
+          await SpellListsPlugin._showSpellListsDialog(item);
+          return null; // Prevent default behavior
+        } else if (originalSubmit) {
+          // Pass the original html argument to the D&D 5e callback (don't pass jQuery-wrapped version)
+          return originalSubmit.call(this, originalHtml);
+        }
+      };
+    }
   }
 
   /**

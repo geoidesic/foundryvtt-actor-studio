@@ -24,6 +24,28 @@ export default class SpellsKnownPlugin {
   }
 
   static _appendOption(list) {
+    // Foundry v12 (game.version < 13) renders the AdvancementSelection .items-list,
+    // whose <li> rows use the item.flexrow structure (item-name / item-controls /
+    // item-hint). v13+ uses the generic Dialog structure (label > dnd5e-icon + span).
+    // Emit the matching structure so the row aligns with the native options.
+    if (game.version < 13) {
+      list.append(`
+        <li class="item flexrow">
+          <div class="item-name flexrow">
+            <div class="item-image" style="background-image: url('systems/dnd5e/icons/svg/items/spell.svg')"></div>
+            <h3>Spells Known</h3>
+          </div>
+          <div class="item-controls flexrow">
+            <input name="type" type="radio" value="SpellsKnown">
+          </div>
+          <div class="item-hint notes">
+            Add a Scale Value advancement for new spells known at this level.
+          </div>
+        </li>
+      `);
+      return;
+    }
+
     list.append(`
       <li data-tooltip="Add a Scale Value advancement for new spells known at this level.">
         <label>
@@ -42,19 +64,30 @@ export default class SpellsKnownPlugin {
 
     const list = html.find('.items-list');
     if (!list.length) return;
-    this._appendOption(list);
 
-    const button = html.find('[data-button="submit"]');
-    const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
-    button.off('click').on('click', async (event) => {
-      const selectedType = html.find('input[name="type"]:checked').val();
-      if (selectedType === 'SpellsKnown') {
-        await this._showDialog(item);
-        app.close();
-        return;
-      }
-      if (originalClickHandler) originalClickHandler.call(button[0], event);
-    });
+    // Idempotent: on Foundry v12 both renderAdvancementSelection and renderDialog
+    // can fire for the same window. Guard on the app instance (stable across
+    // every hook firing) so "Spells Known" is appended exactly once.
+    if (!app._gasSpellsKnownAdded) {
+      app._gasSpellsKnownAdded = true;
+      this._appendOption(list);
+    }
+
+    // Bind the submit handler only once per window.
+    if (!html.data('gas-spellsknown-submit-bound')) {
+      html.data('gas-spellsknown-submit-bound', true);
+      const button = html.find('[data-button="submit"]');
+      const originalClickHandler = $._data(button[0], 'events')?.click?.[0]?.handler;
+      button.off('click').on('click', async (event) => {
+        const selectedType = html.find('input[name="type"]:checked').val();
+        if (selectedType === 'SpellsKnown') {
+          await this._showDialog(item);
+          app.close();
+          return;
+        }
+        if (originalClickHandler) originalClickHandler.call(button[0], event);
+      });
+    }
   }
 
   static async _onRenderDialog(app, html) {
@@ -67,19 +100,29 @@ export default class SpellsKnownPlugin {
 
     const list = html.find('ol, ul').first();
     if (!list.length) return;
-    this._appendOption(list);
 
-    const originalSubmit = app.data.buttons.ok.callback;
-    app.data.buttons.ok.callback = async (htmlArg) => {
-      const wrapped = htmlArg instanceof jQuery ? htmlArg : $(htmlArg);
-      const selectedType = wrapped.find('input[name="type"]:checked').val();
-      if (selectedType === 'SpellsKnown') {
-        await this._showDialog(item);
+    // Idempotent: avoid duplicate "Spells Known" radios if this hook fires more than once.
+    // Guard on the app instance so it is appended exactly once per window.
+    if (!app._gasSpellsKnownAdded) {
+      app._gasSpellsKnownAdded = true;
+      this._appendOption(list);
+    }
+
+    // Intercept the dialog submit to handle our custom type (only once per window).
+    if (!app._gasSpellsKnownSubmitBound) {
+      app._gasSpellsKnownSubmitBound = true;
+      const originalSubmit = app.data.buttons.ok.callback;
+      app.data.buttons.ok.callback = async (htmlArg) => {
+        const wrapped = htmlArg instanceof jQuery ? htmlArg : $(htmlArg);
+        const selectedType = wrapped.find('input[name="type"]:checked').val();
+        if (selectedType === 'SpellsKnown') {
+          await this._showDialog(item);
+          return null;
+        }
+        if (originalSubmit) return originalSubmit.call(this, htmlArg);
         return null;
-      }
-      if (originalSubmit) return originalSubmit.call(this, htmlArg);
-      return null;
-    };
+      };
+    }
   }
 
   static async _showDialog(item) {
