@@ -444,9 +444,12 @@ export async function handleAddEquipment({
         if (window.GAS.dnd5eVersion >= 5) {
           createdItem = await Item.create(data, { parent: $actorInGame });
         } else {
-          // For v4.x and below, use dropItemOnCharacter to ensure advancements fire
+          // For v4.x and below, use dropItemOnCharacter to ensure advancements fire.
+          // dnd5e v12's _onDropItemCreate calls item.toObject() internally, so it
+          // requires an Item instance rather than plain item data.
+          const itemToDrop = new Item(data);
           const preIds = new Set($actorInGame.items.map(i => i.id));
-          await dropItemOnCharacter($actorInGame, data);
+          await dropItemOnCharacter($actorInGame, itemToDrop);
           // Poll for the new item to appear on the actor
           createdItem = await new Promise((resolve) => {
             const maxAttempts = 20;

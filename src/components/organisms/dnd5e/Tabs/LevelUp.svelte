@@ -476,7 +476,9 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
               )
 
     +if("!$newLevelValueForExistingClass") 
-      h1.flexrow.mt-md
+      p.mt-md.left {t('LevelUp.MultiClassesDescription')}
+
+      h1.flexrow.mt-lg
         .flex2.left {t('LevelUp.NewClassTitle')}
         +if("$selectedMultiClassUUID")
           .flex0
