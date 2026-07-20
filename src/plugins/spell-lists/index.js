@@ -68,6 +68,12 @@ export default class SpellListsPlugin {
     // Add our spell lists option to the types list
     const typeList = html.find('.items-list');
     html.addClass('gas dnd5e spell-lists-plugin');
+
+    // Foundry v12 (game.version < 13): mark the window so CSS can make the
+    // content area scrollable (the advancement list can overflow and hide Save).
+    if (game.version < 13) {
+      html.addClass('gas-v12');
+    }
     
     const spellListsOption = `
       <li class="item flexrow">

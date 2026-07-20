@@ -773,6 +773,16 @@ body.game #gas-settings-submenu.app.window-app
 .app.window-app.dnd5e.sheet.advancement.gas.v3x
   height: 565px !important
 
+// Foundry v12 (game.version < 13): the advancement list can overflow and hide the
+// Save button with no scroll. Make the content area scrollable so it stays reachable.
+// The `gas-v12` class is added by the spell-lists plugin only on Foundry v12.
+.app.window-app.dnd5e.sheet.advancement.gas.v3x.spell-lists-plugin.gas-v12
+  .window-content
+    form
+      overflow-y: auto
+      overflow-x: hidden
+      max-height: 100%
+
 // Ensure notifications have a proper background (for some reason they were transparent)
 #notifications .notification.warning
   background-color: var(--color-level-warning-bg)
