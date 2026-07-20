@@ -305,6 +305,10 @@
         "Name": "Actor Studio 視窗寬度",
         "Hint": "在此設定視窗的初始寬度"
       },
+      "KeepActorStudioOnTop": {
+        "Name": "保持 Actor Studio 在最上層",
+        "Hint": "啟用時，Actor Studio 視窗會固定在其他視窗上方（例如點擊「建立角色」後開啟角色表時）。停用時，它會像一般視窗一樣，讓您可以在選擇法術時檢視其他視窗（例如法術說明）。"
+      },
       "WindowY": {
         "Name": "Actor Studio 視窗高度",
         "Hint": "在此設定視窗的初始高度"

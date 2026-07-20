@@ -31,6 +31,15 @@ export function registerUISettings() {
     type: Number,
   });
 
+  game.settings.register(MODULE_ID, 'keepActorStudioOnTop', {
+    name: game.i18n.localize('GAS.Setting.KeepActorStudioOnTop.Name'),
+    hint: game.i18n.localize('GAS.Setting.KeepActorStudioOnTop.Hint'),
+    scope: 'world',
+    config: false,
+    default: true,
+    type: Boolean,
+  });
+
   game.settings.register(MODULE_ID, 'showButtonInSideBar', {
     name: game.i18n.localize('GAS.Setting.showButtonInSideBar.Name'),
     hint: game.i18n.localize('GAS.Setting.showButtonInSideBar.Hint'),

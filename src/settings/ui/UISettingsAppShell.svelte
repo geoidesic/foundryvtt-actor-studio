@@ -52,6 +52,15 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           label
             input(
               type="checkbox"
+              bind:checked="{keepActorStudioOnTop}"
+            )
+            span {game.i18n.localize('GAS.Setting.KeepActorStudioOnTop.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.KeepActorStudioOnTop.Hint')}
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
               bind:checked="{experimentalCharacterNameStyling}"
             )
             span {game.i18n.localize('GAS.Setting.ExperimentalCharacterNameStyling.Name')}
@@ -117,6 +126,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let windowX = safeGetSetting(MODULE_ID, 'windowX', 720);
   let windowY = safeGetSetting(MODULE_ID, 'windowY', 800);
   let showButtonInSideBar = safeGetSetting(MODULE_ID, 'showButtonInSideBar', true);
+  let keepActorStudioOnTop = safeGetSetting(MODULE_ID, 'keepActorStudioOnTop', true);
   let experimentalCharacterNameStyling = safeGetSetting(MODULE_ID, 'experimentalCharacterNameStyling', false);
   let illuminatedDescription = safeGetSetting(MODULE_ID, 'illuminatedDescription', true);
   let illuminatedWidth = safeGetSetting(MODULE_ID, 'illuminatedWidth', '100');
@@ -128,6 +138,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'windowX', windowX);
       await game.settings.set(MODULE_ID, 'windowY', windowY);
       await game.settings.set(MODULE_ID, 'showButtonInSideBar', showButtonInSideBar);
+      await game.settings.set(MODULE_ID, 'keepActorStudioOnTop', keepActorStudioOnTop);
       await game.settings.set(MODULE_ID, 'experimentalCharacterNameStyling', experimentalCharacterNameStyling);
       await game.settings.set(MODULE_ID, 'illuminatedDescription', illuminatedDescription);
       await game.settings.set(MODULE_ID, 'illuminatedWidth', illuminatedWidth);

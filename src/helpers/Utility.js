@@ -1048,6 +1048,11 @@ function getCurrentEffectiveSheetId(actor) {
  */
 export function bringActorStudioToFront() {
   try {
+    // Respect the server-configured "keep on top" behavior. When disabled, the
+    // Actor Studio window behaves like a normal window (e.g. so users can read
+    // spell descriptions in other windows during spell selection).
+    if (safeGetSetting(MODULE_ID, 'keepActorStudioOnTop', true) === false) return false;
+
     const state = window.GAS?.levelUpFSM?.getCurrentState?.();
     if (!state || state === 'idle') return false;
 

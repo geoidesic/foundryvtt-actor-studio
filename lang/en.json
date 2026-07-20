@@ -305,6 +305,10 @@
         "Name": "Actor Studio application window width",
         "Hint": "Set the initial width for the window here"
       },
+      "KeepActorStudioOnTop": {
+        "Name": "Keep Actor Studio on top",
+        "Hint": "When enabled, the Actor Studio window stays pinned above other windows (e.g. after Create Character opens the character sheet). When disabled, it behaves like a normal window so you can read other windows (such as spell descriptions) during spell selection."
+      },
       "WindowY": {
         "Name": "Actor Studio application window height",
         "Hint": "Set the initial height for the window here"
