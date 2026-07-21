@@ -364,9 +364,9 @@
         "Hint": "有効にすると、カスタム呪文リストフラグでの一致を許可し、クラス未割り当て呪文も表示します。無効にすると、選択したクラス/サブクラスに明示的に割り当てられた呪文のみ表示します。"
       },
       "ShowLevelPreviewDropdown": {
-        "Name": "レベルプレビュードロップダウンを表示",
-        "Hint": "有効にすると、クラスタブにレベルプレビュードロップダウンが表示され、異なるレベルでの進展をプレビューできます。無効にすると、高レベルキャラクター作成に関する混乱を避けるためにドロップダウンが非表示になります。"
-      },
+        "Name": "Show Level Preview Dropdown (Race, Background, Class)",
+        "Hint": "If enabled, shows e.g. a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."}
+      ,
       "HideLeftSidebar": {
         "Name": "背景・種族・クラスの左パネルを非表示",
         "Hint": "有効にすると、背景・種族・クラスタブで右パネルを非表示にし、単一パネル表示に切り替えます。"

@@ -21,6 +21,11 @@
 
   const isDisabled = getContext('isDisabled') || false;
   const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
+  const showLevelPreviewDropdown = safeGetSetting(
+    MODULE_ID,
+    "showLevelPreviewDropdown",
+    false
+  );
 
   let active = null,
     value = null,
@@ -211,22 +216,22 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
       .flex3 
         IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
-      +if("source && !hideLeftSidebar")
+      +if("source && !hideLeftSidebar && showLevelPreviewDropdown")
         //- h3.left {t('Source')}
         ol.properties-list
           li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-      +if("filteredMovement && !hideLeftSidebar")
+      +if("filteredMovement && !hideLeftSidebar && showLevelPreviewDropdown")
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
             li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
-      +if("filteredSenses.length && !hideLeftSidebar")
+      +if("filteredSenses.length && !hideLeftSidebar && showLevelPreviewDropdown")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
-      +if("advancementArray && !hideLeftSidebar")
+      +if("advancementArray && !hideLeftSidebar && showLevelPreviewDropdown")
         h2.left {t('Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")

@@ -364,8 +364,8 @@
         "Hint": "If enabled, spells can match custom spell-list flags and spells without class assignments are included. If disabled, only spells explicitly assigned to the selected class/subclass are shown."
       },
       "ShowLevelPreviewDropdown": {
-        "Name": "Show Level Preview Dropdown",
-        "Hint": "If enabled, shows a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
+        "Name": "Show Level Preview Dropdown (Race, Background, Class)",
+        "Hint": "If enabled, shows e.g. a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."
       },
       "HideLeftSidebar": {
         "Name": "Hide left panel for Backgrounds, Origins and Classes",

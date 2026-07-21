@@ -279,7 +279,10 @@
     updateClassRichHTML();
   }
 
+
   $: subClassHeader = hideLeftSidebar ? `<h1>${t("SubClass")}</h1>` : "";
+
+  $: showSubclassSelect = $characterClass && subclasses.length && subClassLevel == 1;
 
   $: wrappedSubClassHTML = $characterClass
     ? `${richSubClassHTML ? `<div class="actor-studio-subclass">${subClassHeader}${richSubClassHTML}</div>` : ""}` : "";
@@ -316,6 +319,9 @@
     classAdvancementArrayFiltered = [];
   }
 
+
+  $: fullwidthClassSelect = !$characterClass || ($characterClass && showSubclassSelect && !subclassValue)
+
   onMount(async () => {
     let classUuid, subclassUuid;
     if (isSelectionAutomationEnabled()) {
@@ -335,14 +341,14 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar || !$characterClass}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar || fullwidthClassSelect}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .class-tab-selects
       .flexrow
         .flex0.required(class="{$characterClass ? '' : 'active'}") *
         .flex3 
           IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
-      +if("$characterClass && subclasses.length && subClassLevel == 1")
+      +if("showSubclassSelect")
         h2.left {t('SubClass')}
         .flexrow
           .flex0.required(class="{$characterSubClass ? '' : 'active'}") *

@@ -20,6 +20,12 @@
   const isDisabled = getContext('isDisabled') || false;
   const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 
+  const showLevelPreviewDropdown = safeGetSetting(
+    MODULE_ID,
+    "showLevelPreviewDropdown",
+    false
+  );
+
   $: console.log('[BG] $background changed:', $background);
 
   let active = null,
@@ -107,7 +113,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-    +if("advancementArray.length && !hideLeftSidebar")
+    +if("advancementArray.length && !hideLeftSidebar && showLevelPreviewDropdown")
       h2.left {t('Advancements')}
       ul.icon-list
         +each("advancementArray as advancement")
