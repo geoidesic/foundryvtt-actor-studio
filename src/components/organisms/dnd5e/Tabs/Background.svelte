@@ -19,6 +19,7 @@
 
   const isDisabled = getContext('isDisabled') || false;
   const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
+  const tabTitle = t('Tabs.Background.Title');
 
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
@@ -57,6 +58,7 @@
         id,
       }))
     : [];
+
 
   let richHTML = "";
 
@@ -107,7 +109,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background" singlePanel="{hideLeftSidebar}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" singlePanel="{hideLeftSidebar || !value}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *

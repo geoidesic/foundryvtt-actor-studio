@@ -209,7 +209,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideLeftSidebar}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideLeftSidebar || !value}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
