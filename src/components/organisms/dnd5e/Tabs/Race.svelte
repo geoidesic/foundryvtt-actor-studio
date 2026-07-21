@@ -20,7 +20,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
-  const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+  const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 
   let active = null,
     value = null,
@@ -204,29 +204,29 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideLeftSidebar}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
       .flex3 
         IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
-      +if("source && !hideAdvancementList")
+      +if("source && !hideLeftSidebar")
         //- h3.left {t('Source')}
         ol.properties-list
           li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-      +if("filteredMovement && !hideAdvancementList")
+      +if("filteredMovement && !hideLeftSidebar")
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
             li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
-      +if("filteredSenses.length && !hideAdvancementList")
+      +if("filteredSenses.length && !hideLeftSidebar")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
-      +if("advancementArray && !hideAdvancementList")
+      +if("advancementArray && !hideLeftSidebar")
         h2.left {t('Advancements')}
         ul.icon-list
           +each("advancementArray as advancement")
@@ -238,7 +238,7 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
                 .flex2 {advancement.title}
               .flexrow
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-      +if("hideAdvancementList")
+      +if("hideLeftSidebar")
         .description-fill.mt-sm
           | {@html richHTML}
   

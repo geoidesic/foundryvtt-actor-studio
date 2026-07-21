@@ -71,15 +71,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             span {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Name')}
           p.hint {game.i18n.localize('GAS.Setting.forceDnd5eLevelUpAutomation.Hint')}
 
-        .setting-item
-          label
-            input(
-              type="checkbox"
-              bind:checked="{showLevelPreviewDropdown}"
-            )
-            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
-
       .setting-group
         h3 Advancement Options
         
@@ -156,7 +147,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let forceTakeAverageHitPoints = safeGetSetting(MODULE_ID, 'forceTakeAverageHitPoints', false);
   let advancementCaptureTimerThreshold = safeGetSetting(MODULE_ID, 'advancementCaptureTimerThreshold', 300);
   let enableCustomFeatSelector = safeGetSetting(MODULE_ID, 'enableCustomFeatSelector', false);
-  let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
   let characterCreationTabOrder = normalizeCharacterCreationTabOrder(
     safeGetSetting(MODULE_ID, 'characterCreationTabOrder', DEFAULT_CHARACTER_CREATION_TAB_ORDER)
   );
@@ -198,7 +188,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'forceTakeAverageHitPoints', forceTakeAverageHitPoints);
       await game.settings.set(MODULE_ID, 'advancementCaptureTimerThreshold', advancementCaptureTimerThreshold);
       await game.settings.set(MODULE_ID, 'enableCustomFeatSelector', enableCustomFeatSelector);
-      await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);
       await game.settings.set(MODULE_ID, 'characterCreationTabOrder', normalizedTabOrder);
 
       refreshOpenActorSheets();

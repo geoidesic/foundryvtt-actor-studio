@@ -77,15 +77,6 @@ export function registerProgressionSettings() {
     default: false
   });
 
-  game.settings.register(MODULE_ID, 'showLevelPreviewDropdown', {
-    name: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name'),
-    hint: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint'),
-    scope: 'world',
-    config: false,
-    default: false,
-    type: Boolean,
-  });
-
   game.settings.register(MODULE_ID, 'characterCreationTabOrder', {
     name: game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Name'),
     hint: game.i18n.localize('GAS.Setting.CharacterCreationTabOrder.Hint'),

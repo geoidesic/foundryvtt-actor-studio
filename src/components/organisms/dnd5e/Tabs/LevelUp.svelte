@@ -61,7 +61,7 @@ let
   classAdvancementComponents = {}
 ;
 
-const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
@@ -422,7 +422,7 @@ onDestroy(() => {
 });
 </script>
 <template lang="pug">
-StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideLeftSidebar}")
   div(slot="left")
     +if("window.GAS.debug")
       //- pre classUuidForLevelUp {$classUuidForLevelUp}
@@ -511,7 +511,7 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
       //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
       //- +if("selectedMultiClassUUID")
 
-      +if("!hideAdvancementList")
+      +if("!hideLeftSidebar")
         LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         //- Subclass selection section
@@ -522,7 +522,7 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
                 .flex0.relative.image
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
                 .flex2 {t('SubClass')}
-      +if("hideAdvancementList && $classUuidForLevelUp")
+      +if("hideLeftSidebar && $classUuidForLevelUp")
         .description-fill.mt-sm
           +if("$levelUpSubClassObject")
             | {@html richSubClassHTML}

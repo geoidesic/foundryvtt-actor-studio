@@ -70,10 +70,20 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           label
             input(
               type="checkbox"
-              bind:checked="{hideAdvancementList}"
+              bind:checked="{hideLeftSidebar}"
             )
-            span {game.i18n.localize('GAS.Setting.HideAdvancementList.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.HideAdvancementList.Hint')}
+            span {game.i18n.localize('GAS.Setting.HideLeftSidebar.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.HideLeftSidebar.Hint')}
+
+
+        .setting-item
+          label
+            input(
+              type="checkbox"
+              bind:checked="{showLevelPreviewDropdown}"
+            )
+            span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
+          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
         h3 Illuminated Description Options
@@ -131,7 +141,8 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let illuminatedDescription = safeGetSetting(MODULE_ID, 'illuminatedDescription', true);
   let illuminatedWidth = safeGetSetting(MODULE_ID, 'illuminatedWidth', '100');
   let illuminatedHeight = safeGetSetting(MODULE_ID, 'illuminatedHeight', '100');
-  let hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+  let hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
+  let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
 
   async function saveSettings() {
     try {
@@ -143,7 +154,8 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'illuminatedDescription', illuminatedDescription);
       await game.settings.set(MODULE_ID, 'illuminatedWidth', illuminatedWidth);
       await game.settings.set(MODULE_ID, 'illuminatedHeight', illuminatedHeight);
-      await game.settings.set(MODULE_ID, 'hideAdvancementList', hideAdvancementList);
+      await game.settings.set(MODULE_ID, 'hideLeftSidebar', hideLeftSidebar);
+      await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);
 
       ui.notifications.info('UI settings saved successfully');
       application.close();

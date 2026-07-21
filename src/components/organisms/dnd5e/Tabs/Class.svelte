@@ -71,15 +71,21 @@
     false
   );
 
+  const hideLevelPreview = safeGetSetting(
+    MODULE_ID,
+    "hideLevelPreview",
+    false
+  );
+
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
     "showLevelPreviewDropdown",
     false
   );
 
-  const hideAdvancementList = safeGetSetting(
+  const hideLeftSidebar = safeGetSetting(
     MODULE_ID,
-    "hideAdvancementList",
+    "hideLeftSidebar",
     false
   );
 
@@ -273,8 +279,10 @@
     updateClassRichHTML();
   }
 
+  $: subClassHeader = hideLeftSidebar ? `<h1>${t("SubClass")}</h1>` : "";
+
   $: wrappedSubClassHTML = $characterClass
-    ? `${richSubClassHTML ? `<div class="actor-studio-subclass"><h1>${t("SubClass")}</h1>${richSubClassHTML}</div>` : ""}` : "";
+    ? `${richSubClassHTML ? `<div class="actor-studio-subclass">${subClassHeader}${richSubClassHTML}</div>` : ""}` : "";
 
   $: combinedHtml = $characterClass
     ? `${wrappedSubClassHTML}${richHTML}`
@@ -327,7 +335,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideAdvancementList}" contentClass="{hideAdvancementList ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .class-tab-selects
       .flexrow
@@ -341,11 +349,11 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
           .flex3
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
     +if("$characterClass")
-      +if("hideAdvancementList")
+      +if("hideLeftSidebar")
         .description-fill.mt-sm
           | {@html richHTML}
-      +if("classAdvancementArrayFiltered")
-        +if("!hideAdvancementList")
+      +if("classAdvancementArrayFiltered && !hideLeftSidebar")
+        +if("showLevelPreviewDropdown")
           CollapsibleSectionHeader(
             className="left mt-sm"
             label="{t('Tabs.Classes.LevelPreview')}"
@@ -376,30 +384,31 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
                     .flex2 {advancement.title}
                   .flexrow
                     svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-      div {@html wrappedSubClassHTML}
+      .mt-md {@html wrappedSubClassHTML}
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
-        +if("!hideAdvancementList")
-          CollapsibleSectionHeader(
-            className="left mt-sm"
-            label="{`${t('Tabs.Classes.SubClass')} ${t('Advancements')}`}"
-            expanded="{subClassAdvancementExpanded}"
-            on:toggle="{toggleSubClassAdvancements}"
-          )
-            span(slot="right").badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
-          ul.icon-list
-            +if("!subClassAdvancementArrayFiltered.length")
-              li.left {t('NoAdvancements')}
-            +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
-              +each("subClassAdvancementArrayFiltered as advancement")
-                  //- @todo: this should be broken out into components for each advancement.type
-                  li.left(data-type="{advancement.type}")
-                    .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
-                      .flex0.relative.image
-                        img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                      .flex2 {advancement.title}
-                    .flexrow
-                      svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
+        +if("!hideLeftSidebar")
+          +if("showLevelPreviewDropdown")
+            CollapsibleSectionHeader(
+              className="left mt-sm"
+              label="{`${t('Tabs.Classes.SubClass')} ${t('Advancements')}`}"
+              expanded="{subClassAdvancementExpanded}"
+              on:toggle="{toggleSubClassAdvancements}"
+            )
+              span(slot="right").badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
+            ul.icon-list
+              +if("!subClassAdvancementArrayFiltered.length")
+                li.left {t('NoAdvancements')}
+              +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
+                +each("subClassAdvancementArrayFiltered as advancement")
+                    //- @todo: this should be broken out into components for each advancement.type
+                    li.left(data-type="{advancement.type}")
+                      .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
+                        .flex0.relative.image
+                          img.icon(src="{advancement.icon}" alt="{advancement.title}")
+                        .flex2 {advancement.title}
+                      .flexrow
+                        svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
   div(slot="right") {@html combinedHtml}
 </template>
 

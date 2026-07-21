@@ -18,7 +18,7 @@
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
-  const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+  const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 
   $: console.log('[BG] $background changed:', $background);
 
@@ -101,13 +101,13 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background" singlePanel="{hideAdvancementList}")
+StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabName="background" singlePanel="{hideLeftSidebar}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-    +if("advancementArray.length && !hideAdvancementList")
+    +if("advancementArray.length && !hideLeftSidebar")
       h2.left {t('Advancements')}
       ul.icon-list
         +each("advancementArray as advancement")
@@ -120,7 +120,7 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
             .flexrow
               //- pre advancement {advancement.type}
               svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-    +if("hideAdvancementList && value")
+    +if("hideLeftSidebar && value")
       .description-fill.mt-sm
         | {@html richHTML}
   div(slot="right") {@html richHTML}
