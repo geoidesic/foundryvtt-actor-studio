@@ -273,8 +273,11 @@
     updateClassRichHTML();
   }
 
+  $: wrappedSubClassHTML = $characterClass
+    ? `${richSubClassHTML ? `<div class="actor-studio-subclass"><h1>${t("SubClass")}</h1>${richSubClassHTML}</div>` : ""}` : "";
+
   $: combinedHtml = $characterClass
-    ? `${richSubClassHTML ? `<h1>${t("SubClass")}</h1>${richSubClassHTML}` : ""}${richHTML}`
+    ? `${wrappedSubClassHTML}${richHTML}`
     : "";
 
   $: if (subClassesIndex?.length) {
@@ -340,7 +343,7 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
     +if("$characterClass")
       +if("hideAdvancementList")
         .description-fill.mt-sm
-          | {@html combinedHtml || richHTML}
+          | {@html richHTML}
       +if("classAdvancementArrayFiltered")
         +if("!hideAdvancementList")
           CollapsibleSectionHeader(
@@ -373,6 +376,7 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
                     .flex2 {advancement.title}
                   .flexrow
                     svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
+      div {@html wrappedSubClassHTML}
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
         +if("!hideAdvancementList")
@@ -433,4 +437,13 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
 
   :global(.class-tab-single-panel .description-fill)
     width: 100%
+
+  // Subclass visibility: show in left column when wide (two-column),
+  // and in the single column when narrow.
+  :global(.col-a .actor-studio-subclass)
+    display: block
+  :global(.col-b .actor-studio-subclass)
+    display: none
+  :global(.class-tab-single-panel .col-a .actor-studio-subclass)
+    display: block
 </style>
