@@ -335,7 +335,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar || !$characterClass}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .class-tab-selects
       .flexrow
