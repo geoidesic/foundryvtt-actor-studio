@@ -99,8 +99,27 @@
         "Level": "Level"
       },
       "Background": {
-        "Title": "Background",
-        "Placeholder": "Backgrounds"
+        "Custom": "Custom Background",
+        "CreateCustom": "Create Custom Background",
+        "AbilityScores": "Ability Scores",
+        "AbilityScorePrompt": "Select 3 ability scores for this background. These scores will be available for increase during character creation.",
+        "OriginFeat": "Origin Feat",
+        "OriginFeatPrompt": "Select 1 origin feat for this background.",
+        "SkillProficiencies": "Skill Proficiencies",
+        "SkillProficienciesPrompt": "Select 2 skill proficiencies for this background.",
+        "ToolProficiency": "Tool Proficiency",
+        "ToolProficiencyPrompt": "Select 1 tool proficiency for this background.",
+        "BackgroundName": "Background Name",
+        "BackgroundNamePlaceholder": "e.g. Custom Acolyte",
+        "CreateButton": "Create Background",
+        "CreateSuccess": "Custom background \"{name}\" created successfully!",
+        "CreateError": "Failed to create custom background. Please check the form and try again.",
+        "MissingName": "Please provide a name for your custom background.",
+        "MissingAbilityScores": "Please select exactly 3 ability scores.",
+        "MissingFeat": "Please select an origin feat.",
+        "MissingSkills": "Please select exactly 2 skill proficiencies.",
+        "MissingTool": "Please select a tool proficiency.",
+        "ToggleCustom": "Create Custom Background"
       },
       "Equipment": {
         "Title": "Equipment"
@@ -431,6 +450,18 @@
         "Hint": "Create and edit custom spell lists used for spell filtering.",
         "Label": "Manage Spell Lists",
         "MenuHint": "Open the Spell List Manager to create and edit custom lists."
+      },
+      "Background": {
+        "Name": "Background",
+        "Hint": "Configure custom background creation options",
+        "Label": "Configure background",
+        "Title": "Background Configuration",
+        "Description": "Set options for custom background creation during character creation",
+        "CustomBackgroundOptions": "Custom Background Options"
+      },
+      "EnableCustomBackground": {
+        "Name": "Enable Custom Background Creation",
+        "Hint": "When enabled, players can create a custom background on-the-fly during character creation. The custom background will define 3 ability scores, 1 origin feat, 2 skill proficiencies, and 1 tool proficiency."
       },
       "Progression": {
         "Name": "Progression",

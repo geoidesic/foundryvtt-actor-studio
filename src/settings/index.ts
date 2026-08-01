@@ -12,6 +12,7 @@ import { registerAccessControlSettings } from './accessControl/registerAccessCon
 import { registerCompendiumDisplaySettings } from './compendiumDisplay/registerCompendiumDisplaySettings';
 import { registerDiagnosticsSettings } from './diagnostics/registerDiagnosticsSettings';
 import { registerSpellSettings } from './spell/registerSpellSettings';
+import { registerBackgroundSettings } from './background/registerBackgroundSettings';
 
 // settings not shown on the Module Settings - not modifiable by users
 export const enum PrivateSettingKeys {
@@ -38,6 +39,7 @@ export function registerSettings(app: Game): void {
   registerAccessControlSettings();
   registerCompendiumDisplaySettings();
   registerSpellSettings();
+  registerBackgroundSettings();
   
   donationTracker();
   registerDiagnosticsSettings();

@@ -16,6 +16,7 @@
   import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs } from "~/src/stores/index";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import CustomBackgroundForm from "~/src/components/molecules/dnd5e/CustomBackgroundForm.svelte";
 
   const isDisabled = getContext('isDisabled') || false;
   const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
@@ -53,6 +54,20 @@
     : [];
 
   let richHTML = "";
+
+  // Custom background toggle
+  let showCustomBackground = false;
+  $: enableCustomBackground = safeGetSetting(MODULE_ID, 'enableCustomBackground', false);
+
+  function toggleCustomBackground() {
+    showCustomBackground = !showCustomBackground;
+  }
+
+  function onCustomBackgroundCreated(createdItem) {
+    // The $background store is already set by the CustomBackgroundForm
+    // Hide the custom form once created
+    showCustomBackground = false;
+  }
 
   // isDisabled now handled by StandardTabLayout
 
@@ -107,6 +122,15 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
+    +if("enableCustomBackground")
+      .custom-toggle-wrap
+        button.custom-toggle-btn(type="button" on:click="{toggleCustomBackground}" disabled="{isDisabled}")
+          +if("showCustomBackground")
+            | - {t('Tabs.Background.Placeholder')}
+            +else()
+              | + {t('Tabs.Background.ToggleCustom')}
+    //- Custom background form (shown when toggled)
+    CustomBackgroundForm(bind:show="{showCustomBackground}" onBackgroundCreated="{onCustomBackgroundCreated}")
     +if("advancementArray.length && !hideAdvancementList")
       h2.left {t('Advancements')}
       ul.icon-list
@@ -136,4 +160,29 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
     :global(img)
       max-width: 100%
       height: auto
+
+  .custom-toggle-wrap
+    margin-top: 0.5rem
+    margin-bottom: 0.25rem
+
+  .custom-toggle-btn
+    width: 100%
+    padding: 0.4rem 0.6rem
+    border: 1px dashed #4a9eff
+    border-radius: 4px
+    background: rgba(74, 158, 255, 0.08)
+    color: #4a9eff
+    cursor: pointer
+    font-size: 0.85rem
+    font-family: inherit
+    text-align: center
+    transition: all 0.15s ease
+
+    &:hover:not(:disabled)
+      background: rgba(74, 158, 255, 0.18)
+      border-color: #6ab8ff
+
+    &:disabled
+      opacity: 0.4
+      cursor: not-allowed
 </style>
