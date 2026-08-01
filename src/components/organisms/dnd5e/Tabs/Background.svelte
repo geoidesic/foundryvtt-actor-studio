@@ -7,6 +7,8 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
+    getAdvancementEntryCount,
+    advancementEntriesToArray,
     illuminatedDescription,
     safeGetSetting,
     isSelectionAutomationEnabled,
@@ -14,12 +16,21 @@
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
-  import { background, readOnlyTabs } from "~/src/stores/index";
+  import { background, readOnlyTabs, level } from "~/src/stores/index";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
   import CustomBackgroundForm from "~/src/components/molecules/dnd5e/CustomBackgroundForm.svelte";
 
   const isDisabled = getContext('isDisabled') || false;
   const hideAdvancementList = safeGetSetting(MODULE_ID, 'hideAdvancementList', false);
+  const showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
+
+  const levelOptions = [];
+  for (let i = 1; i <= 20; i++) {
+    levelOptions.push({ label: t('Tabs.Classes.Level') + " " + i, value: i });
+  }
+
+  const selectStyles = {};
 
   $: console.log('[BG] $background changed:', $background);
 
@@ -46,11 +57,8 @@
   $: advancementComponents = {};
   $: html = $background?.system?.description.value || "";
   $: backgrounds = allItems.filter((x) => x.type == "background");
-  $: advancementArray = $background?.advancement?.byId
-    ? Object.entries($background.advancement.byId).map(([id, value]) => ({
-        ...value,
-        id,
-      }))
+  $: advancementArray = getAdvancementEntryCount($background?.system?.advancement)
+    ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
   let richHTML = "";
@@ -80,6 +88,10 @@
         log.e(`Failed to load component for ${advancement.type}:`, error);
       }
     }
+  };
+
+  const levelSelectHandler = async () => {
+    await importAdvancements();
   };
   
   const selectBackgroundHandler = async (option) => {
@@ -131,9 +143,15 @@ StandardTabLayout(title="{t('Tabs.Background.Title')}" showTitle="{true}" tabNam
               | + {t('Tabs.Background.ToggleCustom')}
     //- Custom background form (shown when toggled)
     CustomBackgroundForm(bind:show="{showCustomBackground}" onBackgroundCreated="{onCustomBackgroundCreated}")
-    +if("advancementArray.length && !hideAdvancementList")
+    +if("value && !hideAdvancementList")
+      +if("showLevelPreviewDropdown && !$readOnlyTabs.includes('background')")
+        .flexrow.mb-xs
+          .flex2.left
+            TJSSelect(options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}")
       h2.left {t('Advancements')}
       ul.icon-list
+        +if("!advancementArray.length")
+          li.left {t('NoAdvancements')}
         +each("advancementArray as advancement")
           //- @todo: this should be broken out into components for each advancement.type
           li.left
