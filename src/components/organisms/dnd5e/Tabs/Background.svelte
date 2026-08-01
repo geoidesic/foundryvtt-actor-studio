@@ -7,6 +7,8 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
+    getAdvancementEntryCount,
+    advancementEntriesToArray,
     illuminatedDescription,
     safeGetSetting,
     isSelectionAutomationEnabled,
@@ -14,18 +16,25 @@
   } from "~/src/helpers/Utility.js";
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
-  import { background, readOnlyTabs } from "~/src/stores/index";
+  import { background, readOnlyTabs, level } from "~/src/stores/index";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
   const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
   const tabTitle = t('Tabs.Background.Title');
-
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
     "showLevelPreviewDropdown",
     false
   );
+
+  const levelOptions = [];
+  for (let i = 1; i <= 20; i++) {
+    levelOptions.push({ label: t('Tabs.Classes.Level') + " " + i, value: i });
+  }
+
+  const selectStyles = {};
 
   $: console.log('[BG] $background changed:', $background);
 
@@ -52,11 +61,8 @@
   $: advancementComponents = {};
   $: html = $background?.system?.description.value || "";
   $: backgrounds = allItems.filter((x) => x.type == "background");
-  $: advancementArray = $background?.advancement?.byId
-    ? Object.entries($background.advancement.byId).map(([id, value]) => ({
-        ...value,
-        id,
-      }))
+  $: advancementArray = getAdvancementEntryCount($background?.system?.advancement)
+    ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
 
@@ -73,6 +79,10 @@
         log.e(`Failed to load component for ${advancement.type}:`, error);
       }
     }
+  };
+
+  const levelSelectHandler = async () => {
+    await importAdvancements();
   };
   
   const selectBackgroundHandler = async (option) => {
@@ -115,9 +125,15 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" sin
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-    +if("advancementArray.length && !hideLeftSidebar && showLevelPreviewDropdown")
+    +if("value && !hideLeftSidebar && showLevelPreviewDropdown")
+      +if("!$readOnlyTabs.includes('background')")
+        .flexrow.mb-xs
+          .flex2.left
+            TJSSelect(options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}")
       h2.left {t('Advancements')}
       ul.icon-list
+        +if("!advancementArray.length")
+          li.left {t('NoAdvancements')}
         +each("advancementArray as advancement")
           //- @todo: this should be broken out into components for each advancement.type
           li.left

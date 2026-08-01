@@ -7,6 +7,7 @@
     extractItemsFromPacksSync,
     getPacksFromSettings,
     getAdvancementValue,
+    getAdvancementEntryCount,
     advancementEntriesToArray,
     illuminatedDescription,
     isSelectionAutomationEnabled,
@@ -16,7 +17,8 @@
   import { safeGetSetting } from '~/src/helpers/Utility';
   import { getContext, onDestroy, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
-  import { race, subRace, tabDisabled } from "~/src/stores/index";
+  import { race, subRace, tabDisabled, level, readOnlyTabs } from "~/src/stores/index";
+  import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
@@ -26,6 +28,13 @@
     "showLevelPreviewDropdown",
     false
   );
+
+  const levelOptions = [];
+  for (let i = 1; i <= 20; i++) {
+    levelOptions.push({ label: t('Tabs.Classes.Level') + " " + i, value: i });
+  }
+
+  const selectStyles = {};
 
   let active = null,
     value = null,
@@ -49,6 +58,11 @@
 
   const actor = getContext("#doc");
   let advancementComponents = {};
+
+  const levelSelectHandler = async () => {
+    const advancements = getAdvancements($race);
+    await importAdvancements(advancements);
+  };
 
   async function importAdvancements(advancements) {
     if (!advancements || !Array.isArray(advancements)) return;
@@ -81,10 +95,12 @@
 
   // Get the advancement array safely
   function getAdvancements(race) {
-    if (!race || !race.system || !race.system.advancement) return [];
+    if (!race || !race.system || !getAdvancementEntryCount(race.system.advancement)) {
+      return [];
+    }
 
     return advancementEntriesToArray(race.system.advancement).filter(
-      (value) => !(value.type == "Trait" && value.title == "Dwarven Resilience")
+      (value) => value.level === $level && !(value.type == "Trait" && value.title == "Dwarven Resilience")
     );
   }
 
@@ -232,8 +248,14 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
       +if("advancementArray && !hideLeftSidebar && showLevelPreviewDropdown")
+        +if("!$readOnlyTabs.includes('race')")
+          .flexrow.mb-xs
+            .flex2.left
+              TJSSelect(options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}")
         h2.left {t('Advancements')}
         ul.icon-list
+          +if("!advancementArray.length")
+            li.left {t('NoAdvancements')}
           +each("advancementArray as advancement")
             //- @todo: this should be broken out into components for each advancement.type
             li.left
