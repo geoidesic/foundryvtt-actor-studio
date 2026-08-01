@@ -65,6 +65,8 @@
     ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
+  $: singlePanel = hideLeftSidebar || !value || !showLevelPreviewDropdown;
+
 
   let richHTML = "";
 
@@ -81,10 +83,6 @@
     }
   };
 
-  const levelSelectHandler = async () => {
-    await importAdvancements();
-  };
-  
   const selectBackgroundHandler = async (option) => {
     console.log('[BG] selectBackgroundHandler called with:', option);
     const selectedBackground = await fromUuid(option);
@@ -95,7 +93,6 @@
       value = option;
     }
     await tick();
-    await importAdvancements();
     richHTML = await illuminatedDescription(html, $background);
 
     Hooks.call('gas.richhtmlReady', richHTML);
@@ -119,32 +116,13 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" singlePanel="{hideLeftSidebar || !value}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
       .flex3 
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
-    +if("value && !hideLeftSidebar && showLevelPreviewDropdown")
-      +if("!$readOnlyTabs.includes('background')")
-        .flexrow.mb-xs
-          .flex2.left
-            TJSSelect(options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}")
-      h2.left {t('Advancements')}
-      ul.icon-list
-        +if("!advancementArray.length")
-          li.left {t('NoAdvancements')}
-        +each("advancementArray as advancement")
-          //- @todo: this should be broken out into components for each advancement.type
-          li.left
-            .flexrow(data-tooltip="{getAdvancementValue(advancement, 'hint')}"  data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-              .flex0.relative.image
-                img.icon(src="{advancement.icon}" alt="{advancement.title}")
-              .flex2 {advancement.title}
-            .flexrow
-              //- pre advancement {advancement.type}
-              svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-    +if("hideLeftSidebar && value")
+    +if("singlePanel && value")
       .description-fill.mt-sm
         | {@html richHTML}
   div(slot="right") {@html richHTML}

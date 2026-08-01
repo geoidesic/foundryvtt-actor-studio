@@ -126,6 +126,8 @@
   
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
+
+  $: singlePanel = hideLeftSidebar || !value || !showLevelPreviewDropdown;
   
   // Dynamic title and placeholder based on D&D rules version
   $: tabTitle = (() => {
@@ -225,7 +227,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{hideLeftSidebar || !value}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
@@ -265,7 +267,7 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
                 .flex2 {advancement.title}
               .flexrow
                 svelte:component(this="{advancementComponents[advancement.type]}" advancement="{advancement}")
-      +if("hideLeftSidebar")
+      +if("singlePanel && value")
         .description-fill.mt-sm
           | {@html richHTML}
   

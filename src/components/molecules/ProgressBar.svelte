@@ -22,17 +22,18 @@
   $: displayProgress = Math.round(normalizedProgress);
   
 </script>
-<div class="progress">
-  <div class="fill" style="width: {normalizedProgress}%"></div>
-  <div class="label">{displayProgress}% Complete</div>
-</div>
+<template lang="pug">
+.progress
+  .fill(style="width: {normalizedProgress}%")
+  .label {displayProgress}% Complete
+</template>
 <style lang="sass">
   @import '../../../styles/Mixins.sass'
 
   .progress
     position: relative
     display: block
-    min-height: 1.6rem
+    min-height: 1.2rem
     border-radius: 5px
     background-color: var(--gas-progress-track-background, #e0e0e0)
     overflow: hidden

@@ -320,7 +320,11 @@
   }
 
 
-  $: fullwidthClassSelect = !$characterClass || ($characterClass && showSubclassSelect && !subclassValue)
+
+  $: fullwidthClassSelect = !$characterClass || ($characterClass && showSubclassSelect && !subclassValue) || (hideLeftSidebar) || (!advancementEntriesToArray) || (!showLevelPreviewDropdown)
+  
+  $: singlePanel = hideLeftSidebar || fullwidthClassSelect
+
 
   onMount(async () => {
     let classUuid, subclassUuid;
@@ -355,7 +359,7 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
           .flex3
             IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
     +if("$characterClass")
-      +if("hideLeftSidebar")
+      +if("hideLeftSidebar || singlePanel")
         .description-fill.mt-sm
           | {@html richHTML}
       +if("classAdvancementArrayFiltered && !hideLeftSidebar")
