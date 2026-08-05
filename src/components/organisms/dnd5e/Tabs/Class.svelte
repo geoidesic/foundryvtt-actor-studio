@@ -1,6 +1,5 @@
 <script>
   import SvelteSelect from "svelte-select";
-  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
     extractMapIteratorObjectProperties,
@@ -31,6 +30,10 @@
   import DonationTracker from "~/src/plugins/donation-tracker";
   import StartingEquipment from "~/src/components/molecules/dnd5e/StartingEquipment.svelte";
   import StartingGold from "~/src/components/molecules/dnd5e/StartingGold.svelte";
+  import ClassDescriptionPanel from "~/src/components/molecules/dnd5e/ClassDescriptionPanel.svelte";
+  import ClassSelector from "~/src/components/molecules/dnd5e/ClassSelector.svelte";
+  import SubclassSelector from "~/src/components/molecules/dnd5e/SubclassSelector.svelte";
+  import AdvancementIconList from "~/src/components/molecules/dnd5e/AdvancementIconList.svelte";
   import CollapsibleSectionHeader from "~/src/components/atoms/dnd5e/CollapsibleSectionHeader.svelte";
   import { clearEquipmentSelections } from "~/src/stores/equipmentSelections";
 
@@ -321,9 +324,15 @@
 
 
 
-  $: fullwidthClassSelect = !$characterClass || ($characterClass && showSubclassSelect && !subclassValue) || (hideLeftSidebar) || (!advancementEntriesToArray) || (!showLevelPreviewDropdown)
-  
-  $: singlePanel = hideLeftSidebar || fullwidthClassSelect
+  // The two-panel layout is available only after class and subclass selection.
+  // The responsive layout determines how the panels fit; these state flags determine
+  // which content is allowed in each panel.
+  $: classSelected = Boolean($characterClass);
+  $: isSubclassSelectVisible = Boolean(showSubclassSelect);
+  $: subClassSelected = Boolean($characterSubClass);
+  $: canRenderTwoPanels =
+    !hideLeftSidebar && classSelected && isSubclassSelectVisible && subClassSelected;
+  $: singlePanel = !canRenderTwoPanels;
 
 
   onMount(async () => {
@@ -342,27 +351,35 @@
       await handleSelectSubClass(subclassUuid);
     }
   });
+
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{hideLeftSidebar || fullwidthClassSelect}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .class-tab-selects
-      .flexrow
-        .flex0.required(class="{$characterClass ? '' : 'active'}") *
-        .flex3 
-          IconSelect.icon-select(active="{classProp}" options="{filteredClassIndex}"  placeHolder="{classesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectClass}" id="characterClass-select" bind:value="{classValue}" disabled="{isDisabled}")
+      ClassSelector(
+        active="{classProp}"
+        options="{filteredClassIndex}"
+        value="{classValue}"
+        handler="{handleSelectClass}"
+        disabled="{isDisabled}"
+      )
       +if("showSubclassSelect")
         h2.left {t('SubClass')}
-        .flexrow
-          .flex0.required(class="{$characterSubClass ? '' : 'active'}") *
-          .flex3
-            IconSelect.icon-select(active="{subClassProp}" options="{subclasses}"  placeHolder="{subclassesPlaceholder}" groupBy="{['sourceBook','packLabel']}" handler="{handleSelectSubClass}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{isDisabled}")
+        SubclassSelector(
+          active="{subClassProp}"
+          options="{subclasses}"
+          value="{subclassValue}"
+          handler="{handleSelectSubClass}"
+          disabled="{isDisabled}"
+        )
     +if("$characterClass")
-      +if("hideLeftSidebar || singlePanel")
-        .description-fill.mt-sm
-          | {@html richHTML}
-      +if("classAdvancementArrayFiltered && !hideLeftSidebar")
+      +if("singlePanel")
+        ClassDescriptionPanel(html="{combinedHtml}")
+      +if("canRenderTwoPanels && richSubClassHTML")
+        ClassDescriptionPanel(html="{wrappedSubClassHTML}")
+      +if("canRenderTwoPanels && classAdvancementArrayFiltered")
         +if("showLevelPreviewDropdown")
           CollapsibleSectionHeader(
             className="left mt-sm"
@@ -370,34 +387,15 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
             expanded="{classAdvancementExpanded}"
             on:toggle="{toggleClassAdvancements}"
           )
-          ul.icon-list
-            +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
-              li.flexrow
-                .flex2.left
-                  TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
-            +if("!classAdvancementArrayFiltered.length && !classGetsSubclassThisLevel")
-              li.left {t('NoAdvancements')}
-            +if("!classAdvancementArrayFiltered.length && classGetsSubclassThisLevel && classAdvancementExpanded")
-              li.badge.left.inset.ml-sm.mb-xs {t('Level')} {$level}
-              li.left 
-                .flexrow
-                  .flex0.relative.image
-                    img.icon(src="systems/dnd5e/icons/svg/items/subclass.svg" alt="{t('AltText.Subclass')}")
-                  .flex2 {t('SubClass')}
-            +if("classAdvancementArrayFiltered.length && classAdvancementExpanded")
-              +each("classAdvancementArrayFiltered as advancement")
-                //- @todo: this should be broken out into components for each advancement.type
-                li.left(data-type="{advancement.type}")
-                  .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip")
-                    .flex0.relative.image
-                      img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                    .flex2 {advancement.title}
-                  .flexrow
-                    svelte:component(this="{classAdvancementComponents[advancement.type]}" advancement="{advancement}")
-      .mt-md {@html wrappedSubClassHTML}
+          +if("!$readOnlyTabs.includes('class') && showLevelPreviewDropdown && classAdvancementExpanded")
+            li.flexrow
+              .flex2.left
+                TJSSelect( options="{levelOptions}" store="{level}" on:change="{levelSelectHandler}" styles="{selectStyles}" )
+          +if("classAdvancementExpanded")
+            AdvancementIconList(advancements="{classAdvancementArrayFiltered}" components="{classAdvancementComponents}")
     +if("subclasses.length")
       +if("subClassAdvancementArrayFiltered.length")
-        +if("!hideLeftSidebar")
+        +if("canRenderTwoPanels")
           +if("showLevelPreviewDropdown")
             CollapsibleSectionHeader(
               className="left mt-sm"
@@ -406,20 +404,10 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
               on:toggle="{toggleSubClassAdvancements}"
             )
               span(slot="right").badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
-            ul.icon-list
-              +if("!subClassAdvancementArrayFiltered.length")
-                li.left {t('NoAdvancements')}
-              +if("subClassAdvancementArrayFiltered.length && subClassAdvancementExpanded")
-                +each("subClassAdvancementArrayFiltered as advancement")
-                    //- @todo: this should be broken out into components for each advancement.type
-                    li.left(data-type="{advancement.type}")
-                      .flexrow(data-tooltip="{getAdvancementValue(advancement)}" data-tooltip-locked="true" data-tooltip-class="gas-tooltip dnd5e2 dnd5e-tooltip item-tooltip" )
-                        .flex0.relative.image
-                          img.icon(src="{advancement.icon}" alt="{advancement.title}")
-                        .flex2 {advancement.title}
-                      .flexrow
-                        svelte:component(this="{subClassAdvancementComponents[advancement.type]}" advancement="{advancement}")
-  div(slot="right") {@html combinedHtml}
+            +if("subClassAdvancementExpanded")
+              AdvancementIconList(advancements="{subClassAdvancementArrayFiltered}" components="{subClassAdvancementComponents}" tooltipLocked="{true}")
+  div(slot="right")
+    ClassDescriptionPanel(html="{richHTML}")
 </template>
 
 <style lang="sass">
@@ -461,8 +449,6 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
   // and in the single column when narrow.
   :global(.col-a .actor-studio-subclass)
     display: block
-  :global(.col-b .actor-studio-subclass)
-    display: none
   :global(.class-tab-single-panel .col-a .actor-studio-subclass)
     display: block
 </style>

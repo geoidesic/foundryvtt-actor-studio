@@ -127,7 +127,7 @@
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
 
-  $: singlePanel = hideLeftSidebar || !value || !showLevelPreviewDropdown;
+  $: singlePanel = hideLeftSidebar || !value;
   
   // Dynamic title and placeholder based on D&D rules version
   $: tabTitle = (() => {
