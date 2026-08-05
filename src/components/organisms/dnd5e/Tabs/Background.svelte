@@ -65,7 +65,7 @@
     ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
-  $: singlePanel = hideLeftSidebar || !value || !showLevelPreviewDropdown;
+  $: singlePanel = hideLeftSidebar || !value;
 
 
   let richHTML = "";
