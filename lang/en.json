@@ -609,6 +609,7 @@
       "Roll": "Roll",
       "Increase": "Increase",
       "Decrease": "Decrease",
+      "Remove": "Remove",
       "Subclass": "Subclass"
     },
     "Spells": {
