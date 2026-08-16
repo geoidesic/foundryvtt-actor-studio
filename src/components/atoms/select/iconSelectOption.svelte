@@ -36,6 +36,6 @@ div.option(
 		enrichedLabel="{option.enrichedLabel}"
 		enableEnrichment="{enableEnrichment}"
 		showPackLabel="{showPackLabel}"
-		packLabel="{option.packLabel}"
+		sourceBook="{option.sourceBook || option.packId || option.value}"
 	)
 </template>

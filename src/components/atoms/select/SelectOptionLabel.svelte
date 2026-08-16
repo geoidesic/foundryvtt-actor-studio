@@ -3,7 +3,7 @@
   export let enrichedLabel = undefined;
   export let enableEnrichment = false;
   export let showPackLabel = false;
-  export let packLabel = undefined;
+  export let sourceBook = undefined;
 
   // Strip source book identifiers (e.g., "(TCR)", "[GMO]", "Tasha's") from the label
   function stripSourceLabels(labelText) {
@@ -15,11 +15,14 @@
   }
 
   const displayLabel = stripSourceLabels(label);
+  $: displaySourceBook = sourceBook
+    ? sourceBook.split('.')[0].replace(/^Compendium\./, '').replace(/-/g, ' ')
+    : '';
 </script>
 
 <template lang="pug">
-+if("showPackLabel && packLabel")
-  .gas-pack-badge {packLabel}
++if("showPackLabel && displaySourceBook")
+  .gas-pack-badge {displaySourceBook}
 div.option-label
   +if("enableEnrichment")
     | {@html enrichedLabel}
