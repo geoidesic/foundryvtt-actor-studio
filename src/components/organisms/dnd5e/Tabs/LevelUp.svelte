@@ -37,7 +37,7 @@ import {
 } from "~/src/helpers/Utility.js";
 
 import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
-import IconSelect from "~/src/components/molecules/select/IconSelect.svelte";
+import IconSelect from "./../../../molecules/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
 import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
 
@@ -62,6 +62,8 @@ let
 ;
 
 const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
+
+$: singlePanel = hideLeftSidebar || !$classUuidForLevelUp || !showLevelPreviewDropdown;
 
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
@@ -422,7 +424,7 @@ onDestroy(() => {
 });
 </script>
 <template lang="pug">
-StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{hideLeftSidebar}")
+StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     +if("window.GAS.debug")
       //- pre classUuidForLevelUp {$classUuidForLevelUp}
@@ -522,7 +524,7 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
                 .flex0.relative.image
                   img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
                 .flex2 {t('SubClass')}
-      +if("hideLeftSidebar && $classUuidForLevelUp")
+      +if("singlePanel && $classUuidForLevelUp")
         .description-fill.mt-sm
           +if("$levelUpSubClassObject")
             | {@html richSubClassHTML}
