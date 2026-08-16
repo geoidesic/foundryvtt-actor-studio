@@ -175,5 +175,5 @@ div.custom-select({...$$restProps} {id} role="combobox" aria-expanded="{isOpen}"
 </template>
 
 <style lang="sass">
-@import './selectShared.sass'
+@import '../../../../styles/selectShared.sass'
 </style>

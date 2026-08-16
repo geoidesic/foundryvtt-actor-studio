@@ -1,5 +1,5 @@
 <script>
-  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import IconSelect from "~/src/components/molecules/select/IconSelect.svelte";
   import { localize as t } from "~/src/helpers/Utility";
 
   export let active = null;

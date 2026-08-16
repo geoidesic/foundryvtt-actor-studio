@@ -37,7 +37,7 @@ import {
 } from "~/src/helpers/Utility.js";
 
 import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
-import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+import IconSelect from "~/src/components/molecules/select/IconSelect.svelte";
 import ClassLevelRow from "~/src/plugins/level-up/ClassLevelRow.svelte";
 import LeftColDetails from "~/src/plugins/level-up/LevelUpExistingClassLeftCol.svelte";
 
