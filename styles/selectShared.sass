@@ -5,7 +5,7 @@
 
 .selected-option
   display: flex
-  align-items: left
+  align-items: center
   padding: 0.35rem 1.75rem 0.35rem 0.15rem
   font-size: 0.875rem
   font-weight: 400
@@ -19,10 +19,7 @@
   text-overflow: ellipsis
   position: relative
 
-img
-  position: absolute
-  top: -3px
-  left: 0
+.selected-option img
   width: 24px
   height: 24px
   vertical-align: middle
@@ -40,8 +37,10 @@ img
     border-color: #80bdff
 
 .option-icon
+  flex: 0 0 24px
   position: relative
-  min-width: 24px
+  width: 24px
+  height: 24px
   margin-right: 8px
 
 .option-label
@@ -66,7 +65,7 @@ img
 
 .option
   display: flex
-  align-items: left
+  align-items: center
   padding: 4px
   font-size: 0.875rem
   font-weight: 400

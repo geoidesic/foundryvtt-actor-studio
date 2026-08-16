@@ -9,9 +9,9 @@
     import { onMount, onDestroy, getContext } from "svelte";
     import { truncate, safeGetSetting } from "~/src/helpers/Utility.js";
     import { MODULE_ID } from "~/src/helpers/constants";
-    import { enrichHTML } from "~/src/helpers/Utility.js";
-    import { derived } from 'svelte/store';
-    import { getExternalApplication, subscribeToPositionStores, calculateDropdownMaxHeight, isClickOutsideContainer } from './selectDropdownUtils.js';
+    import SelectOptionIcon from "~/src/components/atoms/select/SelectOptionIcon.svelte";
+    import IconSelectOption from "~/src/components/atoms/select/iconSelectOption.svelte";
+    import { getExternalApplication, subscribeToPositionStores, calculateDropdownMaxHeight, isClickOutsideContainer } from '../../atoms/select/selectDropdownUtils.js';
 
     export let options = []; //- {value, label, link, icon || img}
     export let value = ""; //- the currently selected uuid
@@ -61,12 +61,7 @@
 
     const showPackLabelInSelect = safeGetSetting(MODULE_ID, 'showPackLabelInSelect', true);
 
-    function getLabel(option) {
-      if (!groupBy && showPackLabelInSelect && option.packLabel) {
-        return `[${option.packLabel}] ${option.label}`;
-      }
-      return option.label;
-    }
+
 
     function toggleDropdown() {
           window.GAS?.log?.d?.('[IconSelect.toggleDropdown]', {
@@ -296,11 +291,7 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
     +each("options as option, index")
       +if("option && option?.value === value")
         +if("!noImg && !textOnly(option) && shrinkIfNoIcon")
-          div.option-icon(class="{option.img ? option.img : ''}")
-            +if("option.icon != undefined")
-              i(class="{option.icon}")
-              +else
-                img(src="{option.img}" alt="{option.label}")
+          SelectOptionIcon(option="{option}")
         div.option-label {truncate(option.label, truncateWidth)}
     div.chevron-icon
       i(class="fas fa-chevron-down")
@@ -317,53 +308,37 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
           div.group-label {groupName}
           +each("groupedOptions[groupName] as option")
             +if("option")
-              div.option(
-                role="option"
-                on:click|stopPropagation|preventDefault!="{selectOption(option)}"
-                tabindex!="{option.value === value ? '-1' : '0'}"
-                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
-                class:is-current-selection!="{option.value === value}"
-                data-index="{navigableOptions.indexOf(option)}"
-                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
-                aria-disabled!="{option.value === value}"
+              IconSelectOption(
+                option="{option}"
+                value="{value}"
+                highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                optionIndex="{navigableOptions.indexOf(option)}"
+                onSelect="{selectOption}"
+                textOnly="{textOnly}"
+                shrinkIfNoIcon="{shrinkIfNoIcon}"
+                enableEnrichment="{enableEnrichment}"
+                showPackLabel="{showPackLabelInSelect}"
+                label="{option.label}"
               )
-                +if("!textOnly(option) && shrinkIfNoIcon")
-                  div.option-icon(class="{option.img ? option.img : ''}")
-                    +if("option.icon != undefined")
-                      i(class="{option.icon}")
-                      +else
-                        img(src="{option.img}" alt="{option.label}")
-                +if("enableEnrichment")
-                  div.option-label {@html option.enrichedLabel}
-                  +else
-                    div.option-label {getLabel(option)}
         +else
           +each("filteredOptions as option")
             +if("option")
-              div.option(
-                role="option"
-                on:click|stopPropagation|preventDefault!="{selectOption(option)}"
-                tabindex!="{option.value === value ? '-1' : '0'}"
-                class:highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
-                class:is-current-selection!="{option.value === value}"
-                data-index="{navigableOptions.indexOf(option)}"
-                aria-selected="{navigableOptions.indexOf(option) === highlightedIndex}"
-                aria-disabled!="{option.value === value}"
+              IconSelectOption(
+                option="{option}"
+                value="{value}"
+                highlighted="{navigableOptions.indexOf(option) === highlightedIndex}"
+                optionIndex="{navigableOptions.indexOf(option)}"
+                onSelect="{selectOption}"
+                textOnly="{textOnly}"
+                shrinkIfNoIcon="{shrinkIfNoIcon}"
+                enableEnrichment="{enableEnrichment}"
+                showPackLabel="{showPackLabelInSelect}"
+                label="{option.label}"
               )
-                +if("!textOnly(option) && shrinkIfNoIcon")
-                  div.option-icon(class="{option.img ? option.img : ''}")
-                    +if("option.icon != undefined")
-                      i(class="{option.icon}")
-                      +else
-                        img(src="{option.img}" alt="{option.label}")
-                +if("enableEnrichment")
-                  div.option-label {@html option.enrichedLabel}
-                  +else
-                    div.option-label {getLabel(option)}
 </template>
 
 <style lang="sass">
-@import './selectShared.sass'
+@import '../../../../styles/selectShared.sass'
 @import '../../../../styles/gas-app-scope.sass'
 
 .options-dropdown
@@ -378,6 +353,7 @@ div.custom-select({...$$restProps} id="{id}" role="combobox" aria-expanded="{isO
   font-weight: bold
   font-size: 2rem
   font-family: var(--dnd5e-font-modesto)
+
 .option
   &.highlighted
     background-color: rgba(0, 0, 0, 0.3)

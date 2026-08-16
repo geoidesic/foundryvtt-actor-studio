@@ -11,7 +11,7 @@
   import PointBuy from "~/src/components/molecules/dnd5e/AbilityEntry/PointBuy.svelte";
   import Roll from "~/src/components/molecules/dnd5e/AbilityEntry/Roll.svelte";
   import StandardArray from "~/src/components/molecules/dnd5e/AbilityEntry/StandardArray.svelte";
-  import IconSelect from "~/src/components/atoms/select/IconSelect.svelte";
+  import IconSelect from "~/src/components/molecules/select/IconSelect.svelte";
   import { localize as t, safeGetSetting } from "~/src/helpers/Utility";
   import { MODULE_ID } from "~/src/helpers/constants";
   import { abilityGenerationMethod } from "~/src/stores/index";

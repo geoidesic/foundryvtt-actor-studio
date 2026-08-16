@@ -477,10 +477,21 @@ export function extractItemsFromPacksSync(packs, keys) {
     entries = filterPackForDTPackItems(pack, entries);
     window.GAS?.log?.d?.('entries post', entries);
     let packItems = extractMapIteratorObjectProperties(entries, keys);
+    
+    // Strip source book identifiers from the label (e.g., "(TCR)", "[GMO]", ", Tasha's")
+    const cleanLabel = (labelText) => {
+      if (!labelText) return labelText;
+      return labelText
+        .replace(/\s*[\(\[]([\w\s]+)[\)\]]/g, '')  // Remove (XXX), [XXX], etc.
+        .replace(/,\s*[A-Z][a-z'.-]+(?:['\-][a-z]+)*/g, '') // Remove ", BookName" pattern
+        .trim()
+        .replace(/\s+/g, ' ');                       // Normalize whitespace
+    };
+
     packItems = packItems.map(item => ({
       ...item,
-      label: item.label,
-      compoundLabel: `[${pack.metadata.label}] ${item.label}`,
+      label: cleanLabel(item.label),
+      compoundLabel: `[${pack.metadata.label}] ${cleanLabel(item.label)}`,
       packName: pack.metadata.name,
       packId: pack.metadata.id,
       packLabel: pack.metadata.label,
