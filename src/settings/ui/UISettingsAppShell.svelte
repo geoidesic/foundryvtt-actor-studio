@@ -75,15 +75,19 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             span {game.i18n.localize('GAS.Setting.HideLeftSidebar.Name')}
           p.hint {game.i18n.localize('GAS.Setting.HideLeftSidebar.Hint')}
 
-
-        .setting-item
+        .setting-item(class:disabled="{hideLeftSidebar}")
           label
             input(
               type="checkbox"
               bind:checked="{showLevelPreviewDropdown}"
+              disabled="{hideLeftSidebar}"
+              title="{hideLeftSidebar ? game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.DisabledHint') : game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}"
             )
             span {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name')}
-          p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
+          +if("hideLeftSidebar")
+            p.hint.disabled-hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.DisabledHint')}
+            +else
+              p.hint {game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint')}
 
       .setting-group
         h3 Illuminated Description Options
@@ -144,6 +148,10 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
   let hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
   let showLevelPreviewDropdown = safeGetSetting(MODULE_ID, 'showLevelPreviewDropdown', false);
 
+  $: if (hideLeftSidebar) {
+    showLevelPreviewDropdown = false;
+  }
+
   async function saveSettings() {
     try {
       await game.settings.set(MODULE_ID, 'windowX', windowX);
@@ -155,7 +163,11 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
       await game.settings.set(MODULE_ID, 'illuminatedWidth', illuminatedWidth);
       await game.settings.set(MODULE_ID, 'illuminatedHeight', illuminatedHeight);
       await game.settings.set(MODULE_ID, 'hideLeftSidebar', hideLeftSidebar);
-      await game.settings.set(MODULE_ID, 'showLevelPreviewDropdown', showLevelPreviewDropdown);
+      await game.settings.set(
+        MODULE_ID,
+        'showLevelPreviewDropdown',
+        hideLeftSidebar ? false : showLevelPreviewDropdown,
+      );
 
       ui.notifications.info('UI settings saved successfully');
       application.close();
@@ -251,6 +263,18 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           font-size: 0.85rem
           color: #aaa
           font-style: italic
+
+        &.disabled
+          opacity: 0.7
+
+          label
+            cursor: not-allowed
+
+          input[type="checkbox"]
+            cursor: not-allowed
+
+          .disabled-hint
+            color: #d8b56a
 
   .settings-footer
     position: sticky

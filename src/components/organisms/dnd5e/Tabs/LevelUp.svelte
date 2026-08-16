@@ -63,7 +63,13 @@ let
 
 const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 
-$: singlePanel = hideLeftSidebar || !$classUuidForLevelUp || !showLevelPreviewDropdown;
+const showLevelPreviewDropdown = safeGetSetting(
+  MODULE_ID,
+  'showLevelPreviewDropdown',
+  false,
+);
+
+$: singlePanel = hideLeftSidebar || !$classUuidForLevelUp;
 
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
@@ -490,20 +496,22 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
 
     +if("$classUuidForLevelUp")
       
-      h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
+      +if("showLevelPreviewDropdown")
+        +if("showLevelPreviewDropdown")
+          h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
 
-      +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
-        h3.left.mt-md {t('LevelUp.Subclass')}
-        +if("window.GAS.debug")
-          //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-        .flexrow
-          .flex0.required(class="{$levelUpSubClassObject ? '' : 'active'}") *
-          .flex3
-            IconSelect.icon-select.mb-md(active="{subClassProp}" options="{subclasses}" placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{$isLevelUpAdvancementInProgress}")
-      +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
-        p
-          i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
-          | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
+          +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+            h3.left.mt-md {t('LevelUp.Subclass')}
+          +if("window.GAS.debug")
+            //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+          .flexrow
+            .flex0.required(class="{$levelUpSubClassObject ? '' : 'active'}") *
+            .flex3
+              IconSelect.icon-select.mb-md(active="{subClassProp}" options="{subclasses}" placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{$isLevelUpAdvancementInProgress}")
+          +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+            p
+              i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
+              | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
 
 
       //- pre subclasses {subclasses.length}
@@ -514,7 +522,8 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
       //- +if("selectedMultiClassUUID")
 
       +if("!hideLeftSidebar")
-        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
+        +if("showLevelPreviewDropdown")
+          LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         //- Subclass selection section
         +if("shouldShowSubclassPreview")

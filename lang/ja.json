@@ -365,7 +365,8 @@
       },
       "ShowLevelPreviewDropdown": {
         "Name": "Show Level Preview Dropdown (Race, Background, Class)",
-        "Hint": "If enabled, shows e.g. a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters."}
+        "Hint": "If enabled, shows e.g. a level preview dropdown in the Class tab that allows users to preview advancements at different levels. If disabled, the dropdown will be hidden to avoid confusion about creating higher level characters.",
+        "DisabledHint": "Unavailable while Hide left panel is enabled, because the preview is displayed in the left panel."}
       ,
       "HideLeftSidebar": {
         "Name": "背景・種族・クラスの左パネルを非表示",
