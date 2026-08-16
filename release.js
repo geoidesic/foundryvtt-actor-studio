@@ -667,7 +667,9 @@ if (!isDraft) {
     } else {
         console.log(`⬆️  Pushing to ${targetBranch} branch...`);
         execSync(`git push origin ${targetBranch}`);
-        const tagPushCmd = useForceTag ? `git push origin ${newVersion} --force` : `git push origin ${newVersion}`;
+        const tagPushCmd = useForceTag
+            ? `git push origin refs/tags/${newVersion}:refs/tags/${newVersion} --force`
+            : `git push origin refs/tags/${newVersion}:refs/tags/${newVersion}`;
         execSync(tagPushCmd);
         console.log(`📌 Pushed tag ${newVersion}${useForceTag ? ' (force)' : ''}`);
     }
