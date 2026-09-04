@@ -147,16 +147,16 @@ export function dnd5eSheet2UI(app, html, data) {
     }
   }
 
-  if (!hasClasses || (!safeGetSetting(MODULE_ID, 'milestoneLeveling', false) && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
+  const isMilestoneLeveling = safeGetSetting(MODULE_ID, 'milestoneLeveling', false);
+
+  if (!hasClasses || (!isMilestoneLeveling && (actor.system.details.xp.max - actor.system.details.xp.value > 0))) {
     window.GAS.log.d('[GAS] dnd5eSheet2UI: No classes or not eligible for level up.');
     return;
   }
 
   buttons.css('gap', '0.35rem');
   const levelUpButton = $(
-    `<button type="button" class="config-button gold-button level-up" data-action="flags" data-tooltip="GAS.LevelUp.Button" aria-label="GAS.LevelUp.Button" style="
-      animation: pulse 2s infinite;
-    ">
+    `<button type="button" class="config-button gold-button level-up" data-action="flags" data-tooltip="GAS.LevelUp.Button" aria-label="GAS.LevelUp.Button" style="animation: ${isMilestoneLeveling ? 'none' : 'pulse 2s infinite'};">
       <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-arrow.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 24px; max-height: 24px;"></img>
     </button>
   `);
@@ -165,10 +165,12 @@ export function dnd5eSheet2UI(app, html, data) {
     await openActorStudioLevelUp(app, 2);
   })
 
-  $('<style>')
-    .prop('type', 'text/css')
-    .html(pulseKeyframes)
-    .appendTo('head');
+  if (!isMilestoneLeveling) {
+    $('<style>')
+      .prop('type', 'text/css')
+      .html(pulseKeyframes)
+      .appendTo('head');
+  }
 
   buttons.append(levelUpButton);
 }
@@ -285,7 +287,7 @@ export function tidy5eSheetUI(app, element, data) {
       data-action="gasLevelUp"
       data-tooltip="GAS.LevelUp.Button"
       aria-label="GAS.LevelUp.Button"
-      style="animation: pulse 2s infinite;"
+      style="animation: ${isMilestoneLeveling ? 'none' : 'pulse 2s infinite'};"
     >
       <img src="modules/foundryvtt-actor-studio/assets/actor-studio-logo-dragon-arrow.png" alt="Level Up Button Actor Studio Logo" style="width: 100%; height: 100%; object-fit: contain; max-width: 20px; max-height: 20px;">
     </button>
@@ -297,8 +299,8 @@ export function tidy5eSheetUI(app, element, data) {
   });
   window.GAS.log.g(3)
 
-  // Inject pulse keyframes only once
-  if (!document.getElementById('gas-levelup-pulse-style')) {
+  // Inject pulse keyframes only once when XP-based leveling is active
+  if (!isMilestoneLeveling && !document.getElementById('gas-levelup-pulse-style')) {
     $('<style id="gas-levelup-pulse-style">')
       .prop('type', 'text/css')
       .html(pulseKeyframes)
