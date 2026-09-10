@@ -1,0 +1,677 @@
+{
+  "GAS": {
+    "Error": {
+      "ItemNotFoundInCompendium": "Gegenstand im Kompendium nicht gefunden",
+      "PackIndexNotFound": "Das Kompendium-Paket, aus dem die Charakterklasse importiert wurde, wurde in dieser Welt nicht gefunden",
+      "EquipmentSelectionNotViable": "Startausrüstung konnte nicht ausgewählt werden, da die ausgewählten Datentypen keine Startausrüstungsdaten enthalten."
+    },
+    "ActorStudio": "Actor Studio",
+    "CreateActor": "Akteur erstellen",
+    "Cancel": "Abbrechen",
+    "Dialog": {
+      "ReloadRequiredTitle": "Neuladen erforderlich",
+      "ReloadRequiredContent": "Diese Einstellungsänderung erfordert ein Neuladen von Foundry. Möchtest du jetzt neu laden?",
+      "AutoAssignSources": {
+        "Title": "Actor-Studio-Quellen konfigurieren",
+        "Content": "Es wurden keine Actor-Studio-Quellen zugewiesen. Möchtest du Quellen automatisch zuweisen? (Du kannst diese später jederzeit in den Einstellungen ändern – Actor Studio benötigt einige zugewiesene Quellen.)",
+        "Success": "Quellen erfolgreich automatisch zugewiesen. Du kannst sie bei Bedarf in den Actor-Studio-Einstellungen ändern.",
+        "Skipped": "Quellen wurden nicht automatisch zugewiesen. Du kannst sie später in den Actor-Studio-Einstellungen manuell konfigurieren."
+      }
+    },
+    "Notification": {
+      "CompendiumSourcesCleaned": "Actor Studio hat einige Kompendiumsquellen für {type} bereinigt. <a class='gas-open-sources' href='#'>Quellen öffnen</a>, um die Änderungen zu überprüfen und zu speichern.",
+      "SettingsSaved": "Einstellungen erfolgreich gespeichert.",
+      "SettingsSaveFailed": "Einstellungen konnten nicht gespeichert werden. Bitte versuche es erneut."
+    },
+    "Disabled": "Deaktiviert",
+    "AbilityScores": "Attributswerte",
+    "Advancements": "Weiterentwicklungen",
+    "Level": "Stufe",
+    "LevelUp": {
+      "Button": "Stufenaufstieg",
+      "ClassLevelUp": "Diese Klasse aufsteigen lassen",
+      "ExistingClassesTitle": "Bestehende Klasse aufsteigen lassen",
+      "ExistingClassesDescription": "Klicke auf die Klasse, deren Stufe du erhöhen möchtest.",
+      "MultiClassesDescription": "ODER wähle eine Klasse aus dem Mehrklassen-Dropdown aus, um eine neue hinzuzufügen.",
+      "NewClassTitle": "Mehrklassen hinzufügen",
+      "SelectClass": "Klasse zum Hinzufügen auswählen",
+      "SelectMulticlass": "Mehrklasse auswählen",
+      "CancelDescription": "Klicke auf die Klassen-Schaltfläche unten, um die Auswahl für den Stufenaufstieg abzubrechen und zum Anfang zurückzukehren. Oder klicke auf „Charakter aktualisieren“, um die Änderungen anzuwenden.",
+      "Subclass": "Unterklasse auswählen",
+      "LevelAdvancements": "Stufen-Weiterentwicklungen",
+      "DisabledTooltip": "Deaktiviert, da eine Weiterentwicklung durchgeführt wird",
+      "DisabledDescription": "Während eine Weiterentwicklung durchgeführt wird, kann dieser Abschnitt nicht bearbeitet werden"
+    },
+    "Footer": {
+      "AddLevel": "Charakterstufe hinzufügen",
+      "AddEquipment": "Bestätigen",
+      "FinalizePurchase": "Kauf abschließen",
+      "FinalizeSpells": "Zauber abschließen",
+      "SkipSpells": "Zauber überspringen",
+      "CharacterName": "Charaktername",
+      "CreateCharacter": "Charakter erstellen",
+      "UpdateCharacter": "Charakter aktualisieren"
+    },
+    "Name": "Name",
+    "MulticlassMode": "Mehrklassenmodus",
+    "Item": "Gegenstand",
+    "Skip": "Überspringen",
+    "Complete": "Abschließen",
+    "Type": "Typ",
+    "NoAdvancements": "Keine Weiterentwicklungen für diese Stufe",
+    "PCTitle": "Spielercharakter",
+    "Title": "Actor Studio",
+    "Source": "Quelle",
+    "StartingEquipment": "Startausrüstung",
+    "Permissions": {
+      "NeedCreateActorError": "Der Benutzer benötigt die Berechtigung „Neue Akteure erstellen“. Bitte den Spielleiter, sie deiner Rolle hinzuzufügen.",
+      "NeedCreateItemWarn": "Der Benutzer besitzt nicht die Berechtigung „Neue Gegenstände erstellen“. Du kannst keine benutzerdefinierten Merkmale erstellen.",
+      "NeedFileUploadWarn": "Der Benutzer besitzt nicht die Berechtigung „Neue Dateien hochladen“. Beim Auswählen von Bildern können Probleme auftreten.",
+      "NeedFileBrowseWarn": "Der Benutzer besitzt nicht die Berechtigung „Dateibrowser verwenden“. Beim Auswählen von Bildern können Probleme auftreten."
+    },
+    "SubClass": "Unterklasse",
+    "Tabs": {
+      "Abilities": {
+        "Title": "Attribute",
+        "HowCalculated": "Wie werden Attribute berechnet?",
+        "AbilityGenerationMethod": "Methode zur Attributsgenerierung",
+        "ManualEntry": "Manuelle Eingabe",
+        "PointBuy": "Punktkauf",
+        "Roll": "Würfeln",
+        "StandardArray": "Standardarray"
+      },
+      "Races": {
+        "Title": "Völker",
+        "Title2024": "Spezies",
+        "Movement": "Bewegung",
+        "Senses": "Sinne",
+        "Type": "Typ",
+        "Placeholder": "Völker",
+        "Placeholder2024": "Spezies"
+      },
+      "Classes": {
+        "Title": "Klassen",
+        "Class": "Klasse",
+        "SubClass": "Unterklasse",
+        "FilterByLevel": "Weiterentwicklungen nach Stufe durchsuchen",
+        "Placeholder": "Klassen",
+        "SubclassPlaceholder": "Unterklassen",
+        "LevelPreview": "Stufenvorschau",
+        "Level": "Stufe"
+      },
+      "Background": {
+        "Title": "Hintergrund",
+        "Placeholder": "Hintergründe"
+      },
+      "Equipment": {
+        "Title": "Ausrüstung"
+      },
+      "Shop": {
+        "Title": "Laden"
+      },
+      "Biography": {
+        "Title": "Biografie"
+      }
+    },
+    "Welcome": {
+      "To": "Willkommen bei",
+      "IntroductionTitle": "Einführung",
+      "Introduction": "Actor Studio hilft dir beim Erstellen und beim Stufenaufstieg deiner Charaktere für Dungeons & Dragons 5e.",
+      "UsageTitle": "Nutzungshinweise",
+      "Issues": "Wenn du Probleme hast, melde sie bitte auf ",
+      "Github": "GitHub.",
+      "CreatedBy": "für FoundryVTT, entwickelt von ",
+      "Support": "Wenn du die Entwicklung dieses Moduls unterstützen möchtest, erwäge bitte eine monatliche Spende über",
+      "SponsorLinkText": "GitHub Sponsors",
+      "IssuesLinkText": "GitHub Issues",
+      "PayPalLinkText": "PayPal",
+      "JoinDiscord": "Tritt dem",
+      "DiscordLinkText": "Actor-Studio-Discord-Server bei",
+      "Thanks": "Vielen Dank, dass du Actor Studio verwendest!"
+    },
+    "Setting": {
+      "World": "Welteneinstellungen",
+      "User": "Benutzereinstellungen",
+      "AbilityScoreEntryOptions": "Optionen zur Attributswert-Eingabe",
+      "LevelingOptions": "Optionen für den Stufenaufstieg",
+      "DisplayOptions": "Anzeigeoptionen",
+      "DebugOptions": "Debug-Optionen",
+      "AbilityEntry": {
+        "AllowManualInput": {
+          "Name": "Manuelle Eingabe erlauben",
+          "Hint": "Benutzern erlauben, die Attributswerte manuell einzugeben"
+        },
+        "AllowStandardArray": {
+          "Name": "Standardarray erlauben",
+          "Hint": "Benutzern erlauben, das Standardarray zu verwenden"
+        },
+        "StandardArrayValues": {
+          "Name": "Benutzerdefiniertes Standardarray",
+          "Hint": "Benutzerdefinierte Werte des Standardarrays festlegen (durch Kommas getrennt, z. B. 15, 14, 13, 12, 10, 8)"
+        },
+        "AllowPointBuy": {
+          "Name": "Punktkauf erlauben",
+          "Hint": "Benutzern erlauben, das Punktkaufsystem zu verwenden",
+          "InvalidTotal": "Ungültige Gesamtpunktzahl"
+        },
+        "AllowRolling": {
+          "Name": "Würfeln erlauben",
+          "Hint": "Benutzern erlauben, die Attributswerte auszuwürfeln"
+        },
+        "PointBuyLimit": {
+          "Name": "Punktkauflimit",
+          "Hint": "Maximal zulässige Punkte für das Punktkaufsystem festlegen. Werte über diesem Schwellenwert werden rot angezeigt."
+        },
+        "AbilityRollFormula": {
+          "Name": "Zum Würfeln der Werte verwendete Formel (pro Wert)",
+          "Hint": "Z. B. 4d6kh3"
+        }
+      },
+      "AdvancementCaptureTimerThreshold": {
+        "Name": "Schwellenwert des Weiterentwicklungs-Erfassungstimers",
+        "Hint": "Schwellenwert für den Weiterentwicklungs-Erfassungstimer festlegen. Wenn Volk, Hintergrund oder Klasse für neue Akteure nicht erfasst werden, erhöhe diesen Wert. Er gibt die Anzahl der Millisekunden an, nach denen die Erfassung der Weiterentwicklung als fehlgeschlagen gilt."
+      },
+      "debug": {
+        "Name": "Debug-Modus aktivieren",
+        "Hint": "Stellt zusätzliche Protokollierung zu Debugging-Zwecken bereit"
+      },
+      "debugHooks": {
+        "Name": "Erweiterten Debug-Modus aktivieren",
+        "Hint": "Stellt zusätzliche Protokollierung aller Foundry-Hooks bereit"
+      },
+      "defaultGoldDice": {
+        "Name": "Standardwurf für Startgold",
+        "Hint": "Hier kannst du die standardmäßig für Startgold gewürfelten Würfel anpassen. Dies wird verwendet, wenn die Charakterklasse keine eigene Startgoldformel besitzt."
+      },
+      "DonationTrackerEnabled": {
+        "Name": "Spenden-Tracker aktivieren",
+        "Hint": "Spenden-Tracker aktivieren, um den aktuellen Spendenbetrag und das Ziel anzuzeigen"
+      },
+      "disableAdvancementCapture": {
+        "Name": "Weiterentwicklungs-Tab deaktivieren",
+        "Hint": "Verhindert, dass Weiterentwicklungen im Weiterentwicklungs-Tab erfasst werden. Stattdessen erscheinen sie als Standardsystem – also in einem Dialogfenster. (Hinweis: Dies ist nur für Debugging-Zwecke gedacht – Actor Studio ist deaktiviert kaum sinnvoll.)"
+      },
+      "forceTakeAverageHitPoints": {
+        "Name": "Durchschnittliche Trefferpunkte erzwingen",
+        "Hint": "Wenn aktiviert, erzwingt Actor Studio beim Stufenaufstieg der Trefferpunkte die Option „Durchschnitt nehmen“."
+      },
+      "DisableOtherActorCreationOptionsForPlayers": {
+        "Name": "Andere „Akteur erstellen“-Schaltfläche deaktivieren",
+        "Hint": "Verhindert, dass Spieler Akteure über die standardmäßige „Akteur erstellen“-Schaltfläche erstellen. Nur Actor Studio ist verfügbar."
+      },
+      "DonationTrackerRank": {
+        "Name": "Rang",
+        "Hint": "Ordnernamen für den Rang eingeben"
+      },
+      "DonationTracker_UnregisteredAccess": {
+        "Name": "Nicht registrierter Zugriff",
+        "Hint": "Wenn aktiviert, haben nicht registrierte Benutzer Zugriff auf alles außerhalb von DT-Ordnern in DT-verknüpften Kompendien."
+      },
+      "DonationTrackerAction": {
+        "Name": "DT-Ordner hinzufügen",
+        "Hint": "Mitgliedsstufen-Ordner des Spenden-Trackers zu diesem Kompendium hinzufügen"
+      },
+      "DonationTracker": {
+        "Name": "Einstellungen des Spenden-Trackers",
+        "Label": "Bearbeiten",
+        "Hint": "Integration aktivieren/deaktivieren. Für jede Mitgliedsstufe des Spenden-Trackers gibt es einen Ordnernamen. Du kannst sie hier bearbeiten."
+      },
+      "DontShowWelcome": {
+        "Name": "Diese Nachricht nicht mehr anzeigen",
+        "Hint": "Die Willkommensanwendung beim ersten Laden von Foundry nicht anzeigen. (Du kannst dies jederzeit über „Einstellungen konfigurieren“ rückgängig machen.)"
+      },
+      "EnableLevelUp": {
+        "Name": "Stufenaufstieg aktivieren",
+        "Hint": "Aktivieren, um dem Charakterbogen eine Schaltfläche für den Stufenaufstieg über Actor Studio hinzuzufügen"
+      },
+      "FilterPackSourcesAppropriatelyByName": {
+        "Name": "Paketquellen nach Namen passend filtern",
+        "Hint": "Wenn aktiviert, enthalten die Quellenabschnitte nur Pakete, deren Name, Pfad, ID oder Bezeichnung dem Quellentyp entspricht. Ein Kompendium mit Gegenständen namens „Zauberemporium“ würde z. B. im Quellenabschnitt „Zauber“, aber nicht in anderen Quellenabschnitten angezeigt."
+      },
+      "forceDnd5eLevelUpAutomation": {
+        "Name": "D&D5e-Automatisierung des Stufenaufstiegs erzwingen",
+        "Hint": "Ohne diese Option ist Actor Studio außer zur Vorschau von Optionen praktisch nutzlos, da es die Änderungen nicht auf den Akteur anwenden kann."
+      },
+      "milestoneLeveling": {
+        "Name": "Stufenaufstieg nach Meilensteinen",
+        "Hint": "Wenn deaktiviert, wird die Schaltfläche „Stufenaufstieg“ nur angezeigt, wenn der Akteur genügend EP für den Stufenaufstieg besitzt. Wenn aktiviert, wird sie immer angezeigt und der Benutzer kann ohne die erforderlichen EP aufsteigen."
+      },
+      "ShowRolls": {
+        "Name": "Würfe im Chat anzeigen",
+        "Hint": "Würfe für Attributswerte, TP pro Stufe und Startgold als Chatnachrichten anzeigen"
+      },
+      "showButtonInSideBar": {
+        "Name": "Schaltfläche in der Seitenleiste anzeigen",
+        "Hint": "Die Actor-Studio-Schaltfläche in der Seitenleiste anzeigen. (Erfordert eine Aktualisierung des Browsers.)"
+      },
+      "illuminatedDescription": {
+        "Name": "Erweiterte Beschreibung aktivieren",
+        "Hint": "Fügt dem rechten Bereich des Tabs, sofern passend, eine größere Version der Auswahl-Symbole hinzu."
+      },
+      "illuminatedHeight": {
+        "Name": "Höhe der erweiterten Beschreibung",
+        "Hint": "Höhe der erweiterten Beschreibung festlegen"
+      },
+      "illuminatedWidth": {
+        "Name": "Breite der erweiterten Beschreibung",
+        "Hint": "Breite der erweiterten Beschreibung festlegen"
+      },
+      "IndividualPanelScroll": {
+        "Name": "Individuelle Panel-Bildläufe",
+        "Hint": "In Tabs mit linkem und rechtem Bereich für unabhängige Bildläufe sorgen"
+      },
+      "AllowAbilityRolling": {
+        "Name": "Würfeln von Attributswerten erlauben"
+      },
+      "AllowAbilityStandardArray": {
+        "Name": "Standardarray für Attributswerte erlauben"
+      },
+      "AllowAbilityPointBuy": {
+        "Name": "Punktkauf für Attributswerte erlauben"
+      },
+      "AllowAbilityInput": {
+        "Name": "Manuelle Eingabe von Attributswerten erlauben"
+      },
+      "UseTokenizer": {
+        "Name": "Tokenizer verwenden, falls verfügbar",
+        "Hint": "Das Werkzeug versucht, das Tokenizer-Modul zu verwenden, sofern es gefunden wird, um standardmäßig Avatar- und Tokenbilder zu erzeugen."
+      },
+      "TokenNameMode": {
+        "Name": "Anzeigemodus des Tokennamens"
+      },
+      "TokenBarMode": {
+        "Name": "Anzeigemodus von Tokenleiste 1"
+      },
+      "EquipmentBlacklist": {
+        "Name": "Ausrüstungs-Blacklist",
+        "Hint": "Beim Kauf nicht angezeigte Gegenstände (Ausrüstung), nach Namen (Groß-/Kleinschreibung beachten, durch „;“ getrennt, Leerzeichen sind zulässig). Standardmäßig werden nur Gegenstände der Seltenheit „gewöhnlich“ angezeigt; diese Liste schließt jedoch einige magische oder unpassende gewöhnliche Gegenstände aus. Standard: „Potion of Climbing; Potion of Healing; Spell Scroll 1st Level; Spell Scroll Cantrip Level; Unarmed Strike“"
+      },
+      "ShowPackLabelInSelect": {
+        "Name": "Kompendiumsbezeichnung bei der Auswahl anzeigen",
+        "Hint": "Die Paketbezeichnung zusammen mit der Gegenstandsbezeichnung in den Auswahloptionen anzeigen"
+      },
+      "SubraceNameBlacklist": {
+        "Name": "Blacklist für Untervolknamen",
+        "Hint": "Gegenstände, die anhand ihres Namens von der Registrierung als Untervölker ausgeschlossen werden (Groß-/Kleinschreibung beachten, durch „;“ getrennt, Leerzeichen sind zulässig). Wird standardmäßig verwendet, um beispielsweise „Gnomische Gerissenheit“ von der Registrierung als Gnom-Unterklasse auszuschließen. Standard: „Gnome Cunning; Halfling Nimbleness“"
+      },
+      "ButtonOnDialogInsteadOfActorsDirectory": {
+        "Name": "Schaltfläche im Dialog „Akteur erstellen“",
+        "Hint": "Wenn die Schaltfläche andere Module stört oder du eine einzelne „Akteur erstellen“-Schaltfläche bevorzugst, um deine Spieler nicht zu verwirren"
+      },
+      "NonGmsCanOnlyCreatePCs": {
+        "Name": "Nicht-Spielleiter können nur Spielercharaktere erstellen",
+        "Hint": "Wenn aktiviert, können Nicht-Spielleiter nur Spielercharaktere und keine anderen Akteurstypen erstellen"
+      },
+      "WindowX": {
+        "Name": "Breite des Actor-Studio-Anwendungsfensters",
+        "Hint": "Anfangsbreite des Fensters festlegen"
+      },
+      "KeepActorStudioOnTop": {
+        "Name": "Actor Studio im Vordergrund halten",
+        "Hint": "Wenn aktiviert, bleibt das Actor-Studio-Fenster über anderen Fenstern angeheftet (z. B. nachdem „Charakter erstellen“ den Charakterbogen geöffnet hat). Wenn deaktiviert, verhält es sich wie ein normales Fenster, sodass du während der Zauberauswahl andere Fenster, etwa Zauberbeschreibungen, lesen kannst."
+      },
+      "WindowY": {
+        "Name": "Höhe des Actor-Studio-Anwendungsfensters",
+        "Hint": "Anfangshöhe des Fensters festlegen"
+      },
+      "Sources": {
+        "Name": "Kompendiumsquellen",
+        "Hint": "Kompendien auswählen, die als Datenquelle für die verschiedenen Erstellungsschritte dienen",
+        "Label": "Quellen auswählen",
+        "Save": "Speichern",
+        "RaceCompendia": "Volkskompendien",
+        "RaceCompendia2024": "Spezieskompendien",
+        "RacialFeatureCompendia": "Kompendien für Volksmerkmale",
+        "RacialFeatureCompendia2024": "Kompendien für Speziesmerkmale",
+        "ClassCompendia": "Klassenkompendien",
+        "SubclassCompendia": "Unterklassenkompendien",
+        "ClassFeatureCompendia": "Kompendien für Klassenmerkmale",
+        "BackgroundCompendia": "Hintergrundkompendien",
+        "SpellCompendia": "Zauberkompendien",
+        "FeatCompendia": "Talentkompendien",
+        "EquipmentCompendia": "Ausrüstungskompendien"
+      },
+      "TrimSubclasses": {
+        "Name": "Unterklassennamen kürzen",
+        "Hint": "Zeigt Unterklassennamen ohne den letzten Teil in Klammern an, hauptsächlich für DDBImporter-Unterklassen wie „Assassin (Rogue)“, die nur als „Assassin“ angezeigt werden sollen (ändert NICHT die dem Akteur hinzugefügten Gegenstände, sondern nur deren Anzeige im Werkzeug)."
+      },
+      "EnableEquipmentSelection": {
+        "Name": "Ausrüstungsauswahl aktivieren",
+        "Hint": "Erlaubt Spielern, ihre Startausrüstung während der Charaktererstellung auszuwählen. Wenn deaktiviert, muss die Ausrüstung nach der Erstellung manuell hinzugefügt werden."
+      },
+      "EnableEquipmentPurchase": {
+        "Name": "Ausrüstungskauf aktivieren",
+        "Hint": "Wenn aktiviert, wird nach der Ausrüstungsauswahl ein „Laden“-Tab für Charaktere mit Startgold hinzugefügt, in dem sie Gegenstände aus festgelegten Kompendien kaufen können. Wenn die Ausrüstungsauswahl deaktiviert ist, wird diese Einstellung ignoriert."
+      },
+      "FilterOutUnaffordables": {
+        "Name": "Nicht bezahlbare Ausrüstung herausfiltern",
+        "Hint": "Wenn aktiviert, blendet der Laden Gegenstände aus, die du dir derzeit nicht leisten kannst. Wenn deaktiviert, bleiben sie sichtbar, werden aber ausgegraut; beim Hinzufügen wird eine Warnung angezeigt."
+      },
+      "ExperimentalCharacterNameStyling": {
+        "Name": "Experimentelle Gestaltung von Charakternamen",
+        "Hint": "Experimentelle animierte Gestaltung von Charakternamen mit zufälligen Farben und Schriftarten aktivieren. Diese experimentelle Funktion verleiht dem Eingabefeld für den Charakternamen zusätzliche visuelle Effekte."
+      },
+      "AllowAbilityRollScoresToBeMoved": {
+        "Name": "Verschieben gewürfelter Attributswerte erlauben",
+        "Hint": "Wenn aktiviert, können gewürfelte Attribute verschoben werden, ähnlich wie beim Standardarray."
+      },
+      "EnableSpellSelection": {
+        "Name": "Zauberauswahl aktivieren",
+        "Hint": "Erlaubt Spielern, ihre Zauber während der Charaktererstellung auszuwählen. Wenn deaktiviert, müssen Zauber nach der Erstellung manuell hinzugefügt werden."
+      },
+      "EnableCustomSpellListFiltering": {
+        "Name": "Zauber, die keiner Charakterklasse zugewiesen sind, stehen allen Charakteren zur Verfügung.",
+        "Hint": "Wenn aktiviert, können Zauber benutzerdefinierten Zauberlisten-Flags entsprechen, und Zauber ohne Klassenzuweisung werden eingeschlossen. Wenn deaktiviert, werden nur Zauber angezeigt, die der ausgewählten Klasse/Unterklasse ausdrücklich zugewiesen sind."
+      },
+      "ShowLevelPreviewDropdown": {
+        "Name": "Dropdown für Stufenvorschau anzeigen (Volk, Hintergrund, Klasse)",
+        "Hint": "Wenn aktiviert, wird z. B. im Klassen-Tab ein Dropdown für die Stufenvorschau angezeigt, mit dem Benutzer Weiterentwicklungen auf verschiedenen Stufen ansehen können. Wenn deaktiviert, wird das Dropdown ausgeblendet, um Verwirrung beim Erstellen höherstufiger Charaktere zu vermeiden.",
+        "DisabledHint": "Nicht verfügbar, wenn „Linken Bereich ausblenden“ aktiviert ist, da die Vorschau im linken Bereich angezeigt wird."
+      },
+      "HideLeftSidebar": {
+        "Name": "Linken Bereich für Hintergründe, Ursprünge und Klassen ausblenden",
+        "Hint": "Wenn aktiviert, wird der linke Bereich der Tabs „Hintergrund“, „Ursprünge“ und „Klasse“ ausgeblendet. Die Dropdown-Auswahl bleibt sichtbar. Der leere Bereich wird mit der Beschreibung des jeweiligen Gegenstands gefüllt."
+      },
+      "CharacterCreationTabOrder": {
+        "Name": "Reihenfolge der Tabs zur Charaktererstellung",
+        "Hint": "Reihenfolge der vier grundlegenden Tabs zur Charaktererstellung festlegen (Attribute, Volk, Hintergrund, Klasse).",
+        "Title": "Reihenfolge der Tabs zur Charaktererstellung",
+        "Abilities": "Attribute",
+        "Race": "Volk",
+        "Race2024": "Spezies",
+        "Background": "Hintergrund",
+        "Class": "Klasse"
+      },
+      "EnableLLMNameGeneration": {
+        "Name": "LLM-Namensgenerierung aktivieren",
+        "Hint": "Wenn aktiviert, wird neben dem Eingabefeld für den Charakternamen eine ChatGPT-Schaltfläche hinzugefügt, die auf Grundlage des ausgewählten Volkes passende Fantasy-Namen erzeugt."
+      },
+      "EnableBiographyTab": {
+        "Name": "Biografie-Tab aktivieren",
+        "Hint": "Den Biografie-Tab während der Charaktererstellung anzeigen. Wenn aktiviert, wird die Biografie auch angezeigt, wenn die LLM-Namensgenerierung oder der Lizenz-Tracker deaktiviert ist; die Schaltfläche „Generieren“ wird ausgeblendet, wenn keine Generierung verfügbar ist."
+      },
+      "EnableLicenseTracker": {
+        "Name": "Lizenz-Tracker aktivieren",
+        "Hint": "Wenn aktiviert, ist für die LLM-Namensgenerierung ein Lizenzschlüssel erforderlich. Der Lizenzschlüssel muss unten eingegeben werden."
+      },
+      "AardvarkLicenseCode": {
+        "Name": "Aardvark-Lizenzcode",
+        "Hint": "Gib deinen Aardvark-Lizenzcode für die LLM-Namensgenerierung ein. Dies ist erforderlich, wenn die Lizenzverfolgung aktiviert ist."
+      },
+      "LLMApiKey": {
+        "Name": "LLM-API-Schlüssel",
+        "Hint": "API-Schlüssel für den LLM-Dienst. Für OpenAI (integrierter Dienst) den Standardwert beibehalten. Für Claude deinen Anthropic-API-Schlüssel eingeben. Für OpenRouter deinen OpenRouter-API-Schlüssel eingeben."
+      },
+      "LLMProvider": {
+        "Name": "LLM-Anbieter",
+        "Hint": "Auswählen, welcher LLM-Anbieter für die Namensgenerierung verwendet werden soll. OpenAI verwendet den integrierten Dienst (kein API-Schlüssel erforderlich). Claude benötigt einen Anthropic-API-Schlüssel. OpenRouter benötigt einen OpenRouter-API-Schlüssel."
+      },
+      "AbilityScores": {
+        "Name": "Attributswerte",
+        "Hint": "Konfigurieren, wie Spieler während der Charaktererstellung Attributswerte eingeben können",
+        "Label": "Attributswerte konfigurieren",
+        "Title": "Konfiguration der Attributswerte",
+        "Description": "Auswählen, welche Methoden Spieler zur Bestimmung ihrer Attributswerte verwenden können",
+        "EntryMethods": "Eingabemethoden"
+      },
+      "Equipment": {
+        "Name": "Ausrüstung und Gold",
+        "Hint": "Startgold sowie Optionen zur Auswahl von Ausrüstung und Zaubern konfigurieren",
+        "Label": "Ausrüstung und Gold konfigurieren",
+        "Title": "Konfiguration von Ausrüstung und Gold",
+        "Description": "Startgold festlegen und Funktionen zur Auswahl von Ausrüstung und Zaubern aktivieren",
+        "StartingGold": "Startgold",
+        "SelectionOptions": "Auswahloptionen"
+      },
+      "Spell": {
+        "Name": "Zauber",
+        "Hint": "Zauberauswahl und Verhalten benutzerdefinierter Zauberlisten konfigurieren",
+        "Label": "Zauber konfigurieren",
+        "Title": "Zauberkonfiguration",
+        "Description": "Zauberauswahl und Funktionen benutzerdefinierter Zauberlisten steuern",
+        "SelectionOptions": "Auswahloptionen",
+        "CustomLists": "Benutzerdefinierte Zauberlisten"
+      },
+      "CustomSpellLists": {
+        "Name": "Benutzerdefinierte Zauberlisten",
+        "Hint": "Benutzerdefinierte Zauberlisten zur Zauberfilterung erstellen und bearbeiten.",
+        "Label": "Zauberlisten verwalten",
+        "MenuHint": "Den Zauberlisten-Manager öffnen, um benutzerdefinierte Listen zu erstellen und zu bearbeiten."
+      },
+      "Progression": {
+        "Name": "Fortschritt",
+        "Hint": "Optionen für Stufenaufstieg und Weiterentwicklungen konfigurieren",
+        "Label": "Fortschritt konfigurieren",
+        "Title": "Fortschrittskonfiguration",
+        "Description": "Verhalten des Stufenaufstiegs und Einstellungen zur Erfassung von Weiterentwicklungen konfigurieren",
+        "LevelUpOptions": "Optionen für den Stufenaufstieg",
+        "AdvancementOptions": "Optionen für Weiterentwicklungen"
+      },
+      "UI": {
+        "Name": "Benutzeroberfläche und Fenster",
+        "Hint": "Fensterabmessungen und Anzeigeoptionen der Benutzeroberfläche konfigurieren",
+        "Label": "Benutzeroberfläche und Fenster konfigurieren",
+        "Title": "Konfiguration von Benutzeroberfläche und Fenster",
+        "Description": "Erscheinungsbild und Abmessungen des Actor-Studio-Fensters anpassen",
+        "WindowDimensions": "Fensterabmessungen",
+        "DisplayOptions": "Anzeigeoptionen",
+        "IlluminatedOptions": "Optionen für erweiterte Beschreibungen"
+      },
+      "AccessControl": {
+        "Name": "Zugriffskontrolle",
+        "Hint": "Spielerberechtigungen für die Charaktererstellung konfigurieren",
+        "Label": "Zugriffskontrolle konfigurieren",
+        "Title": "Konfiguration der Zugriffskontrolle",
+        "Description": "Steuern, welche Aktionen Spieler beim Erstellen von Charakteren durchführen können",
+        "PlayerRestrictions": "Spielerbeschränkungen"
+      },
+      "CompendiumDisplay": {
+        "Name": "Kompendiumsanzeige",
+        "Hint": "Anzeigen und Filtern von Kompendien konfigurieren",
+        "Label": "Kompendiumsanzeige konfigurieren",
+        "Title": "Konfiguration der Kompendiumsanzeige",
+        "Description": "Steuern, wie Kompendium-Pakete in Auswahllisten angezeigt werden",
+        "DisplayOptions": "Anzeigeoptionen"
+      },
+      "Diagnostics": {
+        "Name": "Diagnose",
+        "Hint": "Debug- und Diagnoseoptionen konfigurieren",
+        "Label": "Diagnose konfigurieren",
+        "Title": "Diagnosekonfiguration",
+        "Description": "Debug-Protokollierung und Diagnosefunktionen aktivieren",
+        "DebugOptions": "Debug-Optionen"
+      },
+      "testTimeoutUiInteraction": {
+        "Name": "Zeitüberschreitung für UI-Interaktionen (ms)",
+        "Hint": "Zeitüberschreitung für allgemeine UI-Interaktionen wie Schaltflächenklicks und Tabwechsel"
+      },
+      "testTimeoutUiStateChange": {
+        "Name": "Zeitüberschreitung für UI-Zustandsänderungen (ms)",
+        "Hint": "Zeitüberschreitung für UI-Zustandsänderungen wie das Öffnen der Anwendung, die Aktivierung eines Tabs oder Formularaktualisierungen"
+      },
+      "testTimeoutSpellUiLoad": {
+        "Name": "Ladezeitüberschreitung der Zauberoberfläche (ms)",
+        "Hint": "Zeitüberschreitung, bis zauberbezogene UI-Elemente geladen und interaktiv sind"
+      },
+      "testTimeoutSpellWorkflow": {
+        "Name": "Zeitüberschreitung des Zauberablaufs (ms)",
+        "Hint": "Zeitüberschreitung für vollständige Zauberauswahlabläufe einschließlich des Abschlusses"
+      },
+      "testTimeoutAppClosure": {
+        "Name": "Zeitüberschreitung beim Schließen der Anwendung (ms)",
+        "Hint": "Zeitüberschreitung, bis Anwendungsfenster vollständig geschlossen sind"
+      },
+      "testTimeoutAppLifecycleComplete": {
+        "Name": "Zeitüberschreitung für den vollständigen Anwendungslebenszyklus (ms)",
+        "Hint": "Zeitüberschreitung für den vollständigen Anwendungslebenszyklus einschließlich Erstellung und Bereinigung"
+      },
+      "testTimeoutAdvancementProcessing": {
+        "Name": "Zeitüberschreitung der Weiterentwicklungsverarbeitung (ms)",
+        "Hint": "Zeitüberschreitung für die Verarbeitung von Weiterentwicklungen und Automatisierungsschritte"
+      },
+      "testTimeoutAdvancementPostLevel": {
+        "Name": "Zeitüberschreitung nach dem Stufenaufstieg (ms)",
+        "Hint": "Zeitüberschreitung für Vorgänge nach dem Stufenaufstieg und Zustandsaktualisierungen"
+      },
+      "testTimeoutActorDataUpdate": {
+        "Name": "Zeitüberschreitung für die Aktualisierung von Akteurdaten (ms)",
+        "Hint": "Zeitüberschreitung für Akteurdatenaktualisierungen und Speichervorgänge"
+      },
+      "testIntervalPolling": {
+        "Name": "Abrufintervall (ms)",
+        "Hint": "Zeit zwischen Abrufen beim Warten auf Bedingungen"
+      }
+    },
+    "SpellListManager": {
+      "NewList": "Neue Liste",
+      "Save": "Speichern",
+      "SaveAll": "Alle speichern",
+      "Cancel": "Abbrechen",
+      "SpellLists": "Zauberlisten",
+      "NoSpellLists": "Noch keine Zauberlisten. Klicke auf „Neue Liste“, um eine zu erstellen.",
+      "SpellCount": "{count} Zauber",
+      "SpellCountPlural": "{count} Zauber",
+      "DeleteList": "Liste löschen",
+      "Name": "Name",
+      "NamePlaceholder": "Listennamen eingeben",
+      "Type": "Typ",
+      "TypeClass": "Klasse",
+      "TypeSubclass": "Unterklasse",
+      "TypeRace": "Volk",
+      "TypeRace2024": "Spezies",
+      "TypeBackground": "Hintergrund",
+      "TypeFeat": "Talent",
+      "Identifier": "Bezeichner",
+      "IdentifierPlaceholder": "z. B. wizard, eldritch-knight",
+      "Description": "Beschreibung",
+      "DescriptionPlaceholder": "Optionale Beschreibung",
+      "DragPlaceholder": "Zauber oder ganze Kompendien aus der Seitenleiste hierher ziehen, um sie hinzuzufügen",
+      "DropActive": "Ablegen, um Zauber hinzuzufügen",
+      "Loading": "Wird geladen …",
+      "RemoveSpell": "Zauber entfernen",
+      "SelectListMessage": "Wähle im linken Bereich eine Zauberliste aus, um sie zu bearbeiten",
+      "SavedNotification": "Zauberlisten gespeichert. Lade die Welt neu, um die Änderungen an der Zauberfilterung anzuwenden.",
+      "CompendiumNotFound": "Kompendium \"{pack}\" nicht gefunden.",
+      "NoSpellsInCompendium": "Keine Zauber im Kompendium \"{pack}\" gefunden.",
+      "SpellsAdded": "{count} Zauber aus \"{pack}\" hinzugefügt.",
+      "AllSpellsAlreadyInList": "Alle Zauber aus \"{pack}\" befinden sich bereits in dieser Liste."
+    },
+    "Equipment": {
+      "Label": "Ausrüstung",
+      "Choice": "Eine auswählen",
+      "ChooseOne": "Eine auswählen …",
+      "NoSelectedSource": "Derzeit ist keine Ausrüstungsquelle ausgewählt.",
+      "SourceMissing": "hat keine Startausrüstung konfiguriert.",
+      "EquipmentConfirmed": "Die Startausrüstung wurde bestätigt und befindet sich nun auf dem Charakterbogen.",
+      "EquipmentReadOnly": "Die Auswahl der Startausrüstung wurde abgeschlossen und ist während der Auswahl von Weiterentwicklungen nun schreibgeschützt.",
+      "Focus": "Zauberfokus",
+      "SelectEquipment": "Ausrüstung auswählen",
+      "SelectOne": "Eine der folgenden Optionen auswählen:",
+      "StartingGold": "Startgold",
+      "Selection": "Ausrüstungsauswahl",
+      "Detail": "Ausrüstungsdetails",
+      "Gold": "Gold",
+      "ConfigureLabel": "Startausrüstung konfigurieren",
+      "NoItemsToConfig": "Keine Gegenstände zu konfigurieren",
+      "Type": {
+        "Armor": "Rüstung",
+        "Weapon": "Waffe",
+        "Tool": "Werkzeug",
+        "Focus": "Fokus"
+      },
+      "PlannedInventory": "Geplantes Inventar",
+      "NoItemsSelected": "Keine Gegenstände ausgewählt",
+      "Weight": "Gewicht",
+      "Quantity": "Menge",
+      "SelectType": "Auswählen"
+    },
+    "Shop": {
+      "AvailableGold": "Verfügbar",
+      "SpentGold": "Ausgegeben",
+      "CartItems": "Warenkorbartikel",
+      "CartEmpty": "Dein Warenkorb ist leer",
+      "PurchaseCompleted": "Ausrüstungskäufe wurden abgeschlossen und bestätigt",
+      "ShopReadOnly": "Die Ladenauswahl wurde abgeschlossen und ist nun schreibgeschützt",
+      "AvailableEquipment": "Verfügbare Ausrüstung",
+      "Loading": "Gegenstände werden geladen …",
+      "NoEquipment": "Keine Ausrüstung verfügbar. Bitte überprüfe die Kompendiumsquellen in den Moduleinstellungen.",
+      "ErrorItemNoId": "Gegenstand konnte nicht zum Warenkorb hinzugefügt werden: Gegenstands-ID fehlt",
+      "ErrorAddToCart": "Gegenstand konnte nicht zum Warenkorb hinzugefügt werden",
+      "InfoAddedToCart": "{item} zum Warenkorb hinzugefügt",
+      "ErrorUpdateQuantity": "Gegenstandsmenge konnte nicht aktualisiert werden",
+      "ErrorRemoveFromCart": "Gegenstand konnte nicht aus dem Warenkorb entfernt werden",
+      "FilterPlaceholder": "Gegenstände im Laden nach Stichwort durchsuchen",
+      "NoMatchingEquipment": "Keine passende Ausrüstung gefunden.",
+      "TooExpensive": "Dieser Gegenstand ist für dein verbleibendes Gold zu teuer."
+    },
+    "AltText": {
+      "MoveUp": "Nach oben",
+      "MoveDown": "Nach unten",
+      "Roll": "Würfeln",
+      "Increase": "Erhöhen",
+      "Decrease": "Verringern",
+      "Subclass": "Unterklasse"
+    },
+    "Spells": {
+      "CharacterLevel": "Charakterstufe",
+      "MaxSpellLevel": "Maximale Zauberstufe",
+      "SelectedSpells": "Ausgewählte Zauber",
+      "NoSpellsSelected": "Keine Zauber ausgewählt",
+      "AvailableSpells": "Verfügbare Zauber",
+      "FilterPlaceholder": "Zauber nach Stichwort durchsuchen",
+      "Loading": "Zauber werden geladen …",
+      "NoSpells": "Keine Zauber verfügbar. Bitte überprüfe die Kompendiumsquellen in den Moduleinstellungen.",
+      "NoMatchingSpells": "Keine passenden Zauber gefunden.",
+      "SpellsReadOnly": "Die Zauberauswahl wurde abgeschlossen und ist nun schreibgeschützt",
+      "CantripLimitReached": "Du hast die maximale Anzahl an Zaubertricks für deine Stufe und Klasse erreicht.",
+      "SpellLimitReached": "Du hast die maximale Anzahl an Zaubern für deine Stufe und Klasse erreicht.",
+      "MaxLvl": "Max. Zauberstufe",
+      "Spells": "Zauber",
+      "Cantrips": "Zaubertricks",
+      "Level": "Stufe"
+    },
+    "FeatSpells": {
+      "Title": "Talent-Zauberauswahl",
+      "Description": "Einige deiner Talente gewähren Zugriff auf zusätzliche Zauber. Bitte wähle die erforderlichen Zauber für jedes Talent aus.",
+      "Loading": "Talentanforderungen werden geladen …",
+      "Error": "Fehler beim Laden der Talent-Zauberanforderungen: {error}",
+      "NoRequirements": "Es sind keine Talent-Zauberauswahlen erforderlich.",
+      "ChooseCount": "{count} auswählen",
+      "ManualReview": "Dieses Talent erfordert eine manuelle Überprüfung. Bitte füge die Zauber nach Abschluss des Stufenaufstiegs manuell hinzu.",
+      "LoadingSpells": "Verfügbare Zauber werden geladen …",
+      "Complete": "Abschließen",
+      "Skip": "Überspringen",
+      "Retry": "Erneut versuchen",
+      "SelectedSpells": "Ausgewählte Zauber",
+      "AvailableSpells": "Verfügbare Zauber",
+      "NoSpellsSelected": "Keine Zauber ausgewählt"
+    },
+    "FeatSelector": {
+      "Title": "Talent auswählen",
+      "Search": "Talente durchsuchen …",
+      "Loading": "Talente werden geladen …",
+      "NoFeats": "Keine Talente verfügbar. Überprüfe die Kompendiumsquellen in den Einstellungen.",
+      "Select": "Talent auswählen",
+      "Cancel": "Abbrechen",
+      "ShowIneligible": "Nicht geeignete Talente anzeigen"
+    },
+    "Import": {
+      "Method": "Importmethode",
+      "FromFile": "Aus Datei",
+      "FromText": "Aus Text",
+      "JSONText": "JSON-Text",
+      "NoJSONProvided": "Kein JSON-Text angegeben"
+    },
+    "SpellSchool": {
+      "abj": "Bannmagie",
+      "con": "Beschwörung",
+      "div": "Erkenntnismagie",
+      "enc": "Verzauberung",
+      "evo": "Hervorrufung",
+      "ill": "Illusion",
+      "nec": "Nekromantie",
+      "trs": "Verwandlung"
+    },
+    "Cantrip": "Zaubertrick"
+  }
+}
