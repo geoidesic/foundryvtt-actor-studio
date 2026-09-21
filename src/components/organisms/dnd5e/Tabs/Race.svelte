@@ -127,7 +127,18 @@
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
 
-  $: singlePanel = hideLeftSidebar || !value;
+  // Only use the split layout when the selected race has content that can be
+  // shown in the left preview panel. Otherwise the description remains
+  // full-width and the empty panel is removed.
+  $: hasLeftPanelContent = Boolean(
+    value && showLevelPreviewDropdown && (
+      source ||
+      filteredMovement.length ||
+      filteredSenses.length ||
+      advancementArray.length
+    )
+  );
+  $: singlePanel = hideLeftSidebar || !value || !hasLeftPanelContent;
   
   // Dynamic title and placeholder based on D&D rules version
   $: tabTitle = (() => {
@@ -227,29 +238,29 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePanel="{singlePanel}" contentClass="{singlePanel ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
       .flex3 
         IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
-      +if("source && !hideLeftSidebar && showLevelPreviewDropdown")
+      +if("source && !singlePanel && showLevelPreviewDropdown")
         //- h3.left {t('Source')}
         ol.properties-list
           li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-      +if("filteredMovement && !hideLeftSidebar && showLevelPreviewDropdown")
+      +if("filteredMovement.length && !singlePanel && showLevelPreviewDropdown")
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
             li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
-      +if("filteredSenses.length && !hideLeftSidebar && showLevelPreviewDropdown")
+      +if("filteredSenses.length && !singlePanel && showLevelPreviewDropdown")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
-      +if("advancementArray && !hideLeftSidebar && showLevelPreviewDropdown")
+      +if("advancementArray.length && !singlePanel && showLevelPreviewDropdown")
         +if("!$readOnlyTabs.includes('race')")
           .flexrow.mb-xs
             .flex2.left
@@ -284,4 +295,12 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
     :global(img)
       max-width: 100%
       height: auto
+
+  :global(.class-tab-single-panel .col-a)
+    flex: 1 1 100%
+    max-width: 100%
+    width: 100%
+
+  :global(.class-tab-single-panel .description-fill)
+    width: 100%
 </style>

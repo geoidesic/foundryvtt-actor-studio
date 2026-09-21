@@ -65,7 +65,11 @@
     ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
-  $: singlePanel = hideLeftSidebar || !value;
+  // The selector is the only left-panel content for backgrounds. Once a
+  // background is selected, keep the description full-width unless a future
+  // left-panel preview is actually available.
+  $: hasLeftPanelContent = false;
+  $: singlePanel = hideLeftSidebar || !value || !hasLeftPanelContent;
 
 
   let richHTML = "";
@@ -116,7 +120,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" singlePanel="{singlePanel}" contentClass="{singlePanel ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
@@ -138,4 +142,12 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" sin
     :global(img)
       max-width: 100%
       height: auto
+
+  :global(.class-tab-single-panel .col-a)
+    flex: 1 1 100%
+    max-width: 100%
+    width: 100%
+
+  :global(.class-tab-single-panel .description-fill)
+    width: 100%
 </style>
