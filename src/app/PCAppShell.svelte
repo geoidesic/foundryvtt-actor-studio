@@ -423,6 +423,19 @@
 <style lang="sass">
 :global(.application.GAS) 
   contain: unset !important
+
+// ApplicationV2 (Foundry 13+) needs an explicit flex-height chain. The
+// legacy Foundry 12 ApplicationWindow path intentionally does not receive
+// these rules.
+:global(.application.GAS.gas-v13-plus)
+  > :global(.window-content)
+    display: flex
+    flex-direction: column
+    height: 100%
+    min-height: 0
+    padding: 0
+    overflow: hidden
+
 main 
   display: flex
   flex-direction: column

@@ -1,7 +1,8 @@
 {
-    "title": "Actor Studio",
+    "id": "foundryvtt-actor-studio",
+    "title": "[Aardvark Games] Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "2.9.20",
+"version": "2.9.20",
     "styles": [
         "dist/style.css"
     ],
@@ -61,11 +62,10 @@
                 "type": "system",
                 "compatibility": {
                     "minimum": "3.0.0",
-                    "verified": "5.2",
-                    "maximum": "6"
+                    "verified": "6.0.3",
+                    "maximum": "6.999.999"
                 }
             }
         ]
-    },
-    "id": "foundryvtt-actor-studio"
+    }
 }
