@@ -2,7 +2,7 @@
     "id": "foundryvtt-actor-studio",
     "title": "[Aardvark Games] Actor Studio",
     "description": "Easily create Heroes, Villains and everything in between.",
-    "version": "2.10.1",
+    "version": "2.10.2",
     "styles": [
         "dist/style.css"
     ],
@@ -31,7 +31,7 @@
     ],
     "url": "https://github.com/geoidesic/foundryvtt-actor-studio",
     "manifest": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/latest/download/module.json",
-    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/2.10.1/module.zip",
+    "download": "https://github.com/geoidesic/foundryvtt-actor-studio/releases/download/2.10.2/module.zip",
     "authors": [
         {
             "name": "Noel da Costa",
