@@ -61,13 +61,13 @@ let
   classAdvancementComponents = {}
 ;
 
-const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
 const showLevelPreviewDropdown = safeGetSetting(
   MODULE_ID,
   'showLevelPreviewDropdown',
   false,
 );
-$: singlePanel = hideLeftSidebar || !$classUuidForLevelUp;
+
+$: singlePanel = !showLevelPreviewDropdown || !$classUuidForLevelUp;
 
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
@@ -428,7 +428,7 @@ onDestroy(() => {
 });
 </script>
 <template lang="pug">
-StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="level-up" singlePanel="{singlePanel}" contentClass="{singlePanel ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     +if("window.GAS.debug")
       //- pre classUuidForLevelUp {$classUuidForLevelUp}
@@ -495,6 +495,7 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
     +if("$classUuidForLevelUp")
       
       +if("showLevelPreviewDropdown")
+        +if("showLevelPreviewDropdown")
           h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
 
           +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
@@ -518,9 +519,8 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
       //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
       //- +if("selectedMultiClassUUID")
 
-      +if("!hideLeftSidebar")
-        +if("showLevelPreviewDropdown")
-          LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
+      +if("showLevelPreviewDropdown")
+        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
         
         //- Subclass selection section
         +if("shouldShowSubclassPreview")
@@ -569,4 +569,12 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
 
   :global(.icon-select)
     position: relative
+
+  :global(.class-tab-single-panel .col-a)
+    flex: 1 1 100%
+    max-width: 100%
+    width: 100%
+
+  :global(.class-tab-single-panel .description-fill)
+    width: 100%
 </style>

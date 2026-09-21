@@ -31,7 +31,7 @@ class LLMNameGenerationSettings extends TJSGameSettings {
         scope: 'world',
         config: true,
         type: String,
-        default: 'actor-studio-gpt-beta',
+        default: '',
       },
     });
 

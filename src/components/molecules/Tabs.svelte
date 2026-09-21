@@ -174,6 +174,26 @@
     }
   }
 
+  // ApplicationV2 (Foundry 13+) has no implicit tab-bar height. Keep the
+  // legacy sizing above for Foundry 12 ApplicationWindow applications.
+  :global(.application.GAS.gas-v13-plus) .tabs.gas-tabs {
+    .tabs-list {
+      height: 2.5rem;
+      min-height: 2.5rem;
+      flex: 0 0 2.5rem;
+      align-items: stretch;
+
+      button {
+        height: auto;
+        min-height: 0;
+        margin: 0 2px;
+        margin-bottom: 0;
+        padding: 0 0.75rem;
+        align-items: center;
+      }
+    }
+  }
+
 
   .tab-content {
     @include inset;

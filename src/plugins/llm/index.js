@@ -2,7 +2,8 @@ import { MODULE_ID } from '~/src/helpers/constants';
 
 class LLM {
 
-  apiKey = 'actor-studio-gpt-beta';
+  // No default API key is hardcoded here; it must be supplied via module settings.
+  apiKey = '';
   baseUrl = 'https://actor-studio-llm.vercel.app/api';
   // baseUrl = 'http://localhost:3000/api';
   // baseUrl = 'https://heavy-rocks-clean.loca.lt/api';
