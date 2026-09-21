@@ -15,7 +15,7 @@
   }
 
   const displayLabel = stripSourceLabels(label);
-  $: displaySourceBook = sourceBook
+  $: displaySourceBook = typeof sourceBook === 'string' && sourceBook
     ? sourceBook.split('.')[0].replace(/^Compendium\./, '').replace(/-/g, ' ')
     : '';
 </script>
