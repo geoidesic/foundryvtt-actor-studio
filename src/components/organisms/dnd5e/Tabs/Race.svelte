@@ -22,7 +22,6 @@
   import { MODULE_ID } from "~/src/helpers/constants";
 
   const isDisabled = getContext('isDisabled') || false;
-  const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
     "showLevelPreviewDropdown",
@@ -127,18 +126,10 @@
   // Calculate advancements
   $: advancementArray = getAdvancements($race);
 
-  // Only use the split layout when the selected race has content that can be
-  // shown in the left preview panel. Otherwise the description remains
-  // full-width and the empty panel is removed.
-  $: hasLeftPanelContent = Boolean(
-    value && showLevelPreviewDropdown && (
-      source ||
-      filteredMovement.length ||
-      filteredSenses.length ||
-      advancementArray.length
-    )
-  );
-  $: singlePanel = hideLeftSidebar || !value || !hasLeftPanelContent;
+  // Match the Class tab: preview mode is a two-panel layout; otherwise the
+  // selected race uses the full-width single panel.
+  $: canRenderTwoPanels = Boolean(value && showLevelPreviewDropdown);
+  $: singlePanel = !canRenderTwoPanels;
   
   // Dynamic title and placeholder based on D&D rules version
   $: tabTitle = (() => {
@@ -242,25 +233,25 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
   div(slot="left")
     .flexrow
       .flex0.required(class="{$race ? '' : 'active'}") *
-      .flex3 
+      .flex3
         IconSelect.mb-md.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectRaceHandler}" id="race-select" bind:value)
     +if("value")
-      +if("source && !singlePanel && showLevelPreviewDropdown")
+      +if("source && canRenderTwoPanels")
         //- h3.left {t('Source')}
         ol.properties-list
           li {book} {page} {type.value ? ', ' + type.value : ''} 
 
-      +if("filteredMovement.length && !singlePanel && showLevelPreviewDropdown")
+      +if("filteredMovement.length && canRenderTwoPanels")
         h2.left {t('Tabs.Races.Movement')}
         ol.properties-list
           +each("filteredMovement as movement")
             li.left {movement.label} : {movement.value} {movement.isSpecial ? '' : units}
-      +if("filteredSenses.length && !singlePanel && showLevelPreviewDropdown")
+      +if("filteredSenses.length && canRenderTwoPanels")
         h2.left {t('Tabs.Races.Senses')}
         ol.properties-list
           +each("filteredSenses as senses")
             li.left {senses.label} : {senses.value} {units}
-      +if("advancementArray.length && !singlePanel && showLevelPreviewDropdown")
+      +if("advancementArray.length && canRenderTwoPanels")
         +if("!$readOnlyTabs.includes('race')")
           .flexrow.mb-xs
             .flex2.left
@@ -282,7 +273,8 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="race" singlePan
         .description-fill.mt-sm
           | {@html richHTML}
   
-  div(slot="right") {@html richHTML}
+  div(slot="right")
+    | {@html richHTML}
 </template>
 
 <style lang="sass">

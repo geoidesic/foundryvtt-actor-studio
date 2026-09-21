@@ -365,12 +365,7 @@
       },
       "ShowLevelPreviewDropdown": {
         "Name": "Dropdown für Stufenvorschau anzeigen (Volk, Hintergrund, Klasse)",
-        "Hint": "Wenn aktiviert, wird z. B. im Klassen-Tab ein Dropdown für die Stufenvorschau angezeigt, mit dem Benutzer Weiterentwicklungen auf verschiedenen Stufen ansehen können. Wenn deaktiviert, wird das Dropdown ausgeblendet, um Verwirrung beim Erstellen höherstufiger Charaktere zu vermeiden.",
-        "DisabledHint": "Nicht verfügbar, wenn „Linken Bereich ausblenden“ aktiviert ist, da die Vorschau im linken Bereich angezeigt wird."
-      },
-      "HideLeftSidebar": {
-        "Name": "Linken Bereich für Hintergründe, Ursprünge und Klassen ausblenden",
-        "Hint": "Wenn aktiviert, wird der linke Bereich der Tabs „Hintergrund“, „Ursprünge“ und „Klasse“ ausgeblendet. Die Dropdown-Auswahl bleibt sichtbar. Der leere Bereich wird mit der Beschreibung des jeweiligen Gegenstands gefüllt."
+        "Hint": "Wenn aktiviert, wird z. B. im Klassen-Tab ein Dropdown für die Stufenvorschau angezeigt, mit dem Benutzer Weiterentwicklungen auf verschiedenen Stufen ansehen können. Wenn deaktiviert, wird das Dropdown ausgeblendet, um Verwirrung beim Erstellen höherstufiger Charaktere zu vermeiden."
       },
       "CharacterCreationTabOrder": {
         "Name": "Reihenfolge der Tabs zur Charaktererstellung",

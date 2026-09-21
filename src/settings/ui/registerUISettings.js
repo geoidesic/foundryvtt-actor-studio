@@ -85,15 +85,6 @@ export function registerUISettings() {
     type: String,
   });
 
-  game.settings.register(MODULE_ID, 'hideLeftSidebar', {
-    name: game.i18n.localize('GAS.Setting.HideLeftSidebar.Name'),
-    hint: game.i18n.localize('GAS.Setting.HideLeftSidebar.Hint'),
-    scope: 'world',
-    config: false,
-    default: false,
-    type: Boolean,
-  });
-
   game.settings.register(MODULE_ID, 'showLevelPreviewDropdown', {
     name: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Name'),
     hint: game.i18n.localize('GAS.Setting.ShowLevelPreviewDropdown.Hint'),

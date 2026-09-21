@@ -73,22 +73,9 @@
     "showPackLabelInSelect",
     false
   );
-
-  const hideLevelPreview = safeGetSetting(
-    MODULE_ID,
-    "hideLevelPreview",
-    false
-  );
-
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
     "showLevelPreviewDropdown",
-    false
-  );
-
-  const hideLeftSidebar = safeGetSetting(
-    MODULE_ID,
-    "hideLeftSidebar",
     false
   );
 
@@ -283,7 +270,7 @@
   }
 
 
-  $: subClassHeader = hideLeftSidebar ? `<h1>${t("SubClass")}</h1>` : "";
+  $: subClassHeader = "";
 
   $: showSubclassSelect = $characterClass && subclasses.length && subClassLevel == 1;
 
@@ -331,7 +318,8 @@
   $: isSubclassSelectVisible = Boolean(showSubclassSelect);
   $: subClassSelected = Boolean($characterSubClass);
   $: canRenderTwoPanels =
-    !hideLeftSidebar && classSelected && isSubclassSelectVisible && subClassSelected;
+    showLevelPreviewDropdown ? classSelected : 
+    classSelected && isSubclassSelectVisible && subClassSelected;
   $: singlePanel = !canRenderTwoPanels;
 
 
@@ -355,7 +343,7 @@
 </script>
 
 <template lang="pug">
-StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{singlePanel}" contentClass="{hideLeftSidebar ? 'class-tab-single-panel' : ''}")
+StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="class" singlePanel="{singlePanel}" contentClass="{singlePanel ? 'class-tab-single-panel' : ''}")
   div(slot="left")
     .class-tab-selects
       ClassSelector(
@@ -403,7 +391,6 @@ StandardTabLayout(title="{t('Tabs.Classes.Title')}" showTitle="{true}" tabName="
               expanded="{subClassAdvancementExpanded}"
               on:toggle="{toggleSubClassAdvancements}"
             )
-              span(slot="right").badge.right.inset.ml-sm.mb-xs {t('Level')} {$level}
             +if("subClassAdvancementExpanded")
               AdvancementIconList(advancements="{subClassAdvancementArrayFiltered}" components="{subClassAdvancementComponents}" tooltipLocked="{true}")
   div(slot="right")

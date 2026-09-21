@@ -14,7 +14,7 @@
 </script>
 
 <template lang="pug">
-div.content(class="{contentClass}")
+div.content(class="{contentClass} {singlePanel ? 'single-panel' : ''}")
   +if("showTitle")
     h1.center.mt-none.hide {title}
   .flexrow
@@ -39,8 +39,13 @@ div.content(class="{contentClass}")
 
   .col-a
     // max-width: 325px
+    // Without a min-width, flex-shrink lets col-a/col-b squeeze indefinitely
+    // instead of wrapping onto separate lines when the window narrows.
+    min-width: 220px
 
-  
+  .col-b
+    min-width: 260px
+
   .overlay
     position: absolute
     top: 0

@@ -1,12 +1,9 @@
 <script>
-  import SvelteSelect from "svelte-select";
   import IconSelect from "~/src/components/molecules/select/IconSelect.svelte";
   import StandardTabLayout from "~/src/components/organisms/StandardTabLayout.svelte";
   import {
-    getFoldersFromMultiplePacks,
     extractItemsFromPacksSync,
     getPacksFromSettings,
-    getAdvancementValue,
     getAdvancementEntryCount,
     advancementEntriesToArray,
     illuminatedDescription,
@@ -14,14 +11,14 @@
     isSelectionAutomationEnabled,
     getSelectionAutomationValue
   } from "~/src/helpers/Utility.js";
-  import { getContext, onDestroy, onMount, tick } from "svelte";
+  import { getContext, onMount, tick } from "svelte";
   import { localize as t } from "~/src/helpers/Utility";
   import { background, readOnlyTabs, level } from "~/src/stores/index";
   import { TJSSelect } from "@typhonjs-fvtt/standard/component/form";
   import { MODULE_ID } from "~/src/helpers/constants";
+  import AdvancementIconList from "~/src/components/molecules/dnd5e/AdvancementIconList.svelte";
 
   const isDisabled = getContext('isDisabled') || false;
-  const hideLeftSidebar = safeGetSetting(MODULE_ID, 'hideLeftSidebar', false);
   const tabTitle = t('Tabs.Background.Title');
   const showLevelPreviewDropdown = safeGetSetting(
     MODULE_ID,
@@ -65,11 +62,10 @@
     ? advancementEntriesToArray($background.system.advancement).filter((value) => value.level === $level)
     : [];
 
-  // The selector is the only left-panel content for backgrounds. Once a
-  // background is selected, keep the description full-width unless a future
-  // left-panel preview is actually available.
-  $: hasLeftPanelContent = false;
-  $: singlePanel = hideLeftSidebar || !value || !hasLeftPanelContent;
+  // Match the Class tab: preview mode is a two-panel layout; otherwise the
+  // selected background uses the full-width single panel.
+  $: canRenderTwoPanels = Boolean(value && showLevelPreviewDropdown);
+  $: singlePanel = !canRenderTwoPanels;
 
 
   let richHTML = "";
@@ -97,6 +93,7 @@
       value = option;
     }
     await tick();
+    await importAdvancements();
     richHTML = await illuminatedDescription(html, $background);
 
     Hooks.call('gas.richhtmlReady', richHTML);
@@ -117,6 +114,10 @@
     }
   });
 
+  $: if (advancementArray.length) {
+    importAdvancements();
+  }
+
 </script>
 
 <template lang="pug">
@@ -124,12 +125,20 @@ StandardTabLayout(title="{tabTitle}" showTitle="{true}" tabName="background" sin
   div(slot="left")
     .flexrow
       .flex0.required(class="{$background ? '' : 'active'}") *
-      .flex3 
+      .flex3
         IconSelect.icon-select({options} {active} {placeHolder} groupBy="{['sourceBook','packLabel']}" handler="{selectBackgroundHandler}" id="background-select" bind:value disabled="{isDisabled}")
+    +if("canRenderTwoPanels")
+      +if("!$readOnlyTabs.includes('background')")
+        .flexrow.mb-xs
+          .flex2.left
+            TJSSelect(options="{levelOptions}" store="{level}" on:change="{importAdvancements}" styles="{selectStyles}")
+      h2.left {t('Advancements')}
+      AdvancementIconList(advancements="{advancementArray}" components="{advancementComponents}")
     +if("singlePanel && value")
       .description-fill.mt-sm
         | {@html richHTML}
-  div(slot="right") {@html richHTML}
+  div(slot="right")
+    | {@html richHTML}
 </template>
 
 <style lang="sass">
