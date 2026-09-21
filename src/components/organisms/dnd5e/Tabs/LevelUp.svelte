@@ -495,18 +495,18 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
     +if("$classUuidForLevelUp")
       
       +if("showLevelPreviewDropdown")
-        +if("showLevelPreviewDropdown")
-          h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
+        h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
 
-          +if("subclasses.length && $levelUpClassGetsSubclassThisLevel")  
-            h3.left.mt-md {t('LevelUp.Subclass')}
-          +if("window.GAS.debug")
-            //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
+      //- Subclass selection is required for classes that gain a subclass at this level.
+      //- Keep it independent from the optional advancement preview setting.
+      +if("$levelUpClassGetsSubclassThisLevel")
+        h3.left.mt-md {t('LevelUp.Subclass')}
+        +if("subclasses.length")
           .flexrow
             .flex0.required(class="{$levelUpSubClassObject ? '' : 'active'}") *
             .flex3
               IconSelect.icon-select.mb-md(active="{subClassProp}" options="{subclasses}" placeHolder="{subclassesPlaceholder}" handler="{eventHandlers.selectSubClassHandler}" id="subClass-select" bind:value="{subclassValue}" truncateWidth="17" disabled="{$isLevelUpAdvancementInProgress}")
-          +if("!subclasses.length && $levelUpClassGetsSubclassThisLevel")  
+          +else()
             p
               i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
               | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
