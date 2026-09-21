@@ -37,10 +37,17 @@ const isTestRelease = isDraft || isPreRelease;
 
 const reinstallDependenciesForBranch = (branchName) => {
     const nodeModulesPath = path.join(__dirname, 'node_modules');
-    console.log(`🧹 ${branchName}: removing node_modules...`);
-    fs.rmSync(nodeModulesPath, { recursive: true, force: true });
-    console.log(`📦 ${branchName}: running bun i...`);
-    execSync('bun i', { stdio: 'inherit' });
+    console.log(`🧹 ${branchName}: removing node_modules to ensure clean dependencies...`);
+    try {
+        // Use shell rm -rf which is more forgiving than fs.rmSync on macOS
+        execSync(`rm -rf "${nodeModulesPath}"`);
+        console.log(`✅ Successfully removed node_modules`);
+    } catch (error) {
+        console.log(`⚠️  Could not remove node_modules (files in use): ${error.message}`);
+        console.log(`   Will run bun install - it will update what changed`);
+    }
+    console.log(`📦 ${branchName}: running bun install...`);
+    execSync('bun install', { stdio: 'inherit' });
 };
 
 // Check for uncommitted changes (must be before any branch switching or merging)
