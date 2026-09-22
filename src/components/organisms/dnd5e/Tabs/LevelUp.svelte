@@ -67,7 +67,15 @@ const showLevelPreviewDropdown = safeGetSetting(
   false,
 );
 
-$: singlePanel = !showLevelPreviewDropdown || !$classUuidForLevelUp;
+// Two-panel layout is available once there's content to split between panels.
+// Without the preview setting, only split once a subclass has actually been picked.
+$: classSelected = Boolean($classUuidForLevelUp);
+$: isSubclassSelectVisible = Boolean($levelUpClassGetsSubclassThisLevel && subclasses.length);
+$: subClassSelected = Boolean($subClassUuidForLevelUp);
+$: canRenderTwoPanels = showLevelPreviewDropdown
+  ? classSelected
+  : classSelected && isSubclassSelectVisible && subClassSelected;
+$: singlePanel = !canRenderTwoPanels;
 
 
 window.GAS.log.d('[DEBUG] subClassesPacks:', subClassesPacks);
@@ -325,13 +333,11 @@ $: shouldShowSubclassPreview = subclasses.length && $levelUpClassGetsSubclassThi
 $: classes = window.GAS.dnd5eVersion >= 4 ? $actor.classes : $actor._classes;
 $: classKeys = Object.keys(classes);
 $: html = $levelUpClassObject?.system?.description.value || "";
-// $: combinedHtml = $classUuidForLevelUp ? $levelUpRichHTML + (richSubClassHTML ? `<h1>${t('SubClass')}</h1>` + richSubClassHTML : '') : '';
 $: newLevel = $isNewMultiClassSelected ? 1 : $newLevelValueForExistingClass;
-$: if($classUuidForLevelUp) {
-  $levelUpCombinedHtml = $levelUpRichHTML + (richSubClassHTML ? `<h1>${t('SubClass')}</h1>` + richSubClassHTML : '')
-} else {
-  $levelUpCombinedHtml = '';
-}
+// Subclass content goes above class content when they share a single panel.
+$: wrappedSubClassHTML = richSubClassHTML ? `<div class="actor-studio-subclass">${richSubClassHTML}</div>` : '';
+$: combinedHtml = $classUuidForLevelUp ? `${wrappedSubClassHTML}${$levelUpRichHTML}` : '';
+$: $levelUpCombinedHtml = $levelUpRichHTML;
 /**
  * Filters available classes for multiclassing
  * Excludes classes the character already has and sorts alphabetically
@@ -497,6 +503,18 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
       +if("showLevelPreviewDropdown")
         h2.flexrow.mt-md {t('LevelUp.LevelAdvancements')}
 
+      +if("showLevelPreviewDropdown")
+        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
+        
+        //- Subclass selection section (for 2014 rules or 2024 rules < version 4)
+        +if("shouldShowSubclassPreview")
+          ul.icon-list
+            li.left
+              .flexrow
+                .flex0.relative.image
+                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
+                .flex2 {t('SubClass')}
+
       //- Subclass selection is required for classes that gain a subclass at this level.
       //- Keep it independent from the optional advancement preview setting.
       +if("$levelUpClassGetsSubclassThisLevel")
@@ -511,36 +529,17 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
               i.fas.fa-exclamation-triangle.icon(style="color: #ff6b6b;").left.mr-sm
               | No subclasses available. Ask your GM to check compendium sources for subclasses are assigned in the settings.
 
-
-      //- pre subclasses {subclasses.length}
-      //- pre levelUpClassGetsSubclassThisLevel {$levelUpClassGetsSubclassThisLevel}
-      //- pre subclassLevelForLevelUp {$subclassLevelForLevelUp}
-      //- pre window.GAS.dnd5eVersion {window.GAS.dnd5eVersion}
-      //- pre window.GAS.dnd5eRules {window.GAS.dnd5eRules}
-      //- +if("selectedMultiClassUUID")
-
-      +if("showLevelPreviewDropdown")
-        LeftColDetails(classAdvancementArrayFiltered="{classAdvancementArrayFiltered}" level="{newLevel}" )
-        
-        //- Subclass selection section
-        +if("shouldShowSubclassPreview")
-          ul.icon-list
-            li.left
-              .flexrow
-                .flex0.relative.image
-                  img.icon(src="{`modules/${MODULE_ID}/assets/dnd5e/3.x/subclass.svg`}" alt="{t('AltText.Subclass')}")
-                .flex2 {t('SubClass')}
-      +if("singlePanel && $classUuidForLevelUp")
+      +if("singlePanel")
         .description-fill.mt-sm
-          +if("$levelUpSubClassObject")
-            | {@html richSubClassHTML}
-            +else()
-              | {@html $levelUpRichHTML}
+          | {@html combinedHtml}
+      +if("canRenderTwoPanels && richSubClassHTML")
+        .description-fill.mt-sm
+          | {@html wrappedSubClassHTML}
 
   div(slot="right")
     +if("$classUuidForLevelUp")
       h1 {$levelUpClassObject?.name || ''}
-    | {@html $levelUpCombinedHtml}
+    | {@html $levelUpRichHTML}
 </template>
 <style lang="sass" scoped>
   @use "../../../../../styles/Mixins.sass" as mixins
@@ -566,6 +565,8 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
     color: inherit
     font-size: 0.9375rem
     line-height: 1.5
+    word-wrap: break-word
+    word-break: break-word
 
   :global(.icon-select)
     position: relative
@@ -577,4 +578,6 @@ StandardTabLayout(title="{t('LevelUp.Title')}" showTitle="{false}" tabName="leve
 
   :global(.class-tab-single-panel .description-fill)
     width: 100%
+    word-wrap: break-word
+    word-break: break-word
 </style>
