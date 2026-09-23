@@ -29,6 +29,20 @@
     }
   }
 
+  // Strip any HTML/script markup from free-text biography fields before they are
+  // persisted to stores that may later be rendered via unsafe (e.g. {@html}) contexts.
+  const stripHtml = (value) => (typeof value === "string" ? value.replace(/<[^>]*>/g, "") : value);
+
+  $: for (const key of Object.keys($biographyContent)) {
+    const clean = stripHtml($biographyContent[key]);
+    if (clean !== $biographyContent[key]) biographyContent.update(c => ({ ...c, [key]: clean }));
+  }
+
+  $: for (const key of Object.keys($characterDetails)) {
+    const clean = stripHtml($characterDetails[key]);
+    if (clean !== $characterDetails[key]) characterDetails.update(c => ({ ...c, [key]: clean }));
+  }
+
 </script>
 
 <template lang="pug">
