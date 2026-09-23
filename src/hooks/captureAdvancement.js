@@ -95,7 +95,7 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
 
 const isAppElementAppended = (appId) => {
   const panelElement = $('#foundryvtt-actor-studio-pc-sheet .window-content main section.a .tab-content .content');
-  return panelElement.find(`[data-appid="${appId}"]`).length > 0;
+  return panelElement.find(`[gas-appid="${appId}"]`).length > 0;
 };
 
 const getLevelProgressionForSubtitle = (currentProcess, subtitleText) => {

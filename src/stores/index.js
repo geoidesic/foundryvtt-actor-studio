@@ -223,6 +223,7 @@ export const resetLevelUpStores = () => {
   storeDefinitions.levelUpClassObject.set(null); //- tracks the new multi class object
   storeDefinitions.levelUpSubClassObject.set(null); //- tracks the new multi class object
   levelUpPreAdvancementSelections.set({}); //- clears selections from the previous level-up session
+  dropItemRegistry.removeAll(); //- clears queued advancements from the previous level-up session
 }
 
 // Function to reset all stores
