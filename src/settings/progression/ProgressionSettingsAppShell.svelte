@@ -261,19 +261,6 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
           margin-bottom: 0.25rem
           color: white
 
-        .setting-label
-          display: flex
-          align-items: center
-          gap: 0.5rem
-          font-weight: 500
-          margin-bottom: 0.25rem
-          color: white
-
-          input[type="checkbox"]
-            width: 1.2rem
-            height: 1.2rem
-            cursor: pointer
-
           input[type="number"]
             max-width: 120px
             padding: 0.25rem 0.5rem
@@ -286,6 +273,19 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
             &:focus
               outline: 2px solid #4a9eff
               outline-offset: 1px
+
+        .setting-label
+          display: flex
+          align-items: center
+          gap: 0.5rem
+          font-weight: 500
+          margin-bottom: 0.25rem
+          color: white
+
+          input[type="checkbox"]
+            width: 1.2rem
+            height: 1.2rem
+            cursor: pointer
 
         p.hint
           margin: 0.25rem 0 0 0

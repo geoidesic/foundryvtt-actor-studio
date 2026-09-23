@@ -55,7 +55,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 <script>
   import { getContext } from 'svelte';
   import { TJSApplicationShell } from '@typhonjs-fvtt/runtime/svelte/component/application';
-  import { TJSDialog } from '@typhonjs-fvtt/runtime/svelte/application';
+  import { showReloadRequiredConfirm } from '../confirmationHelpers';
   import { MODULE_ID } from '~/src/helpers/constants';
   import { safeGetSetting } from '~/src/helpers/Utility';
 
@@ -78,11 +78,7 @@ TJSApplicationShell(bind:elementRoot="{elementRoot}")
 
       ui.notifications.info('Equipment settings saved successfully');
       
-      const result = await TJSDialog.confirm({
-        title: game.i18n.localize('GAS.Dialog.ReloadRequiredTitle'),
-        content: `<p>${game.i18n.localize('GAS.Dialog.ReloadRequiredContent')}</p>`,
-        defaultYes: true
-      });
+      const result = await showReloadRequiredConfirm({ world: true });
 
       if (result) {
         window.location.reload();
