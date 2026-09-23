@@ -117,12 +117,27 @@
       const cart = get(shopCart);
       if (!cart.has(itemId)) return;
 
-      const { itemData } = cart.get(itemId);
+      const { itemData, uuid } = cart.get(itemId);
       const quantity = Math.max(0, newQuantity);
       
-      updateCart(itemId, quantity, itemData);
+      updateCart(itemId, quantity, itemData, uuid);
     } catch(error) {
       console.error("Error updating item quantity:", error);
+      ui.notifications?.warn(t('Shop.ErrorUpdateQuantity'));
+    }
+  }
+
+  // Change by one item bundle, matching the increment used by the shop list.
+  function changeItemQuantity(itemId, direction) {
+    try {
+      const cart = get(shopCart);
+      const cartItem = cart.get(itemId);
+      if (!cartItem) return;
+
+      const quantityStep = Number(cartItem.itemData?.system?.quantity) || 1;
+      updateItemQuantity(itemId, cartItem.quantity + (direction * quantityStep));
+    } catch(error) {
+      console.error("Error changing item quantity:", error);
       ui.notifications?.warn(t('Shop.ErrorUpdateQuantity'));
     }
   }
@@ -251,7 +266,37 @@
               </div>
             </div>
             <div class="cart-item-col3">
-              <button class="remove-btn" on:click={() => removeFromCart(cartItem.id)} disabled={isDisabled}>
+              <div class="quantity-controls">
+                <button
+                  type="button"
+                  class="quantity-btn"
+                  on:click|preventDefault={() => changeItemQuantity(cartItem.id, -1)}
+                  disabled={isDisabled}
+                  aria-label={`${t('AltText.Decrease')} ${cartItem.item.name}`}
+                  title={`${t('AltText.Decrease')} ${cartItem.item.name}`}
+                >
+                  <i class="fas fa-minus" aria-hidden="true"></i>
+                </button>
+                <span class="quantity-display">×{cartItem.quantity}</span>
+                <button
+                  type="button"
+                  class="quantity-btn"
+                  on:click|preventDefault={() => changeItemQuantity(cartItem.id, 1)}
+                  disabled={isDisabled}
+                  aria-label={`${t('AltText.Increase')} ${cartItem.item.name}`}
+                  title={`${t('AltText.Increase')} ${cartItem.item.name}`}
+                >
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                </button>
+              </div>
+              <button
+                type="button"
+                class="remove-btn"
+                on:click|preventDefault={() => removeFromCart(cartItem.id)}
+                disabled={isDisabled}
+                aria-label={`${t('AltText.Remove')} ${cartItem.item.name}`}
+                title={`${t('AltText.Remove')} ${cartItem.item.name}`}
+              >
                 <i class="fas fa-trash"></i>
               </button>
             </div>
@@ -455,8 +500,33 @@
       flex-shrink: 0
       display: flex
       align-items: center
+      gap: 0.25rem
       padding-top: 0.5rem
       padding-bottom: 0.5rem
+
+    .quantity-controls
+      display: flex
+      align-items: center
+      gap: 0.15rem
+
+    .quantity-btn
+      background: none
+      border: 1px solid var(--color-border-light-tertiary)
+      border-radius: 3px
+      cursor: pointer
+      min-width: 1.5rem
+      min-height: 1.5rem
+      padding: 0.1rem
+      line-height: 1
+
+      &:hover
+        background: rgba(0, 0, 0, 0.1)
+
+      &:disabled
+        opacity: 0.5
+        cursor: not-allowed
+        &:hover
+          background: none
 
     .remove-btn
       background: none
