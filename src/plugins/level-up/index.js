@@ -1,6 +1,7 @@
 import { get } from 'svelte/store';
 import { MODULE_ID } from '~/src/helpers/constants';
 import { characterSubClass, levelUpSubClassObject } from '~/src/stores/storeDefinitions';
+import { resetLevelUpStores } from '~/src/stores';
 import PCApplication from '~/src/app/PCApplication.js';
 import { bringActorStudioToFront, safeGetSetting, restorePendingActorSheetsAfterLevelUp } from '~/src/helpers/Utility';
 
@@ -72,6 +73,7 @@ async function openActorStudioLevelUp(app, busyErrorCode) {
     await storeOriginalSheetClassForLevelUp(app);
   }
 
+  resetLevelUpStores();
   new PCApplication(app.actor, true).render(true, { focus: true });
 }
 
