@@ -222,6 +222,7 @@ export const resetLevelUpStores = () => {
   storeDefinitions.selectedMultiClassUUID.set(false); //- tracks the selected multi class
   storeDefinitions.levelUpClassObject.set(null); //- tracks the new multi class object
   storeDefinitions.levelUpSubClassObject.set(null); //- tracks the new multi class object
+  levelUpPreAdvancementSelections.set({}); //- clears selections from the previous level-up session
 }
 
 // Function to reset all stores

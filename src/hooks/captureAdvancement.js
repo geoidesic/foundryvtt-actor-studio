@@ -16,7 +16,16 @@ const BROWSE_TARGET_SELECTOR = [
 
 const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
   default: {
-    checkboxSelectors: [],
+    checkboxSelectors: [
+      'dnd5e-checkbox.average-checkbox',
+      'dnd5e-checkbox[name="useAverage"]',
+      'dnd5e-checkbox[id$="-useAverage"]',
+      'dnd5e-checkbox[id*="useAverage"]',
+      'dnd5e-checkbox[data-action*="average"]',
+      'dnd5e-checkbox[data-action*="Average"]',
+      'dnd5e-checkbox[aria-label*="average" i]',
+      'dnd5e-checkbox[aria-label*="hit point" i]'
+    ],
     rollInputSelectors: [],
     rollButtonSelectors: [
       '[data-action="roll"]',
@@ -69,12 +78,7 @@ const FORCE_TAKE_AVERAGE_HP_SELECTOR_CONFIG = {
     selectValues: []
   },
   5: {
-    checkboxSelectors: [
-      'dnd5e-checkbox.average-checkbox',
-      'dnd5e-checkbox[name="useAverage"]',
-      'dnd5e-checkbox[id$="-useAverage"]',
-      'dnd5e-checkbox[id*="useAverage"]'
-    ],
+    checkboxSelectors: [],
     rollInputSelectors: [
       'input.roll-result'
     ],
@@ -381,6 +385,7 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
       const rawCheckbox = checkboxElement[0];
       const isChecked = checkboxElement.is(':checked')
         || Boolean(rawCheckbox?.checked)
+        || rawCheckbox?.checked === 'true'
         || (nestedCheckbox.length ? nestedCheckbox.is(':checked') : false);
 
       if (!isChecked) {
@@ -391,11 +396,14 @@ const applyForceTakeAverageSelection = (element, selectorConfig) => {
         }
 
         checkboxElement.prop('checked', true);
-        checkboxElement.attr('checked', 'checked');
-        checkboxElement.attr('aria-checked', 'true');
         if (rawCheckbox && 'checked' in rawCheckbox) {
           rawCheckbox.checked = true;
         }
+        if (rawCheckbox && typeof rawCheckbox.setAttribute === 'function') {
+          rawCheckbox.setAttribute('checked', 'true');
+        }
+        checkboxElement.attr('checked', 'checked');
+        checkboxElement.attr('aria-checked', 'true');
         if (rawCheckbox && typeof rawCheckbox.setAttribute === 'function') {
           rawCheckbox.setAttribute('checked', 'checked');
           rawCheckbox.setAttribute('aria-checked', 'true');
